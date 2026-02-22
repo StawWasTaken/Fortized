@@ -33,16 +33,26 @@ a { text-decoration: none; }
 nav {
   position: sticky; top: 0; z-index: 200;
   display: flex; justify-content: space-between; align-items: center;
-  padding: 14px 56px;
+  padding: 16px 72px;
   background: rgba(8,10,15,.92); backdrop-filter: blur(24px);
   border-bottom: 1px solid var(--border);
 }
 .logo { display: flex; align-items: center; gap: 11px; }
 .logo img { height: 26px; width: 26px; object-fit: contain; }
 .logo-text { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: #fff; letter-spacing: -.3px; }
-.logo-badge { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); background: rgba(255,249,62,.08); border: 1px solid var(--accent-border); border-radius: 4px; padding: 2px 7px; }
-.nav-back { font-size: 13px; color: var(--muted-light); display: flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 9px; transition: color .15s, background .15s; }
-.nav-back:hover { color: #fff; background: rgba(255,255,255,.05); }
+.nav-links { display: flex; align-items: center; gap: 4px; }
+.nav-link {
+  color: var(--muted-light); font-size: 14px; font-weight: 500;
+  padding: 8px 14px; border-radius: 9px; text-decoration: none;
+  transition: color .15s, background .15s;
+}
+.nav-link:hover { color: #fff; background: rgba(255,255,255,.05); }
+.nav-link.active { color: var(--accent); }
+.btn-outline-nav {
+  border: 1.5px solid rgba(255,249,62,.28) !important;
+  color: var(--accent) !important;
+}
+.btn-outline-nav:hover { background: rgba(255,249,62,.06) !important; }
 
 /* ─── HERO ─── */
 .page-hero {
@@ -211,9 +221,12 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   <a href="index.html" class="logo">
     <img src="Fortized icon.png" alt="Fortized">
     <span class="logo-text">Fortized</span>
-    <span class="logo-badge">Beta</span>
   </a>
-  <a href="index.html" class="nav-back">← Back to Home</a>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="blog.html" class="nav-link">Blog</a>
+    <a href="login.html" class="nav-link btn-outline-nav">Login</a>
+  </div>
 </nav>
 
 <div class="page-hero">
@@ -374,7 +387,6 @@ tocLinks.forEach(a => {
   });
 });
 
-// Set initial active
 if (sections.length) {
   tocLinks.forEach(a => a.classList.remove('active'));
   const first = tocLinks[0];

@@ -455,7 +455,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 <div class="emoji-picker-panel" id="emoji-picker"></div>
 
 <!-- NOTIFICATION PANEL -->
-<div class="notif-panel" id="notif-panel">
+<div class="notif-panel" id="notif-panel" style="width:360px;max-width:360px;">
   <div class="np-header">
     <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg> Notifications</h3>
     <button onclick="markAllRead()" style="font-size:11px;background:none;border:none;color:var(--muted);cursor:pointer;">Mark all read</button>
@@ -602,7 +602,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
           <button class="btn-a" onclick="openModal('modal-new-dm')">➕ New Message</button>
         </div>
       </div>
-      <div id="dm-user-panel" style="display:none;width:300px;min-width:300px;max-width:300px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
+      <div id="dm-user-panel" style="display:none;width:310px;min-width:310px;max-width:310px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
     </div>
 
     <!-- FRIENDS VIEW -->
@@ -743,41 +743,75 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   <div class="modal">
     <div class="modal-bar"></div>
     <div class="modal-body">
-      <div class="modal-title">✨ Create a Bastion</div>
-      <div class="modal-sub">Start your own community</div>
-      <div style="display:flex;gap:14px;margin-bottom:14px;">
-        <div id="cb-icon-preview" style="width:64px;height:64px;border-radius:16px;background:var(--panel2);border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;flex-shrink:0;overflow:hidden;" onclick="document.getElementById('cb-icon-upload').click()">🏰</div>
-        <div style="flex:1;">
-          <input id="cb-icon-upload" type="file" accept="image/*" style="display:none;" onchange="previewCBIcon(event)">
-          <input class="modal-input" id="cb-name" placeholder="Bastion name" maxlength="40">
-          <input class="modal-input" id="cb-desc" placeholder="Short description (optional)" maxlength="120">
+      <div class="modal-title">Create a Bastion</div>
+      <div class="modal-sub">Build your community — your way</div>
+      <!-- Step 1: choose path -->
+      <div id="cb-step-1">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <div onclick="showBastionStep2('custom')" style="padding:18px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:.15s;" onmouseenter="this.style.borderColor='var(--accent-mid)'" onmouseleave="this.style.borderColor='var(--border)'">
+            <div style="font-size:28px;margin-bottom:6px;">🏗️</div>
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;">Create My Own</div>
+            <div style="font-size:11.5px;color:var(--muted-light);margin-top:3px;">Start fresh from scratch</div>
+          </div>
+          <div onclick="showBastionStep2('template')" style="padding:18px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:.15s;" onmouseenter="this.style.borderColor='var(--accent-mid)'" onmouseleave="this.style.borderColor='var(--border)'">
+            <div style="font-size:28px;margin-bottom:6px;">📋</div>
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;">Start From a Template</div>
+            <div style="font-size:11.5px;color:var(--muted-light);margin-top:3px;">Pre-configured channels</div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-g" onclick="closeModal('modal-create-bastion')">Cancel</button>
         </div>
       </div>
-      <div style="font-family:'Syne',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Icon Emoji</div>
-      <div class="emoji-picker-wrap" id="cb-emoji-pick" style="margin-bottom:14px;">
-        <span style="font-size:12px;color:var(--muted-light);">Or pick an emoji:</span>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
-          <span id="cb-selected-emoji" style="font-size:22px;padding:4px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:8px;cursor:pointer;">🏰</span>
+      <!-- Step 2a: templates -->
+      <div id="cb-step-templates" style="display:none;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Choose a template</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;" id="template-grid">
+          ${[
+            {id:'gaming',emoji:'🎮',name:'Game Hall',desc:'Play together',channels:['general','lfg','clips','meta']},
+            {id:'fellowship',emoji:'🤝',name:'Fellowship',desc:'Friends & community',channels:['general','hangout','events','off-topic']},
+            {id:'guild',emoji:'⚔️',name:'Guild',desc:'Team & coordination',channels:['general','strategy','recruitment','log']},
+            {id:'study',emoji:'📚',name:'Study Circle',desc:'Learn together',channels:['general','resources','help','accountability']},
+            {id:'artisan',emoji:'🎨',name:'Artisans',desc:'Create & showcase',channels:['general','showcase','wip','feedback']},
+            {id:'academy',emoji:'🎓',name:'Academy',desc:'Teaching & courses',channels:['announcements','general','q-and-a','resources']},
+          ].map(t=>`<div onclick="selectBastionTemplate('${t.id}','${t.emoji}','${escapeHTML(t.name)}')" id="tmpl-${t.id}" style="padding:12px 8px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;transition:.15s;" onmouseenter="this.style.borderColor='var(--accent-mid)'" onmouseleave="if(!this.classList.contains('sel'))this.style.borderColor='var(--border)'">
+            <div style="font-size:24px;margin-bottom:4px;">${t.emoji}</div>
+            <div style="font-size:12px;font-weight:700;">${t.name}</div>
+            <div style="font-size:10.5px;color:var(--muted);">${t.desc}</div>
+          </div>`).join('')}
+        </div>
+        <div class="modal-actions">
+          <button class="btn-g" onclick="showBastionStep1()">← Back</button>
+          <button class="btn-a" onclick="showBastionStep2('custom',true)">Continue →</button>
+        </div>
+      </div>
+      <!-- Step 2b: custom create form -->
+      <div id="cb-step-form" style="display:none;">
+        <div style="display:flex;gap:12px;margin-bottom:14px;">
+          <div id="cb-icon-preview" style="width:60px;height:60px;border-radius:14px;background:var(--panel2);border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;flex-shrink:0;overflow:hidden;" onclick="document.getElementById('cb-icon-upload').click()">🏰</div>
+          <input id="cb-icon-upload" type="file" accept="image/*" style="display:none;" onchange="previewCBIcon(event)">
+          <div style="flex:1;">
+            <input class="modal-input" id="cb-name" placeholder="Bastion name" maxlength="40">
+            <input class="modal-input" id="cb-desc" placeholder="Short description (optional)" maxlength="120">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <span id="cb-selected-emoji" style="font-size:22px;padding:4px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:8px;cursor:pointer;" onclick="pickCBEmoji()">🏰</span>
           <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="pickCBEmoji()">Change Emoji</button>
         </div>
-      </div>
-      <div style="font-family:'Syne',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Visibility</div>
-      <div class="vis-toggle">
-        <div class="vis-opt active" id="vis-public" onclick="setCBVis('public')">
-          <div style="font-size:22px;">🌍</div>
-          <div style="font-size:13px;font-weight:700;">Public</div>
-          <div style="font-size:11px;color:var(--muted-light);">Anyone can join</div>
+        <div class="vis-toggle" style="margin-bottom:12px;">
+          <div class="vis-opt active" id="vis-public" onclick="setCBVis('public')">
+            <div style="font-size:20px;">🌍</div><div style="font-size:12px;font-weight:700;">Public</div>
+          </div>
+          <div class="vis-opt" id="vis-private" onclick="setCBVis('private')">
+            <div style="font-size:20px;">🔒</div><div style="font-size:12px;font-weight:700;">Private</div>
+          </div>
         </div>
-        <div class="vis-opt" id="vis-private" onclick="setCBVis('private')">
-          <div style="font-size:22px;">🔒</div>
-          <div style="font-size:13px;font-weight:700;">Private</div>
-          <div style="font-size:11px;color:var(--muted-light);">Invite only</div>
+        <div class="modal-error" id="cb-error"></div>
+        <div class="modal-actions">
+          <button class="btn-g" onclick="showBastionStep1()">← Back</button>
+          <button class="btn-a" onclick="createBastion()">Create Bastion ✨</button>
         </div>
-      </div>
-      <div class="modal-error" id="cb-error"></div>
-      <div class="modal-actions">
-        <button class="btn-g" onclick="closeModal('modal-create-bastion')">Cancel</button>
-        <button class="btn-a" onclick="createBastion()">Create Bastion ✨</button>
       </div>
     </div>
   </div>
@@ -1435,7 +1469,23 @@ function selectChannel(idx) {
   const el=document.getElementById('ch-sb-'+idx);
   if (el) el.classList.add('active');
 
-  if (ch.type==='voice') { joinVoice(idx); return; }
+  if (ch.type==='voice') {
+    joinVoice(idx);
+    // Show watch together + screen share in voice connected bar
+    const vcBar = document.getElementById('voice-connected-bar');
+    if (vcBar) {
+      const extra = document.getElementById('vc-ch-extra');
+      if (!extra) {
+        const div = document.createElement('div');
+        div.id = 'vc-ch-extra';
+        div.style.cssText = 'display:flex;gap:6px;padding:4px 8px;';
+        div.innerHTML = '<button onclick="startScreenShare()" title="Share Screen" style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);color:#60a5fa;padding:4px 10px;border-radius:8px;font-size:11.5px;cursor:pointer;">🖥 Screen</button>'
+          + '<button onclick="startWatchTogether()" title="Watch Together" style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);color:#a78bfa;padding:4px 10px;border-radius:8px;font-size:11.5px;cursor:pointer;">▶ Watch</button>';
+        vcBar.appendChild(div);
+      }
+    }
+    return;
+  }
 
   const wrap=document.getElementById('bastion-chat-wrap');
   if (!wrap) return;
@@ -1636,7 +1686,10 @@ function appendMessage(container, msg, context, prevAuthor) {
   row.dataset.from=msg.from||'';
 
   const replyHTML=msg.replyTo?`<div class="msg-reply-ref">↩ <strong>${escapeHTML(msg.replyTo.from||'')}</strong>: ${escapeHTML((msg.replyTo.text||'').slice(0,60))}</div>`:'';
-  const fwdHTML=msg.forwarded?`<div class="msg-forward-tag">↪ Forwarded</div>`:'';
+  const fwdHTML=msg.forwarded?`<div style="display:flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,.04);border-left:2px solid rgba(255,255,255,.2);border-radius:4px;margin-bottom:5px;font-size:12px;color:var(--muted);">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15,17 20,12 15,7"/><path d="M4,18v-2a4,4,0,0,1,4-4h12"/></svg>
+    <span style="font-weight:600;">Forwarded</span>${msg.forwardedBy&&msg.forwardedBy!==msg.from?` <span style="opacity:.7;">by ${escapeHTML(msg.forwardedBy)}</span>`:''}
+  </div>`:'';
   const editTag=msg.edited?`<span class="msg-edited">(edited)</span>`:'';
   const reactHTML=msg.reactions?Object.entries(msg.reactions).map(([emoji,users])=>{
     const arr=Array.isArray(users)?users:Object.values(users);
@@ -1683,12 +1736,12 @@ function buildMsgActions(msg, context, id) {
   const safeFrom=escapeHTML(msg.from||'');
   const safeText=escapeHTML((msg.text||'').replace(/'/g,' ').slice(0,100));
   return `<div class="msg-acts">
-    <button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply">↩</button>
-    <button onclick="addReactionUI(event,'${safeId}','${context}')" title="React">😊</button>
-    <button onclick="forwardMsg('${safeText}')" title="Forward">↪</button>
-    ${isOwn?`<button onclick="editMsg('${safeId}')" title="Edit">✏️</button>`:''}
-    ${isOwn?`<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:var(--red);">🗑</button>`:''}
-    <button onclick="reportMessage('${safeId}','${safeText}')" title="Report" style="color:var(--muted);">🚩</button>
+    <button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply" style="display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg></button>
+    <button onclick="addReactionUI(event,'${safeId}','${context}')" title="React" style="display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
+    <button onclick="forwardMsg('${safeText}')" title="Forward" style="display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>
+    ${isOwn?`<button onclick="editMsg('${safeId}')" title="Edit" style="display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`:''}
+    ${isOwn?`<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:var(--red);display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:''}
+    <button onclick="reportMessage('${safeId}','${safeText}')" title="Report" style="color:var(--muted);display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>
   </div>`;
 }
 
@@ -1727,7 +1780,7 @@ function cancelEdit(msgId, original) {
   const textEl=row?.querySelector('.msg-text');
   if (textEl) textEl.innerHTML=parseMD(escapeHTML(original));
 }
-function saveEdit(msgId) {
+async function saveEdit(msgId) {
   const ta=document.getElementById('edit-ta');
   if (!ta) return;
   const newText=ta.value.trim();
@@ -1736,6 +1789,16 @@ function saveEdit(msgId) {
   if (row) row.dataset.text=newText;
   const textEl=row?.querySelector('.msg-text');
   if (textEl) textEl.innerHTML=parseMD(escapeHTML(newText))+'<span class="msg-edited">(edited)</span>';
+  // Persist to Firebase
+  try {
+    if (curDM) {
+      await firebase.database().ref(`dms/${[CU.username,curDM].sort().join('__')}/${msgId}`).update({text:newText,edited:true});
+    } else {
+      const b=CU.bastions?.[curBastion]; const ch=b?.channels?.[curChannel];
+      const bid=b?.globalId||b?.name; const chName=ch?.name||'general';
+      await firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`).update({text:newText,edited:true});
+    }
+  } catch(e){ console.warn('Edit persist error',e); }
   toast('Message edited','success');
 }
 function deleteMsg(msgId, context) {
@@ -1775,11 +1838,13 @@ function deleteMsg(msgId, context) {
     const ctx = context || (curDM ? 'dm' : 'ch');
     try {
       if (ctx==='dm') {
-        await FortizedSocial.deleteDMMessage?.(CU.username, curDM, msgId);
+        await firebase.database().ref(`dms/${[CU.username,curDM].sort().join('__')}/${msgId}`).remove();
       } else {
         const b = CU.bastions?.[curBastion];
         const ch = b?.channels?.[curChannel];
-        await FortizedSocial.deleteBastionMessage?.(b?.globalId||b?.name, ch?.name||'general', msgId);
+        const bid = b?.globalId||b?.name;
+        const chName = ch?.name||'general';
+        await firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`).remove();
       }
     } catch {}
     toast('Message deleted','success');
@@ -1795,8 +1860,18 @@ function forwardMsg(text) {
   openModal('modal-forward');
 }
 async function forwardToDM(username) {
-  try { await FortizedSocial.sendDMMessage(CU.username,username,forwardMsgText+' [forwarded]'); toast('Forwarded to '+username,'success'); }
-  catch { toast('Forward failed','error'); }
+  try {
+    const now=new Date();
+    const msg={
+      id:Date.now().toString(36)+Math.random().toString(36).slice(2),
+      from:CU.username, text:forwardMsgText,
+      forwarded:true, forwardedBy:CU.username,
+      time:now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+      timestamp:now.toISOString()
+    };
+    await firebase.database().ref(`dms/${[CU.username,username].sort().join('__')}/${msg.id}`).set(msg);
+    toast('Forwarded to '+username,'success');
+  } catch { toast('Forward failed','error'); }
 }
 function addReactionUI(e, msgId, context) {
   const emojis=['👍','❤️','😂','😮','😢','🔥','✨','👀','🎉','💯'];
@@ -2111,6 +2186,7 @@ function updateDOBField(){
 
   updateUserbar();
   renderRailBastions();
+  if(typeof startVCListener==='function') startVCListener(CU.username);
 
   // Hide loading screen immediately
   const loader=document.getElementById('app-loading');
@@ -2196,6 +2272,68 @@ function selectCBEmoji(emoji) {
   if (prev && !cbIconData) prev.textContent = emoji;
 }
 
+
+// ════════════════════════════════════════════
+// BASTION CREATION WIZARD
+// ════════════════════════════════════════════
+let _selectedBastionTemplate = null;
+
+function showBastionStep1() {
+  _selectedBastionTemplate = null;
+  const s1=document.getElementById('cb-step-1');
+  const st=document.getElementById('cb-step-templates');
+  const sf=document.getElementById('cb-step-form');
+  if(s1){s1.style.display='';} if(st){st.style.display='none';} if(sf){sf.style.display='none';}
+  // reset template selection
+  document.querySelectorAll('[id^=tmpl-]').forEach(el=>el.classList.remove('sel'));
+}
+
+function showBastionStep2(type, fromTemplate) {
+  const s1=document.getElementById('cb-step-1');
+  const st=document.getElementById('cb-step-templates');
+  const sf=document.getElementById('cb-step-form');
+  if(s1) s1.style.display='none';
+  if(type==='template' && !fromTemplate) {
+    if(st) st.style.display=''; if(sf) sf.style.display='none';
+  } else {
+    if(st) st.style.display='none'; if(sf) sf.style.display='';
+    if(_selectedBastionTemplate) {
+      const nameInp=document.getElementById('cb-name');
+      const emojiEl=document.getElementById('cb-selected-emoji');
+      const iconPrev=document.getElementById('cb-icon-preview');
+      if(nameInp && !nameInp.value) nameInp.value = _selectedBastionTemplate.name;
+      if(emojiEl) emojiEl.textContent = _selectedBastionTemplate.emoji;
+      if(iconPrev) iconPrev.textContent = _selectedBastionTemplate.emoji;
+    }
+    setTimeout(()=>{document.getElementById('cb-name')?.focus();},80);
+  }
+}
+
+function selectBastionTemplate(id, emoji, name) {
+  _selectedBastionTemplate = {id, emoji, name};
+  document.querySelectorAll('[id^=tmpl-]').forEach(el=>{
+    el.classList.remove('sel');
+    el.style.borderColor='var(--border)';
+    el.style.background='transparent';
+  });
+  const el=document.getElementById('tmpl-'+id);
+  if(el){
+    el.classList.add('sel');
+    el.style.borderColor='var(--accent-mid)';
+    el.style.background='var(--accent-dim)';
+  }
+}
+
+// Template channel presets
+const BASTION_TEMPLATES = {
+  gaming:     {channels:['general','lfg','clips','meta','events'],       emoji:'🎮'},
+  fellowship: {channels:['general','hangout','events','off-topic','memes'],emoji:'🤝'},
+  guild:      {channels:['general','strategy','recruitment','log','voice-lobby'],emoji:'⚔️'},
+  study:      {channels:['general','resources','help','accountability','study-hall'],emoji:'📚'},
+  artisan:    {channels:['general','showcase','wip','feedback','resources'],emoji:'🎨'},
+  academy:    {channels:['announcements','general','q-and-a','resources','office-hours'],emoji:'🎓'},
+};
+
 async function createBastion() {
   const name = document.getElementById('cb-name')?.value?.trim();
   const desc = document.getElementById('cb-desc')?.value?.trim();
@@ -2203,6 +2341,10 @@ async function createBastion() {
   if (!name) { if(err)err.textContent='Bastion name is required'; return; }
   if (err) err.textContent = '';
 
+    const tmpl = _selectedBastionTemplate && BASTION_TEMPLATES[_selectedBastionTemplate.id];
+  const _chs = tmpl
+    ? tmpl.channels.map(n=>({name:n,type:(n.includes('voice')||n.includes('vc')||n.includes('lobby'))?'voice':'text',desc:''}))
+    : [{name:'general',type:'text',desc:'General discussion'},{name:'announcements',type:'text',desc:''},{name:'voice',type:'voice',desc:''}];
   const bastion = {
     name, desc: desc||'',
     emblem: cbSelectedEmoji||'🏰',
@@ -3124,14 +3266,41 @@ async function buildNotifList() {
   const list=document.getElementById('np-list'); if(!list) return;
   let notifs=[];
   try{notifs=await FortizedSocial.getNotifications(CU.username)||[];}catch{}
-  if(!notifs.length){list.innerHTML=`<div style="padding:20px;text-align:center;font-size:13px;color:var(--muted);">✓ All caught up!</div>`;return;}
-  list.innerHTML=notifs.slice(0,20).map(n=>{
-    let icon='🔔',text='';
-    if(n.type==='friend_request'){icon='👥';text=`<strong>${escapeHTML(n.from)}</strong> sent you a friend request`;}
-    else if(n.type==='friend_accept'){icon='🤝';text=`<strong>${escapeHTML(n.from)}</strong> accepted your request`;}
-    else if(n.type==='dm'){icon='💬';text=`<strong>${escapeHTML(n.from)}</strong>: ${escapeHTML((n.data?.preview||'').slice(0,50))}`;}
-    const actions=n.type==='friend_request'?`<div class="np-actions"><button class="np-accept" onclick="acceptFriend('${n.from}');buildNotifList()">Accept</button><button class="np-decline" onclick="declineFriend('${n.from}');buildNotifList()">Decline</button></div>`:'';
-    return`<div class="np-item ${n.read?'':'unread'}"><div class="np-icon">${icon}</div><div class="np-text"><p>${text}</p><div class="np-time">${formatTimeAgo(n.time)}</div>${actions}</div></div>`;
+  if(!notifs.length){
+    list.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;">'
+      +'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>'
+      +'<div style="font-size:13px;color:var(--muted);text-align:center;">All caught up!<br><span style="font-size:11.5px;opacity:.6;">No new notifications</span></div></div>';
+    return;
+  }
+  const svgs = {
+    friend_request:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+    friend_accept: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>',
+    dm:            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+    mention:       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 006 0v-1a10 10 0 10-3.92 7.94"/></svg>',
+    bastion:       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',
+    call:          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 012 1.18a2 2 0 012-2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 6.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>',
+  };
+  const colors = {
+    friend_request:'#60a5fa', friend_accept:'#3ecf6e', dm:'#a78bfa',
+    mention:'#ffd93e', bastion:'var(--accent)', call:'#3ecf6e',
+  };
+  list.innerHTML = notifs.slice(0,25).map(n => {
+    const svg = svgs[n.type] || svgs.bastion;
+    const col = colors[n.type] || 'var(--accent)';
+    let text='';
+    if(n.type==='friend_request') text='<strong>'+escapeHTML(n.from)+'</strong> sent you a friend request';
+    else if(n.type==='friend_accept') text='<strong>'+escapeHTML(n.from)+'</strong> accepted your request — you are now friends!';
+    else if(n.type==='dm') text='<strong>'+escapeHTML(n.from)+'</strong>: '+escapeHTML((n.data?.preview||'').slice(0,60));
+    else if(n.type==='mention') text='<strong>'+escapeHTML(n.from)+'</strong> mentioned you';
+    else if(n.type==='call') text='<strong>'+escapeHTML(n.from)+'</strong> called you';
+    else text='New notification';
+    const actions = n.type==='friend_request'
+      ? '<div class="np-actions"><button class="np-accept" onclick="acceptFriend(\''+n.from+'\');buildNotifList()">Accept</button><button class="np-decline" onclick="declineFriend(\''+n.from+'\');buildNotifList()">Decline</button></div>'
+      : '';
+    return '<div class="np-item '+(n.read?'':'unread')+'" onclick="'+(n.type==='dm'?"openDMChat('"+escapeHTML(n.from)+"');toggleNotifPanel()":'')+'">'
+      +'<div class="np-icon" style="color:'+col+';background:'+col+'1a;border-color:'+col+'33;">'+svg+'</div>'
+      +'<div class="np-text"><p>'+text+'</p>'
+      +'<div class="np-time">'+formatTimeAgo(n.time)+'</div>'+actions+'</div></div>';
   }).join('');
 }
 
@@ -3149,6 +3318,8 @@ async function viewUserProfile(username) {
   let status = 'offline';
   try { status = await FortizedSocial.getStatus(username); } catch {}
   if (username === CU.username) status = CU.status || 'online';
+  // Subscribe to real-time status updates for this profile
+  subscribeProfileStatus(username);
 
   const isOwn = username === CU.username;
   const isFriend = (CU.friends||[]).includes(username);
@@ -3195,7 +3366,11 @@ async function viewUserProfile(username) {
           ${hasRadiance?'<div style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,200,62,.18),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:3px 11px;font-size:11px;font-weight:700;color:#ffd93e;">✨ Radiance Active</div>':''}
         </div>
         ${u.bio?`<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">About Me</div><div style="font-size:13px;color:var(--muted-light);line-height:1.55;">${escapeHTML(u.bio)}</div></div>`:''}
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;"><span style="width:9px;height:9px;border-radius:50%;background:${sc};"></span><span style="font-size:12.5px;color:var(--muted-light);">${SL[status]||status}</span></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:9px;height:9px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
+          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:12.5px;color:var(--muted-light);">${SL[status]||status}</span>
+        </div>
+        ${u.customStatus?.text?`<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;font-size:11.5px;margin-bottom:10px;">${u.customStatus.emoji||''} ${escapeHTML(u.customStatus.text)}</div>`:`<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;padding:3px 10px;border-radius:100px;font-size:11.5px;margin-bottom:10px;"></div>`}
         ${socialHTML?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">${socialHTML}</div>`:''}
         ${joinedDate?`<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Member Since</div><div style="font-size:13px;color:var(--muted-light);">${joinedDate}</div></div>`:''}
         <div style="display:flex;gap:8px;">
@@ -3212,13 +3387,13 @@ async function viewUserProfile(username) {
       : '';
 
     modalEl.innerHTML = `
-      <div style="position:relative;height:110px;background:linear-gradient(135deg,#0f1830,#1a0f30);margin:-24px -24px 0;overflow:hidden;border-radius:18px 18px 0 0;">
+      <div style="position:relative;height:140px;background:linear-gradient(135deg,#0f1830,#1a0f30);margin:-24px -24px 0;overflow:hidden;border-radius:18px 18px 0 0;">
         <img src="${u.banner||''}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
       </div>
       <div style="padding:0 18px 18px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-32px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-40px;margin-bottom:12px;">
           <div style="position:relative;">
-            <div style="width:72px;height:72px;border-radius:50%;background:var(--panel2);border:4px solid var(--panel);overflow:hidden;">${buildAvatarHTML(u.pfp,u.displayName||u.username,72)}</div>
+            <div style="width:84px;height:84px;border-radius:50%;background:var(--panel2);border:4px solid var(--panel);overflow:hidden;">${buildAvatarHTML(u.pfp,u.displayName||u.username,84)}</div>
             <span style="position:absolute;bottom:4px;right:4px;width:13px;height:13px;border-radius:50%;background:${sc};border:2px solid var(--panel);"></span>
           </div>
           <div style="display:flex;gap:6px;padding-top:36px;">
@@ -3238,7 +3413,10 @@ async function viewUserProfile(username) {
           <div style="font-size:12px;color:var(--muted);">@${escapeHTML(u.username)}</div>
           ${hasRadiance?'<div style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,200,62,.18),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:3px 11px;font-size:11px;font-weight:700;color:#ffd93e;">✨ Radiance</div>':''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;"><span style="width:9px;height:9px;border-radius:50%;background:${sc};"></span><span style="font-size:12.5px;color:var(--muted-light);">${SL[status]||status}</span></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:9px;height:9px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
+          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:12.5px;color:var(--muted-light);">${SL[status]||status}</span>
+        </div>
         ${u.bio?`<div style="margin-bottom:14px;padding:10px 12px;background:var(--panel2);border-radius:11px;border-left:3px solid rgba(255,255,255,.08);"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">About Me</div><div style="font-size:13px;color:var(--muted-light);line-height:1.55;">${escapeHTML(u.bio)}</div></div>`:''}
         ${gameHTML}
         ${socialHTML?`<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;">Connected</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${socialHTML}</div></div>`:''}
@@ -3285,16 +3463,25 @@ function handleContextMenu(e) {
   if(msgRow) {
     const msgId=msgRow.dataset.msgid;
     const text=msgRow.dataset.text||'';
-    const isOwn=msgRow.classList.contains('own');
+    const isOwn=msgRow.dataset.from===CU.username;
+    const svgReply='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>';
+    const svgEmoji='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>';
+    const svgFwd='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg>';
+    const svgCopy='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+    const svgPin='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h5l-4 5 2 7-6-4-6 4 2-7-4-5h5z"/></svg>';
+    const svgEdit='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+    const svgDel='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+    const svgReport='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
     items=[
       {section:true,label:'Message'},
-      {icon:'↩',label:'Reply',action:()=>replyToMsg(msgId,msgRow.querySelector('.msg-author')?.textContent||'',curDM?'dm':'ch')},
-      {icon:'😊',label:'Add Reaction',action:()=>addReactionUI(msgId,curDM?'dm':'ch')},
-      {icon:'↪',label:'Forward',action:()=>forwardMsg(text)},
-      {icon:'📋',label:'Copy Text',action:()=>navigator.clipboard.writeText(text)},
+      {icon:svgReply,label:'Reply',action:()=>replyToMsg(msgId,msgRow.querySelector('.msg-author')?.textContent||'',curDM?'dm':'ch')},
+      {icon:svgEmoji,label:'Add Reaction',action:()=>addReactionUI(msgId,curDM?'dm':'ch')},
+      {icon:svgFwd,label:'Forward',action:()=>forwardMsg(text)},
+      {icon:svgCopy,label:'Copy Text',action:()=>navigator.clipboard.writeText(text)},
+      {icon:svgPin,label:'Pin Message',action:()=>pinMessage(msgId,text)},
       {sep:true},
-      {icon:'🚩',label:'Report Message',action:()=>reportMessage(msgId,text)},
-      ...(isOwn?[{sep:true},{icon:'✏️',label:'Edit',action:()=>editMsg(msgId,curDM?'dm':'ch')},{icon:'🗑️',label:'Delete',danger:true,action:()=>deleteMsg(msgId,curDM?'dm':'ch',true)}]:[]),
+      {icon:svgReport,label:'Report Message',action:()=>reportMessage(msgId,text)},
+      ...(isOwn?[{sep:true},{icon:svgEdit,label:'Edit',action:()=>editMsg(msgId,curDM?'dm':'ch')},{icon:svgDel,label:'Delete',danger:true,action:()=>deleteMsg(msgId,curDM?'dm':'ch',true)}]:[]),
     ];
   } else if(isInput) {
     items=[
@@ -4918,14 +5105,26 @@ function parseMD(s) {
   });
   // 5. Fortized invite/bastion link — show embed card
   s = s.replace(/https?:\/\/[^\s]*\?invite=([\w]+)/gi, (url, code) => {
-    return `<div style="display:inline-flex;align-items:center;gap:10px;padding:10px 16px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:12px;margin:4px 0;cursor:pointer;" onclick="openExternalLink(event,'${escapeHTML(url)}')">` +
-      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>` +
-      `<div><div style="font-size:13px;font-weight:700;color:var(--accent);">Join Bastion</div><div style="font-size:11px;color:var(--muted-light);">Invite code: ${escapeHTML(code)}</div></div></div>`;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,var(--accent-dim),rgba(78,205,196,.04));border:1px solid var(--accent-mid);border-radius:14px;margin:6px 0;cursor:pointer;max-width:380px;" onclick="joinByInvite('${escapeHTML(code)}')">
+      <div style="width:42px;height:42px;border-radius:12px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🏰</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13.5px;font-weight:800;color:var(--accent);margin-bottom:2px;">Fortized Bastion Invite</div>
+        <div style="font-size:11.5px;color:var(--muted-light);">Code: <code style="background:rgba(255,255,255,.08);padding:1px 6px;border-radius:4px;">${escapeHTML(code)}</code></div>
+      </div>
+      <div style="flex-shrink:0;background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:5px 12px;border-radius:8px;">Join →</div>
+    </div>`;
   });
   // 6. All other URLs — yellow clickable link
-  s = s.replace(/(?<![='"\(])(https?:\/\/[^\s<>"'\)]+)/gi, url => {
+  s = s.replace(/(?<![='"(])(https?:\/\/[^\s<>"'()]+)/gi, url => {
     const safe = escapeHTML(url);
-    return `<a href="#" onclick="openExternalLink(event,'${safe}')" style="color:var(--accent);text-decoration:underline;text-underline-offset:2px;">${safe}</a>`;
+    // Detect common sites for branded link display
+    let badge='🔗', domain='';
+    try { domain = new URL(url).hostname.replace('www.',''); } catch {}
+    if(domain.includes('github.com')) badge='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48v-1.69c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10.02 10.02 0 0022 12c0-5.52-4.48-10-10-10z"/></svg>';
+    else if(domain.includes('twitter.com')||domain.includes('x.com')) badge='𝕏';
+    else if(domain.includes('roblox.com')) badge='🎮';
+    else if(domain.includes('discord.gg')||domain.includes('discord.com')) badge='🎮';
+    return '<a href="#" onclick="openExternalLink(event,\''+safe+'\')" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(78,205,196,.3);padding-bottom:1px;font-size:inherit;">'+badge+' '+safe+'</a>';
   });
   // Markdown formatting
   return s
@@ -5192,15 +5391,17 @@ function isUserBlocked(username) {
 // ════════════════════════════════════════════
 // NOTIFICATION SOUND (louder + DND-aware)
 // ════════════════════════════════════════════
+let _notifSoundPlaying = false;
 function playNotifSound(type = 'message') {
-  // Respect DND and sounds setting
   if (CU?.status === 'dnd') return;
   if (!notifSettings?.sounds) return;
-
+  if (_notifSoundPlaying) return; // coalesce: only one at a time
+  _notifSoundPlaying = true;
+  setTimeout(()=>{ _notifSoundPlaying=false; }, 800);
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const master = ctx.createGain();
-    master.gain.value = 0.85; // loud but not jarring
+    master.gain.value = 0.5;
     master.connect(ctx.destination);
 
     if (type === 'message') {
@@ -5228,7 +5429,19 @@ function playNotifSound(type = 'message') {
         g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
         osc.start(t); osc.stop(t + 0.25);
       });
-    } else if (type === 'mention') {
+    } else if (type === 'call') {
+      // Rising tone for incoming call
+      [440, 550, 660, 550].forEach((freq, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(master);
+        o.type = 'sine'; o.frequency.value = freq;
+        const t = ctx.currentTime + i * 0.15;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.5, t + 0.04);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        o.start(t); o.stop(t + 0.15);
+      });
+  } else if (type === 'mention') {
       // Sharp alert ping
       const osc = ctx.createOscillator();
       const g = ctx.createGain();
@@ -5479,6 +5692,7 @@ async function showDMUserPanel(username) {
   if (!panel) return;
   panel.style.display = 'block';
   panel.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center;">Loading\u2026</div>';
+  subscribeProfileStatus(username);
   let u = null;
   try { u = await FortizedSocial.getUserByName(username); } catch {}
   if (!u) u = { username, displayName: username };
@@ -5523,6 +5737,7 @@ async function showDMUserPanel(username) {
     + '<div style="padding:0 14px 12px;border-bottom:1px solid var(--border);">'
     + '<div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;margin-bottom:1px;">' + escapeHTML(u.displayName||u.username) + '</div>'
     + '<div style="font-size:11px;color:var(--muted);">@' + escapeHTML(u.username) + '</div>'
+    + (u.customStatus?.text ? '<div class="profile-custom-status" data-for="'+escapeHTML(u.username)+'" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;font-size:11px;margin-top:4px;">'+u.customStatus.emoji+' '+escapeHTML(u.customStatus.text)+'</div>' : '<div class="profile-custom-status" data-for="'+escapeHTML(u.username)+'" style="display:none;"></div>')
     + (hasR ? '<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.15),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.25);border-radius:100px;padding:2px 8px;font-size:9.5px;font-weight:700;color:#ffd93e;margin-top:4px;">\u2728 Radiance</div>' : '')
     + '</div>'
     + (u.bio ? '<div style="padding:12px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">About Me</div><div style="font-size:12.5px;color:var(--muted-light);line-height:1.55;">' + escapeHTML(u.bio) + '</div></div>' : '')
@@ -5535,6 +5750,10 @@ async function showDMUserPanel(username) {
     + (socialHtml ? '<div style="padding:12px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Connected</div>' + socialHtml + '</div>' : '')
     + gamesHtml
     + '<div style="padding:12px 14px;">'
+    + '<div style="display:flex;gap:6px;margin-bottom:8px;">'  
+    + '<button onclick="startVoiceCall(\'' + escapeHTML(username) + '\')" style="flex:1;padding:8px;border-radius:10px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.25);color:#3ecf6e;font-size:12.5px;cursor:pointer;font-weight:600;">📞 Voice Call</button>'
+    + '<button onclick="showPinnedMessages()" style="flex:1;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);font-size:12.5px;cursor:pointer;font-weight:600;">📌 Pins</button>'
+    + '</div>'
     + '<button onclick="viewUserProfile(\'' + escapeHTML(username) + '\')" style="width:100%;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);font-size:12.5px;cursor:pointer;font-weight:600;">View Full Profile</button>'
     + '</div>';
 }
@@ -5582,7 +5801,9 @@ function renderFavGifs(targetInput) {
   const grid = document.getElementById('giphy-grid');
   if (!grid) return;
   if (!favs.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:13px;">No favourite GIFs yet.<br>Star a GIF to save it here!</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px;gap:8px;">'
+      + '<div style="font-size:28px;">⭐</div>'
+      + '<div style="text-align:center;font-size:12.5px;color:var(--muted);">No saved GIFs yet.<br>Hover a GIF and click ★ to save it!</div></div>';
     return;
   }
   grid.innerHTML = favs.map(gif => {
@@ -5610,17 +5831,19 @@ function openGiphyPicker(inputId) {
   const picker = document.createElement('div');
   picker.id = 'giphy-picker';
   picker.style.cssText = `position:fixed;left:${Math.max(8,rect.left)}px;bottom:${window.innerHeight-rect.top+8}px;`
-    + 'width:340px;max-height:380px;background:var(--panel);border:1px solid var(--border);border-radius:16px;z-index:8000;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.5);';
+    + 'width:380px;max-height:460px;background:var(--panel);border:1px solid var(--border);border-radius:18px;z-index:8000;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.7);backdrop-filter:blur(20px);';
 
   picker.innerHTML = `
-    <div style="padding:10px 12px 8px;border-bottom:1px solid var(--border);flex-shrink:0;">
-      <input id="giphy-search-input" class="field-input" placeholder="Search GIFs…" style="width:100%;font-size:12.5px;padding:6px 10px;" oninput="handleGiphySearch(this.value,'${escapeHTML(_giphyInput)}')">
-      <div style="display:flex;gap:4px;margin-top:8px;">
-        <button id="gtab-trending" onclick="switchGiphyTab('trending','${escapeHTML(_giphyInput)}')" style="flex:1;padding:5px;border-radius:8px;border:1px solid var(--accent-mid);background:var(--accent-dim);color:var(--accent);font-size:11.5px;font-weight:700;cursor:pointer;">🔥 Trending</button>
-        <button id="gtab-favourites" onclick="switchGiphyTab('favourites','${escapeHTML(_giphyInput)}')" style="flex:1;padding:5px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted-light);font-size:11.5px;font-weight:700;cursor:pointer;">⭐ Favourites</button>
+    <div style="padding:12px 14px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--accent);margin-bottom:8px;">GIF Picker</div>
+      <input id="giphy-search-input" class="field-input" placeholder="🔍 Search millions of GIFs…" style="width:100%;font-size:12.5px;padding:7px 12px;" oninput="handleGiphySearch(this.value,'${escapeHTML(_giphyInput)}')">
+      <div style="display:flex;gap:5px;margin-top:8px;">
+        <button id="gtab-trending" onclick="switchGiphyTab('trending','${escapeHTML(_giphyInput)}')" style="flex:1;padding:6px;border-radius:9px;border:1px solid var(--accent-mid);background:var(--accent-dim);color:var(--accent);font-size:11.5px;font-weight:700;cursor:pointer;transition:.15s;">🔥 Trending</button>
+        <button id="gtab-favourites" onclick="switchGiphyTab('favourites','${escapeHTML(_giphyInput)}')" style="flex:1;padding:6px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted-light);font-size:11.5px;font-weight:700;cursor:pointer;transition:.15s;">⭐ Saved</button>
       </div>
     </div>
-    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;"></div>
+    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:10px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px;"></div>
+    <div style="padding:6px 10px;text-align:center;border-top:1px solid var(--border);font-size:10px;color:var(--muted);flex-shrink:0;">Powered by GIPHY</div>
   `;
 
   document.body.appendChild(picker);
@@ -5682,12 +5905,24 @@ function renderGiphyResults(gifs, inputId) {
   if (!grid) return;
   if (!gifs || !gifs.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">No results</div>'; return; }
   grid.innerHTML = gifs.map(g => {
-    const url = g.images?.fixed_height_small?.url || g.images?.original?.url || '';
-    return `<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;cursor:pointer;background:var(--panel2);" onclick="insertGifById('${g.id}','${escapeHTML(inputId)}')">
-      <img src="${escapeHTML(url)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
-      <button onclick="event.stopPropagation();saveFavGif({id:'${g.id}',url:'${escapeHTML(url)}'})" title="Favourite" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.55);border:none;color:#ffd93e;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">★</button>
+    const url = g.images?.fixed_height_small?.url || g.images?.fixed_height?.url || g.images?.original?.url || '';
+    return `<div style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:var(--panel2);aspect-ratio:4/3;" onclick="insertGifById('${g.id}','${escapeHTML(inputId)}')">
+      <img src="${escapeHTML(url)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" draggable="false" oncontextmenu="return false" ondragstart="return false">
+      <div style="position:absolute;inset:0;opacity:0;transition:.15s;background:rgba(0,0,0,.4);" class="gif-hover-overlay"></div>
+      <button onclick="event.stopPropagation();saveFavGif({id:'${g.id}',url:'${escapeHTML(url)}'})" title="Favourite" style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,.7);border:none;color:#ffd93e;border-radius:50%;width:24px;height:24px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.15s;" class="gif-fav-btn">★</button>
     </div>`;
   }).join('');
+  // Hover reveal fav button
+  grid.querySelectorAll('div[style*=aspect-ratio]').forEach(card=>{
+    card.addEventListener('mouseenter',()=>{
+      card.querySelector('.gif-hover-overlay').style.opacity='1';
+      card.querySelector('.gif-fav-btn').style.opacity='1';
+    });
+    card.addEventListener('mouseleave',()=>{
+      card.querySelector('.gif-hover-overlay').style.opacity='0';
+      card.querySelector('.gif-fav-btn').style.opacity='0';
+    });
+  });
 }
 
 function insertGifById(id, inputId) {
@@ -5722,6 +5957,10 @@ function openFileUpload(context) {
     fileInp.remove();
   };
 }
+
+
+function _closeEl(id){var e=document.getElementById(id);if(e)e.remove();}
+function _closeWTPlayer(){_closeEl('wt-player-overlay');if(_vc)_vc.watchingTogether=false;}
 
 function _clearAttachment(){var b=document.getElementById("attach-preview-bar");if(b)b.remove();window._pendingAttachment=null;}
 function showAttachmentPreview(name, type, dataUrl, size, context) {
@@ -6014,6 +6253,422 @@ function ftzTimeAgo(date) {
   if (d<3600000) return Math.floor(d/60000)+'m ago';
   if (d<86400000) return Math.floor(d/3600000)+'h ago';
   return Math.floor(d/86400000)+'d ago';
+}
+
+// ════════════════════════════════════════════
+// VOICE CALL (WebRTC P2P, Discord-style)
+// ════════════════════════════════════════════
+let _vc = {
+  pc: null, localStream: null, remoteStream: null,
+  partner: null, isCaller: false,
+  muted: false, deafened: false,
+  screenStream: null, watchingTogether: false, watchYtUrl: '',
+  sigRef: null,
+};
+
+function vcSignalPath(a, b) {
+  return 'vcSignal/' + [a,b].sort().join('__');
+}
+
+async function startVoiceCall(partner) {
+  if (_vc.pc) { toast('Already in a call','error'); return; }
+  _vc.partner = partner; _vc.isCaller = true;
+  await _vcSetup(true);
+  toast('Calling '+partner+'…','info');
+  // Signal the offer
+  const offer = await _vc.pc.createOffer();
+  await _vc.pc.setLocalDescription(offer);
+  const path = vcSignalPath(CU.username, partner);
+  await firebase.database().ref(path).set({ type:'offer', from:CU.username, sdp:offer.sdp, ts:Date.now() });
+  // Listen for answer
+  firebase.database().ref(path+'/answer').on('value', async snap => {
+    const ans = snap.val();
+    if (!ans||!ans.sdp) return;
+    if (_vc.pc.signalingState==='have-local-offer') {
+      await _vc.pc.setRemoteDescription({type:'answer',sdp:ans.sdp});
+    }
+    firebase.database().ref(path+'/answer').off('value');
+  });
+  renderVoiceCallUI(partner, true);
+}
+
+async function answerVoiceCall(partner, offerSdp) {
+  if (_vc.pc) endVoiceCall(); // replace existing
+  _vc.partner = partner; _vc.isCaller = false;
+  await _vcSetup(false);
+  await _vc.pc.setRemoteDescription({type:'offer',sdp:offerSdp});
+  const answer = await _vc.pc.createAnswer();
+  await _vc.pc.setLocalDescription(answer);
+  const path = vcSignalPath(partner, CU.username);
+  await firebase.database().ref(path+'/answer').set({sdp:answer.sdp,ts:Date.now()});
+  renderVoiceCallUI(partner, false);
+}
+
+async function _vcSetup(isCaller) {
+  _vc.localStream = await navigator.mediaDevices.getUserMedia({audio:true,video:false}).catch(()=>null);
+  _vc.pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]});
+  if (_vc.localStream) _vc.localStream.getTracks().forEach(t=>_vc.pc.addTrack(t,_vc.localStream));
+  _vc.pc.ontrack = e => {
+    _vc.remoteStream = e.streams[0];
+    let audioEl = document.getElementById('vc-remote-audio');
+    if (!audioEl) { audioEl=document.createElement('audio'); audioEl.id='vc-remote-audio'; audioEl.autoplay=true; document.body.appendChild(audioEl); }
+    audioEl.srcObject = _vc.remoteStream;
+  };
+  const path = vcSignalPath(CU.username, _vc.partner);
+  _vc.pc.onicecandidate = e => {
+    if (e.candidate) {
+      firebase.database().ref(path+'/ice/'+CU.username).push({c:JSON.stringify(e.candidate),ts:Date.now()});
+    }
+  };
+  // Listen for remote ICE
+  const remoteIcePath = path+'/ice/'+_vc.partner;
+  firebase.database().ref(remoteIcePath).on('child_added', snap => {
+    const d = snap.val();
+    if (d?.c && _vc.pc) _vc.pc.addIceCandidate(JSON.parse(d.c)).catch(()=>{});
+  });
+  _vc.sigRef = path;
+}
+
+async function endVoiceCall() {
+  if (_vc.localStream) _vc.localStream.getTracks().forEach(t=>t.stop());
+  if (_vc.screenStream) _vc.screenStream.getTracks().forEach(t=>t.stop());
+  if (_vc.pc) { _vc.pc.close(); }
+  if (_vc.sigRef) {
+    firebase.database().ref(_vc.sigRef).update({ended:true,endedBy:CU.username,ts:Date.now()});
+    firebase.database().ref(_vc.sigRef+'/ice').off();
+  }
+  document.getElementById('vc-remote-audio')?.remove();
+  document.getElementById('vc-call-bar')?.remove();
+  document.getElementById('vc-watch-overlay')?.remove();
+  _vc = {pc:null,localStream:null,remoteStream:null,partner:null,isCaller:false,muted:false,deafened:false,screenStream:null,watchingTogether:false,watchYtUrl:'',sigRef:null};
+}
+
+function toggleVCMute() {
+  _vc.muted = !_vc.muted;
+  if (_vc.localStream) _vc.localStream.getAudioTracks().forEach(t=>t.enabled=!_vc.muted);
+  document.getElementById('vc-mute-btn')?.classList.toggle('vc-active', _vc.muted);
+  updateVCBar();
+}
+function toggleVCDeafen() {
+  _vc.deafened = !_vc.deafened;
+  const a = document.getElementById('vc-remote-audio');
+  if (a) a.muted = _vc.deafened;
+  updateVCBar();
+}
+
+async function startScreenShare() {
+  if (_vc.screenStream) {
+    // Stop sharing
+    _vc.screenStream.getTracks().forEach(t=>t.stop()); _vc.screenStream=null;
+    // Restore audio-only track
+    const audioTrack = _vc.localStream?.getAudioTracks()[0];
+    if (_vc.pc && audioTrack) {
+      const sender = _vc.pc.getSenders().find(s=>s.track&&s.track.kind==='video');
+      if (sender) _vc.pc.removeTrack(sender);
+    }
+    firebase.database().ref(_vc.sigRef+'/meta').update({screenShare:false});
+    toast('Screen sharing stopped','info');
+    updateVCBar();
+    return;
+  }
+  try {
+    _vc.screenStream = await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
+    const vt = _vc.screenStream.getVideoTracks()[0];
+    if (_vc.pc) {
+      const sender = _vc.pc.getSenders().find(s=>s.track&&s.track.kind==='video');
+      if (sender) sender.replaceTrack(vt);
+      else _vc.pc.addTrack(vt, _vc.screenStream);
+    }
+    vt.onended = () => { _vc.screenStream=null; firebase.database().ref(_vc.sigRef+'/meta').update({screenShare:false}); updateVCBar(); };
+    firebase.database().ref(_vc.sigRef+'/meta').update({screenShare:true, from:CU.username});
+    toast('Screen sharing started','success');
+    updateVCBar();
+    // Show remote screen view
+    renderScreenShareView(false);
+  } catch(e) { toast('Could not share screen','error'); }
+}
+
+function renderScreenShareView(isRemote) {
+  document.getElementById('vc-screen-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'vc-screen-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:#000;z-index:6000;display:flex;flex-direction:column;';
+  ov.innerHTML = '<div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.05);flex-shrink:0;">'
+    +'<div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;">🖥 '+(isRemote?escapeHTML(_vc.partner):' You')+' is sharing their screen</div>'
+    +'<button onclick="_closeEl(\"vc-screen-overlay\")" style="background:none;border:none;color:#fff;cursor:pointer;font-size:20px;">✕</button>'
+    +'</div>'
+    +'<div style="flex:1;display:flex;align-items:center;justify-content:center;">'
+    +(isRemote
+      ? '<video id="vc-screen-video" autoplay style="max-width:100%;max-height:100%;border-radius:12px;"></video>'
+      : '<video id="vc-screen-video" autoplay muted style="max-width:100%;max-height:100%;border-radius:12px;"></video>')
+    +'</div>';
+  document.body.appendChild(ov);
+  if (isRemote && _vc.remoteStream) {
+    const v = document.getElementById('vc-screen-video');
+    if (v) v.srcObject = _vc.remoteStream;
+  } else if (!isRemote && _vc.screenStream) {
+    const v = document.getElementById('vc-screen-video');
+    if (v) v.srcObject = _vc.screenStream;
+  }
+}
+
+// Watch Together
+function startWatchTogether() {
+  if (!_vc.pc) { toast('Start a voice call first','error'); return; }
+  document.getElementById('vc-watch-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'vc-watch-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.96);z-index:7500;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;';
+  ov.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:24px;max-width:440px;width:100%;">'
+    +'<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;margin-bottom:4px;">▶ Watch Together</div>'
+    +'<div style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Paste a YouTube link to watch in sync</div>'
+    +'<input id="wt-url-inp" class="field-input" placeholder="https://youtube.com/watch?v=..." style="margin-bottom:10px;">'
+    +'<div style="display:flex;gap:8px;">'
+    +'<button class="btn-a" style="flex:1;" onclick="_startWatchSync()">Start Watching</button>'
+    +'<button class="btn-g" style="flex:1;" onclick="_closeEl(\"vc-watch-overlay\")">Cancel</button>'
+    +'</div></div>';
+  document.body.appendChild(ov);
+}
+
+async function _startWatchSync() {
+  const url = document.getElementById('wt-url-inp')?.value?.trim();
+  if (!url||!url.includes('youtube.com')&&!url.includes('youtu.be')) { toast('Enter a valid YouTube URL','error'); return; }
+  const vid = extractYTId(url);
+  if (!vid) { toast('Could not extract video ID','error'); return; }
+  document.getElementById('vc-watch-overlay')?.remove();
+  _vc.watchingTogether = true; _vc.watchYtUrl = vid;
+  // Broadcast
+  firebase.database().ref(_vc.sigRef+'/watch').set({vid,action:'play',t:0,ts:Date.now(),from:CU.username});
+  renderWatchTogetherPlayer(vid, true);
+}
+
+function renderWatchTogetherPlayer(vid, isHost) {
+  document.getElementById('wt-player-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'wt-player-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:#000;z-index:7000;display:flex;flex-direction:column;';
+  ov.innerHTML = '<div style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.06);flex-shrink:0;">'
+    +'<div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;">▶ Watching together with '+escapeHTML(_vc.partner||'')+'</div>'
+    +'<div style="display:flex;gap:8px;">'
+    +(isHost?'<button onclick="syncYTAction(\"pause\")" class="btn-g" style="padding:5px 12px;font-size:12px;">⏸ Pause</button>':'')
+    +(isHost?'<button onclick="syncYTAction(\"play\")" class="btn-a" style="padding:5px 12px;font-size:12px;">▶ Play</button>':'')
+    +'<button onclick="_closeWTPlayer()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:20px;">✕</button>'
+    +'</div>'
+    +'</div>'
+    +'<div style="flex:1;"><iframe id="wt-iframe" src="https://www.youtube.com/embed/'+vid+'?enablejsapi=1&autoplay=1" style="width:100%;height:100%;border:none;" allow="autoplay; fullscreen" allowfullscreen></iframe></div>'
+    +'<div style="padding:8px 14px;background:rgba(255,255,255,.04);font-size:11.5px;color:var(--muted);">'+escapeHTML(_vc.partner||'')+' is also watching • Click ⏸/▶ to sync playback</div>';
+  document.body.appendChild(ov);
+  // Listen for sync events from partner
+  if (!isHost) {
+    firebase.database().ref(_vc.sigRef+'/watch').on('child_added', snap => {
+      const d = snap.val(); if(!d) return;
+      const iframe = document.getElementById('wt-iframe');
+      if (!iframe) return;
+      // postMessage to YouTube iframe
+      if (d.action==='play') iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}','*');
+      else if (d.action==='pause') iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}','*');
+      else if (d.action==='seek') iframe.contentWindow?.postMessage('{"event":"command","func":"seekTo","args":['+d.t+',true]}','*');
+    });
+  }
+}
+
+async function syncYTAction(action, t) {
+  if (!_vc.sigRef) return;
+  await firebase.database().ref(_vc.sigRef+'/watch').push({action, t:t||0, ts:Date.now(), from:CU.username});
+  const iframe = document.getElementById('wt-iframe');
+  if (iframe) {
+    if (action==='play') iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}','*');
+    else if (action==='pause') iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}','*');
+    else if (action==='seek'&&t!=null) iframe.contentWindow?.postMessage('{"event":"command","func":"seekTo","args":['+t+',true]}','*');
+  }
+}
+
+function extractYTId(url) {
+  const m = url.match(/(?:v=|youtu\.be\/|\/shorts\/)([\w-]{11})/);
+  return m?m[1]:null;
+}
+
+function renderVoiceCallUI(partner, isCaller) {
+  document.getElementById('vc-call-bar')?.remove();
+  const bar = document.createElement('div');
+  bar.id = 'vc-call-bar';
+  bar.style.cssText = 'position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:8500;'
+    +'background:rgba(11,14,22,.96);border:1px solid rgba(255,255,255,.1);border-radius:20px 20px 0 0;'
+    +'padding:14px 24px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(20px);'
+    +'box-shadow:0 -8px 40px rgba(0,0,0,.6);min-width:340px;justify-content:center;';
+  bar.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:1px;margin-right:8px;">'
+    +'<div style="font-size:11px;font-weight:700;color:#3ecf6e;">● Voice Call</div>'
+    +'<div style="font-size:12.5px;font-weight:600;" id="vc-partner-name">'+escapeHTML(partner)+'</div>'
+    +'</div>'
+    +_vcBtn('vc-mute-btn','M','toggleVCMute()','Mute','#f87171')
+    +_vcBtn('vc-deaf-btn','🎧','toggleVCDeafen()','Deafen','#f59e0b')
+    +_vcBtn('vc-screen-btn','🖥','startScreenShare()','Share Screen','#60a5fa')
+    +_vcBtn('vc-watch-btn','▶','startWatchTogether()','Watch Together','#a78bfa')
+    +'<button onclick="endVoiceCall()" style="width:44px;height:44px;border-radius:50%;background:#f87171;border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:8px;" title="End Call">📞</button>';
+  document.body.appendChild(bar);
+}
+function _vcBtn(id, icon, fn, title, color) {
+  return '<button id="'+id+'" onclick="'+fn+'" title="'+title+'" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:'+color+';font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;">'+icon+'</button>';
+}
+function updateVCBar() {
+  const mBtn = document.getElementById('vc-mute-btn');
+  const dBtn = document.getElementById('vc-deaf-btn');
+  if(mBtn) mBtn.style.background = _vc.muted?'rgba(248,113,113,.25)':'rgba(255,255,255,.07)';
+  if(dBtn) dBtn.style.background = _vc.deafened?'rgba(245,158,11,.25)':'rgba(255,255,255,.07)';
+}
+
+// Listen for incoming calls globally
+function startVCListener(myUsername) {
+  const ref = firebase.database().ref('vcSignal').orderByKey();
+  ref.on('child_added', snap => {
+    const path = snap.key;
+    if (!path.includes(myUsername)) return;
+    const data = snap.val();
+    if (!data||data.ended) return;
+    if (data.type==='offer' && data.from!==myUsername && !_vc.pc) {
+      // Incoming call
+      const caller = data.from;
+      showIncomingCall(caller, data.sdp);
+    }
+    // Handle watch sync & screen share meta
+    if (data.meta?.screenShare && data.meta.from!==myUsername) {
+      renderScreenShareView(true);
+    }
+    if (data.watch && !_vc.watchingTogether) {
+      const latest = Object.values(data.watch).sort((a,b)=>b.ts-a.ts)[0];
+      if (latest?.vid && latest.from!==myUsername) {
+        _vc.watchingTogether=true; _vc.watchYtUrl=latest.vid;
+        toast(escapeHTML(_vc.partner||caller||'')+'wants to watch together!','info');
+        renderWatchTogetherPlayer(latest.vid, false);
+      }
+    }
+    if (data.ended && _vc.partner===data.endedBy && _vc.pc) {
+      endVoiceCall(); toast('Call ended','info');
+    }
+  });
+}
+
+function showIncomingCall(caller, offerSdp) {
+  _closeEl('incoming-call-modal');
+  const modal = document.createElement('div');
+  modal.id = 'incoming-call-modal';
+  modal.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:9500;'
+    +'background:rgba(11,14,22,.97);border:1px solid rgba(255,255,255,.12);border-radius:18px;'
+    +'padding:20px 28px;min-width:280px;text-align:center;backdrop-filter:blur(22px);'
+    +'box-shadow:0 8px 40px rgba(0,0,0,.8);animation:ctxIn .2s cubic-bezier(.22,1,.36,1);';
+  const nameEl = document.createElement('div');
+  nameEl.innerHTML = '<div style="font-size:32px;margin-bottom:8px;">📞</div>'
+    +'<div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;margin-bottom:3px;">Incoming Call</div>'
+    +'<div style="font-size:13px;color:var(--muted-light);margin-bottom:16px;">'+escapeHTML(caller)+'</div>';
+  const btns = document.createElement('div');
+  btns.style.cssText = 'display:flex;gap:10px;';
+  const acceptBtn = document.createElement('button');
+  acceptBtn.className = 'btn-a'; acceptBtn.style.cssText = 'flex:1;padding:10px;'; acceptBtn.textContent = 'Accept';
+  acceptBtn.onclick = () => { answerVoiceCall(caller, offerSdp); _closeEl('incoming-call-modal'); };
+  const declineBtn = document.createElement('button');
+  declineBtn.className = 'btn-d'; declineBtn.style.cssText = 'flex:1;padding:10px;'; declineBtn.textContent = 'Decline';
+  declineBtn.onclick = () => {
+    firebase.database().ref(vcSignalPath(CU.username, caller)).update({declined:true});
+    _closeEl('incoming-call-modal');
+  };
+  btns.appendChild(acceptBtn); btns.appendChild(declineBtn);
+  modal.appendChild(nameEl); modal.appendChild(btns);
+  document.body.appendChild(modal);
+  playNotifSound('call');
+}
+
+// ════════════════════════════════════════════
+// REAL-TIME STATUS/CUSTOM STATUS IN PROFILES
+// ════════════════════════════════════════════
+let _profileStatusListeners = {};
+function subscribeProfileStatus(username) {
+  if (_profileStatusListeners[username]) return;
+  const ref = firebase.database().ref('statuses/'+username);
+  const ref2 = firebase.database().ref('users/'+username+'/customStatus');
+  const ref3 = firebase.database().ref('users/'+username+'/status');
+  const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
+  const SL = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible',offline:'Offline'};
+  const handler = ref.on('value', snap => {
+    const st = snap.val()||'offline';
+    // Update dots in profile card
+    document.querySelectorAll('.profile-status-dot[data-for="'+username+'"]').forEach(el=>{el.style.background=SC[st]||SC.offline;});
+    document.querySelectorAll('.profile-status-label[data-for="'+username+'"]').forEach(el=>{el.textContent=SL[st]||'Offline';});
+  });
+  const handler2 = ref2.on('value', snap => {
+    const cs = snap.val();
+    document.querySelectorAll('.profile-custom-status[data-for="'+username+'"]').forEach(el=>{
+      if(cs&&cs.text){el.textContent=cs.emoji+' '+cs.text;el.style.display='inline-flex';}
+      else{el.style.display='none';}
+    });
+  });
+  _profileStatusListeners[username] = {ref,ref2,h1:handler,h2:handler2};
+}
+function unsubscribeProfileStatus(username) {
+  const l = _profileStatusListeners[username];
+  if(l){try{l.ref.off('value',l.h1);l.ref2.off('value',l.h2);}catch{} delete _profileStatusListeners[username];}
+}
+function unsubscribeAllProfileStatus() {
+  Object.keys(_profileStatusListeners).forEach(unsubscribeProfileStatus);
+}
+
+// ════════════════════════════════════════════
+// PIN MESSAGES
+// ════════════════════════════════════════════
+function getPinnedMessages(context) {
+  const key = context==='dm' ? 'ftz_pins_dm_'+[CU.username,curDM].sort().join('_') : 'ftz_pins_ch_'+curBastion+'_'+curChannel;
+  return JSON.parse(localStorage.getItem(key)||'[]');
+}
+function savePinnedMessages(context, arr) {
+  const key = context==='dm' ? 'ftz_pins_dm_'+[CU.username,curDM].sort().join('_') : 'ftz_pins_ch_'+curBastion+'_'+curChannel;
+  localStorage.setItem(key, JSON.stringify(arr.slice(0,50)));
+}
+function pinMessage(msgId, text) {
+  const ctx = curDM?'dm':'ch';
+  const pins = getPinnedMessages(ctx);
+  if (pins.find(p=>p.id===msgId)) { toast('Already pinned','info'); return; }
+  const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  const from = row?.dataset.from||'';
+  pins.unshift({id:msgId, text:text.slice(0,200), from, pinned:new Date().toISOString()});
+  savePinnedMessages(ctx, pins);
+  toast('Message pinned!','success');
+  // Refresh pins panel if open
+  if (document.getElementById('pins-panel')) showPinnedMessages();
+}
+function showPinnedMessages() {
+  const ctx = curDM?'dm':'ch';
+  const pins = getPinnedMessages(ctx);
+  document.getElementById('pins-panel')?.remove();
+  const panel = document.createElement('div');
+  panel.id = 'pins-panel';
+  panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;width:320px;background:var(--panel);border-left:1px solid var(--border);z-index:7000;display:flex;flex-direction:column;animation:slideInRight .2s cubic-bezier(.22,1,.36,1);';
+  panel.innerHTML = '<div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">'
+    +'<div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;">📌 Pinned Messages</div>'
+    +'<button onclick="_closeEl(\"pins-panel\")" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;padding:4px;">✕</button>'
+    +'</div>'
+    +'<div style="flex:1;overflow-y:auto;padding:12px;">'
+    +(pins.length
+      ? pins.map((p,i)=>'<div style="padding:10px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
+          +'<span style="font-size:12px;font-weight:700;">'+escapeHTML(p.from||'')+'</span>'
+          +'<button data-unpin-idx="'+i+'" data-unpin-id="'+CSS.escape(p.id)+'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 5px;">✕</button>'
+          +'</div>'
+          +'<div style="font-size:12.5px;color:var(--muted-light);">'+escapeHTML(p.text)+'</div>'
+          +'</div>').join('')
+      : '<div style="text-align:center;padding:40px 20px;color:var(--muted);">No pinned messages yet.<br>Right-click a message to pin it.</div>')
+    +'</div>';
+  document.body.appendChild(panel);
+  // Wire unpin buttons via delegation
+  panel.querySelector('div[style*="flex:1"]')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-unpin-idx]');
+    if (btn) unpinMessage(btn.dataset.unpinId, parseInt(btn.dataset.unpinIdx));
+  });
+}
+function unpinMessage(msgId, idx) {
+  const ctx = curDM?'dm':'ch';
+  const pins = getPinnedMessages(ctx).filter((p,i)=>i!==idx);
+  savePinnedMessages(ctx, pins);
+  showPinnedMessages();
+  toast('Message unpinned','info');
 }
 </script>
 </body>

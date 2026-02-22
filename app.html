@@ -433,6 +433,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .quiz-dot.done{background:var(--green);}.quiz-dot.current{background:var(--accent);}
 .boost-bar{background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted-light);cursor:pointer;margin:8px 8px 4px;}
 .boost-bar .bl{font-weight:700;color:var(--accent);}
+  /* Radiance display name font - updated dynamically */
+  .radiance-name { font-family: var(--radiance-font, inherit); }
 </style>
 <body>
 <!-- APP LOADING -->
@@ -454,7 +456,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 <!-- NOTIFICATION PANEL -->
 <div class="notif-panel" id="notif-panel">
   <div class="np-header">
-    <h3>🔔 Notifications</h3>
+    <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg> Notifications</h3>
     <button onclick="markAllRead()" style="font-size:11px;background:none;border:none;color:var(--muted);cursor:pointer;">Mark all read</button>
     <button onclick="toggleNotifPanel()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;">×</button>
   </div>
@@ -514,7 +516,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 <div class="main">
   <!-- TOPBAR -->
   <div class="topbar" id="topbar">
-    <div class="topbar-title" id="topbar-title">🏠 Home</div>
+    <div class="topbar-title" id="topbar-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg> Home</div>
     <div class="tb-sep" id="tb-sep" style="display:none;"></div>
     <div class="tb-desc" id="tb-desc"></div>
     <div class="tb-actions" id="tb-actions">
@@ -542,7 +544,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
               <h1>Your <em>Community</em><br>Awaits</h1>
               <p class="hero-sub-app">Join Bastions, chat with friends, and build your world on Fortized — the platform built for real communities.</p>
               <div class="home-hero-actions">
-                <button class="btn-a" onclick="showView('discover')">🧭 Discover Bastions</button>
+                <button class="btn-a" onclick="showView('discover')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg> Discover Bastions</button>
                 <button class="btn-g" onclick="openModal('modal-create-bastion')">➕ Create Bastion</button>
               </div>
             </div>
@@ -634,7 +636,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <div class="view" id="view-discover">
       <div class="discover-scroll">
         <div class="disc-hero">
-          <h2>🧭 Discover Bastions</h2>
+          <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg> Discover Bastions</h2>
           <p>Find communities that match your interests</p>
           <div class="disc-search">
             <span class="si">🔍</span>
@@ -783,7 +785,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   <div class="modal">
     <div class="modal-bar"></div>
     <div class="modal-body">
-      <div class="modal-title">💬 New Message</div>
+      <div class="modal-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> New Message</div>
       <div class="modal-sub">Find a user to message</div>
       <input class="modal-input" id="dm-target" placeholder="Username…" onkeydown="if(event.key==='Enter')openDMChat(document.getElementById('dm-target').value.trim())">
       <div class="modal-error" id="dm-error"></div>
@@ -998,25 +1000,7 @@ function escapeHTML(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
-function parseMD(s) {
-  // First handle Giphy links - embed the GIF
-  s = s.replace(/https?:\/\/(?:www\.)?giphy\.com\/gifs\/[\w-]+/gi, url => {
-    const id = url.split('/').pop().split('-').pop();
-    return `<div style="margin:8px 0;border-radius:12px;overflow:hidden;max-width:300px;">` +
-      `<img src="https://media.giphy.com/media/${id}/giphy.gif" style="width:100%;border-radius:12px;display:block;" loading="lazy" onerror="this.parentElement.innerHTML='<a href=\"${url}\" style=\"color:var(--accent);\" onclick=\"openExternalLink(event,\\\"${url}\\\")\">🔗 View GIF</a>'"></div>`;
-  });
-  // Then handle all other URLs
-  s = s.replace(/(?<!["\'=])(https?:\/\/[^\s<>"']+)/gi, url => {
-    const safe = escapeHTML(url);
-    return `<a href="#" onclick="openExternalLink(event,'${safe}')" style="color:var(--accent);text-decoration:underline;text-underline-offset:2px;">${safe}</a>`;
-  });
-  return s
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g,'<em>$1</em>')
-    .replace(/`(.+?)`/g,'<code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;font-family:monospace;">$1</code>')
-    .replace(/~~(.+?)~~/g,'<s>$1</s>')
-    .replace(/\n/g,'<br>');
-}
+
 
 function openExternalLink(e, url) {
   e.preventDefault();
@@ -1121,10 +1105,10 @@ function updateSidebar(v) {
     const bList = (CU?.bastions||[]).map((b,i)=>`<div class="ch-item" onclick="openBastion(${i})"><span style="font-size:16px;">${b.emblem||'🏰'}</span> ${escapeHTML(b.name)}</div>`).join('');
     scroll.innerHTML = `
       <div class="sec-label">Quick Nav</div>
-      <div class="ch-item" onclick="showView('dms')">💬 Messages</div>
+      <div class="ch-item" onclick="showView('dms')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Messages</div>
       <div class="ch-item" onclick="showView('friends')">👥 Friends</div>
-      <div class="ch-item" onclick="showView('discover')">🧭 Discover</div>
-      <div class="ch-item" onclick="showView('atelier')">💎 Atelier</div>
+      <div class="ch-item" onclick="showView('discover')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg> Discover</div>
+      <div class="ch-item" onclick="showView('atelier')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg> Atelier</div>
       ${bList?`<div class="sec-label">Your Bastions</div>`+bList:''}`;
     renderHomePanel();
   } else if (v==='dms') {
@@ -1166,7 +1150,7 @@ function updateUserbar() {
   const ua = document.getElementById('ua');
   const uaName = document.getElementById('ua-name');
   const uaTag = document.getElementById('ua-tag');
-  if (ua) ua.innerHTML = buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 34);
+  if (ua) ua.innerHTML = buildAvatarWithStatus(CU.pfp, CU.displayName||CU.username, 34, CU.status||'online');
   if (uaName) uaName.textContent = CU.displayName||CU.username;
   if (uaTag) uaTag.textContent = '@'+CU.username;
   updateOnyxDisplay();
@@ -1263,7 +1247,10 @@ function openDMView(username) {
       <div class="chat-input-wrap">
         <div class="chat-input-box">
           <div class="chat-input-actions">
-            <button id="emoji-btn-dm" onclick="toggleEmojiPicker('dm-input')" title="Emoji">😊</button>
+            <button id="emoji-btn-dm" onclick="toggleEmojiPicker('dm-input')" title="Emoji">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </button>
+            <button onclick="openGiphyPicker('dm-input')" title="GIF" style="font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);">GIF</button>
           </div>
           <textarea id="dm-input" placeholder="Message ${escapeHTML(username)}…" rows="1"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDM();}"
@@ -1485,12 +1472,15 @@ function loadChatChannel(idx) {
       <div class="chat-input-wrap">
         <div class="chat-input-box">
           <div class="chat-input-actions">
-            <button id="emoji-btn-ch" onclick="toggleEmojiPicker('ch-input')" title="Emoji">😊</button>
+            <button id="emoji-btn-ch" onclick="toggleEmojiPicker('ch-input')" title="Emoji" style="font-size:18px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </button>
+            <button onclick="openGiphyPicker('ch-input')" title="GIF" style="font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);">GIF</button>
           </div>
           <textarea id="ch-input" placeholder="Message #${escapeHTML(ch.name)}…" rows="1"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChannelMsg(${idx});}"
             oninput="autoResize(this)"></textarea>
-          <button class="chat-send" onclick="sendChannelMsg(${idx})">➤</button>
+          <button class="chat-send" onclick="sendChannelMsg(${idx})" title="Send"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
         </div>
       </div>
     </div>`;
@@ -1596,7 +1586,7 @@ function appendMessage(container, msg, context, prevAuthor) {
       <div class="msg-content-col">
         ${fwdHTML}${replyHTML}
         <div class="msg-header">
-          <span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;">${safeFrom}</span>
+          <span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>
           ${(()=>{const b=CU.bastions?.[curBastion];if(!b)return '';const roles=b.roles||[];const mr=(b.memberRoles||{})[msg.from]||[];const pr=roles.find(r=>mr.includes(r.id));return pr?`<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:100px;border:1px solid ${pr.color}44;color:${pr.color};background:${pr.color}18;">${escapeHTML(pr.name)}</span>`:'';})()}
           <span class="msg-timestamp">${time}</span>
         </div>
@@ -1738,7 +1728,7 @@ async function renderMemberList() {
     // Cache PFP
     if (u) _pfpCache['_loading_'+u]=false; // allow refetch
     ml.innerHTML+=`<div class="ml-entry" onclick="viewUserProfile('${escapeHTML(u)}')">
-      <div class="ml-av" style="position:relative;">${buildAvatarHTML(null,u,30)}<div class="ml-status online"></div></div>
+      <div class="ml-av" style="position:relative;">${buildAvatarWithStatus(null,u,30,'online')}</div>
       <div class="ml-info">
         <div class="ml-name" style="color:${primaryRole?.color||'var(--muted-light)'};">${escapeHTML(u)}</div>
         ${roleTag}
@@ -2037,6 +2027,7 @@ function updateDOBField(){
   },1000);
 
   setInterval(async()=>{try{await updateNotifBadge();}catch{}},30000);
+  initIdleDetection();
   clearTimeout(_st);
   }catch(e){console.error('[Fortized]',e);if(_sl)_sl.style.display='none';clearTimeout(_st);}
 })();
@@ -2694,7 +2685,7 @@ function buildProfileNav(scroll) {
     if(s.section) return `<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 14px 4px;">${s.section}</div>`;
     return `<div class="profile-nav-item" onclick="buildProfileView('${s.id}')">${s.icon} ${s.label}</div>`;
   }).join('');
-  scroll.innerHTML+=`<div style="flex:1;"></div><div class="profile-nav-item" onclick="doLogout()" style="color:var(--red);">🚪 Log Out</div>`;
+  scroll.innerHTML+=`<div style="flex:1;"></div><div class="profile-nav-item" onclick="doLogout()" style="color:var(--red);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Log Out</div>`;
   buildProfileView('myprofile');
 }
 
@@ -2740,6 +2731,7 @@ function buildProfileView(tab) {
           <textarea class="field-input" id="bio-input" placeholder="Tell people about yourself…" style="resize:vertical;min-height:80px;" maxlength="300">${escapeHTML(CU.bio||'')}</textarea>
           <button class="btn-a" onclick="saveBio()" style="font-size:13px;padding:8px 16px;margin-top:8px;">Save Bio</button>
         </div>
+        ${renderRadianceFontPicker()}
         <div class="settings-section">
           <div class="settings-title">Connected Accounts</div>
           <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Paste your profile link. Only valid URLs for that platform are accepted.</div>
@@ -2902,7 +2894,7 @@ async function viewUserProfile(username) {
       </div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn-a" onclick="closeModal('modal-user');openDMChat('${escapeHTML(u.username)}')" style="flex:1;justify-content:center;font-size:13px;">💬 Message</button>
+      <button class="btn-a" onclick="closeModal('modal-user');openDMChat('${escapeHTML(u.username)}')" style="flex:1;justify-content:center;font-size:13px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>
       ${isOwn?'':(isFriend?`<button class="btn-d" onclick="closeModal('modal-user');removeFriend('${u.username}')" style="flex:1;justify-content:center;font-size:13px;">Remove</button>`:(hasPending?`<button class="btn-g" style="flex:1;justify-content:center;font-size:13px;opacity:.7;" disabled>Sent</button>`:`<button class="btn-g" onclick="quickAddFriend('${escapeHTML(u.username)}')" style="flex:1;justify-content:center;font-size:13px;">+ Add Friend</button>`))}
       ${!isOwn?`<button class="btn-d" onclick="reportUser('${escapeHTML(u.username)}')" style="padding:9px 14px;font-size:13px;" title="Report">🚩</button>`:''}
     </div>
@@ -3207,6 +3199,7 @@ async function submitReport() {
 // Access: secret code 1478
 
 function tryOpenAdmin() {
+  if (isSuperAdmin()) { adminAuthed = true; openAdminPanel(); return; }
   if (adminAuthed) {
     openAdminPanel();
     return;
@@ -3256,13 +3249,14 @@ function renderAdminPanel() {
   const sidebar = document.getElementById('admin-sidebar');
   const tabs = [
     {id:'dashboard',icon:'📊',label:'Dashboard'},
-    {id:'users',icon:'👤',label:'User Management'},
-    {id:'reports',icon:'🚩',label:'Reports Queue'},
-    {id:'nsfw_queue',icon:'🔞',label:'NSFW Review Queue'},
+    {id:'users',icon:'👤',label:'User Search'},
+    {id:'all_users',icon:'👥',label:'All Users'},
+    {id:'reports',icon:'🚩',label:'Reports'},
+    {id:'nsfw_queue',icon:'🔞',label:'NSFW Queue'},
     {id:'bastions',icon:'🏰',label:'Bastions'},
     {id:'audit',icon:'📋',label:'Audit Log'},
-    ...(isSuperAdmin() ? [{id:'admins',icon:'👑',label:'Admin Management'}] : []),
-    {id:'economy',icon:'💰',label:'Onyx Economy'},
+    ...(isSuperAdmin() ? [{id:'admins',icon:'👑',label:'Admin Mgmt'}] : []),
+    {id:'economy',icon:'💰',label:'Economy'},
   ];
   sidebar.innerHTML = `<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(248,113,113,.6);padding:8px 14px;">Navigation</div>` +
     tabs.map(t=>`<div class="bsettings-nav-item" onclick="loadAdminTab('${t.id}')" style="color:${adminTab===t.id?'var(--red)':'var(--muted-light)'}; background:${adminTab===t.id?'rgba(248,113,113,.08)':''};">${t.icon} ${t.label}</div>`).join('');
@@ -3271,6 +3265,9 @@ function renderAdminPanel() {
 
 async function loadAdminTab(tab) {
   adminTab = tab;
+  // Stop stale intervals when switching tabs
+  if (tab !== 'bastions' && window._adminBastionInterval) { clearInterval(window._adminBastionInterval); window._adminBastionInterval = null; }
+  if (tab !== 'all_users' && window._adminUsersInterval) { clearInterval(window._adminUsersInterval); window._adminUsersInterval = null; }
   // Update sidebar highlight
   document.querySelectorAll('#admin-sidebar .bsettings-nav-item').forEach(el => {
     const isActive = el.textContent.trim().includes(tab.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ')) ||
@@ -3324,7 +3321,7 @@ async function loadAdminTab(tab) {
         <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;">
           <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:14px;color:var(--red);">📋 Quick Actions</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <button class="btn-d" style="justify-content:flex-start;" onclick="loadAdminTab('users')">👤 Search a User</button>
+            <button class="btn-d" style="justify-content:flex-start;" onclick="loadAdminTab('users')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Search a User</button>
             <button class="btn-d" style="justify-content:flex-start;" onclick="loadAdminTab('reports')">🚩 Review Reports</button>
             <button class="btn-d" style="justify-content:flex-start;" onclick="loadAdminTab('nsfw_queue')">🔞 NSFW Queue</button>
           </div>
@@ -3334,7 +3331,7 @@ async function loadAdminTab(tab) {
 
   else if (tab === 'users') {
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;color:var(--red);">👤 User Management</div>
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;color:var(--red);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> User Management</div>
       <div style="display:flex;gap:10px;margin-bottom:20px;">
         <input id="admin-user-search" class="field-input" placeholder="Search by username…" style="max-width:320px;" onkeydown="if(event.key==='Enter')adminSearchUser()">
         <button class="btn-d" onclick="adminSearchUser()">Search</button>
@@ -3474,17 +3471,34 @@ async function loadAdminTab(tab) {
   }
 
   else if (tab === 'all_users') {
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:20px;color:var(--red);">All Users</div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="btn-d" id="sort-reg-btn" onclick="sortAllUsers('registration')">Registration Date</button>
+        <button class="btn-g" id="sort-onyx-btn" onclick="sortAllUsers('onyx')">Onyx Balance</button>
+        <input class="field-input" id="all-users-search" placeholder="Search username…" style="max-width:220px;" oninput="filterAllUsers(this.value)">
+        <span id="admin-users-count" style="font-size:12px;color:var(--muted);align-self:center;"></span>
+        <span style="font-size:11px;color:var(--green);align-self:center;">&#9679; Live</span>
+      </div>
+      <div id="all-users-list"><div style="color:var(--muted);">Loading users…</div></div>`;
     loadAllUsers();
+    if (window._adminUsersInterval) clearInterval(window._adminUsersInterval);
+    window._adminUsersInterval = setInterval(() => { if (adminTab==='all_users') loadAllUsers(true); }, 2000);
     return;
   }
   else if (tab === 'bastions') {
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;color:var(--red);">🏰 Bastions</div>
-      <div style="display:flex;gap:10px;margin-bottom:20px;">
-        <input id="admin-bastion-search" class="field-input" placeholder="Search bastions…" style="max-width:320px;">
-        <button class="btn-d" onclick="adminSearchBastion()">Search</button>
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:20px;color:var(--red);">Bastions</div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <input id="admin-bastion-search" class="field-input" placeholder="Filter by name…" style="max-width:260px;" oninput="filterAdminBastions(this.value)">
+        <span id="admin-bastion-count" style="font-size:12px;color:var(--muted);align-self:center;"></span>
+        <span style="font-size:11px;color:var(--green);align-self:center;">&#9679; Live</span>
       </div>
-      <div id="admin-bastion-result"><div style="color:var(--muted);font-size:13.5px;">Search for a bastion to inspect it.</div></div>`;
+      <div id="admin-bastion-result"><div style="color:var(--muted);">Loading bastions…</div></div>`;
+    loadAdminBastions();
+    // Start live refresh
+    if (window._adminBastionInterval) clearInterval(window._adminBastionInterval);
+    window._adminBastionInterval = setInterval(() => { if (adminTab==='bastions') loadAdminBastions(true); }, 2000);
   }
   else {
     main.innerHTML = `<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3></div>`;
@@ -4216,25 +4230,7 @@ function adminInspectUser(username) {
 // ════════════════════════════════════════════
 // TRIAL RADIANCE LINKS (staw only)
 // ════════════════════════════════════════════
-function generateTrialLink() {
-  if (!isSuperAdmin()) { toast('Unauthorized','error'); return; }
-  const days = parseInt(document.getElementById('trial-days')?.value)||0;
-  if (!days||days<1||days>365) { toast('Enter 1-365 days','error'); return; }
-  const code = 'TRIAL-' + days + 'd-' + Date.now().toString(36).toUpperCase();
-  const link = location.origin + (location.pathname.replace(/\/[^/]*$/, '/') || '/') + 'app.html?trial=' + code;
-  const existing = JSON.parse(localStorage.getItem('ftz_trial_links')||'[]');
-  existing.push({ code, days, created: new Date().toLocaleDateString(), link });
-  localStorage.setItem('ftz_trial_links', JSON.stringify(existing));
-  const el = document.getElementById('trial-link-result');
-  if (el) {
-    el.textContent = link;
-    el.title = 'Click to copy';
-    el.style.cursor = 'pointer';
-    el.onclick = () => navigator.clipboard.writeText(link).then(()=>toast('Trial link copied!','success'));
-  }
-  toast(`${days}-day Radiance trial link created!`,'success');
-  loadAdminTab('economy');
-}
+
 
 async function checkTrialLink() {
   const params = new URLSearchParams(location.search);
@@ -4345,8 +4341,302 @@ function isSuperAdmin() {
   return CU && CU.username === SUPER_ADMIN;
 }
 function isAdmin() {
-  const admins = JSON.parse(localStorage.getItem('ftz_admins') || '["staw"]');
+  if (CU?.username === SUPER_ADMIN) return true;
+  const admins = JSON.parse(localStorage.getItem('ftz_admins') || '[]');
   return CU && admins.includes(CU.username);
+}
+
+
+// ════════════════════════════════════════════
+// ADMIN - LIVE BASTIONS LIST
+// ════════════════════════════════════════════
+let _adminBastionsCache = [];
+
+async function loadAdminBastions(silent = false) {
+  try {
+    const data = await FortizedSocial.getGlobalBastions() || {};
+    _adminBastionsCache = Object.values(data);
+  } catch { if (!_adminBastionsCache.length) _adminBastionsCache = []; }
+  if (!silent) renderAdminBastionsList(_adminBastionsCache);
+  else {
+    const q = document.getElementById('admin-bastion-search')?.value || '';
+    filterAdminBastions(q);
+  }
+}
+
+function filterAdminBastions(q) {
+  const filtered = q
+    ? _adminBastionsCache.filter(b => (b.name||'').toLowerCase().includes(q.toLowerCase()))
+    : _adminBastionsCache;
+  renderAdminBastionsList(filtered);
+}
+
+function renderAdminBastionsList(bastions) {
+  const el = document.getElementById('admin-bastion-result');
+  const cnt = document.getElementById('admin-bastion-count');
+  if (!el) return;
+  if (cnt) cnt.textContent = bastions.length + ' bastions';
+  if (!bastions.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13.5px;">No bastions found.</div>'; return; }
+  el.innerHTML = bastions.map(b => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;">
+      <div style="width:38px;height:38px;border-radius:10px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0;">
+        ${b.icon ? `<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">` : (b.emblem||'🏰')}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:13.5px;">${escapeHTML(b.name||'Unnamed')}</div>
+        <div style="font-size:11px;color:var(--muted);">Owner: ${escapeHTML(b.owner||'?')} · ${b.public!==false?'Public':'Private'} · ${(b.channels||[]).length} channels</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted-light);">${(b.members||[]).length||1} members</div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════
+// ADMIN - LIVE ALL USERS (patched version)
+// ════════════════════════════════════════════
+async function loadAllUsers(silent = false) {
+  try {
+    const data = await FortizedSocial.getAllUsers?.() || {};
+    allUsersData = Object.values(data);
+    if (allUsersData.length === 0) {
+      // Fallback: try getGlobalBastions to at least get owners
+      const bastions = await FortizedSocial.getGlobalBastions?.() || {};
+      const owners = [...new Set(Object.values(bastions).map(b=>b.owner).filter(Boolean))];
+      allUsersData = owners.map(u => ({username:u}));
+    }
+  } catch {}
+  const cnt = document.getElementById('admin-users-count');
+  if (cnt) cnt.textContent = allUsersData.length + ' users';
+  if (!silent) renderAllUsersList(allUsersData);
+  else {
+    const q = document.getElementById('all-users-search')?.value || '';
+    filterAllUsers(q);
+  }
+}
+
+// ════════════════════════════════════════════
+// TRIAL LINK - as proper share links
+// ════════════════════════════════════════════
+function generateTrialLink() {
+  if (!isSuperAdmin()) { toast('Unauthorized','error'); return; }
+  const days = parseInt(document.getElementById('trial-days')?.value)||0;
+  if (!days||days<1||days>365) { toast('Enter 1-365 days','error'); return; }
+  const code = 'TRIAL-' + days + 'd-' + Date.now().toString(36).toUpperCase();
+  const baseUrl = location.origin + location.pathname.replace(/\/[^/]*$/, '/');
+  const link = baseUrl + 'app.html?trial=' + code;
+  const existing = JSON.parse(localStorage.getItem('ftz_trial_links')||'[]');
+  existing.push({ code, days, created: new Date().toLocaleDateString(), link });
+  localStorage.setItem('ftz_trial_links', JSON.stringify(existing));
+  const el = document.getElementById('trial-link-result');
+  if (el) {
+    el.innerHTML = `
+      <div style="font-family:monospace;font-size:12px;color:var(--accent);word-break:break-all;margin-bottom:8px;">${link}</div>
+      <button class="btn-a" style="font-size:12px;padding:6px 14px;" onclick="navigator.clipboard.writeText('${link.replace(/'/g,"\\'")}').then(()=>toast('Copied!','success'))">Copy Link</button>`;
+  }
+  toast(days+'-day Radiance trial link created!','success');
+  loadAdminTab('economy');
+}
+
+
+// ════════════════════════════════════════════
+// GIPHY PICKER
+// ════════════════════════════════════════════
+function openGiphyPicker(targetInputId) {
+  document.getElementById('giphy-picker-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'giphy-picker-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:8500;display:flex;align-items:flex-end;justify-content:center;padding:0 0 80px;';
+  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:420px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -20px 60px rgba(0,0,0,.6);">
+      <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;font-weight:700;font-family:'Syne',sans-serif;color:#fff;">GIF Search</span>
+        <input id="giphy-search" class="field-input" placeholder="Search GIFs…" style="flex:1;" oninput="searchGiphy(this.value,'${targetInputId}')">
+        <button onclick="document.getElementById('giphy-picker-overlay').remove()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;">✕</button>
+      </div>
+      <div id="giphy-results" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:12px;overflow-y:auto;">
+        <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px;">Type to search for GIFs…</div>
+      </div>
+      <div style="padding:8px 14px;font-size:10px;color:var(--muted);text-align:center;border-top:1px solid var(--border);">Powered by GIPHY</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('giphy-search').focus();
+}
+
+let _giphyTimeout = null;
+function searchGiphy(q, targetInputId) {
+  clearTimeout(_giphyTimeout);
+  if (!q.trim()) return;
+  _giphyTimeout = setTimeout(async () => {
+    const results = document.getElementById('giphy-results');
+    if (!results) return;
+    results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Searching…</div>';
+    // Use Giphy public beta key for demo searches
+    try {
+      const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(q)}&limit=12&rating=pg-13`);
+      const data = await res.json();
+      if (!data.data?.length) { results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">No GIFs found</div>'; return; }
+      results.innerHTML = data.data.map(gif => `
+        <div style="border-radius:10px;overflow:hidden;cursor:pointer;aspect-ratio:1;background:var(--panel2);" onclick="insertGif('${gif.embed_url}','${targetInputId}')">
+          <img src="${gif.images.fixed_height_small.url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+        </div>`).join('');
+    } catch {
+      results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">GIF search unavailable offline</div>';
+    }
+  }, 400);
+}
+
+function insertGif(embedUrl, targetInputId) {
+  const inp = document.getElementById(targetInputId);
+  if (inp) {
+    // Insert the giphy URL as text — parseMD will convert it to an embed
+    const giphyUrl = embedUrl.replace('//giphy.com/embed/', '//giphy.com/gifs/').replace(/\/embed$/, '');
+    inp.value = (inp.value ? inp.value + ' ' : '') + 'https://giphy.com/gifs/' + embedUrl.split('/').pop();
+    inp.focus();
+  }
+  document.getElementById('giphy-picker-overlay')?.remove();
+}
+
+// ════════════════════════════════════════════
+// MEDIA EMBEDS IN MESSAGES (YouTube, TikTok, Spotify, Fortized)
+// ════════════════════════════════════════════
+function parseMD(s) {
+  if (!s) return '';
+  // 1. Giphy embed
+  s = s.replace(/https?:\/\/(?:www\.)?giphy\.com\/gifs\/([\w-]+)/gi, (url, id) => {
+    const cleanId = id.split('-').pop();
+    return `<div style="margin:8px 0;border-radius:12px;overflow:hidden;max-width:280px;">` +
+      `<img src="https://media.giphy.com/media/${cleanId}/giphy.gif" style="width:100%;border-radius:12px;display:block;" loading="lazy"></div>`;
+  });
+  // 2. YouTube embed
+  s = s.replace(/https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})[^\s]*/gi, (url, vid) => {
+    return `<div style="margin:8px 0;border-radius:12px;overflow:hidden;max-width:360px;position:relative;padding-bottom:56.25%;height:0;">` +
+      `<iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:12px;" allowfullscreen loading="lazy"></iframe></div>`;
+  });
+  // 3. TikTok — show a card (can't embed directly)
+  s = s.replace(/https?:\/\/(?:www\.)?tiktok\.com\/[^\s]+/gi, url => {
+    const safe = escapeHTML(url);
+    return `<a href="#" onclick="openExternalLink(event,'${safe}')" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;text-decoration:none;font-size:13px;margin:4px 0;">` +
+      `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.09a8.16 8.16 0 004.77 1.52V7.17a4.85 4.85 0 01-1-.48z"/></svg>` +
+      `TikTok Video → ${safe.replace('https://','').slice(0,40)}...</a>`;
+  });
+  // 4. Spotify embed
+  s = s.replace(/https?:\/\/open\.spotify\.com\/(track|album|playlist|artist)\/([\w]+)[^\s]*/gi, (url, type, id) => {
+    return `<div style="margin:8px 0;border-radius:12px;overflow:hidden;max-width:360px;">` +
+      `<iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="${type==='track'?80:160}" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius:12px;"></iframe></div>`;
+  });
+  // 5. Fortized invite/bastion link — show embed card
+  s = s.replace(/https?:\/\/[^\s]*\?invite=([\w]+)/gi, (url, code) => {
+    return `<div style="display:inline-flex;align-items:center;gap:10px;padding:10px 16px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:12px;margin:4px 0;cursor:pointer;" onclick="openExternalLink(event,'${escapeHTML(url)}')">` +
+      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>` +
+      `<div><div style="font-size:13px;font-weight:700;color:var(--accent);">Join Bastion</div><div style="font-size:11px;color:var(--muted-light);">Invite code: ${escapeHTML(code)}</div></div></div>`;
+  });
+  // 6. All other URLs — yellow clickable link
+  s = s.replace(/(?<![='"\(])(https?:\/\/[^\s<>"'\)]+)/gi, url => {
+    const safe = escapeHTML(url);
+    return `<a href="#" onclick="openExternalLink(event,'${safe}')" style="color:var(--accent);text-decoration:underline;text-underline-offset:2px;">${safe}</a>`;
+  });
+  // Markdown formatting
+  return s
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/`(.+?)`/g,'<code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;font-family:monospace;">$1</code>')
+    .replace(/~~(.+?)~~/g,'<s>$1</s>')
+    .replace(/\n/g,'<br>');
+}
+
+// ════════════════════════════════════════════
+// STATUS INDICATOR AS DOT
+// ════════════════════════════════════════════
+function getStatusDot(status, size=10) {
+  const colors = { online:'#3ecf6e', away:'#f59e0b', dnd:'#f87171', invisible:'#6b7280', offline:'#6b7280' };
+  const col = colors[status] || colors.offline;
+  return `<span style="display:inline-block;width:${size}px;height:${size}px;border-radius:50%;background:${col};border:2px solid var(--bg);flex-shrink:0;" title="${status||'offline'}"></span>`;
+}
+
+// Patch buildAvatarHTML to show status dot overlay
+function buildAvatarWithStatus(pfp, name, size, status) {
+  const av = buildAvatarHTML(pfp, name, size);
+  const dot = status ? `<span style="position:absolute;bottom:0;right:0;width:${Math.max(8,Math.floor(size*0.28))}px;height:${Math.max(8,Math.floor(size*0.28))}px;border-radius:50%;background:${({online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171'}[status]||'#6b7280')};border:2px solid var(--bg);"></span>` : '';
+  return `<div style="position:relative;display:inline-flex;flex-shrink:0;">${av}${dot}</div>`;
+}
+
+// ════════════════════════════════════════════
+// IDLE DETECTION
+// ════════════════════════════════════════════
+let _idleTimer = null;
+const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+let _prevStatus = null;
+
+function resetIdleTimer() {
+  if (_idleTimer) clearTimeout(_idleTimer);
+  if (CU?.status === 'away' && _prevStatus && _prevStatus !== 'away') {
+    // User came back — restore previous status
+    CU.status = _prevStatus;
+    _prevStatus = null;
+    try { FortizedSocial.setStatus(CU.username, CU.status); } catch {}
+    updateUserbar();
+  }
+  _idleTimer = setTimeout(() => {
+    if (CU && CU.status !== 'dnd' && CU.status !== 'invisible') {
+      _prevStatus = CU.status || 'online';
+      CU.status = 'away';
+      try { FortizedSocial.setStatus(CU.username, 'away'); } catch {}
+      updateUserbar();
+    }
+  }, IDLE_TIMEOUT);
+}
+
+function initIdleDetection() {
+  ['mousemove','keydown','click','touchstart','scroll'].forEach(ev => {
+    document.addEventListener(ev, resetIdleTimer, { passive: true });
+  });
+  resetIdleTimer();
+}
+
+// ════════════════════════════════════════════
+// RADIANCE FONT SELECTOR
+// ════════════════════════════════════════════
+const RADIANCE_FONTS = [
+  { id: 'default', name: 'Default', css: "'DM Sans', sans-serif" },
+  { id: 'syne', name: 'Syne Bold', css: "'Syne', sans-serif", weight: '800' },
+  { id: 'serif', name: 'Elegant Serif', css: "Georgia, 'Times New Roman', serif" },
+  { id: 'mono', name: 'Monospace', css: "'Courier New', monospace" },
+  { id: 'cursive', name: 'Cursive', css: "cursive" },
+  { id: 'system', name: 'System UI', css: "system-ui, -apple-system, sans-serif" },
+];
+
+function getDisplayFont(user) {
+  if (!user?.displayFont) return RADIANCE_FONTS[0].css;
+  const f = RADIANCE_FONTS.find(f => f.id === user.displayFont);
+  return f ? f.css : RADIANCE_FONTS[0].css;
+}
+
+function renderRadianceFontPicker() {
+  const hasRadiance = CU.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  if (!hasRadiance) return '';
+  return `
+    <div class="settings-section">
+      <div class="settings-title">Display Name Font <span style="font-size:10px;color:var(--accent);background:var(--accent-dim);padding:2px 7px;border-radius:100px;margin-left:6px;">Radiance</span></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;">
+        ${RADIANCE_FONTS.map(f => `
+          <button onclick="previewFont('${f.id}')" style="padding:10px 14px;border-radius:12px;border:1.5px solid ${CU.displayFont===f.id?'var(--accent)':'var(--border)'};background:${CU.displayFont===f.id?'var(--accent-dim)':'var(--panel2)'};cursor:pointer;text-align:left;">
+            <div style="font-family:${f.css};font-weight:${f.weight||'600'};font-size:14px;color:#fff;margin-bottom:2px;">${escapeHTML(CU.displayName||CU.username)}</div>
+            <div style="font-size:10px;color:var(--muted);">${f.name}</div>
+          </button>`).join('')}
+      </div>
+      <button class="btn-a" onclick="saveDisplayFont()" style="font-size:13px;padding:8px 16px;">Save Font</button>
+    </div>`;
+}
+
+function previewFont(fontId) {
+  CU.displayFont = fontId;
+  buildProfileView('myprofile'); // re-render to show selection
+}
+
+async function saveDisplayFont() {
+  await saveUser();
+  updateUserbar();
+  toast('Display font updated!','success');
 }
 
 </script>

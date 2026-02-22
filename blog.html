@@ -27,7 +27,7 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: #1e2535; border-radius: 10px; }
 
-/* ── NAV ──────────────────────────────── */
+/* ── NAV ── */
 nav {
   position: sticky; top: 0; z-index: 200;
   display: flex; justify-content: space-between; align-items: center;
@@ -45,7 +45,7 @@ nav {
 .nav-link:hover { color: #fff; background: rgba(255,255,255,.05); }
 .nav-link.active { color: var(--accent); }
 
-/* ── BLOG HERO ────────────────────────── */
+/* ── BLOG HERO ── */
 .blog-hero {
   padding: 80px 72px 64px;
   position: relative; overflow: hidden;
@@ -75,34 +75,35 @@ nav {
 .blog-hero h1 em { font-style: normal; color: var(--accent); }
 .blog-hero p { font-size: 16.5px; color: var(--muted-light); line-height: 1.65; max-width: 480px; }
 
-/* ── LAYOUT ───────────────────────────── */
+/* ── LAYOUT ── */
 .blog-layout {
   max-width: 1200px; margin: 0 auto;
   padding: 64px 72px 100px;
   display: grid; grid-template-columns: 1fr 300px; gap: 60px;
 }
 
-/* ── FEATURED CARD ────────────────────── */
-.featured-card {
-  background: var(--panel); border: 1px solid var(--border);
+/* ── PINNED FEATURED (large, top) ── */
+.pinned-card {
+  background: var(--panel); border: 1px solid rgba(255,249,62,.22);
   border-radius: 24px; overflow: hidden; cursor: pointer;
-  transition: transform .2s, border-color .2s, box-shadow .2s;
-  margin-bottom: 16px; position: relative;
+  transition: transform .2s, box-shadow .2s;
+  margin-bottom: 24px; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,249,62,.06), 0 8px 40px rgba(0,0,0,.4);
 }
-.featured-card::before {
-  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+.pinned-card::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent 0%, var(--accent) 40%, var(--accent) 60%, transparent 100%);
 }
-.featured-card:hover { transform: translateY(-4px); border-color: rgba(255,249,62,.2); box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+.pinned-card:hover { transform: translateY(-5px); box-shadow: 0 24px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(255,249,62,.18); }
 
-.card-banner {
-  height: 200px;
-  background: linear-gradient(135deg, rgba(255,249,62,.1) 0%, transparent 50%), linear-gradient(to bottom, rgba(8,10,15,.3), rgba(8,10,15,.85)), url("Fortized banner.png") center / cover no-repeat;
-  position: relative; display: flex; align-items: flex-end; padding: 22px 28px;
+.pinned-banner {
+  height: 220px;
+  background: linear-gradient(135deg, rgba(255,249,62,.13) 0%, transparent 50%), linear-gradient(to bottom, rgba(8,10,15,.2), rgba(8,10,15,.88)), url("Fortized banner.png") center / cover no-repeat;
+  position: relative; display: flex; align-items: flex-end; padding: 22px 28px; gap: 8px;
 }
-.card-banner::before {
+.pinned-banner::before {
   content: ""; position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,249,62,.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,249,62,.02) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(255,249,62,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,249,62,.025) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 .card-badge {
@@ -116,72 +117,116 @@ nav {
   background: rgba(255,249,62,.12); color: var(--accent);
   border: 1px solid rgba(255,249,62,.28);
 }
+.pinned-body { padding: 26px 28px 26px; }
 
-.card-body { padding: 26px 28px 24px; }
-.article-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-.article-category {
-  font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(255,249,62,.18);
-  border-radius: 6px; padding: 3px 10px;
+/* ── STANDARD CARDS ── */
+.featured-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 20px; overflow: hidden; cursor: pointer;
+  transition: transform .2s, border-color .2s, box-shadow .2s;
+  margin-bottom: 12px; position: relative;
 }
-.article-date { font-size: 12.5px; color: var(--muted); }
-.read-time { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
-.read-time::before { content: "⏱"; font-size: 10px; opacity: .7; }
+.featured-card:hover { transform: translateY(-3px); border-color: rgba(255,249,62,.18); box-shadow: 0 16px 50px rgba(0,0,0,.45); }
+
+/* Horizontal card variant */
+.card-row {
+  display: flex; align-items: stretch;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden; cursor: pointer;
+  transition: border-color .2s, background .2s, transform .2s;
+  margin-bottom: 10px;
+}
+.card-row:hover { border-color: rgba(255,249,62,.15); background: rgba(255,249,62,.02); transform: translateX(3px); }
+.card-row-stripe {
+  width: 4px; flex-shrink: 0;
+  background: linear-gradient(180deg, var(--accent), rgba(255,249,62,.2));
+}
+.card-row-body { padding: 18px 20px; flex: 1; }
+.card-row-icon { width: 56px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; background: rgba(255,249,62,.04); border-left: 1px solid var(--border); }
+
+.card-banner {
+  height: 160px;
+  background: linear-gradient(135deg, rgba(255,249,62,.08) 0%, transparent 50%), linear-gradient(to bottom, rgba(8,10,15,.3), rgba(8,10,15,.85)), url("Fortized banner.png") center / cover no-repeat;
+  position: relative; display: flex; align-items: flex-end; padding: 16px 20px; gap: 6px;
+}
+.card-banner::before {
+  content: ""; position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,249,62,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,249,62,.018) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.card-body { padding: 20px 22px 20px; }
+.article-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.article-category {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(255,249,62,.18);
+  border-radius: 6px; padding: 2px 9px;
+}
+.article-date { font-size: 12px; color: var(--muted); }
+.read-time { font-size: 11.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+.read-time::before { content: "⏱"; font-size: 9px; opacity: .7; }
 .author-pill {
   display: flex; align-items: center; gap: 6px;
-  font-size: 12px; color: var(--muted-light);
+  font-size: 11.5px; color: var(--muted-light);
   background: rgba(255,255,255,.04); border: 1px solid var(--border);
-  border-radius: 100px; padding: 3px 10px 3px 3px;
+  border-radius: 100px; padding: 2px 9px 2px 3px;
 }
 .author-av-sm {
-  width: 20px; height: 20px; border-radius: 50%;
+  width: 18px; height: 18px; border-radius: 50%;
   background: linear-gradient(135deg, rgba(255,249,62,.3), rgba(255,249,62,.1));
   border: 1px solid rgba(255,249,62,.3);
   display: flex; align-items: center; justify-content: center;
-  font-size: 9px; font-weight: 800; color: var(--accent);
+  font-size: 8px; font-weight: 800; color: var(--accent);
 }
-.card-title { font-family: 'Syne', sans-serif; font-size: 23px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; margin-bottom: 10px; color: #fff; }
-.card-excerpt { font-size: 14px; color: var(--muted-light); line-height: 1.7; margin-bottom: 20px; }
-.read-more { display: inline-flex; align-items: center; gap: 7px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--accent); transition: gap .15s; }
+.card-title { font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -.3px; line-height: 1.2; margin-bottom: 8px; color: #fff; }
+.card-title.large { font-size: 24px; letter-spacing: -.5px; margin-bottom: 10px; }
+.card-excerpt { font-size: 13.5px; color: var(--muted-light); line-height: 1.7; margin-bottom: 18px; }
+.read-more { display: inline-flex; align-items: center; gap: 7px; font-family: 'Syne', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--accent); transition: gap .15s; }
+.pinned-card:hover .read-more,
 .featured-card:hover .read-more { gap: 11px; }
 
-/* ── ARTICLE STUBS ────────────────────── */
-.articles-label {
-  font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--muted); margin: 12px 0 14px;
+/* Section divider */
+.section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin: 28px 0 14px;
   display: flex; align-items: center; gap: 10px;
 }
-.articles-label::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.section-label::before { content: ""; width: 16px; height: 1px; background: var(--accent); opacity: .5; }
+.section-label::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 
+/* Stubs */
 .article-stub {
   display: flex; gap: 14px; align-items: flex-start;
-  padding: 16px; background: rgba(255,255,255,.02);
-  border: 1px solid var(--border); border-radius: 14px;
-  cursor: pointer; transition: border-color .15s, background .15s; margin-bottom: 8px;
+  padding: 14px 16px; background: rgba(255,255,255,.015);
+  border: 1px solid var(--border); border-radius: 12px;
+  cursor: default; margin-bottom: 8px;
 }
-.article-stub:hover { border-color: rgba(255,249,62,.14); background: rgba(255,249,62,.02); }
-.stub-icon { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; background: rgba(255,249,62,.07); border: 1px solid rgba(255,249,62,.12); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.stub-icon { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; background: rgba(255,249,62,.05); border: 1px solid rgba(255,249,62,.1); display: flex; align-items: center; justify-content: center; font-size: 16px; }
 .stub-body { flex: 1; }
-.stub-cat { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; }
-.stub-title { font-family: 'Syne', sans-serif; font-size: 13.5px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 3px; }
-.stub-meta { font-size: 11.5px; color: var(--muted); }
-.stub-coming { font-size: 11px; color: var(--muted); font-style: italic; }
+.stub-cat { font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+.stub-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #6b7a94; line-height: 1.3; margin-bottom: 3px; }
+.stub-coming { font-size: 11px; color: #3a4255; font-style: italic; }
 
-/* ── SIDEBAR ──────────────────────────── */
-.sidebar-block { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 22px; margin-bottom: 18px; }
-.sidebar-title { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-.sidebar-title::before { content: ""; width: 12px; height: 2px; background: var(--accent); border-radius: 1px; }
-.author-card { text-align: center; padding: 6px 0; }
+/* ── SIDEBAR ── */
+.sidebar-block { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 22px; margin-bottom: 16px; }
+.sidebar-title { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.sidebar-title::before { content: ""; width: 10px; height: 2px; background: var(--accent); border-radius: 1px; }
 .author-avatar-big { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,249,62,.25), rgba(255,249,62,.06)); border: 2px solid rgba(255,249,62,.3); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--accent); margin: 0 auto 12px; box-shadow: 0 0 28px rgba(255,249,62,.1); }
-.author-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 4px; }
-.author-role { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(255,249,62,.18); border-radius: 6px; padding: 3px 10px; display: inline-block; margin-bottom: 8px; }
-.author-org { font-size: 12px; color: var(--muted-light); }
-.author-bio { font-size: 12.5px; color: var(--muted-light); line-height: 1.6; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; text-align: left; }
-.tag-list { display: flex; flex-wrap: wrap; gap: 7px; }
-.tag-pill { font-size: 12px; font-weight: 600; color: var(--muted-light); background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.author-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.author-role { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(255,249,62,.18); border-radius: 6px; padding: 2px 9px; display: inline-block; margin-bottom: 6px; }
+.author-org { font-size: 11.5px; color: var(--muted-light); }
+.author-bio { font-size: 12px; color: var(--muted-light); line-height: 1.6; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; text-align: left; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-pill { font-size: 11.5px; font-weight: 600; color: var(--muted-light); background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 100px; padding: 4px 11px; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
 .tag-pill:hover { border-color: rgba(255,249,62,.2); color: var(--accent); background: var(--accent-dim); }
 
-/* ── ARTICLE VIEW ─────────────────────── */
+/* Contributors list */
+.contrib-row { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.contrib-row:last-child { border-bottom: none; padding-bottom: 0; }
+.contrib-av { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,249,62,.2), rgba(255,249,62,.06)); border: 1.5px solid rgba(255,249,62,.25); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+.contrib-name { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #e2e8f3; }
+.contrib-role { font-size: 11px; color: var(--muted); }
+
+/* ── ARTICLE VIEW ── */
 #article-view {
   display: none; max-width: 1200px; margin: 0 auto;
   padding: 64px 72px 100px;
@@ -215,16 +260,15 @@ nav {
 
 .article-byline {
   display: flex; align-items: center; gap: 14px;
-  padding: 18px 22px; background: rgba(255,255,255,.02);
+  padding: 16px 20px; background: rgba(255,255,255,.02);
   border: 1px solid var(--border); border-radius: 14px; margin-bottom: 36px;
 }
-.byline-av { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,249,62,.25), rgba(255,249,62,.06)); border: 2px solid rgba(255,249,62,.3); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+.byline-av { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,249,62,.25), rgba(255,249,62,.06)); border: 2px solid rgba(255,249,62,.3); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
 .byline-info .byline-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
 .byline-info .byline-role { font-size: 12px; color: var(--muted-light); }
-.byline-org { margin-left: auto; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-.byline-org img { height: 15px; opacity: .5; }
+.byline-org { margin-left: auto; font-size: 12px; color: var(--muted); }
 
-/* ── PROSE ────────────────────────────── */
+/* ── PROSE ── */
 .article-prose { font-family: 'Lora', serif; }
 .article-prose .lead { font-size: 17px; color: #c8d0dc; line-height: 1.78; margin-bottom: 34px; padding-bottom: 30px; border-bottom: 1px solid var(--border); font-style: italic; }
 .article-prose p { font-size: 15.5px; color: var(--muted-light); line-height: 1.88; margin-bottom: 20px; }
@@ -235,52 +279,36 @@ nav {
 .article-prose ul li:hover { border-color: rgba(255,249,62,.12); background: rgba(255,249,62,.03); }
 .article-prose ul li::before { content: "✦"; color: var(--accent); font-size: 9px; flex-shrink: 0; margin-top: 5px; }
 .article-prose ul li strong { color: #fff; font-weight: 600; }
-
 .article-prose .highlight-box { background: rgba(255,249,62,.04); border: 1px solid rgba(255,249,62,.12); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 18px 22px; margin: 26px 0; font-size: 14.5px; color: #c8d0dc; line-height: 1.72; font-family: 'DM Sans', sans-serif; }
 .article-prose .highlight-box strong { color: var(--accent); }
-
 .article-prose .quote-block { position: relative; background: rgba(255,255,255,.025); border: 1px solid var(--border); border-left: 3px solid rgba(255,249,62,.35); border-radius: var(--radius); padding: 20px 24px 20px 30px; margin: 26px 0; font-size: 16px; font-style: italic; color: #c8d0dc; line-height: 1.72; }
 .article-prose .quote-block::before { content: "\201C"; position: absolute; top: 6px; left: 12px; font-size: 38px; color: rgba(255,249,62,.2); font-family: 'Lora', serif; line-height: 1; }
-
-/* Inline term link pill */
-.article-prose a.term-link { color: var(--accent); text-decoration: none; font-family: 'DM Sans', sans-serif; font-size: .88em; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; background: var(--accent-dim); border: 1px solid rgba(255,249,62,.2); border-radius: 5px; transition: background .15s, border-color .15s; vertical-align: middle; white-space: nowrap; }
-.article-prose a.term-link:hover { background: rgba(255,249,62,.16); border-color: rgba(255,249,62,.4); }
-.article-prose a.term-link::before { content: "↗"; font-size: .85em; opacity: .7; }
-
+.radiance-badge-inline { display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(90deg, rgba(255,200,62,.12), rgba(255,249,62,.12)); border: 1px solid rgba(255,220,62,.25); border-radius: 100px; padding: 2px 10px; font-size: 13px; font-weight: 700; color: #ffd93e; vertical-align: middle; font-family: 'DM Sans', sans-serif; }
 .article-prose .perks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin: 18px 0 26px; }
 .perk-card { background: var(--panel); border: 1px solid var(--border); border-radius: 13px; padding: 16px; display: flex; gap: 11px; align-items: flex-start; transition: border-color .15s, background .15s; }
 .perk-card:hover { border-color: rgba(255,249,62,.15); background: rgba(255,249,62,.03); }
 .perk-icon { font-size: 20px; flex-shrink: 0; }
 .perk-body .perk-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
 .perk-body .perk-desc { font-size: 12px; color: var(--muted-light); line-height: 1.5; font-family: 'DM Sans', sans-serif; }
-
-.radiance-badge-inline { display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(90deg, rgba(255,200,62,.12), rgba(255,249,62,.12)); border: 1px solid rgba(255,220,62,.25); border-radius: 100px; padding: 2px 10px; font-size: 13px; font-weight: 700; color: #ffd93e; vertical-align: middle; font-family: 'DM Sans', sans-serif; }
-
 .article-prose .sign-off { color: var(--muted); font-size: 13.5px; font-style: italic; border-top: 1px solid var(--border); padding-top: 20px; margin-top: 4px; font-family: 'DM Sans', sans-serif; }
 
-/* Sidebar legal link cards */
-.legal-link-card { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 10px; text-decoration: none; transition: border-color .15s, background .15s; margin-bottom: 8px; }
-.legal-link-card:hover { border-color: rgba(255,249,62,.22); background: rgba(255,249,62,.03); }
-.legal-link-card .llc-icon { font-size: 16px; flex-shrink: 0; }
-.legal-link-card .llc-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 1px; }
-.legal-link-card .llc-desc { font-size: 11.5px; color: var(--muted); }
-
-/* ── FOOTER ───────────────────────────── */
-footer { border-top: 1px solid var(--border); padding: 32px 72px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; }
+/* ── FOOTER ── */
+footer { border-top: 1px solid var(--border); padding: 28px 72px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; }
 .footer-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.footer-logo img { height: 22px; opacity: .5; }
-.footer-logo span { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #2d3548; }
-footer .copy { font-size: 12.5px; color: #2d3548; text-align: center; }
-.footer-links { display: flex; gap: 20px; justify-content: flex-end; }
-.footer-links a { font-size: 12.5px; color: #374151; text-decoration: none; transition: color .15s; }
+.footer-logo img { height: 20px; opacity: .4; }
+.footer-logo span { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #2d3548; }
+footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
+.footer-links { display: flex; gap: 18px; justify-content: flex-end; }
+.footer-links a { font-size: 12px; color: #374151; text-decoration: none; transition: color .15s; }
 .footer-links a:hover { color: var(--muted-light); }
 
-/* ── ANIMATIONS ───────────────────────── */
-@keyframes revealUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+/* ── ANIMATIONS ── */
+@keyframes revealUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
 .reveal { animation: revealUp .5s cubic-bezier(.22,1,.36,1) both; }
 .reveal-d1 { animation-delay: .08s; }
 .reveal-d2 { animation-delay: .16s; }
 .reveal-d3 { animation-delay: .24s; }
+.reveal-d4 { animation-delay: .32s; }
 </style>
 </head>
 <body>
@@ -300,9 +328,7 @@ footer .copy { font-size: 12.5px; color: #2d3548; text-align: center; }
 </nav>
 
 
-<!-- ════════════════════════════════════
-     BLOG LIST VIEW
-═════════════════════════════════════ -->
+<!-- BLOG LIST VIEW -->
 <div id="blog-list-view">
 
   <div class="blog-hero">
@@ -314,98 +340,107 @@ footer .copy { font-size: 12.5px; color: #2d3548; text-align: center; }
   </div>
 
   <div class="blog-layout">
-
-    <!-- Articles -->
     <div>
 
-      <!-- Article 1: What is Fortized? (FEATURED) -->
-      <div class="featured-card reveal" onclick="openArticle('whatisfortized')">
-        <div class="card-banner">
-          <span class="card-badge">⭐ Latest</span>
+      <!-- PINNED: Beta is LIVE -->
+      <div class="pinned-card reveal" onclick="openArticle('betalive')">
+        <div class="pinned-banner">
+          <span class="card-badge">🔥 Pinned</span>
+          <span class="card-badge secondary">🚀 Launch</span>
         </div>
-        <div class="card-body">
+        <div class="pinned-body">
           <div class="article-meta">
-            <span class="article-category">R&amp;D</span>
-            <span class="article-date">February 24, 2026</span>
+            <span class="article-category">Launch</span>
+            <span class="article-date">February 22, 2026</span>
             <span class="read-time">2 min read</span>
             <div class="author-pill">
-              <div class="author-av-sm">T</div>
-              <span>Tyrianum · CRDO</span>
+              <div class="author-av-sm">S</div>
+              <span>Staw · CAO</span>
             </div>
           </div>
-          <div class="card-title">What is Fortized?</div>
-          <div class="card-excerpt">Fortized started with a simple question: why does building a community feel harder than it should? Here's how we built a digital stronghold around structure, identity, and progression — and what makes it different.</div>
+          <div class="card-title large">Fortized Beta is LIVE!</div>
+          <div class="card-excerpt">Today is the day. As of February 22, 2026, the Fortized Beta is officially open. The Atelier is live, the walls are up, and your Bastion is ready to be claimed.</div>
           <span class="read-more">Read Article →</span>
         </div>
       </div>
 
-      <!-- Article 2: Atelier (Feb 21) -->
-      <div class="featured-card reveal reveal-d1" onclick="openArticle('atelier')">
+      <div class="section-label reveal reveal-d1">Recent Articles</div>
+
+      <!-- Article: What is Fortized? -->
+      <div class="featured-card reveal reveal-d1" onclick="openArticle('whatisfortized')">
         <div class="card-banner">
-          <span class="card-badge secondary">🏗️ R&amp;D</span>
+          <span class="card-badge secondary">R&amp;D</span>
+        </div>
+        <div class="card-body">
+          <div class="article-meta">
+            <span class="article-category">R&amp;D</span>
+            <span class="article-date">February 22, 2026</span>
+            <span class="read-time">2 min read</span>
+            <div class="author-pill"><div class="author-av-sm">T</div><span>Tyrianum · CRDO</span></div>
+          </div>
+          <div class="card-title">What is Fortized?</div>
+          <div class="card-excerpt">Fortized started with a simple question: why does building a community feel harder than it should? Here's the structure, identity, and progression system that makes it different.</div>
+          <span class="read-more">Read Article →</span>
+        </div>
+      </div>
+
+      <!-- Article: Atelier -->
+      <div class="featured-card reveal reveal-d2" onclick="openArticle('atelier')">
+        <div class="card-banner">
+          <span class="card-badge secondary">R&amp;D</span>
         </div>
         <div class="card-body">
           <div class="article-meta">
             <span class="article-category">R&amp;D</span>
             <span class="article-date">February 21, 2026</span>
             <span class="read-time">3 min read</span>
-            <div class="author-pill">
-              <div class="author-av-sm">T</div>
-              <span>Tyrianum · CRDO</span>
-            </div>
+            <div class="author-pill"><div class="author-av-sm">T</div><span>Tyrianum · CRDO</span></div>
           </div>
           <div class="card-title">Introducing The Atelier</div>
-          <div class="card-excerpt">After an intensive R&amp;D sprint, we're pulling back the curtain on our latest feature: The Atelier — your hub for progression within the Fortress, where loyalty and social reach translate directly into premium status and exclusive upgrades.</div>
+          <div class="card-excerpt">Your hub for progression within the Fortress — where loyalty and social reach translate into premium status and exclusive upgrades. No credit card required.</div>
           <span class="read-more">Read Article →</span>
         </div>
       </div>
 
-      <!-- Article 3: Gates (Feb 21) -->
-      <div class="featured-card reveal reveal-d2" onclick="openArticle('gates')">
+      <!-- Article: Gates -->
+      <div class="featured-card reveal reveal-d3" onclick="openArticle('gates')">
         <div class="card-banner">
-          <span class="card-badge secondary">🚀 Announcement</span>
+          <span class="card-badge secondary">Announcement</span>
         </div>
         <div class="card-body">
           <div class="article-meta">
             <span class="article-category">Announcement</span>
             <span class="article-date">February 21, 2026</span>
             <span class="read-time">2 min read</span>
-            <div class="author-pill">
-              <div class="author-av-sm">M</div>
-              <span>Maus · CCO</span>
-            </div>
+            <div class="author-pill"><div class="author-av-sm">M</div><span>Maus · CCO</span></div>
           </div>
           <div class="card-title">The Gates are Unlocking</div>
-          <div class="card-excerpt">After months of intensive development and rigorous security testing, we are officially on the horizon of a new era. The Fortized Beta is live — here's everything you need to know about what's waiting inside the Fortress.</div>
+          <div class="card-excerpt">After months of intensive development and security testing, the Fortized Beta is live. Here's everything you need to know about what's waiting inside.</div>
           <span class="read-more">Read Article →</span>
         </div>
       </div>
 
-      <!-- Article 4: Safety (Feb 20) -->
-      <div class="featured-card reveal reveal-d3" onclick="openArticle('safety')">
+      <!-- Article: Safety -->
+      <div class="featured-card reveal reveal-d4" onclick="openArticle('safety')">
         <div class="card-banner">
-          <span class="card-badge secondary">🛡️ Safety</span>
+          <span class="card-badge secondary">Safety</span>
         </div>
         <div class="card-body">
           <div class="article-meta">
             <span class="article-category">Safety</span>
             <span class="article-date">February 20, 2026</span>
             <span class="read-time">4 min read</span>
-            <div class="author-pill">
-              <div class="author-av-sm">W</div>
-              <span>Weaverdant · CSO</span>
-            </div>
+            <div class="author-pill"><div class="author-av-sm">W</div><span>Weaverdant · CSO</span></div>
           </div>
           <div class="card-title">How Stawdio Safety Protects Your Bastion</div>
-          <div class="card-excerpt">As head of the Stawdio Safety Department, I oversee the Fortized Security Department to ensure your Bastion stays under your total sovereignty. Here's the layered infrastructure that keeps the Fortress standing strong.</div>
+          <div class="card-excerpt">The layered infrastructure that keeps the Fortress standing strong — from account-level protections to server-side safeguards and full Bastion sovereignty.</div>
           <span class="read-more">Read Article →</span>
         </div>
       </div>
 
-      <!-- Stubs -->
-      <div class="articles-label reveal reveal-d2">Coming Soon</div>
+      <div class="section-label reveal reveal-d4">Coming Soon</div>
 
-      <div class="article-stub reveal reveal-d2">
+      <div class="article-stub reveal reveal-d4">
         <div class="stub-icon">🏰</div>
         <div class="stub-body">
           <div class="stub-cat">Product</div>
@@ -414,7 +449,7 @@ footer .copy { font-size: 12.5px; color: #2d3548; text-align: center; }
         </div>
       </div>
 
-      <div class="article-stub reveal reveal-d3">
+      <div class="article-stub reveal reveal-d4">
         <div class="stub-icon">⚔️</div>
         <div class="stub-body">
           <div class="stub-cat">Community</div>
@@ -430,27 +465,32 @@ footer .copy { font-size: 12.5px; color: #2d3548; text-align: center; }
 
       <div class="sidebar-block reveal">
         <div class="sidebar-title">Contributors</div>
-        <div style="display:flex;flex-direction:column;gap:14px;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div class="author-avatar-big" style="width:44px;height:44px;font-size:17px;margin:0;flex-shrink:0;">T</div>
-            <div>
-              <div class="author-name" style="font-size:13.5px;margin-bottom:2px;">Tyrianum</div>
-              <div class="author-role" style="font-size:10px;padding:2px 8px;">CRDO</div>
-            </div>
+        <div class="contrib-row">
+          <div class="contrib-av">S</div>
+          <div>
+            <div class="contrib-name">Staw</div>
+            <div class="contrib-role">CAO · Stawdio Group</div>
           </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div class="author-avatar-big" style="width:44px;height:44px;font-size:17px;margin:0;flex-shrink:0;">W</div>
-            <div>
-              <div class="author-name" style="font-size:13.5px;margin-bottom:2px;">Weaverdant</div>
-              <div class="author-role" style="font-size:10px;padding:2px 8px;">CSO</div>
-            </div>
+        </div>
+        <div class="contrib-row">
+          <div class="contrib-av">T</div>
+          <div>
+            <div class="contrib-name">Tyrianum</div>
+            <div class="contrib-role">CRDO · Stawdio R&amp;D</div>
           </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div class="author-avatar-big" style="width:44px;height:44px;font-size:17px;margin:0;flex-shrink:0;">M</div>
-            <div>
-              <div class="author-name" style="font-size:13.5px;margin-bottom:2px;">Maus</div>
-              <div class="author-role" style="font-size:10px;padding:2px 8px;">CCO</div>
-            </div>
+        </div>
+        <div class="contrib-row">
+          <div class="contrib-av">W</div>
+          <div>
+            <div class="contrib-name">Weaverdant</div>
+            <div class="contrib-role">CSO · Stawdio Safety</div>
+          </div>
+        </div>
+        <div class="contrib-row">
+          <div class="contrib-av">M</div>
+          <div>
+            <div class="contrib-name">Maus</div>
+            <div class="contrib-role">CCO · Stawdio Group</div>
           </div>
         </div>
       </div>
@@ -458,9 +498,9 @@ footer .copy { font-size: 12.5px; color: #2d3548; text-align: center; }
       <div class="sidebar-block reveal reveal-d1">
         <div class="sidebar-title">Topics</div>
         <div class="tag-list">
+          <span class="tag-pill">Launch</span>
           <span class="tag-pill">R&amp;D</span>
           <span class="tag-pill">Safety</span>
-          <span class="tag-pill">Product</span>
           <span class="tag-pill">Community</span>
           <span class="tag-pill">Economy</span>
           <span class="tag-pill">Radiance</span>
@@ -478,9 +518,7 @@ footer .copy { font-size: 12.5px; color: #2d3548; text-align: center; }
 </div>
 
 
-<!-- ════════════════════════════════════
-     ARTICLE VIEW (shared shell)
-═════════════════════════════════════ -->
+<!-- ARTICLE VIEW -->
 <div id="article-view">
   <div>
     <div class="article-back" onclick="closeArticle()">← Back to Blog</div>
@@ -490,7 +528,6 @@ footer .copy { font-size: 12.5px; color: #2d3548; text-align: center; }
 </div>
 
 
-<!-- FOOTER -->
 <footer>
   <a href="index.html" class="footer-logo">
     <img src="Fortized icon.png" alt="" onerror="this.style.display='none'">
@@ -505,10 +542,43 @@ footer .copy { font-size: 12.5px; color: #2d3548; text-align: center; }
 
 
 <script>
-/* ─────────────────────────────────────
-   ARTICLE DEFINITIONS
-───────────────────────────────────── */
 const ARTICLES = {
+
+  betalive: {
+    category: 'Launch',
+    date: 'February 22, 2026',
+    readTime: '2 min read',
+    authorInitial: 'S',
+    authorPillLabel: 'Stawdio Group',
+    title: 'Fortized Beta is LIVE!',
+    bylineName: 'Staw',
+    bylineRole: 'Chief Administrative Officer, Stawdio Group',
+    content: `
+      <p class="lead">Today is the day. As of February 22, 2026, the Fortized Beta is officially open.</p>
+
+      <p>After months of hard work from the whole team, we're finally moving from internal testing to a live environment. This isn't just another chat app — it's a modern space built for how we actually play and hang out today.</p>
+
+      <h2>What's in the Box?</h2>
+
+      <ul>
+        <li><strong>The Atelier:</strong> Our R&D team nailed the integration. You can start earning Onyx through quests right now and trade them for Radiance perks — no credit card required.</li>
+        <li><strong>Real Security:</strong> We built walls that actually hold. From AutoMod to Raid Protection, your Bastion is genuinely yours to defend.</li>
+        <li><strong>Sovereign Control:</strong> You get full power over your ranks and chambers — no compromises, no fine print.</li>
+      </ul>
+
+      <h2>Why Beta?</h2>
+
+      <p>We're open, but we're still refining. This phase is all about stress-testing the tech and listening to your feedback. We want to make sure the foundation is rock solid before the full release.</p>
+
+      <div class="highlight-box">
+        <strong>Your feedback shapes the Fortress.</strong> Every bug report, feature request, and community discussion during Beta directly influences what we build next. This is your platform — help us make it right.
+      </div>
+
+      <p>Big thanks to everyone who helped us get here — the team, the testers, and everyone waiting at the gates. The Fortress is ready to be claimed.</p>
+
+      <p class="sign-off">— Staw, Chief Administrative Officer · Stawdio Group</p>
+    `
+  },
 
   atelier: {
     category: 'R&amp;D',
@@ -635,12 +705,10 @@ const ARTICLES = {
 
       <h2>Three Pillars</h2>
 
-      <p>From a product standpoint, Fortized focuses on three things:</p>
-
       <ul>
         <li><strong>Structure</strong> — Your Bastions don't turn into chaos. Roles are ranks. Channels are chambers. Voice spaces are designed for real coordination, not noise.</li>
-        <li><strong>Identity</strong> — You're not just another username in a list. With systems like Onyx and Radiance, engagement actually changes how you appear and how you're recognized. The more you contribute, the more your presence evolves.</li>
-        <li><strong>Progression</strong> — Through daily rewards and quests, members earn Onyx — our in-platform currency — which can be exchanged for Radiance. Radiance unlocks enhanced customization, visual distinction, and expanded creative control.</li>
+        <li><strong>Identity</strong> — You're not just another username in a list. With systems like Onyx and Radiance, engagement actually changes how you appear and how you're recognized.</li>
+        <li><strong>Progression</strong> — Through daily rewards and quests, members earn Onyx — our in-platform currency — which can be exchanged for Radiance, unlocking enhanced customization and visual distinction.</li>
       </ul>
 
       <h2>Earned, Not Bought</h2>
@@ -657,14 +725,11 @@ const ARTICLES = {
 
 };
 
-/* ─────────────────────────────────────
-   SHARED SIDEBAR HTML
-───────────────────────────────────── */
 function buildSidebar(article) {
   return `
     <div class="sidebar-block">
       <div class="sidebar-title">Author</div>
-      <div class="author-card">
+      <div style="text-align:center;padding:6px 0;">
         <div class="author-avatar-big">${article.authorInitial}</div>
         <div class="author-name">${article.bylineName}</div>
         <div class="author-role">${article.category}</div>
@@ -679,9 +744,6 @@ function buildSidebar(article) {
   `;
 }
 
-/* ─────────────────────────────────────
-   OPEN / CLOSE ARTICLE
-───────────────────────────────────── */
 function renderArticle(id) {
   const a = ARTICLES[id];
   if (!a) return false;
@@ -697,7 +759,6 @@ function renderArticle(id) {
         </div>
       </div>
     </div>
-
     <div class="article-byline">
       <div class="byline-av">${a.authorInitial}</div>
       <div class="byline-info">
@@ -706,13 +767,11 @@ function renderArticle(id) {
       </div>
       <div class="byline-org">${a.authorPillLabel}</div>
     </div>
-
     <div class="article-prose">${a.content}</div>
   `;
 
   document.getElementById('article-sidebar').innerHTML = buildSidebar(a);
   document.title = `${a.title} — Fortized Blog`;
-
   document.getElementById('blog-list-view').classList.add('hidden');
   document.getElementById('article-view').classList.add('open');
   return true;
@@ -737,7 +796,6 @@ function closeArticle() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* Handle browser back/forward */
 window.addEventListener('popstate', function(e) {
   const id = e.state && e.state.articleId;
   if (id && ARTICLES[id]) {
@@ -750,7 +808,6 @@ window.addEventListener('popstate', function(e) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-/* Handle direct URL load e.g. blog.html?article=whatisfortized */
 (function() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('article');
@@ -760,6 +817,5 @@ window.addEventListener('popstate', function(e) {
   }
 })();
 </script>
-
 </body>
 </html>

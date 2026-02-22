@@ -601,6 +601,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
           <button class="btn-a" onclick="openModal('modal-new-dm')">➕ New Message</button>
         </div>
       </div>
+      <div id="dm-user-panel" style="display:none;width:260px;min-width:260px;max-width:260px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
     </div>
 
     <!-- FRIENDS VIEW -->
@@ -1261,6 +1262,7 @@ function openDMView(username) {
       </div>
     </div>`;
   loadDMMessages(username);
+  setTimeout(() => showDMUserPanel(username), 80);
 }
 function openDMChat(u) { openDMView(u); }
 
@@ -1506,8 +1508,16 @@ async function loadChannelMessages(idx) {
     _chListener=FortizedSocial.listenBastionChannel(b.globalId||b.name,ch.name,msg=>{
       if (curChannel!==idx) return;
       const el=document.getElementById('ch-msgs-'+idx);
-      if (el){appendMessage(el,msg,'ch',null);scrollBottom('ch-msgs-'+idx);
-      if(msg.from!==CU.username){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}}
+      if (el){
+        const echoKey = (msg.from||'') + '|' + (msg.text||'');
+        if (msg.from===CU.username && _sentEcho.has(echoKey)) {
+          _sentEcho.delete(echoKey); // suppress our own echo
+        } else {
+          appendMessage(el,msg,'ch',null);
+          scrollBottom('ch-msgs-'+idx);
+          if(msg.from!==CU.username){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
+        }
+      }
     });
   } catch(e){console.warn('Channel load',e);}
 }
@@ -1538,6 +1548,8 @@ function autoModCheck(text, bastion) {
   return false;
 }
 
+// Track recently sent texts to suppress Firebase real-time echo
+const _sentEcho = new Set();
 async function sendChannelMsg(idx) {
   const inp=document.getElementById('ch-input');
   if (!inp) return;
@@ -1550,7 +1562,9 @@ async function sendChannelMsg(idx) {
   inp.value=''; inp.style.height='auto';
   const rep=replyingTo;
   cancelReply('ch');
-  // Optimistic local render so message appears immediately
+  const echoKey = CU.username + '|' + text;
+  _sentEcho.add(echoKey);
+  setTimeout(() => _sentEcho.delete(echoKey), 5000);
   const msgsEl=document.getElementById('ch-msgs-'+idx);
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep};
   if(msgsEl){
@@ -1701,10 +1715,20 @@ function saveEdit(msgId) {
   toast('Message edited','success');
 }
 function deleteMsg(msgId) {
-  showCustomConfirm('Delete this message?',()=>{
-    const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  showCustomConfirm('Delete this message?', async () => {
+    const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
     if (row) row.remove();
-    toast('Deleted','success');
+    if (msgId.startsWith('local-')) { toast('Deleted','success'); return; }
+    try {
+      if (curDM) {
+        await FortizedSocial.deleteDMMessage?.(CU.username, curDM, msgId);
+      } else {
+        const b = CU.bastions?.[curBastion];
+        const ch = b?.channels?.[curChannel];
+        await FortizedSocial.deleteBastionMessage?.(b?.globalId||b?.name, ch?.name||'general', msgId);
+      }
+    } catch {}
+    toast('Message deleted','success');
   });
 }
 function forwardMsg(text) {
@@ -1923,6 +1947,8 @@ async function promptJoinPublicBastion(bastionId){
     if(!b){toast('Bastion not found','error');return;}
     const already=(CU.bastions||[]).some(ub=>ub.globalId===b.id||ub.name===b.name);
     if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=>ub.globalId===b.id||ub.name===b.name));return;}
+    if(b.public===false){toast('This bastion is invite-only. Ask the owner for an invite link.','error');return;}
+    if((b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
     const localB={name:b.name,emblem:b.emblem||'🏰',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:b.id||b.name,memberRoles:{},automod:{},boostLevel:0,customEmojis:[]};
     CU.bastions=[...(CU.bastions||[]),localB];
     await saveUser();
@@ -1930,6 +1956,13 @@ async function promptJoinPublicBastion(bastionId){
     renderRailBastions();
     toast('Joined '+b.name+'!','success');
     openBastion(CU.bastions.length-1);
+    // Welcome message in first text channel
+    const wName = CU.displayName||CU.username;
+    const wMsg = Math.random()<0.5
+      ? '→ Everyone, welcome **'+wName+'**!'
+      : '→ Glad you\u2019re here, **'+wName+'**.';
+    const wCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
+    try { await FortizedSocial.sendBastionChannelMessage(b.id||b.name, wCh.name, 'Fortized', wMsg); } catch {}
   }catch(e){toast('Failed to join','error');console.error(e);}
 }
 
@@ -2056,6 +2089,7 @@ function updateDOBField(){
   try{checkPersonalInviteLink();}catch{}
   // Show personal invite link if already generated
   applyRadianceFont();
+  trackRadianceTime();
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+(location.pathname.replace(/\/[^/]*$/,'/')||'/')+'app.html?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling
   if(isAdmin())setTimeout(startReportPolling,2000);
@@ -2255,7 +2289,20 @@ function renderBSettingsMain(tab) {
           <div style="font-size:11px;color:var(--muted-light);">Invite only</div>
         </div>
       </div>
-      <button class="btn-a" onclick="saveBastionOverview()">Save Changes</button>`;
+      <button class="btn-a" onclick="saveBastionOverview()">Save Changes</button>
+      ${b.public!==false ? `
+      <div id="app-form-section" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Application Form <span style="font-size:10.5px;color:var(--muted);font-weight:400;">— optional</span></div>
+        <div style="font-size:12px;color:var(--muted-light);margin-bottom:12px;">Members must answer these before joining. Leave blank for instant-join.</div>
+        <div id="app-qs">
+          ${(b.applicationQuestions||[]).map((q,i) => `<div style="display:flex;gap:6px;margin-bottom:7px;"><input class="field-input app-q-input" value="${escapeHTML(q)}" placeholder="Question ${i+1}" onchange="updateAppQuestion(${i},this.value)" style="flex:1;"><button onclick="removeAppQuestion(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;padding:4px;">×</button></div>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-g" onclick="addAppQuestion()" style="font-size:12px;padding:6px 14px;">+ Question</button>
+          <button class="btn-a" onclick="saveAppQuestions()" style="font-size:12px;padding:6px 14px;">Save Form</button>
+        </div>
+      </div>` : '<div style="margin-top:14px;padding:12px;background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);border-radius:10px;font-size:12.5px;color:var(--muted-light);">🔒 Private bastion — invite-only. Share invite links from the Invites tab.</div>'}
+      `;
   }
   else if (tab==='channels') {
     const cats = b.categories||[];
@@ -2363,7 +2410,7 @@ function renderBSettingsMain(tab) {
       <button class="btn-a" style="margin-bottom:18px;font-size:13px;" onclick="generateInvite()">Generate Invite Link</button>
       ${invites.length ? invites.map((inv,i)=>`
         <div style="padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;">
-          <div class="invite-link-box"><span>${location.origin}?invite=${inv.code}</span>
+          <div class="invite-link-box"><span>${location.href.split('?')[0]}?invite=${inv.code}</span>
             <button class="btn-g" style="padding:4px 10px;font-size:12px;" onclick="copyInvite('${inv.code}')">Copy</button>
           </div>
           <div style="font-size:12px;color:var(--muted);">Uses: ${inv.uses||0} · ${inv.expires?'Expires: '+new Date(inv.expires).toLocaleDateString():'No expiry'}</div>
@@ -2439,8 +2486,41 @@ async function saveBastionOverview() {
 }
 function setBastionVis(isPublic) {
   const b = CU.bastions[curBastion];
+  if (!b) return;
   b.public = isPublic;
-  document.querySelectorAll('.vis-opt').forEach((el,i) => el.classList.toggle('active', i===(isPublic?0:1)));
+  document.querySelectorAll('#bsettings-wrap .vis-opt').forEach((el,i) => el.classList.toggle('active', i===(isPublic?0:1)));
+  const sec = document.getElementById('app-form-section');
+  if (sec) sec.style.display = isPublic ? '' : 'none';
+}
+function addAppQuestion() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  b.applicationQuestions = b.applicationQuestions || [];
+  b.applicationQuestions.push('');
+  renderBSettingsMain('overview');
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('.app-q-input');
+    if (inputs.length) inputs[inputs.length-1].focus();
+  }, 50);
+}
+function removeAppQuestion(i) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  (b.applicationQuestions||[]).splice(i, 1);
+  renderBSettingsMain('overview');
+}
+function updateAppQuestion(i, val) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  b.applicationQuestions = b.applicationQuestions || [];
+  b.applicationQuestions[i] = val;
+}
+async function saveAppQuestions() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  // Read current input values before saving
+  document.querySelectorAll('.app-q-input').forEach((el,i) => {
+    if (b.applicationQuestions) b.applicationQuestions[i] = el.value.trim();
+  });
+  await saveUser();
+  try { await FortizedSocial.updateBastionSettings?.(b.globalId||b.name, {applicationQuestions: b.applicationQuestions}); } catch {}
+  toast('Application form saved!', 'success');
 }
 async function updateBastionIcon(e) {
   const file = e.target.files[0]; if(!file) return;
@@ -2491,7 +2571,7 @@ async function generateInvite() {
   toast('Invite created!', 'success');
 }
 function copyInvite(code) {
-  navigator.clipboard.writeText(location.origin+'?invite='+code).then(()=>toast('Invite link copied!','success')).catch(()=>toast('Copy failed','error'));
+  navigator.clipboard.writeText(location.href.split('?')[0]+'?invite='+code).then(()=>toast('Invite link copied!','success')).catch(()=>toast('Copy failed','error'));
 }
 async function revokeInvite(i) {
   CU.bastions[curBastion].invites.splice(i,1);
@@ -2736,7 +2816,7 @@ function buildProfileNav(scroll) {
     {id:'myprofile',icon:'👤',label:'My Profile'},
     {id:'account',icon:'🔒',label:'Account'},
     {id:'notifs_settings',icon:'🔔',label:'Notifications'},
-    {id:'registered_games',icon:'🎮',label:'Registered Games'},
+    {id:'game_collection',icon:'🎮',label:'Game Collection'},
     {section:'Preferences'},
     {id:'privacy',icon:'🛡️',label:'Privacy'},
     {id:'appearance',icon:'🎨',label:'Appearance'},
@@ -2832,21 +2912,8 @@ function buildProfileView(tab) {
         <button class="btn-d" onclick="showCustomConfirm('Delete your account permanently?',doLogout)">Delete Account</button>
       </div>
     </div>`;
-  } else if(tab==='registered_games') {
-    const games = CU.registeredGames || [];
-    main.innerHTML = `<div style="padding:24px;">
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;">🎮 Registered Games</div>
-      <div style="font-size:13px;color:var(--muted-light);margin-bottom:20px;">Games you're playing show on your profile card automatically.</div>
-      ${games.length
-        ? games.map((g,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
-            <div style="width:34px;height:34px;border-radius:8px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:20px;">${g.icon||'🎮'}</div>
-            <div style="flex:1;"><div style="font-weight:600;">${escapeHTML(g.name)}</div><div style="font-size:11px;color:var(--muted);">Added ${new Date(g.addedAt).toLocaleDateString()}</div></div>
-            <button class="btn-d" style="font-size:12px;padding:5px 10px;" onclick="removeRegisteredGame(${i})">Remove</button>
-          </div>`).join('')
-        : '<div style="text-align:center;padding:32px;"><div style="font-size:36px;margin-bottom:12px;">🎮</div><div style="font-weight:700;margin-bottom:6px;">No game detected</div><div style="font-size:13px;color:var(--muted);margin-bottom:18px;">Not seeing your game? Add it manually!</div></div>'
-      }
-      <button class="btn-a" style="margin-top:${games.length?'8':'0'}px;" onclick="addRegisteredGame()">+ Add Game</button>
-    </div>`;
+  } else if(tab==='game_collection') {
+    renderGameCollectionTab(main);
   } else if(tab==='notifs_settings') {
     main.innerHTML=`<div style="padding:24px;">
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:22px;">Notification Settings</div>
@@ -2972,12 +3039,16 @@ async function viewUserProfile(username) {
   ).join('');
 
   // Playing game
-  const activeGame = (u.registeredGames||[]).find(g => g.active);
-  const gameTag = activeGame
-    ? `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(62,207,110,.06);border:1px solid rgba(62,207,110,.15);border-radius:10px;font-size:12.5px;">
-        <span style="font-size:18px;">${activeGame.icon||'🎮'}</span>
-        <div><div style="font-weight:600;color:var(--green);">Playing ${escapeHTML(activeGame.name)}</div></div>
-      </div>` : '';
+  const gameCollection = (u.gameCollection || u.registeredGames || []);
+  const gameTag = gameCollection.length
+    ? (() => {
+        const items = gameCollection.slice(0,6).map(g =>
+          `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--panel2);border:1px solid var(--border);border-radius:7px;font-size:12px;"><span>${g.icon||'🎮'}</span><span style="font-weight:600;">${escapeHTML(g.name)}</span></span>`
+        ).join('');
+        const more = gameCollection.length>6 ? `<span style="font-size:11px;color:var(--muted);"> +${gameCollection.length-6} more</span>` : '';
+        return `<div style="margin-bottom:4px;"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Game Collection</div><div style="display:flex;flex-wrap:wrap;gap:5px;">${items}${more}</div></div>`;
+      })()
+    : '';
 
   // Build card content
   if (isOwn) {
@@ -2990,6 +3061,7 @@ async function viewUserProfile(username) {
         <div style="padding-bottom:4px;">
           <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;">${escapeHTML(u.displayName||u.username)}</div>
           <div style="font-size:11.5px;color:var(--muted);">@${escapeHTML(u.username)}</div>
+          ${(u.radianceUntil&&new Date(u.radianceUntil)>new Date())?'<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.15),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:2px 9px;font-size:10px;font-weight:700;color:#ffd93e;margin-top:3px;">✨ Radiance</div>':''}
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;">
@@ -3015,6 +3087,7 @@ async function viewUserProfile(username) {
         <div style="padding-bottom:4px;">
           <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;">${escapeHTML(u.displayName||u.username)}</div>
           <div style="font-size:11.5px;color:var(--muted);">@${escapeHTML(u.username)} · ${statusLabels[status]||status}</div>
+          ${(u.radianceUntil&&new Date(u.radianceUntil)>new Date())?'<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.15),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:2px 9px;font-size:10px;font-weight:700;color:#ffd93e;margin-top:3px;">✨ Radiance</div>':''}
         </div>
       </div>
       ${u.bio ? `<div style="font-size:13px;color:var(--muted-light);line-height:1.6;margin-bottom:12px;padding:10px 12px;background:var(--panel2);border-radius:10px;">${escapeHTML(u.bio)}</div>` : ''}
@@ -4650,7 +4723,7 @@ async function loadGiphyTrending(targetInputId) {
   const results = document.getElementById('giphy-results');
   if (!results) return;
   try {
-    const res = await fetch('https://api.giphy.com/v1/gifs/trending?api_key=dc6zaTOxFJmzC&limit=12&rating=pg-13');
+    const res = await fetch('https://api.giphy.com/v1/gifs/trending?api_key=8tjnuv9jBeGxVGmRLkrV2nhuvhKXTvDY&limit=12&rating=pg-13');
     const data = await res.json();
     if (!data.data?.length) { results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">No GIFs available</div>'; return; }
     renderGiphyResults(data.data, targetInputId);
@@ -4681,7 +4754,7 @@ function searchGiphy(q, targetInputId) {
     results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Searching…</div>';
     // Use Giphy public beta key for demo searches
     try {
-      const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(q)}&limit=12&rating=pg-13`);
+      const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=8tjnuv9jBeGxVGmRLkrV2nhuvhKXTvDY&q=${encodeURIComponent(q)}&limit=12&rating=pg-13`);
       const data = await res.json();
       if (!data.data?.length) { results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">No GIFs found</div>'; return; }
       results.innerHTML = data.data.map(gif => `
@@ -5078,6 +5151,295 @@ function playNotifSound(type = 'message') {
 }
 
 
+
+
+
+// ════════════════════════════════════════════
+// RADIANCE: track cumulative time, badge HTML
+// ════════════════════════════════════════════
+function trackRadianceTime() {
+  if (!CU || !CU.radianceUntil) return;
+  const now = new Date(), until = new Date(CU.radianceUntil);
+  if (until <= now) return;
+  const last = CU._radianceLastCheck ? new Date(CU._radianceLastCheck) : now;
+  const elapsed = now - last;
+  if (elapsed > 0 && elapsed < 86400000) CU.radianceTotalMs = (CU.radianceTotalMs||0) + elapsed;
+  CU._radianceLastCheck = now.toISOString();
+  saveUser().catch(() => {});
+}
+function radianceBadgeHTML(user) {
+  if (!user) return '';
+  const active = user.radianceUntil && new Date(user.radianceUntil) > new Date();
+  const totalDays = user.radianceTotalMs ? Math.floor(user.radianceTotalMs / 86400000) : 0;
+  if (!active && totalDays < 1) return '';
+  const label = active ? '\u2728 Radiance Active' : ('\u2728 ' + totalDays + 'd Radiance');
+  return '<span style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.15),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:2px 9px;font-size:10px;font-weight:700;color:#ffd93e;">' + label + '</span>';
+}
+
+// ════════════════════════════════════════════
+// BASTION APPLICATION FORM (join flow)
+// ════════════════════════════════════════════
+function showBastionApplicationForm(b) {
+  const questions = b.applicationQuestions || [];
+  if (!questions.length) { promptJoinPublicBastion(b.id || b.name); return; }
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.92);backdrop-filter:blur(16px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
+  let qHtml = '';
+  questions.forEach((q, i) => {
+    qHtml += '<div style="margin-bottom:14px;">'
+      + '<div style="font-size:13px;font-weight:600;margin-bottom:5px;">' + (i+1) + '. ' + escapeHTML(q) + '</div>'
+      + '<textarea id="appq-' + i + '" class="field-input" rows="2" placeholder="Your answer\u2026" style="resize:vertical;width:100%;"></textarea>'
+      + '</div>';
+  });
+  overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;">'
+    + '<div style="padding:24px 26px;">'
+    + '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:4px;">Apply to Join</div>'
+    + '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">' + escapeHTML(b.name) + '</div>'
+    + qHtml
+    + '<div style="display:flex;gap:8px;margin-top:4px;">'
+    + '<button class="btn-a" style="flex:1;" onclick="submitBastionApp(this,\'' + escapeHTML(b.id||b.name) + '\',' + questions.length + ')">Submit Application</button>'
+    + '<button class="btn-g" style="flex:1;" onclick="this.closest(\'[style*=fixed]\').remove()">Cancel</button>'
+    + '</div></div></div>';
+  document.body.appendChild(overlay);
+}
+async function submitBastionApp(btn, bastionId, qCount) {
+  const answers = [];
+  for (let i = 0; i < qCount; i++) {
+    const el = document.getElementById('appq-' + i);
+    const v = el ? el.value.trim() : '';
+    if (!v) { toast('Please answer all questions', 'error'); return; }
+    answers.push(v);
+  }
+  btn.disabled = true; btn.textContent = 'Submitting\u2026';
+  const app = { applicant: CU.username, displayName: CU.displayName||CU.username, answers, timestamp: new Date().toISOString(), status: 'pending' };
+  try { await FortizedSocial.submitBastionApplication?.(bastionId, app); } catch {
+    const key = 'ftz_apps_' + bastionId;
+    const arr = JSON.parse(localStorage.getItem(key)||'[]');
+    arr.push(app);
+    localStorage.setItem(key, JSON.stringify(arr));
+  }
+  btn.closest('[style*=fixed]')?.remove();
+  toast('Application submitted! The owner will review it.', 'success');
+}
+
+// ════════════════════════════════════════════
+// GAME COLLECTION
+// ════════════════════════════════════════════
+const GAME_CATALOG = [
+  {name:'Minecraft',icon:'\u26CF\uFE0F',genre:'Sandbox'},
+  {name:'Roblox',icon:'\uD83C\uDFAE',genre:'Platform'},
+  {name:'Fortnite',icon:'\uD83C\uDFAF',genre:'Battle Royale'},
+  {name:'Valorant',icon:'\uD83D\uDD2B',genre:'FPS'},
+  {name:'League of Legends',icon:'\u2694\uFE0F',genre:'MOBA'},
+  {name:'Rocket League',icon:'\uD83D\uDE80',genre:'Sports'},
+  {name:'Apex Legends',icon:'\uD83E\uDDB8',genre:'Battle Royale'},
+  {name:'Overwatch 2',icon:'\uD83C\uDF00',genre:'FPS'},
+  {name:'GTA V',icon:'\uD83D\uDE97',genre:'Action'},
+  {name:'Among Us',icon:'\uD83D\uDEF8',genre:'Social'},
+  {name:'Genshin Impact',icon:'\uD83C\uDF38',genre:'RPG'},
+  {name:'Cyberpunk 2077',icon:'\uD83E\uDD16',genre:'RPG'},
+  {name:'Elden Ring',icon:'\uD83D\uDDE1\uFE0F',genre:'RPG'},
+  {name:'Terraria',icon:'\uD83C\uDF33',genre:'Sandbox'},
+  {name:'Stardew Valley',icon:'\uD83C\uDF3E',genre:'Simulation'},
+  {name:'The Sims 4',icon:'\uD83C\uDFE0',genre:'Simulation'},
+  {name:'FIFA',icon:'\u26BD',genre:'Sports'},
+  {name:'Hollow Knight',icon:'\uD83E\uDD8B',genre:'Action'},
+  {name:'Dead by Daylight',icon:'\uD83D\uDD2A',genre:'Horror'},
+  {name:'Rainbow Six Siege',icon:'\uD83D\uDEE1\uFE0F',genre:'Tactical'},
+  {name:'Call of Duty',icon:'\uD83C\uDF96\uFE0F',genre:'FPS'},
+  {name:'Warzone',icon:'\uD83D\uDCA3',genre:'Battle Royale'},
+  {name:'Destiny 2',icon:'\uD83C\uDF0C',genre:'RPG'},
+  {name:'World of Warcraft',icon:'\uD83D\uDC09',genre:'MMO'},
+  {name:'Street Fighter 6',icon:'\uD83D\uDC4A',genre:'Fighting'},
+  {name:'Hades',icon:'\uD83D\uDD25',genre:'Roguelike'},
+  {name:'Celeste',icon:'\u2744\uFE0F',genre:'Platformer'},
+  {name:'Chess',icon:'\u265F\uFE0F',genre:'Strategy'},
+  {name:'Polytoria',icon:'\uD83C\uDF10',genre:'Platform'},
+  {name:'Terraria',icon:'\uD83C\uDF33',genre:'Sandbox'},
+];
+
+function renderGameCollectionTab(main) {
+  if (!main) return;
+  const games = CU.gameCollection || [];
+  let gHtml = '';
+  if (games.length) {
+    gHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:16px;">';
+    games.forEach((g, i) => {
+      gHtml += '<div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;position:relative;">'
+        + '<div style="font-size:30px;margin-bottom:8px;">' + (g.icon||'\uD83C\uDFAE') + '</div>'
+        + '<div style="font-weight:700;font-size:12.5px;margin-bottom:2px;">' + escapeHTML(g.name) + '</div>'
+        + '<div style="font-size:10px;color:var(--muted);">' + escapeHTML(g.genre||'Game') + '</div>'
+        + '<button onclick="removeGameFromCollection(' + i + ')" style="position:absolute;top:5px;right:6px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;">\xd7</button>'
+        + '</div>';
+    });
+    gHtml += '</div>';
+  } else {
+    gHtml = '<div style="text-align:center;padding:40px;">'
+      + '<div style="font-size:48px;margin-bottom:14px;">\uD83C\uDFAE</div>'
+      + '<div style="font-family:Syne,sans-serif;font-weight:800;font-size:16px;margin-bottom:8px;">No games yet</div>'
+      + '<div style="font-size:13px;color:var(--muted);">Add games you love to show them on your public profile.</div>'
+      + '</div>';
+  }
+  main.innerHTML = '<div style="padding:24px;">'
+    + '<div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;">Game Collection</div>'
+    + '<div style="font-size:13px;color:var(--muted-light);margin-bottom:20px;">Add games you play — publicly shown on your profile card.</div>'
+    + gHtml
+    + '<button class="btn-a" onclick="openGameCollectionPicker()" style="font-size:13px;padding:10px 22px;">+ Add Game</button>'
+    + '</div>';
+}
+
+let _gcTimer = null;
+function openGameCollectionPicker() {
+  document.getElementById('gc-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'gc-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.9);backdrop-filter:blur(14px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:520px;width:100%;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;">'
+    + '<div style="padding:18px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">'
+    + '<div style="font-family:Syne,sans-serif;font-size:17px;font-weight:800;margin-bottom:10px;">Add to Game Collection</div>'
+    + '<input class="field-input" id="gc-search" placeholder="Search games or type a name\u2026" style="width:100%;" oninput="filterGCPicker(this.value)">'
+    + '</div>'
+    + '<div id="gc-grid" style="overflow-y:auto;flex:1;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>'
+    + '<div style="padding:10px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;">'
+    + '<button class="btn-g" style="flex:1;" onclick="document.getElementById(\'gc-overlay\').remove()">Cancel</button>'
+    + '<button class="btn-a" style="flex:1;" onclick="addCustomGameFromSearch()">+ Custom</button>'
+    + '</div></div>';
+  document.body.appendChild(overlay);
+  renderGCGrid(GAME_CATALOG);
+  document.getElementById('gc-search').focus();
+}
+
+function filterGCPicker(q) {
+  clearTimeout(_gcTimer);
+  _gcTimer = setTimeout(() => {
+    if (!q.trim()) { renderGCGrid(GAME_CATALOG); return; }
+    const filtered = GAME_CATALOG.filter(g =>
+      g.name.toLowerCase().includes(q.toLowerCase()) || (g.genre||'').toLowerCase().includes(q.toLowerCase()));
+    const grid = document.getElementById('gc-grid');
+    if (!grid) return;
+    if (!filtered.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);">'
+        + 'No match found<br>'
+        + '<button class="btn-a" style="margin-top:10px;font-size:12px;" onclick="addGameToCollection(\'' + escapeHTML(q) + '\',\'\uD83C\uDFAE\',\'Custom\')">Add \u201c' + escapeHTML(q) + '\u201d</button>'
+        + '</div>';
+      return;
+    }
+    renderGCGrid(filtered);
+  }, 200);
+}
+
+function renderGCGrid(games) {
+  const grid = document.getElementById('gc-grid');
+  if (!grid) return;
+  const owned = new Set((CU.gameCollection||[]).map(g => g.name));
+  let html = '';
+  games.forEach(g => {
+    const has = owned.has(g.name);
+    html += '<div style="padding:11px 8px;background:' + (has?'var(--accent-dim)':'var(--panel2)') + ';border:1.5px solid ' + (has?'var(--accent-mid)':'var(--border)') + ';border-radius:12px;cursor:pointer;text-align:center;" '
+      + 'onclick="' + (has ? 'removeGameFromCollectionByName(\'' + escapeHTML(g.name) + '\')' : 'addGameToCollection(\'' + escapeHTML(g.name) + '\',\'' + (g.icon||'\uD83C\uDFAE') + '\',\'' + escapeHTML(g.genre||'Game') + '\')') + '">'
+      + '<div style="font-size:24px;margin-bottom:5px;">' + (g.icon||'\uD83C\uDFAE') + '</div>'
+      + '<div style="font-size:11.5px;font-weight:700;margin-bottom:1px;">' + escapeHTML(g.name) + '</div>'
+      + '<div style="font-size:9.5px;color:' + (has?'var(--accent)':'var(--muted)') + ';">' + (has?'\u2713 Added':escapeHTML(g.genre||'')) + '</div>'
+      + '</div>';
+  });
+  grid.innerHTML = html;
+}
+
+async function addGameToCollection(name, icon, genre) {
+  CU.gameCollection = CU.gameCollection || [];
+  if (CU.gameCollection.some(g => g.name === name)) { toast(name + ' already added', 'info'); return; }
+  CU.gameCollection.push({ name, icon: icon||'\uD83C\uDFAE', genre: genre||'Game', addedAt: new Date().toISOString() });
+  await saveUser();
+  renderGCGrid(GAME_CATALOG);
+  buildProfileView('game_collection');
+  toast(name + ' added!', 'success');
+}
+async function removeGameFromCollection(idx) {
+  (CU.gameCollection = CU.gameCollection||[]).splice(idx, 1);
+  await saveUser();
+  buildProfileView('game_collection');
+}
+async function removeGameFromCollectionByName(name) {
+  CU.gameCollection = (CU.gameCollection||[]).filter(g => g.name !== name);
+  await saveUser();
+  renderGCGrid(GAME_CATALOG);
+  buildProfileView('game_collection');
+}
+function addCustomGameFromSearch() {
+  const q = (document.getElementById('gc-search')||{}).value?.trim();
+  if (!q) { toast('Type a game name first', 'error'); return; }
+  addGameToCollection(q, '\uD83C\uDFAE', 'Custom');
+  document.getElementById('gc-overlay')?.remove();
+}
+
+// ════════════════════════════════════════════
+// DM USER PANEL (Discord-style right panel)
+// ════════════════════════════════════════════
+async function showDMUserPanel(username) {
+  const panel = document.getElementById('dm-user-panel');
+  if (!panel) return;
+  panel.style.display = 'block';
+  panel.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center;">Loading\u2026</div>';
+  let u = null;
+  try { u = await FortizedSocial.getUserByName(username); } catch {}
+  if (!u) u = { username, displayName: username };
+  let status = 'offline';
+  try { status = await FortizedSocial.getStatus(username); } catch {}
+  const SC = { online:'#3ecf6e', away:'#f59e0b', dnd:'#f87171', invisible:'#6b7280', offline:'#6b7280' };
+  const SL = { online:'Online', away:'Away', dnd:'Do Not Disturb', invisible:'Invisible', offline:'Offline' };
+  const sc = SC[status]||SC.offline;
+  const hasR = u.radianceUntil && new Date(u.radianceUntil) > new Date();
+  const games = u.gameCollection || u.registeredGames || [];
+  const socials = u.socials || {};
+  let socialHtml = '';
+  [{k:'youtube',l:'YouTube',c:'#FF0000'},{k:'roblox',l:'Roblox',c:'#00B2FF'},{k:'spotify',l:'Spotify',c:'#1DB954'},{k:'polytoria',l:'Polytoria',c:'#7C5CBF'}].forEach(p => {
+    if (socials[p.k]) socialHtml += '<a href="#" onclick="openExternalLink(event,\'' + escapeHTML(socials[p.k]) + '\')" '
+      + 'style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;border:1px solid ' + p.c + '33;color:' + p.c + ';font-size:12px;font-weight:600;text-decoration:none;margin-bottom:4px;">'
+      + p.l + ' \u2192</a>';
+  });
+  let gamesHtml = '';
+  if (games.length) {
+    gamesHtml = '<div style="padding:12px 14px;border-top:1px solid var(--border);">'
+      + '<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Game Collection</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+    games.slice(0,8).forEach(g => {
+      gamesHtml += '<div style="display:flex;align-items:center;gap:4px;padding:3px 7px;background:var(--panel);border:1px solid var(--border);border-radius:7px;font-size:11px;">'
+        + '<span>' + (g.icon||'\uD83C\uDFAE') + '</span><span style="font-weight:600;">' + escapeHTML(g.name) + '</span></div>';
+    });
+    gamesHtml += '</div></div>';
+  }
+  panel.innerHTML =
+    '<div style="height:68px;background:linear-gradient(135deg,#0f1830,#1a0f30);position:relative;overflow:hidden;">'
+    + '<img src="' + (u.banner||'') + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
+    + '</div>'
+    + '<div style="padding:0 12px;margin-top:-24px;margin-bottom:10px;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-end;">'
+    + '<div style="position:relative;display:inline-block;">'
+    + '<div style="width:48px;height:48px;border-radius:50%;background:var(--panel2);border:3px solid var(--channel);overflow:hidden;">' + buildAvatarHTML(u.pfp,u.displayName||u.username,48) + '</div>'
+    + '<span style="position:absolute;bottom:2px;right:2px;width:10px;height:10px;border-radius:50%;background:' + sc + ';border:2px solid var(--channel);"></span>'
+    + '</div>'
+    + '<button onclick="document.getElementById(\'dm-user-panel\').style.display=\'none\'" style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted-light);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">\xd7</button>'
+    + '</div>'
+    + '</div>'
+    + '<div style="padding:0 14px 12px;border-bottom:1px solid var(--border);">'
+    + '<div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;margin-bottom:1px;">' + escapeHTML(u.displayName||u.username) + '</div>'
+    + '<div style="font-size:11px;color:var(--muted);">@' + escapeHTML(u.username) + '</div>'
+    + (hasR ? '<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.15),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.25);border-radius:100px;padding:2px 8px;font-size:9.5px;font-weight:700;color:#ffd93e;margin-top:4px;">\u2728 Radiance</div>' : '')
+    + '</div>'
+    + (u.bio ? '<div style="padding:12px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">About Me</div><div style="font-size:12.5px;color:var(--muted-light);line-height:1.55;">' + escapeHTML(u.bio) + '</div></div>' : '')
+    + '<div style="padding:12px 14px;border-bottom:1px solid var(--border);">'
+    + '<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">Status</div>'
+    + '<div style="display:flex;align-items:center;gap:6px;font-size:12px;">'
+    + '<span style="width:8px;height:8px;border-radius:50%;background:' + sc + ';flex-shrink:0;"></span>'
+    + escapeHTML(SL[status]||status)
+    + '</div></div>'
+    + (socialHtml ? '<div style="padding:12px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Connected</div>' + socialHtml + '</div>' : '')
+    + gamesHtml
+    + '<div style="padding:12px 14px;">'
+    + '<button onclick="viewUserProfile(\'' + escapeHTML(username) + '\')" style="width:100%;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);font-size:12.5px;cursor:pointer;font-weight:600;">View Full Profile</button>'
+    + '</div>';
+}
 
 </script>
 </body>

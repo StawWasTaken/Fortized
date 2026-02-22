@@ -192,7 +192,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .chat-input-actions{display:flex;gap:2px;align-items:center;}
 .chat-input-actions button{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
 .chat-input-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
-.member-list{width:260px;min-width:260px;max-width:260px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;padding:12px 0;flex-shrink:0;}
+.member-list{width:290px;min-width:290px;max-width:290px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;padding:12px 0;flex-shrink:0;}
 .ml-role-header{padding:6px 14px 4px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:10px;}
 .ml-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;overflow:hidden;}
 .ml-entry{display:flex;align-items:center;gap:8px;padding:5px 9px 5px 12px;margin:1px 4px;border-radius:10px;cursor:pointer;transition:background .1s;}
@@ -505,6 +505,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <div class="ua-info">
       <div class="ua-name" id="ua-name">Loading…</div>
       <div class="ua-tag" id="ua-tag">@user</div>
+      <div id="ua-custom-status" onclick="openStatusPicker()" title="Set custom status" style="display:none;align-items:center;gap:4px;padding:1px 7px;margin-top:2px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;cursor:pointer;max-width:160px;overflow:hidden;white-space:nowrap;font-size:10.5px;"></div>
     </div>
     <div class="ua-btns">
       <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute">🎤</button>
@@ -601,7 +602,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
           <button class="btn-a" onclick="openModal('modal-new-dm')">➕ New Message</button>
         </div>
       </div>
-      <div id="dm-user-panel" style="display:none;width:260px;min-width:260px;max-width:260px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
+      <div id="dm-user-panel" style="display:none;width:300px;min-width:300px;max-width:300px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
     </div>
 
     <!-- FRIENDS VIEW -->
@@ -1156,6 +1157,7 @@ function updateUserbar() {
   if (uaName) uaName.textContent = CU.displayName||CU.username;
   if (uaTag) uaTag.textContent = '@'+CU.username;
   updateOnyxDisplay();
+  if (typeof refreshCustomStatusBubble==='function') refreshCustomStatusBubble();
 }
 function updateOnyxDisplay() {
   ['onyx-val','atelier-balance'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=CU?.onyx||0;});
@@ -1256,9 +1258,9 @@ function openDMView(username) {
             <button onclick="openGiphyPicker('dm-input')" title="GIF" style="font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);">GIF</button>
           </div>
           <textarea id="dm-input" placeholder="Message ${escapeHTML(username)}…" rows="1"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDM();}"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();handleChatSend('dm');}"
             oninput="autoResize(this)"></textarea>
-          <button class="chat-send" onclick="sendDM()">➤</button>
+          <button class="chat-send" onclick="handleChatSend('dm')">➤</button>
         </div>
       </div>
     </div>`;
@@ -1278,7 +1280,15 @@ async function loadDMMessages(username) {
     _dmListener = FortizedSocial.listenDM(CU.username, username, msg => {
       if (curDM!==username) return;
       const el=document.getElementById('dm-msgs');
-      if (el) { appendMessage(el,msg,'dm',null); scrollBottom('dm-msgs'); }
+      if (el) {
+        const dmEchoKey='dm|'+(msg.from||'')+'|'+(msg.text||'');
+        if(msg.from===CU.username && _sentEcho.has(dmEchoKey)){
+          _sentEcho.delete(dmEchoKey);
+        } else {
+          appendMessage(el,msg,'dm',null); scrollBottom('dm-msgs');
+          if(msg.from!==CU.username) playNotifSound('message');
+        }
+      }
     });
   } catch(e){console.warn('DM load',e);}
 }
@@ -1291,7 +1301,9 @@ async function sendDM() {
   inp.value=''; inp.style.height='auto';
   const rep=replyingTo;
   cancelReply('dm');
-  // Optimistic local render
+  const dmEchoKey='dm|'+CU.username+'|'+text;
+  _sentEcho.add(dmEchoKey);
+  setTimeout(()=>_sentEcho.delete(dmEchoKey),6000);
   const msgsEl=document.getElementById('dm-msgs');
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep};
   if(msgsEl){
@@ -1353,18 +1365,28 @@ function renderBastionSidebar(scroll) {
   const chs=b.channels||[];
   const isOwner=b.owner===CU.username;
 
-  const textChs=chs.filter(c=>c.type!=='voice');
+  const textChs=chs.filter(c=>c.type==='text'||!c.type);
   const voiceChs=chs.filter(c=>c.type==='voice');
+  const forumChs=chs.filter(c=>c.type==='forum');
 
   if (textChs.length||isOwner) {
     html+=`<div class="cat-row">📝 TEXT CHANNELS ${isOwner?`<button onclick="addChannel(${curBastion},'text')">+</button>`:''}  </div>`;
     chs.forEach((ch,i)=>{
-      if (ch.type==='voice') return;
+      if (ch.type==='voice'||ch.type==='forum') return;
       const tier=getAgeTier(CU?.dateOfBirth);
       const blocked=ch.nsfw&&tier==='child';
       const nsfwTag=ch.nsfw?`<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:1px 5px;border-radius:4px;flex-shrink:0;">NSFW</span>`:'';
       html+=`<div class="ch-item ${curChannel===i?'active':''}" id="ch-sb-${i}" ${blocked?'style="opacity:.4;pointer-events:none;"':''}onclick="selectChannel(${i})">
         <span>#</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>${nsfwTag}${blocked?'<span title="Age blocked">🔒</span>':''}
+      </div>`;
+    });
+  }
+  if (forumChs.length||isOwner) {
+    html+=`<div class="cat-row">💬 FORUMS ${isOwner?`<button onclick="addChannel(${curBastion},'forum')">+</button>`:''}</div>`;
+    forumChs.forEach(function(ch){
+      const ri=chs.indexOf(ch);
+      html+=`<div class="ch-item ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="openForumChannel(${ri})">
+        <span>💬</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>
       </div>`;
     });
   }
@@ -1485,7 +1507,7 @@ function loadChatChannel(idx) {
           <textarea id="ch-input" placeholder="Message #${escapeHTML(ch.name)}…" rows="1"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChannelMsg(${idx});}"
             oninput="autoResize(this)"></textarea>
-          <button class="chat-send" onclick="sendChannelMsg(${idx})" title="Send"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
+          <button class="chat-send" onclick="handleChatSend('ch',${idx})" title="Send"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
         </div>
       </div>
     </div>`;
@@ -1716,13 +1738,43 @@ function saveEdit(msgId) {
   if (textEl) textEl.innerHTML=parseMD(escapeHTML(newText))+'<span class="msg-edited">(edited)</span>';
   toast('Message edited','success');
 }
-function deleteMsg(msgId) {
+function deleteMsg(msgId, context) {
   showCustomConfirm('Delete this message?', async () => {
     const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-    if (row) row.remove();
+    if (row) {
+      // If this is the first message of a group (has avatar+header), promote next continuation
+      if (row.classList.contains('msg-first')) {
+        let next = row.nextElementSibling;
+        while (next && next.classList.contains('date-div')) next = next.nextElementSibling;
+        if (next && next.classList.contains('msg-cont') && next.dataset.from === row.dataset.from) {
+          // Promote: give it the header from the deleted row
+          next.classList.replace('msg-cont','msg-first');
+          const fromName = next.dataset.from || '';
+          const safeFrom = escapeHTML(fromName);
+          const time = next.querySelector('.msg-time-small')?.textContent || '';
+          const avId = 'av-' + next.dataset.msgid.replace(/[^a-z0-9]/gi,'-');
+          const b = CU.bastions?.[curBastion];
+          const roles = b?.roles||[];
+          const mr = (b?.memberRoles||{})[fromName]||[];
+          const pr = roles.find(r=>mr.includes(r.id));
+          const roleTag = pr
+            ? `<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:100px;border:1px solid ${pr.color}44;color:${pr.color};background:${pr.color}18;">${escapeHTML(pr.name)}</span>`
+            : '';
+          // Rebuild content column with header prepended
+          const col = next.querySelector('.msg-content-col');
+          const existingContent = col ? col.innerHTML : '';
+          const avWrap = next.querySelector('.msg-av-wrap');
+          if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;">${buildAvatarHTML(null,fromName,36)}</div>`;
+          if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
+          FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,36);}}).catch(()=>{});
+        }
+      }
+      row.remove();
+    }
     if (msgId.startsWith('local-')) { toast('Deleted','success'); return; }
+    const ctx = context || (curDM ? 'dm' : 'ch');
     try {
-      if (curDM) {
+      if (ctx==='dm') {
         await FortizedSocial.deleteDMMessage?.(CU.username, curDM, msgId);
       } else {
         const b = CU.bastions?.[curBastion];
@@ -2493,13 +2545,17 @@ async function saveBastionOverview() {
   renderRailBastions();
   toast('Bastion updated!', 'success');
 }
-function setBastionVis(isPublic) {
+async function setBastionVis(isPublic) {
   const b = CU.bastions[curBastion];
   if (!b) return;
   b.public = isPublic;
   document.querySelectorAll('#bsettings-wrap .vis-opt').forEach((el,i) => el.classList.toggle('active', i===(isPublic?0:1)));
   const sec = document.getElementById('app-form-section');
   if (sec) sec.style.display = isPublic ? '' : 'none';
+  // Persist immediately
+  await saveUser();
+  try { await FortizedSocial.updateBastionSettings?.(b.globalId||b.name, {public: isPublic}); } catch {}
+  toast(isPublic ? 'Bastion is now Public' : 'Bastion is now Private', 'success');
 }
 function addAppQuestion() {
   const b = CU.bastions?.[curBastion]; if (!b) return;
@@ -2844,57 +2900,130 @@ function buildProfileView(tab) {
   const hasRadiance=CU.radianceUntil&&new Date(CU.radianceUntil)>new Date();
 
   if(tab==='myprofile') {
+    const customStatus = CU.customStatus;
     main.innerHTML=`
-      <div class="profile-banner-area" style="position:relative;">
-        <img src="${CU.banner||'Profile Banner.png'}" onerror="this.style.display='none'" style="width:100%;height:100%;object-fit:cover;">
-        ${hasRadiance?`<label style="position:absolute;bottom:8px;right:8px;cursor:pointer;"><div style="background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:5px 10px;font-size:12px;color:#fff;">🖼 Change Banner</div><input type="file" accept="image/*" style="display:none;" onchange="updateBanner(event)"></label>`:''}
-      </div>
-      <div class="profile-av-row" style="position:relative;margin-top:-32px;padding-left:24px;">
-        <label style="cursor:pointer;display:block;width:68px;height:68px;border-radius:50%;border:3px solid var(--bg);overflow:hidden;background:var(--panel2);">
-          ${CU.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</div>`}
-          <input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event)">
-        </label>
-        ${hasRadiance?`<div class="radiance-badge" style="margin-left:12px;margin-top:auto;">✨ Radiance Active</div>`:''}
-      </div>
-      <div class="profile-content">
-        <div class="profile-display-name">${escapeHTML(CU.displayName||CU.username)}</div>
-        <div class="profile-username">@${escapeHTML(CU.username)}</div>
-        <div class="profile-stats-row" style="margin-top:14px;">
-          <div class="ps-stat"><div class="ps-val">${(CU.bastions||[]).length}</div><div class="ps-key">Bastions</div></div>
-          <div class="ps-stat"><div class="ps-val">${(CU.friends||[]).length}</div><div class="ps-key">Friends</div></div>
-          <div class="ps-stat"><div class="ps-val">${CU.onyx||0}</div><div class="ps-key">Onyx</div></div>
-        </div>
-        <div class="settings-section">
-          <div class="settings-title">Display Name</div>
-          <input class="field-input" id="dn-input" value="${escapeHTML(CU.displayName||CU.username)}" style="margin-bottom:8px;" maxlength="32">
-          <button class="btn-a" onclick="saveDisplayName()" style="font-size:13px;padding:8px 16px;">Save Name</button>
-        </div>
-        <div class="settings-section">
-          <div class="settings-title">Status</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            ${[['online','🟢','Online'],['away','🟡','Away'],['dnd','🔴','Do Not Disturb'],['invisible','⚫','Invisible']].map(([s,i,l])=>`<button onclick="setMyStatus('${s}')" style="display:flex;align-items:center;gap:5px;background:${CU.status===s?'var(--accent-dim)':'transparent'};border:1px solid ${CU.status===s?'var(--accent-mid)':'var(--border)'};color:${CU.status===s?'var(--accent)':'var(--muted-light)'};padding:7px 14px;border-radius:10px;font-size:12.5px;cursor:pointer;">${i} ${l}</button>`).join('')}
+      <!-- PREVIEW CARD (top, Discord-style) -->
+      <div style="padding:24px 24px 0;">
+        <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Preview</div>
+        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:24px;">
+          <!-- Banner -->
+          <div style="height:80px;position:relative;cursor:pointer;" onclick="document.getElementById('banner-file-inp').click()">
+            <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0f1830,#1a0f30);">
+              ${CU.banner?`<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:``}
+            </div>
+            <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
+              <span style="color:#fff;font-size:12.5px;font-weight:600;background:rgba(0,0,0,.5);padding:5px 12px;border-radius:8px;">🖼 Change Banner</span>
+            </div>
+          </div>
+          <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event)">
+          <!-- Avatar row -->
+          <div style="padding:0 16px 16px;position:relative;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-28px;margin-bottom:12px;">
+              <label style="cursor:pointer;position:relative;display:inline-block;">
+                <div style="width:68px;height:68px;border-radius:50%;border:4px solid var(--panel2);overflow:hidden;background:var(--panel);">
+                  ${CU.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</div>`}
+                </div>
+                <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0"><span style="font-size:18px;">📷</span></div>
+                <input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event)">
+              </label>
+              ${hasRadiance?`<div style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,200,62,.15),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;color:#ffd93e;">✨ Radiance Active</div>`:''}
+            </div>
+            <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:2px;">${escapeHTML(CU.displayName||CU.username)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">@${escapeHTML(CU.username)}</div>
+            ${customStatus?`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;font-size:11.5px;cursor:pointer;" onclick="openStatusPicker()">${customStatus.emoji} ${escapeHTML(customStatus.text)}</div>`:`<div style="font-size:11.5px;color:var(--muted);cursor:pointer;" onclick="openStatusPicker()">+ Set custom status</div>`}
           </div>
         </div>
-        <div class="settings-section">
-          <div class="settings-title">Bio</div>
-          <textarea class="field-input" id="bio-input" placeholder="Tell people about yourself…" style="resize:vertical;min-height:80px;" maxlength="300">${escapeHTML(CU.bio||'')}</textarea>
-          <button class="btn-a" onclick="saveBio()" style="font-size:13px;padding:8px 16px;margin-top:8px;">Save Bio</button>
+      </div>
+
+      <!-- SETTINGS SECTIONS -->
+      <div style="padding:0 24px 32px;">
+        <!-- Display Name -->
+        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);">Display Name</div>
+          </div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px;">${escapeHTML(CU.displayName||CU.username)}</div>
+          <input class="field-input" id="dn-input" value="${escapeHTML(CU.displayName||CU.username)}" maxlength="32" style="margin-bottom:8px;">
+          <button class="btn-a" onclick="saveDisplayName()" style="font-size:12.5px;padding:7px 16px;">Save</button>
         </div>
+
+        <!-- Username (read only) -->
+        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Username</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:14px;font-weight:600;">@${escapeHTML(CU.username)}</div>
+            <div style="font-size:11px;color:var(--muted);background:rgba(255,255,255,.05);padding:3px 8px;border-radius:6px;">Cannot be changed</div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Email Address</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <input class="field-input" id="email-input" value="${escapeHTML(CU.email||'')}" placeholder="your@email.com" style="flex:1;">
+            <button class="btn-g" onclick="saveEmail()" style="font-size:12.5px;padding:7px 14px;flex-shrink:0;">Save</button>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Password & Authentication</div>
+          <input class="field-input" id="pw-old" type="password" placeholder="Current password" style="margin-bottom:8px;">
+          <input class="field-input" id="pw-new" type="password" placeholder="New password (min 6 chars)" style="margin-bottom:8px;">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-a" onclick="changePassword()" style="font-size:12.5px;padding:7px 16px;">Change Password</button>
+            <div id="pw-msg" style="font-size:12px;"></div>
+          </div>
+        </div>
+
+        <!-- Presence / Status -->
+        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Status</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+            ${[['online','#3ecf6e','🟢','Online'],['away','#f59e0b','🟡','Away'],['dnd','#f87171','🔴','Do Not Disturb'],['invisible','#6b7280','⚫','Invisible']].map(([s,col,ic,l])=>`
+              <button onclick="setMyStatus('${s}')" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1.5px solid ${CU.status===s?col+'66':'var(--border)'};background:${CU.status===s?col+'18':'transparent'};color:${CU.status===s?col:'var(--muted-light)'};font-size:12.5px;cursor:pointer;font-weight:${CU.status===s?'700':'400'};">
+                <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;"></span>${l}
+              </button>`).join('')}
+          </div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Custom Status</div>
+          ${customStatus
+            ? `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;">
+                <span style="font-size:13px;">${customStatus.emoji} ${escapeHTML(customStatus.text)}</span>
+                <button class="btn-d" onclick="clearCustomStatus()" style="font-size:11px;padding:4px 10px;">Clear</button>
+              </div>`
+            : `<button class="btn-g" onclick="openStatusPicker()" style="font-size:12.5px;padding:8px 16px;">+ Set Custom Status</button>`
+          }
+        </div>
+
+        <!-- Bio -->
+        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">About Me</div>
+          <textarea class="field-input" id="bio-input" placeholder="Tell people about yourself…" style="resize:vertical;min-height:80px;" maxlength="300">${escapeHTML(CU.bio||'')}</textarea>
+          <button class="btn-a" onclick="saveBio()" style="font-size:12.5px;padding:7px 16px;margin-top:8px;">Save</button>
+        </div>
+
         ${renderRadianceFontPicker()}
-        <div class="settings-section">
-          <div class="settings-title">Connected Accounts</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Paste your profile link. Only valid URLs for that platform are accepted.</div>
+
+        <!-- Connected Accounts -->
+        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Connected Accounts</div>
           ${[
-            {key:'youtube',icon:'▶',label:'YouTube',placeholder:'https://youtube.com/@yourchannel',pattern:'youtube.com'},
-            {key:'roblox',icon:'🎮',label:'Roblox',placeholder:'https://roblox.com/users/12345/profile',pattern:'roblox.com'},
-            {key:'spotify',icon:'♪',label:'Spotify',placeholder:'https://open.spotify.com/user/youruser',pattern:'open.spotify.com'},
-            {key:'polytoria',icon:'🌐',label:'Polytoria',placeholder:'https://polytoria.com/user/yourname',pattern:'polytoria.com'},
+            {key:'youtube',color:'#FF0000',bg:'rgba(255,0,0,.08)',label:'YouTube',placeholder:'https://youtube.com/@channel'},
+            {key:'roblox',color:'#00B2FF',bg:'rgba(0,178,255,.08)',label:'Roblox',placeholder:'https://roblox.com/users/12345/profile'},
+            {key:'spotify',color:'#1DB954',bg:'rgba(29,185,84,.08)',label:'Spotify',placeholder:'https://open.spotify.com/user/you'},
+            {key:'polytoria',color:'#7C5CBF',bg:'rgba(124,92,191,.08)',label:'Polytoria',placeholder:'https://polytoria.com/user/you'},
           ].map(acc=>`
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-              <div style="width:34px;height:34px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">${acc.icon}</div>
-              <input class="field-input" id="social-${acc.key}" value="${escapeHTML(CU.socials&&CU.socials[acc.key]||'')}" placeholder="${acc.placeholder}" style="flex:1;" onchange="validateSocialLink('${acc.key}','${acc.pattern}',this)">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${acc.bg};border:1px solid ${acc.color}33;border-radius:11px;margin-bottom:8px;">
+              <div style="font-size:12.5px;font-weight:700;color:${acc.color};min-width:68px;">${acc.label}</div>
+              <input class="field-input" id="social-${acc.key}" value="${escapeHTML(CU.socials&&CU.socials[acc.key]||'')}" placeholder="${acc.placeholder}" style="flex:1;background:rgba(0,0,0,.2);border-color:${acc.color}33;" onchange="validateSocialLink('${acc.key}','${acc.label.toLowerCase()}.com',this)">
             </div>`).join('')}
-          <button class="btn-a" onclick="saveSocialLinks()" style="font-size:13px;padding:8px 16px;">Save Links</button>
+          <button class="btn-a" onclick="saveSocialLinks()" style="font-size:12.5px;padding:8px 18px;margin-top:4px;">Save Connections</button>
+        </div>
+
+        <!-- Danger Zone -->
+        <div style="background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:14px;padding:16px 18px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:10px;">Danger Zone</div>
+          <button class="btn-d" onclick="showCustomConfirm('Delete your account permanently? This cannot be undone.',doLogout)" style="font-size:12.5px;padding:8px 16px;">Delete Account</button>
         </div>
       </div>`;
   } else if(tab==='account') {
@@ -4725,6 +4854,33 @@ function insertGif(embedUrl, targetInputId) {
 
 function parseMD(s) {
   if (!s) return '';
+  // 0a. Image attachments
+  s = s.replace(/\[FTZIMG:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
+    return '<div style="margin:5px 0;">'
+      + '<img src="' + data + '" style="max-width:360px;max-height:300px;border-radius:10px;display:block;cursor:zoom-in;" loading="lazy" onclick="window._zoomImg(this.src)">'
+      + '<a href="' + data + '" download="' + escapeHTML(name) + '" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-top:3px;text-decoration:none;">⬇ ' + escapeHTML(name) + '</a></div>';
+  });
+  // 0b. Video attachments
+  s = s.replace(/\[FTZVID:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
+    return '<div style="margin:5px 0;max-width:400px;">'
+      + '<video controls style="width:100%;max-height:260px;border-radius:10px;background:#000;display:block;" src="' + data + '"></video>'
+      + '<a href="' + data + '" download="' + escapeHTML(name) + '" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-top:3px;text-decoration:none;">⬇ ' + escapeHTML(name) + '</a></div>';
+  });
+  // 0c. Audio attachments
+  s = s.replace(/\[FTZAUD:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
+    return '<div style="margin:5px 0;max-width:360px;">'
+      + '<audio controls style="width:100%;border-radius:10px;" src="' + data + '"></audio>'
+      + '<a href="' + data + '" download="' + escapeHTML(name) + '" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-top:3px;text-decoration:none;">⬇ ' + escapeHTML(name) + '</a></div>';
+  });
+  // 0d. Generic file attachments
+  s = s.replace(/\[FTZFILE:([^\|]+)\|([^\|]+)\|([^\]]+)\]/g, function(_, name, sizeStr, data) {
+    var ext = (name.split('.').pop()||'').toLowerCase();
+    var ico = {pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',zip:'🗜',rar:'🗜',txt:'📃',mp3:'🎵',mp4:'🎬',png:'🖼',jpg:'🖼',jpeg:'🖼',gif:'🖼',webp:'🖼'}[ext]||'📎';
+    return '<a href="' + data + '" download="' + escapeHTML(name) + '" style="display:inline-flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;text-decoration:none;color:var(--text);margin:4px 0;max-width:320px;">'
+      + '<span style="font-size:26px;flex-shrink:0;">' + ico + '</span>'
+      + '<div style="min-width:0;"><div style="font-weight:600;font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">' + escapeHTML(name) + '</div>'
+      + '<div style="font-size:11px;color:var(--muted);">' + escapeHTML(sizeStr) + ' · ⬇ Download</div></div></a>';
+  });
   // 1. Giphy embed
   s = s.replace(/https?:\/\/(?:www\.)?giphy\.com\/gifs\/([\w-]+)/gi, (url, id) => {
     const cleanId = id.split('-').pop();
@@ -4732,10 +4888,14 @@ function parseMD(s) {
       `<img src="https://media.giphy.com/media/${cleanId}/giphy.gif" style="width:100%;border-radius:12px;display:block;" loading="lazy"></div>`;
   });
   // 2. YouTube embed (videos, shorts, and channel links)
-  s = s.replace(/https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/shorts\/([\w-]{11})|youtube\.com\/watch\?v=([\w-]{11})|youtu\.be\/([\w-]{11}))[^\s]*/gi, (url, short, watch, lite) => {
-    const vid = short || watch || lite;
-    return `<div style="margin:8px 0;border-radius:12px;overflow:hidden;max-width:320px;position:relative;padding-bottom:56.25%;height:0;">` +
-      `<iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:12px;" allowfullscreen loading="lazy"></iframe></div>`;
+  // YouTube Shorts — portrait 9:16
+  s = s.replace(/https?:\/\/(?:www\.|m\.)?youtube\.com\/shorts\/([\w-]{11})[^\s]*/gi, (url, vid) => {
+    return `<div style="margin:8px 0;display:inline-block;vertical-align:top;"><div style="position:relative;width:180px;height:320px;border-radius:12px;overflow:hidden;"><iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;inset:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe></div></div>`;
+  });
+  // YouTube regular — 16:9
+  s = s.replace(/https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/watch\?v=([\w-]{11})|youtu\.be\/([\w-]{11}))[^\s]*/gi, (url, watch, lite) => {
+    const vid = watch || lite;
+    return `<div style="margin:8px 0;border-radius:12px;overflow:hidden;max-width:480px;"><div style="position:relative;padding-bottom:56.25%;height:0;"><iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:12px;" allowfullscreen loading="lazy"></iframe></div></div>`;
   });
   // YouTube channel links — show as a clickable card
   s = s.replace(/https?:\/\/(?:www\.)?youtube\.com\/@([\w.-]+)[^\s]*/gi, (url, handle) => {
@@ -5539,61 +5699,322 @@ function insertGifById(id, inputId) {
 // ════════════════════════════════════════════
 // FILE UPLOAD (30MB / 45MB for Radiance)
 // ════════════════════════════════════════════
-function openFileUpload(inputId) {
+function openFileUpload(context) {
   const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
   const maxMB = hasRadiance ? 45 : 30;
   document.getElementById('ftz-file-input')?.remove();
-  const inp = document.createElement('input');
-  inp.type = 'file'; inp.id = 'ftz-file-input';
-  inp.accept = '*/*'; inp.style.display = 'none';
-  inp.multiple = false;
-  document.body.appendChild(inp);
-  inp.click();
-  inp.onchange = () => {
-    const file = inp.files[0]; if (!file) return;
+  const fileInp = document.createElement('input');
+  fileInp.type='file'; fileInp.id='ftz-file-input';
+  fileInp.accept='*/*'; fileInp.style.display='none';
+  document.body.appendChild(fileInp);
+  fileInp.click();
+  fileInp.onchange = () => {
+    const file = fileInp.files[0]; if (!file) { fileInp.remove(); return; }
     if (file.size > maxMB * 1024 * 1024) {
-      toast(`File too large. Max ${maxMB}MB${hasRadiance ? ' (Radiance)' : ''}`, 'error'); inp.remove(); return;
+      toast('File too large. Max ' + maxMB + 'MB', 'error'); fileInp.remove(); return;
     }
-    const r = new FileReader();
-    r.onload = ev => {
-      const dataUrl = ev.target.result;
-      const isImage = file.type.startsWith('image/');
-      const isVideo = file.type.startsWith('video/');
-      const isAudio = file.type.startsWith('audio/');
-      // Insert as embed reference in chat input
-      const chatInp = document.getElementById(inputId || 'ch-input');
-      if (chatInp) {
-        // Store file in session, embed reference
-        const fileId = 'file-' + Date.now();
-        window._attachedFiles = window._attachedFiles || {};
-        window._attachedFiles[fileId] = { name: file.name, type: file.type, data: dataUrl, size: file.size };
-        // Show preview bar
-        showAttachmentPreview(fileId, file.name, file.type, dataUrl, inputId);
-      }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      window._pendingAttachment = { name: file.name, type: file.type, data: ev.target.result, size: file.size, context };
+      showAttachmentPreview(file.name, file.type, ev.target.result, file.size, context);
     };
-    r.readAsDataURL(file);
-    inp.remove();
+    reader.readAsDataURL(file);
+    fileInp.remove();
   };
 }
 
-function showAttachmentPreview(fileId, name, type, dataUrl, inputId) {
+function _clearAttachment(){var b=document.getElementById("attach-preview-bar");if(b)b.remove();window._pendingAttachment=null;}
+function showAttachmentPreview(name, type, dataUrl, size, context) {
   document.getElementById('attach-preview-bar')?.remove();
   const bar = document.createElement('div');
   bar.id = 'attach-preview-bar';
-  bar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel2);border-top:1px solid var(--border);font-size:12.5px;';
+  bar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel2);border-top:1px solid var(--border);font-size:12.5px;flex-shrink:0;';
   const isImage = type.startsWith('image/');
-  bar.innerHTML = (isImage ? `<img src="${dataUrl}" style="height:40px;width:40px;object-fit:cover;border-radius:8px;">` : `<div style="width:40px;height:40px;border-radius:8px;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:20px;">📎</div>`)
-    + `<div style="flex:1;min-width:0;"><div style="font-weight:600;truncate:ellipsis;overflow:hidden;white-space:nowrap;">${escapeHTML(name)}</div><div style="font-size:11px;color:var(--muted);">${(window._attachedFiles[fileId]?.size/1024/1024).toFixed(2)} MB</div></div>`
-    + `<button onclick="document.getElementById('attach-preview-bar').remove();delete window._attachedFiles?.['${fileId}']" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;">✕</button>`;
-  // Insert before chat-input-wrap
-  const inputWrap = document.getElementById(inputId || 'ch-input')?.closest('.chat-input-wrap');
+  const sizeMB = (size/1024/1024).toFixed(2);
+  bar.innerHTML = (isImage
+    ? '<img src="'+dataUrl+'" style="height:42px;width:42px;object-fit:cover;border-radius:9px;flex-shrink:0;">'
+    : '<div style="width:42px;height:42px;border-radius:9px;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">📎</div>')
+    + '<div style="flex:1;min-width:0;"><div style="font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">'+escapeHTML(name)+'</div>'
+    + '<div style="font-size:11px;color:var(--muted);">'+sizeMB+' MB</div></div>'
+    + '<button onclick="_clearAttachment()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;">✕</button>';
+  const inputId = context==='dm' ? 'dm-input' : 'ch-input';
+  const inputWrap = document.getElementById(inputId)?.closest('.chat-input-wrap');
   if (inputWrap) inputWrap.parentNode.insertBefore(bar, inputWrap);
-  else document.body.appendChild(bar);
 }
 
 // ════════════════════════════════════════════
 // updateBastionBanner (duplicate guard)
 // ════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════
+// HANDLE CHAT SEND (with file attachment support)
+// ═══════════════════════════════════════════════════════════
+function handleChatSend(context, chIdx) {
+  const att = window._pendingAttachment;
+  if (att) {
+    // Build embed token based on file type
+    const isImage = att.type.startsWith('image/');
+    const isVideo = att.type.startsWith('video/');
+    const isAudio = att.type.startsWith('audio/');
+    const sizeMB = (att.size/1024/1024).toFixed(2)+' MB';
+    let token;
+    if (isImage) token = '[FTZIMG:'+att.name+'|'+att.data+']';
+    else if (isVideo) token = '[FTZVID:'+att.name+'|'+att.data+']';
+    else if (isAudio) token = '[FTZAUD:'+att.name+'|'+att.data+']';
+    else token = '[FTZFILE:'+att.name+'|'+sizeMB+'|'+att.data+']';
+    // Prepend to chat input
+    const inp = document.getElementById(context==='dm'?'dm-input':'ch-input');
+    if (inp) {
+      const existing = inp.value.trim();
+      inp.value = (existing ? existing+' ' : '') + token;
+    }
+    _clearAttachment();
+    window._pendingAttachment = null;
+  }
+  if (context==='dm') sendDM();
+  else if (chIdx!=null) sendChannelMsg(chIdx);
+  else if (curChannel!=null) sendChannelMsg(curChannel);
+}
+
+// ═══════════════════════════════════════════════════════════
+// CUSTOM STATUS BUBBLES
+// ═══════════════════════════════════════════════════════════
+function refreshCustomStatusBubble() {
+  const el = document.getElementById('ua-custom-status');
+  if (!el) return;
+  const cs = CU && CU.customStatus;
+  if (cs && cs.text) {
+    el.innerHTML = '<span style="font-size:12px;">'+cs.emoji+'</span><span style="font-size:10.5px;font-weight:600;">'+escapeHTML(cs.text)+'</span>';
+    el.style.display = 'inline-flex';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+const STATUS_PRESETS = [
+  {emoji:'🎮',text:'Gaming',color:'#3ecf6e'},
+  {emoji:'🎵',text:'Listening to music',color:'#1DB954'},
+  {emoji:'💻',text:'Working',color:'#60a5fa'},
+  {emoji:'📚',text:'Studying',color:'#a78bfa'},
+  {emoji:'😴',text:'AFK',color:'#6b7280'},
+  {emoji:'🍕',text:'Eating',color:'#f59e0b'},
+  {emoji:'✈️',text:'Travelling',color:'#38bdf8'},
+  {emoji:'🏋️',text:'Working out',color:'#f87171'},
+  {emoji:'🎨',text:'Creating',color:'#f472b6'},
+  {emoji:'🔥',text:'On a roll',color:'#fb923c'},
+  {emoji:'🤔',text:'Thinking...',color:'#c084fc'},
+  {emoji:'😊',text:'Feeling great!',color:'#fde68a'},
+];
+
+function _closeStatusPicker(){var s=document.getElementById("ftz-status-picker");if(s)s.remove();}
+function openStatusPicker() {
+  var el = document.getElementById('ftz-status-picker');
+  if (el) el.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'ftz-status-picker';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.86);backdrop-filter:blur(14px);z-index:9200;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
+  var cur = CU && CU.customStatus;
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:440px;width:100%;padding:26px;';
+  box.innerHTML = '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:4px;">Set Status</div>'
+    +'<div style="font-size:12.5px;color:var(--muted-light);margin-bottom:18px;">What are you up to right now?</div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:14px;">'
+    +'<button id="sp-emoji" style="width:46px;height:46px;border-radius:12px;background:var(--panel2);border:1px solid var(--border);font-size:22px;cursor:pointer;flex-shrink:0;">'+(cur&&cur.emoji?cur.emoji:'😊')+'</button>'
+    +'<input id="sp-text" class="field-input" placeholder="What are you up to?" value="'+(cur&&cur.text?escapeHTML(cur.text):'')+'" maxlength="60" style="flex:1;font-size:13px;">'
+    +'</div>'
+    +'<div style="font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Quick Select</div>'
+    +'<div id="sp-presets" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;"></div>'
+    +'<div style="display:flex;gap:8px;">'
+    +'<button class="btn-a" style="flex:1;" onclick="saveCustomStatus()">Set Status</button>'
+    +(cur?'<button class="btn-d" style="flex:1;" onclick="clearCustomStatus()">Clear</button>':'')
+    +'<button class="btn-g" style="flex:1;" onclick="_closeStatusPicker()">Cancel</button>'
+    +'</div>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  // Build presets using DOM to avoid quote issues
+  var presetsEl = document.getElementById('sp-presets');
+  if (presetsEl) {
+    STATUS_PRESETS.forEach(function(p) {
+      var btn = document.createElement('button');
+      btn.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:100px;border:1px solid '+p.color+'33;background:'+p.color+'14;color:'+p.color+';font-size:12px;cursor:pointer;font-family:inherit;';
+      btn.innerHTML = '<span>'+p.emoji+'</span><span>'+p.text+'</span>';
+      btn.onclick = function() {
+        var em = document.getElementById('sp-emoji');
+        var tx = document.getElementById('sp-text');
+        if (em) em.textContent = p.emoji;
+        if (tx) tx.value = p.text;
+      };
+      presetsEl.appendChild(btn);
+    });
+  }
+  var emojiBtn = document.getElementById('sp-emoji');
+  if (emojiBtn) emojiBtn.onclick = pickStatusEmoji;
+  var txt = document.getElementById('sp-text');
+  if (txt) setTimeout(function(){txt.focus();},50);
+}
+function pickStatusEmoji() {
+  const emojis = ['😊','🎮','🎵','💻','📚','😴','🍕','✈️','🏋️','🎨','🤔','🔥','😎','🥳','😤','💪','🌙','☀️','⚡','🐉'];
+  const btn = document.getElementById('sp-emoji');
+  if (!btn) return;
+  const rect = btn.getBoundingClientRect();
+  showCtxMenu(rect.right+4, rect.top, emojis.map(function(e){ return {icon:e,label:e,action:function(){btn.textContent=e;}}; }));
+}
+
+async function saveCustomStatus() {
+  const emoji = (document.getElementById('sp-emoji')||{}).textContent||'😊';
+  const text = ((document.getElementById('sp-text')||{}).value||'').trim();
+  if (!text) { toast('Add some text!','error'); return; }
+  CU.customStatus = {emoji, text, set:new Date().toISOString()};
+  await saveUser();
+  try { await FortizedSocial.setCustomStatus&&FortizedSocial.setCustomStatus(CU.username, CU.customStatus); } catch {}
+  document.getElementById('ftz-status-picker')&&document.getElementById('ftz-status-picker').remove();
+  refreshCustomStatusBubble();
+  buildProfileView('myprofile');
+  toast('Status updated!','success');
+}
+
+async function clearCustomStatus() {
+  delete CU.customStatus;
+  await saveUser();
+  try { await FortizedSocial.setCustomStatus&&FortizedSocial.setCustomStatus(CU.username, null); } catch {}
+  document.getElementById('ftz-status-picker')&&document.getElementById('ftz-status-picker').remove();
+  refreshCustomStatusBubble();
+  buildProfileView('myprofile');
+  toast('Status cleared','info');
+}
+
+// ═══════════════════════════════════════════════════════════
+// FORUM CHANNELS
+// ═══════════════════════════════════════════════════════════
+function openForumChannel(chIdx) {
+  curChannel = chIdx;
+  const b = CU.bastions&&CU.bastions[curBastion];
+  const ch = b&&b.channels&&b.channels[chIdx];
+  if (!ch) return;
+  document.querySelectorAll('.ch-item').forEach(function(el){el.classList.remove('active');});
+  const sid = document.getElementById('ch-sb-'+chIdx);
+  if (sid) sid.classList.add('active');
+  const wrap = document.getElementById('bastion-chat-wrap');
+  if (!wrap) return;
+  const posts = ch.posts||[];
+  let postsHTML = posts.length ? posts.slice().reverse().map(function(p,ri){
+    const pi = posts.length-1-ri;
+    return renderForumPostCard(p, chIdx, pi);
+  }).join('') : '<div style="text-align:center;padding:48px 20px;color:var(--muted);">No posts yet. Be the first!</div>';
+  wrap.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">'
+    +'<div style="padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--panel);">'
+    +'<div><div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;">💬 '+escapeHTML(ch.name)+'</div><div style="font-size:12px;color:var(--muted);">'+posts.length+' posts</div></div>'
+    +'<button class="btn-a" onclick="openNewForumPost('+chIdx+')" style="font-size:12.5px;padding:8px 16px;">✏ New Post</button>'
+    +'</div>'
+    +'<div style="flex:1;overflow-y:auto;padding:16px;" id="forum-posts-list">'+postsHTML+'</div>'
+    +'</div>';
+}
+
+function renderForumPostCard(p, chIdx, postIdx) {
+  const ago = p.createdAt ? ftzTimeAgo(new Date(p.createdAt)) : '';
+  const tags = (p.tags||[]).map(function(t){return '<span style="padding:2px 8px;border-radius:100px;background:var(--accent-dim);color:var(--accent);font-size:10.5px;font-weight:700;">'+escapeHTML(t)+'</span>';}).join('');
+  return '<div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;" onclick="openForumPost('+chIdx+','+postIdx+')">'
+    +'<div style="display:flex;justify-content:space-between;gap:12px;">'
+    +'<div style="flex:1;min-width:0;">'
+    +'<div style="font-weight:700;font-size:14px;margin-bottom:4px;">'+escapeHTML(p.title||'Untitled')+'</div>'
+    +(tags?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px;">'+tags+'</div>':'')
+    +'<div style="font-size:12.5px;color:var(--muted-light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML((p.body||'').slice(0,120))+'</div>'
+    +'</div>'
+    +'<div style="text-align:right;flex-shrink:0;font-size:11.5px;color:var(--muted);"><div>'+ago+'</div><div style="margin-top:3px;">💬 '+((p.replies||[]).length)+' replies</div></div>'
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:6px;margin-top:9px;font-size:11.5px;color:var(--muted);">'
+    +buildAvatarHTML(null,p.author,16)+' '+escapeHTML(p.author||'unknown')
+    +'</div>'
+    +'</div>';
+}
+
+function openForumPost(chIdx, postIdx) {
+  const b = CU.bastions&&CU.bastions[curBastion]; if (!b) return;
+  const ch = b.channels&&b.channels[chIdx]; if (!ch) return;
+  const p = ch.posts&&ch.posts[postIdx]; if (!p) return;
+  const wrap = document.getElementById('bastion-chat-wrap'); if (!wrap) return;
+  const replies = p.replies||[];
+  const repliesHTML = replies.map(function(r){
+    return '<div style="display:flex;gap:10px;margin-bottom:10px;padding:10px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;">'
+      +'<div style="flex-shrink:0;">'+buildAvatarHTML(null,r.author,30)+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:12.5px;margin-bottom:3px;">'+escapeHTML(r.author)+' <span style="font-weight:400;color:var(--muted);font-size:11px;">'+ftzTimeAgo(new Date(r.createdAt))+'</span></div>'
+      +'<div style="font-size:13px;color:var(--muted-light);line-height:1.55;">'+parseMD(escapeHTML(r.body||''))+'</div>'
+      +'</div></div>';
+  }).join('');
+  wrap.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">'
+    +'<div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--panel);">'
+    +'<button onclick="openForumChannel('+chIdx+')" style="background:none;border:none;color:var(--muted-light);cursor:pointer;font-size:22px;padding:2px 6px;line-height:1;">←</button>'
+    +'<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(p.title)+'</div>'
+    +'<div style="font-size:11.5px;color:var(--muted);">'+escapeHTML(p.author)+' · '+ftzTimeAgo(new Date(p.createdAt))+'</div></div>'
+    +'</div>'
+    +'<div style="flex:1;overflow-y:auto;padding:16px;">'
+    +'<div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;line-height:1.6;">'+parseMD(escapeHTML(p.body||''))+'</div>'
+    +(replies.length?'<div style="font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">'+replies.length+' REPLIES</div>':'')
+    +repliesHTML
+    +'</div>'
+    +'<div style="padding:10px 14px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;">'
+    +'<textarea id="forum-reply-ta" class="field-input" placeholder="Write a reply…" rows="1" style="flex:1;resize:none;" oninput="autoResize(this)"></textarea>'
+    +'<button class="btn-a" style="padding:8px 16px;" onclick="submitForumReply('+chIdx+','+postIdx+')">Reply</button>'
+    +'</div></div>';
+}
+
+function openNewForumPost(chIdx) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;'; overlay.className='ftz-new-post-overlay';
+  overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:540px;width:100%;padding:26px;">'
+    +'<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:18px;">New Post</div>'
+    +'<input id="fp-title" class="field-input" placeholder="Post title…" maxlength="120" style="margin-bottom:10px;font-size:14px;font-weight:600;">'
+    +'<input id="fp-tags" class="field-input" placeholder="Tags (comma-separated, e.g. help, news)" style="margin-bottom:10px;font-size:12.5px;">'
+    +'<textarea id="fp-body" class="field-input" placeholder="Write your post…" rows="5" style="resize:vertical;margin-bottom:14px;"></textarea>'
+    +'<div style="display:flex;gap:8px;">'
+    +'<button class="btn-a" style="flex:1;" onclick="_submitNewPost('+chIdx+')">Publish</button>'
+    +'<button class="btn-g" style="flex:1;" onclick="_closeNewPost()">Cancel</button>'
+    +'</div></div>';
+  document.body.appendChild(overlay);
+  setTimeout(function(){document.getElementById('fp-title')&&document.getElementById('fp-title').focus();},50);
+}
+
+function _closeNewPost(){var p=document.querySelector(".ftz-new-post-overlay");if(p)p.remove();else{var all=document.querySelectorAll("div[style*='position:fixed']");all.forEach(function(el){if(el.querySelector("#fp-title"))el.remove();});}}
+function _submitNewPost(chIdx){var o=document.querySelector(".ftz-new-post-overlay");submitForumPost(chIdx,o);}
+async function submitForumPost(chIdx, overlay) {
+  const title = (document.getElementById('fp-title')||{}).value&&document.getElementById('fp-title').value.trim();
+  const body = (document.getElementById('fp-body')||{}).value&&document.getElementById('fp-body').value.trim();
+  if (!title) { toast('Add a title','error'); return; }
+  if (!body) { toast('Add some content','error'); return; }
+  const tagsRaw = (document.getElementById('fp-tags')||{}).value||'';
+  const tags = tagsRaw.split(',').map(function(t){return t.trim();}).filter(Boolean).slice(0,5);
+  const b = CU.bastions&&CU.bastions[curBastion]; if (!b) return;
+  if (!b.channels[chIdx].posts) b.channels[chIdx].posts = [];
+  b.channels[chIdx].posts.unshift({id:'fp-'+Date.now(),title,body,tags,author:CU.username,createdAt:new Date().toISOString(),replies:[]});
+  await saveUser();
+  if (overlay) overlay.remove();
+  openForumChannel(chIdx);
+  toast('Post published!','success');
+}
+
+async function submitForumReply(chIdx, postIdx) {
+  const ta = document.getElementById('forum-reply-ta');
+  const body = ta&&ta.value&&ta.value.trim();
+  if (!body) return;
+  const b = CU.bastions&&CU.bastions[curBastion]; if (!b) return;
+  const post = b.channels&&b.channels[chIdx]&&b.channels[chIdx].posts&&b.channels[chIdx].posts[postIdx];
+  if (!post) return;
+  if (!post.replies) post.replies = [];
+  post.replies.push({body, author:CU.username, createdAt:new Date().toISOString()});
+  await saveUser();
+  openForumPost(chIdx, postIdx);
+  toast('Reply posted!','success');
+}
+
+function ftzTimeAgo(date) {
+  if (!date||isNaN(date)) return '';
+  const d = Date.now()-date;
+  if (d<60000) return 'just now';
+  if (d<3600000) return Math.floor(d/60000)+'m ago';
+  if (d<86400000) return Math.floor(d/3600000)+'h ago';
+  return Math.floor(d/86400000)+'d ago';
+}
 </script>
 </body>
 </html>

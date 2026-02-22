@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fortized — Maintenance</title>
+<title>Fortized - Maintenance</title>
 <link rel="icon" type="image/png" href="Fortized icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
@@ -62,14 +62,27 @@ body{
 nav{
   position:relative;z-index:10;
   display:flex;justify-content:space-between;align-items:center;
-  padding:22px 72px;
+  padding:16px 72px;
   border-bottom:1px solid var(--border);
   background:rgba(8,10,15,.7);
   backdrop-filter:blur(20px);
 }
 .logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
-.logo img{height:30px;width:30px;object-fit:contain;}
-.logo-text{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;letter-spacing:-.4px;}
+.logo img{height:26px;width:26px;object-fit:contain;}
+.logo-text{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px;}
+.nav-links{display:flex;align-items:center;gap:4px;}
+.nav-link{
+  color:var(--muted-light);font-size:14px;font-weight:500;
+  padding:8px 14px;border-radius:9px;text-decoration:none;
+  transition:color .15s, background .15s;
+}
+.nav-link:hover{color:#fff;background:rgba(255,255,255,.05);}
+.btn-outline-nav{
+  border:1.5px solid rgba(255,249,62,.28) !important;
+  color:var(--accent) !important;
+}
+.btn-outline-nav:hover{background:rgba(255,249,62,.06) !important;}
+
 .status-badge{
   display:inline-flex;align-items:center;gap:7px;
   font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
@@ -133,7 +146,6 @@ main{
 }
 @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
 
-/* gear spin emoji */
 .gear{
   position:absolute;top:10px;right:8px;font-size:26px;z-index:2;
   animation:gearSpin 3s linear infinite;
@@ -165,7 +177,6 @@ main{
 }
 .hero-area p strong{color:#fff;font-weight:600;}
 
-/* home button */
 .home-btn{
   display:inline-flex;align-items:center;gap:10px;
   font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
@@ -198,11 +209,12 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center;}
 .footer-links a{font-size:12.5px;color:#374151;text-decoration:none;transition:color .15s;}
 .footer-links a:hover{color:#8b95a8;}
 
-@media(max-width:600px){
-  nav{padding:18px 24px;}
+@media(max-width:768px){
+  nav{padding:16px 24px;}
   footer{padding:20px 24px;grid-template-columns:1fr;text-align:center;}
   .footer-links{justify-content:center;}
   .hero-area h1{font-size:40px;letter-spacing:-1.5px;}
+  .nav-link:not(.btn-outline-nav){display:none;}
 }
 </style>
 </head>
@@ -215,13 +227,14 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center;}
 </div>
 
 <nav>
-  <a href="#" class="logo">
+  <a href="index.html" class="logo">
     <img src="Fortized icon.png" alt="Fortized">
     <span class="logo-text">Fortized</span>
   </a>
-  <div class="status-badge">
-    <span class="status-dot"></span>
-    Maintenance in Progress
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="blog.html" class="nav-link">Blog</a>
+    <a href="login.html" class="nav-link btn-outline-nav">Login</a>
   </div>
 </nav>
 
@@ -247,7 +260,7 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center;}
 </main>
 
 <footer>
-  <a href="#" class="footer-logo">
+  <a href="index.html" class="footer-logo">
     <img src="Fortized icon.png" alt="">
     <span>Fortized</span>
   </a>

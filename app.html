@@ -183,6 +183,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .reply-bar-text strong{color:var(--accent);}
 .reply-bar button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}
 .chat-input-wrap{padding:0 16px 14px;flex-shrink:0;}
+.typing-indicator{display:flex;align-items:center;gap:7px;padding:4px 16px 6px;min-height:20px;font-size:12px;color:var(--muted);transition:opacity .2s;}
+.typing-dots{display:flex;gap:3px;align-items:center;}
+.typing-dots span{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:typingBounce 1.2s infinite ease-in-out;}
+.typing-dots span:nth-child(2){animation-delay:.2s;}
+.typing-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
 .chat-input-box{background:var(--panel2);border:1px solid var(--border);border-radius:14px;display:flex;align-items:flex-end;gap:5px;padding:8px 11px;transition:border-color .15s;}
 .chat-input-box:focus-within{border-color:rgba(255,249,62,.24);}
 .chat-input-box textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;resize:none;max-height:120px;line-height:1.5;padding:2px 0;}
@@ -224,26 +230,39 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .bc-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
 .bc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
 .bc-desc{font-size:12px;color:var(--muted-light);line-height:1.55;margin-bottom:8px;}
-.atelier-scroll{flex:1;overflow-y:auto;padding:28px;}
-.atelier-top{display:flex;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:26px 30px;margin-bottom:26px;}
-.atelier-bal{display:flex;align-items:center;gap:13px;}
-.atelier-bal img{width:36px;height:36px;object-fit:contain;}
-.atelier-bal h3{font-size:13px;font-weight:600;color:var(--muted-light);margin-bottom:2px;}
-.atelier-bal .amt{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--accent);}
-.daily-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.18);border-radius:16px;padding:14px 24px;cursor:pointer;}
+.atelier-wrap{display:flex;flex:1;overflow:hidden;}
+.atelier-nav{width:200px;min-width:200px;border-right:1px solid var(--border);background:var(--channel);padding:20px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
+.atelier-nav-section{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px;}
+.atelier-nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:11px;cursor:pointer;font-size:13.5px;color:var(--muted-light);transition:all .1s;}
+.atelier-nav-item:hover{background:rgba(255,255,255,.05);color:#fff;}
+.atelier-nav-item.active{background:rgba(255,249,62,.1);color:var(--accent);font-weight:600;}
+.atelier-scroll{flex:1;overflow-y:auto;padding:32px 36px;}
+.atelier-page-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px;}
+.atelier-page-sub{font-size:13px;color:var(--muted-light);margin-bottom:28px;}
+.atelier-hero{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:28px 32px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));}
+.atelier-bal{display:flex;align-items:center;gap:16px;}
+.atelier-bal .coin{width:48px;height:48px;border-radius:50%;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);display:flex;align-items:center;justify-content:center;font-size:24px;}
+.atelier-bal h3{font-size:12px;font-weight:600;color:var(--muted-light);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+.atelier-bal .amt{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:var(--accent);line-height:1;}
+.daily-btn{display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.18);border-radius:16px;padding:16px 28px;cursor:pointer;transition:all .15s;}
+.daily-btn:hover{background:rgba(255,249,62,.12);transform:translateY(-1px);}
 .daily-btn span{font-size:11px;color:var(--muted-light);}
 .daily-btn strong{font-family:'Syne',sans-serif;font-size:14px;color:var(--accent);}
-.daily-btn.claimed{opacity:.5;cursor:not-allowed;}
-.atelier-section-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.daily-btn.claimed{opacity:.45;cursor:not-allowed;pointer-events:none;}
+.atelier-section-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:#fff;}
 .atelier-section-title::before{content:"";width:14px;height:3px;background:var(--accent);border-radius:2px;}
-.radiance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:28px;}
-.rad-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:22px 18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
-.rad-card:hover{border-color:rgba(255,249,62,.22);transform:translateY(-2px);}
-.best-badge{position:absolute;top:10px;right:10px;background:var(--accent);color:#060810;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;text-transform:uppercase;}
-.rad-icon{font-size:30px;}.rad-dur{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
-.rad-price{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;color:var(--accent);}
+.radiance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;}
+.rad-card{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
+.rad-card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,249,62,.03),transparent);opacity:0;transition:opacity .18s;}
+.rad-card:hover{border-color:rgba(255,249,62,.28);transform:translateY(-3px);box-shadow:0 8px 32px rgba(255,249,62,.08);}
+.rad-card:hover::before{opacity:1;}
+.rad-card.bv{border-color:rgba(255,249,62,.2);background:linear-gradient(135deg,rgba(255,249,62,.06),var(--panel));}
+.best-badge{position:absolute;top:12px;right:12px;background:var(--accent);color:#060810;font-size:9px;font-weight:800;padding:3px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:.05em;}
+.rad-icon{font-size:34px;}.rad-dur{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;}
+.rad-price{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);}
 .rad-price span{font-size:12px;color:var(--muted-light);font-family:'DM Sans',sans-serif;font-weight:400;}
-.rad-feats{font-size:12px;color:var(--muted-light);}
+.rad-feats{font-size:12px;color:var(--muted-light);line-height:1.5;}
+.atelier-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:22px;margin-bottom:14px;}
 .profile-wrap{flex:1;display:flex;overflow:hidden;}
 .profile-nav{width:210px;min-width:210px;border-right:1px solid var(--border);background:var(--channel);display:flex;flex-direction:column;padding:12px 0;overflow-y:auto;}
 .profile-nav-item{display:flex;align-items:center;gap:9px;padding:9px 14px;margin:1px 6px;border-radius:12px;cursor:pointer;font-size:13.5px;color:var(--muted-light);transition:all .1s;}
@@ -668,58 +687,22 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 
     <!-- ATELIER VIEW -->
     <div class="view" id="view-atelier">
-      <div class="atelier-scroll">
-        <div class="atelier-top">
-          <div class="atelier-bal">
-            <img src="Onyx.png" onerror="this.style.display='none'">
-            <div>
-              <h3>Your Onyx Balance</h3>
-              <div class="amt" id="atelier-balance">0</div>
-            </div>
-          </div>
-          <div class="daily-btn" id="daily-btn" onclick="claimDaily()">
-            <span>Daily Reward</span>
-            <strong>+50 Onyx</strong>
-          </div>
+      <div class="atelier-wrap">
+        <!-- Sidebar nav -->
+        <div class="atelier-nav">
+          <div class="atelier-nav-section">Overview</div>
+          <div class="atelier-nav-item active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">🏠 Overview</div>
+          <div class="atelier-nav-section">Shop</div>
+          <div class="atelier-nav-item" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">✨ Radiance</div>
+          <div class="atelier-nav-item" id="atnav-fonts" onclick="switchAtelierTab('fonts',this)">🔤 Fonts</div>
+          <div class="atelier-nav-item" id="atnav-themes" onclick="switchAtelierTab('themes',this)">🎨 Themes</div>
+          <div class="atelier-nav-section">Earn</div>
+          <div class="atelier-nav-item" id="atnav-quests" onclick="switchAtelierTab('quests',this)">🎯 Quests</div>
+          <div class="atelier-nav-item" id="atnav-daily" onclick="switchAtelierTab('daily',this)">🎁 Daily</div>
         </div>
-        <div class="atelier-section-title">🎯 Quests</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:28px;">
-          <div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:20px;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),rgba(255,249,62,.2));"></div>
-            <div style="font-size:22px;margin-bottom:8px;">🔗</div>
-            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;">Invite Friends &amp; Get Rewards!</div>
-            <div style="font-size:12.5px;color:var(--muted-light);line-height:1.55;margin-bottom:14px;">Invite friends using your personal Fortized invite link. When they join and stay 24h, you earn Onyx!</div>
-            <div style="display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:11px;font-family:monospace;color:var(--accent);word-break:break-all;" id="invite-link-display">Click below to generate your link</div>
-            <div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;">Reward: <strong style="color:var(--accent);">+9 Onyx</strong> per friend who stays 24h</div>
-            <button class="btn-a" style="font-size:12.5px;padding:9px 14px;width:100%;" onclick="regeneratePersonalInvite()">&#8635; Regenerate Invite Link</button>
-          </div>
-          <div style="background:var(--panel);border:1px dashed var(--border);border-radius:18px;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:.5;">
-            <div style="font-size:28px;margin-bottom:8px;">&#128274;</div>
-            <div style="font-size:13px;font-weight:600;color:var(--muted-light);">More Quests</div>
-            <div style="font-size:11.5px;color:var(--muted);margin-top:4px;">Coming soon</div>
-          </div>
-        </div>
-        <div class="atelier-section-title">✨ Radiance — Stand Out</div>
-        <div class="radiance-grid">
-          <div class="rad-card" onclick="buyRadiance(7,200)">
-            <div class="rad-icon">🌟</div>
-            <div class="rad-dur">7 Days</div>
-            <div class="rad-feats">Profile glow · Custom banner</div>
-            <div class="rad-price">200 <span>Onyx</span></div>
-          </div>
-          <div class="rad-card bv" onclick="buyRadiance(30,600)">
-            <div class="best-badge">BEST VALUE</div>
-            <div class="rad-icon">⭐</div>
-            <div class="rad-dur">30 Days</div>
-            <div class="rad-feats">All 7-day perks + animated badge</div>
-            <div class="rad-price">600 <span>Onyx</span></div>
-          </div>
-          <div class="rad-card" onclick="buyRadiance(90,1500)">
-            <div class="rad-icon">💫</div>
-            <div class="rad-dur">90 Days</div>
-            <div class="rad-feats">All perks + exclusive Radiance role</div>
-            <div class="rad-price">1500 <span>Onyx</span></div>
-          </div>
+        <!-- Main content -->
+        <div class="atelier-scroll" id="atelier-content">
+          <!-- Loaded dynamically by switchAtelierTab() -->
         </div>
       </div>
     </div>
@@ -1116,6 +1099,9 @@ function toast(msg, type='info') {
 // VIEW MANAGEMENT
 // ════════════════════════════════════════════
 function showView(v) {
+  if (v === 'atelier') {
+    setTimeout(() => { renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }, 0);
+  }
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.rail-btn').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.rail-bastion').forEach(el=>el.classList.remove('active'));
@@ -1263,12 +1249,39 @@ function renderHomePanel() {
 // ════════════════════════════════════════════
 function renderDMSidebar(scroll) {
   const friends = CU?.friends||[];
-  if (!friends.length) { scroll.innerHTML='<div style="padding:18px 14px;font-size:13px;color:var(--muted);">No DMs yet. Add friends to start!</div>'; return; }
+  if (!friends.length) {
+    scroll.innerHTML='<div style="padding:18px 14px;font-size:13px;color:var(--muted);text-align:center;line-height:1.6;">No friends yet.<br><button class="btn-a" style="margin-top:10px;font-size:12px;padding:7px 16px;" onclick="openModal(\"modal-add-friend\")">+ Add Friend</button></div>';
+    return;
+  }
   scroll.innerHTML = '<div class="sec-label">Direct Messages</div>' + friends.map(f=>`
     <div class="friend-item" id="dm-fi-${f}" onclick="openDMView('${escapeHTML(f)}')">
-      <div class="fa" style="width:32px;height:32px;font-size:13px;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,f,32)}</div>
-      <div class="fi-info"><div class="fi-name">${escapeHTML(f)}</div></div>
+      <div style="position:relative;flex-shrink:0;">
+        <div class="fa" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(null,f,34)}</div>
+        <span class="profile-status-dot" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:#6b7280;border:2px solid var(--channel);"></span>
+      </div>
+      <div class="fi-info" style="min-width:0;flex:1;">
+        <div class="fi-name" style="font-weight:600;">${escapeHTML(f)}</div>
+        <div id="dm-preview-${f}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:130px;"></div>
+      </div>
     </div>`).join('');
+  // Load status dots
+  friends.forEach(async f => {
+    try {
+      const s = await FortizedSocial.getStatus(f);
+      const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
+      document.querySelectorAll(`.profile-status-dot[data-for="${f}"]`).forEach(d=>d.style.background=SC[s]||SC.offline);
+    } catch {}
+    // Load last DM preview
+    try {
+      const msgs = await FortizedSocial.getDMMessages(CU.username, f);
+      const last = msgs?.[msgs.length-1];
+      const el = document.getElementById('dm-preview-'+f);
+      if (el && last) {
+        const preview = (last.from===CU.username?'You: ':'') + (last.text||'').replace(/\[FTZ[A-Z]+:[^\]]+\]/g,'📎 File').slice(0,40);
+        el.textContent = preview;
+      }
+    } catch {}
+  });
 }
 
 let _dmListener = null;
@@ -1299,6 +1312,10 @@ function openDMView(username) {
         <span class="reply-bar-text">Replying to <strong id="dm-reply-name"></strong></span>
         <button onclick="cancelReply('dm')">✕</button>
       </div>
+      <div class="typing-indicator" id="dm-typing-bar" style="opacity:0;">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <span id="dm-typing-text"></span>
+      </div>
       <div class="chat-input-wrap">
         <div class="chat-input-box">
           <div class="chat-input-actions">
@@ -1310,7 +1327,7 @@ function openDMView(username) {
           </div>
           <textarea id="dm-input" placeholder="Message ${escapeHTML(username)}…" rows="1"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();handleChatSend('dm');}"
-            oninput="autoResize(this)"></textarea>
+            oninput="autoResize(this);broadcastTyping()"></textarea>
           <button class="chat-send" onclick="handleChatSend('dm')">➤</button>
         </div>
       </div>
@@ -1318,6 +1335,7 @@ function openDMView(username) {
   loadDMMessages(username);
   setTimeout(() => showDMUserPanel(username), 80);
   ensureDMExists(username).catch(()=>{});
+  _listenTyping(username);
 }
 function openDMChat(u) { openDMView(u); }
 
@@ -1366,6 +1384,7 @@ async function loadDMMessages(username) {
 }
 
 async function sendDM() {
+  _stopTypingBroadcast();
   const inp=document.getElementById('dm-input');
   if (!inp||!curDM) return;
   const text=inp.value.trim();
@@ -2081,20 +2100,48 @@ async function sendFriendRequest(){
   if(!username){if(err)err.textContent='Enter a username';return;}
   if(username===CU.username){if(err)err.textContent="Can't add yourself";return;}
   if(err)err.textContent='';if(succ)succ.textContent='';
-  try{const r=await FortizedSocial.sendFriendRequest(CU.username,username);if(r.ok){if(succ)succ.textContent=r.msg;inp.value='';await refreshCU();}else{if(err)err.textContent=r.msg||'Failed';}}
-  catch{if(err)err.textContent='Error';}
+  try{
+    const r=await FortizedSocial.sendFriendRequest(CU.username, username);
+    if(r.ok){
+      if(succ) succ.textContent=r.msg;
+      inp.value='';
+      const hint=document.getElementById('friend-target-hint');
+      if(hint){hint.style.color='var(--accent)';hint.textContent='⏳ Friend request sent!';}
+      await refreshCU();
+      renderFriendsList();
+    } else {
+      if(err) err.textContent=r.msg||'Failed';
+    }
+  } catch(e){ console.error(e); if(err) err.textContent='Connection error'; }
 }
 async function acceptFriend(username){
-  try{await FortizedSocial.acceptFriendRequest(CU.username,username);await refreshCU();toast('Now friends with '+username+'!','success');renderFriendsList();renderDMSidebar(document.getElementById('sidebar-scroll'));}
-  catch{toast('Error','error');}
+  try{
+    await FortizedSocial.acceptFriendRequest(CU.username, username);
+    await refreshCU();
+    toast('Now friends with '+username+'!','success');
+    renderFriendsList();
+    renderDMSidebar(document.getElementById('sidebar-scroll'));
+    // Auto-open DM
+    openDMView(username);
+  } catch(e){ console.error(e); toast('Error accepting request','error'); }
 }
 async function declineFriend(username){
-  try{await FortizedSocial.declineFriendRequest(CU.username,username);await refreshCU();renderFriendsList();toast('Declined','info');}catch{}
+  try{
+    await FortizedSocial.declineFriendRequest(CU.username, username);
+    await refreshCU();
+    renderFriendsList();
+    toast('Declined','info');
+  } catch(e){ console.error(e); }
 }
 async function removeFriend(username){
-  showCustomConfirm('Remove '+username+' from friends?',async()=>{
-    try{await FortizedSocial.removeFriend(CU.username,username);await refreshCU();toast('Removed '+username,'info');renderFriendsList();}
-    catch{toast('Error','error');}
+  showCustomConfirm('Remove '+username+' from friends?', async()=>{
+    try{
+      await FortizedSocial.removeFriend(CU.username, username);
+      await refreshCU();
+      toast('Removed '+username,'info');
+      renderFriendsList();
+      renderDMSidebar(document.getElementById('sidebar-scroll'));
+    } catch(e){ console.error(e); toast('Error','error'); }
   });
 }
 
@@ -2133,8 +2180,13 @@ function setDiscoverTab(tab,btn){discoverTab=tab;document.querySelectorAll('.dis
 async function promptJoinPublicBastion(bastionId){
   try{
     const all=await FortizedSocial.getGlobalBastions()||{};
-    const b=Object.values(all).find(x=>x.id===bastionId||x.name===bastionId);
-    if(!b){toast('Bastion not found','error');return;}
+    // Match by id, name, or case-insensitive name
+    const bid = (bastionId||'').trim().toLowerCase();
+    const b=Object.values(all).find(x=>
+      x.id===bastionId || x.name===bastionId ||
+      (x.id||'').toLowerCase()===bid || (x.name||'').toLowerCase()===bid
+    );
+    if(!b){toast('Bastion not found. Try the exact name or use an invite link.','error');return;}
     const already=(CU.bastions||[]).some(ub=>ub.globalId===b.id||ub.name===b.name);
     if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=>ub.globalId===b.id||ub.name===b.name));return;}
     if(b.public===false){toast('This bastion is invite-only. Ask the owner for an invite link.','error');return;}
@@ -2281,7 +2333,7 @@ function updateDOBField(){
   // Show personal invite link if already generated
   applyRadianceFont();
   trackRadianceTime();
-  if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+(location.pathname.replace(/\/[^/]*$/,'/')||'/')+'app.html?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
+  if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling
   if(isAdmin())setTimeout(startReportPolling,2000);
 
@@ -2465,11 +2517,32 @@ async function addChannel(bastionIdx, type) {
 }
 
 async function joinBastionByCode() {
-  const code = document.getElementById('join-code')?.value?.trim();
+  const code = (document.getElementById('join-code')?.value || '').trim();
   const err = document.getElementById('join-error');
   if (!code) { if(err)err.textContent='Enter a code or name'; return; }
-  try { await promptJoinPublicBastion(code); closeModal('modal-join-bastion'); }
-  catch { if(err)err.textContent='Could not find that bastion'; }
+  if(err) err.textContent = '';
+
+  // First try as an invite code (?invite=xxx flow)
+  const allBastions = await FortizedSocial.getGlobalBastions().catch(()=>({})) || {};
+  let foundByInvite = null;
+  for (const b of Object.values(allBastions)) {
+    if ((b.invites||[]).find(inv=>inv.code===code)) { foundByInvite=b; break; }
+  }
+  if (foundByInvite) {
+    try {
+      await promptJoinPublicBastion(foundByInvite.id || foundByInvite.name);
+      closeModal('modal-join-bastion');
+    } catch(e) { if(err)err.textContent='Failed to join bastion'; }
+    return;
+  }
+
+  // Try as bastion name or id
+  try {
+    await promptJoinPublicBastion(code);
+    closeModal('modal-join-bastion');
+  } catch {
+    if(err) err.textContent='Bastion not found. Check the code or name.';
+  }
 }
 
 // ════════════════════════════════════════════
@@ -3848,24 +3921,41 @@ function tryOpenAdmin() {
 
 
 function openAdminPanel() {
-  // Create fullscreen admin overlay
+  if (!isSuperAdmin() && !isAdmin()) { toast('Access denied','error'); return; }
+  if (!adminAuthed && !isSuperAdmin()) {
+    const pass = prompt('Admin password:');
+    if (!pass) return;
+    const admins = JSON.parse(localStorage.getItem('ftz_admins')||'["staw"]');
+    const stored = localStorage.getItem('ftz_admin_pass_'+CU.username);
+    if (stored && stored !== pass) { toast('Wrong password','error'); return; }
+    adminAuthed = true;
+  }
+  if (isSuperAdmin()) adminAuthed = true;
+
   let existing = document.getElementById('admin-panel-overlay');
   if (existing) { existing.style.display = 'flex'; renderAdminPanel(); return; }
 
   const overlay = document.createElement('div');
   overlay.id = 'admin-panel-overlay';
-  overlay.style.cssText = `position:fixed;inset:0;background:var(--bg);z-index:8000;display:flex;flex-direction:column;`;
+  overlay.style.cssText = 'position:fixed;inset:0;background:#080b14;z-index:8000;display:flex;flex-direction:column;font-family:"DM Sans",sans-serif;';
   overlay.innerHTML = `
-    <div style="height:52px;background:rgba(0,0,0,.6);border-bottom:1px solid rgba(248,113,113,.2);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;">
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div>
-      <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--red);">FORTIZED ADMIN PANEL</span>
-      <span style="font-size:12px;color:var(--muted);">Logged in as: ${escapeHTML(CU.username)}${isSuperAdmin()?' 👑':''}</span>
+    <div id="adm-topbar" style="height:56px;background:rgba(0,0,0,.7);border-bottom:1px solid rgba(248,113,113,.15);display:flex;align-items:center;padding:0 24px;gap:14px;flex-shrink:0;backdrop-filter:blur(12px);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:9px;height:9px;border-radius:50%;background:#f87171;box-shadow:0 0 8px #f8717188;"></div>
+        <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#f87171;letter-spacing:.04em;">ADMIN CONSOLE</span>
+      </div>
+      <div style="height:18px;width:1px;background:rgba(255,255,255,.1);"></div>
+      <span style="font-size:12px;color:rgba(255,255,255,.35);">Signed in as <strong style="color:rgba(255,255,255,.6);">${escapeHTML(CU.username)}</strong>${isSuperAdmin()?' <span style="color:#ffd93e;">👑 SUPER</span>':''}</span>
       <div style="flex:1;"></div>
-      <button onclick="document.getElementById('admin-panel-overlay').style.display='none'" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);padding:6px 14px;border-radius:9px;cursor:pointer;font-size:13px;">✕ Exit</button>
+      <div id="adm-live-dot" style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#3ecf6e;">
+        <div style="width:6px;height:6px;border-radius:50%;background:#3ecf6e;animation:pulse 2s infinite;"></div>
+        Live
+      </div>
+      <button onclick="document.getElementById('admin-panel-overlay').style.display='none'" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);color:#f87171;padding:7px 16px;border-radius:10px;cursor:pointer;font-size:13px;font-family:inherit;">✕ Exit</button>
     </div>
     <div style="display:flex;flex:1;overflow:hidden;">
-      <div id="admin-sidebar" style="width:220px;min-width:220px;border-right:1px solid rgba(248,113,113,.1);background:rgba(248,113,113,.02);overflow-y:auto;padding:12px 0;"></div>
-      <div id="admin-main" style="flex:1;overflow-y:auto;padding:28px;"></div>
+      <div id="admin-sidebar" style="width:230px;min-width:230px;border-right:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02);overflow-y:auto;padding:16px 10px;display:flex;flex-direction:column;gap:2px;"></div>
+      <div id="admin-main" style="flex:1;overflow-y:auto;padding:32px 36px;background:#080b14;"></div>
     </div>`;
   document.body.appendChild(overlay);
   renderAdminPanel();
@@ -3873,303 +3963,305 @@ function openAdminPanel() {
 
 function renderAdminPanel() {
   const sidebar = document.getElementById('admin-sidebar');
+  if (!sidebar) return;
   const tabs = [
-    {id:'dashboard',icon:'📊',label:'Dashboard'},
-    {id:'users',icon:'👤',label:'User Search'},
-    {id:'all_users',icon:'👥',label:'All Users'},
-    {id:'reports',icon:'🚩',label:'Reports'},
-    {id:'nsfw_queue',icon:'🔞',label:'NSFW Queue'},
-    {id:'bastions',icon:'🏰',label:'Bastions'},
-    {id:'audit',icon:'📋',label:'Audit Log'},
-    ...(isSuperAdmin() ? [{id:'admins',icon:'👑',label:'Admin Mgmt'}] : []),
-    {id:'economy',icon:'💰',label:'Economy'},
+    {id:'dashboard', icon:'⬡', label:'Dashboard', group:'Overview'},
+    {id:'users',     icon:'🔍', label:'User Lookup', group:'Users'},
+    {id:'all_users', icon:'👥', label:'All Users', group:'Users'},
+    {id:'reports',   icon:'🚩', label:'Reports', group:'Moderation'},
+    {id:'nsfw_queue',icon:'🔞', label:'NSFW Queue', group:'Moderation'},
+    {id:'bastions',  icon:'🏰', label:'Bastions', group:'Content'},
+    {id:'audit',     icon:'📋', label:'Audit Log', group:'System'},
+    {id:'economy',   icon:'💰', label:'Economy', group:'System'},
+    ...(isSuperAdmin() ? [{id:'admins',icon:'👑',label:'Admin Mgmt',group:'System'}] : []),
   ];
-  sidebar.innerHTML = `<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(248,113,113,.6);padding:8px 14px;">Navigation</div>` +
-    tabs.map(t=>`<div class="bsettings-nav-item" onclick="loadAdminTab('${t.id}')" style="color:${adminTab===t.id?'var(--red)':'var(--muted-light)'}; background:${adminTab===t.id?'rgba(248,113,113,.08)':''};">${t.icon} ${t.label}</div>`).join('');
+  const groups = [...new Set(tabs.map(t=>t.group))];
+  sidebar.innerHTML = groups.map(g => {
+    const gTabs = tabs.filter(t=>t.group===g);
+    return `<div style="font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(248,113,113,.4);padding:10px 8px 5px;">${g}</div>`
+      + gTabs.map(t => `
+        <div onclick="loadAdminTab('${t.id}')" data-admtab="${t.id}" style="display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:11px;cursor:pointer;font-size:13px;color:${adminTab===t.id?'#fff':'rgba(255,255,255,.45)'};background:${adminTab===t.id?'rgba(248,113,113,.12)':'transparent'};border:1px solid ${adminTab===t.id?'rgba(248,113,113,.2)':'transparent'};transition:all .12s;margin-bottom:1px;" onmouseenter="if('${t.id}'!==adminTab)this.style.background='rgba(255,255,255,.04)'" onmouseleave="if('${t.id}'!==adminTab)this.style.background='transparent'">
+          <span style="font-size:15px;width:20px;text-align:center;">${t.icon}</span>
+          <span>${t.label}</span>
+        </div>`).join('');
+  }).join('');
   loadAdminTab(adminTab);
 }
 
 async function loadAdminTab(tab) {
   adminTab = tab;
-  // Stop stale intervals when switching tabs
   if (tab !== 'bastions' && window._adminBastionInterval) { clearInterval(window._adminBastionInterval); window._adminBastionInterval = null; }
   if (tab !== 'all_users' && window._adminUsersInterval) { clearInterval(window._adminUsersInterval); window._adminUsersInterval = null; }
-  // Update sidebar highlight
-  document.querySelectorAll('#admin-sidebar .bsettings-nav-item').forEach(el => {
-    const isActive = el.textContent.trim().includes(tab.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ')) ||
-      (tab==='dashboard'&&el.textContent.includes('Dashboard')) ||
-      (tab==='nsfw_queue'&&el.textContent.includes('NSFW'));
-    el.style.color = isActive ? 'var(--red)' : 'var(--muted-light)';
-    el.style.background = isActive ? 'rgba(248,113,113,.08)' : '';
+  document.querySelectorAll('[data-admtab]').forEach(el => {
+    const active = el.dataset.admtab === tab;
+    el.style.background = active ? 'rgba(248,113,113,.12)' : 'transparent';
+    el.style.color = active ? '#fff' : 'rgba(255,255,255,.45)';
+    el.style.borderColor = active ? 'rgba(248,113,113,.2)' : 'transparent';
   });
 
   const main = document.getElementById('admin-main');
   if (!main) return;
 
+  // ── DASHBOARD ──────────────────────────────────────────────
   if (tab === 'dashboard') {
-    // Load stats
-    let totalUsers = '—', activeUsers = '—';
-    // Reports - check Firebase for real-time reports too
-    let fbReports = [];
-    try { fbReports = await FortizedSocial.getAllReports?.() || []; } catch {}
-    const localReports = JSON.parse(localStorage.getItem('ftz_reports') || '[]');
-    // Merge, deduplicate by timestamp
-    const seenTs = new Set(localReports.map(r=>r.timestamp));
-    fbReports.forEach(r=>{ if(!seenTs.has(r.timestamp)) localReports.push(r); });
-    localStorage.setItem('ftz_reports', JSON.stringify(localReports));
-    const reports = localReports;
-    const pendingReports = reports.filter(r=>r.status==='pending').length;
-    const bannedUsers = JSON.parse(localStorage.getItem('ftz_bans') || '[]');
-
+    const reports = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+    const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+    const audits = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
+    const pending = reports.filter(r=>r.status==='pending').length;
+    let totalUsers = '—';
+    try { const snap = await firebase.database().ref('users').get(); totalUsers = snap.exists() ? Object.keys(snap.val()).length : 0; } catch {}
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;color:var(--red);">📊 Dashboard Overview</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;">
+      <div style="margin-bottom:28px;">
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:4px;">Dashboard</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.35);">Welcome back, ${escapeHTML(CU.displayName||CU.username)}. Here's what's happening.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;">
         ${[
-          ['Total Users','👤','Loading…',''],
-          ['Active (24h)','🟢','Loading…',''],
-          ['Pending Reports','🚩',pendingReports,pendingReports>0?'color:var(--red)':''],
-          ['Banned Users','🔨',bannedUsers.length,''],
-        ].map(([label,icon,val,style])=>`
-          <div style="background:var(--panel);border:1px solid rgba(248,113,113,.12);border-radius:18px;padding:20px 16px;">
-            <div style="font-size:28px;margin-bottom:8px;">${icon}</div>
-            <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;${style}">${val}</div>
-            <div style="font-size:12px;color:var(--muted);">${label}</div>
+          {label:'Total Users',val:totalUsers,icon:'👤',color:'#60a5fa'},
+          {label:'Pending Reports',val:pending,icon:'🚩',color:pending>0?'#f87171':'#3ecf6e'},
+          {label:'Banned Users',val:bans.length,icon:'🔨',color:'#f87171'},
+          {label:'Audit Events',val:audits.length,icon:'📋',color:'#a78bfa'},
+        ].map(s=>`
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:20px 18px;cursor:pointer;" onclick="loadAdminTab('${s.label==='Pending Reports'?'reports':s.label==='Banned Users'?'all_users':s.label==='Audit Events'?'audit':'all_users'}')">
+            <div style="font-size:26px;margin-bottom:10px;">${s.icon}</div>
+            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:${s.color};">${s.val}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:3px;">${s.label}</div>
           </div>`).join('')}
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;">
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:14px;color:var(--red);">🚩 Recent Reports</div>
-          ${reports.slice(0,5).map(r=>`<div style="padding:8px 10px;background:var(--panel2);border-radius:10px;margin-bottom:6px;font-size:12.5px;">
-            <div style="font-weight:600;">${escapeHTML(r.reason)}</div>
-            <div style="color:var(--muted);font-size:11px;">By: ${escapeHTML(r.reporter)} · ${formatTimeAgo(r.createdAt)}</div>
-          </div>`).join('') || '<div style="color:var(--muted);font-size:13px;">No reports yet</div>'}
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:18px;">
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#f87171;margin-bottom:16px;">🚩 Recent Reports</div>
+          ${reports.slice(0,6).map(r=>`
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 11px;background:rgba(255,255,255,.03);border-radius:10px;margin-bottom:6px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(r.reason||'No reason')}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.3);">By ${escapeHTML(r.reporter)} · ${formatTimeAgo(r.createdAt||r.timestamp)}</div>
+              </div>
+              <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(248,113,113,.12);color:#f87171;flex-shrink:0;">${r.status||'pending'}</span>
+            </div>`).join('') || '<div style="font-size:13px;color:rgba(255,255,255,.3);padding:10px 0;">No reports yet</div>'}
         </div>
-        <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;">
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:14px;color:var(--red);">📋 Quick Actions</div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:16px;">⚡ Quick Actions</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <button class="btn-d" style="justify-content:flex-start;" onclick="loadAdminTab('users')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Search a User</button>
-            <button class="btn-d" style="justify-content:flex-start;" onclick="loadAdminTab('reports')">🚩 Review Reports</button>
-            <button class="btn-d" style="justify-content:flex-start;" onclick="loadAdminTab('nsfw_queue')">🔞 NSFW Queue</button>
+            <button onclick="loadAdminTab('users')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;">🔍 Search a User</button>
+            <button onclick="loadAdminTab('reports')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;">🚩 Review Reports</button>
+            <button onclick="loadAdminTab('economy')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;">💰 Manage Economy</button>
+            <button onclick="loadAdminTab('bastions')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;">🏰 Manage Bastions</button>
           </div>
         </div>
       </div>`;
   }
 
+  // ── USER LOOKUP ────────────────────────────────────────────
   else if (tab === 'users') {
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;color:var(--red);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> User Management</div>
-      <div style="display:flex;gap:10px;margin-bottom:20px;">
-        <input id="admin-user-search" class="field-input" placeholder="Search by username…" style="max-width:320px;" onkeydown="if(event.key==='Enter')adminSearchUser()">
-        <button class="btn-d" onclick="adminSearchUser()">Search</button>
+      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">User Lookup</div>
+      <div style="display:flex;gap:10px;margin-bottom:24px;">
+        <input id="admin-user-search" style="flex:1;max-width:380px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 16px;color:#fff;font-family:inherit;font-size:13.5px;outline:none;" placeholder="Search by username…" onkeydown="if(event.key==='Enter')adminSearchUser()">
+        <button onclick="adminSearchUser()" style="padding:10px 20px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;border-radius:12px;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:600;">Search</button>
       </div>
       <div id="admin-user-result"></div>`;
   }
 
-  else if (tab === 'reports') {
-    const reports = JSON.parse(localStorage.getItem('ftz_reports') || '[]');
+  // ── REPORTS, BASTIONS, AUDIT, ECONOMY, ADMINS, ALL_USERS, NSFW tabs 
+  // same content as before but restyled
+  else if (tab === 'all_users') {
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;color:var(--red);">🚩 Reports Queue</div>
-      ${!reports.length ? '<div class="empty-state"><div class="ei">✅</div><h3>No pending reports</h3></div>' :
+      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:8px;">All Users</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.35);margin-bottom:20px;">Live list of all registered users.</div>
+      <input id="all-users-search" style="width:100%;max-width:320px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:16px;" placeholder="Filter by username…" oninput="filterAllUsers(this.value)">
+      <div id="all-users-count" style="font-size:12px;color:rgba(255,255,255,.3);margin-bottom:12px;"></div>
+      <div id="all-users-list"></div>`;
+    await loadAllUsers(false);
+    window._adminUsersInterval = setInterval(() => { if (adminTab==='all_users') loadAllUsers(true); }, 3000);
+  }
+
+  else if (tab === 'reports') {
+    const reports = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">Reports</div>
+      ${reports.length===0?'<div style="color:rgba(255,255,255,.3);font-size:14px;">No reports yet.</div>':
         reports.map((r,i)=>`
-          <div style="background:var(--panel);border:1px solid ${r.status==='pending'?'rgba(248,113,113,.3)':'var(--border)'};border-radius:16px;padding:18px;margin-bottom:12px;">
-            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">
-              <div style="background:rgba(248,113,113,.1);border-radius:10px;padding:10px;font-size:20px;">🚩</div>
-              <div style="flex:1;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                  <span style="font-weight:700;font-size:14px;">${escapeHTML(r.reason)}</span>
-                  <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:${r.status==='pending'?'rgba(248,113,113,.15)':'rgba(62,207,110,.1)'};color:${r.status==='pending'?'var(--red)':'var(--green)'};">${r.status.toUpperCase()}</span>
-                </div>
-                <div style="font-size:12px;color:var(--muted);">Reported by: <strong>${escapeHTML(r.reporter)}</strong> · ${formatTimeAgo(r.createdAt)}</div>
-                ${r.msgText?`<div style="font-size:12.5px;background:rgba(0,0,0,.2);padding:8px 12px;border-radius:8px;margin-top:8px;color:var(--muted-light);border-left:3px solid var(--red);">"${escapeHTML(r.msgText.slice(0,200))}"</div>`:''}
-                ${r.username?`<div style="font-size:12.5px;margin-top:6px;">Reported user: <strong>${escapeHTML(r.username)}</strong></div>`:''}
-                ${r.context?`<div style="font-size:12px;color:var(--muted);margin-top:6px;">Context: ${escapeHTML(r.context)}</div>`:''}
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div>
+                <div style="font-weight:700;font-size:14px;">${escapeHTML(r.reason||'No reason')}</div>
+                <div style="font-size:11.5px;color:rgba(255,255,255,.35);">Reported by <strong>${escapeHTML(r.reporter)}</strong> · ${formatTimeAgo(r.createdAt||r.timestamp)}</div>
               </div>
+              <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${r.status==='resolved'?'rgba(62,207,110,.1)':'rgba(248,113,113,.1)'};color:${r.status==='resolved'?'#3ecf6e':'#f87171'};">${r.status||'pending'}</span>
             </div>
-            ${r.status==='pending'?`
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn-g" style="font-size:12px;padding:6px 12px;" onclick="resolveReport(${i},'dismissed')">Dismiss</button>
-                <button class="btn-d" style="font-size:12px;padding:6px 12px;" onclick="resolveReport(${i},'warned')">Warn User</button>
-                <button class="btn-d" style="font-size:12px;padding:6px 12px;" onclick="resolveReport(${i},'suspended')">Suspend</button>
-                <button class="btn-d" style="font-size:12px;padding:6px 12px;background:rgba(248,113,113,.2);" onclick="resolveReport(${i},'banned')">Permanent Ban</button>
-              </div>`:'<div style="font-size:12px;color:var(--muted);">Resolved: '+r.resolution+'</div>'}
+            ${r.status!=='resolved'?`<div style="display:flex;gap:8px;">
+              <button onclick="resolveReport(${i},'dismissed')" style="padding:6px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);border-radius:9px;cursor:pointer;font-family:inherit;font-size:12px;">Dismiss</button>
+              <button onclick="resolveReport(${i},'warned')" style="padding:6px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#f59e0b;border-radius:9px;cursor:pointer;font-family:inherit;font-size:12px;">Warn User</button>
+              <button onclick="resolveReport(${i},'banned')" style="padding:6px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:9px;cursor:pointer;font-family:inherit;font-size:12px;">Ban User</button>
+            </div>`:''}
           </div>`).join('')}`;
   }
 
-  else if (tab === 'nsfw_queue') {
-    const queue = JSON.parse(localStorage.getItem('ftz_nsfw_queue') || '[]');
+  else if (tab === 'audit') {
+    const log = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]').reverse();
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;color:var(--red);">🔞 NSFW Review Queue</div>
-      <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:14px;padding:14px 18px;margin-bottom:20px;font-size:13.5px;color:var(--muted-light);">
-        🤖 Uploads are scanned by an AI classifier and flagged here for human review. All moderator decisions are logged.
-      </div>
-      ${!queue.length ? `
-        <div class="empty-state"><div class="ei">✅</div><h3>Queue is clear!</h3><p>All flagged content has been reviewed.</p></div>` :
+      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">Audit Log</div>
+      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;">
+        ${log.length===0?'<div style="padding:20px;color:rgba(255,255,255,.3);">No events yet.</div>':
+          log.slice(0,100).map(e=>`
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,.04);">
+              <div style="font-size:11px;font-family:monospace;color:rgba(255,255,255,.25);flex-shrink:0;">${new Date(e.timestamp||e.ts||0).toLocaleString()}</div>
+              <div style="flex:1;font-size:13px;"><strong style="color:#f87171;">${escapeHTML(e.action||e.type||'event')}</strong> · ${escapeHTML(e.target||e.username||'')}</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);">by ${escapeHTML(e.by||e.admin||CU.username)}</div>
+            </div>`).join('')}
+      </div>`;
+  }
+
+  else if (tab === 'economy') {
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">Economy</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:700px;">
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;">
+          <div style="font-weight:700;font-size:15px;margin-bottom:14px;">💰 Give Onyx</div>
+          <input id="eco-username" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:10px;box-sizing:border-box;" placeholder="Username">
+          <input id="eco-amount" type="number" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:12px;box-sizing:border-box;" placeholder="Onyx amount">
+          <button onclick="adminGiveOnyx()" style="width:100%;padding:10px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;">Give Onyx</button>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;">
+          <div style="font-weight:700;font-size:15px;margin-bottom:14px;">✨ Grant Radiance</div>
+          <input id="radiance-username" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:10px;box-sizing:border-box;" placeholder="Username">
+          <select id="radiance-days" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:12px;">
+            <option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="365">1 year</option>
+          </select>
+          <button onclick="adminGrantRadiance()" style="width:100%;padding:10px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;">Grant Radiance</button>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;">
+          <div style="font-weight:700;font-size:15px;margin-bottom:14px;">🎫 Trial Links</div>
+          <input id="trial-days" type="number" min="1" max="365" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:12px;box-sizing:border-box;" placeholder="Days (1-365)">
+          <button onclick="generateTrialLink()" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;">Generate Trial Link</button>
+          <div id="trial-link-result" style="margin-top:12px;"></div>
+        </div>
+      </div>`;
+  }
+
+  else if (tab === 'bastions') {
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:8px;">Bastions</div>
+      <input id="admin-bastion-search" style="width:100%;max-width:320px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:16px;" placeholder="Filter by name…" oninput="filterAdminBastions(this.value)">
+      <div id="admin-bastions-list"></div>`;
+    loadAdminBastions(false);
+    window._adminBastionInterval = setInterval(() => { if (adminTab==='bastions') loadAdminBastions(true); }, 4000);
+  }
+
+  else if (tab === 'nsfw_queue') {
+    const queue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">NSFW Queue</div>
+      ${queue.length===0?'<div style="color:rgba(255,255,255,.3);">Queue is empty.</div>':
         queue.map((item,i)=>`
-          <div style="background:var(--panel);border:1px solid rgba(248,113,113,.2);border-radius:16px;padding:18px;margin-bottom:12px;">
-            <div style="display:flex;gap:12px;align-items:flex-start;">
-              <div style="width:80px;height:80px;border-radius:12px;background:var(--panel2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden;">
-                ${item.data?`<img src="${item.data}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;filter:blur(8px);" title="Blurred for review">`:'🖼️'}
-              </div>
-              <div style="flex:1;">
-                <div style="font-weight:700;margin-bottom:4px;">Flagged Upload</div>
-                <div style="font-size:12px;color:var(--muted);">User: <strong>${escapeHTML(item.uploader)}</strong> · Type: ${item.type||'image'}</div>
-                <div style="font-size:12px;color:var(--muted);">AI Score: <strong style="color:var(--red);">${item.aiScore||'N/A'}</strong> · ${formatTimeAgo(item.createdAt)}</div>
-                <div style="font-size:11px;padding:3px 8px;border-radius:100px;display:inline-flex;margin-top:6px;background:rgba(248,113,113,.12);color:var(--red);font-weight:700;">${item.aiLabel||'SUGGESTIVE'}</div>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
-              <button class="btn-g" style="font-size:12px;padding:6px 12px;" onclick="reviewNSFW(${i},'approve')">✅ Approve</button>
-              <button class="btn-d" style="font-size:12px;padding:6px 12px;" onclick="reviewNSFW(${i},'restrict')">🔞 Restrict to 18+</button>
-              <button class="btn-d" style="font-size:12px;padding:6px 12px;background:rgba(248,113,113,.2);" onclick="reviewNSFW(${i},'remove')">🗑️ Remove</button>
-              <button class="btn-d" style="font-size:12px;padding:6px 12px;" onclick="reviewNSFW(${i},'warn')">⚠️ Warn User</button>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;margin-bottom:12px;">
+            <div style="font-size:13px;margin-bottom:10px;">Uploaded by <strong>${escapeHTML(item.uploader)}</strong></div>
+            ${item.url?`<img src="${item.url}" style="max-width:200px;border-radius:10px;margin-bottom:10px;" onerror="this.remove()">`:'' }
+            <div style="display:flex;gap:8px;">
+              <button onclick="reviewNSFW(${i},'approved')" style="padding:6px 14px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;border-radius:9px;cursor:pointer;font-family:inherit;font-size:12px;">Approve</button>
+              <button onclick="reviewNSFW(${i},'rejected')" style="padding:6px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:9px;cursor:pointer;font-family:inherit;font-size:12px;">Reject</button>
             </div>
           </div>`).join('')}`;
   }
 
   else if (tab === 'admins' && isSuperAdmin()) {
-    const admins = JSON.parse(localStorage.getItem('ftz_admins') || '["staw"]');
+    const admins = JSON.parse(localStorage.getItem('ftz_admins')||'["staw"]');
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;color:var(--red);">👑 Admin Management</div>
-      <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:14px;padding:14px 18px;margin-bottom:20px;font-size:13.5px;color:var(--muted-light);">
-        Only <strong style="color:var(--red);">staw</strong> (Super Admin) can manage the admin roster. All changes are logged.
+      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">Admin Management</div>
+      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;max-width:520px;margin-bottom:20px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:14px;">Current Admins</div>
+        ${admins.map((a,i)=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:10px;margin-bottom:6px;">
+            <span style="font-size:18px;">${a===SUPER_ADMIN?'👑':'🛡️'}</span>
+            <span style="font-weight:600;flex:1;">${escapeHTML(a)}</span>
+            ${a===SUPER_ADMIN?'<span style="font-size:11px;color:#ffd93e;">SUPER ADMIN</span>':`<button onclick="removeAdmin(${i})" style="padding:4px 12px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;">Remove</button>`}
+          </div>`).join('')}
       </div>
-      <div style="display:flex;gap:10px;margin-bottom:20px;">
-        <input id="new-admin-input" class="field-input" placeholder="Username to make admin…" style="max-width:280px;">
-        <button class="btn-d" onclick="addAdmin()">Add Admin</button>
-      </div>
-      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:12px;letter-spacing:.05em;text-transform:uppercase;">Current Admins (${admins.length})</div>
-      ${admins.map((a,i)=>`
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;">
-          <span style="font-size:18px;">${a===SUPER_ADMIN?'👑':'🛡️'}</span>
-          <span style="font-weight:600;flex:1;">${escapeHTML(a)}</span>
-          ${a===SUPER_ADMIN?`<span style="font-size:11px;color:var(--accent);font-weight:700;">SUPER ADMIN</span>`:''}
-          ${a!==SUPER_ADMIN?`<button class="btn-d" style="font-size:12px;padding:5px 10px;" onclick="removeAdmin(${i})">Remove</button>`:''}
-        </div>`).join('')}`;
-  }
-
-  else if (tab === 'audit') {
-    const log = JSON.parse(localStorage.getItem('ftz_audit_log') || '[]');
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;color:var(--red);">📋 Audit Log</div>
-      <div style="font-size:13.5px;color:var(--muted-light);margin-bottom:16px;">All admin actions are permanently logged and cannot be deleted.</div>
-      ${!log.length ? '<div style="color:var(--muted);font-size:13.5px;">No actions logged yet.</div>' :
-        [...log].reverse().map(entry=>`
-          <div style="padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;display:flex;gap:12px;align-items:center;">
-            <div style="width:8px;height:8px;border-radius:50%;background:${entry.type==='ban'?'var(--red)':entry.type==='warn'?'var(--yellow)':'var(--muted)'};flex-shrink:0;"></div>
-            <div style="flex:1;">
-              <span style="font-weight:600;">${escapeHTML(entry.admin)}</span>
-              <span style="color:var(--muted);"> → </span>
-              <span>${entry.action}</span>
-              <span style="color:var(--muted);"> on </span>
-              <span style="font-weight:600;">${escapeHTML(entry.target||'')}</span>
-              ${entry.reason?`<div style="font-size:11.5px;color:var(--muted);margin-top:2px;">Reason: ${escapeHTML(entry.reason)}</div>`:''}
-            </div>
-            <div style="font-size:11px;color:var(--muted);">${formatTimeAgo(entry.timestamp)}</div>
-          </div>`).join('')}`;
-  }
-
-  else if (tab === 'economy') {
-    const trialLinks = JSON.parse(localStorage.getItem('ftz_trial_links')||'[]');
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;color:var(--red);">💰 Onyx Economy</div>
-      <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:14px;padding:14px 18px;margin-bottom:20px;font-size:13.5px;color:var(--muted-light);">
-        ⚠️ All Onyx adjustments require a reason. Every transaction is logged in the Audit Log.
-      </div>
-      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-        <input id="eco-username" class="field-input" placeholder="Username" style="max-width:200px;">
-        <input id="eco-amount" class="field-input" type="number" placeholder="Amount" style="max-width:120px;">
-        <input id="eco-reason" class="field-input" placeholder="Reason (required)" style="max-width:240px;">
-        <button class="btn-d" onclick="adjustOnyx(1)">+ Give Onyx</button>
-        <button class="btn-d" onclick="adjustOnyx(-1)">- Remove Onyx</button>
-      </div>
-      ${isSuperAdmin()?`
-      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border);">
-        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:14px;">✨ Radiance Trial Links</div>
-        <div style="font-size:13px;color:var(--muted-light);margin-bottom:14px;">Create a link that gives the recipient a free Radiance trial when they click it.</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-          <input id="trial-days" class="field-input" type="number" placeholder="Days (e.g. 7)" style="max-width:140px;">
-          <button class="btn-a" onclick="generateTrialLink()">Generate Trial Link</button>
-        </div>
-        <div id="trial-link-result" style="font-family:monospace;font-size:12px;color:var(--accent);background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;word-break:break-all;min-height:36px;"></div>
-        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">Previously generated (${trialLinks.length})</div>
-        ${trialLinks.slice(-5).reverse().map(l=>`<div style="font-size:12px;color:var(--muted-light);padding:6px 0;border-bottom:1px solid var(--border);">${l.days}d trial · ${l.created} · <span style="font-family:monospace;">${l.code}</span></div>`).join('')}
-      </div>`:''}`;
-  }
-
-  else if (tab === 'all_users') {
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:20px;color:var(--red);">All Users</div>
-      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-        <button class="btn-d" id="sort-reg-btn" onclick="sortAllUsers('registration')">Registration Date</button>
-        <button class="btn-g" id="sort-onyx-btn" onclick="sortAllUsers('onyx')">Onyx Balance</button>
-        <input class="field-input" id="all-users-search" placeholder="Search username…" style="max-width:220px;" oninput="filterAllUsers(this.value)">
-        <span id="admin-users-count" style="font-size:12px;color:var(--muted);align-self:center;"></span>
-        <span style="font-size:11px;color:var(--green);align-self:center;">&#9679; Live</span>
-      </div>
-      <div id="all-users-list"><div style="color:var(--muted);">Loading users…</div></div>`;
-    loadAllUsers();
-    if (window._adminUsersInterval) clearInterval(window._adminUsersInterval);
-    window._adminUsersInterval = setInterval(() => { if (adminTab==='all_users') loadAllUsers(true); }, 2000);
-    return;
-  }
-  else if (tab === 'bastions') {
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:20px;color:var(--red);">Bastions</div>
-      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-        <input id="admin-bastion-search" class="field-input" placeholder="Filter by name…" style="max-width:260px;" oninput="filterAdminBastions(this.value)">
-        <span id="admin-bastion-count" style="font-size:12px;color:var(--muted);align-self:center;"></span>
-        <span style="font-size:11px;color:var(--green);align-self:center;">&#9679; Live</span>
-      </div>
-      <div id="admin-bastion-result"><div style="color:var(--muted);">Loading bastions…</div></div>`;
-    loadAdminBastions();
-    // Start live refresh
-    if (window._adminBastionInterval) clearInterval(window._adminBastionInterval);
-    window._adminBastionInterval = setInterval(() => { if (adminTab==='bastions') loadAdminBastions(true); }, 2000);
-  }
-  else {
-    main.innerHTML = `<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3></div>`;
+      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;max-width:520px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:14px;">Add Admin</div>
+        <input id="new-admin-username" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:10px;box-sizing:border-box;" placeholder="Username to promote">
+        <button onclick="addAdmin()" style="padding:10px 20px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;">Add Admin</button>
+      </div>`;
   }
 }
 
-// Admin actions
 async function adminSearchUser() {
-  const username = document.getElementById('admin-user-search')?.value?.trim();
-  if (!username) return;
+  const raw = document.getElementById('admin-user-search')?.value?.trim().toLowerCase();
+  if (!raw) return;
   const result = document.getElementById('admin-user-result');
-  result.innerHTML = '<div style="color:var(--muted);">Searching…</div>';
+  result.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:13px;">Searching…</div>';
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch {}
-  if (!u) { result.innerHTML = '<div style="color:var(--red);">User not found.</div>'; return; }
+  try { u = await FortizedSocial.getUserByName(raw); } catch(e){ console.error(e); }
+  if (!u) { result.innerHTML = '<div style="color:#f87171;font-size:13px;">No user found.</div>'; return; }
+  const username = u.username;
   const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
   const isBanned = bans.some(b=>b.username===username);
   const ageTier = getAgeTier(u.dateOfBirth);
+  const hasRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
+  const alreadyFriends = (CU.friends||[]).includes(username);
+  const isMe = username === CU.username;
 
   result.innerHTML = `
-    <div style="background:var(--panel);border:1px solid rgba(248,113,113,.2);border-radius:18px;padding:22px;max-width:600px;">
-      <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px;">
-        <div style="width:52px;height:52px;border-radius:50%;background:var(--panel2);border:2px solid var(--border);font-size:20px;display:flex;align-items:center;justify-content:center;overflow:hidden;">${buildAvatarHTML(u.pfp,u.displayName||u.username,52)}</div>
-        <div>
-          <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;">${escapeHTML(u.displayName||u.username)}</div>
-          <div style="font-size:12px;color:var(--muted);">@${escapeHTML(u.username)}</div>
-          ${isBanned?`<span style="font-size:10px;font-weight:700;background:rgba(248,113,113,.15);color:var(--red);padding:2px 8px;border-radius:100px;">BANNED</span>`:''}
+    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;max-width:680px;">
+      <div style="display:flex;align-items:center;gap:16px;padding:22px 24px;border-bottom:1px solid rgba(255,255,255,.06);">
+        <div style="width:60px;height:60px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,.1);">${buildAvatarHTML(u.pfp,u.displayName||u.username,60)}</div>
+        <div style="flex:1;">
+          <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;">${escapeHTML(u.displayName||u.username)}</div>
+          <div style="font-size:12.5px;color:rgba(255,255,255,.35);">@${escapeHTML(username)}</div>
+          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">
+            ${isBanned?'<span style="font-size:10px;font-weight:700;background:rgba(248,113,113,.15);color:#f87171;padding:2px 8px;border-radius:100px;">BANNED</span>':''}
+            ${hasRadiance?'<span style="font-size:10px;font-weight:700;background:rgba(255,249,62,.1);color:#ffd93e;padding:2px 8px;border-radius:100px;">✨ RADIANCE</span>':''}
+          </div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;font-size:13px;">
-        <div><span style="color:var(--muted);">Age Tier:</span> <strong>${ageTier||'Unknown'}</strong></div>
-        <div><span style="color:var(--muted);">Onyx:</span> <strong>${u.onyx||0}</strong></div>
-        <div><span style="color:var(--muted);">Bastions:</span> <strong>${(u.bastions||[]).length}</strong></div>
-        <div><span style="color:var(--muted);">Friends:</span> <strong>${(u.friends||[]).length}</strong></div>
-        <div><span style="color:var(--muted);">Radiance:</span> <strong>${u.radianceUntil&&new Date(u.radianceUntil)>new Date()?'Active':'None'}</strong></div>
-        <div><span style="color:var(--muted);">Email:</span> <strong>${u.email?u.email.replace(/(.{2}).+(@.+)/,'$1***$2'):'N/A'}</strong></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);">
+        ${[['Onyx',u.onyx||0],['Friends',(u.friends||[]).length],['Bastions',(u.bastions||[]).length],['Age Tier',ageTier||'Unknown'],['Joined',u.createdAt?new Date(u.createdAt).toLocaleDateString():'Unknown'],['Radiance',hasRadiance?'Active':'None']].map(([k,v])=>`
+          <div style="padding:13px 18px;border-right:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04);">
+            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:2px;">${k}</div>
+            <div style="font-size:14px;font-weight:700;">${v}</div>
+          </div>`).join('')}
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn-d" style="font-size:12px;padding:7px 13px;" onclick="adminActionUser('${escapeHTML(username)}','warn')">⚠️ Issue Warning</button>
-        <button class="btn-d" style="font-size:12px;padding:7px 13px;" onclick="adminActionUser('${escapeHTML(username)}','suspend')">⏸ Suspend</button>
-        ${isBanned?
-          `<button class="btn-g" style="font-size:12px;padding:7px 13px;" onclick="adminActionUser('${escapeHTML(username)}','unban')">✅ Unban</button>`:
-          `<button class="btn-d" style="font-size:12px;padding:7px 13px;background:rgba(248,113,113,.2);" onclick="adminActionUser('${escapeHTML(username)}','ban')">🔨 Permanent Ban</button>`}
+      <div style="padding:16px 22px;display:flex;gap:8px;flex-wrap:wrap;">
+        ${!isMe?`<button onclick="adminActionUser('${escapeHTML(username)}','warn')" style="padding:7px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#f59e0b;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">⚠️ Warn</button>`:''}
+        ${!isMe?`<button onclick="adminActionUser('${escapeHTML(username)}','suspend')" style="padding:7px 14px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#a855f7;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">⏸ Suspend</button>`:''}
+        ${!isMe?(isBanned?`<button onclick="adminActionUser('${escapeHTML(username)}','unban')" style="padding:7px 14px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">✅ Unban</button>`:`<button onclick="adminActionUser('${escapeHTML(username)}','ban')" style="padding:7px 14px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">🔨 Ban</button>`):''}
+        ${!isMe && !alreadyFriends?`<button onclick="adminForceFriend('${escapeHTML(username)}')" style="padding:7px 14px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">👥 Force Friend</button>`:''}
+        <button onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="padding:7px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">💰 Give Onyx</button>
+        <button onclick="adminActionUser('${escapeHTML(username)}','radiance')" style="padding:7px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">✨ Radiance</button>
+        <button onclick="openDMView('${escapeHTML(username)}');document.getElementById('admin-panel-overlay').style.display='none';" style="padding:7px 14px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">💬 Message</button>
       </div>
     </div>`;
+}
+
+async function adminForceFriend(targetUsername) {
+  if (!targetUsername || targetUsername === CU.username) return;
+  try {
+    const [meData, targetData] = await Promise.all([
+      FortizedSocial.getUserByName(CU.username),
+      FortizedSocial.getUserByName(targetUsername)
+    ]);
+    if (!meData || !targetData) { toast('User not found','error'); return; }
+    const myFriends = [...new Set([...(meData.friends||[]), targetUsername])];
+    const theirFriends = [...new Set([...(targetData.friends||[]), CU.username])];
+    // Clear pending requests both ways
+    await Promise.all([
+      firebase.database().ref('users/'+CU.username).update({
+        friends: myFriends,
+        friendRequestsSent: (meData.friendRequestsSent||[]).filter(u=>u!==targetUsername),
+        friendRequestsReceived: (meData.friendRequestsReceived||[]).filter(u=>u!==targetUsername)
+      }),
+      firebase.database().ref('users/'+targetUsername).update({
+        friends: theirFriends,
+        friendRequestsSent: (targetData.friendRequestsSent||[]).filter(u=>u!==CU.username),
+        friendRequestsReceived: (targetData.friendRequestsReceived||[]).filter(u=>u!==CU.username)
+      })
+    ]);
+    await refreshCU();
+    logAudit('force_friend', targetUsername, 'Force-added by admin');
+    toast('Force-friended '+targetUsername, 'success');
+    adminSearchUser();
+  } catch(e) { console.error(e); toast('Failed to force friend','error'); }
 }
 
 function adminActionUser(username, action) {
@@ -4200,6 +4292,29 @@ function adminActionUser(username, action) {
     showCustomInput('Suspension Duration', 'Hours to suspend (e.g. 24):', (hours) => {
       logAudit('suspend', username, `${hours}h suspension`);
       toast(`${username} suspended for ${hours}h`, 'success');
+    });
+  } else if (action === 'give_onyx') {
+    showCustomInput('Give Onyx', 'Amount to give:', async (amt) => {
+      const n = parseInt(amt);
+      if (!n || n <= 0) { toast('Enter a valid amount','error'); return; }
+      const u = await FortizedSocial.getUserByName(username).catch(()=>null);
+      if (!u) { toast('User not found','error'); return; }
+      await firebase.database().ref('users/'+username+'/onyx').set((u.onyx||0)+n);
+      logAudit('give_onyx', username, `+${n} Onyx`);
+      toast(`Gave ${n} Onyx to ${username}`, 'success');
+      if (username===CU.username) await refreshCU();
+      adminSearchUser();
+    });
+  } else if (action === 'radiance') {
+    showCustomInput('Grant Radiance (days)', 'Days of Radiance:', async (days) => {
+      const n = parseInt(days);
+      if (!n || n <= 0) { toast('Enter valid days','error'); return; }
+      const until = new Date(Date.now() + n*86400000).toISOString();
+      await firebase.database().ref('users/'+username+'/radianceUntil').set(until);
+      logAudit('grant_radiance', username, `${n} days`);
+      toast(`Granted ${n} days Radiance to ${username}`, 'success');
+      if (username===CU.username) await refreshCU();
+      adminSearchUser();
     });
   }
 }
@@ -4622,6 +4737,18 @@ function showRailBastionCtx(e, idx) {
 async function checkInviteLink() {
   const params = new URLSearchParams(location.search);
   const invite = params.get('invite');
+  const bastionParam = params.get('bastion');
+  
+  // Handle ?bastion=NAME direct join
+  if (bastionParam && !invite) {
+    const url = new URL(location.href);
+    url.searchParams.delete('bastion');
+    history.replaceState({}, '', url);
+    if (!CU?.username) return; // not logged in
+    await promptJoinPublicBastion(bastionParam);
+    return;
+  }
+  
   if (!invite) return;
   // Clean URL immediately
   const url = new URL(location.href);
@@ -7428,6 +7555,273 @@ async function checkFriendTarget(val) {
       }
     } catch { hint.textContent = ''; }
   }, 350);
+}
+
+// ════════════════════════════════════════════
+// TYPING INDICATOR
+// ════════════════════════════════════════════
+let _typingTimeout = null;
+let _typingListenerOff = null;
+let _isTyping = false;
+
+function _typingPath(u1, u2) {
+  return 'typing/' + [u1, u2].sort().join('__');
+}
+
+function broadcastTyping() {
+  if (!CU?.username || !curDM) return;
+  const ref = firebase.database().ref(_typingPath(CU.username, curDM) + '/' + CU.username);
+  if (!_isTyping) {
+    _isTyping = true;
+    ref.set({ ts: Date.now(), username: CU.username });
+    // Auto-expire presence on Firebase
+    ref.onDisconnect().remove();
+  }
+  clearTimeout(_typingTimeout);
+  _typingTimeout = setTimeout(() => {
+    _isTyping = false;
+    ref.remove().catch(()=>{});
+  }, 2500);
+}
+
+function _stopTypingBroadcast() {
+  _isTyping = false;
+  clearTimeout(_typingTimeout);
+  if (CU?.username && curDM) {
+    firebase.database().ref(_typingPath(CU.username, curDM) + '/' + CU.username).remove().catch(()=>{});
+  }
+}
+
+function _listenTyping(partner) {
+  if (_typingListenerOff) { try{_typingListenerOff();}catch{} _typingListenerOff=null; }
+  const ref = firebase.database().ref(_typingPath(CU.username, partner));
+  const handler = ref.on('value', snap => {
+    const data = snap.val() || {};
+    // Only show typing for the other person
+    const partnerTyping = Object.values(data).filter(v => v && v.username && v.username !== CU.username);
+    const bar = document.getElementById('dm-typing-bar');
+    const txt = document.getElementById('dm-typing-text');
+    if (!bar || !txt) return;
+    if (partnerTyping.length > 0 && curDM === partner) {
+      txt.textContent = partner + ' is typing…';
+      bar.style.opacity = '1';
+    } else {
+      bar.style.opacity = '0';
+    }
+  });
+  _typingListenerOff = () => ref.off('value', handler);
+}
+
+// ════════════════════════════════════════════
+// ATELIER
+// ════════════════════════════════════════════
+let _atelierTab = 'overview';
+
+function switchAtelierTab(tab, el) {
+  _atelierTab = tab;
+  document.querySelectorAll('.atelier-nav-item').forEach(i=>i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderAtelierTab(tab);
+}
+
+function renderAtelierTab(tab) {
+  const el = document.getElementById('atelier-content');
+  if (!el) return;
+  const balance = CU?.onyx || 0;
+  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const radianceDaysLeft = hasRadiance ? Math.ceil((new Date(CU.radianceUntil)-Date.now())/86400000) : 0;
+
+  if (tab === 'overview') {
+    el.innerHTML = `
+      <div class="atelier-page-title">💎 Atelier</div>
+      <div class="atelier-page-sub">Your Fortized shop — buy upgrades, earn rewards.</div>
+      <div class="atelier-hero">
+        <div class="atelier-bal">
+          <div class="coin">⬡</div>
+          <div>
+            <h3>Onyx Balance</h3>
+            <div class="amt" id="atelier-balance">${balance}</div>
+          </div>
+        </div>
+        <div class="daily-btn" id="daily-btn" onclick="claimDaily()">
+          <span>Daily Reward</span>
+          <strong>+50 Onyx</strong>
+        </div>
+      </div>
+      ${hasRadiance?`
+      <div class="atelier-card" style="background:linear-gradient(135deg,rgba(255,249,62,.08),var(--panel));border-color:rgba(255,249,62,.2);display:flex;align-items:center;gap:16px;">
+        <div style="font-size:36px;">✨</div>
+        <div style="flex:1;">
+          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--accent);">Radiance Active</div>
+          <div style="font-size:12.5px;color:var(--muted-light);margin-top:2px;">${radianceDaysLeft} day${radianceDaysLeft!==1?'s':''} remaining</div>
+        </div>
+        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" class="btn-a" style="font-size:12px;padding:7px 14px;">Extend</button>
+      </div>`:''}
+      <div class="atelier-section-title">Quick Actions</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        ${[
+          {icon:'✨',title:'Radiance',desc:'Stand out with profile glow, badges, and more',tab:'radiance'},
+          {icon:'🎯',title:'Quests',desc:'Complete quests to earn Onyx rewards',tab:'quests'},
+          {icon:'🎁',title:'Daily Reward',desc:'Claim your +50 Onyx every 24 hours',tab:'daily'},
+          {icon:'🔤',title:'Fonts',desc:'Customize your display name font (Radiance)',tab:'fonts'},
+        ].map(item=>`
+          <div onclick="switchAtelierTab('${item.tab}',document.getElementById('atnav-${item.tab}'))" style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;cursor:pointer;transition:all .15s;display:flex;gap:14px;align-items:center;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--border)'">
+            <div style="font-size:28px;flex-shrink:0;">${item.icon}</div>
+            <div><div style="font-weight:700;font-size:14px;">${item.title}</div><div style="font-size:12px;color:var(--muted-light);margin-top:2px;">${item.desc}</div></div>
+          </div>`).join('')}
+      </div>`;
+    // Restore claimed state
+    refreshDailyBtn();
+  }
+
+  else if (tab === 'radiance') {
+    el.innerHTML = `
+      <div class="atelier-page-title">✨ Radiance</div>
+      <div class="atelier-page-sub">Stand out from the crowd with exclusive profile effects.</div>
+      <div class="atelier-hero">
+        <div class="atelier-bal"><div class="coin">⬡</div><div><h3>Your Balance</h3><div class="amt" id="atelier-balance">${balance}</div></div></div>
+        ${hasRadiance?`<div style="text-align:right;"><div style="font-size:11px;color:var(--muted-light);">Currently active</div><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);">${radianceDaysLeft}d left</div></div>`:''}
+      </div>
+      <div class="atelier-section-title">Choose a Plan</div>
+      <div class="radiance-grid">
+        <div class="rad-card" onclick="buyRadiance(7,200)">
+          <div class="rad-icon">🌟</div>
+          <div class="rad-dur">7 Days</div>
+          <div class="rad-feats">Profile glow · Custom banner · Badge</div>
+          <div class="rad-price">200 <span>Onyx</span></div>
+        </div>
+        <div class="rad-card bv" onclick="buyRadiance(30,600)">
+          <div class="best-badge">BEST VALUE</div>
+          <div class="rad-icon">⭐</div>
+          <div class="rad-dur">30 Days</div>
+          <div class="rad-feats">All 7-day perks + animated badge + 45MB uploads</div>
+          <div class="rad-price">600 <span>Onyx</span></div>
+        </div>
+        <div class="rad-card" onclick="buyRadiance(90,1500)">
+          <div class="rad-icon">💫</div>
+          <div class="rad-dur">90 Days</div>
+          <div class="rad-feats">All perks + exclusive Radiance role + font selector</div>
+          <div class="rad-price">1500 <span>Onyx</span></div>
+        </div>
+      </div>
+      <div class="atelier-section-title">What You Get</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${[
+          ['✨','Profile Glow','A golden animated glow around your avatar'],
+          ['🎨','Custom Banner','Upload a banner image to your profile'],
+          ['🔖','Radiance Badge','Exclusive badge on your profile card'],
+          ['📁','45MB Uploads','Increased file upload limit in all chats'],
+          ['🔤','Font Selector','Pick a custom display name font (90d plan)'],
+          ['⭐','Priority Support','Faster response from the Fortized team'],
+        ].map(([icon,name,desc])=>`
+          <div style="display:flex;gap:12px;align-items:center;padding:14px 16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;">
+            <div style="font-size:22px;">${icon}</div>
+            <div><div style="font-weight:600;font-size:13.5px;">${name}</div><div style="font-size:12px;color:var(--muted-light);">${desc}</div></div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  else if (tab === 'quests') {
+    el.innerHTML = `
+      <div class="atelier-page-title">🎯 Quests</div>
+      <div class="atelier-page-sub">Complete quests to earn Onyx.</div>
+      <div class="atelier-hero">
+        <div class="atelier-bal"><div class="coin">⬡</div><div><h3>Balance</h3><div class="amt" id="atelier-balance">${balance}</div></div></div>
+      </div>
+      <div class="atelier-section-title">Active Quests</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),rgba(255,249,62,.2));"></div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <div style="font-size:26px;">🔗</div>
+            <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;">Invite Friends</div><div style="font-size:12.5px;color:var(--muted-light);">Earn +9 Onyx per friend who joins and stays 24h</div></div>
+            <div style="margin-left:auto;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">+9 ⬡</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:11px;font-family:monospace;color:var(--accent);word-break:break-all;" id="invite-link-display">Click below to generate your link</div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn-a" style="flex:1;font-size:12.5px;" onclick="regeneratePersonalInvite()">⟳ Generate Link</button>
+            <button class="btn-g" style="padding:8px 14px;font-size:12.5px;" onclick="navigator.clipboard.writeText(document.getElementById('invite-link-display').textContent).then(()=>toast('Copied!','success'))">Copy</button>
+          </div>
+        </div>
+        <div style="background:var(--panel);border:1px dashed var(--border);border-radius:16px;padding:20px;display:flex;align-items:center;gap:14px;opacity:.5;">
+          <div style="font-size:26px;">🔒</div>
+          <div><div style="font-weight:600;font-size:14px;">More Quests Coming Soon</div><div style="font-size:12px;color:var(--muted-light);">Stay tuned for new ways to earn Onyx</div></div>
+        </div>
+      </div>`;
+    // Restore invite link
+    if (CU?.personalInviteCode) {
+      const d = document.getElementById('invite-link-display');
+      if (d) { const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode; d.textContent=l; d.style.cursor='pointer'; d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success')); }
+    }
+  }
+
+  else if (tab === 'daily') {
+    el.innerHTML = `
+      <div class="atelier-page-title">🎁 Daily Reward</div>
+      <div class="atelier-page-sub">Come back every day to claim your free Onyx.</div>
+      <div style="max-width:420px;margin:0 auto;text-align:center;padding-top:20px;">
+        <div style="font-size:80px;margin-bottom:20px;">🎁</div>
+        <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--accent);margin-bottom:8px;">+50 Onyx</div>
+        <div style="font-size:14px;color:var(--muted-light);margin-bottom:28px;">Claim your daily reward once every 24 hours.</div>
+        <div class="daily-btn" id="daily-btn" onclick="claimDaily()" style="margin:0 auto;width:fit-content;">
+          <span>Claim Now</span>
+          <strong>+50 Onyx</strong>
+        </div>
+        <div style="margin-top:20px;font-size:12px;color:var(--muted);">Current balance: <strong style="color:var(--accent);">${balance} Onyx</strong></div>
+      </div>`;
+    refreshDailyBtn();
+  }
+
+  else if (tab === 'fonts') {
+    const hasR = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+    el.innerHTML = hasR ? `
+      <div class="atelier-page-title">🔤 Font Selector</div>
+      <div class="atelier-page-sub">Choose a custom font for your display name (Radiance perk).</div>
+      <div id="font-selector-root"></div>` : `
+      <div class="atelier-page-title">🔤 Font Selector</div>
+      <div class="atelier-page-sub">A Radiance perk — upgrade to unlock.</div>
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:36px;text-align:center;max-width:420px;">
+        <div style="font-size:44px;margin-bottom:14px;">🔒</div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Radiance Required</div>
+        <div style="font-size:13px;color:var(--muted-light);margin-bottom:20px;">Get Radiance to unlock custom display name fonts.</div>
+        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" class="btn-a">View Radiance Plans</button>
+      </div>`;
+    if (hasR) { setTimeout(()=>buildFontSelector('font-selector-root'), 0); }
+  }
+
+  else if (tab === 'themes') {
+    el.innerHTML = `
+      <div class="atelier-page-title">🎨 Themes</div>
+      <div class="atelier-page-sub">Customize the Fortized color palette.</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:600px;">
+        ${[
+          {name:'Fortized Dark',desc:'Default dark theme',accent:'#ffd93e',bg:'#0a0d16'},
+          {name:'Midnight Blue',desc:'Deep blue vibes',accent:'#60a5fa',bg:'#070d1a'},
+          {name:'Forest',desc:'Earthy green tones',accent:'#3ecf6e',bg:'#07120d'},
+          {name:'Crimson',desc:'Bold red accents',accent:'#f87171',bg:'#120707'},
+          {name:'Violet',desc:'Purple dream',accent:'#a78bfa',bg:'#0c0714'},
+          {name:'Frost',desc:'Cool icy tones',accent:'#93c5fd',bg:'#080e18'},
+        ].map(t=>`
+          <div onclick="applyTheme('${t.name}')" style="background:${t.bg};border:2px solid ${t.accent}33;border-radius:16px;padding:18px;cursor:pointer;transition:all .15s;" onmouseenter="this.style.borderColor='${t.accent}'" onmouseleave="this.style.borderColor='${t.accent}33'">
+            <div style="width:24px;height:24px;border-radius:50%;background:${t.accent};margin-bottom:10px;box-shadow:0 0 10px ${t.accent}66;"></div>
+            <div style="font-weight:700;font-size:13.5px;color:#fff;">${t.name}</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,.4);margin-top:2px;">${t.desc}</div>
+          </div>`).join('')}
+      </div>`;
+  }
+}
+
+function applyTheme(name) {
+  // Basic theme switching - just a stub with toast for now
+  toast('Theme "'+name+'" selected!', 'success');
+}
+
+// Call renderAtelierTab when atelier view opens
+const _origShowView = window.showView || function(){};
+function refreshAtelierBalance() {
+  document.querySelectorAll('#atelier-balance').forEach(el => {
+    el.textContent = CU?.onyx || 0;
+  });
 }
 </script>
 </body>

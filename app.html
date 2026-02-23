@@ -345,7 +345,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .epp-custom-emoji img{width:26px;height:26px;object-fit:contain;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);z-index:1000;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--panel);border:1px solid var(--border);border-radius:20px;width:100%;max-width:420px;overflow:hidden;animation:mIn .2s cubic-bezier(.22,1,.36,1) both;box-shadow:0 32px 80px rgba(0,0,0,.7);}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:20px;width:100%;max-width:480px;overflow:hidden;animation:mIn .2s cubic-bezier(.22,1,.36,1) both;box-shadow:0 32px 80px rgba(0,0,0,.7);}
 .modal.wide{max-width:580px;}
 .modal.tall{max-height:80vh;display:flex;flex-direction:column;}
 .modal.tall .modal-body{overflow-y:auto;flex:1;}
@@ -374,6 +374,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .toast.error{border-left:3px solid var(--red);color:#fca5a5;}
 .toast.info{border-left:3px solid var(--accent);color:var(--accent);}
 .ctx-menu{position:fixed;z-index:9999;background:rgba(11,14,22,.98);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:6px;min-width:200px;box-shadow:0 20px 50px rgba(0,0,0,.7);backdrop-filter:blur(22px);animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
+@keyframes vcPulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes ctxIn{from{opacity:0;transform:scale(.96) translateY(-4px);}to{opacity:1;transform:none;}}
 .ctx-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;font-size:13px;color:rgba(220,228,240,.9);cursor:pointer;}
 .ctx-item:hover{background:rgba(255,255,255,.07);color:#fff;}
@@ -436,6 +437,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .boost-bar .bl{font-weight:700;color:var(--accent);}
   /* Radiance display name font - updated dynamically */
   .radiance-name { font-family: var(--radiance-font, inherit); }
+.tmpl-card{padding:14px 8px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s;}
+.tmpl-card:hover,.tmpl-card.sel{border-color:var(--accent-mid);background:var(--accent-dim);}
+.tmpl-emoji{font-size:26px;margin-bottom:5px;}
+.tmpl-name{font-size:12px;font-weight:700;margin-bottom:2px;}
+.tmpl-desc{font-size:10.5px;color:var(--muted);}
 </style>
 <body>
 <!-- APP LOADING -->
@@ -505,6 +511,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <div class="ua-info">
       <div class="ua-name" id="ua-name">Loading…</div>
       <div class="ua-tag" id="ua-tag">@user</div>
+      <div id="game-activity-bar" onclick="openGameActivityPicker()" style="display:none;align-items:center;gap:5px;padding:3px 8px;background:rgba(62,207,110,.07);border:1px solid rgba(62,207,110,.18);border-radius:9px;margin:2px 0;font-size:11px;cursor:pointer;" title="Game Activity"></div>
       <div id="ua-custom-status" onclick="openStatusPicker()" title="Set custom status" style="display:none;align-items:center;gap:4px;padding:1px 7px;margin-top:2px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;cursor:pointer;max-width:160px;overflow:hidden;white-space:nowrap;font-size:10.5px;"></div>
     </div>
     <div class="ua-btns">
@@ -767,18 +774,24 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
       <div id="cb-step-templates" style="display:none;">
         <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Choose a template</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;" id="template-grid">
-          ${[
-            {id:'gaming',emoji:'🎮',name:'Game Hall',desc:'Play together',channels:['general','lfg','clips','meta']},
-            {id:'fellowship',emoji:'🤝',name:'Fellowship',desc:'Friends & community',channels:['general','hangout','events','off-topic']},
-            {id:'guild',emoji:'⚔️',name:'Guild',desc:'Team & coordination',channels:['general','strategy','recruitment','log']},
-            {id:'study',emoji:'📚',name:'Study Circle',desc:'Learn together',channels:['general','resources','help','accountability']},
-            {id:'artisan',emoji:'🎨',name:'Artisans',desc:'Create & showcase',channels:['general','showcase','wip','feedback']},
-            {id:'academy',emoji:'🎓',name:'Academy',desc:'Teaching & courses',channels:['announcements','general','q-and-a','resources']},
-          ].map(t=>`<div onclick="selectBastionTemplate('${t.id}','${t.emoji}','${escapeHTML(t.name)}')" id="tmpl-${t.id}" style="padding:12px 8px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;transition:.15s;" onmouseenter="this.style.borderColor='var(--accent-mid)'" onmouseleave="if(!this.classList.contains('sel'))this.style.borderColor='var(--border)'">
-            <div style="font-size:24px;margin-bottom:4px;">${t.emoji}</div>
-            <div style="font-size:12px;font-weight:700;">${t.name}</div>
-            <div style="font-size:10.5px;color:var(--muted);">${t.desc}</div>
-          </div>`).join('')}
+          <div class="tmpl-card" id="tmpl-gaming" onclick="selectBastionTemplate('gaming','🎮','Game Hall')">
+            <div class="tmpl-emoji">🎮</div><div class="tmpl-name">Game Hall</div><div class="tmpl-desc">Play together</div>
+          </div>
+          <div class="tmpl-card" id="tmpl-fellowship" onclick="selectBastionTemplate('fellowship','🤝','Fellowship')">
+            <div class="tmpl-emoji">🤝</div><div class="tmpl-name">Fellowship</div><div class="tmpl-desc">Friends &amp; community</div>
+          </div>
+          <div class="tmpl-card" id="tmpl-guild" onclick="selectBastionTemplate('guild','⚔️','Guild')">
+            <div class="tmpl-emoji">⚔️</div><div class="tmpl-name">Guild</div><div class="tmpl-desc">Team &amp; coordination</div>
+          </div>
+          <div class="tmpl-card" id="tmpl-study" onclick="selectBastionTemplate('study','📚','Study Circle')">
+            <div class="tmpl-emoji">📚</div><div class="tmpl-name">Study Circle</div><div class="tmpl-desc">Learn together</div>
+          </div>
+          <div class="tmpl-card" id="tmpl-artisan" onclick="selectBastionTemplate('artisan','🎨','Artisans')">
+            <div class="tmpl-emoji">🎨</div><div class="tmpl-name">Artisans</div><div class="tmpl-desc">Create &amp; showcase</div>
+          </div>
+          <div class="tmpl-card" id="tmpl-academy" onclick="selectBastionTemplate('academy','🎓','Academy')">
+            <div class="tmpl-emoji">🎓</div><div class="tmpl-name">Academy</div><div class="tmpl-desc">Teaching &amp; courses</div>
+          </div>
         </div>
         <div class="modal-actions">
           <button class="btn-g" onclick="showBastionStep1()">← Back</button>
@@ -2696,8 +2709,11 @@ async function setBastionVis(isPublic) {
   if (sec) sec.style.display = isPublic ? '' : 'none';
   // Persist immediately
   await saveUser();
-  try { await FortizedSocial.updateBastionSettings?.(b.globalId||b.name, {public: isPublic}); } catch {}
-  toast(isPublic ? 'Bastion is now Public' : 'Bastion is now Private', 'success');
+  try {
+    const bid = b.globalId || b.name;
+    await firebase.database().ref('globalBastions/'+bid).update({public: isPublic});
+  } catch {}
+  toast(isPublic ? 'Bastion is now Public 🌍' : 'Bastion is now Private 🔒', 'success');
 }
 function addAppQuestion() {
   const b = CU.bastions?.[curBastion]; if (!b) return;
@@ -3387,16 +3403,16 @@ async function viewUserProfile(username) {
       : '';
 
     modalEl.innerHTML = `
-      <div style="position:relative;height:140px;background:linear-gradient(135deg,#0f1830,#1a0f30);margin:-24px -24px 0;overflow:hidden;border-radius:18px 18px 0 0;">
+      <div style="position:relative;aspect-ratio:16/9;max-height:180px;background:linear-gradient(135deg,#0f1830,#1a0f30);margin:-24px -24px 0;overflow:hidden;border-radius:18px 18px 0 0;">
         <img src="${u.banner||''}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
       </div>
       <div style="padding:0 18px 18px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-40px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-48px;margin-bottom:14px;">
           <div style="position:relative;">
-            <div style="width:84px;height:84px;border-radius:50%;background:var(--panel2);border:4px solid var(--panel);overflow:hidden;">${buildAvatarHTML(u.pfp,u.displayName||u.username,84)}</div>
-            <span style="position:absolute;bottom:4px;right:4px;width:13px;height:13px;border-radius:50%;background:${sc};border:2px solid var(--panel);"></span>
+            <div style="width:92px;height:92px;border-radius:50%;background:var(--panel2);border:5px solid var(--panel);overflow:hidden;">${buildAvatarHTML(u.pfp,u.displayName||u.username,92)}</div>
+            <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:5px;right:5px;width:14px;height:14px;border-radius:50%;background:${sc};border:3px solid var(--panel);"></span>
           </div>
-          <div style="display:flex;gap:6px;padding-top:36px;">
+          <div style="display:flex;gap:6px;padding-top:40px;">
             <button class="btn-a" onclick="closeModal('modal-user');openDMChat('${escapeHTML(u.username)}')" style="font-size:12px;padding:7px 14px;">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message
             </button>
@@ -5049,15 +5065,45 @@ function parseMD(s) {
   });
   // 0b. Video attachments
   s = s.replace(/\[FTZVID:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
-    return '<div style="margin:5px 0;max-width:400px;">'
-      + '<video controls style="width:100%;max-height:260px;border-radius:10px;background:#000;display:block;" src="' + data + '"></video>'
-      + '<a href="' + data + '" download="' + escapeHTML(name) + '" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-top:3px;text-decoration:none;">⬇ ' + escapeHTML(name) + '</a></div>';
+    var vid2='vid-'+Math.random().toString(36).slice(2);
+    return '<div style="margin:6px 0;max-width:420px;background:#000;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08);">'
+      +'<div style="position:relative;cursor:pointer;" onclick="ftzVideoToggle(\''+vid2+'\')">'
+      +'<video id="'+vid2+'" src="'+data+'" style="width:100%;max-height:280px;display:block;" ontimeupdate="ftzVideoTick(\''+vid2+'\')" onloadedmetadata="ftzVideoMeta(\''+vid2+'\')" onended="ftzVideoEnd(\''+vid2+'\')"></video>'
+      +'<div id="'+vid2+'-overlay" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);">'
+      +'<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,249,62,.9);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#000;">▶</div>'
+      +'</div></div>'
+      +'<div style="padding:8px 12px;background:rgba(255,255,255,.04);">'
+      +'<div style="position:relative;height:4px;background:rgba(255,255,255,.12);border-radius:2px;cursor:pointer;margin-bottom:6px;" onclick="ftzVideoSeek(\''+vid2+'\',event)">'
+      +'<div id="'+vid2+'-prog" style="height:100%;background:var(--accent);border-radius:2px;width:0%;"></div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;">'
+      +'<div style="display:flex;align-items:center;gap:8px;">'
+      +'<button onclick="ftzVideoToggle(\''+vid2+'\')" id="'+vid2+'-btn" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:16px;padding:0;line-height:1;">▶</button>'
+      +'<span id="'+vid2+'-cur" style="font-size:11px;color:var(--muted);">0:00</span>'
+      +'<span style="font-size:11px;color:var(--muted);">/</span>'
+      +'<span id="'+vid2+'-dur" style="font-size:11px;color:var(--muted);">--:--</span>'
+      +'</div>'
+      +'<a href="'+data+'" download="'+escapeHTML(name)+'" style="font-size:10.5px;color:var(--muted);text-decoration:none;">⬇ '+escapeHTML(name)+'</a>'
+      +'</div></div></div>';
   });
   // 0c. Audio attachments
   s = s.replace(/\[FTZAUD:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
-    return '<div style="margin:5px 0;max-width:360px;">'
-      + '<audio controls style="width:100%;border-radius:10px;" src="' + data + '"></audio>'
-      + '<a href="' + data + '" download="' + escapeHTML(name) + '" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-top:3px;text-decoration:none;">⬇ ' + escapeHTML(name) + '</a></div>';
+    var aid='aud-'+Math.random().toString(36).slice(2);
+    return '<div style="margin:6px 0;max-width:380px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.12);border-radius:14px;padding:12px 14px;">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+      +'<button id="'+aid+'-btn" onclick="ftzAudioToggle(\''+aid+'\')" style="width:38px;height:38px;border-radius:50%;background:var(--accent);border:none;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;font-weight:900;">▶</button>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px;">🎵 '+escapeHTML(name)+'</div>'
+      +'<div style="position:relative;height:4px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;" onclick="ftzAudioSeek(\''+aid+'\',event)">'
+      +'<div id="'+aid+'-prog" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width .1s;"></div>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;margin-top:3px;">'
+      +'<span id="'+aid+'-cur" style="font-size:10px;color:var(--muted);">0:00</span>'
+      +'<span id="'+aid+'-dur" style="font-size:10px;color:var(--muted);">--:--</span>'
+      +'</div></div></div>'
+      +'<audio id="'+aid+'" src="'+data+'" style="display:none;" ontimeupdate="ftzAudioTick(\''+aid+'\')" onloadedmetadata="ftzAudioMeta(\''+aid+'\')" onended="ftzAudioEnd(\''+aid+'\')"></audio>'
+      +'<a href="'+data+'" download="'+escapeHTML(name)+'" style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--muted);text-decoration:none;">⬇ Download</a>'
+      +'</div>';
   });
   // 0d. Generic file attachments
   s = s.replace(/\[FTZFILE:([^\|]+)\|([^\|]+)\|([^\]]+)\]/g, function(_, name, sizeStr, data) {
@@ -5722,16 +5768,15 @@ async function showDMUserPanel(username) {
     gamesHtml += '</div></div>';
   }
   panel.innerHTML =
-    '<div style="height:68px;background:linear-gradient(135deg,#0f1830,#1a0f30);position:relative;overflow:hidden;">'
+    '<div style="position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,#0f1830,#1a0f30);overflow:hidden;">'
     + '<img src="' + (u.banner||'') + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
     + '</div>'
-    + '<div style="padding:0 12px;margin-top:-24px;margin-bottom:10px;">'
+    + '<div style="padding:0 14px;margin-top:-40px;margin-bottom:10px;">'
     + '<div style="display:flex;justify-content:space-between;align-items:flex-end;">'
     + '<div style="position:relative;display:inline-block;">'
-    + '<div style="width:48px;height:48px;border-radius:50%;background:var(--panel2);border:3px solid var(--channel);overflow:hidden;">' + buildAvatarHTML(u.pfp,u.displayName||u.username,48) + '</div>'
-    + '<span style="position:absolute;bottom:2px;right:2px;width:10px;height:10px;border-radius:50%;background:' + sc + ';border:2px solid var(--channel);"></span>'
+    + '<div style="width:76px;height:76px;border-radius:50%;background:var(--panel2);border:4px solid var(--channel);overflow:hidden;">' + buildAvatarHTML(u.pfp,u.displayName||u.username,76) + '</div>'
+    + '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" style="position:absolute;bottom:4px;right:4px;width:13px;height:13px;border-radius:50%;background:' + sc + ';border:3px solid var(--channel);"></span>'
     + '</div>'
-    + ''
     + '</div>'
     + '</div>'
     + '<div style="padding:0 14px 12px;border-bottom:1px solid var(--border);">'
@@ -6275,6 +6320,8 @@ async function startVoiceCall(partner) {
   _vc.partner = partner; _vc.isCaller = true;
   await _vcSetup(true);
   toast('Calling '+partner+'…','info');
+  // Play ringtone
+  _startRingtone();
   // Signal the offer
   const offer = await _vc.pc.createOffer();
   await _vc.pc.setLocalDescription(offer);
@@ -6293,7 +6340,8 @@ async function startVoiceCall(partner) {
 }
 
 async function answerVoiceCall(partner, offerSdp) {
-  if (_vc.pc) endVoiceCall(); // replace existing
+  _stopRingtone();
+  if (_vc.pc) endVoiceCall();
   _vc.partner = partner; _vc.isCaller = false;
   await _vcSetup(false);
   await _vc.pc.setRemoteDescription({type:'offer',sdp:offerSdp});
@@ -6330,6 +6378,7 @@ async function _vcSetup(isCaller) {
 }
 
 async function endVoiceCall() {
+  _stopRingtone();
   if (_vc.localStream) _vc.localStream.getTracks().forEach(t=>t.stop());
   if (_vc.screenStream) _vc.screenStream.getTracks().forEach(t=>t.stop());
   if (_vc.pc) { _vc.pc.close(); }
@@ -6395,7 +6444,7 @@ function renderScreenShareView(isRemote) {
   ov.style.cssText = 'position:fixed;inset:0;background:#000;z-index:6000;display:flex;flex-direction:column;';
   ov.innerHTML = '<div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.05);flex-shrink:0;">'
     +'<div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;">🖥 '+(isRemote?escapeHTML(_vc.partner):' You')+' is sharing their screen</div>'
-    +'<button onclick="_closeEl(\"vc-screen-overlay\")" style="background:none;border:none;color:#fff;cursor:pointer;font-size:20px;">✕</button>'
+    +'<button id="vc-screen-close-btn" style="background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;">✕</button>'
     +'</div>'
     +'<div style="flex:1;display:flex;align-items:center;justify-content:center;">'
     +(isRemote
@@ -6403,6 +6452,7 @@ function renderScreenShareView(isRemote) {
       : '<video id="vc-screen-video" autoplay muted style="max-width:100%;max-height:100%;border-radius:12px;"></video>')
     +'</div>';
   document.body.appendChild(ov);
+  document.getElementById('vc-screen-close-btn')?.addEventListener('click', ()=>_closeEl('vc-screen-overlay'));
   if (isRemote && _vc.remoteStream) {
     const v = document.getElementById('vc-screen-video');
     if (v) v.srcObject = _vc.remoteStream;
@@ -6496,15 +6546,22 @@ function renderVoiceCallUI(partner, isCaller) {
     +'background:rgba(11,14,22,.96);border:1px solid rgba(255,255,255,.1);border-radius:20px 20px 0 0;'
     +'padding:14px 24px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(20px);'
     +'box-shadow:0 -8px 40px rgba(0,0,0,.6);min-width:340px;justify-content:center;';
-  bar.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:1px;margin-right:8px;">'
-    +'<div style="font-size:11px;font-weight:700;color:#3ecf6e;">● Voice Call</div>'
-    +'<div style="font-size:12.5px;font-weight:600;" id="vc-partner-name">'+escapeHTML(partner)+'</div>'
+  const muteIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+  const deafIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>';
+  const screenIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+  const watchIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>';
+  const endIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>';
+  bar.innerHTML = '<div style="display:flex;align-items:center;gap:4px;margin-right:10px;">'
+    +'<div style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;flex-shrink:0;animation:vcPulse 1.5s infinite;"></div>'
+    +'<div style="display:flex;flex-direction:column;"><div style="font-size:10.5px;font-weight:700;color:#3ecf6e;letter-spacing:.04em;">VOICE CONNECTED</div>'
+    +'<div style="font-size:12.5px;font-weight:600;" id="vc-partner-name">with '+escapeHTML(partner)+'</div></div>'
     +'</div>'
-    +_vcBtn('vc-mute-btn','M','toggleVCMute()','Mute','#f87171')
-    +_vcBtn('vc-deaf-btn','🎧','toggleVCDeafen()','Deafen','#f59e0b')
-    +_vcBtn('vc-screen-btn','🖥','startScreenShare()','Share Screen','#60a5fa')
-    +_vcBtn('vc-watch-btn','▶','startWatchTogether()','Watch Together','#a78bfa')
-    +'<button onclick="endVoiceCall()" style="width:44px;height:44px;border-radius:50%;background:#f87171;border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:8px;" title="End Call">📞</button>';
+    +_vcBtn('vc-mute-btn',muteIcon,'toggleVCMute()','Mute/Unmute','#f87171')
+    +_vcBtn('vc-deaf-btn',deafIcon,'toggleVCDeafen()','Deafen','#f59e0b')
+    +_vcBtn('vc-screen-btn',screenIcon,'startScreenShare()','Share Screen','#60a5fa')
+    +_vcBtn('vc-watch-btn',watchIcon,'startWatchTogether()','Watch Together','#a78bfa')
+    +'<div style="width:1px;height:28px;background:rgba(255,255,255,.1);margin:0 4px;"></div>'
+    +'<button onclick="endVoiceCall()" title="End Call" style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+endIcon+'</button>';
   document.body.appendChild(bar);
 }
 function _vcBtn(id, icon, fn, title, color) {
@@ -6670,6 +6727,245 @@ function unpinMessage(msgId, idx) {
   showPinnedMessages();
   toast('Message unpinned','info');
 }
+
+
+// ════════════════════════════════════════════
+// RINGTONE SYSTEM
+// ════════════════════════════════════════════
+let _ringtoneAudio = null;
+let _ringtoneTimer = null;
+function _startRingtone() {
+  _stopRingtone();
+  try {
+    _ringtoneAudio = new Audio('https://raw.githubusercontent.com/fortized/fortized/main/fortized-ringtone.mp3');
+    _ringtoneAudio.loop = true;
+    _ringtoneAudio.volume = 0.7;
+    _ringtoneAudio.play().catch(()=>{});
+    // Auto-stop after 30s
+    _ringtoneTimer = setTimeout(_stopRingtone, 30000);
+  } catch(e) { console.warn('Ringtone error', e); }
+}
+function _stopRingtone() {
+  if (_ringtoneTimer) { clearTimeout(_ringtoneTimer); _ringtoneTimer=null; }
+  if (_ringtoneAudio) { try { _ringtoneAudio.pause(); _ringtoneAudio.currentTime=0; } catch {} _ringtoneAudio=null; }
+}
+
+// ════════════════════════════════════════════
+// CUSTOM AUDIO PLAYER FUNCTIONS
+// ════════════════════════════════════════════
+function _ftzFmtTime(s) {
+  if (!isFinite(s)||isNaN(s)) return '--:--';
+  const m=Math.floor(s/60), sec=Math.floor(s%60);
+  return m+':'+(sec<10?'0':'')+sec;
+}
+function ftzAudioToggle(id) {
+  const a=document.getElementById(id); if(!a) return;
+  const btn=document.getElementById(id+'-btn');
+  if (a.paused) { a.play(); if(btn) btn.textContent='⏸'; }
+  else { a.pause(); if(btn) btn.textContent='▶'; }
+}
+function ftzAudioTick(id) {
+  const a=document.getElementById(id); if(!a||!a.duration) return;
+  const prog=document.getElementById(id+'-prog');
+  const cur=document.getElementById(id+'-cur');
+  if(prog) prog.style.width=(a.currentTime/a.duration*100)+'%';
+  if(cur) cur.textContent=_ftzFmtTime(a.currentTime);
+}
+function ftzAudioMeta(id) {
+  const a=document.getElementById(id); if(!a) return;
+  const dur=document.getElementById(id+'-dur');
+  if(dur) dur.textContent=_ftzFmtTime(a.duration);
+}
+function ftzAudioEnd(id) {
+  const btn=document.getElementById(id+'-btn');
+  const prog=document.getElementById(id+'-prog');
+  if(btn) btn.textContent='▶';
+  if(prog) prog.style.width='0%';
+}
+function ftzAudioSeek(id, e) {
+  const a=document.getElementById(id); if(!a||!a.duration) return;
+  const bar=e.currentTarget; const rect=bar.getBoundingClientRect();
+  a.currentTime=((e.clientX-rect.left)/rect.width)*a.duration;
+}
+
+// ════════════════════════════════════════════
+// CUSTOM VIDEO PLAYER FUNCTIONS
+// ════════════════════════════════════════════
+function ftzVideoToggle(id) {
+  const v=document.getElementById(id); if(!v) return;
+  const btn=document.getElementById(id+'-btn');
+  const ov=document.getElementById(id+'-overlay');
+  if (v.paused) {
+    v.play();
+    if(btn) btn.textContent='⏸';
+    if(ov) ov.style.display='none';
+  } else {
+    v.pause();
+    if(btn) btn.textContent='▶';
+    if(ov) ov.style.display='flex';
+  }
+}
+function ftzVideoTick(id) {
+  const v=document.getElementById(id); if(!v||!v.duration) return;
+  const prog=document.getElementById(id+'-prog');
+  const cur=document.getElementById(id+'-cur');
+  if(prog) prog.style.width=(v.currentTime/v.duration*100)+'%';
+  if(cur) cur.textContent=_ftzFmtTime(v.currentTime);
+}
+function ftzVideoMeta(id) {
+  const v=document.getElementById(id); if(!v) return;
+  const dur=document.getElementById(id+'-dur');
+  if(dur) dur.textContent=_ftzFmtTime(v.duration);
+}
+function ftzVideoEnd(id) {
+  const btn=document.getElementById(id+'-btn');
+  const ov=document.getElementById(id+'-overlay');
+  const prog=document.getElementById(id+'-prog');
+  if(btn) btn.textContent='▶';
+  if(ov) ov.style.display='flex';
+  if(prog) prog.style.width='0%';
+}
+function ftzVideoSeek(id, e) {
+  const v=document.getElementById(id); if(!v||!v.duration) return;
+  const bar=e.currentTarget; const rect=bar.getBoundingClientRect();
+  v.currentTime=((e.clientX-rect.left)/rect.width)*v.duration;
+}
+
+// ════════════════════════════════════════════
+// GAME ACTIVITY / STATUS (Discord-style)
+// ════════════════════════════════════════════
+const KNOWN_GAMES = [
+  {name:'Roblox', icon:'🎮', keywords:['roblox','robloxplayer','roblox player']},
+  {name:'Polytoria', icon:'🏗️', keywords:['polytoria']},
+  {name:'Minecraft', icon:'⛏️', keywords:['minecraft','javaw','minecraftlauncher']},
+  {name:'Fortnite', icon:'🎯', keywords:['fortnite','epicgameslauncher']},
+  {name:'Steam', icon:'🎮', keywords:['steam']},
+  {name:'Discord', icon:'💬', keywords:['discord']},
+];
+
+let _gameActivity = null;
+let _gameActivityInterval = null;
+let _userCustomApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
+
+function detectGameActivity() {
+  // Web can't directly read processes. We simulate detection via:
+  // 1. User-registered custom apps (persisted)
+  // 2. Screen title detection via document.title matching
+  // 3. WebGL renderer string (GPU info can hint at game running)
+  // Return current game if any match
+  return null; // Real detection requires native app; show manual set UI
+}
+
+function setGameActivity(name, icon) {
+  _gameActivity = name ? {name, icon: icon||'🎮', since: new Date().toISOString()} : null;
+  refreshGameActivityBar();
+  // Save to user profile
+  if (CU) {
+    CU.gameActivity = _gameActivity;
+    saveUser().catch(()=>{});
+    if (_gameActivity) {
+      firebase.database().ref('users/'+CU.username+'/gameActivity').set(_gameActivity).catch(()=>{});
+    } else {
+      firebase.database().ref('users/'+CU.username+'/gameActivity').remove().catch(()=>{});
+    }
+  }
+}
+
+function refreshGameActivityBar() {
+  const bar = document.getElementById('game-activity-bar');
+  if (!bar) return;
+  if (_gameActivity) {
+    bar.style.display = 'flex';
+    bar.innerHTML = '<span style="font-size:13px;">' + (_gameActivity.icon||'🎮') + '</span>'
+      +'<span style="font-size:11px;font-weight:700;color:var(--text);">'+escapeHTML(_gameActivity.name)+'</span>'
+      +'<span style="font-size:10px;color:var(--muted);">Playing</span>'
+      +'<button onclick="setGameActivity(null)" title="Stop" style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;">✕</button>';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function openGameActivityPicker() {
+  _closeEl('game-activity-modal');
+  _userCustomApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
+  const allGames = [...KNOWN_GAMES, ..._userCustomApps.map(a=>({name:a.name,icon:a.icon||'🎮',keywords:[]}))];
+  const modal = document.createElement('div');
+  modal.id = 'game-activity-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.8);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;width:380px;max-width:95vw;box-shadow:0 24px 60px rgba(0,0,0,.7);';
+  box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">'
+    +'<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;">🎮 Game Activity</div>'
+    +'<button id="ga-close" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;"></button>'
+    +'</div>'
+    +((_gameActivity) ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:12px;margin-bottom:14px;"><span>'+(_gameActivity.icon||'🎮')+'</span><span style="font-size:13px;font-weight:700;">'+escapeHTML(_gameActivity.name)+'</span><button id="ga-stop-btn" style="margin-left:auto;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:var(--red);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;">Stop</button></div>' : '')
+    +'<div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Games</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">'
+    +allGames.map((g,gi)=>'<div id="ga-game-'+gi+'" style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:11px;cursor:pointer;transition:.12s;"><span style="font-size:18px;">'+g.icon+'</span><span style="font-size:12.5px;font-weight:700;">'+escapeHTML(g.name)+'</span></div>').join('')
+    +'</div>'
+    +'<div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Add Custom App</div>'
+    +'<div style="display:flex;gap:6px;margin-bottom:10px;">'
+    +'<input id="ga-custom-inp" class="field-input" placeholder="App / game name" style="flex:1;font-size:12.5px;">'
+    +'<input id="ga-custom-icon" class="field-input" placeholder="🎮" style="width:48px;font-size:16px;text-align:center;">'
+    +'<button onclick="_addCustomGameApp()" class="btn-a" style="padding:6px 14px;font-size:12.5px;">Add</button>'
+    +'</div>'
+    +'<div style="font-size:10.5px;color:var(--muted);">Added apps will be remembered for future detection.</div>';
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+  document.getElementById('ga-close').onclick = ()=>_closeEl('game-activity-modal');
+  document.getElementById('ga-close').textContent = '✕';
+  modal.addEventListener('click', e=>{
+    if(e.target===modal) { _closeEl('game-activity-modal'); return; }
+    // Wire game tiles
+    const tile = e.target.closest('[id^=ga-game-]');
+    if (tile) {
+      const gi = parseInt(tile.id.replace('ga-game-',''));
+      const allG = [...KNOWN_GAMES, ..._userCustomApps.map(a=>({name:a.name,icon:a.icon||'🎮'}))];
+      const g = allG[gi]; if(g){ setGameActivity(g.name,g.icon); _closeEl('game-activity-modal'); }
+    }
+  });
+  document.getElementById('ga-stop-btn')?.addEventListener('click',()=>{ setGameActivity(null); _closeEl('game-activity-modal'); });
+}
+
+function _addCustomGameApp() {
+  const name = document.getElementById('ga-custom-inp')?.value?.trim();
+  const icon = document.getElementById('ga-custom-icon')?.value?.trim() || '🎮';
+  if (!name) { toast('Enter an app name','error'); return; }
+  _userCustomApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
+  if (!_userCustomApps.find(a=>a.name===name)) {
+    _userCustomApps.push({name, icon});
+    localStorage.setItem('ftz_custom_apps', JSON.stringify(_userCustomApps));
+  }
+  setGameActivity(name, icon);
+  _closeEl('game-activity-modal');
+  toast('Game activity set to '+name,'success');
+}
+
+// Show game activity on other users' profiles
+function renderGameActivityOnProfile(u, containerEl) {
+  if (!u?.gameActivity?.name) return;
+  const ga = u.gameActivity;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(62,207,110,.06);border:1px solid rgba(62,207,110,.15);border-radius:11px;margin-bottom:12px;';
+  div.innerHTML = '<span style="font-size:18px;">'+(ga.icon||'🎮')+'</span>'
+    +'<div><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#3ecf6e;">Playing a Game</div>'
+    +'<div style="font-size:13px;font-weight:700;">'+escapeHTML(ga.name)+'</div></div>';
+  if (containerEl) containerEl.prepend(div);
+}
+
+// ════════════════════════════════════════════
+// GAME ACTIVITY BAR CSS (injected at init)
+// ════════════════════════════════════════════
+(function injectGameActivityBar() {
+  const ua = document.getElementById('userbar-area') || document.querySelector('.userbar');
+  if (!ua) return;
+  const bar = document.createElement('div');
+  bar.id = 'game-activity-bar';
+  bar.style.cssText = 'display:none;align-items:center;gap:5px;padding:4px 8px;background:rgba(62,207,110,.07);border:1px solid rgba(62,207,110,.18);border-radius:9px;margin:2px 0;font-size:11px;cursor:pointer;';
+  bar.title = 'Game Activity';
+  ua.after?.(bar) || ua.parentNode?.insertBefore(bar, ua.nextSibling);
+})();
+
 </script>
 </body>
 </html>

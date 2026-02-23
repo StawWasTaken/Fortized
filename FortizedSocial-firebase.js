@@ -7,15 +7,12 @@ const firebaseConfig = {
   messagingSenderId: "232126031951",
   appId: "1:232126031951:web:c66312d3175f137c25223a"
 };
-// ─────────────────────────────────────────────────────────────
 
 const FortizedSocial = (() => {
 
-  // ── Firebase init ──────────────────────────────────────────
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); // FIXED: was FIREBASE_CONFIG
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // ── DB path helpers ────────────────────────────────────────
   const P = {
     user:        u  => `users/${u}`,
     status:      u  => `statuses/${u}`,
@@ -30,25 +27,20 @@ const FortizedSocial = (() => {
     invite:      code   => `invites/${code}`,
   };
 
-  // ── Tiny promise wrappers ──────────────────────────────────
+  // ── Normalize username ─────────────────────────────────────
+  // ALL usernames are stored lowercase. Normalize before any lookup.
+  function norm(u) {
+    return (u || '').trim().toLowerCase();
+  }
+
   function dbGet(path) {
     return db.ref(path).get().then(snap => snap.exists() ? snap.val() : null);
   }
-  function dbSet(path, val) {
-    return db.ref(path).set(val);
-  }
-  function dbUpdate(path, val) {
-    return db.ref(path).update(val);
-  }
-  function dbPush(path, val) {
-    return db.ref(path).push(val);
-  }
-  function dbRemove(path) {
-    return db.ref(path).remove();
-  }
-  function dbTransaction(path, fn) {
-    return db.ref(path).transaction(fn);
-  }
+  function dbSet(path, val) { return db.ref(path).set(val); }
+  function dbUpdate(path, val) { return db.ref(path).update(val); }
+  function dbPush(path, val) { return db.ref(path).push(val); }
+  function dbRemove(path) { return db.ref(path).remove(); }
+  function dbTransaction(path, fn) { return db.ref(path).transaction(fn); }
 
   // ── Session ────────────────────────────────────────────────
   function getCurrentUsername() {
@@ -73,17 +65,18 @@ const FortizedSocial = (() => {
 
   async function getUserByName(username) {
     if (!username) return null;
-    return dbGet(P.user(username));
+    // Always normalize — users are stored under lowercase keys
+    return dbGet(P.user(norm(username)));
   }
 
   async function saveUserObject(user) {
     if (!user?.username) return;
-    await dbUpdate(P.user(user.username), user);
+    await dbUpdate(P.user(norm(user.username)), user);
   }
 
   // ── Auth ───────────────────────────────────────────────────
   async function register(username, password, email = '') {
-    username = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    username = norm(username).replace(/[^a-z0-9_]/g, '');
     if (!username || username.length < 3)
       return { ok: false, msg: 'Username must be 3+ characters (a-z, 0-9, _).' };
     if (!password || password.length < 6)
@@ -108,12 +101,12 @@ const FortizedSocial = (() => {
       createdAt: new Date().toISOString()
     };
     await dbSet(P.user(username), user);
-    setCurrentUsername(username); // FIXED: also set session on register
+    setCurrentUsername(username);
     return { ok: true, user };
   }
 
   async function login(username, password) {
-    username = username.trim().toLowerCase();
+    username = norm(username);
     const user = await getUserByName(username);
     if (!user) return { ok: false, msg: 'User not found.' };
     if (user.password !== password) return { ok: false, msg: 'Wrong password.' };
@@ -123,25 +116,26 @@ const FortizedSocial = (() => {
   }
 
   async function logout(username) {
-    await setStatus(username, 'offline');
+    await setStatus(norm(username), 'offline');
     stopPolling();
     clearCurrentUsername();
   }
 
   // ── Status ─────────────────────────────────────────────────
   async function getStatus(username) {
-    const val = await dbGet(P.status(username));
+    const val = await dbGet(P.status(norm(username)));
     return val || 'offline';
   }
 
   async function setStatus(username, status) {
+    username = norm(username);
     await dbSet(P.status(username), status);
     await dbUpdate(P.user(username), { status });
   }
 
   // ── Notifications ──────────────────────────────────────────
   async function getNotifications(username) {
-    const data = await dbGet(P.notifs(username));
+    const data = await dbGet(P.notifs(norm(username)));
     if (!data) return [];
     return Object.values(data).sort((a, b) =>
       new Date(b.time) - new Date(a.time)
@@ -152,15 +146,15 @@ const FortizedSocial = (() => {
     notif.id   = Date.now().toString(36) + Math.random().toString(36).slice(2);
     notif.time = new Date().toISOString();
     notif.read = false;
-    await dbSet(`${P.notifs(toUsername)}/${notif.id}`, notif);
+    await dbSet(`${P.notifs(norm(toUsername))}/${notif.id}`, notif);
   }
 
   async function markNotificationsRead(username) {
-    const data = await dbGet(P.notifs(username));
+    const data = await dbGet(P.notifs(norm(username)));
     if (!data) return;
     const updates = {};
     Object.keys(data).forEach(k => { updates[`${k}/read`] = true; });
-    await dbUpdate(P.notifs(username), updates);
+    await dbUpdate(P.notifs(norm(username)), updates);
   }
 
   async function getUnreadCount(username) {
@@ -170,6 +164,11 @@ const FortizedSocial = (() => {
 
   // ── Friend System ──────────────────────────────────────────
   async function sendFriendRequest(fromUsername, toUsername) {
+    // Normalize both — this is the critical fix
+    fromUsername = norm(fromUsername);
+    toUsername   = norm(toUsername);
+
+    if (!toUsername) return { ok: false, msg: 'Enter a username.' };
     if (fromUsername === toUsername) return { ok: false, msg: "Can't add yourself." };
 
     const [fu, tu] = await Promise.all([
@@ -177,15 +176,16 @@ const FortizedSocial = (() => {
       getUserByName(toUsername)
     ]);
     if (!fu) return { ok: false, msg: 'Your account not found.' };
-    if (!tu) return { ok: false, msg: 'User not found.' };
+    if (!tu) return { ok: false, msg: `User "${toUsername}" not found.` };
 
     const friends       = fu.friends           || [];
     const sentReqs      = fu.friendRequestsSent || [];
     const theirSentReqs = tu.friendRequestsSent || [];
 
-    if (friends.includes(toUsername))    return { ok: false, msg: 'Already friends.' };
-    if (sentReqs.includes(toUsername))   return { ok: false, msg: 'Request already sent.' };
+    if (friends.includes(toUsername))   return { ok: false, msg: 'Already friends.' };
+    if (sentReqs.includes(toUsername))  return { ok: false, msg: 'Request already sent.' };
 
+    // If they already sent us a request, just accept
     if (theirSentReqs.includes(fromUsername)) {
       return acceptFriendRequest(fromUsername, toUsername);
     }
@@ -205,6 +205,9 @@ const FortizedSocial = (() => {
   }
 
   async function acceptFriendRequest(myUsername, fromUsername) {
+    myUsername   = norm(myUsername);
+    fromUsername = norm(fromUsername);
+
     const [mu, fu] = await Promise.all([
       getUserByName(myUsername),
       getUserByName(fromUsername)
@@ -234,6 +237,8 @@ const FortizedSocial = (() => {
   const acceptFriend = acceptFriendRequest;
 
   async function declineFriendRequest(myUsername, fromUsername) {
+    myUsername   = norm(myUsername);
+    fromUsername = norm(fromUsername);
     const [mu, fu] = await Promise.all([
       getUserByName(myUsername),
       getUserByName(fromUsername)
@@ -248,6 +253,8 @@ const FortizedSocial = (() => {
   }
 
   async function removeFriend(myUsername, friendUsername) {
+    myUsername     = norm(myUsername);
+    friendUsername = norm(friendUsername);
     const [mu, fu] = await Promise.all([
       getUserByName(myUsername),
       getUserByName(friendUsername)
@@ -263,7 +270,7 @@ const FortizedSocial = (() => {
 
   // ── Direct Messages ────────────────────────────────────────
   async function getDMMessages(user1, user2) {
-    const data = await dbGet(P.dm(user1, user2));
+    const data = await dbGet(P.dm(norm(user1), norm(user2)));
     if (!data) return [];
     return Object.values(data).sort((a, b) =>
       new Date(a.timestamp) - new Date(b.timestamp)
@@ -271,6 +278,8 @@ const FortizedSocial = (() => {
   }
 
   async function sendDMMessage(fromUsername, toUsername, text) {
+    fromUsername = norm(fromUsername);
+    toUsername   = norm(toUsername);
     const now = new Date();
     const msg = {
       id:        Date.now().toString(36) + Math.random().toString(36).slice(2),
@@ -307,7 +316,7 @@ const FortizedSocial = (() => {
   }
 
   async function getRecentDMPartners(username) {
-    const data = await dbGet(P.dmIndex(username));
+    const data = await dbGet(P.dmIndex(norm(username)));
     if (!data) return [];
     return Array.isArray(data) ? data : Object.values(data);
   }
@@ -326,7 +335,7 @@ const FortizedSocial = (() => {
     const msgRef = db.ref(P.bastionMsgs(bastionId, channelId)).push();
     const msg = {
       id:        msgRef.key,
-      from:      fromUsername,
+      from:      norm(fromUsername),
       text,
       time:      now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       timestamp: now.toISOString()
@@ -339,9 +348,9 @@ const FortizedSocial = (() => {
     const path = `${P.bastionMsgs(bastionId, channelId)}/${msgId}/reactions/${emoji}`;
     await dbTransaction(path, current => {
       const arr = current ? (Array.isArray(current) ? current : Object.values(current)) : [];
-      const idx = arr.indexOf(username);
+      const idx = arr.indexOf(norm(username));
       if (idx !== -1) arr.splice(idx, 1);
-      else arr.push(username);
+      else arr.push(norm(username));
       return arr.length ? arr : null;
     });
   }
@@ -350,11 +359,9 @@ const FortizedSocial = (() => {
   async function getGlobalBastions() {
     return (await dbGet(P.globalBastions)) || {};
   }
-
   async function saveGlobalBastion(id, data) {
     await dbSet(P.globalBastion(id), data);
   }
-
   async function getGlobalBastion(id) {
     return dbGet(P.globalBastion(id));
   }
@@ -365,27 +372,20 @@ const FortizedSocial = (() => {
     if (!data) return [];
     return Array.isArray(data) ? data : Object.values(data);
   }
-
   async function addBastionMember(bastionId, username) {
     const members = await getBastionMembers(bastionId);
-    if (!members.includes(username)) members.push(username);
+    const u = norm(username);
+    if (!members.includes(u)) members.push(u);
     await dbSet(P.bastionMembers(bastionId), members);
   }
-
   async function removeBastionMember(bastionId, username) {
     const members = await getBastionMembers(bastionId);
-    await dbSet(P.bastionMembers(bastionId), members.filter(u => u !== username));
+    await dbSet(P.bastionMembers(bastionId), members.filter(u => u !== norm(username)));
   }
 
   // ── Invites ────────────────────────────────────────────────
-  async function getInvite(code) {
-    return dbGet(P.invite(code));
-  }
-
-  async function saveInvite(code, data) {
-    await dbSet(P.invite(code), data);
-  }
-
+  async function getInvite(code) { return dbGet(P.invite(code)); }
+  async function saveInvite(code, data) { await dbSet(P.invite(code), data); }
   async function incrementInviteUses(code) {
     await dbTransaction(P.invite(code) + '/uses', n => (n || 0) + 1);
   }
@@ -397,6 +397,7 @@ const FortizedSocial = (() => {
   function startPolling(username, callbacks = {}) {
     _callbacks = callbacks;
     stopPolling();
+    username = norm(username);
 
     const notifRef = db.ref(P.notifs(username));
     const notifHandler = notifRef.on('child_added', snap => {
@@ -429,17 +430,13 @@ const FortizedSocial = (() => {
 
   function listenBastionChannel(bastionId, channelId, callback) {
     const ref = db.ref(P.bastionMsgs(bastionId, channelId));
-    const handler = ref.on('child_added', snap => {
-      callback?.(snap.val());
-    });
+    const handler = ref.on('child_added', snap => { callback?.(snap.val()); });
     return () => ref.off('child_added', handler);
   }
 
   function listenDM(user1, user2, callback) {
-    const ref = db.ref(P.dm(user1, user2));
-    const handler = ref.on('child_added', snap => {
-      callback?.(snap.val());
-    });
+    const ref = db.ref(P.dm(norm(user1), norm(user2)));
+    const handler = ref.on('child_added', snap => { callback?.(snap.val()); });
     return () => ref.off('child_added', handler);
   }
 

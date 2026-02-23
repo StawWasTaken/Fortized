@@ -249,8 +249,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .profile-nav-item{display:flex;align-items:center;gap:9px;padding:9px 14px;margin:1px 6px;border-radius:12px;cursor:pointer;font-size:13.5px;color:var(--muted-light);transition:all .1s;}
 .profile-nav-item:hover{background:rgba(255,255,255,.05);color:#fff;}
 .profile-nav-item.active{background:rgba(255,249,62,.08);color:var(--accent);}
-.profile-main{flex:1;overflow-y:auto;}
-.profile-banner-area{width:100%;height:150px;background:linear-gradient(135deg,#0f1830,#1a0f30,#0f2030);position:relative;overflow:hidden;}
+.profile-main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.profile-banner-area{width:100%;height:240px;background:linear-gradient(135deg,#0f1830,#1a0f30,#0f2030);position:relative;overflow:hidden;}
 .profile-banner-area img{width:100%;height:100%;object-fit:cover;}
 .profile-av-row{display:flex;align-items:flex-end;gap:14px;padding:0 24px;margin-top:-28px;margin-bottom:14px;}
 .profile-av-big{width:56px;height:56px;border-radius:50%;background:var(--panel);border:3px solid var(--bg);font-size:20px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;}
@@ -345,7 +345,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .epp-custom-emoji img{width:26px;height:26px;object-fit:contain;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);z-index:1000;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--panel);border:1px solid var(--border);border-radius:20px;width:100%;max-width:480px;overflow:hidden;animation:mIn .2s cubic-bezier(.22,1,.36,1) both;box-shadow:0 32px 80px rgba(0,0,0,.7);}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:20px;width:100%;max-width:680px;overflow:hidden;animation:mIn .2s cubic-bezier(.22,1,.36,1) both;box-shadow:0 32px 80px rgba(0,0,0,.7);}
 .modal.wide{max-width:580px;}
 .modal.tall{max-height:80vh;display:flex;flex-direction:column;}
 .modal.tall .modal-body{overflow-y:auto;flex:1;}
@@ -375,6 +375,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .toast.info{border-left:3px solid var(--accent);color:var(--accent);}
 .ctx-menu{position:fixed;z-index:9999;background:rgba(11,14,22,.98);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:6px;min-width:200px;box-shadow:0 20px 50px rgba(0,0,0,.7);backdrop-filter:blur(22px);animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
 @keyframes vcPulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes callPulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.4);opacity:0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes ctxIn{from{opacity:0;transform:scale(.96) translateY(-4px);}to{opacity:1;transform:none;}}
 .ctx-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;font-size:13px;color:rgba(220,228,240,.9);cursor:pointer;}
 .ctx-item:hover{background:rgba(255,255,255,.07);color:#fff;}
@@ -2477,7 +2479,7 @@ function renderBSettingsMain(tab) {
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">🏰 Overview</div>
       <div style="margin-bottom:18px;">
         <div class="settings-title">Banner</div>
-        <div style="height:88px;border-radius:12px;overflow:hidden;border:1.5px dashed var(--border);cursor:pointer;position:relative;" onclick="document.getElementById('bs-banner-upload').click()">
+        <div style="height:160px;border-radius:12px;overflow:hidden;border:1.5px dashed var(--border);cursor:pointer;position:relative;" onclick="document.getElementById('bs-banner-upload').click()">
           ${b.banner?`<img src="${b.banner}" style="width:100%;height:100%;object-fit:cover;">`:'<div style="height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f1830,#1a0f30);color:var(--muted);font-size:13px;">🖼 Click to upload banner</div>'}
         </div>
         <input id="bs-banner-upload" type="file" accept="image/*" style="display:none;" onchange="updateBastionBanner(event)">
@@ -3060,41 +3062,10 @@ function buildProfileView(tab) {
   if(tab==='myprofile') {
     const customStatus = CU.customStatus;
     main.innerHTML=`
-      <!-- PREVIEW CARD (top, Discord-style) -->
-      <div style="padding:24px 24px 0;">
-        <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Preview</div>
-        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:24px;">
-          <!-- Banner -->
-          <div style="height:80px;position:relative;cursor:pointer;" onclick="document.getElementById('banner-file-inp').click()">
-            <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0f1830,#1a0f30);">
-              ${CU.banner?`<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:``}
-            </div>
-            <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
-              <span style="color:#fff;font-size:12.5px;font-weight:600;background:rgba(0,0,0,.5);padding:5px 12px;border-radius:8px;">🖼 Change Banner</span>
-            </div>
-          </div>
-          <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event)">
-          <!-- Avatar row -->
-          <div style="padding:0 16px 16px;position:relative;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-28px;margin-bottom:12px;">
-              <label style="cursor:pointer;position:relative;display:inline-block;">
-                <div style="width:68px;height:68px;border-radius:50%;border:4px solid var(--panel2);overflow:hidden;background:var(--panel);">
-                  ${CU.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</div>`}
-                </div>
-                <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0"><span style="font-size:18px;">📷</span></div>
-                <input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event)">
-              </label>
-              ${hasRadiance?`<div style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,200,62,.15),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;color:#ffd93e;">✨ Radiance Active</div>`:''}
-            </div>
-            <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:2px;">${escapeHTML(CU.displayName||CU.username)}</div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">@${escapeHTML(CU.username)}</div>
-            ${customStatus?`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;font-size:11.5px;cursor:pointer;" onclick="openStatusPicker()">${customStatus.emoji} ${escapeHTML(customStatus.text)}</div>`:`<div style="font-size:11.5px;color:var(--muted);cursor:pointer;" onclick="openStatusPicker()">+ Set custom status</div>`}
-          </div>
-        </div>
-      </div>
-
-      <!-- SETTINGS SECTIONS -->
-      <div style="padding:0 24px 32px;">
+      <!-- TWO-COLUMN LAYOUT: left=form, right=live preview -->
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:0;min-height:100%;align-items:start;">
+        <!-- LEFT: settings fields -->
+        <div style="padding:28px 24px 40px;border-right:1px solid var(--border);overflow-y:auto;">
         <!-- Display Name -->
         <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
@@ -3183,7 +3154,49 @@ function buildProfileView(tab) {
           <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:10px;">Danger Zone</div>
           <button class="btn-d" onclick="showCustomConfirm('Delete your account permanently? This cannot be undone.',doLogout)" style="font-size:12.5px;padding:8px 16px;">Delete Account</button>
         </div>
-      </div>`;
+        </div><!-- /left col -->
+
+        <!-- RIGHT: Live preview -->
+        <div style="padding:24px 18px;position:sticky;top:0;border-left:1px solid var(--border);min-height:100%;background:rgba(255,255,255,.01);">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Live Preview</div>
+          <div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.5);">
+            <!-- Banner -->
+            <div style="height:120px;position:relative;cursor:pointer;" onclick="document.getElementById('banner-file-inp').click()">
+              <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0f1830,#1a0f30);">
+                ${CU.banner?`<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:``}
+              </div>
+              <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(4,6,10,.7));pointer-events:none;"></div>
+              <div style="position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.6);padding:2px 7px;border-radius:6px;font-size:10px;color:#fff;">🖼 Change Banner</div>
+            </div>
+            <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event)">
+            <!-- Avatar + info -->
+            <div style="padding:0 14px 16px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-28px;margin-bottom:10px;">
+                <label style="cursor:pointer;position:relative;display:inline-block;">
+                  <div style="width:68px;height:68px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);box-shadow:0 2px 10px rgba(0,0,0,.4);">
+                    ${CU.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</div>`}
+                  </div>
+                  <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0"><span style="font-size:15px;">📷</span></div>
+                  <input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event)">
+                </label>
+                ${hasRadiance?`<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.15),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:3px 9px;font-size:10px;font-weight:700;color:#ffd93e;">✨ Radiance</div>`:''}
+              </div>
+              <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:1px;">${escapeHTML(CU.displayName||CU.username)}</div>
+              <div style="font-size:11.5px;color:var(--muted);margin-bottom:6px;">@${escapeHTML(CU.username)}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:${{online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280'}[CU.status||'online']||'#3ecf6e'};flex-shrink:0;"></span>
+                <span style="font-size:12px;color:var(--muted-light);">${{online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible'}[CU.status||'online']||'Online'}</span>
+              </div>
+              ${customStatus?`<div style="display:inline-flex;align-items:center;gap:5px;padding:2px 9px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;font-size:11px;cursor:pointer;margin-bottom:6px;" onclick="openStatusPicker()">${customStatus.emoji} ${escapeHTML(customStatus.text)}</div>`:`<div style="font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:6px;" onclick="openStatusPicker()">+ Set custom status</div>`}
+              ${CU.bio?`<div style="padding:8px 10px;background:var(--panel2);border-radius:10px;border-left:3px solid var(--accent-mid);font-size:12px;color:var(--muted-light);line-height:1.5;margin-top:4px;">${escapeHTML(CU.bio.slice(0,100)+(CU.bio.length>100?'…':''))}</div>`:''}
+            </div>
+          </div>
+          <!-- Quick tip -->
+          <div style="margin-top:10px;padding:10px 12px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.1);border-radius:10px;">
+            <div style="font-size:10.5px;color:var(--muted-light);line-height:1.5;">💡 Click the banner or avatar in the preview to change them.</div>
+          </div>
+        </div><!-- /right col -->
+      </div><!-- /grid -->`;
   } else if(tab==='account') {
     main.innerHTML=`<div style="padding:24px;">
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:22px;">Account</div>
@@ -3366,21 +3379,27 @@ async function viewUserProfile(username) {
 
   if (isOwn) {
     modalEl.innerHTML = `
-      <div style="position:relative;height:110px;background:linear-gradient(135deg,#0f1830,#1a0f30);margin:-24px -24px 0;overflow:hidden;border-radius:18px 18px 0 0;">
+      <div style="position:relative;height:240px;background:linear-gradient(135deg,#0f1830,#1a0f30);margin:-24px -24px 0;overflow:hidden;border-radius:18px 18px 0 0;">
         <img src="${u.banner||''}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 45%,rgba(4,6,10,.75));pointer-events:none;"></div>
       </div>
-      <div style="padding:0 18px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-32px;margin-bottom:12px;">
+      <div style="padding:0 22px 20px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-52px;margin-bottom:16px;">
           <div style="position:relative;">
-            <div style="width:72px;height:72px;border-radius:50%;background:var(--panel2);border:4px solid var(--panel);overflow:hidden;">${buildAvatarHTML(u.pfp,u.displayName||u.username,72)}</div>
-            <span style="position:absolute;bottom:4px;right:4px;width:13px;height:13px;border-radius:50%;background:${sc};border:2px solid var(--panel);"></span>
+            <div style="width:100px;height:100px;border-radius:50%;background:var(--panel2);border:5px solid var(--panel);overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.5);">${buildAvatarHTML(u.pfp,u.displayName||u.username,100)}</div>
+            <span style="position:absolute;bottom:6px;right:6px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid var(--panel);box-shadow:0 0 0 2px rgba(0,0,0,.3);"></span>
+          </div>
+          <div style="display:flex;gap:6px;padding-bottom:4px;">
+            <button class="btn-a" onclick="closeModal('modal-user');showView('profile')" style="font-size:12.5px;padding:8px 16px;">Edit Profile</button>
+            <button class="btn-g" onclick="closeModal('modal-user')" style="font-size:12.5px;padding:8px 14px;">Close</button>
           </div>
         </div>
-        <div style="margin-bottom:12px;">
-          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:2px;">${escapeHTML(u.displayName||u.username)}</div>
-          <div style="font-size:12px;color:var(--muted);">@${escapeHTML(u.username)}</div>
-          ${hasRadiance?'<div style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,200,62,.18),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:3px 11px;font-size:11px;font-weight:700;color:#ffd93e;">✨ Radiance Active</div>':''}
-        </div>
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.1;">${escapeHTML(u.displayName||u.username)}</div>
+            ${hasRadiance?'<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.18),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:2px 9px;font-size:10.5px;font-weight:700;color:#ffd93e;">✨ Radiance</div>':''}
+          </div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">@${escapeHTML(u.username)}</div>
         ${u.bio?`<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">About Me</div><div style="font-size:13px;color:var(--muted-light);line-height:1.55;">${escapeHTML(u.bio)}</div></div>`:''}
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:9px;height:9px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
@@ -3403,41 +3422,53 @@ async function viewUserProfile(username) {
       : '';
 
     modalEl.innerHTML = `
-      <div style="position:relative;aspect-ratio:16/9;max-height:180px;background:linear-gradient(135deg,#0f1830,#1a0f30);margin:-24px -24px 0;overflow:hidden;border-radius:18px 18px 0 0;">
+      <!-- BANNER 680×240 -->
+      <div style="position:relative;height:240px;background:linear-gradient(135deg,#0f1830,#1a0f30);margin:-24px -24px 0;overflow:hidden;border-radius:18px 18px 0 0;">
         <img src="${u.banner||''}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 45%,rgba(4,6,10,.75));pointer-events:none;"></div>
       </div>
-      <div style="padding:0 18px 18px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-48px;margin-bottom:14px;">
+      <div style="padding:0 22px 20px;">
+        <!-- Avatar + action buttons -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-52px;margin-bottom:16px;">
           <div style="position:relative;">
-            <div style="width:92px;height:92px;border-radius:50%;background:var(--panel2);border:5px solid var(--panel);overflow:hidden;">${buildAvatarHTML(u.pfp,u.displayName||u.username,92)}</div>
-            <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:5px;right:5px;width:14px;height:14px;border-radius:50%;background:${sc};border:3px solid var(--panel);"></span>
+            <div style="width:100px;height:100px;border-radius:50%;background:var(--panel2);border:5px solid var(--panel);overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.6);">${buildAvatarHTML(u.pfp,u.displayName||u.username,100)}</div>
+            <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:6px;right:6px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid var(--panel);box-shadow:0 0 0 2px rgba(0,0,0,.3);"></span>
           </div>
-          <div style="display:flex;gap:6px;padding-top:40px;">
-            <button class="btn-a" onclick="closeModal('modal-user');openDMChat('${escapeHTML(u.username)}')" style="font-size:12px;padding:7px 14px;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message
+          <div style="display:flex;gap:6px;padding-bottom:4px;">
+            <button class="btn-a" onclick="closeModal('modal-user');openDMChat('${escapeHTML(u.username)}')" style="font-size:12.5px;padding:8px 16px;display:flex;align-items:center;gap:5px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message
+            </button>
+            <button onclick="startVoiceCall('${escapeHTML(u.username)}');closeModal('modal-user')" title="Voice Call" style="width:36px;height:36px;border-radius:50%;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.3);color:#3ecf6e;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
             </button>
             ${isFriend
-              ? `<button class="btn-d" onclick="closeModal('modal-user');removeFriend('${escapeHTML(u.username)}')" style="font-size:12px;padding:7px 14px;">Unfriend</button>`
+              ? `<button class="btn-d" onclick="closeModal('modal-user');removeFriend('${escapeHTML(u.username)}')" style="font-size:12px;padding:8px 14px;">Unfriend</button>`
               : hasPending
-                ? `<button class="btn-g" disabled style="font-size:12px;padding:7px 14px;opacity:.6;">Sent ✓</button>`
-                : `<button class="btn-g" onclick="quickAddFriend('${escapeHTML(u.username)}')" style="font-size:12px;padding:7px 14px;">+ Add Friend</button>`
+                ? `<button class="btn-g" disabled style="font-size:12px;padding:8px 14px;opacity:.6;">Request Sent ✓</button>`
+                : `<button class="btn-g" onclick="quickAddFriend('${escapeHTML(u.username)}')" style="font-size:12px;padding:8px 14px;">+ Add Friend</button>`
             }
           </div>
         </div>
-        <div style="margin-bottom:12px;">
-          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:2px;">${escapeHTML(u.displayName||u.username)}</div>
-          <div style="font-size:12px;color:var(--muted);">@${escapeHTML(u.username)}</div>
-          ${hasRadiance?'<div style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,200,62,.18),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:3px 11px;font-size:11px;font-weight:700;color:#ffd93e;">✨ Radiance</div>':''}
+        <!-- Name + badges -->
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.1;">${escapeHTML(u.displayName||u.username)}</div>
+            ${hasRadiance?'<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.18),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:2px 9px;font-size:10.5px;font-weight:700;color:#ffd93e;">✨ Radiance</div>':''}
+            ${u.gameActivity?.name?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:100px;padding:2px 9px;font-size:10.5px;font-weight:600;">${u.gameActivity.icon||'🎮'} ${escapeHTML(u.gameActivity.name)}</div>`:''}
+          </div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">@${escapeHTML(u.username)}</div>
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+            <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:10px;height:10px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
+            <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:13px;color:var(--muted-light);">${SL[status]||status}</span>
+            ${u.customStatus?.text?`<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;font-size:11.5px;">${u.customStatus.emoji||''} ${escapeHTML(u.customStatus.text)}</span>`:`<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></span>`}
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:9px;height:9px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
-          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:12.5px;color:var(--muted-light);">${SL[status]||status}</span>
-        </div>
-        ${u.bio?`<div style="margin-bottom:14px;padding:10px 12px;background:var(--panel2);border-radius:11px;border-left:3px solid rgba(255,255,255,.08);"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">About Me</div><div style="font-size:13px;color:var(--muted-light);line-height:1.55;">${escapeHTML(u.bio)}</div></div>`:''}
+        <div style="height:1px;background:rgba(255,255,255,.06);margin:10px 0 12px;"></div>
+        ${u.bio?`<div style="margin-bottom:12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">About Me</div><div style="font-size:13px;color:var(--muted-light);line-height:1.6;padding:10px 12px;background:var(--panel2);border-radius:10px;border-left:3px solid var(--accent-mid);">${escapeHTML(u.bio)}</div></div>`:''}
         ${gameHTML}
-        ${socialHTML?`<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;">Connected</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${socialHTML}</div></div>`:''}
-        ${joinedDate?`<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Member Since</div><div style="font-size:13px;color:var(--muted-light);">${joinedDate}</div></div>`:''}
-        <div style="display:flex;gap:6px;">
+        ${socialHTML?`<div style="margin-bottom:12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Connected Accounts</div><div style="display:flex;flex-wrap:wrap;gap:5px;">${socialHTML}</div></div>`:''}
+        ${joinedDate?`<div style="display:flex;align-items:center;gap:5px;margin-bottom:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span style="font-size:12px;color:var(--muted);">Member since ${joinedDate}</span></div>`:''}
+        <div style="display:flex;gap:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);">
           <button onclick="toggleBlockUser('${escapeHTML(u.username)}')" style="flex:1;padding:8px;border-radius:10px;border:1px solid ${isBlocked?'rgba(248,113,113,.4)':'var(--border)'};background:${isBlocked?'rgba(248,113,113,.1)':'transparent'};color:${isBlocked?'var(--red)':'var(--muted-light)'};font-size:12px;cursor:pointer;font-weight:600;">${isBlocked?'Unblock':'Block'}</button>
           <button onclick="reportUser('${escapeHTML(u.username)}')" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted-light);font-size:12px;cursor:pointer;font-weight:600;">Report</button>
           <button onclick="closeModal('modal-user')" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted-light);font-size:12px;cursor:pointer;font-weight:600;">Close</button>
@@ -5768,7 +5799,7 @@ async function showDMUserPanel(username) {
     gamesHtml += '</div></div>';
   }
   panel.innerHTML =
-    '<div style="position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,#0f1830,#1a0f30);overflow:hidden;">'
+    '<div style="position:relative;height:240px;background:linear-gradient(135deg,#0f1830,#1a0f30);overflow:hidden;">'
     + '<img src="' + (u.banner||'') + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
     + '</div>'
     + '<div style="padding:0 14px;margin-top:-40px;margin-bottom:10px;">'
@@ -6308,7 +6339,7 @@ let _vc = {
   partner: null, isCaller: false,
   muted: false, deafened: false,
   screenStream: null, watchingTogether: false, watchYtUrl: '',
-  sigRef: null,
+  sigRef: null, _callStartTime: 0, _callTimerInterval: null, _speakChecker: null,
 };
 
 function vcSignalPath(a, b) {
@@ -6379,12 +6410,16 @@ async function _vcSetup(isCaller) {
 
 async function endVoiceCall() {
   _stopRingtone();
+  if (_vc._callTimerInterval) { clearInterval(_vc._callTimerInterval); _vc._callTimerInterval=null; }
+  if (_vc._speakChecker) { clearInterval(_vc._speakChecker); _vc._speakChecker=null; }
   if (_vc.localStream) _vc.localStream.getTracks().forEach(t=>t.stop());
   if (_vc.screenStream) _vc.screenStream.getTracks().forEach(t=>t.stop());
   if (_vc.pc) { _vc.pc.close(); }
   if (_vc.sigRef) {
+    // Signal to partner that call ended
     firebase.database().ref(_vc.sigRef).update({ended:true,endedBy:CU.username,ts:Date.now()});
     firebase.database().ref(_vc.sigRef+'/ice').off();
+    firebase.database().ref(_vc.sigRef+'/answer').off();
   }
   document.getElementById('vc-remote-audio')?.remove();
   document.getElementById('vc-call-bar')?.remove();
@@ -6432,8 +6467,8 @@ async function startScreenShare() {
     firebase.database().ref(_vc.sigRef+'/meta').update({screenShare:true, from:CU.username});
     toast('Screen sharing started','success');
     updateVCBar();
-    // Show remote screen view
-    renderScreenShareView(false);
+    // Show in VC room if open, else overlay
+    _showScreenInRoom(false);
   } catch(e) { toast('Could not share screen','error'); }
 }
 
@@ -6489,7 +6524,7 @@ async function _startWatchSync() {
   _vc.watchingTogether = true; _vc.watchYtUrl = vid;
   // Broadcast
   firebase.database().ref(_vc.sigRef+'/watch').set({vid,action:'play',t:0,ts:Date.now(),from:CU.username});
-  renderWatchTogetherPlayer(vid, true);
+  _showWatchInRoom(vid);
 }
 
 function renderWatchTogetherPlayer(vid, isHost) {
@@ -6538,31 +6573,145 @@ function extractYTId(url) {
   return m?m[1]:null;
 }
 
-function renderVoiceCallUI(partner, isCaller) {
-  document.getElementById('vc-call-bar')?.remove();
-  const bar = document.createElement('div');
-  bar.id = 'vc-call-bar';
-  bar.style.cssText = 'position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:8500;'
-    +'background:rgba(11,14,22,.96);border:1px solid rgba(255,255,255,.1);border-radius:20px 20px 0 0;'
-    +'padding:14px 24px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(20px);'
-    +'box-shadow:0 -8px 40px rgba(0,0,0,.6);min-width:340px;justify-content:center;';
-  const muteIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
-  const deafIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>';
-  const screenIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
-  const watchIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>';
-  const endIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>';
-  bar.innerHTML = '<div style="display:flex;align-items:center;gap:4px;margin-right:10px;">'
-    +'<div style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;flex-shrink:0;animation:vcPulse 1.5s infinite;"></div>'
-    +'<div style="display:flex;flex-direction:column;"><div style="font-size:10.5px;font-weight:700;color:#3ecf6e;letter-spacing:.04em;">VOICE CONNECTED</div>'
-    +'<div style="font-size:12.5px;font-weight:600;" id="vc-partner-name">with '+escapeHTML(partner)+'</div></div>'
+async function renderVoiceCallUI(partner, isCaller) {
+  _closeEl('vc-call-bar');
+  // Fetch avatars
+  let myPfp = CU.pfp, partnerPfp = null;
+  try { const pu = await FortizedSocial.getUserByName(partner); partnerPfp=pu?.pfp; } catch {}
+
+  const room = document.createElement('div');
+  room.id = 'vc-call-bar';
+  room.style.cssText = 'position:fixed;inset:0;z-index:8500;background:rgba(7,9,14,.97);display:flex;flex-direction:column;backdrop-filter:blur(6px);';
+
+  // --- TOP BAR ---
+  const topBar = document.createElement('div');
+  topBar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:18px 28px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);';
+  topBar.innerHTML = '<div style="display:flex;align-items:center;gap:8px;">'
+    +'<div style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;animation:vcPulse 1.5s infinite;"></div>'
+    +'<span style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:#fff;">Voice Call</span>'
+    +'<span style="font-size:12px;color:rgba(255,255,255,.4);">with '+escapeHTML(partner)+'</span>'
     +'</div>'
-    +_vcBtn('vc-mute-btn',muteIcon,'toggleVCMute()','Mute/Unmute','#f87171')
-    +_vcBtn('vc-deaf-btn',deafIcon,'toggleVCDeafen()','Deafen','#f59e0b')
-    +_vcBtn('vc-screen-btn',screenIcon,'startScreenShare()','Share Screen','#60a5fa')
-    +_vcBtn('vc-watch-btn',watchIcon,'startWatchTogether()','Watch Together','#a78bfa')
-    +'<div style="width:1px;height:28px;background:rgba(255,255,255,.1);margin:0 4px;"></div>'
-    +'<button onclick="endVoiceCall()" title="End Call" style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+endIcon+'</button>';
-  document.body.appendChild(bar);
+    +'<div id="vc-timer" style="font-family:monospace;font-size:13px;color:rgba(255,255,255,.5);">0:00</div>';
+
+  // --- PARTICIPANTS AREA ---
+  const participants = document.createElement('div');
+  participants.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;gap:60px;padding:40px;';
+
+  function makeParticipant(pfp, name, isMe) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:14px;';
+    wrap.id = isMe ? 'vc-my-tile' : 'vc-partner-tile';
+
+    // Avatar with speaking ring
+    const avOuter = document.createElement('div');
+    avOuter.style.cssText = 'position:relative;';
+    const ring = document.createElement('div');
+    ring.id = isMe ? 'vc-my-ring' : 'vc-partner-ring';
+    ring.style.cssText = 'width:140px;height:140px;border-radius:50%;border:3px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;transition:border-color .2s;background:rgba(255,255,255,.04);overflow:hidden;';
+    if (pfp) {
+      const img = document.createElement('img');
+      img.src = pfp; img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%;';
+      img.onerror = ()=>{ img.remove(); ring.innerHTML='<span style="font-size:52px;font-family:Syne,sans-serif;font-weight:800;">'+name[0].toUpperCase()+'</span>'; };
+      ring.appendChild(img);
+    } else {
+      ring.innerHTML='<span style="font-size:52px;font-family:Syne,sans-serif;font-weight:800;">'+escapeHTML(name[0].toUpperCase())+'</span>';
+    }
+    // Muted indicator
+    const mutedDot = document.createElement('div');
+    mutedDot.id = isMe ? 'vc-my-muted' : 'vc-partner-muted';
+    mutedDot.style.cssText = 'position:absolute;bottom:4px;right:4px;width:28px;height:28px;border-radius:50%;background:rgba(11,14,22,.95);border:2px solid rgba(255,255,255,.08);display:none;align-items:center;justify-content:center;';
+    mutedDot.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+    avOuter.appendChild(ring); avOuter.appendChild(mutedDot);
+    // Label
+    const label = document.createElement('div');
+    label.style.cssText = 'font-family:Syne,sans-serif;font-size:15px;font-weight:800;color:#fff;';
+    label.textContent = name;
+    const subLabel = document.createElement('div');
+    subLabel.style.cssText = 'font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;';
+    subLabel.textContent = isMe ? 'You' : 'In call';
+    wrap.appendChild(avOuter); wrap.appendChild(label); wrap.appendChild(subLabel);
+    return wrap;
+  }
+
+  participants.appendChild(makeParticipant(myPfp, CU.displayName||CU.username, true));
+  participants.appendChild(makeParticipant(partnerPfp, partner, false));
+
+  // --- CONTROLS BAR ---
+  const controls = document.createElement('div');
+  controls.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:14px;padding:28px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06);';
+
+  function vcRoomBtn(id, svg, label, color, bgColor, fn) {
+    const btn = document.createElement('div');
+    btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;';
+    const circle = document.createElement('button');
+    circle.id = id;
+    circle.style.cssText = 'width:56px;height:56px;border-radius:50%;border:none;background:'+(bgColor||'rgba(255,255,255,.08)')+';color:'+(color||'#fff')+';cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s;';
+    circle.innerHTML = svg;
+    circle.onclick = fn;
+    circle.onmouseenter = ()=>{ circle.style.transform='scale(1.08)'; };
+    circle.onmouseleave = ()=>{ circle.style.transform='scale(1)'; };
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:11px;color:rgba(255,255,255,.5);font-weight:600;';
+    lbl.textContent = label;
+    btn.appendChild(circle); btn.appendChild(lbl);
+    return btn;
+  }
+
+  const svgMic = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+  const svgDeaf = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>';
+  const svgScreen = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+  const svgWatch = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>';
+  const svgEnd = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1-.22 1.12.43 2.33.66 3.6.66.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.5c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.1.32.01.7-.22.98L6.6 10.8z"/></svg>';
+
+  controls.appendChild(vcRoomBtn('vc-mute-btn',svgMic,'Mute','#fff','rgba(255,255,255,.08)',toggleVCMute));
+  controls.appendChild(vcRoomBtn('vc-deaf-btn',svgDeaf,'Deafen','#fff','rgba(255,255,255,.08)',toggleVCDeafen));
+  controls.appendChild(vcRoomBtn('vc-screen-btn',svgScreen,'Screen','#60a5fa','rgba(96,165,250,.12)',startScreenShare));
+  controls.appendChild(vcRoomBtn('vc-watch-btn',svgWatch,'Watch','#a78bfa','rgba(167,139,250,.12)',startWatchTogether));
+  // END CALL - bigger, red
+  const endWrap = document.createElement('div');
+  endWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;';
+  const endBtn = document.createElement('button');
+  endBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;';
+  endBtn.innerHTML = svgEnd; endBtn.onclick = endVoiceCall;
+  endBtn.onmouseenter = ()=>endBtn.style.transform='scale(1.08)';
+  endBtn.onmouseleave = ()=>endBtn.style.transform='scale(1)';
+  const endLbl = document.createElement('div');
+  endLbl.style.cssText = 'font-size:11px;color:#f87171;font-weight:700;';
+  endLbl.textContent = 'Leave Call';
+  endWrap.appendChild(endBtn); endWrap.appendChild(endLbl);
+  controls.appendChild(endWrap);
+
+  room.appendChild(topBar); room.appendChild(participants); room.appendChild(controls);
+  document.body.appendChild(room);
+
+  // Start call timer
+  _vc._callStartTime = Date.now();
+  _vc._callTimerInterval = setInterval(()=>{
+    const el = document.getElementById('vc-timer');
+    if (el) {
+      const s = Math.floor((Date.now()-_vc._callStartTime)/1000);
+      el.textContent = Math.floor(s/60)+':'+(s%60<10?'0':'')+(s%60);
+    } else { clearInterval(_vc._callTimerInterval); }
+  }, 1000);
+
+  // Speaking indicator via Web Audio analyser
+  if (_vc.localStream) {
+    try {
+      const actx = new AudioContext();
+      const src = actx.createMediaStreamSource(_vc.localStream);
+      const analyser = actx.createAnalyser(); analyser.fftSize=256;
+      src.connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const checkSpeak = setInterval(()=>{
+        if (!document.getElementById('vc-my-ring')) { clearInterval(checkSpeak); return; }
+        analyser.getByteFrequencyData(data);
+        const vol = data.reduce((a,b)=>a+b,0)/data.length;
+        const ring = document.getElementById('vc-my-ring');
+        if(ring) ring.style.borderColor = vol>12?'#3ecf6e':'rgba(255,255,255,.08)';
+      },100);
+      _vc._speakChecker = checkSpeak;
+    } catch {}
+  }
 }
 function _vcBtn(id, icon, fn, title, color) {
   return '<button id="'+id+'" onclick="'+fn+'" title="'+title+'" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:'+color+';font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;">'+icon+'</button>';
@@ -6570,14 +6719,16 @@ function _vcBtn(id, icon, fn, title, color) {
 function updateVCBar() {
   const mBtn = document.getElementById('vc-mute-btn');
   const dBtn = document.getElementById('vc-deaf-btn');
-  if(mBtn) mBtn.style.background = _vc.muted?'rgba(248,113,113,.25)':'rgba(255,255,255,.07)';
-  if(dBtn) dBtn.style.background = _vc.deafened?'rgba(245,158,11,.25)':'rgba(255,255,255,.07)';
+  const myMuted = document.getElementById('vc-my-muted');
+  if(mBtn) mBtn.style.background = _vc.muted?'rgba(248,113,113,.4)':'rgba(255,255,255,.08)';
+  if(dBtn) dBtn.style.background = _vc.deafened?'rgba(245,158,11,.4)':'rgba(255,255,255,.08)';
+  if(myMuted) myMuted.style.display = _vc.muted?'flex':'none';
 }
 
 // Listen for incoming calls globally
 function startVCListener(myUsername) {
   const ref = firebase.database().ref('vcSignal').orderByKey();
-  ref.on('child_added', snap => {
+  const _vcHandler = snap => {
     const path = snap.key;
     if (!path.includes(myUsername)) return;
     const data = snap.val();
@@ -6588,50 +6739,96 @@ function startVCListener(myUsername) {
       showIncomingCall(caller, data.sdp);
     }
     // Handle watch sync & screen share meta
-    if (data.meta?.screenShare && data.meta.from!==myUsername) {
-      renderScreenShareView(true);
+    if (data.meta?.screenShare && data.meta.from!==myUsername && _vc.pc) {
+      _showScreenInRoom(true);
     }
     if (data.watch && !_vc.watchingTogether) {
       const latest = Object.values(data.watch).sort((a,b)=>b.ts-a.ts)[0];
       if (latest?.vid && latest.from!==myUsername) {
         _vc.watchingTogether=true; _vc.watchYtUrl=latest.vid;
-        toast(escapeHTML(_vc.partner||caller||'')+'wants to watch together!','info');
-        renderWatchTogetherPlayer(latest.vid, false);
+        _showWatchInRoom(latest.vid);
       }
     }
-    if (data.ended && _vc.partner===data.endedBy && _vc.pc) {
-      endVoiceCall(); toast('Call ended','info');
+    if (data.ended && data.endedBy && data.endedBy!==myUsername && _vc.pc) {
+      endVoiceCall(); toast('Call ended by '+escapeHTML(data.endedBy),'info');
     }
-  });
+  };
+  ref.on('child_added', _vcHandler);
+  ref.on('child_changed', _vcHandler);
 }
 
-function showIncomingCall(caller, offerSdp) {
+async function showIncomingCall(caller, offerSdp) {
   _closeEl('incoming-call-modal');
+  _startRingtone(); // callee also hears ringtone
+  // Fetch caller pfp
+  let callerPfp = null;
+  try { const cu = await FortizedSocial.getUserByName(caller); callerPfp = cu?.pfp; } catch {}
+
   const modal = document.createElement('div');
   modal.id = 'incoming-call-modal';
-  modal.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:9500;'
-    +'background:rgba(11,14,22,.97);border:1px solid rgba(255,255,255,.12);border-radius:18px;'
-    +'padding:20px 28px;min-width:280px;text-align:center;backdrop-filter:blur(22px);'
-    +'box-shadow:0 8px 40px rgba(0,0,0,.8);animation:ctxIn .2s cubic-bezier(.22,1,.36,1);';
-  const nameEl = document.createElement('div');
-  nameEl.innerHTML = '<div style="font-size:32px;margin-bottom:8px;">📞</div>'
-    +'<div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;margin-bottom:3px;">Incoming Call</div>'
-    +'<div style="font-size:13px;color:var(--muted-light);margin-bottom:16px;">'+escapeHTML(caller)+'</div>';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9600;background:rgba(4,6,10,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;backdrop-filter:blur(12px);animation:fadeIn .3s ease;';
+
+  // Pulsing avatar
+  const avWrap = document.createElement('div');
+  avWrap.style.cssText = 'position:relative;';
+  const pulse1 = document.createElement('div');
+  pulse1.style.cssText = 'position:absolute;inset:-16px;border-radius:50%;border:2px solid rgba(62,207,110,.3);animation:callPulse 1.8s ease-out infinite;';
+  const pulse2 = document.createElement('div');
+  pulse2.style.cssText = 'position:absolute;inset:-30px;border-radius:50%;border:2px solid rgba(62,207,110,.15);animation:callPulse 1.8s ease-out .6s infinite;';
+  const avCircle = document.createElement('div');
+  avCircle.style.cssText = 'width:110px;height:110px;border-radius:50%;overflow:hidden;border:3px solid #3ecf6e;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:42px;font-family:Syne,sans-serif;font-weight:800;';
+  if (callerPfp) {
+    const img = document.createElement('img');
+    img.src = callerPfp; img.style.cssText='width:100%;height:100%;object-fit:cover;';
+    img.onerror = ()=>{ img.remove(); avCircle.textContent=caller[0].toUpperCase(); };
+    avCircle.appendChild(img);
+  } else { avCircle.textContent = caller[0].toUpperCase(); }
+  avWrap.appendChild(pulse2); avWrap.appendChild(pulse1); avWrap.appendChild(avCircle);
+
+  // Text
+  const textDiv = document.createElement('div');
+  textDiv.style.cssText = 'text-align:center;';
+  textDiv.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,.5);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Incoming Call</div>'
+    +'<div style="font-family:Syne,sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:4px;">'+escapeHTML(caller)+'</div>'
+    +'<div style="font-size:13px;color:rgba(255,255,255,.4);">wants to start a voice call</div>';
+
+  // Buttons
   const btns = document.createElement('div');
-  btns.style.cssText = 'display:flex;gap:10px;';
-  const acceptBtn = document.createElement('button');
-  acceptBtn.className = 'btn-a'; acceptBtn.style.cssText = 'flex:1;padding:10px;'; acceptBtn.textContent = 'Accept';
-  acceptBtn.onclick = () => { answerVoiceCall(caller, offerSdp); _closeEl('incoming-call-modal'); };
+  btns.style.cssText = 'display:flex;gap:20px;align-items:center;';
+
+  const declineWrap = document.createElement('div');
+  declineWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;';
   const declineBtn = document.createElement('button');
-  declineBtn.className = 'btn-d'; declineBtn.style.cssText = 'flex:1;padding:10px;'; declineBtn.textContent = 'Decline';
+  declineBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;';
+  declineBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" transform="rotate(135 12 12)"/></svg>';
+  declineBtn.onmouseenter = ()=>declineBtn.style.transform='scale(1.08)';
+  declineBtn.onmouseleave = ()=>declineBtn.style.transform='scale(1)';
   declineBtn.onclick = () => {
-    firebase.database().ref(vcSignalPath(CU.username, caller)).update({declined:true});
+    _stopRingtone();
+    firebase.database().ref(vcSignalPath(CU.username, caller)).update({declined:true, ts:Date.now()});
     _closeEl('incoming-call-modal');
   };
-  btns.appendChild(acceptBtn); btns.appendChild(declineBtn);
-  modal.appendChild(nameEl); modal.appendChild(btns);
+  const declineLbl = document.createElement('div');
+  declineLbl.style.cssText = 'font-size:11.5px;color:rgba(255,255,255,.5);font-weight:600;';
+  declineLbl.textContent = 'Decline';
+  declineWrap.appendChild(declineBtn); declineWrap.appendChild(declineLbl);
+
+  const acceptWrap = document.createElement('div');
+  acceptWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;';
+  const acceptBtn = document.createElement('button');
+  acceptBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;';
+  acceptBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>';
+  acceptBtn.onmouseenter = ()=>acceptBtn.style.transform='scale(1.08)';
+  acceptBtn.onmouseleave = ()=>acceptBtn.style.transform='scale(1)';
+  acceptBtn.onclick = () => { answerVoiceCall(caller, offerSdp); _closeEl('incoming-call-modal'); };
+  const acceptLbl = document.createElement('div');
+  acceptLbl.style.cssText = 'font-size:11.5px;color:rgba(255,255,255,.5);font-weight:600;';
+  acceptLbl.textContent = 'Accept';
+  acceptWrap.appendChild(acceptBtn); acceptWrap.appendChild(acceptLbl);
+
+  btns.appendChild(declineWrap); btns.appendChild(acceptWrap);
+  modal.appendChild(avWrap); modal.appendChild(textDiv); modal.appendChild(btns);
   document.body.appendChild(modal);
-  playNotifSound('call');
 }
 
 // ════════════════════════════════════════════
@@ -6966,6 +7163,62 @@ function renderGameActivityOnProfile(u, containerEl) {
   ua.after?.(bar) || ua.parentNode?.insertBefore(bar, ua.nextSibling);
 })();
 
+
+// ════════════════════════════════════════════
+// VC ROOM SCREEN/WATCH PANEL
+// ════════════════════════════════════════════
+function _showScreenInRoom(isRemote) {
+  // Remove standalone overlay first
+  _closeEl('vc-screen-overlay');
+  const room = document.getElementById('vc-call-bar');
+  if (!room) { renderScreenShareView(isRemote); return; }
+  // Inject content panel above controls
+  _closeEl('vc-content-panel');
+  const panel = document.createElement('div');
+  panel.id = 'vc-content-panel';
+  panel.style.cssText = 'flex:2;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);position:relative;border-radius:16px;margin:0 28px;overflow:hidden;min-height:0;';
+  const vid = document.createElement('video');
+  vid.id = 'vc-screen-video'; vid.autoplay = true;
+  if (!isRemote) vid.muted = true;
+  vid.style.cssText = 'max-width:100%;max-height:100%;border-radius:12px;';
+  const closeBtn = document.createElement('button');
+  closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;';
+  closeBtn.textContent='✕';
+  closeBtn.onclick = ()=>{ _closeEl('vc-content-panel'); if(_vc.screenStream){ _vc.screenStream.getTracks().forEach(t=>t.stop()); _vc.screenStream=null; firebase.database().ref(_vc.sigRef+'/meta').update({screenShare:false}); } };
+  const label = document.createElement('div');
+  label.style.cssText = 'position:absolute;bottom:10px;left:14px;background:rgba(0,0,0,.7);padding:3px 10px;border-radius:8px;font-size:12px;color:#fff;font-weight:600;';
+  label.textContent = isRemote ? (_vc.partner||'Partner')+' is sharing' : 'Your screen';
+  panel.appendChild(vid); panel.appendChild(closeBtn); panel.appendChild(label);
+  // Insert between participants and controls
+  const controls = room.lastElementChild;
+  room.insertBefore(panel, controls);
+  if (!isRemote && _vc.screenStream) vid.srcObject = _vc.screenStream;
+  else if (isRemote && _vc.remoteStream) vid.srcObject = _vc.remoteStream;
+}
+
+function _showWatchInRoom(vid) {
+  _closeEl('wt-player-overlay');
+  const room = document.getElementById('vc-call-bar');
+  if (!room) { renderWatchTogetherPlayer(vid, true); return; }
+  _closeEl('vc-content-panel');
+  const panel = document.createElement('div');
+  panel.id = 'vc-content-panel';
+  panel.style.cssText = 'flex:2;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;border-radius:16px;margin:0 28px;overflow:hidden;min-height:0;position:relative;';
+  const iframe = document.createElement('iframe');
+  iframe.src = 'https://www.youtube.com/embed/'+vid+'?enablejsapi=1&autoplay=1';
+  iframe.style.cssText = 'width:100%;height:100%;border:none;';
+  iframe.allow = 'autoplay; fullscreen';
+  iframe.allowFullscreen = true;
+  const topRow = document.createElement('div');
+  topRow.style.cssText = 'position:absolute;top:10px;right:10px;display:flex;gap:6px;z-index:2;';
+  const closeBtn = document.createElement('button');
+  closeBtn.style.cssText='background:rgba(0,0,0,.7);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;';
+  closeBtn.textContent='✕'; closeBtn.onclick=()=>{ _closeEl('vc-content-panel'); _vc.watchingTogether=false; };
+  topRow.appendChild(closeBtn);
+  panel.appendChild(iframe); panel.appendChild(topRow);
+  const controls2 = room.lastElementChild;
+  room.insertBefore(panel, controls2);
+}
 </script>
 </body>
 </html>

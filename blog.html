@@ -19,6 +19,7 @@
   --muted-light: #8b95a8;
   --text: #dde3ed;
   --radius: 14px;
+  --nav-h: 68px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -27,31 +28,38 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: #1e2535; border-radius: 10px; }
 
-/* ── NAV ── */
-nav {
+/* ══════════════════════════════════
+   UNIFIED NAV
+══════════════════════════════════ */
+.nav-root {
   position: sticky; top: 0; z-index: 200;
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 16px 72px;
-  background: rgba(8,10,15,.92);
-  backdrop-filter: blur(20px);
+  height: var(--nav-h);
+  display: flex; align-items: center;
+  padding: 0 40px;
+  background: rgba(8,10,15,.96);
+  backdrop-filter: blur(28px) saturate(200%);
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 40px rgba(0,0,0,.4);
 }
-.logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-.logo img { height: 26px; width: 26px; object-fit: contain; }
-.logo-text { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: #fff; letter-spacing: -.3px; }
-.nav-links { display: flex; align-items: center; gap: 4px; }
-.nav-link {
-  color: var(--muted-light); font-size: 14px; font-weight: 500;
-  padding: 8px 14px; border-radius: 9px; text-decoration: none;
-  transition: color .15s, background .15s;
-}
-.nav-link:hover { color: #fff; background: rgba(255,255,255,.05); }
-.nav-link.active { color: var(--accent); }
-.btn-outline-nav {
-  border: 1.5px solid rgba(255,249,62,.28) !important;
-  color: var(--accent) !important;
-}
-.btn-outline-nav:hover { background: rgba(255,249,62,.06) !important; }
+.nav-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-right: 32px; }
+.nav-logo img { height: 28px; width: 28px; object-fit: contain; }
+.nav-logo-word { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -.5px; }
+.nav-logo-badge { font-size: 8.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #080a0f; background: var(--accent); border-radius: 4px; padding: 2.5px 6px; line-height: 1; }
+.nav-pill-group { display: flex; align-items: center; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 4px; gap: 1px; }
+.nav-pill { font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500; color: var(--muted-light); padding: 7px 14px; border-radius: 9px; transition: color .15s, background .15s; white-space: nowrap; }
+.nav-pill:hover { color: #fff; background: rgba(255,255,255,.06); }
+.nav-pill.active { color: var(--accent); background: rgba(255,249,62,.07); }
+.nav-sep { width: 1px; height: 22px; background: rgba(255,255,255,.07); margin: 0 12px; flex-shrink: 0; }
+.nav-community-tag { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--muted-light); background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 100px; padding: 6px 14px 6px 10px; margin-right: 4px; }
+.nav-community-tag .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,.7); animation: navDotBlink 2.5s ease infinite; }
+@keyframes navDotBlink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+.nav-spacer { flex: 1; }
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.nav-btn-login { font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--muted-light); padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.03); transition: color .15s, border-color .15s, background .15s; }
+.nav-btn-login:hover { color: #fff; border-color: rgba(255,255,255,.16); background: rgba(255,255,255,.06); }
+.nav-btn-cta { font-family: 'Syne', sans-serif; font-size: 13.5px; font-weight: 700; color: #080a0f; background: var(--accent); padding: 9px 20px; border-radius: 10px; transition: box-shadow .2s, filter .15s, transform .14s; }
+.nav-btn-cta:hover { box-shadow: 0 0 28px var(--accent-glow); filter: brightness(1.06); transform: translateY(-1px); }
+@media (max-width: 900px) { .nav-pill-group,.nav-community-tag,.nav-sep { display: none; } }
 
 /* ── BLOG HERO ── */
 .blog-hero {
@@ -71,140 +79,47 @@ nav {
   background-size: 60px 60px; pointer-events: none;
 }
 .blog-hero-inner { position: relative; z-index: 1; max-width: 700px; }
-.blog-eyebrow {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--accent); background: rgba(255,249,62,.07);
-  border: 1px solid rgba(255,249,62,.18); border-radius: 100px;
-  padding: 5px 14px; margin-bottom: 24px;
-}
+.blog-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); background: rgba(255,249,62,.07); border: 1px solid rgba(255,249,62,.18); border-radius: 100px; padding: 5px 14px; margin-bottom: 24px; }
 .blog-eyebrow::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
 .blog-hero h1 { font-family: 'Syne', sans-serif; font-size: 54px; font-weight: 800; letter-spacing: -2px; line-height: 1; margin-bottom: 16px; }
 .blog-hero h1 em { font-style: normal; color: var(--accent); }
 .blog-hero p { font-size: 16.5px; color: var(--muted-light); line-height: 1.65; max-width: 480px; }
 
 /* ── LAYOUT ── */
-.blog-layout {
-  max-width: 1200px; margin: 0 auto;
-  padding: 64px 72px 100px;
-  display: grid; grid-template-columns: 1fr 300px; gap: 60px;
-}
+.blog-layout { max-width: 1200px; margin: 0 auto; padding: 64px 72px 100px; display: grid; grid-template-columns: 1fr 300px; gap: 60px; }
 
-/* ── PINNED FEATURED (large, top) ── */
-.pinned-card {
-  background: var(--panel); border: 1px solid rgba(255,249,62,.22);
-  border-radius: 24px; overflow: hidden; cursor: pointer;
-  transition: transform .2s, box-shadow .2s;
-  margin-bottom: 24px; position: relative;
-  box-shadow: 0 0 0 1px rgba(255,249,62,.06), 0 8px 40px rgba(0,0,0,.4);
-}
-.pinned-card::before {
-  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, transparent 0%, var(--accent) 40%, var(--accent) 60%, transparent 100%);
-}
+/* ── PINNED ── */
+.pinned-card { background: var(--panel); border: 1px solid rgba(255,249,62,.22); border-radius: 24px; overflow: hidden; cursor: pointer; transition: transform .2s, box-shadow .2s; margin-bottom: 24px; position: relative; box-shadow: 0 0 0 1px rgba(255,249,62,.06), 0 8px 40px rgba(0,0,0,.4); }
+.pinned-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent 0%, var(--accent) 40%, var(--accent) 60%, transparent 100%); }
 .pinned-card:hover { transform: translateY(-5px); box-shadow: 0 24px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(255,249,62,.18); }
-
-.pinned-banner {
-  height: 220px;
-  background: linear-gradient(135deg, rgba(255,249,62,.13) 0%, transparent 50%), linear-gradient(to bottom, rgba(8,10,15,.2), rgba(8,10,15,.88)), url("Fortized banner.png") center / cover no-repeat;
-  position: relative; display: flex; align-items: flex-end; padding: 22px 28px; gap: 8px;
-}
-.pinned-banner::before {
-  content: ""; position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,249,62,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,249,62,.025) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-.card-badge {
-  position: relative; z-index: 1;
-  display: inline-flex; align-items: center; gap: 6px;
-  background: var(--accent); color: #080a0f;
-  font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
-  padding: 5px 12px; border-radius: 100px;
-}
-.card-badge.secondary {
-  background: rgba(255,249,62,.12); color: var(--accent);
-  border: 1px solid rgba(255,249,62,.28);
-}
+.pinned-banner { height: 220px; background: linear-gradient(135deg, rgba(255,249,62,.13) 0%, transparent 50%), linear-gradient(to bottom, rgba(8,10,15,.2), rgba(8,10,15,.88)), url("Fortized banner.png") center / cover no-repeat; position: relative; display: flex; align-items: flex-end; padding: 22px 28px; gap: 8px; }
+.pinned-banner::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,249,62,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,249,62,.025) 1px, transparent 1px); background-size: 40px 40px; }
+.card-badge { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #080a0f; font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 5px 12px; border-radius: 100px; }
+.card-badge.secondary { background: rgba(255,249,62,.12); color: var(--accent); border: 1px solid rgba(255,249,62,.28); }
 .pinned-body { padding: 26px 28px 26px; }
 
 /* ── STANDARD CARDS ── */
-.featured-card {
-  background: var(--panel); border: 1px solid var(--border);
-  border-radius: 20px; overflow: hidden; cursor: pointer;
-  transition: transform .2s, border-color .2s, box-shadow .2s;
-  margin-bottom: 12px; position: relative;
-}
+.featured-card { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; cursor: pointer; transition: transform .2s, border-color .2s, box-shadow .2s; margin-bottom: 12px; position: relative; }
 .featured-card:hover { transform: translateY(-3px); border-color: rgba(255,249,62,.18); box-shadow: 0 16px 50px rgba(0,0,0,.45); }
-
-.card-row {
-  display: flex; align-items: stretch;
-  background: var(--panel); border: 1px solid var(--border);
-  border-radius: 16px; overflow: hidden; cursor: pointer;
-  transition: border-color .2s, background .2s, transform .2s;
-  margin-bottom: 10px;
-}
-.card-row:hover { border-color: rgba(255,249,62,.15); background: rgba(255,249,62,.02); transform: translateX(3px); }
-.card-row-stripe {
-  width: 4px; flex-shrink: 0;
-  background: linear-gradient(180deg, var(--accent), rgba(255,249,62,.2));
-}
-.card-row-body { padding: 18px 20px; flex: 1; }
-.card-row-icon { width: 56px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; background: rgba(255,249,62,.04); border-left: 1px solid var(--border); }
-
-.card-banner {
-  height: 160px;
-  background: linear-gradient(135deg, rgba(255,249,62,.08) 0%, transparent 50%), linear-gradient(to bottom, rgba(8,10,15,.3), rgba(8,10,15,.85)), url("Fortized banner.png") center / cover no-repeat;
-  position: relative; display: flex; align-items: flex-end; padding: 16px 20px; gap: 6px;
-}
-.card-banner::before {
-  content: ""; position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,249,62,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,249,62,.018) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
+.card-banner { height: 160px; background: linear-gradient(135deg, rgba(255,249,62,.08) 0%, transparent 50%), linear-gradient(to bottom, rgba(8,10,15,.3), rgba(8,10,15,.85)), url("Fortized banner.png") center / cover no-repeat; position: relative; display: flex; align-items: flex-end; padding: 16px 20px; gap: 6px; }
+.card-banner::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,249,62,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,249,62,.018) 1px, transparent 1px); background-size: 40px 40px; }
 .card-body { padding: 20px 22px 20px; }
 .article-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-.article-category {
-  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(255,249,62,.18);
-  border-radius: 6px; padding: 2px 9px;
-}
+.article-category { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(255,249,62,.18); border-radius: 6px; padding: 2px 9px; }
 .article-date { font-size: 12px; color: var(--muted); }
 .read-time { font-size: 11.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
 .read-time::before { content: "⏱"; font-size: 9px; opacity: .7; }
-.author-pill {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11.5px; color: var(--muted-light);
-  background: rgba(255,255,255,.04); border: 1px solid var(--border);
-  border-radius: 100px; padding: 2px 9px 2px 3px;
-}
-.author-av-sm {
-  width: 18px; height: 18px; border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255,249,62,.3), rgba(255,249,62,.1));
-  border: 1px solid rgba(255,249,62,.3);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 8px; font-weight: 800; color: var(--accent);
-}
+.author-pill { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted-light); background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 100px; padding: 2px 9px 2px 3px; }
+.author-av-sm { width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,249,62,.3), rgba(255,249,62,.1)); border: 1px solid rgba(255,249,62,.3); display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 800; color: var(--accent); }
 .card-title { font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -.3px; line-height: 1.2; margin-bottom: 8px; color: #fff; }
 .card-title.large { font-size: 24px; letter-spacing: -.5px; margin-bottom: 10px; }
 .card-excerpt { font-size: 13.5px; color: var(--muted-light); line-height: 1.7; margin-bottom: 18px; }
 .read-more { display: inline-flex; align-items: center; gap: 7px; font-family: 'Syne', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--accent); transition: gap .15s; }
-.pinned-card:hover .read-more,
-.featured-card:hover .read-more { gap: 11px; }
-
-.section-label {
-  font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--muted); margin: 28px 0 14px;
-  display: flex; align-items: center; gap: 10px;
-}
+.pinned-card:hover .read-more, .featured-card:hover .read-more { gap: 11px; }
+.section-label { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 28px 0 14px; display: flex; align-items: center; gap: 10px; }
 .section-label::before { content: ""; width: 16px; height: 1px; background: var(--accent); opacity: .5; }
 .section-label::after { content: ""; flex: 1; height: 1px; background: var(--border); }
-
-.article-stub {
-  display: flex; gap: 14px; align-items: flex-start;
-  padding: 14px 16px; background: rgba(255,255,255,.015);
-  border: 1px solid var(--border); border-radius: 12px;
-  cursor: default; margin-bottom: 8px;
-}
+.article-stub { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; background: rgba(255,255,255,.015); border: 1px solid var(--border); border-radius: 12px; cursor: default; margin-bottom: 8px; }
 .stub-icon { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; background: rgba(255,249,62,.05); border: 1px solid rgba(255,249,62,.1); display: flex; align-items: center; justify-content: center; font-size: 16px; }
 .stub-body { flex: 1; }
 .stub-cat { font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
@@ -223,7 +138,6 @@ nav {
 .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag-pill { font-size: 11.5px; font-weight: 600; color: var(--muted-light); background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 100px; padding: 4px 11px; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
 .tag-pill:hover { border-color: rgba(255,249,62,.2); color: var(--accent); background: var(--accent-dim); }
-
 .contrib-row { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .contrib-row:last-child { border-bottom: none; padding-bottom: 0; }
 .contrib-av { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,249,62,.2), rgba(255,249,62,.06)); border: 1.5px solid rgba(255,249,62,.25); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
@@ -231,42 +145,17 @@ nav {
 .contrib-role { font-size: 11px; color: var(--muted); }
 
 /* ── ARTICLE VIEW ── */
-#article-view {
-  display: none; max-width: 1200px; margin: 0 auto;
-  padding: 64px 72px 100px;
-  grid-template-columns: 1fr 300px; gap: 60px;
-}
+#article-view { display: none; max-width: 1200px; margin: 0 auto; padding: 64px 72px 100px; grid-template-columns: 1fr 300px; gap: 60px; }
 #article-view.open { display: grid; }
 #blog-list-view.hidden { display: none; }
-
-.article-back {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 13px; color: var(--muted-light); cursor: pointer;
-  padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border);
-  transition: color .15s, border-color .15s, background .15s; margin-bottom: 30px;
-}
+.article-back { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted-light); cursor: pointer; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border); transition: color .15s, border-color .15s, background .15s; margin-bottom: 30px; }
 .article-back:hover { color: #fff; border-color: rgba(255,255,255,.12); background: rgba(255,255,255,.04); }
-
-.article-full-banner {
-  width: 100%; height: 280px; border-radius: 20px; overflow: hidden;
-  background: linear-gradient(135deg, rgba(255,249,62,.12) 0%, transparent 50%), linear-gradient(to bottom, rgba(8,10,15,.1), rgba(8,10,15,.7)), url("Fortized banner.png") center / cover no-repeat;
-  position: relative; margin-bottom: 32px; border: 1px solid var(--border);
-  display: flex; align-items: flex-end; padding: 32px 36px;
-}
-.article-full-banner::before {
-  content: ""; position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,249,62,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,249,62,.025) 1px, transparent 1px);
-  background-size: 50px 50px;
-}
+.article-full-banner { width: 100%; height: 280px; border-radius: 20px; overflow: hidden; background: linear-gradient(135deg, rgba(255,249,62,.12) 0%, transparent 50%), linear-gradient(to bottom, rgba(8,10,15,.1), rgba(8,10,15,.7)), url("Fortized banner.png") center / cover no-repeat; position: relative; margin-bottom: 32px; border: 1px solid var(--border); display: flex; align-items: flex-end; padding: 32px 36px; }
+.article-full-banner::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,249,62,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,249,62,.025) 1px, transparent 1px); background-size: 50px 50px; }
 .banner-content { position: relative; z-index: 1; }
 .article-full-title { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; letter-spacing: -1.2px; line-height: 1.1; color: #fff; margin-bottom: 14px; text-shadow: 0 2px 20px rgba(0,0,0,.6); }
 .article-full-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-
-.article-byline {
-  display: flex; align-items: center; gap: 14px;
-  padding: 16px 20px; background: rgba(255,255,255,.02);
-  border: 1px solid var(--border); border-radius: 14px; margin-bottom: 36px;
-}
+.article-byline { display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: rgba(255,255,255,.02); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 36px; }
 .byline-av { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,249,62,.25), rgba(255,249,62,.06)); border: 2px solid rgba(255,249,62,.3); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
 .byline-info .byline-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
 .byline-info .byline-role { font-size: 12px; color: var(--muted-light); }
@@ -306,7 +195,6 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
 .footer-links a { font-size: 12px; color: #374151; text-decoration: none; transition: color .15s; }
 .footer-links a:hover { color: var(--muted-light); }
 
-/* ── ANIMATIONS ── */
 @keyframes revealUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
 .reveal { animation: revealUp .5s cubic-bezier(.22,1,.36,1) both; }
 .reveal-d1 { animation-delay: .08s; }
@@ -315,35 +203,43 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
 .reveal-d4 { animation-delay: .32s; }
 
 @media (max-width: 768px) {
-  nav { padding: 16px 24px; }
+  .nav-root { padding: 0 20px; }
   .blog-hero { padding: 56px 24px 40px; }
   .blog-layout { padding: 40px 24px 80px; grid-template-columns: 1fr; }
   footer { padding: 20px 24px; grid-template-columns: 1fr; text-align: center; }
   .footer-links { justify-content: center; }
   #article-view { padding: 40px 24px 80px; grid-template-columns: 1fr; }
-  .nav-link:not(.btn-outline-nav) { display: none; }
 }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <a href="index.html" class="logo">
+<!-- UNIFIED NAV -->
+<nav class="nav-root">
+  <a href="index.html" class="nav-logo">
     <img src="Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
-    <span class="logo-text">Fortized</span>
+    <span class="nav-logo-word">Fortized</span>
   </a>
-  <div class="nav-links">
-    <a href="index.html" class="nav-link">Home</a>
-    <a href="blog.html" class="nav-link active">Blog</a>
-    <a href="login.html" class="nav-link btn-outline-nav">Login</a>
+
+  <div class="nav-pill-group">
+    <a href="index.html" class="nav-pill">Home</a>
+    <a href="blog.html" class="nav-pill active">Blog</a>
+    <a href="support.html" class="nav-pill">Support</a>
+    <a href="download.html" class="nav-pill">Download</a>
+  </div>
+
+  <div class="nav-sep"></div>
+
+  <div class="nav-spacer"></div>
+
+  <div class="nav-right">
+    <a href="login.html" class="nav-btn-login">Login</a>
+    <a href="signup.html" class="nav-btn-cta">Join the Fortress →</a>
   </div>
 </nav>
 
-
 <!-- BLOG LIST VIEW -->
 <div id="blog-list-view">
-
   <div class="blog-hero">
     <div class="blog-hero-inner reveal">
       <div class="blog-eyebrow">The Fortized Blog</div>
@@ -354,8 +250,6 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
 
   <div class="blog-layout">
     <div>
-
-      <!-- PINNED: Beta is LIVE -->
       <div class="pinned-card reveal" onclick="openArticle('betalive')">
         <div class="pinned-banner">
           <span class="card-badge">🔥 Pinned</span>
@@ -366,10 +260,7 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
             <span class="article-category">Launch</span>
             <span class="article-date">February 22, 2026</span>
             <span class="read-time">2 min read</span>
-            <div class="author-pill">
-              <div class="author-av-sm">S</div>
-              <span>Staw · CAO</span>
-            </div>
+            <div class="author-pill"><div class="author-av-sm">S</div><span>Staw · CAO</span></div>
           </div>
           <div class="card-title large">Fortized Beta is LIVE!</div>
           <div class="card-excerpt">Today is the day. As of February 22, 2026, the Fortized Beta is officially open. The Atelier is live, the walls are up, and your Bastion is ready to be claimed.</div>
@@ -380,9 +271,7 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
       <div class="section-label reveal reveal-d1">Recent Articles</div>
 
       <div class="featured-card reveal reveal-d1" onclick="openArticle('whatisfortized')">
-        <div class="card-banner">
-          <span class="card-badge secondary">R&amp;D</span>
-        </div>
+        <div class="card-banner"><span class="card-badge secondary">R&amp;D</span></div>
         <div class="card-body">
           <div class="article-meta">
             <span class="article-category">R&amp;D</span>
@@ -397,9 +286,7 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
       </div>
 
       <div class="featured-card reveal reveal-d2" onclick="openArticle('atelier')">
-        <div class="card-banner">
-          <span class="card-badge secondary">R&amp;D</span>
-        </div>
+        <div class="card-banner"><span class="card-badge secondary">R&amp;D</span></div>
         <div class="card-body">
           <div class="article-meta">
             <span class="article-category">R&amp;D</span>
@@ -414,9 +301,7 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
       </div>
 
       <div class="featured-card reveal reveal-d3" onclick="openArticle('gates')">
-        <div class="card-banner">
-          <span class="card-badge secondary">Announcement</span>
-        </div>
+        <div class="card-banner"><span class="card-badge secondary">Announcement</span></div>
         <div class="card-body">
           <div class="article-meta">
             <span class="article-category">Announcement</span>
@@ -431,9 +316,7 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
       </div>
 
       <div class="featured-card reveal reveal-d4" onclick="openArticle('safety')">
-        <div class="card-banner">
-          <span class="card-badge secondary">Safety</span>
-        </div>
+        <div class="card-banner"><span class="card-badge secondary">Safety</span></div>
         <div class="card-body">
           <div class="article-meta">
             <span class="article-category">Safety</span>
@@ -448,7 +331,6 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
       </div>
 
       <div class="section-label reveal reveal-d4">Coming Soon</div>
-
       <div class="article-stub reveal reveal-d4">
         <div class="stub-icon">🏰</div>
         <div class="stub-body">
@@ -457,7 +339,6 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
           <div class="stub-coming">Coming soon</div>
         </div>
       </div>
-
       <div class="article-stub reveal reveal-d4">
         <div class="stub-icon">⚔️</div>
         <div class="stub-body">
@@ -466,66 +347,31 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
           <div class="stub-coming">Coming soon</div>
         </div>
       </div>
-
     </div>
 
     <!-- Sidebar -->
     <div>
-
       <div class="sidebar-block reveal">
         <div class="sidebar-title">Contributors</div>
-        <div class="contrib-row">
-          <div class="contrib-av">S</div>
-          <div>
-            <div class="contrib-name">Staw</div>
-            <div class="contrib-role">CAO · Stawdio Group</div>
-          </div>
-        </div>
-        <div class="contrib-row">
-          <div class="contrib-av">T</div>
-          <div>
-            <div class="contrib-name">Tyrianum</div>
-            <div class="contrib-role">CRDO · Stawdio R&amp;D</div>
-          </div>
-        </div>
-        <div class="contrib-row">
-          <div class="contrib-av">W</div>
-          <div>
-            <div class="contrib-name">Weaverdant</div>
-            <div class="contrib-role">CSO · Stawdio Safety</div>
-          </div>
-        </div>
-        <div class="contrib-row">
-          <div class="contrib-av">M</div>
-          <div>
-            <div class="contrib-name">Maus</div>
-            <div class="contrib-role">CCO · Stawdio Group</div>
-          </div>
-        </div>
+        <div class="contrib-row"><div class="contrib-av">S</div><div><div class="contrib-name">Staw</div><div class="contrib-role">CAO · Stawdio Group</div></div></div>
+        <div class="contrib-row"><div class="contrib-av">T</div><div><div class="contrib-name">Tyrianum</div><div class="contrib-role">CRDO · Stawdio R&amp;D</div></div></div>
+        <div class="contrib-row"><div class="contrib-av">W</div><div><div class="contrib-name">Weaverdant</div><div class="contrib-role">CSO · Stawdio Safety</div></div></div>
+        <div class="contrib-row"><div class="contrib-av">M</div><div><div class="contrib-name">Maus</div><div class="contrib-role">CCO · Stawdio Group</div></div></div>
       </div>
-
       <div class="sidebar-block reveal reveal-d1">
         <div class="sidebar-title">Topics</div>
         <div class="tag-list">
-          <span class="tag-pill">Launch</span>
-          <span class="tag-pill">R&amp;D</span>
-          <span class="tag-pill">Safety</span>
-          <span class="tag-pill">Community</span>
-          <span class="tag-pill">Economy</span>
-          <span class="tag-pill">Radiance</span>
-          <span class="tag-pill">Bastions</span>
+          <span class="tag-pill">Launch</span><span class="tag-pill">R&amp;D</span><span class="tag-pill">Safety</span>
+          <span class="tag-pill">Community</span><span class="tag-pill">Economy</span><span class="tag-pill">Radiance</span><span class="tag-pill">Bastions</span>
         </div>
       </div>
-
       <div class="sidebar-block reveal reveal-d2" style="background:rgba(255,249,62,.04);border-color:rgba(255,249,62,.15);">
         <div class="sidebar-title" style="color:var(--accent);">About the Blog</div>
         <p style="font-size:13px;color:var(--muted-light);line-height:1.65;">The Fortized Blog is the official communication channel of Stawdio Group. All articles reflect the views and announcements of the Fortized development team.</p>
       </div>
-
     </div>
   </div>
 </div>
-
 
 <!-- ARTICLE VIEW -->
 <div id="article-view">
@@ -535,7 +381,6 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   </div>
   <div id="article-sidebar"></div>
 </div>
-
 
 <footer>
   <a href="index.html" class="footer-logo">
@@ -549,195 +394,22 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   </div>
 </footer>
 
-
 <script>
 const ARTICLES = {
-
-  betalive: {
-    category: 'Launch',
-    date: 'February 22, 2026',
-    readTime: '2 min read',
-    authorInitial: 'S',
-    authorPillLabel: 'Stawdio Group',
-    title: 'Fortized Beta is LIVE!',
-    bylineName: 'Staw',
-    bylineRole: 'Chief Administrative Officer, Stawdio Group',
-    content: `
-      <p class="lead">Today is the day. As of February 22, 2026, the Fortized Beta is officially open.</p>
-      <p>After months of hard work from the whole team, we're finally moving from internal testing to a live environment. This isn't just another chat app — it's a modern space built for how we actually play and hang out today.</p>
-      <h2>What's in the Box?</h2>
-      <ul>
-        <li><strong>The Atelier:</strong> Our R&D team nailed the integration. You can start earning Onyx through quests right now and trade them for Radiance perks — no credit card required.</li>
-        <li><strong>Real Security:</strong> We built walls that actually hold. From AutoMod to Raid Protection, your Bastion is genuinely yours to defend.</li>
-        <li><strong>Sovereign Control:</strong> You get full power over your ranks and chambers — no compromises, no fine print.</li>
-      </ul>
-      <h2>Why Beta?</h2>
-      <p>We're open, but we're still refining. This phase is all about stress-testing the tech and listening to your feedback. We want to make sure the foundation is rock solid before the full release.</p>
-      <div class="highlight-box">
-        <strong>Your feedback shapes the Fortress.</strong> Every bug report, feature request, and community discussion during Beta directly influences what we build next. This is your platform — help us make it right.
-      </div>
-      <p>Big thanks to everyone who helped us get here — the team, the testers, and everyone waiting at the gates. The Fortress is ready to be claimed.</p>
-      <p class="sign-off">— Staw, Chief Administrative Officer · Stawdio Group</p>
-    `
-  },
-
-  atelier: {
-    category: 'R&amp;D',
-    date: 'February 21, 2026',
-    readTime: '3 min read',
-    authorInitial: 'T',
-    authorPillLabel: 'Stawdio R&amp;D Department',
-    title: 'Introducing The Atelier',
-    bylineName: 'Tyrianum',
-    bylineRole: 'Chief R&amp;D Officer, Stawdio Group',
-    content: `
-      <p class="lead">At Fortized, we believe that building a community shouldn't just be work — it should be rewarding. After an intensive R&amp;D sprint from February 18th to the 20th, we are thrilled to officially pull back the curtain on our latest feature: <strong>The Atelier.</strong></p>
-      <p>The Atelier is your new hub for progression within the Fortress. It's a space where your loyalty and social reach translate directly into premium status and exclusive aesthetic upgrades.</p>
-      <h2>How It Works: The Path of Onyx</h2>
-      <p>The economy of the Atelier is powered by <strong>Onyx</strong>. These precious pieces are the currency of the Fortress, and earning them is straightforward.</p>
-      <ul>
-        <li><strong>Complete Quests:</strong> Engage with the community and help us grow.</li>
-        <li><strong>Recruit Your Squad:</strong> Your primary quest is simple — invite new allies to Fortized. As you bring more people into the Fortress, your Onyx reserves will grow.</li>
-        <li><strong>Daily Rewards:</strong> Consistency pays off. Don't forget to claim your daily Onyx bonus to keep your balance climbing.</li>
-      </ul>
-      <h2>Ascend to Radiance</h2>
-      <p>What do you do with a mountain of Onyx? You trade it for <span class="radiance-badge-inline">✨ Radiance</span>.</p>
-      <p>Radiance is our premium status that sets you apart from the villagers. Through the Atelier, you can exchange your hard-earned Onyx for Radiance packs ranging from 24-hour boosts to full 30-day memberships. No credit card required — just pure community engagement.</p>
-      <div class="highlight-box">
-        <strong>No credit card. No paywalls.</strong> Radiance is earned entirely through community participation. Every perk is accessible to every member of the Fortress — it's a question of dedication, not spending power.
-      </div>
-      <h2>Radiance Perks</h2>
-      <div class="perks-grid">
-        <div class="perk-card"><span class="perk-icon">🎨</span><div class="perk-body"><div class="perk-title">Custom Profile Badge</div><div class="perk-desc">Wear the exclusive Radiance Shield and distinguish yourself across every Bastion.</div></div></div>
-        <div class="perk-card"><span class="perk-icon">🌟</span><div class="perk-body"><div class="perk-title">Animated Border</div><div class="perk-desc">Stand out with a glowing animated avatar frame that signals your status instantly.</div></div></div>
-        <div class="perk-card"><span class="perk-icon">💬</span><div class="perk-body"><div class="perk-title">Extended Messaging</div><div class="perk-desc">Break the character limits — Radiance members can send messages up to 4,000 characters.</div></div></div>
-        <div class="perk-card"><span class="perk-icon">🖼️</span><div class="perk-body"><div class="perk-title">Custom Banner</div><div class="perk-desc">Personalize your profile with a custom banner that sets the tone for your presence.</div></div></div>
-      </div>
-      <p class="sign-off">— Tyrianum, Chief R&amp;D Officer · Stawdio R&amp;D Department</p>
-    `
-  },
-
-  safety: {
-    category: 'Safety',
-    date: 'February 20, 2026',
-    readTime: '4 min read',
-    authorInitial: 'W',
-    authorPillLabel: 'Stawdio Safety Department',
-    title: 'How Stawdio Safety Protects Your Bastion',
-    bylineName: 'Weaverdant',
-    bylineRole: 'Chief Safety Officer, Stawdio Group',
-    content: `
-      <p class="lead">As head of the Stawdio Safety Department, my role is to ensure that every Bastion within Fortized remains under the complete sovereignty of its owner. Security isn't an afterthought — it's foundational to everything we build.</p>
-      <p>The Fortized Security Department operates as a dedicated force within the broader Stawdio Safety framework. Our mission is simple: keep the Fortress standing, no matter what.</p>
-      <h2>Layered Defense Infrastructure</h2>
-      <p>We approach platform security the same way a military engineer approaches a fortification — in layers. Each layer is designed to stop threats before they reach the next. From account-level protections to server-side safeguards, every component is built with the community's trust in mind.</p>
-      <div class="highlight-box">
-        <strong>Bastion Sovereignty.</strong> Your Bastion is yours. Our security architecture is designed to ensure that admins retain full, uncompromised control over their communities at all times.
-      </div>
-      <h2>Trust &amp; Transparency</h2>
-      <p>We believe that security only works when it's visible. That's why the Safety Department publishes regular updates on our practices, incident responses, and ongoing improvements. The Fortress doesn't hide its walls — it builds them in the open.</p>
-      <p class="sign-off">— Weaverdant, Chief Safety Officer · Stawdio Safety Department</p>
-    `
-  },
-
-  gates: {
-    category: 'Announcement',
-    date: 'February 21, 2026',
-    readTime: '2 min read',
-    authorInitial: 'M',
-    authorPillLabel: 'Stawdio Group',
-    title: 'The Gates are Unlocking',
-    bylineName: 'Maus',
-    bylineRole: 'Chief Community Officer, Stawdio Group',
-    content: `
-      <p class="lead">After months of intensive development and rigorous security testing, we are officially on the horizon of a new era. The Fortized Beta is live — and the gates are finally unlocking.</p>
-      <p>This is a moment we've been building toward since the very first line of code. Today, we're opening the Fortress to the community — to the builders, the leaders, the competitive teams, and the friend groups who've been waiting at the gates.</p>
-      <h2>What's Inside</h2>
-      <p>The Beta gives you access to the core Fortized experience: Bastions, Chambers, Roles, and the early implementation of our Onyx economy. It's not the finished product — but it's real, it's functional, and it's ready for you to stress-test it.</p>
-      <div class="highlight-box">
-        <strong>Beta means builder.</strong> Your feedback during this phase directly shapes the Fortress. Every bug report, feature request, and community discussion helps us build something stronger.
-      </div>
-      <h2>How to Get In</h2>
-      <p>Access to the Beta is rolling out progressively. Stay tuned to official channels for your invitation. The gates are unlocking — and the Fortress is ready to be claimed.</p>
-      <p class="sign-off">— Maus, Chief Community Officer · Stawdio Group</p>
-    `
-  },
-
-  whatisfortized: {
-    category: 'R&amp;D',
-    date: 'February 22, 2026',
-    readTime: '2 min read',
-    authorInitial: 'T',
-    authorPillLabel: 'Stawdio R&amp;D Department',
-    title: 'What is Fortized?',
-    bylineName: 'Tyrianum',
-    bylineRole: 'Chief R&amp;D Officer, Stawdio Group',
-    content: `
-      <p class="lead">Fortized started with a simple question: why does building a community feel harder than it should?</p>
-      <p>Most platforms give you chat rooms. Some give you tools. A few give you customization. But very few give you <strong>identity</strong>.</p>
-      <p>Fortized is our answer to that gap. It's not just another messaging app. It's a digital stronghold — a place where gaming communities, friend groups, and competitive teams can organize themselves with clarity and purpose. We call servers <strong>Bastions</strong> because they're meant to be defended, built upon, and strengthened over time.</p>
-      <h2>Three Pillars</h2>
-      <ul>
-        <li><strong>Structure</strong> — Your Bastions don't turn into chaos. Roles are ranks. Channels are chambers. Voice spaces are designed for real coordination, not noise.</li>
-        <li><strong>Identity</strong> — You're not just another username in a list. With systems like Onyx and Radiance, engagement actually changes how you appear and how you're recognized.</li>
-        <li><strong>Progression</strong> — Through daily rewards and quests, members earn Onyx — our in-platform currency — which can be exchanged for Radiance, unlocking enhanced customization and visual distinction.</li>
-      </ul>
-      <h2>Earned, Not Bought</h2>
-      <div class="highlight-box">
-        <strong>No payment required.</strong> Radiance is unlocked through participation alone. Every perk, every visual distinction, every upgrade — earned by showing up and contributing to your community.
-      </div>
-      <p>Progression is where Fortized separates itself from the crowd. The Fortress rewards those who build it. The more you contribute, the more the platform reflects who you are within it.</p>
-      <p class="sign-off">— Tyrianum, Chief R&amp;D Officer · Stawdio R&amp;D Department</p>
-    `
-  }
-
+  betalive: { category:'Launch', date:'February 22, 2026', readTime:'2 min read', authorInitial:'S', authorPillLabel:'Stawdio Group', title:'Fortized Beta is LIVE!', bylineName:'Staw', bylineRole:'Chief Administrative Officer, Stawdio Group', content:`<p class="lead">Today is the day. As of February 22, 2026, the Fortized Beta is officially open.</p><p>After months of hard work from the whole team, we're finally moving from internal testing to a live environment. This isn't just another chat app — it's a modern space built for how we actually play and hang out today.</p><h2>What's in the Box?</h2><ul><li><strong>The Atelier:</strong> Our R&D team nailed the integration. You can start earning Onyx through quests right now and trade them for Radiance perks — no credit card required.</li><li><strong>Real Security:</strong> We built walls that actually hold. From AutoMod to Raid Protection, your Bastion is genuinely yours to defend.</li><li><strong>Sovereign Control:</strong> You get full power over your ranks and chambers — no compromises, no fine print.</li></ul><h2>Why Beta?</h2><p>We're open, but we're still refining. This phase is all about stress-testing the tech and listening to your feedback. We want to make sure the foundation is rock solid before the full release.</p><div class="highlight-box"><strong>Your feedback shapes the Fortress.</strong> Every bug report, feature request, and community discussion during Beta directly influences what we build next. This is your platform — help us make it right.</div><p>Big thanks to everyone who helped us get here — the team, the testers, and everyone waiting at the gates. The Fortress is ready to be claimed.</p><p class="sign-off">— Staw, Chief Administrative Officer · Stawdio Group</p>` },
+  atelier: { category:'R&amp;D', date:'February 21, 2026', readTime:'3 min read', authorInitial:'T', authorPillLabel:'Stawdio R&amp;D Department', title:'Introducing The Atelier', bylineName:'Tyrianum', bylineRole:'Chief R&amp;D Officer, Stawdio Group', content:`<p class="lead">At Fortized, we believe that building a community shouldn't just be work — it should be rewarding. After an intensive R&amp;D sprint, we are thrilled to officially pull back the curtain on <strong>The Atelier.</strong></p><p>The Atelier is your new hub for progression within the Fortress. It's a space where your loyalty and social reach translate directly into premium status and exclusive aesthetic upgrades.</p><h2>How It Works: The Path of Onyx</h2><ul><li><strong>Complete Quests:</strong> Engage with the community and help us grow.</li><li><strong>Recruit Your Squad:</strong> Invite new allies to Fortized. As you bring more people in, your Onyx reserves grow.</li><li><strong>Daily Rewards:</strong> Consistency pays off. Claim your daily Onyx bonus to keep your balance climbing.</li></ul><h2>Ascend to Radiance</h2><p>What do you do with a mountain of Onyx? You trade it for <span class="radiance-badge-inline">✨ Radiance</span>.</p><p>Radiance is our premium status that sets you apart from the villagers. Exchange your hard-earned Onyx for Radiance packs ranging from 24-hour boosts to full 30-day memberships. No credit card required.</p><div class="highlight-box"><strong>No credit card. No paywalls.</strong> Radiance is earned entirely through community participation.</div><h2>Radiance Perks</h2><div class="perks-grid"><div class="perk-card"><span class="perk-icon">🎨</span><div class="perk-body"><div class="perk-title">Custom Profile Badge</div><div class="perk-desc">Wear the exclusive Radiance Shield across every Bastion.</div></div></div><div class="perk-card"><span class="perk-icon">🌟</span><div class="perk-body"><div class="perk-title">Animated Border</div><div class="perk-desc">A glowing animated avatar frame that signals your status instantly.</div></div></div><div class="perk-card"><span class="perk-icon">💬</span><div class="perk-body"><div class="perk-title">Extended Messaging</div><div class="perk-desc">Messages up to 4,000 characters.</div></div></div><div class="perk-card"><span class="perk-icon">🖼️</span><div class="perk-body"><div class="perk-title">Custom Banner</div><div class="perk-desc">Personalize your profile with a custom banner.</div></div></div></div><p class="sign-off">— Tyrianum, Chief R&amp;D Officer · Stawdio R&amp;D Department</p>` },
+  safety: { category:'Safety', date:'February 20, 2026', readTime:'4 min read', authorInitial:'W', authorPillLabel:'Stawdio Safety Department', title:'How Stawdio Safety Protects Your Bastion', bylineName:'Weaverdant', bylineRole:'Chief Safety Officer, Stawdio Group', content:`<p class="lead">As head of the Stawdio Safety Department, my role is to ensure that every Bastion within Fortized remains under the complete sovereignty of its owner.</p><p>The Fortized Security Department operates as a dedicated force within the broader Stawdio Safety framework. Our mission is simple: keep the Fortress standing, no matter what.</p><h2>Layered Defense Infrastructure</h2><p>We approach platform security the same way a military engineer approaches a fortification — in layers. Each layer is designed to stop threats before they reach the next.</p><div class="highlight-box"><strong>Bastion Sovereignty.</strong> Your Bastion is yours. Our security architecture is designed to ensure that admins retain full, uncompromised control over their communities at all times.</div><h2>Trust &amp; Transparency</h2><p>We believe that security only works when it's visible. That's why the Safety Department publishes regular updates on our practices, incident responses, and ongoing improvements.</p><p class="sign-off">— Weaverdant, Chief Safety Officer · Stawdio Safety Department</p>` },
+  gates: { category:'Announcement', date:'February 21, 2026', readTime:'2 min read', authorInitial:'M', authorPillLabel:'Stawdio Group', title:'The Gates are Unlocking', bylineName:'Maus', bylineRole:'Chief Community Officer, Stawdio Group', content:`<p class="lead">After months of intensive development and rigorous security testing, we are officially on the horizon of a new era. The Fortized Beta is live — and the gates are finally unlocking.</p><p>This is a moment we've been building toward since the very first line of code. Today, we're opening the Fortress to the community.</p><h2>What's Inside</h2><p>The Beta gives you access to the core Fortized experience: Bastions, Chambers, Roles, and the early implementation of our Onyx economy.</p><div class="highlight-box"><strong>Beta means builder.</strong> Your feedback during this phase directly shapes the Fortress.</div><h2>How to Get In</h2><p>Access to the Beta is rolling out progressively. Stay tuned to official channels for your invitation.</p><p class="sign-off">— Maus, Chief Community Officer · Stawdio Group</p>` },
+  whatisfortized: { category:'R&amp;D', date:'February 22, 2026', readTime:'2 min read', authorInitial:'T', authorPillLabel:'Stawdio R&amp;D Department', title:'What is Fortized?', bylineName:'Tyrianum', bylineRole:'Chief R&amp;D Officer, Stawdio Group', content:`<p class="lead">Fortized started with a simple question: why does building a community feel harder than it should?</p><p>Most platforms give you chat rooms. Some give you tools. A few give you customization. But very few give you <strong>identity</strong>.</p><p>Fortized is our answer to that gap. We call servers <strong>Bastions</strong> because they're meant to be defended, built upon, and strengthened over time.</p><h2>Three Pillars</h2><ul><li><strong>Structure</strong> — Your Bastions don't turn into chaos. Roles are ranks. Channels are chambers.</li><li><strong>Identity</strong> — With systems like Onyx and Radiance, engagement actually changes how you appear.</li><li><strong>Progression</strong> — Members earn Onyx through daily rewards and quests, exchangeable for Radiance.</li></ul><h2>Earned, Not Bought</h2><div class="highlight-box"><strong>No payment required.</strong> Radiance is unlocked through participation alone.</div><p class="sign-off">— Tyrianum, Chief R&amp;D Officer · Stawdio R&amp;D Department</p>` }
 };
 
 function buildSidebar(article) {
-  return `
-    <div class="sidebar-block">
-      <div class="sidebar-title">Author</div>
-      <div style="text-align:center;padding:6px 0;">
-        <div class="author-avatar-big">${article.authorInitial}</div>
-        <div class="author-name">${article.bylineName}</div>
-        <div class="author-role">${article.category}</div>
-        <div class="author-org">${article.authorPillLabel}</div>
-        <div class="author-bio">Writing on behalf of the Stawdio Group team. All views represent official Fortized positions and announcements.</div>
-      </div>
-    </div>
-    <div class="sidebar-block" style="background:rgba(255,249,62,.04);border-color:rgba(255,249,62,.15);">
-      <div class="sidebar-title" style="color:var(--accent);">About the Blog</div>
-      <p style="font-size:13px;color:var(--muted-light);line-height:1.65;">The Fortized Blog is the official communication channel of Stawdio Group. All articles reflect the views and announcements of the Fortized development team.</p>
-    </div>
-  `;
+  return `<div class="sidebar-block"><div class="sidebar-title">Author</div><div style="text-align:center;padding:6px 0;"><div class="author-avatar-big">${article.authorInitial}</div><div class="author-name">${article.bylineName}</div><div class="author-role">${article.category}</div><div class="author-org">${article.authorPillLabel}</div><div class="author-bio">Writing on behalf of the Stawdio Group team. All views represent official Fortized positions and announcements.</div></div></div><div class="sidebar-block" style="background:rgba(255,249,62,.04);border-color:rgba(255,249,62,.15);"><div class="sidebar-title" style="color:var(--accent);">About the Blog</div><p style="font-size:13px;color:var(--muted-light);line-height:1.65;">The Fortized Blog is the official communication channel of Stawdio Group.</p></div>`;
 }
 
 function renderArticle(id) {
-  const a = ARTICLES[id];
-  if (!a) return false;
-
-  document.getElementById('article-content').innerHTML = `
-    <div class="article-full-banner">
-      <div class="banner-content">
-        <div class="article-full-title">${a.title}</div>
-        <div class="article-full-meta">
-          <span class="article-category">${a.category}</span>
-          <span class="article-date">${a.date}</span>
-          <span class="read-time">${a.readTime}</span>
-        </div>
-      </div>
-    </div>
-    <div class="article-byline">
-      <div class="byline-av">${a.authorInitial}</div>
-      <div class="byline-info">
-        <div class="byline-name">${a.bylineName}</div>
-        <div class="byline-role">${a.bylineRole}</div>
-      </div>
-      <div class="byline-org">${a.authorPillLabel}</div>
-    </div>
-    <div class="article-prose">${a.content}</div>
-  `;
-
+  const a = ARTICLES[id]; if (!a) return false;
+  document.getElementById('article-content').innerHTML = `<div class="article-full-banner"><div class="banner-content"><div class="article-full-title">${a.title}</div><div class="article-full-meta"><span class="article-category">${a.category}</span><span class="article-date">${a.date}</span><span class="read-time">${a.readTime}</span></div></div></div><div class="article-byline"><div class="byline-av">${a.authorInitial}</div><div class="byline-info"><div class="byline-name">${a.bylineName}</div><div class="byline-role">${a.bylineRole}</div></div><div class="byline-org">${a.authorPillLabel}</div></div><div class="article-prose">${a.content}</div>`;
   document.getElementById('article-sidebar').innerHTML = buildSidebar(a);
   document.title = `${a.title} — Fortized Blog`;
   document.getElementById('blog-list-view').classList.add('hidden');
@@ -766,23 +438,15 @@ function closeArticle() {
 
 window.addEventListener('popstate', function(e) {
   const id = e.state && e.state.articleId;
-  if (id && ARTICLES[id]) {
-    renderArticle(id);
-  } else {
-    document.getElementById('blog-list-view').classList.remove('hidden');
-    document.getElementById('article-view').classList.remove('open');
-    document.title = 'Fortized Blog';
-  }
+  if (id && ARTICLES[id]) { renderArticle(id); }
+  else { document.getElementById('blog-list-view').classList.remove('hidden'); document.getElementById('article-view').classList.remove('open'); document.title = 'Fortized Blog'; }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 (function() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('article');
-  if (id && ARTICLES[id]) {
-    renderArticle(id);
-    history.replaceState({ articleId: id }, '', window.location.href);
-  }
+  if (id && ARTICLES[id]) { renderArticle(id); history.replaceState({ articleId: id }, '', window.location.href); }
 })();
 </script>
 </body>

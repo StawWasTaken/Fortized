@@ -13,444 +13,216 @@
   --accent-border: rgba(255,249,62,.18);
   --accent-glow: rgba(255,249,62,.3);
   --bg: #080a0f;
-  --bg2: #0c0f18;
   --panel: rgba(12,15,22,.95);
   --border: #1a2030;
   --radius: 14px;
   --muted: #5a6478;
   --muted-light: #8b95a8;
   --text: #c8d0dc;
+  --nav-h: 68px;
 }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:#fff;font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:10px;}
+a{text-decoration:none;}
+.nav-root{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;padding:0 40px;background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid var(--border);box-shadow:0 1px 40px rgba(0,0,0,.4);}
+.nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:32px;}
+.nav-logo img{height:28px;width:28px;object-fit:contain;}
+.nav-logo-word{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.5px;}
+.nav-logo-badge{font-size:8.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#080a0f;background:var(--accent);border-radius:4px;padding:2.5px 6px;line-height:1;}
+.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:4px;gap:1px;}
+.nav-pill{font-size:13.5px;font-weight:500;color:var(--muted-light);padding:7px 14px;border-radius:9px;transition:color .15s,background .15s;white-space:nowrap;}
+.nav-pill:hover{color:#fff;background:rgba(255,255,255,.06);}
+.nav-pill.active{color:var(--accent);background:rgba(255,249,62,.07);}
+.nav-sep{width:1px;height:22px;background:rgba(255,255,255,.07);margin:0 12px;flex-shrink:0;}
+.nav-community-tag{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--muted-light);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:100px;padding:6px 14px 6px 10px;margin-right:4px;}
+.nav-community-tag .live-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.7);animation:navDotBlink 2.5s ease infinite;}
+@keyframes navDotBlink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.nav-spacer{flex:1;}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.nav-btn-login{font-size:13.5px;font-weight:600;color:var(--muted-light);padding:8px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);transition:color .15s,border-color .15s,background .15s;}
+.nav-btn-login:hover{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06);}
+.nav-btn-cta{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#080a0f;background:var(--accent);padding:9px 20px;border-radius:10px;transition:box-shadow .2s,filter .15s,transform .14s;}
+.nav-btn-cta:hover{box-shadow:0 0 28px var(--accent-glow);filter:brightness(1.06);transform:translateY(-1px);}
+@media(max-width:900px){.nav-pill-group,.nav-community-tag,.nav-sep{display:none;}}
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { background: var(--bg); color: #fff; font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: #1e2535; border-radius: 10px; }
-a { text-decoration: none; }
+.page-hero{padding:72px 72px 56px;position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
+.page-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,rgba(8,10,15,1) 42%,rgba(8,10,15,.78) 100%),url("Fortized banner.png") center/cover no-repeat;z-index:0;}
+.page-hero::after{content:"";position:absolute;inset:0;z-index:0;background-image:linear-gradient(rgba(255,249,62,.011) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.011) 1px,transparent 1px);background-size:56px 56px;pointer-events:none;}
+.hero-spotlight{position:absolute;top:-120px;left:-80px;z-index:0;width:500px;height:500px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,249,62,.06) 0%,transparent 65%);pointer-events:none;animation:spotDrift 9s ease-in-out infinite;}
+@keyframes spotDrift{0%,100%{transform:translate(0,0);}50%{transform:translate(40px,30px);}}
+.hero-inner{position:relative;z-index:1;}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:32px;}
+.hero-left{max-width:620px;}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);background:rgba(255,249,62,.06);border:1px solid var(--accent-border);border-radius:100px;padding:5px 13px;margin-bottom:22px;}
+.eyebrow::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--accent);}
+.page-hero h1{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;letter-spacing:-2px;line-height:1.02;margin-bottom:16px;}
+.hero-desc{font-size:16px;color:var(--muted-light);line-height:1.7;margin-bottom:32px;max-width:460px;}
+.search-wrap{position:relative;max-width:520px;margin-bottom:26px;}
+.search-wrap input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,249,62,.2);border-radius:12px;padding:14px 52px 14px 18px;font-family:'DM Sans',sans-serif;font-size:14.5px;color:#fff;outline:none;transition:border-color .2s,box-shadow .2s;}
+.search-wrap input::placeholder{color:var(--muted);}
+.search-wrap input:focus{border-color:rgba(255,249,62,.42);box-shadow:0 0 0 3px rgba(255,249,62,.07);}
+.search-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:17px;pointer-events:none;}
+.search-results{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:#0d1120;border:1px solid rgba(255,249,62,.18);border-radius:12px;z-index:100;overflow:hidden;box-shadow:0 16px 44px rgba(0,0,0,.6);}
+.search-results.show{display:block;}
+.search-result-item{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border);}
+.search-result-item:last-child{border-bottom:none;}
+.search-result-item:hover{background:rgba(255,249,62,.04);}
+.sri-cat{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:var(--accent-dim);border:1px solid rgba(255,249,62,.14);border-radius:4px;padding:1.5px 7px;flex-shrink:0;}
+.sri-title{font-size:13.5px;color:#dde3ed;flex:1;}
+.sri-arrow{color:var(--muted);font-size:13px;}
+.status-widget{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;padding:18px 22px;min-width:240px;flex-shrink:0;}
+.status-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.status-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.status-row:last-child{border-bottom:none;padding-bottom:0;}
+.status-row-label{font-size:12.5px;color:var(--muted-light);display:flex;align-items:center;gap:8px;}
+.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dot-green{background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.5);}
+.dot-yellow{background:#facc15;box-shadow:0 0 8px rgba(250,204,21,.5);animation:blink 2s ease infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.status-badge{font-size:10.5px;font-weight:700;border-radius:5px;padding:2px 8px;}
+.badge-operational{color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);}
+.badge-degraded{color:#facc15;background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.2);}
+.topic-chips{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:40px;}
+.topic-chip{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted-light);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:8px 14px;cursor:pointer;transition:color .15s,border-color .15s,background .15s;}
+.topic-chip:hover{color:var(--accent);border-color:var(--accent-border);background:var(--accent-dim);}
+.topic-chip-icon{font-size:15px;}
 
-/* ── NOISE GRAIN ── */
-body::before {
-  content: "";
-  position: fixed; inset: 0; z-index: 500;
-  pointer-events: none; opacity: .016;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 256px 256px;
-}
+.quick-actions{padding:56px 72px 0;}
+.qa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.qa-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:28px 24px;display:flex;flex-direction:column;gap:14px;align-items:flex-start;cursor:pointer;position:relative;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s;text-decoration:none;}
+.qa-card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,249,62,.04),transparent);opacity:0;transition:opacity .2s;}
+.qa-card:hover{transform:translateY(-4px);border-color:rgba(255,249,62,.2);box-shadow:0 16px 40px rgba(0,0,0,.45);}
+.qa-card:hover::before{opacity:1;}
+.qa-icon{width:46px;height:46px;border-radius:13px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:20px;}
+.qa-label{font-family:'Syne',sans-serif;font-size:14.5px;font-weight:700;color:#fff;}
+.qa-desc{font-size:12.5px;color:var(--muted-light);line-height:1.55;}
+.qa-arrow{margin-top:auto;font-size:13px;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:5px;transition:gap .15s;}
+.qa-card:hover .qa-arrow{gap:9px;}
 
-/* ── NAV ── */
-nav {
-  position: sticky; top: 0; z-index: 200;
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 16px 72px;
-  background: rgba(8,10,15,.92); backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--border);
-}
-.logo { display: flex; align-items: center; gap: 11px; }
-.logo img { height: 26px; width: 26px; object-fit: contain; }
-.logo-text { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: #fff; letter-spacing: -.3px; }
-.nav-links { display: flex; align-items: center; gap: 4px; }
-.nav-link {
-  color: var(--muted-light); font-size: 14px; font-weight: 500;
-  padding: 8px 14px; border-radius: 9px;
-  transition: color .15s, background .15s;
-}
-.nav-link:hover { color: #fff; background: rgba(255,255,255,.05); }
-.nav-link.active { color: var(--accent); }
-.btn-outline-nav {
-  border: 1.5px solid rgba(255,249,62,.28) !important;
-  color: var(--accent) !important;
-}
-.btn-outline-nav:hover { background: rgba(255,249,62,.06) !important; }
+.section-wrap{padding:72px 72px 0;}
+.section-label{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+.section-label::before{content:"";width:16px;height:1.5px;background:var(--accent);}
+.section-heading{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:28px;}
 
-/* ── HERO ── */
-.page-hero {
-  padding: 72px 72px 56px;
-  position: relative; overflow: hidden;
-  border-bottom: 1px solid var(--border);
-}
-.page-hero::before {
-  content: ""; position: absolute; inset: 0;
-  background:
-    linear-gradient(105deg, rgba(8,10,15,1) 42%, rgba(8,10,15,.78) 100%),
-    url("Fortized banner.png") center / cover no-repeat;
-  z-index: 0;
-}
-.page-hero::after {
-  content: ""; position: absolute; inset: 0; z-index: 0;
-  background-image:
-    linear-gradient(rgba(255,249,62,.011) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,249,62,.011) 1px, transparent 1px);
-  background-size: 56px 56px; pointer-events: none;
-}
-.hero-spotlight {
-  position: absolute; top: -120px; left: -80px; z-index: 0;
-  width: 500px; height: 500px; border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(255,249,62,.06) 0%, transparent 65%);
-  pointer-events: none;
-  animation: spotDrift 9s ease-in-out infinite;
-}
-@keyframes spotDrift {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(40px, 30px); }
-}
-.hero-inner { position: relative; z-index: 1; }
-.hero-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 32px; }
-.hero-left { max-width: 620px; }
-.eyebrow {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--accent); background: rgba(255,249,62,.06);
-  border: 1px solid var(--accent-border); border-radius: 100px;
-  padding: 5px 13px; margin-bottom: 22px;
-}
-.eyebrow::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
-.page-hero h1 {
-  font-family: 'Syne', sans-serif;
-  font-size: 52px; font-weight: 800; letter-spacing: -2px;
-  line-height: 1.02; margin-bottom: 16px;
-}
-.page-hero p.hero-desc { font-size: 16px; color: var(--muted-light); line-height: 1.7; margin-bottom: 32px; max-width: 460px; }
+.faq-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
+.faq-tab{font-size:12.5px;font-weight:600;color:var(--muted-light);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:100px;padding:7px 16px;cursor:pointer;transition:color .15s,border-color .15s,background .15s;}
+.faq-tab:hover{color:#fff;border-color:rgba(255,255,255,.1);}
+.faq-tab.active{color:var(--accent);background:var(--accent-dim);border-color:var(--accent-border);}
+.faq-list{display:flex;flex-direction:column;gap:8px;}
+.faq-item{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .18s;}
+.faq-item.open{border-color:rgba(255,249,62,.18);}
+.faq-question{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;cursor:pointer;transition:background .15s;}
+.faq-question:hover{background:rgba(255,249,62,.02);}
+.fq-text{font-size:14.5px;font-weight:600;color:#e2e8f3;line-height:1.4;}
+.fq-icon{width:26px;height:26px;border-radius:7px;flex-shrink:0;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted-light);font-weight:700;transition:background .15s,color .15s,transform .2s;}
+.faq-item.open .fq-icon{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-border);transform:rotate(45deg);}
+.faq-answer{max-height:0;overflow:hidden;transition:max-height .32s cubic-bezier(.22,1,.36,1),padding .32s;padding:0 22px;font-size:14px;color:var(--muted-light);line-height:1.78;}
+.faq-item.open .faq-answer{max-height:400px;padding:0 22px 18px;}
 
-/* Search bar */
-.search-wrap {
-  position: relative; max-width: 520px; margin-bottom: 26px;
-}
-.search-wrap input {
-  width: 100%; background: rgba(255,255,255,.04); border: 1px solid rgba(255,249,62,.2);
-  border-radius: 12px; padding: 14px 52px 14px 18px;
-  font-family: 'DM Sans', sans-serif; font-size: 14.5px; color: #fff;
-  outline: none; transition: border-color .2s, box-shadow .2s;
-}
-.search-wrap input::placeholder { color: var(--muted); }
-.search-wrap input:focus { border-color: rgba(255,249,62,.42); box-shadow: 0 0 0 3px rgba(255,249,62,.07); }
-.search-icon {
-  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-  color: var(--muted); font-size: 17px; pointer-events: none;
-}
-.search-results {
-  display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0;
-  background: #0d1120; border: 1px solid rgba(255,249,62,.18);
-  border-radius: 12px; z-index: 100; overflow: hidden;
-  box-shadow: 0 16px 44px rgba(0,0,0,.6);
-}
-.search-results.show { display: block; }
-.search-result-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 13px 16px; cursor: pointer;
-  transition: background .15s; border-bottom: 1px solid var(--border);
-}
-.search-result-item:last-child { border-bottom: none; }
-.search-result-item:hover { background: rgba(255,249,62,.04); }
-.sri-cat {
-  font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(255,249,62,.14);
-  border-radius: 4px; padding: 1.5px 7px; flex-shrink: 0;
-}
-.sri-title { font-size: 13.5px; color: #dde3ed; flex: 1; }
-.sri-arrow { color: var(--muted); font-size: 13px; }
+.articles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.article-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px;cursor:pointer;transition:transform .2s,border-color .2s,box-shadow .2s;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;}
+.article-card::after{content:"";position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .2s;}
+.article-card:hover{transform:translateY(-3px);border-color:rgba(255,249,62,.15);box-shadow:0 12px 32px rgba(0,0,0,.4);}
+.article-card:hover::after{opacity:1;}
+.art-cat{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:4px;padding:2px 8px;display:inline-block;width:fit-content;}
+.art-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;line-height:1.35;}
+.art-desc{font-size:12.5px;color:var(--muted-light);line-height:1.62;flex:1;}
+.art-link{font-size:12px;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:5px;margin-top:4px;transition:gap .15s;}
+.article-card:hover .art-link{gap:9px;}
 
-/* Status widget */
-.status-widget {
-  background: rgba(255,255,255,.02); border: 1px solid var(--border);
-  border-radius: 14px; padding: 18px 22px; min-width: 240px; flex-shrink: 0;
-}
-.status-title { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
-.status-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
-.status-row:last-child { border-bottom: none; padding-bottom: 0; }
-.status-row-label { font-size: 12.5px; color: var(--muted-light); display: flex; align-items: center; gap: 8px; }
-.status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.dot-green { background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,.5); }
-.dot-yellow { background: #facc15; box-shadow: 0 0 8px rgba(250,204,21,.5); animation: blink 2s ease infinite; }
-.dot-red { background: #f87171; box-shadow: 0 0 8px rgba(248,113,113,.5); }
-@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
-.status-badge { font-size: 10.5px; font-weight: 700; border-radius: 5px; padding: 2px 8px; }
-.badge-operational { color: #4ade80; background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.2); }
-.badge-degraded { color: #facc15; background: rgba(250,204,21,.1); border: 1px solid rgba(250,204,21,.2); }
-.badge-outage { color: #f87171; background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.2); }
+.contact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.contact-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:30px 26px;display:flex;flex-direction:column;gap:14px;transition:border-color .18s,transform .2s,box-shadow .2s;}
+.contact-card:hover{border-color:rgba(255,249,62,.18);transform:translateY(-3px);box-shadow:0 14px 36px rgba(0,0,0,.4);}
+.cc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.cc-icon{width:50px;height:50px;border-radius:14px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.cc-eta{font-size:10.5px;font-weight:700;color:var(--muted-light);background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:3px 9px;white-space:nowrap;}
+.cc-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;}
+.cc-desc{font-size:13px;color:var(--muted-light);line-height:1.65;flex:1;}
+.cc-btn{display:inline-flex;align-items:center;gap:7px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;padding:10px 18px;border-radius:10px;transition:filter .15s,box-shadow .15s,transform .14s;cursor:pointer;border:none;width:fit-content;}
+.cc-btn:hover{transform:translateY(-1px);}
+.cc-btn-primary{background:var(--accent);color:#080a0f;}
+.cc-btn-primary:hover{box-shadow:0 0 24px var(--accent-glow);filter:brightness(1.05);}
+.cc-btn-outline{background:transparent;color:#fff;border:1.5px solid var(--border)!important;}
+.cc-btn-outline:hover{border-color:rgba(255,255,255,.15)!important;background:rgba(255,255,255,.04);}
 
-/* ── QUICK ACTIONS ── */
-.quick-actions { padding: 56px 72px 0; }
-.qa-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.qa-card {
-  background: var(--panel); border: 1px solid var(--border);
-  border-radius: 18px; padding: 28px 24px;
-  display: flex; flex-direction: column; gap: 14px; align-items: flex-start;
-  cursor: pointer; position: relative; overflow: hidden;
-  transition: transform .2s, border-color .2s, box-shadow .2s;
-  text-decoration: none;
-}
-.qa-card::before {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,249,62,.04), transparent);
-  opacity: 0; transition: opacity .2s;
-}
-.qa-card:hover { transform: translateY(-4px); border-color: rgba(255,249,62,.2); box-shadow: 0 16px 40px rgba(0,0,0,.45); }
-.qa-card:hover::before { opacity: 1; }
-.qa-icon {
-  width: 46px; height: 46px; border-radius: 13px;
-  background: rgba(255,249,62,.07); border: 1px solid rgba(255,249,62,.12);
-  display: flex; align-items: center; justify-content: center; font-size: 20px;
-}
-.qa-label { font-family: 'Syne', sans-serif; font-size: 14.5px; font-weight: 700; color: #fff; }
-.qa-desc { font-size: 12.5px; color: var(--muted-light); line-height: 1.55; }
-.qa-arrow { margin-top: auto; font-size: 13px; color: var(--accent); font-weight: 600; display: flex; align-items: center; gap: 5px; transition: gap .15s; }
-.qa-card:hover .qa-arrow { gap: 9px; }
+.abuse-band{background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.18);border-radius:16px;padding:24px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.abuse-icon{font-size:28px;flex-shrink:0;}
+.abuse-text{flex:1;min-width:200px;}
+.abuse-text h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;}
+.abuse-text p{font-size:13px;color:#a8b0c0;line-height:1.6;}
+.abuse-btn{display:inline-flex;align-items:center;gap:7px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#f87171;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:10px 18px;cursor:pointer;transition:background .15s,box-shadow .15s;white-space:nowrap;}
+.abuse-btn:hover{background:rgba(248,113,113,.16);box-shadow:0 0 20px rgba(248,113,113,.15);}
 
-/* ── SECTION COMMONS ── */
-.section-wrap { padding: 72px 72px 0; }
-.section-label {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 10px;
-}
-.section-label::before { content: ""; width: 16px; height: 1.5px; background: var(--accent); }
-.section-heading {
-  font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
-  letter-spacing: -.5px; margin-bottom: 28px;
-}
+.safety-support-band{margin:56px 72px 0;background:rgba(255,249,62,.03);border:1px solid rgba(255,249,62,.12);border-top:3px solid var(--accent);border-radius:20px;padding:36px 44px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;position:relative;overflow:hidden;}
+.safety-support-band::after{content:"";position:absolute;top:-80px;right:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(255,249,62,.06),transparent 65%);pointer-events:none;}
+.ssb-left{display:flex;align-items:center;gap:20px;}
+.ssb-icon{width:56px;height:56px;border-radius:16px;flex-shrink:0;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.16);display:flex;align-items:center;justify-content:center;font-size:26px;}
+.ssb-text h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:5px;}
+.ssb-text p{font-size:13.5px;color:var(--muted-light);line-height:1.6;max-width:460px;}
+.ssb-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.ssb-btn{display:inline-flex;align-items:center;gap:7px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;padding:11px 20px;border-radius:10px;cursor:pointer;border:none;transition:filter .15s,box-shadow .15s,transform .14s;}
+.ssb-btn:hover{transform:translateY(-1px);}
+.ssb-btn-primary{background:var(--accent);color:#080a0f;}
+.ssb-btn-primary:hover{box-shadow:0 0 24px var(--accent-glow);filter:brightness(1.05);}
+.ssb-btn-ghost{background:transparent;color:var(--muted-light);border:1.5px solid var(--border)!important;}
+.ssb-btn-ghost:hover{color:#fff;border-color:rgba(255,255,255,.14)!important;}
 
-/* ── FAQ CATEGORIES ── */
-.faq-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
-.faq-tab {
-  font-size: 12.5px; font-weight: 600; color: var(--muted-light);
-  background: rgba(255,255,255,.03); border: 1px solid var(--border);
-  border-radius: 100px; padding: 7px 16px; cursor: pointer;
-  transition: color .15s, border-color .15s, background .15s;
-}
-.faq-tab:hover { color: #fff; border-color: rgba(255,255,255,.1); }
-.faq-tab.active { color: var(--accent); background: var(--accent-dim); border-color: var(--accent-border); }
+footer{border-top:1px solid var(--border);padding:28px 72px;margin-top:80px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px;}
+.footer-logo{display:flex;align-items:center;gap:9px;}
+.footer-logo img{height:20px;opacity:.45;}
+.footer-logo span{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#2d3548;}
+footer .copy{font-size:12px;color:#2d3548;text-align:center;}
+.footer-links{display:flex;gap:18px;justify-content:flex-end;}
+.footer-links a{font-size:12px;color:#374151;transition:color .15s;}
+.footer-links a:hover{color:var(--muted-light);}
 
-/* FAQ accordion */
-.faq-list { display: flex; flex-direction: column; gap: 8px; }
-.faq-item {
-  background: var(--panel); border: 1px solid var(--border);
-  border-radius: 14px; overflow: hidden;
-  transition: border-color .18s;
-}
-.faq-item.open { border-color: rgba(255,249,62,.18); }
-.faq-question {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 18px 22px; cursor: pointer;
-  transition: background .15s;
-}
-.faq-question:hover { background: rgba(255,249,62,.02); }
-.fq-text { font-size: 14.5px; font-weight: 600; color: #e2e8f3; line-height: 1.4; }
-.fq-icon {
-  width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0;
-  background: rgba(255,255,255,.04); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; color: var(--muted-light); font-weight: 700;
-  transition: background .15s, color .15s, transform .2s;
-}
-.faq-item.open .fq-icon { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); transform: rotate(45deg); }
-.faq-answer {
-  max-height: 0; overflow: hidden;
-  transition: max-height .32s cubic-bezier(.22,1,.36,1), padding .32s;
-  padding: 0 22px; font-size: 14px; color: var(--muted-light); line-height: 1.78;
-}
-.faq-item.open .faq-answer { max-height: 400px; padding: 0 22px 18px; }
-.faq-answer a { color: var(--accent); }
-
-/* ── ARTICLES GRID ── */
-.articles-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.article-card {
-  background: var(--panel); border: 1px solid var(--border);
-  border-radius: 16px; padding: 24px; cursor: pointer;
-  transition: transform .2s, border-color .2s, box-shadow .2s;
-  display: flex; flex-direction: column; gap: 10px;
-  position: relative; overflow: hidden;
-}
-.article-card::after {
-  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1.5px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0; transition: opacity .2s;
-}
-.article-card:hover { transform: translateY(-3px); border-color: rgba(255,249,62,.15); box-shadow: 0 12px 32px rgba(0,0,0,.4); }
-.article-card:hover::after { opacity: 1; }
-.art-cat {
-  font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-border);
-  border-radius: 4px; padding: 2px 8px; display: inline-block; width: fit-content;
-}
-.art-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #fff; line-height: 1.35; }
-.art-desc { font-size: 12.5px; color: var(--muted-light); line-height: 1.62; flex: 1; }
-.art-link { font-size: 12px; color: var(--accent); font-weight: 600; display: flex; align-items: center; gap: 5px; margin-top: 4px; transition: gap .15s; }
-.article-card:hover .art-link { gap: 9px; }
-
-/* ── CONTACT CHANNELS ── */
-.contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.contact-card {
-  background: var(--panel); border: 1px solid var(--border);
-  border-radius: 18px; padding: 30px 26px;
-  display: flex; flex-direction: column; gap: 14px;
-  transition: border-color .18s, transform .2s, box-shadow .2s;
-  position: relative; overflow: hidden;
-}
-.contact-card:hover { border-color: rgba(255,249,62,.18); transform: translateY(-3px); box-shadow: 0 14px 36px rgba(0,0,0,.4); }
-.cc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.cc-icon {
-  width: 50px; height: 50px; border-radius: 14px;
-  background: rgba(255,249,62,.07); border: 1px solid rgba(255,249,62,.12);
-  display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
-}
-.cc-eta {
-  font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
-  color: var(--muted-light); background: rgba(255,255,255,.04); border: 1px solid var(--border);
-  border-radius: 6px; padding: 3px 9px; white-space: nowrap;
-}
-.cc-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #fff; }
-.cc-desc { font-size: 13px; color: var(--muted-light); line-height: 1.65; flex: 1; }
-.cc-btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
-  padding: 10px 18px; border-radius: 10px;
-  transition: filter .15s, box-shadow .15s, transform .14s; cursor: pointer; border: none; width: fit-content;
-}
-.cc-btn:hover { transform: translateY(-1px); }
-.cc-btn-primary { background: var(--accent); color: #080a0f; }
-.cc-btn-primary:hover { box-shadow: 0 0 24px var(--accent-glow); filter: brightness(1.05); }
-.cc-btn-outline { background: transparent; color: #fff; border: 1.5px solid var(--border) !important; }
-.cc-btn-outline:hover { border-color: rgba(255,255,255,.15) !important; background: rgba(255,255,255,.04); }
-
-/* ── REPORT ABUSE ── */
-.abuse-band {
-  background: rgba(248,113,113,.04); border: 1px solid rgba(248,113,113,.18);
-  border-radius: 16px; padding: 24px 28px;
-  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
-}
-.abuse-icon { font-size: 28px; flex-shrink: 0; }
-.abuse-text { flex: 1; min-width: 200px; }
-.abuse-text h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-.abuse-text p { font-size: 13px; color: #a8b0c0; line-height: 1.6; }
-.abuse-btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #f87171;
-  background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.25);
-  border-radius: 10px; padding: 10px 18px; cursor: pointer;
-  transition: background .15s, box-shadow .15s;
-  white-space: nowrap;
-}
-.abuse-btn:hover { background: rgba(248,113,113,.16); box-shadow: 0 0 20px rgba(248,113,113,.15); }
-
-/* ── POPULAR TOPICS ── */
-.topic-chips { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 40px; }
-.topic-chip {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 13px; color: var(--muted-light);
-  background: rgba(255,255,255,.03); border: 1px solid var(--border);
-  border-radius: 9px; padding: 8px 14px; cursor: pointer;
-  transition: color .15s, border-color .15s, background .15s;
-}
-.topic-chip:hover { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
-.topic-chip-icon { font-size: 15px; }
-
-/* ── SAFETY CTA ── */
-.safety-support-band {
-  margin: 56px 72px 0;
-  background: rgba(255,249,62,.03); border: 1px solid rgba(255,249,62,.12);
-  border-top: 3px solid var(--accent);
-  border-radius: 20px; padding: 36px 44px;
-  display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
-  position: relative; overflow: hidden;
-}
-.safety-support-band::after {
-  content: ""; position: absolute; top: -80px; right: -80px;
-  width: 280px; height: 280px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,249,62,.06), transparent 65%);
-  pointer-events: none;
-}
-.ssb-left { display: flex; align-items: center; gap: 20px; }
-.ssb-icon {
-  width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
-  background: rgba(255,249,62,.08); border: 1px solid rgba(255,249,62,.16);
-  display: flex; align-items: center; justify-content: center; font-size: 26px;
-}
-.ssb-text h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 5px; letter-spacing: -.2px; }
-.ssb-text p { font-size: 13.5px; color: var(--muted-light); line-height: 1.6; max-width: 460px; }
-.ssb-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.ssb-btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
-  padding: 11px 20px; border-radius: 10px; cursor: pointer; border: none;
-  transition: filter .15s, box-shadow .15s, transform .14s;
-}
-.ssb-btn:hover { transform: translateY(-1px); }
-.ssb-btn-primary { background: var(--accent); color: #080a0f; }
-.ssb-btn-primary:hover { box-shadow: 0 0 24px var(--accent-glow); filter: brightness(1.05); }
-.ssb-btn-ghost { background: transparent; color: var(--muted-light); border: 1.5px solid var(--border) !important; }
-.ssb-btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,.14) !important; }
-
-/* ── FOOTER ── */
-footer {
-  border-top: 1px solid var(--border); padding: 28px 72px; margin-top: 80px;
-  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px;
-}
-.footer-logo { display: flex; align-items: center; gap: 9px; }
-.footer-logo img { height: 20px; opacity: .45; }
-.footer-logo span { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #2d3548; }
-footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
-.footer-links { display: flex; gap: 18px; justify-content: flex-end; }
-.footer-links a { font-size: 12px; color: #374151; transition: color .15s; }
-.footer-links a:hover { color: var(--muted-light); }
-
-/* ── ANIMATIONS ── */
-@keyframes revealUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-.reveal { animation: revealUp .5s cubic-bezier(.22,1,.36,1) both; }
-.reveal-d1 { animation-delay: .07s; }
-.reveal-d2 { animation-delay: .14s; }
-.reveal-d3 { animation-delay: .21s; }
-.reveal-d4 { animation-delay: .28s; }
-
-/* ── DIVIDER ── */
-.divider { height: 1px; background: var(--border); margin: 56px 0 0; }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 1024px) {
-  .articles-grid { grid-template-columns: 1fr 1fr; }
-  .qa-grid { grid-template-columns: 1fr 1fr; }
-  .contact-grid { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 768px) {
-  nav, .quick-actions, .section-wrap, footer, .safety-support-band { padding-left: 24px; padding-right: 24px; }
-  .page-hero { padding: 52px 24px 40px; }
-  .hero-top { flex-direction: column; }
-  .qa-grid, .articles-grid, .contact-grid { grid-template-columns: 1fr; }
-  footer { grid-template-columns: 1fr; text-align: center; }
-  .footer-links { justify-content: center; }
-  .nav-link:not(.btn-outline-nav) { display: none; }
-  .safety-support-band { margin-left: 24px; margin-right: 24px; }
+@media(max-width:1024px){.articles-grid,.qa-grid,.contact-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:768px){
+  .nav-root,.quick-actions,.section-wrap,footer,.safety-support-band{padding-left:24px;padding-right:24px;}
+  .page-hero{padding:52px 24px 40px;}
+  .hero-top{flex-direction:column;}
+  .qa-grid,.articles-grid,.contact-grid{grid-template-columns:1fr;}
+  footer{grid-template-columns:1fr;text-align:center;}
+  .footer-links{justify-content:center;}
+  .safety-support-band{margin-left:24px;margin-right:24px;}
 }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <a href="index.html" class="logo">
-    <img src="Fortized icon.png" alt="Fortized">
-    <span class="logo-text">Fortized</span>
+<nav class="nav-root">
+  <a href="index.html" class="nav-logo">
+    <img src="Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
+    <span class="nav-logo-word">Fortized</span>
+    <span class="nav-logo-badge">Beta</span>
   </a>
-  <div class="nav-links">
-    <a href="index.html" class="nav-link">Home</a>
-    <a href="blog.html" class="nav-link">Blog</a>
-    <a href="support.html" class="nav-link active">Support</a>
-    <a href="login.html" class="nav-link btn-outline-nav">Login</a>
+  <div class="nav-pill-group">
+    <a href="index.html" class="nav-pill">Home</a>
+    <a href="blog.html" class="nav-pill">Blog</a>
+    <a href="support.html" class="nav-pill active">Support</a>
+    <a href="download.html" class="nav-pill">Download</a>
+  </div>
+  <div class="nav-sep"></div>
+  <div class="nav-community-tag"><span class="live-dot"></span>Beta is Live</div>
+  <div class="nav-spacer"></div>
+  <div class="nav-right">
+    <a href="login.html" class="nav-btn-login">Login</a>
+    <a href="signup.html" class="nav-btn-cta">Join the Fortress</a>
   </div>
 </nav>
 
-<!-- HERO -->
 <div class="page-hero">
   <div class="hero-spotlight"></div>
   <div class="hero-inner">
     <div class="hero-top">
-      <div class="hero-left reveal">
-        <div class="eyebrow">🛡 Fortized Support</div>
+      <div class="hero-left">
+        <div class="eyebrow">Fortized Support</div>
         <h1>How can we<br>help you?</h1>
         <p class="hero-desc">Find answers, report issues, and get in touch with the Stawdio team. Your Fortress is in good hands.</p>
         <div class="search-wrap">
-          <input type="text" id="searchInput" placeholder="Search for help… e.g. &quot;reset password&quot;, &quot;bastion roles&quot;" autocomplete="off">
+          <input type="text" id="searchInput" placeholder='Search... e.g. "reset password", "bastion roles"' autocomplete="off">
           <span class="search-icon">🔍</span>
           <div class="search-results" id="searchResults"></div>
         </div>
@@ -463,70 +235,30 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
           <span class="topic-chip" onclick="filterFaq('all')"><span class="topic-chip-icon">📋</span>All Topics</span>
         </div>
       </div>
-
-      <!-- System Status -->
-      <div class="status-widget reveal reveal-d2">
+      <div class="status-widget">
         <div class="status-title">⚡ Platform Status</div>
-        <div class="status-row">
-          <span class="status-row-label"><span class="status-dot dot-green"></span>Fortized Web</span>
-          <span class="status-badge badge-operational">Operational</span>
-        </div>
-        <div class="status-row">
-          <span class="status-row-label"><span class="status-dot dot-green"></span>Messaging</span>
-          <span class="status-badge badge-operational">Operational</span>
-        </div>
-        <div class="status-row">
-          <span class="status-row-label"><span class="status-dot dot-green"></span>Voice Channels</span>
-          <span class="status-badge badge-operational">Operational</span>
-        </div>
-        <div class="status-row">
-          <span class="status-row-label"><span class="status-dot dot-yellow"></span>The Atelier</span>
-          <span class="status-badge badge-degraded">Beta</span>
-        </div>
-        <div class="status-row">
-          <span class="status-row-label"><span class="status-dot dot-green"></span>AutoMod</span>
-          <span class="status-badge badge-operational">Operational</span>
-        </div>
+        <div class="status-row"><span class="status-row-label"><span class="status-dot dot-green"></span>Fortized Web</span><span class="status-badge badge-operational">Operational</span></div>
+        <div class="status-row"><span class="status-row-label"><span class="status-dot dot-green"></span>Messaging</span><span class="status-badge badge-operational">Operational</span></div>
+        <div class="status-row"><span class="status-row-label"><span class="status-dot dot-green"></span>Voice Channels</span><span class="status-badge badge-operational">Operational</span></div>
+        <div class="status-row"><span class="status-row-label"><span class="status-dot dot-yellow"></span>The Atelier</span><span class="status-badge badge-degraded">Beta</span></div>
+        <div class="status-row"><span class="status-row-label"><span class="status-dot dot-green"></span>AutoMod</span><span class="status-badge badge-operational">Operational</span></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- QUICK ACTIONS -->
-<div class="quick-actions" style="padding-top: 48px;">
+<div class="quick-actions" style="padding-top:48px;">
   <div class="qa-grid">
-    <a href="#faq" class="qa-card reveal">
-      <div class="qa-icon">📖</div>
-      <div class="qa-label">Browse FAQ</div>
-      <div class="qa-desc">Common questions answered about accounts, Bastions, and Radiance.</div>
-      <div class="qa-arrow">View all →</div>
-    </a>
-    <a href="#contact" class="qa-card reveal reveal-d1">
-      <div class="qa-icon">💬</div>
-      <div class="qa-label">Contact Support</div>
-      <div class="qa-desc">Reach the Stawdio team directly. We respond within 24–48 hours.</div>
-      <div class="qa-arrow">Get in touch →</div>
-    </a>
-    <a href="#report" class="qa-card reveal reveal-d2">
-      <div class="qa-icon">🚨</div>
-      <div class="qa-label">Report a User</div>
-      <div class="qa-desc">Report abuse, harassment, or policy violations to the Security Department.</div>
-      <div class="qa-arrow">Submit report →</div>
-    </a>
-    <a href="privacy.html" class="qa-card reveal reveal-d3">
-      <div class="qa-icon">🔒</div>
-      <div class="qa-label">Privacy & Legal</div>
-      <div class="qa-desc">Review our Privacy Policy, Terms of Use, and data rights information.</div>
-      <div class="qa-arrow">Read docs →</div>
-    </a>
+    <a href="#faq" class="qa-card"><div class="qa-icon">📖</div><div class="qa-label">Browse FAQ</div><div class="qa-desc">Common questions answered about accounts, Bastions, and Radiance.</div><div class="qa-arrow">View all →</div></a>
+    <a href="#contact" class="qa-card"><div class="qa-icon">💬</div><div class="qa-label">Contact Support</div><div class="qa-desc">Reach the Stawdio team directly. We respond within 24–48 hours.</div><div class="qa-arrow">Get in touch →</div></a>
+    <a href="#report" class="qa-card"><div class="qa-icon">🚨</div><div class="qa-label">Report a User</div><div class="qa-desc">Report abuse, harassment, or policy violations to the Security Department.</div><div class="qa-arrow">Submit report →</div></a>
+    <a href="privacy.html" class="qa-card"><div class="qa-icon">🔒</div><div class="qa-label">Privacy &amp; Legal</div><div class="qa-desc">Review our Privacy Policy, Terms of Use, and data rights information.</div><div class="qa-arrow">Read docs →</div></a>
   </div>
 </div>
 
-<!-- FAQ -->
-<div class="section-wrap" id="faq" style="padding-top: 64px;">
+<div class="section-wrap" id="faq" style="padding-top:64px;">
   <div class="section-label">Help Center</div>
   <div class="section-heading">Frequently asked questions</div>
-
   <div class="faq-tabs" id="faqTabs">
     <div class="faq-tab active" onclick="filterFaq('all')">All</div>
     <div class="faq-tab" onclick="filterFaq('account')">🧑‍💻 Account</div>
@@ -535,243 +267,65 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
     <div class="faq-tab" onclick="filterFaq('safety')">🛡 Safety</div>
     <div class="faq-tab" onclick="filterFaq('technical')">⚙️ Technical</div>
   </div>
-
   <div class="faq-list" id="faqList">
-
-    <!-- Account -->
-    <div class="faq-item" data-cat="account">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">How do I reset my password?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">On the login page, click "Forgot Password" and enter your registered email. You'll receive reset instructions shortly. Because Fortized currently uses local browser storage, your credentials are stored on your device — clearing browser data will remove your account locally. If you're locked out, contact support for further assistance.</div>
-    </div>
-
-    <div class="faq-item" data-cat="account">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">How do I delete my Fortized account?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">You can delete your account at any time via your profile settings. Navigate to Settings → Account → Delete Account. Under GDPR, EU users have the right to full data erasure. If you require additional assistance or want to confirm removal from any future cloud systems, reach out through our support channels.</div>
-    </div>
-
-    <div class="faq-item" data-cat="account">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">Can I change my username or display name?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">Yes. Head to Settings → Profile to update your username, display name, and profile picture at any time. Changes are reflected immediately across all Bastions you're a member of.</div>
-    </div>
-
-    <div class="faq-item" data-cat="account">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">What is the minimum age to use Fortized?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">Fortized requires users to be at least 13 years old globally. In EU member states, the minimum age is 16, or 13 with verifiable parental/guardian consent, in compliance with GDPR and the EU Digital Services Act. Stawdio Group, registered in France, is subject to applicable EU consumer and digital law.</div>
-    </div>
-
-    <!-- Bastions -->
-    <div class="faq-item" data-cat="bastion">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">How do I create a Bastion?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">Click the "+" button in the Bastion sidebar to open the creation flow. You'll be prompted to name your Bastion, set its visibility (public or private), and configure initial Chambers. As the owner, you have full administrative authority over your community at all times.</div>
-    </div>
-
-    <div class="faq-item" data-cat="bastion">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">What are Chambers and Ranks?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">Chambers are organized channels within a Bastion — text, voice, or announcement chambers. Ranks are the role system: each rank can have unique permissions, display names, and visual identifiers. Fortized's military-inspired naming gives your community clear hierarchy and purpose from day one.</div>
-    </div>
-
-    <div class="faq-item" data-cat="bastion">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">Can Fortized staff access or override my Bastion?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">No. Bastion Sovereignty is a core principle of Fortized. Stawdio Group never overrides or bypasses admin controls. Your Bastion's structure, membership records, roles, and DMs belong to you. The only exception is enforcement of our Terms of Use in cases of severe violations, such as illegal content or platform-wide abuse.</div>
-    </div>
-
-    <!-- Radiance -->
-    <div class="faq-item" data-cat="radiance">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">What is Radiance and how do I get it?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">Radiance is Fortized's premium status, unlocked entirely through community engagement — no credit card required. Earn Onyx by completing quests, inviting friends, and claiming daily rewards in The Atelier. Exchange your Onyx for Radiance packs ranging from 24-hour boosts to full 30-day memberships.</div>
-    </div>
-
-    <div class="faq-item" data-cat="radiance">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">What perks does Radiance include?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">Active Radiance members receive: a custom Radiance Shield badge, an animated avatar border, extended messaging (up to 4,000 characters), and a custom profile banner. All perks are purely cosmetic and do not affect community moderation or permissions within Bastions.</div>
-    </div>
-
-    <div class="faq-item" data-cat="radiance">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">What happens when my Radiance expires?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">When your Radiance period ends, your account reverts to standard status and premium cosmetics are removed. Your Onyx balance is preserved — you can earn more and re-activate Radiance at any time through The Atelier.</div>
-    </div>
-
-    <!-- Safety -->
-    <div class="faq-item" data-cat="safety">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">How do I report a user or message?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">Right-click or long-press any message to access the "Report" option. Select the relevant violation category and submit. Reports go directly to the Fortized Security Department for review. For urgent or serious incidents, you can also escalate via our support channels below.</div>
-    </div>
-
-    <div class="faq-item" data-cat="safety">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">What does AutoMod do?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">AutoMod is Fortized's real-time content moderation system. It detects and acts on policy-violating messages before they reach other users — including spam, slurs, phishing links, and known harmful content patterns. Bastion owners can also configure additional custom keyword filters for their communities.</div>
-    </div>
-
-    <div class="faq-item" data-cat="safety">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">I've been wrongly banned. How do I appeal?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">If your account was suspended or terminated and you believe it was in error, you can submit an appeal through official support channels. EU users also have the right to contest account termination decisions under the EU Digital Services Act. Include your username, a description of the situation, and any supporting context. We will respond within 15 business days.</div>
-    </div>
-
-    <!-- Technical -->
-    <div class="faq-item" data-cat="technical">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">Why did my account data disappear?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">Fortized currently stores account data in your browser's localStorage. This means clearing your browser's cache or cookies, using a private/incognito window, or switching browsers will remove your local data. We recommend noting your credentials securely. Cloud sync will be introduced in a future update.</div>
-    </div>
-
-    <div class="faq-item" data-cat="technical">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">Is Fortized available as a desktop or mobile app?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">Fortized is currently accessible via web browser. A dedicated desktop app and mobile application are on the roadmap. For the best experience during Beta, we recommend using a modern Chromium-based browser on desktop.</div>
-    </div>
-
-    <div class="faq-item" data-cat="technical">
-      <div class="faq-question" onclick="toggleFaq(this)">
-        <span class="fq-text">I found a bug or security vulnerability. What do I do?</span>
-        <span class="fq-icon">+</span>
-      </div>
-      <div class="faq-answer">Please report bugs through our official support channels or via the in-app feedback tool. For security vulnerabilities, contact the Stawdio Safety Department directly and do not publicly disclose the issue until it has been reviewed. Responsible disclosure is greatly appreciated and helps protect the entire community.</div>
-    </div>
-
+    <div class="faq-item" data-cat="account"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I reset my password?</span><span class="fq-icon">+</span></div><div class="faq-answer">On the login page, click "Forgot Password" and enter your registered email. Because Fortized currently uses local browser storage, your credentials are stored on your device — clearing browser data will remove your account locally.</div></div>
+    <div class="faq-item" data-cat="account"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I delete my Fortized account?</span><span class="fq-icon">+</span></div><div class="faq-answer">Navigate to Settings → Account → Delete Account. EU users have the right to full data erasure under GDPR. If you require additional assistance, reach out through our support channels.</div></div>
+    <div class="faq-item" data-cat="account"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">Can I change my username or display name?</span><span class="fq-icon">+</span></div><div class="faq-answer">Yes. Head to Settings → Profile to update your username, display name, and profile picture at any time. Changes are reflected immediately across all Bastions.</div></div>
+    <div class="faq-item" data-cat="account"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What is the minimum age to use Fortized?</span><span class="fq-icon">+</span></div><div class="faq-answer">Fortized requires users to be at least 13 years old globally. In EU member states, the minimum age is 16, or 13 with verifiable parental/guardian consent.</div></div>
+    <div class="faq-item" data-cat="bastion"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I create a Bastion?</span><span class="fq-icon">+</span></div><div class="faq-answer">Click the "+" button in the Bastion sidebar to open the creation flow. Set your Bastion's name, visibility (public or private), and configure initial Chambers. As the owner, you have full administrative authority at all times.</div></div>
+    <div class="faq-item" data-cat="bastion"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What are Chambers and Ranks?</span><span class="fq-icon">+</span></div><div class="faq-answer">Chambers are organized channels within a Bastion — text, voice, or announcement. Ranks are the role system with unique permissions and visual identifiers, giving your community clear hierarchy from day one.</div></div>
+    <div class="faq-item" data-cat="bastion"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">Can Fortized staff access or override my Bastion?</span><span class="fq-icon">+</span></div><div class="faq-answer">No. Bastion Sovereignty is a core principle. Stawdio Group never overrides or bypasses admin controls. The only exception is enforcement of our Terms of Use in cases of severe violations such as illegal content.</div></div>
+    <div class="faq-item" data-cat="radiance"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What is Radiance and how do I get it?</span><span class="fq-icon">+</span></div><div class="faq-answer">Radiance is Fortized's premium status, unlocked entirely through community engagement — no credit card required. Earn Onyx by completing quests, inviting friends, and claiming daily rewards in The Atelier.</div></div>
+    <div class="faq-item" data-cat="radiance"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What perks does Radiance include?</span><span class="fq-icon">+</span></div><div class="faq-answer">Active Radiance members receive: a custom Radiance Shield badge, an animated avatar border, extended messaging (up to 4,000 characters), and a custom profile banner. All perks are purely cosmetic.</div></div>
+    <div class="faq-item" data-cat="safety"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I report a user or message?</span><span class="fq-icon">+</span></div><div class="faq-answer">Right-click or long-press any message to access the "Report" option. Reports go directly to the Fortized Security Department for review. For urgent incidents, escalate via our support channels below.</div></div>
+    <div class="faq-item" data-cat="safety"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What does AutoMod do?</span><span class="fq-icon">+</span></div><div class="faq-answer">AutoMod is Fortized's real-time content moderation system. It detects and acts on policy-violating messages before they reach other users. Bastion owners can also configure custom keyword filters.</div></div>
+    <div class="faq-item" data-cat="safety"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">I've been wrongly banned. How do I appeal?</span><span class="fq-icon">+</span></div><div class="faq-answer">Submit an appeal through official support channels including your username and a description. EU users have the right to contest termination decisions under the EU Digital Services Act. We respond within 15 business days.</div></div>
+    <div class="faq-item" data-cat="technical"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">Why did my account data disappear?</span><span class="fq-icon">+</span></div><div class="faq-answer">Fortized currently stores account data in your browser's localStorage. Clearing your browser cache or switching browsers will remove local data. Cloud sync will be introduced in a future update.</div></div>
+    <div class="faq-item" data-cat="technical"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">Is Fortized available as a desktop or mobile app?</span><span class="fq-icon">+</span></div><div class="faq-answer">Fortized is currently accessible via web browser. A dedicated desktop app and mobile application are on the roadmap. For the best Beta experience, we recommend a modern Chromium-based browser on desktop.</div></div>
+    <div class="faq-item" data-cat="technical"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">I found a bug or security vulnerability. What do I do?</span><span class="fq-icon">+</span></div><div class="faq-answer">Report bugs through official support channels or the in-app feedback tool. For security vulnerabilities, contact the Stawdio Safety Department directly and do not publicly disclose until reviewed. Responsible disclosure is greatly appreciated.</div></div>
   </div>
 </div>
 
-<!-- ARTICLES -->
-<div class="section-wrap" style="padding-top: 64px;">
+<div class="section-wrap" style="padding-top:64px;">
   <div class="section-label">Knowledge Base</div>
-  <div class="section-heading">Guides & documentation</div>
+  <div class="section-heading">Guides &amp; documentation</div>
   <div class="articles-grid">
-    <div class="article-card reveal" onclick="">
-      <span class="art-cat">Getting Started</span>
-      <div class="art-title">Setting up your first Bastion</div>
-      <div class="art-desc">A complete walkthrough for creating, naming, and configuring your Bastion — including Chambers, Ranks, and invite links.</div>
-      <div class="art-link">Read guide →</div>
-    </div>
-    <div class="article-card reveal reveal-d1" onclick="">
-      <span class="art-cat">The Atelier</span>
-      <div class="art-title">How Onyx & Radiance work</div>
-      <div class="art-desc">Everything you need to know about earning Onyx through quests and daily rewards, and trading it for Radiance status.</div>
-      <div class="art-link">Read guide →</div>
-    </div>
-    <div class="article-card reveal reveal-d2" onclick="">
-      <span class="art-cat">Safety</span>
-      <div class="art-title">Configuring AutoMod for your Bastion</div>
-      <div class="art-desc">Step-by-step instructions for setting up keyword filters, raid protection, and user verification in your community.</div>
-      <div class="art-link">Read guide →</div>
-    </div>
-    <div class="article-card reveal reveal-d3" onclick="">
-      <span class="art-cat">Accounts</span>
-      <div class="art-title">Managing your profile & privacy</div>
-      <div class="art-desc">How to update your username, avatar, and banner — plus managing your privacy settings and data rights under GDPR.</div>
-      <div class="art-link">Read guide →</div>
-    </div>
-    <div class="article-card reveal reveal-d2" onclick="">
-      <span class="art-cat">Roles & Permissions</span>
-      <div class="art-title">Understanding Ranks & permissions</div>
-      <div class="art-desc">Deep dive into Fortized's rank hierarchy system: creating custom roles, assigning permissions, and managing your community's structure.</div>
-      <div class="art-link">Read guide →</div>
-    </div>
-    <div class="article-card reveal reveal-d3" onclick="">
-      <span class="art-cat">Voice</span>
-      <div class="art-title">Voice channels & War Council mode</div>
-      <div class="art-desc">How to configure voice Chambers, set access permissions by rank, and use War Council broadcast mode for fortress-wide comms.</div>
-      <div class="art-link">Read guide →</div>
-    </div>
+    <div class="article-card"><span class="art-cat">Getting Started</span><div class="art-title">Setting up your first Bastion</div><div class="art-desc">A complete walkthrough for creating, naming, and configuring your Bastion — including Chambers, Ranks, and invite links.</div><div class="art-link">Read guide →</div></div>
+    <div class="article-card"><span class="art-cat">The Atelier</span><div class="art-title">How Onyx &amp; Radiance work</div><div class="art-desc">Everything you need to know about earning Onyx through quests and daily rewards, and trading it for Radiance status.</div><div class="art-link">Read guide →</div></div>
+    <div class="article-card"><span class="art-cat">Safety</span><div class="art-title">Configuring AutoMod for your Bastion</div><div class="art-desc">Step-by-step instructions for setting up keyword filters, raid protection, and user verification in your community.</div><div class="art-link">Read guide →</div></div>
+    <div class="article-card"><span class="art-cat">Accounts</span><div class="art-title">Managing your profile &amp; privacy</div><div class="art-desc">How to update your username, avatar, and banner — plus managing your privacy settings and data rights under GDPR.</div><div class="art-link">Read guide →</div></div>
+    <div class="article-card"><span class="art-cat">Roles &amp; Permissions</span><div class="art-title">Understanding Ranks &amp; permissions</div><div class="art-desc">Deep dive into Fortized's rank hierarchy system: creating custom roles, assigning permissions, and managing your community's structure.</div><div class="art-link">Read guide →</div></div>
+    <div class="article-card"><span class="art-cat">Voice</span><div class="art-title">Voice channels &amp; War Council mode</div><div class="art-desc">How to configure voice Chambers, set access permissions by rank, and use War Council broadcast mode for fortress-wide comms.</div><div class="art-link">Read guide →</div></div>
   </div>
 </div>
 
-<!-- CONTACT -->
-<div class="section-wrap" id="contact" style="padding-top: 64px;">
+<div class="section-wrap" id="contact" style="padding-top:64px;">
   <div class="section-label">Get Help</div>
   <div class="section-heading">Contact the Stawdio team</div>
   <div class="contact-grid">
-    <div class="contact-card reveal">
-      <div class="cc-top">
-        <div class="cc-icon">💬</div>
-        <span class="cc-eta">~24 hrs</span>
-      </div>
-      <div class="cc-title">General Support</div>
-      <div class="cc-desc">Questions about your account, Bastions, features, or anything else. The Stawdio support team is here to help.</div>
-      <button class="cc-btn cc-btn-primary">Open a Ticket</button>
-    </div>
-    <div class="contact-card reveal reveal-d1">
-      <div class="cc-top">
-        <div class="cc-icon">🛡️</div>
-        <span class="cc-eta">Priority</span>
-      </div>
-      <div class="cc-title">Security Department</div>
-      <div class="cc-desc">Report serious safety violations, escalate abuse cases, or disclose security vulnerabilities responsibly.</div>
-      <button class="cc-btn cc-btn-primary">Contact Safety</button>
-    </div>
-    <div class="contact-card reveal reveal-d2">
-      <div class="cc-top">
-        <div class="cc-icon">🇪🇺</div>
-        <span class="cc-eta">15 days</span>
-      </div>
-      <div class="cc-title">EU & Legal Requests</div>
-      <div class="cc-desc">GDPR data requests, right of erasure, account appeals, or EU Digital Services Act formal complaints.</div>
-      <button class="cc-btn cc-btn-outline">Submit Request</button>
-    </div>
+    <div class="contact-card"><div class="cc-top"><div class="cc-icon">💬</div><span class="cc-eta">~24 hrs</span></div><div class="cc-title">General Support</div><div class="cc-desc">Questions about your account, Bastions, features, or anything else. The Stawdio support team is here to help.</div><button class="cc-btn cc-btn-primary">Open a Ticket</button></div>
+    <div class="contact-card"><div class="cc-top"><div class="cc-icon">🛡️</div><span class="cc-eta">Priority</span></div><div class="cc-title">Security Department</div><div class="cc-desc">Report serious safety violations, escalate abuse cases, or disclose security vulnerabilities responsibly.</div><button class="cc-btn cc-btn-primary">Contact Safety</button></div>
+    <div class="contact-card"><div class="cc-top"><div class="cc-icon">🇪🇺</div><span class="cc-eta">15 days</span></div><div class="cc-title">EU &amp; Legal Requests</div><div class="cc-desc">GDPR data requests, right of erasure, account appeals, or EU Digital Services Act formal complaints.</div><button class="cc-btn cc-btn-outline">Submit Request</button></div>
   </div>
 </div>
 
-<!-- REPORT ABUSE -->
-<div class="section-wrap" id="report" style="padding-top: 32px;">
+<div class="section-wrap" id="report" style="padding-top:32px;">
   <div class="abuse-band">
     <div class="abuse-icon">🚨</div>
     <div class="abuse-text">
       <h3>Report Abuse or Harassment</h3>
-      <p>If you're experiencing targeted harassment, hate speech, threats, or have witnessed illegal content on the platform, report it immediately. The Fortized Security Department reviews all reports promptly. Any misconduct is the sole responsibility of the individual who commits it — we take every report seriously.</p>
+      <p>If you're experiencing targeted harassment, hate speech, threats, or have witnessed illegal content on the platform, report it immediately. The Fortized Security Department reviews all reports promptly. Any misconduct is the sole responsibility of the individual who commits it.</p>
     </div>
     <button class="abuse-btn">Report Now →</button>
   </div>
 </div>
 
-<!-- SAFETY BAND -->
 <div class="safety-support-band">
   <div class="ssb-left">
     <div class="ssb-icon">🏰</div>
     <div class="ssb-text">
       <h3>Your Bastion. Your rules.</h3>
-      <p>Fortized is built on a layered security architecture. From AutoMod and Raid Protection to the dedicated Stawdio Safety Department — every wall is designed to hold. Read our full safety practices in the Privacy Policy and Terms.</p>
+      <p>Fortized is built on a layered security architecture. From AutoMod and Raid Protection to the dedicated Stawdio Safety Department — every wall is designed to hold.</p>
     </div>
   </div>
   <div class="ssb-actions">
@@ -780,10 +334,9 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   </div>
 </div>
 
-<!-- FOOTER -->
 <footer>
   <a href="index.html" class="footer-logo">
-    <img src="Fortized icon.png" alt="">
+    <img src="Fortized icon.png" alt="" onerror="this.style.display='none'">
     <span>Fortized</span>
   </a>
   <p class="copy">© 2026 Fortized · Stawdio Group</p>
@@ -795,19 +348,15 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
 </footer>
 
 <script>
-/* ── FAQ ACCORDION ── */
 function toggleFaq(btn) {
   const item = btn.parentElement;
   const isOpen = item.classList.contains('open');
   document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
   if (!isOpen) item.classList.add('open');
 }
-
-/* ── FAQ FILTER ── */
 function filterFaq(cat) {
   document.querySelectorAll('.faq-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
-  const tabMap = { all: 0, account: 1, bastion: 2, radiance: 3, safety: 4, technical: 5 };
+  const tabMap = { all:0, account:1, bastion:2, radiance:3, safety:4, technical:5 };
   const tabs = document.querySelectorAll('.faq-tab');
   if (tabs[tabMap[cat]]) tabs[tabMap[cat]].classList.add('active');
   document.querySelectorAll('.faq-item').forEach(item => {
@@ -816,72 +365,38 @@ function filterFaq(cat) {
   });
   document.getElementById('faq').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-
-/* ── SEARCH ── */
 const SEARCH_DATA = [
-  { cat: 'Account', title: 'How do I reset my password?', id: 'account' },
-  { cat: 'Account', title: 'How do I delete my account?', id: 'account' },
-  { cat: 'Account', title: 'Changing username or display name', id: 'account' },
-  { cat: 'Account', title: 'Minimum age requirements', id: 'account' },
-  { cat: 'Bastion', title: 'Creating a Bastion', id: 'bastion' },
-  { cat: 'Bastion', title: 'Chambers and Ranks explained', id: 'bastion' },
-  { cat: 'Bastion', title: 'Bastion Sovereignty — can staff access my server?', id: 'bastion' },
-  { cat: 'Radiance', title: 'What is Radiance and how to get it', id: 'radiance' },
-  { cat: 'Radiance', title: 'Radiance perks and benefits', id: 'radiance' },
-  { cat: 'Radiance', title: 'What happens when Radiance expires', id: 'radiance' },
-  { cat: 'Safety', title: 'Reporting a user or message', id: 'safety' },
-  { cat: 'Safety', title: 'What does AutoMod do?', id: 'safety' },
-  { cat: 'Safety', title: 'Appeal a ban or suspension', id: 'safety' },
-  { cat: 'Technical', title: 'Account data disappeared / localStorage', id: 'technical' },
-  { cat: 'Technical', title: 'Desktop and mobile app availability', id: 'technical' },
-  { cat: 'Technical', title: 'Reporting a bug or security vulnerability', id: 'technical' },
+  { cat:'Account', title:'How do I reset my password?', id:'account' },
+  { cat:'Account', title:'How do I delete my account?', id:'account' },
+  { cat:'Account', title:'Changing username or display name', id:'account' },
+  { cat:'Bastion', title:'Creating a Bastion', id:'bastion' },
+  { cat:'Bastion', title:'Chambers and Ranks explained', id:'bastion' },
+  { cat:'Radiance', title:'What is Radiance and how to get it', id:'radiance' },
+  { cat:'Radiance', title:'Radiance perks and benefits', id:'radiance' },
+  { cat:'Safety', title:'Reporting a user or message', id:'safety' },
+  { cat:'Safety', title:'What does AutoMod do?', id:'safety' },
+  { cat:'Safety', title:'Appeal a ban or suspension', id:'safety' },
+  { cat:'Technical', title:'Account data disappeared / localStorage', id:'technical' },
+  { cat:'Technical', title:'Desktop and mobile app availability', id:'technical' },
+  { cat:'Technical', title:'Reporting a bug or security vulnerability', id:'technical' },
 ];
-
 const input = document.getElementById('searchInput');
 const results = document.getElementById('searchResults');
-
 input.addEventListener('input', () => {
   const q = input.value.trim().toLowerCase();
   if (q.length < 2) { results.classList.remove('show'); return; }
-  const filtered = SEARCH_DATA.filter(d =>
-    d.title.toLowerCase().includes(q) || d.cat.toLowerCase().includes(q)
-  ).slice(0, 6);
+  const filtered = SEARCH_DATA.filter(d => d.title.toLowerCase().includes(q) || d.cat.toLowerCase().includes(q)).slice(0, 6);
   if (!filtered.length) { results.classList.remove('show'); return; }
-  results.innerHTML = filtered.map(d => `
-    <div class="search-result-item" onclick="filterFaq('${d.id}');closeSearch();">
-      <span class="sri-cat">${d.cat}</span>
-      <span class="sri-title">${d.title}</span>
-      <span class="sri-arrow">→</span>
-    </div>
-  `).join('');
+  results.innerHTML = filtered.map(d => `<div class="search-result-item" onclick="filterFaq('${d.id}');closeSearch();"><span class="sri-cat">${d.cat}</span><span class="sri-title">${d.title}</span><span class="sri-arrow">→</span></div>`).join('');
   results.classList.add('show');
 });
-
-function closeSearch() {
-  results.classList.remove('show');
-  input.value = '';
-}
-document.addEventListener('click', e => {
-  if (!e.target.closest('.search-wrap')) closeSearch();
-});
-
-/* ── SCROLL REVEAL ── */
+function closeSearch() { results.classList.remove('show'); input.value = ''; }
+document.addEventListener('click', e => { if (!e.target.closest('.search-wrap')) closeSearch(); });
 const revealEls = document.querySelectorAll('.article-card, .contact-card, .qa-card');
-const revealObserver = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.style.opacity = '1';
-      entry.target.style.transform = 'translateY(0)';
-      revealObserver.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.1 });
-revealEls.forEach(el => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(20px)';
-  el.style.transition = 'opacity .5s ease, transform .5s ease';
-  revealObserver.observe(el);
-});
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; ro.unobserve(e.target); }});
+}, { threshold:0.1 });
+revealEls.forEach(el => { el.style.opacity='0'; el.style.transform='translateY(20px)'; el.style.transition='opacity .5s ease, transform .5s ease'; ro.observe(el); });
 </script>
 </body>
 </html>

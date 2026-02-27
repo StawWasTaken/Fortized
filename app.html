@@ -11,29 +11,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <style>
 :root {
-  /* ─ Fortized Brand ─ */
-  --accent: #5865f2;       /* Discord-ish blurple but Fortized owns it */
-  --accent2: #7289da;
-  --accent-dim: rgba(88,101,242,.15);
-  --accent-mid: rgba(88,101,242,.32);
-  --accent-glow: rgba(88,101,242,.2);
+  /* ═══ FORTIZED BRAND — Warm Gaming Palette ═══ */
+  --accent: #F5A623;          /* Fortized amber gold */
+  --accent2: #FFD93E;         /* bright yellow */
+  --accent-dim: rgba(245,166,35,.13);
+  --accent-mid: rgba(245,166,35,.30);
+  --accent-glow: rgba(245,166,35,.18);
 
-  /* ─ Backgrounds (warm dark, cozy & gaming) ─ */
-  --bg: #1e1f22;
-  --rail: #111214;
-  --sidebar: #2b2d31;
-  --channel: #313338;
-  --panel: #2b2d31;
-  --panel2: #232428;
-  --panel3: #1e1f22;
+  /* ─ Backgrounds — warm layered darks (Guilded-inspired) ─ */
+  --bg: #1A1825;              /* main bg — deep warm purple-dark */
+  --rail: #100F1A;            /* leftmost rail — darkest */
+  --sidebar: #1E1C2A;         /* channel/DM sidebar */
+  --channel: #222030;         /* content area */
+  --panel: #252334;
+  --panel2: #2C2A3C;
+  --panel3: #322F44;
+  --panel-hover: #2F2D40;
 
   /* ─ Borders ─ */
-  --border: rgba(255,255,255,.06);
+  --border: rgba(255,255,255,.07);
   --border-light: rgba(255,255,255,.04);
-  --border-solid: #3f4147;
+  --border-solid: #3A3750;
 
   /* ─ Text ─ */
-  --text: #dbdee1;
+  --text: #E8E4F3;
   --muted: #80848e;
   --muted-light: #b5bac1;
 
@@ -41,7 +42,7 @@
   --green: #23a55a;
   --red: #f23f43;
   --yellow: #f0b232;
-  --blue: #5865f2;
+  --blue: var(--accent);
   --purple: #8957e5;
 
   /* ─ Fonts ─ */
@@ -137,7 +138,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
   width:240px; min-width:240px;
   background:var(--sidebar);
   border-right:1px solid var(--border);
-  display:flex; flex-direction:column; overflow:hidden;
+  display:none; flex-direction:column; overflow:hidden;
 }
 .sidebar-header {
   height:52px; display:flex; align-items:center; padding:0 14px;
@@ -309,10 +310,11 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
 .hcn-tab:hover { background:rgba(255,255,255,.07); color:var(--text); }
 .hcn-tab.active { background:rgba(255,255,255,.1); color:#fff; font-weight:700; }
 .hcn-tab-add {
-  background:var(--accent); color:#fff !important; font-weight:700;
+  background:var(--accent); color:#1A1825 !important; font-weight:800;
   margin-left:10px; padding:5px 14px; border-radius:8px;
+  font-size:12.5px;
 }
-.hcn-tab-add:hover { background:var(--accent2) !important; color:#fff !important; }
+.hcn-tab-add:hover { background:var(--accent2) !important; color:#1A1825 !important; }
 .home-center-scroll { flex:1; overflow-y:auto; padding:24px 28px; }
 
 /* Friends list rows */
@@ -467,11 +469,12 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
 ═══════════════════════════════════════════ */
 .btn-a {
   background:var(--accent);
-  color:#fff; border:none; border-radius:10px;
-  padding:9px 18px; font-family:var(--font-body); font-size:13px; font-weight:700;
+  color:#1A1825; border:none; border-radius:10px;
+  padding:9px 18px; font-family:var(--font-head); font-size:13px; font-weight:800;
   cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:6px;
+  letter-spacing:.01em;
 }
-.btn-a:hover { opacity:.9; transform:translateY(-1px); box-shadow:0 4px 20px rgba(88,101,242,.35); }
+.btn-a:hover { background:var(--accent2); transform:translateY(-1px); box-shadow:0 4px 20px var(--accent-glow); }
 .btn-a:active { transform:none; }
 .btn-g {
   background:rgba(255,255,255,.07); color:var(--text);
@@ -641,7 +644,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
   padding:5px 14px; font-size:12.5px; font-weight:700; color:var(--muted); cursor:pointer; transition:all .15s;
 }
 .disc-tab:hover { border-color:var(--border-light); color:var(--text); }
-.disc-tab.active { background:var(--accent-dim); border-color:var(--accent-mid); color:var(--accent); }
+.disc-tab.active { background:var(--accent-dim); border-color:var(--accent-mid); color:var(--accent); font-weight:700; }
 
 .bastion-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; padding:24px; }
 .bastion-card {
@@ -712,7 +715,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
   display:inline-flex; align-items:center; gap:4px; padding:2px 8px;
   border-radius:100px; font-size:10.5px; font-weight:800; border:1px solid transparent;
 }
-.ftz-badge-radiance  { background:rgba(88,101,242,.12); border-color:rgba(88,101,242,.3); color:var(--accent); }
+.ftz-badge-radiance  { background:rgba(245,166,35,.1); border-color:rgba(88,101,242,.3); color:var(--accent); }
 .ftz-badge-radianceplus { background:rgba(255,107,53,.12); border-color:rgba(255,107,53,.3); color:#ff6b35; }
 .ftz-badge-admin { background:rgba(237,66,69,.12); border-color:rgba(237,66,69,.3); color:var(--red); }
 .ftz-badge-beta  { background:rgba(91,141,238,.12); border-color:rgba(91,141,238,.3); color:var(--blue); }
@@ -888,13 +891,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
 .rail-btn.active::before { background:var(--accent); }
 
 /* Sidebar polish */
-.sidebar { background:#2b2d31; }
+.sidebar { background:var(--sidebar); }
 .sidebar-header { 
   background:rgba(0,0,0,.2); 
   box-shadow:0 1px 0 var(--border);
   letter-spacing:.01em;
 }
-.sidebar-scroll { background:#2b2d31; }
+.sidebar-scroll { background:var(--sidebar); }
 
 /* Channel items */
 .ch-item { color:var(--muted); font-weight:500; }
@@ -903,7 +906,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
 
 /* Userbar glow */
 .userbar { 
-  background:#232428; 
+  background:var(--panel2); 
   box-shadow:0 -1px 0 rgba(255,255,255,.04);
 }
 
@@ -937,7 +940,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
 .chat-input-box textarea { color:var(--text); font-size:14px; }
 
 /* Member list */
-.member-list { background:#2b2d31; border-left:1px solid rgba(255,255,255,.04); }
+.member-list { background:var(--sidebar); border-left:1px solid rgba(255,255,255,.04); }
 .ml-cat { color:var(--muted); font-size:11px; letter-spacing:.05em; }
 .ml-entry:hover { background:rgba(255,255,255,.07); }
 
@@ -962,8 +965,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
 
 /* Bastion card hover */
 .bastion-card:hover { 
-  border-color:rgba(88,101,242,.4);
-  box-shadow:0 8px 32px rgba(88,101,242,.12);
+  border-color:rgba(245,166,35,.35);
+  box-shadow:0 8px 32px rgba(245,166,35,.1);
   transform:translateY(-3px);
 }
 
@@ -978,22 +981,22 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
 .hcn-brand { color:var(--text); font-weight:800; }
 
 /* Home right col */
-.home-right-col { background:#2b2d31; }
+.home-right-col { background:var(--sidebar); }
 
 /* Forum */
 .forum-wrap { background:var(--channel); }
 
 /* Profile section */
-.profile-section { background:#2b2d31; border:1px solid rgba(255,255,255,.06); }
+.profile-section { background:var(--sidebar); border:1px solid rgba(255,255,255,.06); }
 .profile-section-hdr { background:rgba(0,0,0,.1); }
 
 /* Atelier */
-.atelier-nav { background:#2b2d31; }
+.atelier-nav { background:var(--sidebar); }
 .atelier-scroll { background:var(--channel); }
 
 /* Toast */
 .toast {
-  background:#313338 !important;
+  background:var(--panel) !important;
   border:1px solid rgba(255,255,255,.1) !important;
   box-shadow:0 8px 32px rgba(0,0,0,.5) !important;
   font-weight:600;
@@ -1001,7 +1004,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
 
 /* Field inputs */
 .field-input {
-  background:#1e1f22;
+  background:var(--panel3);
   border:1px solid rgba(255,255,255,.06);
   border-radius:8px;
   padding:10px 13px;
@@ -1015,17 +1018,17 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
 .field-input:focus { border-color:var(--accent); }
 
 /* Gaming glow effect on active elements */
-.rail-btn.active { box-shadow:0 0 12px rgba(88,101,242,.2); }
+.rail-btn.active { box-shadow:0 0 14px rgba(245,166,35,.18); }
 
 /* Notification panel */
-.notif-panel { background:#313338; border-left:1px solid rgba(255,255,255,.06); }
+.notif-panel { background:var(--panel); border-left:1px solid rgba(255,255,255,.06); }
 .np-header { background:rgba(0,0,0,.15); }
 .np-item { border-bottom:1px solid rgba(255,255,255,.04); }
 .np-item:hover { background:rgba(255,255,255,.04); }
 
 /* Account switcher */
 .account-switcher {
-  background:#2b2d31 !important;
+  background:var(--sidebar) !important;
   border:1px solid rgba(255,255,255,.08) !important;
   box-shadow:0 16px 48px rgba(0,0,0,.6) !important;
   border-radius:12px !important;
@@ -1044,7 +1047,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
   transition:all .1s;
 }
 .disc-tab:hover { background:rgba(255,255,255,.09); color:var(--text); }
-.disc-tab.active { background:var(--accent-dim); border-color:var(--accent-mid); color:var(--accent); }
+.disc-tab.active { background:var(--accent-dim); border-color:var(--accent-mid); color:var(--accent); font-weight:700; }
 
 /* Nice separator */
 .rail-sep { background:rgba(255,255,255,.06); }
@@ -1054,15 +1057,104 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
 .home-hero-redesigned { display:none !important; }
 
 /* Loading - brand color */
-.load-spinner { border-color:rgba(88,101,242,.2); border-top-color:var(--accent); }
+.load-spinner { border-color:rgba(245,166,35,.15); border-top-color:var(--accent); }
 
 /* Empty state button */
 .empty-state .btn-a { margin-top:8px; }
 
 /* Bastion card embed */
-.embed-invite-card { background:#2b2d31; }
-.embed-link-card { background:#2b2d31; }
-.embed-x-card { background:#2b2d31; }
+.embed-invite-card { background:var(--sidebar); }
+.embed-link-card { background:var(--sidebar); }
+.embed-x-card { background:var(--sidebar); }
+
+/* ═══ GUILDED/FORTIZED STYLE ENHANCEMENTS ═══════════════════ */
+
+/* Warm glow on hover elements */
+.ch-item:hover { background:rgba(245,166,35,.06); color:var(--text); }
+.ch-item.active { background:rgba(245,166,35,.1); color:var(--accent); }
+
+/* Friend item glow */
+.friend-item:hover { background:rgba(245,166,35,.05); }
+.friend-item.active { background:rgba(245,166,35,.08); }
+
+/* Rail bastion hover — amber glow */
+.rail-bastion:hover, .rail-bastion.active {
+  border-color:var(--accent);
+  background:var(--accent-dim);
+  box-shadow:0 0 12px rgba(245,166,35,.15);
+}
+
+/* Active rail indicator */
+.rail-btn.active::before { background:var(--accent); }
+.rail-bastion.active::before { background:var(--accent); }
+
+/* Sidebar scrollbar */
+.sidebar ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); }
+
+/* Topbar - warm glow */
+.topbar { background:rgba(16,15,26,.97); }
+
+/* Message hover */
+.msg-row:hover { background:rgba(245,166,35,.03); }
+.msg-row { padding:2px 16px; border-radius:4px; transition:background .1s; }
+
+/* Btn colors */
+.btn-a { background:var(--accent) !important; color:#1A1825 !important; font-weight:800 !important; }
+.btn-a:hover { background:var(--accent2) !important; color:#1A1825 !important; }
+
+/* Modal background */
+.modal-overlay { background:rgba(10,9,18,.88); }
+.modal { background:var(--panel); border:1px solid var(--border-solid); }
+
+/* Embed cards */
+.embed-invite-card { background:var(--panel); border:1px solid var(--border-solid); }
+.embed-link-card { background:var(--panel); border-left:3px solid var(--accent); }
+.embed-x-card { background:var(--panel); }
+
+/* Template cards */
+.tmpl-card {
+  background:var(--panel2); border:2px solid var(--border-solid);
+  border-radius:14px; padding:16px 12px; text-align:center;
+  cursor:pointer; transition:all .15s;
+}
+.tmpl-card:hover { border-color:var(--accent-mid); background:var(--panel-hover); transform:translateY(-2px); }
+.tmpl-card.sel { border-color:var(--accent); background:var(--accent-dim); }
+.tmpl-emoji { font-size:28px; margin-bottom:6px; }
+.tmpl-name { font-family:var(--font-head); font-size:13px; font-weight:800; margin-bottom:3px; }
+.tmpl-desc { font-size:11px; color:var(--muted-light); }
+
+/* Category row accent */
+.cat-row { color:var(--muted); }
+.cat-row:hover { color:var(--muted-light); }
+
+/* Home center nav tabs - cleaner */
+.hcn-tab { border-radius:8px; transition:all .12s; }
+.hcn-tab.active { background:rgba(245,166,35,.12); color:var(--accent); font-weight:700; }
+.hcn-tab:hover:not(.active) { background:rgba(255,255,255,.06); color:var(--text); }
+
+/* Bastion card glow */
+.bastion-card:hover { border-color:rgba(245,166,35,.3) !important; box-shadow:0 6px 24px rgba(245,166,35,.08) !important; }
+
+/* Onyx pill - warm */
+.onyx-pill { background:var(--accent-dim) !important; border-color:var(--accent-mid) !important; color:var(--accent) !important; }
+.onyx-pill:hover { background:rgba(245,166,35,.18) !important; }
+
+/* Status dots */
+.fs.online, .hfr-dot[style*='--green'] { background:var(--green); }
+
+/* Home friend row */
+.home-friend-row:hover { background:rgba(245,166,35,.05); }
+
+/* Sec label */
+.sec-label { color:var(--muted); }
+
+/* Selection */
+::selection { background:rgba(245,166,35,.22); }
+
+/* Profile hover cards */
+.profile-hover-card { background:var(--panel3); border:1px solid var(--border-solid); }
+
+@keyframes callPulse { 0%{transform:scale(1);opacity:.7} 70%{transform:scale(1.55);opacity:0} 100%{transform:scale(1.55);opacity:0} }
 
 </style>
 <body>
@@ -1092,27 +1184,53 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
   <div class="np-list" id="np-list"><div style="padding:20px;text-align:center;font-size:13px;color:var(--muted);">Loading…</div></div>
 </div>
 
-<!-- RAIL -->
+<!-- RAIL — Guilded-style left icon strip -->
 <div class="rail" id="rail">
-  <div class="rail-logo" onclick="showView('home')" data-tip="Home">
-    <img src="Fortized icon.png" onerror="this.style.display='none'">
+  <!-- Fortized logo -->
+  <div class="rail-logo" onclick="showView('home')" data-tip="Fortized Home" style="margin-bottom:6px;">
+    <img src="Fortized icon.png" style="width:36px;height:36px;border-radius:12px;" onerror="this.parentElement.innerHTML='<span style=font-size:22px>🏰</span>'">
   </div>
   <div class="rail-sep"></div>
-  <div class="rail-btn" id="rb-home" data-tip="Home" onclick="showView('home')">🏠</div>
-  <div class="rail-btn" id="rb-dms" data-tip="Messages" onclick="showView('dms')">💬</div>
-  <div class="rail-btn" id="rb-friends" data-tip="Friends" onclick="showView('friends')">👥</div>
+  
+  <!-- Nav items -->
+  <div class="rail-btn" id="rb-home" data-tip="Home" onclick="showView('home')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+  </div>
+  <div class="rail-btn" id="rb-dms" data-tip="Messages" onclick="showView('dms')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+  </div>
+  <div class="rail-btn" id="rb-friends" data-tip="Friends" onclick="showView('friends')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  </div>
   <div class="rail-btn" id="rb-notifs" data-tip="Notifications" onclick="toggleNotifPanel()" style="position:relative;">
-    🔔<span class="rail-notif-badge" id="notif-badge" style="display:none;">0</span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+    <span class="rail-notif-badge" id="notif-badge" style="display:none;">0</span>
   </div>
+  
   <div class="rail-sep"></div>
-  <div class="rail-btn" id="rb-discover" data-tip="Discover" onclick="showView('discover')">🧭</div>
-  <div class="rail-btn" id="rb-atelier" data-tip="Atelier (Shop)" onclick="showView('atelier')">💎</div>
+  
+  <div class="rail-btn" id="rb-discover" data-tip="Discover Bastions" onclick="showView('discover')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
+  </div>
+  <div class="rail-btn" id="rb-atelier" data-tip="Atelier Shop" onclick="showView('atelier')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+  </div>
+
   <div class="rail-sep"></div>
+  
+  <!-- Bastions -->
   <div id="rail-bastions"></div>
-  <div class="rail-btn" data-tip="Create Bastion" onclick="openModal('modal-create-bastion')" style="margin-top:4px;">➕</div>
+  <div class="rail-btn" data-tip="Create Bastion" onclick="openModal('modal-create-bastion')" style="width:40px;height:40px;border:2px dashed var(--border-solid);border-radius:14px;font-size:18px;color:var(--muted);transition:all .15s;" onmouseenter="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseleave="this.style.borderColor='var(--border-solid)';this.style.color='var(--muted)'">+</div>
+  
   <div style="flex:1;"></div>
-  <div class="rail-btn" data-tip="Switch Account" id="rb-switch-acct" onclick="toggleAccountSwitcher()">👤</div>
-  <div class="rail-btn" id="rb-profile" data-tip="Profile & Settings" onclick="showView('profile')">⚙️</div>
+  
+  <!-- Bottom actions -->
+  <div class="rail-btn" data-tip="Switch Account" id="rb-switch-acct" onclick="toggleAccountSwitcher()">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+  </div>
+  <div class="rail-btn" id="rb-profile" data-tip="Settings" onclick="showView('profile')">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+  </div>
 </div>
 <!-- ACCOUNT SWITCHER PANEL -->
 <div id="account-switcher-panel" style="display:none;" class="account-switcher">
@@ -1145,16 +1263,22 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
     <div class="vcb-participants" id="vcb-participants"></div>
   </div>
   <div class="userbar">
-    <div class="ua" id="ua" onclick="showView('profile')"></div>
+    <div class="ua" id="ua" onclick="showView('profile')" title="View Profile" style="cursor:pointer;position:relative;">
+      <span class="fs online" id="ua-status-dot" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--sidebar);background:var(--green);z-index:2;"></span>
+    </div>
     <div class="ua-info">
       <div class="ua-name" id="ua-name">Loading…</div>
       <div class="ua-tag" id="ua-tag">@user</div>
-      <div id="game-activity-bar" onclick="openGameActivityPicker()" style="display:none;align-items:center;gap:5px;padding:3px 8px;background:rgba(62,207,110,.07);border:1px solid rgba(62,207,110,.18);border-radius:9px;margin:2px 0;font-size:11px;cursor:pointer;" title="Game Activity"></div>
-      <div id="ua-custom-status" onclick="openStatusPicker()" title="Set custom status" style="display:none;align-items:center;gap:4px;padding:1px 7px;margin-top:2px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;cursor:pointer;max-width:160px;overflow:hidden;white-space:nowrap;font-size:10.5px;"></div>
+      <div id="game-activity-bar" onclick="openGameActivityPicker()" style="display:none;align-items:center;gap:5px;padding:2px 7px;background:rgba(67,233,123,.08);border:1px solid rgba(67,233,123,.2);border-radius:8px;margin:2px 0;font-size:11px;cursor:pointer;" title="Game Activity"></div>
+      <div id="ua-custom-status" onclick="openStatusPicker()" title="Set status" style="display:none;align-items:center;gap:4px;padding:1px 7px;margin-top:2px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;cursor:pointer;max-width:150px;overflow:hidden;white-space:nowrap;font-size:10px;"></div>
     </div>
     <div class="ua-btns">
-      <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute">🎤</button>
-      <button onclick="showView('profile')" title="Settings">⚙</button>
+      <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute" style="color:var(--muted);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <button onclick="showView('profile')" title="Settings" style="color:var(--muted);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
     </div>
   </div>
 </div>
@@ -1187,7 +1311,9 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
       <!-- Left: Recent activity / DMs -->
       <div class="home-left-col" id="home-left-col">
         <div class="home-left-hdr">
-          <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:13px;">Recent</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--muted);flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:13px;">Direct Messages</span>
+          <button onclick="openModal('modal-new-dm')" style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .1s;" onmouseenter="this.style.background='rgba(255,255,255,.07)';this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text')" onmouseleave="this.style.background='';this.style.color=''" title="New DM">+</button>
         </div>
         <div class="home-left-scroll" id="home-recent-list">
           <!-- Injected by renderHomePanel -->
@@ -1202,40 +1328,39 @@ body { background:var(--bg); color:var(--text); font-family:var(--font-body); di
         <!-- Sub-nav -->
         <div class="home-center-nav">
           <div class="hcn-brand">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--accent)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             Friends
           </div>
           <div class="hcn-tabs">
             <button class="hcn-tab active" id="hcn-tab-online" onclick="switchHomeTab('online',this)">Online</button>
             <button class="hcn-tab" id="hcn-tab-all" onclick="switchHomeTab('all',this)">All</button>
             <button class="hcn-tab" id="hcn-tab-pending" onclick="switchHomeTab('pending',this)">Pending</button>
-            <button class="hcn-tab hcn-tab-add" onclick="openModal('modal-add-friend')">➕ Add Friend</button>
+            <button class="hcn-tab hcn-tab-add" onclick="openModal('modal-add-friend')" style="display:flex;align-items:center;gap:5px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Friend
+            </button>
           </div>
         </div>
         <!-- Friends content -->
         <div class="home-center-scroll">
+          <!-- Welcome section - shown only when no chat is active -->
           <div id="home-friends-content">
             <!-- Injected by switchHomeTab/renderHomePanel -->
           </div>
         </div>
       </div>
 
-      <!-- Right: Activity / Bastions / Blog -->
+      <!-- Right: Active Now panel -->
       <div class="home-right-col" id="home-right-col">
-        <div class="home-right-hdr">Active Now</div>
-        <div id="home-active-now">
-          <!-- Online friends injected by renderHomePanel -->
+        <div class="home-right-hdr" style="padding:16px 16px 10px;border-bottom:1px solid var(--border);margin-bottom:4px;">
+          <span>Active Now</span>
         </div>
-        <div class="home-right-hdr" style="margin-top:16px;">Your Bastions</div>
-        <div id="rp-bastions"></div>
-        <div class="home-right-hdr" style="margin-top:16px;">What's New</div>
-        <div class="blog-post" onclick="showView('discover')">
-          <div class="bp-tag">Explore</div>
-          <div class="bp-title">Find new communities in Discover</div>
+        <div id="home-active-now" style="padding:0 6px;">
+          <!-- Online friends injected -->
         </div>
-        <div class="blog-post" onclick="showView('atelier')">
-          <div class="bp-tag">Shop</div>
-          <div class="bp-title">Radiance+ now available in Atelier</div>
+        <div style="padding:12px 16px 8px;border-top:1px solid var(--border);margin-top:10px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:8px;">Your Bastions</div>
+          <div id="rp-bastions"></div>
         </div>
       </div>
     </div>
@@ -2013,11 +2138,11 @@ async function renderHomeFriendsTab(tab) {
     return;
   }
   if (!friends.length) {
-    el.innerHTML = `<div style="text-align:center;padding:64px 24px;">
-      <div style="font-size:56px;margin-bottom:16px;">👥</div>
-      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">No friends yet!</div>
-      <div style="font-size:13.5px;color:var(--muted-light);margin-bottom:20px;">Add friends to start messaging and see what they're up to.</div>
-      <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:13px;padding:9px 22px;">➕ Add Friend</button>
+    el.innerHTML = `<div style="text-align:center;padding:72px 32px;max-width:400px;margin:0 auto;">
+      <div style="font-size:64px;margin-bottom:20px;animation:float 4s ease infinite;">👥</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Nobody here yet!</div>
+      <div style="font-size:13.5px;color:var(--muted-light);line-height:1.7;margin-bottom:24px;">Add friends to start chatting, see what they're playing, and join voice calls together.</div>
+      <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:13px;padding:10px 24px;border-radius:12px;">+ Add Friend</button>
     </div>`;
     return;
   }
@@ -8573,11 +8698,11 @@ async function showIncomingCall(caller, offerSdp) {
   const avWrap = document.createElement('div');
   avWrap.style.cssText = 'position:relative;';
   const pulse1 = document.createElement('div');
-  pulse1.style.cssText = 'position:absolute;inset:-16px;border-radius:50%;border:2px solid rgba(62,207,110,.3);animation:callPulse 1.8s ease-out infinite;';
+  pulse1.style.cssText = 'position:absolute;inset:-16px;border-radius:50%;border:2px solid rgba(245,166,35,.35);animation:callPulse 1.8s ease-out infinite;';
   const pulse2 = document.createElement('div');
-  pulse2.style.cssText = 'position:absolute;inset:-30px;border-radius:50%;border:2px solid rgba(62,207,110,.15);animation:callPulse 1.8s ease-out .6s infinite;';
+  pulse2.style.cssText = 'position:absolute;inset:-30px;border-radius:50%;border:2px solid rgba(245,166,35,.18);animation:callPulse 1.8s ease-out .6s infinite;';
   const avCircle = document.createElement('div');
-  avCircle.style.cssText = 'width:110px;height:110px;border-radius:50%;overflow:hidden;border:3px solid #3ecf6e;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:42px;font-family:Syne,sans-serif;font-weight:800;';
+  avCircle.style.cssText = 'width:110px;height:110px;border-radius:50%;overflow:hidden;border:3px solid var(--accent,#F5A623);background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:42px;font-family:Syne,sans-serif;font-weight:800;box-shadow:0 0 40px rgba(245,166,35,.2);';
   if (callerPfp) {
     const img = document.createElement('img');
     img.src = callerPfp; img.style.cssText='width:100%;height:100%;object-fit:cover;';
@@ -9613,22 +9738,10 @@ async function submitAddAccount() {
     // Try to authenticate with FortizedSocial
     // FortizedSocial.loginUser may not exist - use direct Firebase lookup
     let result = null;
-    try {
-      if (typeof FortizedSocial.loginUser === 'function') {
-        result = await FortizedSocial.loginUser(username, password);
-      } else {
-        // Direct Firebase auth fallback: fetch user + verify password field
-        result = await FortizedSocial.getUserByName(username);
-        if (!result) throw new Error('User not found');
-        // Basic password check (if stored as hash or plain on user record)
-        const storedPw = result.password || result.passwordHash || result.pw;
-        if (storedPw && storedPw !== password && storedPw !== btoa(password)) {
-          throw new Error('Incorrect password');
-        }
-      }
-    } catch(authErr) {
-      throw authErr;
-    }
+    // FortizedSocial.login(username, password) returns {ok, user} or {ok:false, msg}
+    const loginResult = await FortizedSocial.login(username, password);
+    if (!loginResult?.ok) throw new Error(loginResult?.msg || 'Incorrect username or password');
+    result = loginResult.user;
     if (!result?.username) throw new Error('Invalid credentials');
     saveCurrentToAccounts();
     localStorage.setItem('ftz_user_'+result.username, JSON.stringify(result));
@@ -9965,7 +10078,7 @@ async function showCallingScreen(partner) {
 
   const screen = document.createElement('div');
   screen.id = 'ftz-calling-screen';
-  screen.style.cssText = 'position:fixed;inset:0;z-index:8600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(160deg,#0a0d1a 0%,#0e1525 50%,#0a1220 100%);';
+  screen.style.cssText = 'position:fixed;inset:0;z-index:8600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(160deg,#100F1A 0%,#1A1728 50%,#151221 100%);';
 
   const avatarHTML = partnerPfp
     ? `<img src="${escapeHTML(partnerPfp)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
@@ -9973,14 +10086,15 @@ async function showCallingScreen(partner) {
 
   screen.innerHTML = `
     <style id="calling-screen-style">
-      @keyframes cRing { 0%{transform:scale(1);opacity:.6} 80%{transform:scale(1.8);opacity:0} 100%{transform:scale(1.8);opacity:0} }
+      @keyframes cRing { 0%{transform:scale(1);opacity:.7} 80%{transform:scale(2.0);opacity:0} 100%{transform:scale(2.0);opacity:0} }
       @keyframes cDot  { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
-      @keyframes cFade { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
-      .c-ring { position:absolute;inset:0;border-radius:50%;border:2px solid rgba(67,181,129,.35); }
+      @keyframes cFade { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+      @keyframes cFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+      .c-ring { position:absolute;inset:0;border-radius:50%;border:2px solid rgba(245,166,35,.4); }
       .c-ring-1 { animation:cRing 2.2s ease-out infinite; }
       .c-ring-2 { animation:cRing 2.2s ease-out .55s infinite; }
       .c-ring-3 { animation:cRing 2.2s ease-out 1.1s infinite; }
-      .c-dot { display:inline-block;width:6px;height:6px;border-radius:50%;background:#43b581; }
+      .c-dot { display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent,#F5A623); }
       .c-dot:nth-child(1) { animation:cDot 1.4s .0s infinite; }
       .c-dot:nth-child(2) { animation:cDot 1.4s .28s infinite; }
       .c-dot:nth-child(3) { animation:cDot 1.4s .56s infinite; }
@@ -9996,14 +10110,14 @@ async function showCallingScreen(partner) {
         <div class="c-ring c-ring-2"></div>
         <div class="c-ring c-ring-3"></div>
         <!-- Avatar circle -->
-        <div style="position:relative;z-index:2;width:140px;height:140px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#1a2845,#0d1828);border:3px solid rgba(67,181,129,.45);box-shadow:0 0 60px rgba(67,181,129,.15),0 20px 60px rgba(0,0,0,.6);">
+        <div style="position:relative;z-index:2;width:140px;height:140px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#1a2845,#0d1828);border:3px solid rgba(245,166,35,.6);box-shadow:0 0 60px rgba(245,166,35,.18),0 20px 60px rgba(0,0,0,.6);">
           ${avatarHTML}
           <div style="width:100%;height:100%;display:${partnerPfp ? 'none' : 'flex'};align-items:center;justify-content:center;font-size:52px;font-weight:800;font-family:'Syne',sans-serif;color:#fff;">
             ${escapeHTML(partner[0].toUpperCase())}
           </div>
         </div>
         <!-- Online dot -->
-        <div style="position:absolute;bottom:6px;right:6px;z-index:3;width:22px;height:22px;border-radius:50%;background:#43b581;border:3px solid #0a0d1a;animation:vcPulse 1.5s ease infinite;"></div>
+        <div style="position:absolute;bottom:6px;right:6px;z-index:3;width:22px;height:22px;border-radius:50%;background:var(--green,#43E97B);border:3px solid #1A1825;animation:vcPulse 1.5s ease infinite;"></div>
       </div>
 
       <!-- Name -->

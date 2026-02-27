@@ -46,6 +46,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .friend-item{display:flex;align-items:center;gap:9px;padding:6px 10px;margin:1px 6px;border-radius:10px;cursor:pointer;transition:background .1s;}
 .friend-item:hover{background:rgba(255,255,255,.05);}
 .friend-item.active{background:rgba(255,249,62,.07);}
+.gc-icon{border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
 .fa{position:relative;flex-shrink:0;border-radius:50%;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:visible;}
 .fa .fs{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--sidebar);}
 .fs.online{background:var(--green);}.fs.away{background:var(--yellow);}.fs.dnd{background:var(--red);}.fs.offline,.fs.invisible{background:#374151;}
@@ -463,6 +464,119 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .tmpl-emoji{font-size:26px;margin-bottom:5px;}
 .tmpl-name{font-size:12px;font-weight:700;margin-bottom:2px;}
 .tmpl-desc{font-size:10.5px;color:var(--muted);}
+
+/* ── BADGE SYSTEM ─────────────────────────────────── */
+.ftz-badge { display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:100px;font-size:9.5px;font-weight:700;letter-spacing:.04em;vertical-align:middle;margin:0 1px; }
+.ftz-badge.badge-radiance { background:linear-gradient(90deg,rgba(255,200,62,.2),rgba(255,249,62,.15));border:1px solid rgba(255,220,62,.35);color:#ffd93e; }
+.ftz-badge.badge-radiance-plus { background:linear-gradient(90deg,rgba(255,120,62,.2),rgba(255,249,62,.15));border:1px solid rgba(255,160,62,.35);color:#ff9d3e; }
+.ftz-badge.badge-admin { background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:#f87171; }
+.ftz-badge.badge-beta { background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.3);color:#60a5fa; }
+.ftz-badge.badge-bot { background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:#a78bfa; }
+.ftz-badge.badge-quest { background:rgba(62,207,110,.15);border:1px solid rgba(62,207,110,.3);color:#3ecf6e; }
+
+/* ── LOADING SKELETON ─────────────────────────────── */
+@keyframes shimmer { 0%{background-position:-600px 0} 100%{background-position:600px 0} }
+.skeleton { background:linear-gradient(90deg,var(--panel2) 25%,rgba(255,255,255,.05) 50%,var(--panel2) 75%);background-size:600px 100%;animation:shimmer 1.4s infinite linear;border-radius:8px;display:block; }
+
+/* ── FRIEND ADD ANIMATION ─────────────────────────── */
+@keyframes friendPop { 0%{transform:scale(.5) rotate(-10deg);opacity:0} 60%{transform:scale(1.2) rotate(3deg);opacity:1} 100%{transform:scale(1) rotate(0deg);opacity:1} }
+.friend-pop { animation:friendPop .5s cubic-bezier(.22,1,.36,1) both; }
+@keyframes heartFloat { 0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-60px) scale(.4);opacity:0} }
+.heart-float { position:fixed;font-size:24px;pointer-events:none;animation:heartFloat 1.2s ease-out forwards;z-index:9999; }
+
+/* ── EMBED LINK CARDS (from template doc) ─────────── */
+.embed-link-card { border-radius:10px;background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);overflow:hidden;max-width:480px;margin:8px 0;cursor:pointer;transition:transform .15s,box-shadow .2s,border-color .2s;display:flex;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both; }
+.embed-link-card:hover { transform:translateY(-1px);box-shadow:0 4px 28px rgba(255,249,62,.07); }
+.embed-link-card .elc-body { padding:10px 12px;flex:1;min-width:0;display:flex;flex-direction:column;gap:4px; }
+.embed-link-card .elc-site { display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted); }
+.embed-link-card .elc-title { font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.embed-link-card .elc-desc { font-size:11.5px;color:var(--muted-light);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+.embed-link-card .elc-url { font-size:9.5px;color:var(--muted);font-family:monospace; }
+.embed-link-card .elc-thumb { width:80px;min-width:80px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:20px;opacity:.35; }
+.embed-invite-card { border-radius:14px;overflow:hidden;max-width:360px;background:var(--panel);border:1px solid var(--border);margin:8px 0;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;cursor:pointer;transition:transform .15s,border-color .2s; }
+.embed-invite-card:hover { transform:translateY(-1px);border-color:rgba(255,249,62,.22); }
+@keyframes embedIn { from{opacity:0;transform:translateY(6px) scale(.98)} to{opacity:1;transform:none} }
+.embed-x-card,.embed-spotify-card { border-radius:10px;background:var(--panel);border:1px solid var(--border);max-width:480px;margin:8px 0;overflow:hidden;cursor:pointer;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;transition:transform .15s,border-color .2s; }
+.embed-x-card { border-left:3px solid #1d9bf0; }
+.embed-x-card:hover { transform:translateY(-1px);border-color:rgba(29,155,240,.25); }
+.embed-spotify-card { border-left:3px solid #1DB954; }
+.embed-spotify-card:hover { transform:translateY(-1px);border-color:rgba(29,185,84,.3); }
+
+/* ── ENHANCED HOME HERO ───────────────────────────── */
+.home-hero-redesigned { display:flex;flex-direction:column;min-height:0;background:var(--panel);border-bottom:1px solid var(--border); }
+.home-stat-strip { display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:rgba(0,0,0,.2); }
+.hss-item { flex:1;padding:12px 20px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:2px; }
+.hss-item:last-child { border-right:none; }
+.hss-val { font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent); }
+.hss-label { font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.04em; }
+
+/* ── RADIANCE / RADIANCE+ ─────────────────────────── */
+.rad-basic { background:linear-gradient(135deg,rgba(255,200,62,.12),rgba(255,249,62,.08));border-color:rgba(255,220,62,.25);color:#ffd93e; }
+.rad-plus { background:linear-gradient(135deg,rgba(255,100,62,.15),rgba(255,220,62,.1));border-color:rgba(255,150,62,.35);color:#ff9d3e; }
+.radplus-badge { display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,120,62,.2),rgba(255,200,62,.15));border:1px solid rgba(255,160,62,.35);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:#ff9d3e; }
+
+/* ── SWITCH ACCOUNTS ──────────────────────────────── */
+.account-switcher { position:fixed;bottom:70px;left:78px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:10px;min-width:220px;z-index:2000;box-shadow:0 20px 50px rgba(0,0,0,.7);animation:ctxIn .14s cubic-bezier(.22,1,.36,1); }
+.acct-item { display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;cursor:pointer;transition:background .1s; }
+.acct-item:hover { background:rgba(255,255,255,.06); }
+.acct-item.active-acct { background:rgba(255,249,62,.07); }
+
+/* ── FORUM IMAGE POST ─────────────────────────────── */
+.forum-img-post { border-radius:16px;overflow:hidden;border:1px solid var(--border);background:var(--panel);max-width:480px;margin:8px 0;cursor:pointer;transition:border-color .15s; }
+.forum-img-post:hover { border-color:rgba(255,249,62,.2); }
+.forum-img-post img { width:100%;max-height:320px;object-fit:cover;display:block; }
+.forum-img-post .fip-footer { padding:10px 14px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted); }
+
+/* ── COPY MSG LINK TOOLTIP ────────────────────────── */
+.msg-link-copied { position:fixed;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:11px;color:var(--accent);z-index:9999;pointer-events:none;animation:fadeIn .15s,fadeOut .3s 1.2s forwards; }
+@keyframes fadeOut { to{opacity:0;transform:translateY(-4px)} }
+
+/* ── SAFETY BANNER ────────────────────────────────── */
+.safety-banner { padding:10px 14px;border-radius:12px;margin:8px 0;display:flex;align-items:flex-start;gap:10px;font-size:12.5px;line-height:1.5; }
+.safety-banner.warn { background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:#fbbf24; }
+.safety-banner.danger { background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:#f87171; }
+.safety-banner.info { background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);color:#93c5fd; }
+
+/* ── DID YOU KNOW STRIP ───────────────────────────── */
+.did-you-know { display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.1);border-radius:12px;font-size:12.5px;margin:10px 0; }
+.dyk-tag { font-family:'Syne',sans-serif;font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap; }
+
+/* ── LOADING STATES ───────────────────────────────── */
+.page-loader { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px;flex:1; }
+.page-loader .pl-spinner { width:36px;height:36px;border:3px solid rgba(255,249,62,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite; }
+.page-loader .pl-text { font-size:13px;color:var(--muted);font-weight:600; }
+
+/* ── STATUS MODE FIX ──────────────────────────────── */
+.status-picker-modal { position:fixed;inset:0;background:rgba(4,6,10,.85);backdrop-filter:blur(12px);z-index:4000;display:flex;align-items:center;justify-content:center; }
+.sp-card { background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:380px;width:100%; }
+.sp-mode-row { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px; }
+.sp-mode-opt { flex:1;min-width:80px;padding:10px 8px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;font-weight:600;transition:all .15s; }
+.sp-mode-opt:hover,.sp-mode-opt.sel { border-color:var(--accent-mid);background:var(--accent-dim);color:var(--accent); }
+.sp-mode-dot { width:12px;height:12px;border-radius:50%; }
+
+/* ── GAME DETECTION ENHANCED ──────────────────────── */
+.detected-app-item { display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;transition:border-color .15s; }
+.detected-app-item:hover { border-color:rgba(255,249,62,.2); }
+.dai-icon { width:36px;height:36px;border-radius:10px;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+.dai-info { flex:1;min-width:0; }
+.dai-name { font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.dai-sub { font-size:11px;color:var(--muted); }
+
+/* ── BASTION TEMPLATE CARD ────────────────────────── */
+.bastion-template-card { border:1.5px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .15s; }
+.bastion-template-card:hover,.bastion-template-card.sel { border-color:var(--accent-mid);box-shadow:0 4px 20px rgba(255,249,62,.08); }
+.btc-preview { height:80px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative; }
+.btc-body { padding:12px 14px;background:var(--panel); }
+.btc-name { font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;margin-bottom:3px; }
+.btc-channels { font-size:11px;color:var(--muted); }
+
+/* ── CONNECT SOCIAL / ACCOUNTS ────────────────────── */
+.connected-account-row { display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:8px; }
+.car-icon { width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+.car-info { flex:1;min-width:0; }
+.car-name { font-size:13px;font-weight:600; }
+.car-sub { font-size:11px;color:var(--muted); }
+
 </style>
 <body>
 <!-- APP LOADING -->
@@ -510,7 +624,23 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   <div id="rail-bastions"></div>
   <div class="rail-btn" data-tip="Create Bastion" onclick="openModal('modal-create-bastion')" style="margin-top:4px;">➕</div>
   <div style="flex:1;"></div>
+  <div class="rail-btn" data-tip="Switch Account" id="rb-switch-acct" onclick="toggleAccountSwitcher()">👤</div>
   <div class="rail-btn" id="rb-profile" data-tip="Profile & Settings" onclick="showView('profile')">⚙️</div>
+</div>
+<!-- ACCOUNT SWITCHER PANEL -->
+<div id="account-switcher-panel" style="display:none;" class="account-switcher">
+  <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:4px 12px 8px;">Accounts</div>
+  <div id="acct-switcher-list"></div>
+  <div style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">
+    <div class="acct-item" onclick="addAnotherAccount()" style="color:var(--accent);">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:14px;">+</div>
+      <span style="font-size:13px;font-weight:600;">Add Account</span>
+    </div>
+    <div class="acct-item" onclick="doLogout()" style="color:var(--red);">
+      <div style="width:28px;height:28px;border-radius:50%;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);display:flex;align-items:center;justify-content:center;font-size:12px;">→</div>
+      <span style="font-size:13px;font-weight:600;">Log Out</span>
+    </div>
+  </div>
 </div>
 
 <!-- SIDEBAR -->
@@ -568,32 +698,43 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <div class="view" id="view-home">
       <div class="home-wrap">
         <div class="home-feed">
-          <div class="home-hero">
+          <!-- HERO -->
+          <div class="home-hero" id="home-hero-area">
             <div class="hero-left-content">
               <div class="hero-tag-app"><span class="hero-tag-dot"></span>FORTIZED PLATFORM</div>
               <h1>Your <em>Community</em><br>Awaits</h1>
               <p class="hero-sub-app">Join Bastions, chat with friends, and build your world on Fortized — the platform built for real communities.</p>
               <div class="home-hero-actions">
-                <button class="btn-a" onclick="showView('discover')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg> Discover Bastions</button>
-                <button class="btn-g" onclick="openModal('modal-create-bastion')">➕ Create Bastion</button>
+                <button class="btn-a" onclick="showView('discover')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg> Discover</button>
+                <button class="btn-g" onclick="openModal('modal-create-bastion')">➕ New Bastion</button>
+                <button class="btn-g" onclick="openModal('modal-new-dm')">💬 New DM</button>
               </div>
             </div>
             <div class="home-hero-knight">
               <img src="Fortized Knight.png" onerror="this.style.display='none'" alt="Fortized Knight">
             </div>
           </div>
-          <div class="home-marquee">
-            <div class="marquee-track" id="marquee-track">
-              <!-- items injected by JS -->
-            </div>
+          <!-- STAT STRIP -->
+          <div class="home-stat-strip" id="home-stat-strip">
+            <div class="hss-item"><div class="hss-val" id="stat-bastions">–</div><div class="hss-label">Your Bastions</div></div>
+            <div class="hss-item"><div class="hss-val" id="stat-friends">–</div><div class="hss-label">Friends</div></div>
+            <div class="hss-item"><div class="hss-val" id="stat-onyx">–</div><div class="hss-label">Onyx</div></div>
+            <div class="hss-item"><div class="hss-val" id="stat-online">–</div><div class="hss-label">Online Now</div></div>
           </div>
+          <!-- MARQUEE -->
+          <div class="home-marquee">
+            <div class="marquee-track" id="marquee-track"></div>
+          </div>
+          <!-- MAIN FEED -->
           <div class="home-main-scroll">
+            <div id="home-dyk-strip"></div>
             <div class="section-hdr"><h3>Quick Access</h3></div>
             <div class="quick-nav" id="quick-nav"></div>
             <div class="section-hdr"><h3>Recent Activity</h3></div>
             <div id="activity-feed"></div>
           </div>
         </div>
+        <!-- RIGHT PANEL -->
         <div class="home-right">
           <div class="rp-section">
             <div class="rp-title">Your Bastions</div>
@@ -607,12 +748,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
             <div class="rp-title">Latest from Fortized</div>
             <div class="blog-post" onclick="toast('Opening blog post…','info')">
               <div class="bp-tag">Update</div>
-              <div class="bp-title">Custom Emoji & Bastion Boosts are live!</div>
+              <div class="bp-title">Group Chats, Embeds & Badges now live!</div>
               <div class="bp-date">Feb 2026</div>
             </div>
             <div class="blog-post" onclick="toast('Opening blog post…','info')">
               <div class="bp-tag">Feature</div>
-              <div class="bp-title">AutoMod now supports custom keywords</div>
+              <div class="bp-title">Radiance+ tier launched in Atelier</div>
+              <div class="bp-date">Feb 2026</div>
+            </div>
+            <div class="blog-post" onclick="toast('Opening blog post…','info')">
+              <div class="bp-tag">Safety</div>
+              <div class="bp-title">Enhanced age-gating & content scanning</div>
               <div class="bp-date">Jan 2026</div>
             </div>
           </div>
@@ -621,8 +767,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     </div>
 
     <!-- DMs VIEW -->
-    <div class="view" id="view-dms">
-      <div class="chat-wrap" id="dm-chat-wrap">
+    <div class="view" id="view-dms" style="display:flex;overflow:hidden;">
+      <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
         <div class="empty-state">
           <div class="ei">💬</div>
           <h3>No conversation selected</h3>
@@ -630,7 +776,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
           <button class="btn-a" onclick="openModal('modal-new-dm')">➕ New Message</button>
         </div>
       </div>
-      <div id="dm-user-panel" style="display:none;width:310px;min-width:310px;max-width:310px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
+      <div id="dm-user-panel" style="display:none;width:280px;min-width:280px;max-width:280px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
     </div>
 
     <!-- FRIENDS VIEW -->
@@ -816,17 +962,38 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 </div>
 
 <!-- NEW DM -->
+<!-- CREATE GROUP CHAT MODAL -->
 <div class="modal-overlay" id="modal-new-dm">
-  <div class="modal">
+  <div class="modal" style="max-width:480px;width:100%;">
     <div class="modal-bar"></div>
     <div class="modal-body">
-      <div class="modal-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> New Message</div>
-      <div class="modal-sub">Find a user to message</div>
-      <input class="modal-input" id="dm-target" placeholder="Username…" onkeydown="if(event.key==='Enter')openDMChat(document.getElementById('dm-target').value.trim().toLowerCase())">
-      <div class="modal-error" id="dm-error"></div>
-      <div class="modal-actions">
-        <button class="btn-g" onclick="closeModal('modal-new-dm')">Cancel</button>
-        <button class="btn-a" onclick="openDMChat(document.getElementById('dm-target').value.trim().toLowerCase())">Open Chat</button>
+      <div class="modal-title">💬 New Message</div>
+      <div class="modal-sub">Start a direct message or create a group chat</div>
+      <!-- Tabs -->
+      <div style="display:flex;gap:6px;margin-bottom:16px;background:var(--panel2);border-radius:12px;padding:4px;">
+        <button id="ndm-tab-dm" onclick="switchNewDMTab('dm')" style="flex:1;padding:7px;border-radius:9px;background:var(--accent);color:#060810;font-weight:700;font-size:13px;border:none;cursor:pointer;">Direct Message</button>
+        <button id="ndm-tab-gc" onclick="switchNewDMTab('gc')" style="flex:1;padding:7px;border-radius:9px;background:transparent;color:var(--muted-light);font-weight:600;font-size:13px;border:none;cursor:pointer;">Group Chat</button>
+      </div>
+      <!-- DM pane -->
+      <div id="ndm-pane-dm">
+        <input class="modal-input" id="dm-target" placeholder="Username…" onkeydown="if(event.key==='Enter')openDMChat(document.getElementById('dm-target').value.trim().toLowerCase())">
+        <div class="modal-error" id="dm-error"></div>
+        <div class="modal-actions">
+          <button class="btn-g" onclick="closeModal('modal-new-dm')">Cancel</button>
+          <button class="btn-a" onclick="openDMChat(document.getElementById('dm-target').value.trim().toLowerCase())">Open Chat</button>
+        </div>
+      </div>
+      <!-- Group Chat pane -->
+      <div id="ndm-pane-gc" style="display:none;">
+        <input class="modal-input" id="gc-name-input" placeholder="Group name…" style="margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">Select Friends</div>
+        <div id="gc-friend-picker" style="max-height:210px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:12px;"></div>
+        <div id="gc-selected-preview" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:24px;"></div>
+        <div class="modal-error" id="gc-error"></div>
+        <div class="modal-actions">
+          <button class="btn-g" onclick="closeModal('modal-new-dm')">Cancel</button>
+          <button class="btn-a" id="gc-create-btn" onclick="createGroupChat()">Create Group</button>
+        </div>
       </div>
     </div>
   </div>
@@ -983,7 +1150,7 @@ let quizIdx = 0;
 let quizCorrect = 0;
 let quizAnswers = [];
 let activeReportData = null;
-const SUPER_ADMIN = 'staw';'fortized';
+const SUPER_ADMIN = 'staw';
 const ROLE_COLORS = ['#fbbf24','#f87171','#34d399','#60a5fa','#a78bfa','#f472b6','#fb923c','#22d3ee'];
 const PERMISSIONS = [
   ['send_messages','Send Messages'],['read_history','Read History'],
@@ -1099,8 +1266,22 @@ function toast(msg, type='info') {
 // VIEW MANAGEMENT
 // ════════════════════════════════════════════
 function showView(v) {
+  // Fade-in animation for view transitions
+  const _nextView = document.getElementById('view-' + v);
+  if (_nextView) {
+    _nextView.style.opacity = '0';
+    requestAnimationFrame(() => {
+      _nextView.style.transition = 'opacity .18s ease';
+      _nextView.style.opacity = '1';
+      setTimeout(() => { _nextView.style.transition = ''; }, 220);
+    });
+  }
   if (v === 'atelier') {
     setTimeout(() => { renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }, 0);
+  }
+  // Clean up GC panel when leaving DMs view
+  if (v !== 'dms') {
+    document.getElementById('gc-member-panel')?.remove();
   }
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.rail-btn').forEach(el=>el.classList.remove('active'));
@@ -1152,7 +1333,9 @@ function updateSidebar(v) {
     renderHomePanel();
   } else if (v==='dms') {
     if (hdrTitle) hdrTitle.textContent = '💬 Messages';
-    if (hdrActs) hdrActs.innerHTML = `<button onclick="openModal('modal-new-dm')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New DM">✏️</button>`;
+    if (hdrActs) hdrActs.innerHTML = `
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New DM">✏️</button>
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('gc')" style="background:transparent;border:none;color:var(--muted);font-size:14px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New Group Chat">👥</button>`;
     renderDMSidebar(scroll);
   } else if (v==='friends') {
     if (hdrTitle) hdrTitle.textContent = '👥 Friends';
@@ -1217,6 +1400,28 @@ function renderRailBastions() {
 // HOME PANEL
 // ════════════════════════════════════════════
 function renderHomePanel() {
+  // DYK strip
+  const dykEl = document.getElementById('home-dyk-strip');
+  if (dykEl) dykEl.innerHTML = getDYKHtml();
+
+  // Stats strip
+  const bastions = CU?.bastions||[];
+  const friends0 = CU?.friends||[];
+  const statB = document.getElementById('stat-bastions');
+  const statF = document.getElementById('stat-friends');
+  const statO = document.getElementById('stat-onyx');
+  const statOn = document.getElementById('stat-online');
+  if (statB) statB.textContent = bastions.length;
+  if (statF) statF.textContent = friends0.length;
+  if (statO) statO.textContent = (CU?.onyx||0);
+  if (statOn) {
+    statOn.textContent = '…';
+    let onlineCt = 0;
+    Promise.all(friends0.slice(0,10).map(f =>
+      FortizedSocial.getStatus(f).then(s=>{ if(s==='online'||s==='away') onlineCt++; }).catch(()=>{})
+    )).then(()=>{ if(statOn) statOn.textContent = onlineCt; });
+  }
+
   const qn = document.getElementById('quick-nav');
   if (qn) qn.innerHTML = [
     {icon:'💬',label:'Messages',sub:'Chat with friends',act:"showView('dms')",col:'rgba(96,165,250,.12)'},
@@ -1225,12 +1430,8 @@ function renderHomePanel() {
     {icon:'⚙️',label:'Settings',sub:'Profile & prefs',act:"showView('profile')",col:'rgba(167,139,250,.12)'},
   ].map(t=>`<div class="qn-tile" onclick="${t.act}"><div class="qn-icon" style="background:${t.col}">${t.icon}</div><div class="qn-text"><h4>${t.label}</h4><p>${t.sub}</p></div></div>`).join('');
 
-  const af = document.getElementById('activity-feed');
-  if (af) af.innerHTML = [
-    {icon:'🏰',text:`Welcome back, <strong>${escapeHTML(CU?.displayName||CU?.username||'')}</strong>!`},
-    {icon:'👥',text:`<strong>${(CU?.friends||[]).length}</strong> friend(s) connected`},
-    {icon:'💰',text:`Onyx balance: <strong>${CU?.onyx||0}</strong>`},
-  ].map(i=>`<div class="activity-item"><div class="act-icon">${i.icon}</div><div class="act-text"><p>${i.text}</p></div></div>`).join('');
+  // Load friend activity feed asynchronously
+  setTimeout(loadFriendActivity, 100);
 
   const rpB = document.getElementById('rp-bastions');
   if (rpB) rpB.innerHTML = (CU?.bastions||[]).slice(0,6).map((b,i)=>`<div class="rp-notif" style="cursor:pointer;" onclick="openBastion(${i})"><div class="rn-icon">${b.emblem||'🏰'}</div><div class="rn-text"><p>${escapeHTML(b.name)}</p><div class="rn-time">${(b.channels||[]).length} channels</div></div></div>`).join('')||'<div style="padding:8px;font-size:12.5px;color:var(--muted);">No bastions yet</div>';
@@ -1249,29 +1450,52 @@ function renderHomePanel() {
 // ════════════════════════════════════════════
 function renderDMSidebar(scroll) {
   const friends = CU?.friends||[];
-  if (!friends.length) {
-    scroll.innerHTML='<div style="padding:18px 14px;font-size:13px;color:var(--muted);text-align:center;line-height:1.6;">No friends yet.<br><button class="btn-a" style="margin-top:10px;font-size:12px;padding:7px 16px;" onclick="openModal(\"modal-add-friend\")">+ Add Friend</button></div>';
-    return;
+  const gcs = CU?.groupChats||[];
+
+  let html = '';
+
+  // ── Direct Messages section ──────────────────
+  html += '<div class="sec-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;">Direct Messages</div>';
+  if (friends.length) {
+    html += friends.map(f=>`
+      <div class="friend-item" id="dm-fi-${f}" onclick="openDMView('${escapeHTML(f)}')">
+        <div style="position:relative;flex-shrink:0;">
+          <div class="fa" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(null,f,34)}</div>
+          <span class="profile-status-dot" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:#6b7280;border:2px solid var(--channel);"></span>
+        </div>
+        <div class="fi-info" style="min-width:0;flex:1;">
+          <div class="fi-name" style="font-weight:600;">${escapeHTML(f)}</div>
+          <div id="dm-preview-${f}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:130px;"></div>
+        </div>
+      </div>`).join('');
+  } else {
+    html += '<div style="padding:8px 14px;font-size:12px;color:var(--muted);">No friends yet.</div>';
   }
-  scroll.innerHTML = '<div class="sec-label">Direct Messages</div>' + friends.map(f=>`
-    <div class="friend-item" id="dm-fi-${f}" onclick="openDMView('${escapeHTML(f)}')">
-      <div style="position:relative;flex-shrink:0;">
-        <div class="fa" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(null,f,34)}</div>
-        <span class="profile-status-dot" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:#6b7280;border:2px solid var(--channel);"></span>
-      </div>
-      <div class="fi-info" style="min-width:0;flex:1;">
-        <div class="fi-name" style="font-weight:600;">${escapeHTML(f)}</div>
-        <div id="dm-preview-${f}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:130px;"></div>
-      </div>
-    </div>`).join('');
-  // Load status dots
+
+  // ── Group Chats section ──────────────────────
+  html += '<div class="sec-label" style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;padding-right:10px;">Group Chats <button onclick="openModal(\'modal-new-dm\');switchNewDMTab(\'gc\')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;" title="New group">✚</button></div>';
+  if (gcs.length) {
+    html += gcs.map(gc=>`
+      <div class="friend-item" id="gc-fi-${escapeHTML(gc.id)}" onclick="openGroupChatView('${escapeHTML(gc.id)}')">
+        <div style="width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg,${gc.color||'#7c5cbf'},${gc.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${gc.emoji||'👥'}</div>
+        <div class="fi-info" style="min-width:0;flex:1;">
+          <div class="fi-name" style="font-weight:600;">${escapeHTML(gc.name)}</div>
+          <div id="gc-preview-${escapeHTML(gc.id)}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:130px;">${(gc.members||[]).length} members</div>
+        </div>
+      </div>`).join('');
+  } else {
+    html += '<div style="padding:8px 14px;font-size:12px;color:var(--muted);">No group chats yet.</div>';
+  }
+
+  scroll.innerHTML = html;
+
+  // ── Async: status dots + DM previews ─────────
   friends.forEach(async f => {
     try {
       const s = await FortizedSocial.getStatus(f);
       const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
       document.querySelectorAll(`.profile-status-dot[data-for="${f}"]`).forEach(d=>d.style.background=SC[s]||SC.offline);
     } catch {}
-    // Load last DM preview
     try {
       const msgs = await FortizedSocial.getDMMessages(CU.username, f);
       const last = msgs?.[msgs.length-1];
@@ -1282,6 +1506,19 @@ function renderDMSidebar(scroll) {
       }
     } catch {}
   });
+
+  // GC last-message previews
+  gcs.forEach(async gc => {
+    try {
+      const snap = await firebase.database().ref('groupChats/'+gc.id+'/messages').orderByKey().limitToLast(1).get();
+      if (!snap.exists()) return;
+      const last = Object.values(snap.val())[0];
+      const el = document.getElementById('gc-preview-'+gc.id);
+      if (el && last) {
+        el.textContent = (last.from===CU.username?'You: ':''+last.from+': ') + (last.text||'').slice(0,35);
+      }
+    } catch {}
+  });
 }
 
 let _dmListener = null;
@@ -1289,6 +1526,8 @@ function openDMView(username) {
   if (!username) return;
   username = (username||"").trim().toLowerCase();
   curDM = username;
+  curGC = null;
+  document.getElementById('gc-member-panel')?.remove();
   closeModal('modal-new-dm');
   showView('dms');
   const topTitle = document.getElementById('topbar-title');
@@ -1389,6 +1628,8 @@ async function sendDM() {
   if (!inp||!curDM) return;
   const text=inp.value.trim();
   if (!text && !window._pendingAttachment) return;
+  // Safety pre-check
+  if (text) { const sw = contentSafetyCheck(text); if (sw) showContentWarning(sw); }
   // Friend check
   const friends = CU?.friends||[];
   if (!friends.includes(curDM) && curDM !== CU?.username) {
@@ -1429,15 +1670,484 @@ async function sendDM() {
   catch { toast('Failed to send','error'); }
 }
 
-// New DM modal
+// ════════════════════════════════════════════════════
+// GROUP CHAT SYSTEM
+// ════════════════════════════════════════════════════
+
+let curGC = null;        // current group chat id
+let _gcListener = null;  // Firebase listener unsubscribe
+
+// ── Modal tab switching ─────────────────────────────
+function switchNewDMTab(tab) {
+  const dmBtn  = document.getElementById('ndm-tab-dm');
+  const gcBtn  = document.getElementById('ndm-tab-gc');
+  const dmPane = document.getElementById('ndm-pane-dm');
+  const gcPane = document.getElementById('ndm-pane-gc');
+  if (!dmBtn||!gcBtn||!dmPane||!gcPane) return;
+  const accentStyle = 'background:var(--accent);color:#060810;font-weight:700;';
+  const inactiveStyle = 'background:transparent;color:var(--muted-light);font-weight:600;';
+  if (tab === 'dm') {
+    dmBtn.style.cssText += accentStyle; gcBtn.style.cssText += inactiveStyle;
+    dmPane.style.display=''; gcPane.style.display='none';
+  } else {
+    gcBtn.style.cssText += accentStyle; dmBtn.style.cssText += inactiveStyle;
+    gcPane.style.display=''; dmPane.style.display='none';
+    renderGCFriendPicker();
+  }
+}
+
+function renderGCFriendPicker() {
+  const picker = document.getElementById('gc-friend-picker');
+  if (!picker) return;
+  const friends = CU?.friends||[];
+  if (!friends.length) {
+    picker.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0;">You need friends to create a group chat.</div>';
+    return;
+  }
+  // Use checkboxes
+  picker.innerHTML = friends.map(f => `
+    <label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;cursor:pointer;transition:background .1s;" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='transparent'">
+      <input type="checkbox" class="gc-member-cb" value="${escapeHTML(f)}" onchange="updateGCSelectedPreview()" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;">
+      <div style="width:28px;height:28px;overflow:hidden;border-radius:50%;flex-shrink:0;">${buildAvatarHTML(null,f,28)}</div>
+      <span style="font-size:13.5px;font-weight:600;">${escapeHTML(f)}</span>
+    </label>`).join('');
+}
+
+function updateGCSelectedPreview() {
+  const selected = [...document.querySelectorAll('.gc-member-cb:checked')].map(cb=>cb.value);
+  const preview = document.getElementById('gc-selected-preview');
+  if (!preview) return;
+  if (!selected.length) { preview.innerHTML=''; return; }
+  preview.innerHTML = selected.map(u=>`
+    <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:100px;padding:3px 8px;font-size:12px;">
+      ${escapeHTML(u)}
+      <button onclick="uncheckGCMember('${escapeHTML(u)}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;line-height:1;padding:0 0 0 2px;">✕</button>
+    </span>`).join('');
+}
+
+function uncheckGCMember(username) {
+  const cb = document.querySelector(`.gc-member-cb[value="${CSS.escape(username)}"]`);
+  if (cb) { cb.checked = false; updateGCSelectedPreview(); }
+}
+
+async function createGroupChat() {
+  const nameInp = document.getElementById('gc-name-input');
+  const err = document.getElementById('gc-error');
+  const btn = document.getElementById('gc-create-btn');
+  if (!nameInp) return;
+  const name = nameInp.value.trim();
+  if (!name) { if(err)err.textContent='Enter a group name'; return; }
+  const members = [...document.querySelectorAll('.gc-member-cb:checked')].map(cb=>cb.value);
+  if (members.length < 1) { if(err)err.textContent='Select at least 1 friend'; return; }
+  if (err) err.textContent = '';
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  const COLORS = ['#7c5cbf','#3ecf6e','#60a5fa','#f59e0b','#f87171','#e879f9','#fb923c','#22d3ee'];
+  const EMOJIS = ['👥','🎮','🔥','⚡','🌙','🎵','🏆','💫','🌈','🚀'];
+  const gcId = 'gc_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  const allMembers = [...new Set([CU.username, ...members])];
+  const gc = {
+    id: gcId,
+    name,
+    emoji: EMOJIS[Math.floor(Math.random()*EMOJIS.length)],
+    color:  COLORS[Math.floor(Math.random()*COLORS.length)],
+    color2: COLORS[Math.floor(Math.random()*COLORS.length)],
+    owner: CU.username,
+    members: allMembers,
+    createdAt: new Date().toISOString(),
+  };
+
+  try {
+    // Write GC metadata to Firebase
+    await firebase.database().ref('groupChats/'+gcId+'/meta').set(gc);
+    // Add GC to each member's user record
+    for (const m of allMembers) {
+      const userData = await FortizedSocial.getUserByName(m);
+      if (!userData) continue;
+      const existingGCs = userData.groupChats||[];
+      if (!existingGCs.find(g=>g.id===gcId)) {
+        existingGCs.push({ id:gcId, name, emoji:gc.emoji, color:gc.color, color2:gc.color2, owner:gc.owner, members:allMembers });
+        await firebase.database().ref('users/'+m+'/groupChats').set(existingGCs);
+      }
+    }
+    await refreshCU();
+    closeModal('modal-new-dm');
+    renderDMSidebar(document.getElementById('sidebar-scroll'));
+    toast('Group "'+name+'" created!', 'success');
+    openGroupChatView(gcId);
+  } catch(e) {
+    console.error(e);
+    if(err) err.textContent = 'Failed to create group';
+    btn.disabled=false; btn.textContent='Create Group';
+  }
+}
+
+// ── Open a group chat ───────────────────────────────
+async function openGroupChatView(gcId) {
+  if (!gcId) return;
+  curGC = gcId;
+  curDM = null;  // clear 1-on-1 DM
+  showView('dms');
+
+  // Highlight in sidebar
+  document.querySelectorAll('.friend-item').forEach(fi=>fi.classList.remove('active'));
+  const fi = document.getElementById('gc-fi-'+gcId);
+  if (fi) fi.classList.add('active');
+
+  // Load GC meta
+  let meta = null;
+  try { meta = await firebase.database().ref('groupChats/'+gcId+'/meta').get().then(s=>s.val()); } catch {}
+  if (!meta) { toast('Group not found','error'); return; }
+
+  const topTitle = document.getElementById('topbar-title');
+  if (topTitle) topTitle.textContent = meta.emoji+' '+meta.name;
+
+  // Hide DM user panel, show GC member panel
+  const dmPanel = document.getElementById('dm-user-panel');
+  if (dmPanel) dmPanel.style.display = 'none';
+  showGCMemberPanel(meta);
+
+  // Render chat area
+  const wrap = document.getElementById('dm-chat-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div class="chat-wrap" id="gc-chat-inner">
+      <div class="chat-msgs" id="gc-msgs">
+        <div class="chat-welcome">
+          <div class="w-av" style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:32px;">${meta.emoji||'👥'}</div>
+          <h3>${escapeHTML(meta.name)}</h3>
+          <p>Welcome to <strong>${escapeHTML(meta.name)}</strong>! ${(meta.members||[]).length} members.</p>
+        </div>
+      </div>
+      <div class="reply-bar" id="gc-reply-bar" style="display:none;">
+        <span class="reply-bar-text">Replying to <strong id="gc-reply-name"></strong></span>
+        <button onclick="cancelGCReply()">✕</button>
+      </div>
+      <div class="typing-indicator" id="gc-typing-bar" style="opacity:0;">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <span id="gc-typing-text"></span>
+      </div>
+      <div class="chat-input-wrap">
+        <div class="chat-input-box">
+          <div class="chat-input-actions">
+            <button onclick="openFileUpload('gc-input')" title="Attach" style="font-size:16px;">📎</button>
+            <button id="emoji-btn-gc" onclick="toggleEmojiPicker('gc-input')" title="Emoji">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </button>
+            <button onclick="openGiphyPicker('gc-input')" style="font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);">GIF</button>
+          </div>
+          <textarea id="gc-input" placeholder="Message ${escapeHTML(meta.name)}…" rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGCMessage();}"
+            oninput="autoResize(this);broadcastGCTyping()"></textarea>
+          <button class="chat-send" onclick="sendGCMessage()">➤</button>
+        </div>
+      </div>
+    </div>`;
+
+  // Load messages
+  loadGCMessages(gcId);
+  listenGCTyping(gcId, meta.members||[]);
+}
+
+function showGCMemberPanel(meta) {
+  // Remove old GC panel if exists
+  document.getElementById('gc-member-panel')?.remove();
+  const panel = document.createElement('div');
+  panel.id = 'gc-member-panel';
+  panel.style.cssText = 'width:240px;min-width:240px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;';
+  const isOwner = meta.owner === CU.username;
+  panel.innerHTML = `
+    <div style="padding:18px 14px 12px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${meta.emoji||'👥'}</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;">${escapeHTML(meta.name)}</div>
+          <div style="font-size:11px;color:var(--muted);">${(meta.members||[]).length} members</div>
+        </div>
+      </div>
+      ${isOwner ? `
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button onclick="renameGroupChat('${escapeHTML(meta.id)}')" style="flex:1;padding:6px 10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:12px;color:var(--muted-light);">✏️ Rename</button>
+        <button onclick="addMembersToGC('${escapeHTML(meta.id)}')" style="flex:1;padding:6px 10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:12px;color:var(--muted-light);">➕ Add</button>
+      </div>` : `
+      <button onclick="leaveGroupChat('${escapeHTML(meta.id)}')" style="width:100%;padding:7px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:9px;cursor:pointer;font-size:12px;color:var(--red);">Leave Group</button>`}
+    </div>
+    <div style="padding:12px 14px;flex:1;overflow-y:auto;">
+      <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Members — ${(meta.members||[]).length}</div>
+      ${(meta.members||[]).map(m=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;cursor:pointer;transition:background .1s;" onclick="openUserProfile('${escapeHTML(m)}')" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='transparent'">
+          <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,m,28)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(m)}</div>
+            ${m===meta.owner?'<div style="font-size:10px;color:var(--accent);font-weight:700;">Owner</div>':''}
+          </div>
+          ${isOwner && m!==CU.username ? `<button onclick="event.stopPropagation();kickFromGC('${escapeHTML(meta.id)}','${escapeHTML(m)}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:5px;" title="Kick" onmouseenter="this.style.color='var(--red)'" onmouseleave="this.style.color='var(--muted)'">✕</button>`:''}
+        </div>`).join('')}
+    </div>
+    ${isOwner ? `
+    <div style="padding:10px 14px;border-top:1px solid var(--border);">
+      <button onclick="deleteGroupChat('${escapeHTML(meta.id)}')" style="width:100%;padding:8px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:9px;cursor:pointer;font-size:12px;color:var(--red);">🗑 Delete Group</button>
+    </div>` : ''}`;
+  // Inject into DMs view
+  const dmsView = document.getElementById('view-dms');
+  if (dmsView) dmsView.appendChild(panel);
+}
+
+// ── GC messages ────────────────────────────────────
+async function loadGCMessages(gcId) {
+  const msgsEl = document.getElementById('gc-msgs');
+  if (!msgsEl || !gcId) return;
+  if (_gcListener) { try{_gcListener();}catch{} _gcListener=null; }
+  try {
+    const snap = await firebase.database().ref('groupChats/'+gcId+'/messages').orderByKey().get();
+    const msgs = snap.exists() ? Object.values(snap.val()) : [];
+    renderMessages(msgsEl, msgs, 'gc');
+    scrollBottom('gc-msgs');
+    // Live listener
+    const ref = firebase.database().ref('groupChats/'+gcId+'/messages');
+    const handler = ref.on('child_added', snap => {
+      if (curGC !== gcId) return;
+      const el = document.getElementById('gc-msgs');
+      if (!el) return;
+      const msg = snap.val();
+      const echoKey = 'gc|'+msg.from+'|'+(msg.text||'');
+      if (msg.from===CU.username && _sentEcho.has(echoKey)) { _sentEcho.delete(echoKey); return; }
+      appendMessage(el, msg, 'gc', null);
+      scrollBottom('gc-msgs');
+      if (msg.from!==CU.username) playNotifSound('message');
+    });
+    _gcListener = () => ref.off('child_added', handler);
+  } catch(e) { console.error('loadGCMessages', e); }
+}
+
+async function sendGCMessage() {
+  const inp = document.getElementById('gc-input');
+  if (!inp || !curGC) return;
+  const text = inp.value.trim();
+  if (!text && !window._pendingAttachment) return;
+  inp.value=''; inp.style.height='auto';
+  _stopGCTypingBroadcast();
+
+  const now = new Date();
+  const msgRef = firebase.database().ref('groupChats/'+curGC+'/messages').push();
+  const msg = {
+    id: msgRef.key,
+    from: CU.username,
+    text,
+    time: now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+    timestamp: now.toISOString(),
+  };
+  // Optimistic render
+  const msgsEl = document.getElementById('gc-msgs');
+  if (msgsEl) {
+    const echoKey = 'gc|'+CU.username+'|'+text;
+    _sentEcho.add(echoKey);
+    setTimeout(()=>_sentEcho.delete(echoKey), 6000);
+    const rows = msgsEl.querySelectorAll('.msg-row');
+    const lastAuthor = rows.length ? rows[rows.length-1].dataset.from : null;
+    appendMessage(msgsEl, msg, 'gc', lastAuthor);
+    scrollBottom('gc-msgs');
+  }
+  try { await msgRef.set(msg); }
+  catch { toast('Failed to send','error'); }
+}
+
+// ── GC Typing ──────────────────────────────────────
+let _gcTypingTimeout = null;
+let _gcIsTyping = false;
+let _gcTypingListenerOff = null;
+
+function _gcTypingPath(gcId) { return 'gcTyping/'+gcId; }
+
+function broadcastGCTyping() {
+  if (!CU?.username||!curGC) return;
+  const ref = firebase.database().ref(_gcTypingPath(curGC)+'/'+CU.username);
+  if (!_gcIsTyping) {
+    _gcIsTyping=true;
+    ref.set({ts:Date.now(),username:CU.username});
+    ref.onDisconnect().remove();
+  }
+  clearTimeout(_gcTypingTimeout);
+  _gcTypingTimeout = setTimeout(()=>{ _gcIsTyping=false; ref.remove().catch(()=>{}); }, 2500);
+}
+
+function _stopGCTypingBroadcast() {
+  _gcIsTyping=false; clearTimeout(_gcTypingTimeout);
+  if (CU?.username&&curGC) firebase.database().ref(_gcTypingPath(curGC)+'/'+CU.username).remove().catch(()=>{});
+}
+
+function listenGCTyping(gcId, members) {
+  if (_gcTypingListenerOff) { try{_gcTypingListenerOff();}catch{} _gcTypingListenerOff=null; }
+  const ref = firebase.database().ref(_gcTypingPath(gcId));
+  const handler = ref.on('value', snap => {
+    const data = snap.val()||{};
+    const others = Object.values(data).filter(v=>v&&v.username&&v.username!==CU.username);
+    const bar = document.getElementById('gc-typing-bar');
+    const txt = document.getElementById('gc-typing-text');
+    if (!bar||!txt) return;
+    if (others.length && curGC===gcId) {
+      const names = others.slice(0,2).map(v=>v.username).join(', ');
+      txt.textContent = names + (others.length>1?' are ':' is ') + 'typing…';
+      bar.style.opacity='1';
+    } else { bar.style.opacity='0'; }
+  });
+  _gcTypingListenerOff = ()=>ref.off('value',handler);
+}
+
+function cancelGCReply() {
+  const bar = document.getElementById('gc-reply-bar');
+  if (bar) bar.style.display='none';
+}
+
+// ── GC Management ──────────────────────────────────
+async function renameGroupChat(gcId) {
+  showCustomInput('Rename Group', 'New group name:', async (name) => {
+    if (!name?.trim()) return;
+    try {
+      await firebase.database().ref('groupChats/'+gcId+'/meta/name').set(name.trim());
+      // Update in all members' user records
+      const snap = await firebase.database().ref('groupChats/'+gcId+'/meta/members').get();
+      const members = snap.val()||[];
+      for (const m of members) {
+        const ud = await FortizedSocial.getUserByName(m);
+        if (!ud) continue;
+        const gcs = (ud.groupChats||[]).map(g=>g.id===gcId?{...g,name:name.trim()}:g);
+        await firebase.database().ref('users/'+m+'/groupChats').set(gcs);
+      }
+      await refreshCU();
+      renderDMSidebar(document.getElementById('sidebar-scroll'));
+      toast('Group renamed!','success');
+      openGroupChatView(gcId);
+    } catch(e){ toast('Failed to rename','error'); }
+  });
+}
+
+async function addMembersToGC(gcId) {
+  const meta = await firebase.database().ref('groupChats/'+gcId+'/meta').get().then(s=>s.val());
+  if (!meta) return;
+  const friends = CU?.friends||[];
+  const eligible = friends.filter(f=>!(meta.members||[]).includes(f));
+  if (!eligible.length) { toast('All friends are already in this group','info'); return; }
+
+  // Show a simple overlay to pick members
+  const ov = document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(4,6,10,.85);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML=`
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:26px;max-width:380px;width:100%;">
+      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:14px;">Add Members</div>
+      <div style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">
+        ${eligible.map(f=>`
+          <label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;cursor:pointer;">
+            <input type="checkbox" class="add-gc-cb" value="${escapeHTML(f)}" style="width:16px;height:16px;accent-color:var(--accent);">
+            <div style="width:26px;height:26px;border-radius:50%;overflow:hidden;">${buildAvatarHTML(null,f,26)}</div>
+            <span style="font-size:13.5px;font-weight:600;">${escapeHTML(f)}</span>
+          </label>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="this.closest('div[style]').closest('div[style]').remove()" style="flex:1;padding:9px;background:var(--panel2);border:1px solid var(--border);border-radius:11px;cursor:pointer;color:var(--muted-light);">Cancel</button>
+        <button id="add-gc-confirm" style="flex:1;padding:9px;background:var(--accent);color:#060810;font-weight:700;border:none;border-radius:11px;cursor:pointer;">Add</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('#add-gc-confirm').addEventListener('click', async () => {
+    const toAdd = [...ov.querySelectorAll('.add-gc-cb:checked')].map(cb=>cb.value);
+    if (!toAdd.length) { ov.remove(); return; }
+    const newMembers = [...new Set([...(meta.members||[]), ...toAdd])];
+    try {
+      await firebase.database().ref('groupChats/'+gcId+'/meta/members').set(newMembers);
+      for (const m of toAdd) {
+        const ud = await FortizedSocial.getUserByName(m);
+        if (!ud) continue;
+        const existingGCs = ud.groupChats||[];
+        if (!existingGCs.find(g=>g.id===gcId)) {
+          existingGCs.push({id:gcId,name:meta.name,emoji:meta.emoji,color:meta.color,color2:meta.color2,owner:meta.owner,members:newMembers});
+          await firebase.database().ref('users/'+m+'/groupChats').set(existingGCs);
+        }
+      }
+      // Update all existing members' records with new members list
+      for (const m of (meta.members||[])) {
+        const ud = await FortizedSocial.getUserByName(m);
+        if (!ud) continue;
+        const gcs = (ud.groupChats||[]).map(g=>g.id===gcId?{...g,members:newMembers}:g);
+        await firebase.database().ref('users/'+m+'/groupChats').set(gcs);
+      }
+      await refreshCU();
+      ov.remove();
+      toast('Members added!','success');
+      openGroupChatView(gcId);
+    } catch(e){ toast('Failed to add members','error'); }
+  });
+}
+
+async function kickFromGC(gcId, target) {
+  if (target===CU.username) return;
+  showCustomConfirm('Kick '+target+' from this group?', async () => {
+    try {
+      const snap = await firebase.database().ref('groupChats/'+gcId+'/meta/members').get();
+      const members = (snap.val()||[]).filter(m=>m!==target);
+      await firebase.database().ref('groupChats/'+gcId+'/meta/members').set(members);
+      // Remove from target's user record
+      const ud = await FortizedSocial.getUserByName(target);
+      if (ud) {
+        const gcs = (ud.groupChats||[]).filter(g=>g.id!==gcId);
+        await firebase.database().ref('users/'+target+'/groupChats').set(gcs);
+      }
+      toast(target+' was removed','success');
+      openGroupChatView(gcId);
+    } catch(e){ toast('Failed to kick','error'); }
+  });
+}
+
+async function leaveGroupChat(gcId) {
+  showCustomConfirm('Leave this group chat?', async () => {
+    try {
+      const snap = await firebase.database().ref('groupChats/'+gcId+'/meta/members').get();
+      const members = (snap.val()||[]).filter(m=>m!==CU.username);
+      await firebase.database().ref('groupChats/'+gcId+'/meta/members').set(members);
+      const gcs = (CU.groupChats||[]).filter(g=>g.id!==gcId);
+      await firebase.database().ref('users/'+CU.username+'/groupChats').set(gcs);
+      await refreshCU();
+      curGC = null;
+      document.getElementById('gc-member-panel')?.remove();
+      const wrap = document.getElementById('dm-chat-wrap');
+      if (wrap) wrap.innerHTML='<div class="empty-state"><div class="ei">💬</div><h3>No conversation selected</h3><p>Choose a DM or group from the sidebar.</p></div>';
+      renderDMSidebar(document.getElementById('sidebar-scroll'));
+      toast('Left the group','info');
+    } catch(e){ toast('Failed to leave','error'); }
+  });
+}
+
+async function deleteGroupChat(gcId) {
+  showCustomConfirm('Delete this group forever? This cannot be undone.', async () => {
+    try {
+      const snap = await firebase.database().ref('groupChats/'+gcId+'/meta/members').get();
+      const members = snap.val()||[];
+      for (const m of members) {
+        const ud = await FortizedSocial.getUserByName(m);
+        if (!ud) continue;
+        const gcs = (ud.groupChats||[]).filter(g=>g.id!==gcId);
+        await firebase.database().ref('users/'+m+'/groupChats').set(gcs);
+      }
+      await firebase.database().ref('groupChats/'+gcId).remove();
+      await refreshCU();
+      curGC = null;
+      document.getElementById('gc-member-panel')?.remove();
+      const wrap = document.getElementById('dm-chat-wrap');
+      if (wrap) wrap.innerHTML='<div class="empty-state"><div class="ei">💬</div><h3>No conversation selected</h3></div>';
+      renderDMSidebar(document.getElementById('sidebar-scroll'));
+      toast('Group deleted','info');
+    } catch(e){ toast('Failed to delete','error'); }
+  });
+}
+
+// legacy stub kept so old references don't crash
 async function startNewDM() {
-  const inp=document.getElementById('new-dm-target');
-  const err=document.getElementById('new-dm-error');
+  const inp=document.getElementById('new-dm-target')||document.getElementById('dm-target');
   if (!inp) return;
   const username=inp.value.trim().toLowerCase();
-  if (!username){if(err)err.textContent='Enter a username';return;}
+  if (!username) return;
   const u=await FortizedSocial.getUserByName(username).catch(()=>null);
-  if (!u){if(err)err.textContent='User not found';return;}
+  if (!u){ toast('User not found','error'); return; }
   openDMView(username);
 }
 
@@ -1810,8 +2520,20 @@ function appendMessage(container, msg, context, prevAuthor) {
   container.appendChild(row);
 }
 
+function copyMsgLink(msgId) {
+  const url = window.location.href.split('?')[0] + '?msg=' + encodeURIComponent(msgId);
+  navigator.clipboard.writeText(url).then(() => {
+    const tip = document.createElement('div');
+    tip.className = 'msg-link-copied';
+    tip.textContent = '🔗 Link copied!';
+    document.body.appendChild(tip);
+    setTimeout(() => tip.remove(), 1600);
+  }).catch(() => toast('Could not copy link', 'error'));
+}
+
 function buildMsgActions(msg, context, id) {
   const isOwn=msg.from===CU?.username;
+  const isBastionAdmin = context==='channel' && hasPerm('manage_messages');
   const safeId=escapeHTML(id);
   const safeFrom=escapeHTML(msg.from||'');
   const safeText=escapeHTML((msg.text||'').replace(/'/g,' ').slice(0,100));
@@ -1819,8 +2541,9 @@ function buildMsgActions(msg, context, id) {
     <button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply" style="display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg></button>
     <button onclick="addReactionUI(event,'${safeId}','${context}')" title="React" style="display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
     <button onclick="forwardMsg('${safeText}')" title="Forward" style="display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>
+    <button onclick="copyMsgLink('${safeId}')" title="Copy Link" style="display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></button>
     ${isOwn?`<button onclick="editMsg('${safeId}')" title="Edit" style="display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`:''}
-    ${isOwn?`<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:var(--red);display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:''}
+    ${(isOwn||isBastionAdmin)?`<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:var(--red);display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:''}
     <button onclick="reportMessage('${safeId}','${safeText}')" title="Report" style="color:var(--muted);display:flex;align-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>
   </div>`;
 }
@@ -2333,6 +3056,8 @@ function updateDOBField(){
   // Show personal invite link if already generated
   applyRadianceFont();
   trackRadianceTime();
+  // Post-init setup: account switcher, periodic updates
+  setTimeout(_postInitSetup, 500);
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling
   if(isAdmin())setTimeout(startReportPolling,2000);
@@ -2437,14 +3162,123 @@ function selectBastionTemplate(id, emoji, name) {
   }
 }
 
-// Template channel presets
+// Template channel presets — rich bastion templates
 const BASTION_TEMPLATES = {
-  gaming:     {channels:['general','lfg','clips','meta','events'],       emoji:'🎮'},
-  fellowship: {channels:['general','hangout','events','off-topic','memes'],emoji:'🤝'},
-  guild:      {channels:['general','strategy','recruitment','log','voice-lobby'],emoji:'⚔️'},
-  study:      {channels:['general','resources','help','accountability','study-hall'],emoji:'📚'},
-  artisan:    {channels:['general','showcase','wip','feedback','resources'],emoji:'🎨'},
-  academy:    {channels:['announcements','general','q-and-a','resources','office-hours'],emoji:'🎓'},
+  gaming: {
+    emoji:'🎮', color:'#1e3a5f',
+    channels:[
+      {name:'announcements',type:'text',desc:'Server news and updates'},
+      {name:'general',type:'text',desc:'General gaming chat'},
+      {name:'lfg',type:'text',desc:'Looking for group'},
+      {name:'clips',type:'text',desc:'Share your best moments'},
+      {name:'meta',type:'text',desc:'Game strategy and meta discussion'},
+      {name:'events',type:'text',desc:'Upcoming events and tournaments'},
+      {name:'voice-lobby',type:'voice',desc:'Chill voice channel'},
+      {name:'game-room',type:'voice',desc:'In-game voice chat'},
+    ],
+    roles:[
+      {id:'admin',name:'Admin',color:'#fbbf24'},
+      {id:'officer',name:'Officer',color:'#60a5fa'},
+      {id:'member',name:'Member',color:'#3ecf6e'},
+      {id:'recruit',name:'Recruit',color:'#9ca3af'},
+    ],
+    description:'A gaming community — play, share, and compete together.',
+  },
+  fellowship: {
+    emoji:'🤝', color:'#2d1b4e',
+    channels:[
+      {name:'announcements',type:'text',desc:'Bastion announcements'},
+      {name:'general',type:'text',desc:'Hang out and chat'},
+      {name:'hangout',type:'text',desc:'Off-topic conversations'},
+      {name:'events',type:'text',desc:'Community events'},
+      {name:'memes',type:'text',desc:'Memes and fun'},
+      {name:'introductions',type:'text',desc:'Introduce yourself!'},
+      {name:'lounge',type:'voice',desc:'Voice lounge'},
+    ],
+    roles:[
+      {id:'admin',name:'Admin',color:'#fbbf24'},
+      {id:'moderator',name:'Moderator',color:'#a78bfa'},
+      {id:'member',name:'Member',color:'#60a5fa'},
+    ],
+    description:'A friendly community for hanging out and making friends.',
+  },
+  guild: {
+    emoji:'⚔️', color:'#3b1a1a',
+    channels:[
+      {name:'announcements',type:'text',desc:'Guild announcements'},
+      {name:'general',type:'text',desc:'Guild chat'},
+      {name:'strategy',type:'text',desc:'Tactics and planning'},
+      {name:'recruitment',type:'text',desc:'Recruit new members'},
+      {name:'war-log',type:'text',desc:'Battle reports'},
+      {name:'off-topic',type:'text',desc:'Non-guild chat'},
+      {name:'war-room',type:'voice',desc:'Strategy calls'},
+      {name:'chill-zone',type:'voice',desc:'Relax voice channel'},
+    ],
+    roles:[
+      {id:'admin',name:'Guild Master',color:'#fbbf24'},
+      {id:'officer',name:'Officer',color:'#f87171'},
+      {id:'veteran',name:'Veteran',color:'#fb923c'},
+      {id:'member',name:'Member',color:'#60a5fa'},
+      {id:'recruit',name:'Recruit',color:'#9ca3af'},
+    ],
+    description:'A competitive guild for organized gameplay and teamwork.',
+  },
+  study: {
+    emoji:'📚', color:'#0d2618',
+    channels:[
+      {name:'announcements',type:'text',desc:'Study group updates'},
+      {name:'general',type:'text',desc:'General study chat'},
+      {name:'resources',type:'text',desc:'Share study materials'},
+      {name:'help',type:'text',desc:'Ask questions here'},
+      {name:'progress',type:'text',desc:'Share your wins'},
+      {name:'accountability',type:'text',desc:'Daily check-ins'},
+      {name:'study-hall',type:'voice',desc:'Silent study session'},
+      {name:'group-session',type:'voice',desc:'Group discussion'},
+    ],
+    roles:[
+      {id:'admin',name:'Admin',color:'#fbbf24'},
+      {id:'tutor',name:'Tutor',color:'#3ecf6e'},
+      {id:'member',name:'Student',color:'#60a5fa'},
+    ],
+    description:'A focused study group — learn together, grow together.',
+  },
+  artisan: {
+    emoji:'🎨', color:'#2d0a2a',
+    channels:[
+      {name:'announcements',type:'text',desc:'Studio announcements'},
+      {name:'showcase',type:'text',desc:'Share your finished works'},
+      {name:'wip',type:'text',desc:'Work in progress — show your process'},
+      {name:'feedback',type:'text',desc:'Request and give constructive feedback'},
+      {name:'resources',type:'text',desc:'Tutorials, references, and tools'},
+      {name:'commissions',type:'text',desc:'Open commissions and requests'},
+      {name:'art-talk',type:'voice',desc:'Art discussion voice channel'},
+    ],
+    roles:[
+      {id:'admin',name:'Admin',color:'#fbbf24'},
+      {id:'featured',name:'Featured Artist',color:'#e879f9'},
+      {id:'member',name:'Creator',color:'#60a5fa'},
+    ],
+    description:'A creative studio — share art, get feedback, and grow as an artist.',
+  },
+  academy: {
+    emoji:'🎓', color:'#0a1a2e',
+    channels:[
+      {name:'announcements',type:'text',desc:'Academy announcements'},
+      {name:'general',type:'text',desc:'Student lounge'},
+      {name:'q-and-a',type:'text',desc:'Questions and answers'},
+      {name:'resources',type:'text',desc:'Course materials and links'},
+      {name:'projects',type:'text',desc:'Submit and discuss projects'},
+      {name:'office-hours',type:'voice',desc:'Talk to instructors'},
+      {name:'group-study',type:'voice',desc:'Study together'},
+    ],
+    roles:[
+      {id:'admin',name:'Instructor',color:'#fbbf24'},
+      {id:'ta',name:'Teaching Assistant',color:'#60a5fa'},
+      {id:'member',name:'Student',color:'#3ecf6e'},
+      {id:'alumni',name:'Alumni',color:'#9ca3af'},
+    ],
+    description:'A structured learning community with courses, resources, and mentors.',
+  },
 };
 
 async function createBastion() {
@@ -2456,21 +3290,20 @@ async function createBastion() {
 
     const tmpl = _selectedBastionTemplate && BASTION_TEMPLATES[_selectedBastionTemplate.id];
   const _chs = tmpl
-    ? tmpl.channels.map(n=>({name:n,type:(n.includes('voice')||n.includes('vc')||n.includes('lobby'))?'voice':'text',desc:''}))
-    : [{name:'general',type:'text',desc:'General discussion'},{name:'announcements',type:'text',desc:''},{name:'voice',type:'voice',desc:''}];
+    ? tmpl.channels
+    : [{name:'general',type:'text',desc:'General discussion'},{name:'announcements',type:'text',desc:'Important announcements'},{name:'lounge',type:'voice',desc:'Voice lounge'}];
+  const _roles = tmpl
+    ? tmpl.roles.map(r=>({...r, permissions: r.id==='admin' ? PERMISSIONS.map(p=>p[0]) : ['send_messages','read_history','add_reactions']}))
+    : [
+        {id:'admin',name:'Admin',color:'#fbbf24',permissions:PERMISSIONS.map(p=>p[0])},
+        {id:'member',name:'Member',color:'#60a5fa',permissions:['send_messages','read_history','add_reactions']},
+      ];
   const bastion = {
-    name, desc: desc||'',
-    emblem: cbSelectedEmoji||'🏰',
+    name, desc: desc||tmpl?.description||'',
+    emblem: cbSelectedEmoji||(tmpl?.emoji)||'🏰',
     icon: cbIconData||null,
-    channels: [
-      {name:'general',type:'text',desc:'General chat for everyone'},
-      {name:'announcements',type:'text',desc:'Important announcements'},
-      {name:'lounge',type:'voice',desc:'Voice chat'},
-    ],
-    roles: [
-      {id:'admin',name:'Admin',color:'#fbbf24',permissions:PERMISSIONS.map(p=>p[0])},
-      {id:'member',name:'Member',color:'#60a5fa',permissions:['send_messages','read_history','add_reactions']},
-    ],
+    channels: _chs,
+    roles: _roles,
     owner: CU.username,
     public: cbVisibility === 'public',
     memberRoles: {[CU.username]:['admin']},
@@ -3160,7 +3993,7 @@ function buildProfileNav(scroll) {
     {id:'myprofile',icon:'👤',label:'My Profile'},
     {id:'account',icon:'🔒',label:'Account'},
     {id:'notifs_settings',icon:'🔔',label:'Notifications'},
-    {id:'game_collection',icon:'🎮',label:'Game Collection'},
+    {id:'game_collection',icon:'🎮',label:'Apps & Games'},
     {section:'Preferences'},
     {id:'privacy',icon:'🛡️',label:'Privacy'},
     {id:'appearance',icon:'🎨',label:'Appearance'},
@@ -3259,7 +4092,7 @@ function buildProfileView(tab) {
             {key:'youtube',color:'#FF0000',bg:'rgba(255,0,0,.08)',label:'YouTube',placeholder:'https://youtube.com/@channel'},
             {key:'roblox',color:'#00B2FF',bg:'rgba(0,178,255,.08)',label:'Roblox',placeholder:'https://roblox.com/users/12345/profile'},
             {key:'spotify',color:'#1DB954',bg:'rgba(29,185,84,.08)',label:'Spotify',placeholder:'https://open.spotify.com/user/you'},
-            {key:'polytoria',color:'#7C5CBF',bg:'rgba(124,92,191,.08)',label:'Polytoria',placeholder:'https://polytoria.com/user/you'},
+            {key:'twitter',color:'#1d9bf0',bg:'rgba(29,155,240,.08)',label:'X (Twitter)',placeholder:'https://x.com/yourusername'},
           ].map(acc=>`
             <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${acc.bg};border:1px solid ${acc.color}33;border-radius:11px;margin-bottom:8px;">
               <div style="font-size:12.5px;font-weight:700;color:${acc.color};min-width:68px;">${acc.label}</div>
@@ -3298,7 +4131,7 @@ function buildProfileView(tab) {
                   <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0"><span style="font-size:15px;">📷</span></div>
                   <input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event)">
                 </label>
-                ${hasRadiance?`<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.15),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:3px 9px;font-size:10px;font-weight:700;color:#ffd93e;">✨ Radiance</div>`:''}
+                <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">${renderBadgesHTML(CU)}</div>
               </div>
               <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:1px;">${escapeHTML(CU.displayName||CU.username)}</div>
               <div style="font-size:11.5px;color:var(--muted);margin-bottom:6px;">@${escapeHTML(CU.username)}</div>
@@ -3390,6 +4223,21 @@ async function buyRadiance(days, cost) {
     toast(`✨ Radiance active for ${days} days!`,'success');
   });
 }
+
+async function buyRadiancePlus(days, cost) {
+  showCustomConfirm(`Buy ${days}-day Radiance+ for ${cost} Onyx?`, async () => {
+    if ((CU.onyx||0) < cost) { toast('Not enough Onyx!', 'error'); return; }
+    CU.onyx -= cost;
+    const until = new Date(Date.now() + days*86400000);
+    CU.radiancePlus = until.toISOString();
+    // Also set basic radiance so all basic perks work
+    CU.radianceUntil = until.toISOString();
+    await saveUser();
+    refreshAtelierBalance();
+    toast(`🌟 Radiance+ active for ${days} days!`, 'success');
+  });
+}
+
 
 // ════════════════════════════════════════════
 // NOTIFICATIONS
@@ -3485,7 +4333,7 @@ async function viewUserProfile(username) {
     {k:'youtube', label:'YouTube', color:'#FF0000', bg:'rgba(255,0,0,.1)'},
     {k:'roblox', label:'Roblox', color:'#00B2FF', bg:'rgba(0,178,255,.1)'},
     {k:'spotify', label:'Spotify', color:'#1DB954', bg:'rgba(29,185,84,.1)'},
-    {k:'polytoria', label:'Polytoria', color:'#7C5CBF', bg:'rgba(124,92,191,.1)'},
+    {k:'twitter', label:'X / Twitter', color:'#1d9bf0', bg:'rgba(29,155,240,.1)'},
   ];
   const socialHTML = socialPlatforms.filter(p => socials[p.k]).map(p =>
     `<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:9px;border:1px solid ${p.color}40;background:${p.bg};color:${p.color};font-size:12px;font-weight:700;text-decoration:none;">${p.label} →</a>`
@@ -3516,7 +4364,7 @@ async function viewUserProfile(username) {
         <div style="margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
             <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.1;">${escapeHTML(u.displayName||u.username)}</div>
-            ${hasRadiance?'<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.18),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:2px 9px;font-size:10.5px;font-weight:700;color:#ffd93e;">✨ Radiance</div>':''}
+            ${renderBadgesHTML(u)}
           </div>
           <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">@${escapeHTML(u.username)}</div>
         ${u.bio?`<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">About Me</div><div style="font-size:13px;color:var(--muted-light);line-height:1.55;">${escapeHTML(u.bio)}</div></div>`:''}
@@ -3534,7 +4382,7 @@ async function viewUserProfile(username) {
       </div>`;
   } else {
     const gameHTML = gameCollection.length
-      ? '<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Game Collection</div><div style="display:flex;flex-wrap:wrap;gap:5px;">'
+      ? '<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Apps & Games</div><div style="display:flex;flex-wrap:wrap;gap:5px;">'
         + gameCollection.slice(0,6).map(g=>`<div style="display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;font-size:12px;"><span>${g.icon||'🎮'}</span><span style="font-weight:600;">${escapeHTML(g.name)}</span></div>`).join('')
         + (gameCollection.length>6?`<span style="font-size:11px;color:var(--muted);align-self:center;">+${gameCollection.length-6} more</span>`:'')
         + '</div></div>'
@@ -3572,7 +4420,7 @@ async function viewUserProfile(username) {
         <div style="margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">
             <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.1;">${escapeHTML(u.displayName||u.username)}</div>
-            ${hasRadiance?'<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.18),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:2px 9px;font-size:10.5px;font-weight:700;color:#ffd93e;">✨ Radiance</div>':''}
+            ${renderBadgesHTML(u)}
             ${u.gameActivity?.name?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:100px;padding:2px 9px;font-size:10.5px;font-weight:600;">${u.gameActivity.icon||'🎮'} ${escapeHTML(u.gameActivity.name)}</div>`:''}
           </div>
           <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">@${escapeHTML(u.username)}</div>
@@ -3599,7 +4447,17 @@ async function viewUserProfile(username) {
 
 async function quickAddFriend(username) {
   username = (username||"").trim().toLowerCase();
-  try{const r=await FortizedSocial.sendFriendRequest(CU.username,username);toast(r.msg,r.ok?'success':'error');if(r.ok){await refreshCU();}}catch{toast('Error','error');}
+  try{
+    const r=await FortizedSocial.sendFriendRequest(CU.username,username);
+    toast(r.msg,r.ok?'success':'error');
+    if(r.ok){
+      await refreshCU();
+      // Friend add animations
+      spawnHeartAnimation(window.innerWidth/2-20, window.innerHeight/2);
+      setTimeout(()=>spawnHeartAnimation(window.innerWidth/2+30, window.innerHeight/2-30), 120);
+      setTimeout(()=>spawnHeartAnimation(window.innerWidth/2, window.innerHeight/2+20), 250);
+    }
+  }catch{toast('Error','error');}
 }
 
 // ════════════════════════════════════════════
@@ -3711,7 +4569,9 @@ function showCustomConfirm(message,callback){
 // ════════════════════════════════════════════
 // MODALS
 // ════════════════════════════════════════════
-function openModal(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
+function openModal(id){
+  if (id === 'modal-new-dm') { setTimeout(() => switchNewDMTab('dm'), 10); }
+  const el=document.getElementById(id);if(el)el.classList.add('open');}
 function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
 document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open');});
 
@@ -4211,7 +5071,7 @@ async function adminSearchUser() {
           <div style="font-size:12.5px;color:rgba(255,255,255,.35);">@${escapeHTML(username)}</div>
           <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">
             ${isBanned?'<span style="font-size:10px;font-weight:700;background:rgba(248,113,113,.15);color:#f87171;padding:2px 8px;border-radius:100px;">BANNED</span>':''}
-            ${hasRadiance?'<span style="font-size:10px;font-weight:700;background:rgba(255,249,62,.1);color:#ffd93e;padding:2px 8px;border-radius:100px;">✨ RADIANCE</span>':''}
+            ${renderBadgesHTML(u)}
           </div>
         </div>
       </div>
@@ -4511,7 +5371,11 @@ async function showQuizResult() {
 
 async function completeVerification() {
   CU.verified = true;
+  CU.verifiedAt = new Date().toISOString();
+  // Also award a small Onyx bonus for completing verification
+  CU.onyx = (CU.onyx||0) + 25;
   await saveUser();
+  updateOnyxDisplay();
   document.getElementById('verify-overlay')?.remove();
   toast('🎉 Welcome to Fortized!', 'success');
   if (!CU.dateOfBirth) setTimeout(showDOBSetup, 400);
@@ -4823,8 +5687,8 @@ function validateSocialLink(key, pattern, input) {
 
 async function saveSocialLinks() {
   CU.socials = CU.socials || {};
-  const platforms = ['youtube','roblox','spotify','polytoria'];
-  const patterns = { youtube:'youtube.com', roblox:'roblox.com', spotify:'open.spotify.com', polytoria:'polytoria.com' };
+  const platforms = ['youtube','roblox','spotify','twitter'];
+  const patterns = { youtube:'youtube.com', roblox:'roblox.com', spotify:'open.spotify.com', twitter:'x.com' };
   let invalid = false;
   platforms.forEach(key => {
     const inp = document.getElementById('social-'+key);
@@ -5354,28 +6218,83 @@ function parseMD(s) {
     return `<div style="margin:8px 0;border-radius:12px;overflow:hidden;max-width:360px;">` +
       `<iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="${type==='track'?80:160}" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius:12px;"></iframe></div>`;
   });
-  // 5. Fortized invite/bastion link — show embed card
+  // 5. Fortized invite/bastion link — styled embed card
   s = s.replace(/https?:\/\/[^\s]*\?invite=([\w]+)/gi, (url, code) => {
-    return `<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,var(--accent-dim),rgba(78,205,196,.04));border:1px solid var(--accent-mid);border-radius:14px;margin:6px 0;cursor:pointer;max-width:380px;" onclick="joinByInvite('${escapeHTML(code)}')">
-      <div style="width:42px;height:42px;border-radius:12px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🏰</div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13.5px;font-weight:800;color:var(--accent);margin-bottom:2px;">Fortized Bastion Invite</div>
-        <div style="font-size:11.5px;color:var(--muted-light);">Code: <code style="background:rgba(255,255,255,.08);padding:1px 6px;border-radius:4px;">${escapeHTML(code)}</code></div>
+    const alreadyMember = (CU?.bastions||[]).some(b=>(b.invites||[]).some(inv=>inv.code===code));
+    return `<div class="embed-invite-card" onclick="joinByInvite('${escapeHTML(code)}')" style="max-width:360px;">
+      <div style="height:80px;background:linear-gradient(135deg,#0d1a12,#0a1020,#1a0d28);position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;opacity:.05;background-image:radial-gradient(circle,rgba(255,249,62,.9) 1px,transparent 1px);background-size:18px 18px;"></div>
+        <div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:160px;height:100px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,249,62,.18) 0%,transparent 70%);filter:blur(12px);"></div>
       </div>
-      <div style="flex-shrink:0;background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:5px 12px;border-radius:8px;">Join →</div>
+      <div style="padding:0 16px 4px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-top:10px;">You've been invited to a Bastion</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 16px;">
+        <div style="width:48px;height:48px;border-radius:12px;background:var(--panel2);border:2px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🏰</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Fortized Bastion</div>
+          <div style="font-size:10.5px;color:var(--muted-light);margin-top:2px;">Invite code: <code style="background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;font-size:10px;">${escapeHTML(code)}</code></div>
+        </div>
+      </div>
+      <div style="padding:4px 16px 12px;">
+        <button style="width:100%;padding:9px;border-radius:8px;background:${alreadyMember?'var(--panel2)':'var(--accent)'};color:${alreadyMember?'var(--muted-light)':'#060810'};font-family:'Syne',sans-serif;font-size:13px;font-weight:700;border:none;cursor:${alreadyMember?'default':'pointer'};">${alreadyMember?'✓ Already a Member':'🏰 Join Bastion'}</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-top:1px solid var(--border);background:rgba(0,0,0,.12);font-size:10px;color:var(--muted);">
+        <span>Fortized Platform</span>
+        <span style="font-family:monospace;font-size:9px;">${escapeHTML(code)}</span>
+      </div>
     </div>`;
   });
-  // 6. All other URLs — yellow clickable link
+
+  // 5b. X / Twitter post links — styled card
+  s = s.replace(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/([\w]+)\/status\/([\d]+)[^\s]*/gi, (url, user, id) => {
+    const safe = escapeHTML(url);
+    return `<div class="embed-x-card" onclick="openExternalLink(event,'${safe}')" style="padding:12px 14px 10px 17px;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#1d9bf0;margin-bottom:8px;">
+        <span style="font-family:'Syne',sans-serif;font-weight:900;font-size:12px;">𝕏</span> Post
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1d9bf0,#0a6bbf);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#fff;flex-shrink:0;">${user[0].toUpperCase()}</div>
+        <div><div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;">@${escapeHTML(user)}</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted-light);">View post #${escapeHTML(id)} on 𝕏</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;">
+        <span>♥ Likes</span><span>🔁 Retweets</span><span>💬 Replies</span>
+      </div>
+    </div>`;
+  });
+
+  // 5c. X / Twitter profile links
+  s = s.replace(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/([\w]+)(?:\s|$)/gi, (url, user) => {
+    const safe = escapeHTML(url.trim());
+    return `<a href="#" onclick="openExternalLink(event,'${safe}')" class="embed-x-card" style="display:block;padding:10px 14px;text-decoration:none;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1d9bf0,#0a6bbf);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px;flex-shrink:0;">${user[0].toUpperCase()}</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);">@${escapeHTML(user)}</div>
+          <div style="font-size:10px;color:#1d9bf0;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-top:2px;">𝕏 Profile</div>
+        </div>
+        <div style="margin-left:auto;font-size:10px;font-weight:700;color:#1d9bf0;background:rgba(29,155,240,.12);border:1px solid rgba(29,155,240,.28);border-radius:100px;padding:3px 10px;">Follow</div>
+      </div>
+    </a> `;
+  });
+  // 6. All other URLs — rich link embed card
   s = s.replace(/(?<![='"(])(https?:\/\/[^\s<>"'()]+)/gi, url => {
     const safe = escapeHTML(url);
-    // Detect common sites for branded link display
-    let badge='🔗', domain='';
-    try { domain = new URL(url).hostname.replace('www.',''); } catch {}
-    if(domain.includes('github.com')) badge='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48v-1.69c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10.02 10.02 0 0022 12c0-5.52-4.48-10-10-10z"/></svg>';
-    else if(domain.includes('twitter.com')||domain.includes('x.com')) badge='𝕏';
-    else if(domain.includes('roblox.com')) badge='🎮';
-    else if(domain.includes('discord.gg')||domain.includes('discord.com')) badge='🎮';
-    return '<a href="#" onclick="openExternalLink(event,\''+safe+'\')" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(78,205,196,.3);padding-bottom:1px;font-size:inherit;">'+badge+' '+safe+'</a>';
+    let domain = '', siteName = '';
+    try { const u = new URL(url); domain = u.hostname.replace('www.',''); siteName = domain.split('.')[0]; } catch {}
+    if (domain.includes('github.com')) siteName = 'GitHub';
+    else if (domain.includes('twitch.tv')) siteName = 'Twitch';
+    else if (domain.includes('reddit.com')) siteName = 'Reddit';
+    else if (domain.includes('steam') || domain.includes('steampowered')) siteName = 'Steam';
+    else if (domain.includes('itch.io')) siteName = 'itch.io';
+    const pathLabel = url.replace(/^https?:\/\//,'').slice(0,55) + (url.length>60?'…':'');
+    return `<div class="embed-link-card" onclick="openExternalLink(event,'${safe}')">
+      <div class="elc-body">
+        <div class="elc-site">${siteName||domain}</div>
+        <div class="elc-title">${escapeHTML(pathLabel)}</div>
+        <div class="elc-url">${escapeHTML(domain)}</div>
+      </div>
+      <div class="elc-thumb">🔗</div>
+    </div>`;
   });
   // Markdown formatting
   return s
@@ -5535,33 +6454,25 @@ function applyRadianceFont() {
 // REGISTERED GAMES - detect running processes
 // ════════════════════════════════════════════
 async function detectRunningApps() {
-  // This only works in Electron/desktop context
-  // For web, we show a manual picker with common games
+  // Desktop: use Electron API if available
   if (window.electronAPI?.getRunningApps) {
-    try {
-      const apps = await window.electronAPI.getRunningApps();
-      return apps;
-    } catch {}
+    try { return await window.electronAPI.getRunningApps(); } catch {}
   }
-  // Web fallback: show common apps the user can pick from
-  return [
-    { name: 'Minecraft', icon: '⛏️' },
-    { name: 'Roblox', icon: '🎮' },
-    { name: 'Fortnite', icon: '🎯' },
-    { name: 'Valorant', icon: '🎯' },
-    { name: 'League of Legends', icon: '⚔️' },
-    { name: 'Rocket League', icon: '🚀' },
-    { name: 'Among Us', icon: '🚀' },
-    { name: 'Steam', icon: '🎮' },
-    { name: 'Discord', icon: '💬' },
-    { name: 'Spotify', icon: '🎵' },
-    { name: 'Visual Studio Code', icon: '💻' },
-    { name: 'Chrome', icon: '🌐' },
-    { name: 'Firefox', icon: '🦊' },
-    { name: 'OBS Studio', icon: '🎥' },
-    { name: 'Blender', icon: '🎨' },
-    { name: 'Unity', icon: '🎮' },
+  // Build list: user's saved game collection + popular apps
+  const userGames = (CU?.gameCollection||[]).map(g=>({ name:g.name, icon:g.icon||'🎮', fromCollection:true }));
+  const popularApps = [
+    { name:'Minecraft', icon:'⛏️' },{ name:'Roblox', icon:'🎮' },{ name:'Fortnite', icon:'🎯' },
+    { name:'Valorant', icon:'🔫' },{ name:'League of Legends', icon:'⚔️' },{ name:'Rocket League', icon:'🚀' },
+    { name:'Among Us', icon:'🚀' },{ name:'Apex Legends', icon:'🔫' },{ name:'Genshin Impact', icon:'⚡' },
+    { name:'Steam', icon:'🎮' },{ name:'Discord', icon:'💬' },{ name:'Spotify', icon:'🎵' },
+    { name:'VS Code', icon:'💻' },{ name:'OBS Studio', icon:'🎥' },{ name:'Blender', icon:'🎨' },
+    { name:'Unity', icon:'🕹️' },{ name:'Twitch', icon:'📺' },{ name:'YouTube', icon:'▶️' },
+    { name:'Photoshop', icon:'🖼️' },{ name:'After Effects', icon:'✨' },
   ];
+  // Merge: user games first, then popular (deduplicate)
+  const seen = new Set(userGames.map(g=>g.name.toLowerCase()));
+  const merged = [...userGames, ...popularApps.filter(a=>!seen.has(a.name.toLowerCase()))];
+  return merged;
 }
 
 function addRegisteredGame() {
@@ -5838,7 +6749,7 @@ const GAME_CATALOG = [
   {name:'Hades',icon:'\uD83D\uDD25',genre:'Roguelike'},
   {name:'Celeste',icon:'\u2744\uFE0F',genre:'Platformer'},
   {name:'Chess',icon:'\u265F\uFE0F',genre:'Strategy'},
-  {name:'Polytoria',icon:'\uD83C\uDF10',genre:'Platform'},
+  {name:'X (Twitter)',icon:'\uD83C\uDF10',genre:'Platform'},
   {name:'Terraria',icon:'\uD83C\uDF33',genre:'Sandbox'},
 ];
 
@@ -5865,7 +6776,7 @@ function renderGameCollectionTab(main) {
       + '</div>';
   }
   main.innerHTML = '<div style="padding:24px;">'
-    + '<div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;">Game Collection</div>'
+    + '<div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;">Apps & Games</div>'
     + '<div style="font-size:13px;color:var(--muted-light);margin-bottom:20px;">Add games you play — publicly shown on your profile card.</div>'
     + gHtml
     + '<button class="btn-a" onclick="openGameCollectionPicker()" style="font-size:13px;padding:10px 22px;">+ Add Game</button>'
@@ -5881,7 +6792,7 @@ function openGameCollectionPicker() {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:520px;width:100%;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;">'
     + '<div style="padding:18px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">'
-    + '<div style="font-family:Syne,sans-serif;font-size:17px;font-weight:800;margin-bottom:10px;">Add to Game Collection</div>'
+    + '<div style="font-family:Syne,sans-serif;font-size:17px;font-weight:800;margin-bottom:10px;">Add to Apps & Games</div>'
     + '<input class="field-input" id="gc-search" placeholder="Search games or type a name\u2026" style="width:100%;" oninput="filterGCPicker(this.value)">'
     + '</div>'
     + '<div id="gc-grid" style="overflow-y:auto;flex:1;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>'
@@ -5978,7 +6889,7 @@ async function showDMUserPanel(username) {
   const games = u.gameCollection || u.registeredGames || [];
   const socials = u.socials || {};
   let socialHtml = '';
-  [{k:'youtube',l:'YouTube',c:'#FF0000'},{k:'roblox',l:'Roblox',c:'#00B2FF'},{k:'spotify',l:'Spotify',c:'#1DB954'},{k:'polytoria',l:'Polytoria',c:'#7C5CBF'}].forEach(p => {
+  [{k:'youtube',l:'YouTube',c:'#FF0000'},{k:'roblox',l:'Roblox',c:'#00B2FF'},{k:'spotify',l:'Spotify',c:'#1DB954'},{k:'twitter',l:'X (Twitter)',c:'#1d9bf0'}].forEach(p => {
     if (socials[p.k]) socialHtml += '<a href="#" onclick="openExternalLink(event,\'' + escapeHTML(socials[p.k]) + '\')" '
       + 'style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;border:1px solid ' + p.c + '33;color:' + p.c + ';font-size:12px;font-weight:600;text-decoration:none;margin-bottom:4px;">'
       + p.l + ' \u2192</a>';
@@ -5986,7 +6897,7 @@ async function showDMUserPanel(username) {
   let gamesHtml = '';
   if (games.length) {
     gamesHtml = '<div style="padding:12px 14px;border-top:1px solid var(--border);">'
-      + '<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Game Collection</div>'
+      + '<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Apps & Games</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
     games.slice(0,8).forEach(g => {
       gamesHtml += '<div style="display:flex;align-items:center;gap:4px;padding:3px 7px;background:var(--panel);border:1px solid var(--border);border-radius:7px;font-size:11px;">'
@@ -6320,51 +7231,58 @@ const STATUS_PRESETS = [
 
 function _closeStatusPicker(){var s=document.getElementById("ftz-status-picker");if(s)s.remove();}
 function openStatusPicker() {
-  var el = document.getElementById('ftz-status-picker');
-  if (el) el.remove();
-  var overlay = document.createElement('div');
+  _closeStatusPicker();
+  const cur = CU?.customStatus || {};
+  const status = CU?.status || 'online';
+
+  const STATUS_MODES = [
+    { id:'online', label:'Online', color:'#3ecf6e', icon:'🟢' },
+    { id:'away',   label:'Away',   color:'#f59e0b', icon:'🟡' },
+    { id:'dnd',    label:'Do Not Disturb', color:'#f87171', icon:'🔴' },
+    { id:'invisible', label:'Invisible', color:'#6b7280', icon:'⚫' },
+  ];
+
+  const overlay = document.createElement('div');
+  overlay.className = 'status-picker-modal';
   overlay.id = 'ftz-status-picker';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.86);backdrop-filter:blur(14px);z-index:9200;display:flex;align-items:center;justify-content:center;padding:20px;';
-  overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
-  var cur = CU && CU.customStatus;
-  var box = document.createElement('div');
-  box.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:440px;width:100%;padding:26px;';
-  box.innerHTML = '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:4px;">Set Status</div>'
-    +'<div style="font-size:12.5px;color:var(--muted-light);margin-bottom:18px;">What are you up to right now?</div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:14px;">'
-    +'<button id="sp-emoji" style="width:46px;height:46px;border-radius:12px;background:var(--panel2);border:1px solid var(--border);font-size:22px;cursor:pointer;flex-shrink:0;">'+(cur&&cur.emoji?cur.emoji:'😊')+'</button>'
-    +'<input id="sp-text" class="field-input" placeholder="What are you up to?" value="'+(cur&&cur.text?escapeHTML(cur.text):'')+'" maxlength="60" style="flex:1;font-size:13px;">'
-    +'</div>'
-    +'<div style="font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Quick Select</div>'
-    +'<div id="sp-presets" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;"></div>'
-    +'<div style="display:flex;gap:8px;">'
-    +'<button class="btn-a" style="flex:1;" onclick="saveCustomStatus()">Set Status</button>'
-    +(cur?'<button class="btn-d" style="flex:1;" onclick="clearCustomStatus()">Clear</button>':'')
-    +'<button class="btn-g" style="flex:1;" onclick="_closeStatusPicker()">Cancel</button>'
-    +'</div>';
-  overlay.appendChild(box);
+  overlay.onclick = e => { if(e.target===overlay) _closeStatusPicker(); };
+
+  overlay.innerHTML = `
+    <div class="sp-card">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:14px;">Set Status</div>
+      <div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Status Mode</div>
+      <div class="sp-mode-row">
+        ${STATUS_MODES.map(m=>`
+          <div class="sp-mode-opt ${status===m.id?'sel':''}" onclick="pickStatusMode('${m.id}',this)" data-mode="${m.id}">
+            <div class="sp-mode-dot" style="background:${m.color};box-shadow:0 0 6px ${m.color}88;"></div>
+            <span style="font-size:11px;">${m.label}</span>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:14px;">Custom Status Text</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+        <button onclick="pickStatusEmoji()" id="status-emoji-btn" style="width:34px;height:34px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);cursor:pointer;font-size:16px;flex-shrink:0;">${cur.emoji||'😊'}</button>
+        <input id="status-text-input" class="field-input" placeholder="What's on your mind?" value="${escapeHTML(cur.text||'')}" style="flex:1;" maxlength="60">
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-a" style="flex:1;" onclick="saveCustomStatus()">Save</button>
+        <button class="btn-g" style="padding:9px 14px;" onclick="clearCustomStatus()">Clear</button>
+        <button class="btn-g" style="padding:9px 14px;" onclick="_closeStatusPicker()">Cancel</button>
+      </div>
+    </div>`;
+
   document.body.appendChild(overlay);
-  // Build presets using DOM to avoid quote issues
-  var presetsEl = document.getElementById('sp-presets');
-  if (presetsEl) {
-    STATUS_PRESETS.forEach(function(p) {
-      var btn = document.createElement('button');
-      btn.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:100px;border:1px solid '+p.color+'33;background:'+p.color+'14;color:'+p.color+';font-size:12px;cursor:pointer;font-family:inherit;';
-      btn.innerHTML = '<span>'+p.emoji+'</span><span>'+p.text+'</span>';
-      btn.onclick = function() {
-        var em = document.getElementById('sp-emoji');
-        var tx = document.getElementById('sp-text');
-        if (em) em.textContent = p.emoji;
-        if (tx) tx.value = p.text;
-      };
-      presetsEl.appendChild(btn);
-    });
-  }
-  var emojiBtn = document.getElementById('sp-emoji');
-  if (emojiBtn) emojiBtn.onclick = pickStatusEmoji;
-  var txt = document.getElementById('sp-text');
-  if (txt) setTimeout(function(){txt.focus();},50);
 }
+
+function pickStatusMode(mode, el) {
+  CU.status = mode;
+  document.querySelectorAll('.sp-mode-opt').forEach(o => o.classList.toggle('sel', o.dataset.mode===mode));
+  FortizedSocial.setStatus(CU.username, mode).catch(()=>{});
+  saveUser().catch(()=>{});
+  updateUserbar();
+  toast(`Status: ${mode}`, 'info');
+}
+
+
 function pickStatusEmoji() {
   const emojis = ['😊','🎮','🎵','💻','📚','😴','🍕','✈️','🏋️','🎨','🤔','🔥','😎','🥳','😤','💪','🌙','☀️','⚡','🐉'];
   const btn = document.getElementById('sp-emoji');
@@ -6426,7 +7344,10 @@ function openForumChannel(chIdx) {
 function renderForumPostCard(p, chIdx, postIdx) {
   const ago = p.createdAt ? ftzTimeAgo(new Date(p.createdAt)) : '';
   const tags = (p.tags||[]).map(function(t){return '<span style="padding:2px 8px;border-radius:100px;background:var(--accent-dim);color:var(--accent);font-size:10.5px;font-weight:700;">'+escapeHTML(t)+'</span>';}).join('');
-  return '<div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;" onclick="openForumPost('+chIdx+','+postIdx+')">'
+  var imgHTML = p.image ? '<img src="'+p.image+'" style="width:100%;max-height:200px;object-fit:cover;display:block;border-bottom:1px solid var(--border);" loading="lazy">' : '';
+  return '<div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:10px;cursor:pointer;transition:border-color .15s;" onmouseenter="this.style.borderColor=\'rgba(255,249,62,.2)\'" onmouseleave="this.style.borderColor=\'var(--border)\'" onclick="openForumPost('+chIdx+','+postIdx+')">'
+    +imgHTML
+    +'<div style="padding:13px 15px;">'
     +'<div style="display:flex;justify-content:space-between;gap:12px;">'
     +'<div style="flex:1;min-width:0;">'
     +'<div style="font-weight:700;font-size:14px;margin-bottom:4px;">'+escapeHTML(p.title||'Untitled')+'</div>'
@@ -6437,6 +7358,8 @@ function renderForumPostCard(p, chIdx, postIdx) {
     +'</div>'
     +'<div style="display:flex;align-items:center;gap:6px;margin-top:9px;font-size:11.5px;color:var(--muted);">'
     +buildAvatarHTML(null,p.author,16)+' '+escapeHTML(p.author||'unknown')
+    +(p.image ? '<span style="margin-left:auto;">🖼️</span>' : '')
+    +'</div>'
     +'</div>'
     +'</div>';
 }
@@ -6461,6 +7384,7 @@ function openForumPost(chIdx, postIdx) {
     +'<div style="font-size:11.5px;color:var(--muted);">'+escapeHTML(p.author)+' · '+ftzTimeAgo(new Date(p.createdAt))+'</div></div>'
     +'</div>'
     +'<div style="flex:1;overflow-y:auto;padding:16px;">'
+    +(p.image?'<img src="'+p.image+'" style="width:100%;max-height:380px;object-fit:cover;border-radius:14px;margin-bottom:12px;display:block;" loading="lazy">':'')
     +'<div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;line-height:1.6;">'+parseMD(escapeHTML(p.body||''))+'</div>'
     +(replies.length?'<div style="font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">'+replies.length+' REPLIES</div>':'')
     +repliesHTML
@@ -6474,17 +7398,38 @@ function openForumPost(chIdx, postIdx) {
 function openNewForumPost(chIdx) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;'; overlay.className='ftz-new-post-overlay';
-  overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:540px;width:100%;padding:26px;">'
-    +'<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:18px;">New Post</div>'
+  overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:560px;width:100%;padding:26px;max-height:90vh;overflow-y:auto;">'
+    +'<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:18px;">📝 New Post</div>'
     +'<input id="fp-title" class="field-input" placeholder="Post title…" maxlength="120" style="margin-bottom:10px;font-size:14px;font-weight:600;">'
     +'<input id="fp-tags" class="field-input" placeholder="Tags (comma-separated, e.g. help, news)" style="margin-bottom:10px;font-size:12.5px;">'
-    +'<textarea id="fp-body" class="field-input" placeholder="Write your post…" rows="5" style="resize:vertical;margin-bottom:14px;"></textarea>'
+    +'<textarea id="fp-body" class="field-input" placeholder="Write your post…" rows="4" style="resize:vertical;margin-bottom:10px;"></textarea>'
+    +'<div style="margin-bottom:14px;">'
+    +'<div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;">Attach Image (optional)</div>'
+    +'<div id="fp-img-preview" style="display:none;margin-bottom:8px;position:relative;"><img id="fp-img-el" style="max-width:100%;max-height:200px;border-radius:12px;object-fit:cover;display:block;border:1px solid var(--border);"><button onclick="document.getElementById(\'fp-img-el\').src=\'\';document.getElementById(\'fp-img-preview\').style.display=\'none\';window._fpImgData=null;" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.75);border:none;color:#fff;cursor:pointer;font-size:11px;">✕</button></div>'
+    +'<label style="display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:12.5px;color:var(--muted-light);">🖼️ Choose Image<input type="file" accept="image/*" style="display:none;" onchange="previewForumPostImage(this)"></label>'
+    +'<span style="font-size:10.5px;color:var(--muted);margin-left:8px;">Max 4MB</span>'
+    +'</div>'
     +'<div style="display:flex;gap:8px;">'
-    +'<button class="btn-a" style="flex:1;" onclick="_submitNewPost('+chIdx+')">Publish</button>'
+    +'<button class="btn-a" style="flex:1;" onclick="_submitNewPost('+chIdx+')">📤 Publish</button>'
     +'<button class="btn-g" style="flex:1;" onclick="_closeNewPost()">Cancel</button>'
     +'</div></div>';
   document.body.appendChild(overlay);
+  window._fpImgData = null;
   setTimeout(function(){document.getElementById('fp-title')&&document.getElementById('fp-title').focus();},50);
+}
+
+function previewForumPostImage(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (file.size > 4*1024*1024) { toast('Max 4MB','error'); return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    window._fpImgData = e.target.result;
+    var img = document.getElementById('fp-img-el');
+    var preview = document.getElementById('fp-img-preview');
+    if (img && preview) { img.src = e.target.result; preview.style.display='block'; }
+  };
+  reader.readAsDataURL(file);
 }
 
 function _closeNewPost(){var p=document.querySelector(".ftz-new-post-overlay");if(p)p.remove();else{var all=document.querySelectorAll("div[style*='position:fixed']");all.forEach(function(el){if(el.querySelector("#fp-title"))el.remove();});}}
@@ -6498,7 +7443,9 @@ async function submitForumPost(chIdx, overlay) {
   const tags = tagsRaw.split(',').map(function(t){return t.trim();}).filter(Boolean).slice(0,5);
   const b = CU.bastions&&CU.bastions[curBastion]; if (!b) return;
   if (!b.channels[chIdx].posts) b.channels[chIdx].posts = [];
-  b.channels[chIdx].posts.unshift({id:'fp-'+Date.now(),title,body,tags,author:CU.username,createdAt:new Date().toISOString(),replies:[]});
+  var fpImgData = window._fpImgData || null;
+  b.channels[chIdx].posts.unshift({id:'fp-'+Date.now(),title,body,tags,image:fpImgData,author:CU.username,createdAt:new Date().toISOString(),replies:[]});
+  window._fpImgData = null;
   await saveUser();
   if (overlay) overlay.remove();
   openForumChannel(chIdx);
@@ -7136,7 +8083,12 @@ let _ringtoneTimer = null;
 function _startRingtone() {
   _stopRingtone();
   try {
-    _ringtoneAudio = new Audio('https://raw.githubusercontent.com/fortized/fortized/main/fortized-ringtone.mp3');
+    _ringtoneAudio = new Audio('fortized-ringtone.mp3');
+    _ringtoneAudio.onerror = () => {
+      _ringtoneAudio = new Audio('https://raw.githubusercontent.com/fortized/fortized/main/fortized-ringtone.mp3');
+      _ringtoneAudio.loop = true; _ringtoneAudio.volume = 0.7;
+      _ringtoneAudio.play().catch(()=>{});
+    };
     _ringtoneAudio.loop = true;
     _ringtoneAudio.volume = 0.7;
     _ringtoneAudio.play().catch(()=>{});
@@ -7235,7 +8187,7 @@ function ftzVideoSeek(id, e) {
 // ════════════════════════════════════════════
 const KNOWN_GAMES = [
   {name:'Roblox', icon:'🎮', keywords:['roblox','robloxplayer','roblox player']},
-  {name:'Polytoria', icon:'🏗️', keywords:['polytoria']},
+  {name:'X (Twitter)', icon:'🏗️', keywords:['twitter']},
   {name:'Minecraft', icon:'⛏️', keywords:['minecraft','javaw','minecraftlauncher']},
   {name:'Fortnite', icon:'🎯', keywords:['fortnite','epicgameslauncher']},
   {name:'Steam', icon:'🎮', keywords:['steam']},
@@ -7675,48 +8627,68 @@ function renderAtelierTab(tab) {
   }
 
   else if (tab === 'radiance') {
+    const hasRadiancePlus = CU?.radiancePlus && new Date(CU.radiancePlus) > new Date();
+    const radiancePlusDays = hasRadiancePlus ? Math.ceil((new Date(CU.radiancePlus)-Date.now())/86400000) : 0;
     el.innerHTML = `
       <div class="atelier-page-title">✨ Radiance</div>
-      <div class="atelier-page-sub">Stand out from the crowd with exclusive profile effects.</div>
+      <div class="atelier-page-sub">Two tiers — stand out your way.</div>
       <div class="atelier-hero">
-        <div class="atelier-bal"><div class="coin">⬡</div><div><h3>Your Balance</h3><div class="amt" id="atelier-balance">${balance}</div></div></div>
-        ${hasRadiance?`<div style="text-align:right;"><div style="font-size:11px;color:var(--muted-light);">Currently active</div><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);">${radianceDaysLeft}d left</div></div>`:''}
-      </div>
-      <div class="atelier-section-title">Choose a Plan</div>
-      <div class="radiance-grid">
-        <div class="rad-card" onclick="buyRadiance(7,200)">
-          <div class="rad-icon">🌟</div>
-          <div class="rad-dur">7 Days</div>
-          <div class="rad-feats">Profile glow · Custom banner · Badge</div>
-          <div class="rad-price">200 <span>Onyx</span></div>
-        </div>
-        <div class="rad-card bv" onclick="buyRadiance(30,600)">
-          <div class="best-badge">BEST VALUE</div>
-          <div class="rad-icon">⭐</div>
-          <div class="rad-dur">30 Days</div>
-          <div class="rad-feats">All 7-day perks + animated badge + 45MB uploads</div>
-          <div class="rad-price">600 <span>Onyx</span></div>
-        </div>
-        <div class="rad-card" onclick="buyRadiance(90,1500)">
-          <div class="rad-icon">💫</div>
-          <div class="rad-dur">90 Days</div>
-          <div class="rad-feats">All perks + exclusive Radiance role + font selector</div>
-          <div class="rad-price">1500 <span>Onyx</span></div>
+        <div class="atelier-bal"><div class="coin">⬡</div><div><h3>Balance</h3><div class="amt" id="atelier-balance">${balance}</div></div></div>
+        <div style="text-align:right;">
+          ${hasRadiancePlus?`<div class="radplus-badge">✨+ Radiance+ · ${radiancePlusDays}d left</div>`:''}
+          ${hasRadiance&&!hasRadiancePlus?`<div class="radiance-badge">✨ Radiance · ${radianceDaysLeft}d left</div>`:''}
         </div>
       </div>
-      <div class="atelier-section-title">What You Get</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+      <!-- TIER SELECTOR -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
+        <!-- BASIC RADIANCE -->
+        <div style="background:linear-gradient(135deg,rgba(255,200,62,.08),var(--panel));border:1.5px solid rgba(255,220,62,.25);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:32px;">✨</div>
+            <div>
+              <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ffd93e;">Radiance</div>
+              <div style="font-size:11px;color:var(--muted-light);">Basic tier</div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;color:var(--muted-light);line-height:1.6;">Profile glow · Custom banner · Radiance badge · 30MB uploads</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+            <button class="btn-a" style="font-size:12px;padding:8px;" onclick="buyRadiance(7,200)">7 Days — 200 ⬡</button>
+            <button class="btn-a" style="font-size:12px;padding:8px;" onclick="buyRadiance(30,600)">30 Days — 600 ⬡ <span style="font-size:9px;background:#000a;padding:1px 5px;border-radius:6px;margin-left:4px;">BEST</span></button>
+            <button class="btn-a" style="font-size:12px;padding:8px;" onclick="buyRadiance(90,1500)">90 Days — 1500 ⬡</button>
+          </div>
+        </div>
+        <!-- RADIANCE+ -->
+        <div style="background:linear-gradient(135deg,rgba(255,120,62,.12),rgba(255,200,62,.06),var(--panel));border:1.5px solid rgba(255,160,62,.35);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:10px;right:12px;background:var(--accent);color:#060810;font-size:9px;font-weight:800;padding:3px 8px;border-radius:100px;">NEW</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:32px;">🌟</div>
+            <div>
+              <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ff9d3e;">Radiance+</div>
+              <div style="font-size:11px;color:var(--muted-light);">Premium tier — everything in Radiance, plus more</div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;color:var(--muted-light);line-height:1.6;">All Radiance perks · Font selector · Animated badge · 100MB uploads · Bastion boost · Priority support</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+            <button class="btn-a" style="font-size:12px;padding:8px;background:linear-gradient(90deg,#ff9d3e,#ffd93e);color:#060810;" onclick="buyRadiancePlus(30,1200)">30 Days — 1200 ⬡</button>
+            <button class="btn-a" style="font-size:12px;padding:8px;background:linear-gradient(90deg,#ff9d3e,#ffd93e);color:#060810;" onclick="buyRadiancePlus(90,3000)">90 Days — 3000 ⬡ <span style="font-size:9px;background:#0006;padding:1px 5px;border-radius:6px;margin-left:4px;">BEST</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="atelier-section-title">Feature Comparison</div>
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:1fr 80px 80px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 16px;border-bottom:1px solid var(--border);">
+          <div>Feature</div><div style="text-align:center;color:#ffd93e;">Basic</div><div style="text-align:center;color:#ff9d3e;">Plus</div>
+        </div>
         ${[
-          ['✨','Profile Glow','A golden animated glow around your avatar'],
-          ['🎨','Custom Banner','Upload a banner image to your profile'],
-          ['🔖','Radiance Badge','Exclusive badge on your profile card'],
-          ['📁','45MB Uploads','Increased file upload limit in all chats'],
-          ['🔤','Font Selector','Pick a custom display name font (90d plan)'],
-          ['⭐','Priority Support','Faster response from the Fortized team'],
-        ].map(([icon,name,desc])=>`
-          <div style="display:flex;gap:12px;align-items:center;padding:14px 16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;">
-            <div style="font-size:22px;">${icon}</div>
-            <div><div style="font-weight:600;font-size:13.5px;">${name}</div><div style="font-size:12px;color:var(--muted-light);">${desc}</div></div>
+          ['Profile Glow','✓','✓'],['Custom Banner','✓','✓'],['Radiance Badge','✓','✓'],['30MB Uploads','✓','✓'],
+          ['Font Selector','–','✓'],['Animated Badge','–','✓'],['100MB Uploads','–','✓'],['Bastion Boost','–','✓'],['Priority Support','–','✓'],
+        ].map(([feat,basic,plus])=>`
+          <div style="display:grid;grid-template-columns:1fr 80px 80px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+            <div style="color:var(--text);">${feat}</div>
+            <div style="text-align:center;color:${basic==='✓'?'var(--green)':'var(--muted)'};">${basic}</div>
+            <div style="text-align:center;color:${plus==='✓'?'#ff9d3e':'var(--muted)'};">${plus}</div>
           </div>`).join('')}
       </div>`;
   }
@@ -7739,7 +8711,7 @@ function renderAtelierTab(tab) {
           </div>
           <div style="display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:11px;font-family:monospace;color:var(--accent);word-break:break-all;" id="invite-link-display">Click below to generate your link</div>
           <div style="display:flex;gap:8px;margin-top:10px;">
-            <button class="btn-a" style="flex:1;font-size:12.5px;" onclick="regeneratePersonalInvite()">⟳ Generate Link</button>
+            <button class="btn-a" style="flex:1;font-size:12.5px;" onclick="regeneratePersonalInvite();awardQuestBadge();">⟳ Generate Link</button>
             <button class="btn-g" style="padding:8px 14px;font-size:12.5px;" onclick="navigator.clipboard.writeText(document.getElementById('invite-link-display').textContent).then(()=>toast('Copied!','success'))">Copy</button>
           </div>
         </div>
@@ -7823,6 +8795,337 @@ function refreshAtelierBalance() {
     el.textContent = CU?.onyx || 0;
   });
 }
+
+// ════════════════════════════════════════════════════
+// BADGE SYSTEM
+// ════════════════════════════════════════════════════
+function getUserBadges(user) {
+  if (!user) return [];
+  const badges = [];
+  const hasRadiancePlus = user.radiancePlus && new Date(user.radiancePlus) > new Date();
+  const hasRadiance = user.radianceUntil && new Date(user.radianceUntil) > new Date();
+  if (hasRadiancePlus) badges.push({ id:'radiance-plus', label:'✨ Radiance+', cls:'badge-radiance-plus' });
+  else if (hasRadiance) badges.push({ id:'radiance', label:'✨ Radiance', cls:'badge-radiance' });
+  const admins = JSON.parse(localStorage.getItem('ftz_admins')||'[]');
+  if (user.username === SUPER_ADMIN || admins.includes(user.username) || user.isAdmin) badges.push({ id:'admin', label:'🛡️ Admin', cls:'badge-admin' });
+  if (user.isBeta || user.betaUser) badges.push({ id:'beta', label:'🔷 Beta', cls:'badge-beta' });
+  if (user.isBot) badges.push({ id:'bot', label:'🤖 Bot', cls:'badge-bot' });
+  if (user.questsBadge || (user.completedQuests && user.completedQuests.length > 0)) badges.push({ id:'quest', label:'🏅 Quest', cls:'badge-quest' });
+  return badges;
+}
+
+function renderBadgesHTML(user) {
+  return getUserBadges(user).map(b => `<span class="ftz-badge ${b.cls}">${b.label}</span>`).join('');
+}
+
+function spawnHeartAnimation(x, y) {
+  const h = document.createElement('div');
+  h.className = 'heart-float';
+  h.textContent = '💛';
+  h.style.cssText = `left:${x-12}px;top:${y-12}px;`;
+  document.body.appendChild(h);
+  setTimeout(() => h.remove(), 1400);
+}
+
+// ── Did You Know strip ──────────────────────────────
+const DYK_FACTS = [
+  'Fortized was almost called Celestial before we picked our name.',
+  'The Bastion system was inspired by medieval fortress communities.',
+  'Onyx is named after the black gemstone — rare and valuable.',
+  'Radiance users send on average 3× more messages per day.',
+  'The Fortized knight mascot was designed in under 2 hours.',
+  'Fortized supports over 40 custom emoji per Bastion.',
+  'Voice calls on Fortized use WebRTC for ultra-low latency.',
+];
+function getDYKHtml() {
+  const fact = DYK_FACTS[Math.floor(Math.random()*DYK_FACTS.length)];
+  return `<div class="did-you-know"><span class="dyk-tag">💡 Did you know?</span><span style="color:var(--muted-light);line-height:1.5;">${escapeHTML(fact)}</span></div>`;
+}
+
+// ── Page loading skeleton helper ────────────────────
+function skeletonLine(w='100%', h=14, mb=8) {
+  return `<div class="skeleton" style="width:${w};height:${h}px;margin-bottom:${mb}px;"></div>`;
+}
+function showPageLoader(containerId) {
+  const el = document.getElementById(containerId);
+  if (el) el.innerHTML = `<div class="page-loader"><div class="pl-spinner"></div><div class="pl-text">Loading…</div></div>`;
+}
+
+
+// ════════════════════════════════════════════════════
+// ACCOUNT SWITCHER
+// ════════════════════════════════════════════════════
+let _acctSwitcherOpen = false;
+function toggleAccountSwitcher() {
+  const panel = document.getElementById('account-switcher-panel');
+  if (!panel) return;
+  _acctSwitcherOpen = !_acctSwitcherOpen;
+  panel.style.display = _acctSwitcherOpen ? 'block' : 'none';
+  if (_acctSwitcherOpen) renderAccountSwitcher();
+}
+function renderAccountSwitcher() {
+  const el = document.getElementById('acct-switcher-list');
+  if (!el) return;
+  const accounts = getSavedAccounts();
+  el.innerHTML = accounts.map(a => `
+    <div class="acct-item ${a.username===CU?.username?'active-acct':''}" onclick="switchToAccount('${escapeHTML(a.username)}')">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--panel2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(a.pfp||null,a.username,28)}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(a.displayName||a.username)}</div>
+        <div style="font-size:10.5px;color:var(--muted);">@${escapeHTML(a.username)}</div>
+      </div>
+      ${a.username===CU?.username?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:2px 6px;border-radius:100px;">ACTIVE</span>':''}
+    </div>`).join('');
+}
+function getSavedAccounts() {
+  try { return JSON.parse(localStorage.getItem('ftz_saved_accounts')||'[]'); } catch { return []; }
+}
+function saveCurrentToAccounts() {
+  if (!CU) return;
+  const accounts = getSavedAccounts();
+  const idx = accounts.findIndex(a=>a.username===CU.username);
+  const entry = { username:CU.username, displayName:CU.displayName||CU.username, pfp:CU.pfp||null };
+  if (idx>=0) accounts[idx] = entry; else accounts.push(entry);
+  localStorage.setItem('ftz_saved_accounts', JSON.stringify(accounts));
+}
+async function switchToAccount(username) {
+  if (username === CU?.username) { toggleAccountSwitcher(); return; }
+  const cached = localStorage.getItem('ftz_user_'+username);
+  if (cached) {
+    saveCurrentToAccounts();
+    localStorage.setItem('ftz_current', username);
+    window.location.reload();
+  } else {
+    toast('Account not found — please log in', 'error');
+    setTimeout(()=>{window.location.href='login.html';}, 1200);
+  }
+  toggleAccountSwitcher();
+}
+function addAnotherAccount() {
+  toggleAccountSwitcher();
+  saveCurrentToAccounts();
+  // Store current so it can be restored
+  localStorage.setItem('ftz_pre_switch', CU?.username||'');
+  window.location.href = 'login.html?switch=1';
+}
+// Close switcher on outside click
+document.addEventListener('click', e => {
+  if (_acctSwitcherOpen) {
+    const panel = document.getElementById('account-switcher-panel');
+    const btn = document.getElementById('rb-switch-acct');
+    if (panel && !panel.contains(e.target) && !btn?.contains(e.target)) {
+      _acctSwitcherOpen = false;
+      panel.style.display = 'none';
+    }
+  }
+}, true);
+
+
+// ════════════════════════════════════════════════════
+// ENHANCED SAFETY SYSTEM
+// ════════════════════════════════════════════════════
+
+// Enhanced NSFW gate with age verification check
+function enforceAgeGate(contentEl, channelName, onAllow) {
+  if (!contentEl) return;
+  const tier = getAgeTier(CU?.dateOfBirth);
+  if (!tier || tier === AGE_TIERS.CHILD) {
+    // ABSOLUTE BLOCK for children
+    contentEl.innerHTML = `
+      <div class="empty-state" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px;text-align:center;">
+        <div style="font-size:54px;margin-bottom:16px;">🛡️</div>
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">Age Restricted</div>
+        <div style="font-size:13.5px;color:var(--muted-light);max-width:320px;line-height:1.6;margin-bottom:20px;">
+          This channel contains content not suitable for your age group.<br>
+          <strong style="color:var(--accent);">#${escapeHTML(channelName)}</strong> requires users to be 18 or older.
+        </div>
+        <div class="safety-banner warn" style="max-width:400px;">
+          ⚠️ Your account is registered as under 18. NSFW content is permanently blocked for your safety.
+        </div>
+      </div>`;
+    return;
+  }
+  if (tier === AGE_TIERS.TEEN) {
+    // Show friction warning but allow after explicit confirmation
+    contentEl.innerHTML = `
+      <div class="empty-state" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px;text-align:center;">
+        <div style="font-size:54px;margin-bottom:16px;">⚠️</div>
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;color:var(--yellow);">Mature Content Warning</div>
+        <div style="font-size:13.5px;color:var(--muted-light);max-width:340px;line-height:1.6;margin-bottom:20px;">
+          <strong style="color:var(--accent);">#${escapeHTML(channelName)}</strong> may contain mature content. This channel has been flagged as 18+ by the Bastion owner.
+        </div>
+        <div class="safety-banner warn" style="max-width:400px;margin-bottom:18px;">
+          ⚠️ You appear to be a minor (16–17). Accessing 18+ channels is logged and reviewed.
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn-a" onclick="(${onAllow})()" style="font-size:13px;">I confirm I'm 18+ and proceed</button>
+          <button class="btn-g" onclick="selectChannel(0)" style="font-size:13px;">Go Back</button>
+        </div>
+      </div>`;
+    return;
+  }
+  // Adult — allow but log access
+  logAudit('nsfw_access', channelName, 'Adult tier access');
+  onAllow();
+}
+
+// Content scan warning for suspicious uploads
+function showContentWarning(reason) {
+  const banner = document.createElement('div');
+  banner.className = 'safety-banner warn';
+  banner.style.cssText = 'position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:8000;max-width:520px;width:90%;animation:embedIn .2s cubic-bezier(.22,1,.36,1);';
+  banner.innerHTML = `<strong>⚠️ Content Notice</strong> · ${escapeHTML(reason)}<button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;font-size:16px;">×</button>`;
+  banner.style.display = 'flex';
+  document.body.appendChild(banner);
+  setTimeout(() => banner.remove(), 5000);
+}
+
+// Message content pre-scan (keywords)
+const SAFETY_BLOCKLIST = ['n-word', 'slur', 'k-word']; // placeholders — extend as needed
+function contentSafetyCheck(text) {
+  if (!text) return null;
+  const lower = text.toLowerCase();
+  // Check for repeated patterns (spam)
+  if (/(.)\1{9,}/.test(text)) return 'Repetitive characters detected (possible spam).';
+  // Check for excessive caps
+  const caps = (text.match(/[A-Z]/g)||[]).length;
+  if (text.length > 20 && caps/text.length > 0.7) return 'Excessive capitalization detected.';
+  return null;
+}
+
+
+// ════════════════════════════════════════════════════
+// SOCIAL FEATURE 1: FRIEND ACTIVITY
+// ════════════════════════════════════════════════════
+async function loadFriendActivity() {
+  const feedEl = document.getElementById('activity-feed');
+  if (!feedEl) return;
+  const friends = CU?.friends||[];
+  if (!friends.length) {
+    feedEl.innerHTML = `
+      <div class="activity-item" style="opacity:.6;">
+        <div class="act-icon">👥</div>
+        <div class="act-text"><p>Add friends to see their activity here!</p></div>
+        <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:6px 14px;flex-shrink:0;">+ Add Friend</button>
+      </div>`;
+    return;
+  }
+  feedEl.innerHTML = '<div class="page-loader"><div class="pl-spinner"></div></div>';
+  try {
+    const statuses = await Promise.all(friends.slice(0,8).map(async f => {
+      try {
+        const u = await FortizedSocial.getUserByName(f);
+        const st = await FortizedSocial.getStatus(f).catch(()=>'offline');
+        return { username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, game:u?.currentGame||null, customStatus:u?.customStatus||null };
+      } catch { return { username:f, displayName:f, pfp:null, status:'offline', game:null }; }
+    }));
+    if (!feedEl) return;
+    const online = statuses.filter(s=>s.status==='online'||s.status==='away');
+    const offline = statuses.filter(s=>s.status!=='online'&&s.status!=='away');
+    const render = (s) => {
+      const colMap = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',offline:'#6b7280',invisible:'#6b7280'};
+      const col = colMap[s.status]||'#6b7280';
+      return `<div class="activity-item friend-pop" onclick="openDMView('${escapeHTML(s.username)}')">
+        <div class="act-icon" style="position:relative;">
+          ${buildAvatarHTML(s.pfp, s.displayName, 40)}
+          <span style="position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:${col};border:2px solid var(--panel);"></span>
+        </div>
+        <div class="act-text">
+          <p><strong>${escapeHTML(s.displayName)}</strong> is ${s.status==='offline'?'<span style="color:var(--muted);">offline</span>':s.game?`playing <strong>${escapeHTML(s.game.name)}</strong>`:s.customStatus?.text?`<span style="color:var(--muted-light);">${escapeHTML(s.customStatus.emoji||'')} ${escapeHTML(s.customStatus.text)}</span>`:'<span style="color:var(--green);">online</span>'}</p>
+        </div>
+        <button onclick="event.stopPropagation();openDMView('${escapeHTML(s.username)}')" class="btn-g" style="font-size:11.5px;padding:5px 12px;flex-shrink:0;">💬 DM</button>
+      </div>`;
+    };
+    feedEl.innerHTML = [...online, ...offline].map(render).join('') ||
+      `<div class="activity-item"><div class="act-icon">😴</div><div class="act-text"><p>All friends are offline right now.</p></div></div>`;
+  } catch(e) {
+    if (feedEl) feedEl.innerHTML = `<div class="activity-item"><div class="act-icon">⚠️</div><div class="act-text"><p>Could not load friend activity.</p></div></div>`;
+  }
+}
+
+// ════════════════════════════════════════════════════
+// SOCIAL FEATURE 2: REACTION ANIMATIONS
+// ════════════════════════════════════════════════════
+function animateReaction(emoji, targetEl) {
+  if (!targetEl) return;
+  const rect = targetEl.getBoundingClientRect();
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      const span = document.createElement('span');
+      span.textContent = emoji;
+      span.style.cssText = `position:fixed;left:${rect.left + Math.random()*rect.width}px;top:${rect.top}px;font-size:${18+Math.random()*12}px;pointer-events:none;z-index:9999;animation:heartFloat ${0.8+Math.random()*0.5}s ease-out forwards;`;
+      document.body.appendChild(span);
+      setTimeout(() => span.remove(), 1400);
+    }, i * 80);
+  }
+}
+
+// Patch toggleReaction to animate
+const _origToggleReaction = window.toggleReaction || function(){};
+
+
+// ════════════════════════════════════════════════════
+// QUEST BADGE AWARD
+// ════════════════════════════════════════════════════
+async function awardQuestBadge(questName='invite') {
+  if (!CU) return;
+  if (!CU.completedQuests) CU.completedQuests = [];
+  if (!CU.completedQuests.includes(questName)) {
+    CU.completedQuests.push(questName);
+    CU.questsBadge = true; // triggers badge display
+    await saveUser();
+    toast('🏅 Quest badge earned!', 'success');
+    // Spawn celebration
+    for (let i=0;i<5;i++) setTimeout(()=>spawnHeartAnimation(Math.random()*window.innerWidth, Math.random()*window.innerHeight*0.7), i*120);
+  }
+}
+
+// ════════════════════════════════════════════════════
+// SAVE ACCOUNT ON INIT (for account switcher)
+// ════════════════════════════════════════════════════
+function _postInitSetup() {
+  saveCurrentToAccounts();
+  // Update stat strip on atelier view balance updates
+  setInterval(() => {
+    const statO = document.getElementById('stat-onyx');
+    if (statO) statO.textContent = CU?.onyx||0;
+  }, 5000);
+}
+
+
+// ════════════════════════════════════════════════════
+// ADMIN: GRANT RADIANCE
+// ════════════════════════════════════════════════════
+async function adminGrantRadiance() {
+  const username = document.getElementById('radiance-username')?.value?.trim();
+  const days = parseInt(document.getElementById('radiance-days')?.value||'7');
+  if (!username) { toast('Enter a username', 'error'); return; }
+  try {
+    const until = new Date(Date.now() + days*86400000).toISOString();
+    await firebase.database().ref('users/'+username+'/radianceUntil').set(until);
+    toast(`✨ Radiance granted to ${username} for ${days} days`, 'success');
+    logAudit('grant_radiance', username, `${days} days`);
+    document.getElementById('radiance-username').value = '';
+  } catch(e) {
+    toast('Could not grant Radiance: '+e.message, 'error');
+  }
+}
+
+async function adminGrantRadiancePlus() {
+  const username = document.getElementById('radiance-username')?.value?.trim();
+  const days = parseInt(document.getElementById('radiance-days')?.value||'30');
+  if (!username) { toast('Enter a username', 'error'); return; }
+  try {
+    const until = new Date(Date.now() + days*86400000).toISOString();
+    await firebase.database().ref('users/'+username+'/radiancePlus').set(until);
+    await firebase.database().ref('users/'+username+'/radianceUntil').set(until);
+    toast(`🌟 Radiance+ granted to ${username} for ${days} days`, 'success');
+    logAudit('grant_radiance_plus', username, `${days} days`);
+  } catch(e) {
+    toast('Could not grant Radiance+: '+e.message, 'error');
+  }
+}
+
 </script>
 </body>
 </html>

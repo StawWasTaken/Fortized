@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fortized</title>
-<link rel="icon" type="image/png" href="Fortized icon.png">
+<link rel="icon" type="image/png" href="Fortized icon.png" id="favicon">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="FortizedSocial-firebase.js"></script>
@@ -946,15 +946,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
       <div class="atelier-wrap">
         <!-- Sidebar nav -->
         <div class="atelier-nav">
-          <div class="atelier-nav-section">Overview</div>
           <div class="atelier-nav-item active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">🏠 Overview</div>
-          <div class="atelier-nav-section">Shop</div>
-          <div class="atelier-nav-item" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">✨ Radiance</div>
-          <div class="atelier-nav-item" id="atnav-fonts" onclick="switchAtelierTab('fonts',this)">🔤 Fonts</div>
-          <div class="atelier-nav-item" id="atnav-themes" onclick="switchAtelierTab('themes',this)">🎨 Themes</div>
-          <div class="atelier-nav-section">Earn</div>
+          <div class="atelier-nav-item" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">✨ Radiance Dwelling</div>
           <div class="atelier-nav-item" id="atnav-quests" onclick="switchAtelierTab('quests',this)">🎯 Quests</div>
-          <div class="atelier-nav-item" id="atnav-daily" onclick="switchAtelierTab('daily',this)">🎁 Daily</div>
+          <div class="atelier-nav-item" id="atnav-shop" onclick="switchAtelierTab('shop',this)">🛍️ Shop</div>
         </div>
         <!-- Main content -->
         <div class="atelier-scroll" id="atelier-content">
@@ -1229,6 +1224,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 
 
 <script>
+
+// ══════════════════════════════════════════════════════════
+// FAVICON NOTIFICATION SWAP
+// ══════════════════════════════════════════════════════════
+let _faviconHasNotif = false;
+function setFaviconNotif(hasNotif) {
+  if (_faviconHasNotif === hasNotif) return;
+  _faviconHasNotif = hasNotif;
+  const el = document.getElementById('favicon');
+  if (el) el.href = hasNotif ? 'Fortized icon notif.png' : 'Fortized icon.png';
+}
+
 // ════════════════════════════════════════════
 // GLOBAL STATE
 // ════════════════════════════════════════════
@@ -4261,6 +4268,22 @@ const EMOJI_PICKER_TABS = [
 let _recentEmojis = JSON.parse(localStorage.getItem('ftz_recent_emojis')||'[]');
 let _emojiPickerTab = 'smileys';
 
+
+function buildEmojiTabBar() {
+  const tabs = [{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:null,label:'Fortized'},...EMOJI_PICKER_TABS.slice(2)];
+  return tabs.map(t => {
+    const active = _emojiPickerTab === t.id;
+    const baseStyle = 'border:none;cursor:pointer;flex-shrink:0;line-height:1;transition:all .1s;border-radius:8px;padding:5px 7px;';
+    const activeStyle = active ? 'background:rgba(255,249,62,.15);color:var(--accent);' : 'background:transparent;color:rgba(255,255,255,.45);';
+    let inner;
+    if (t.id === 'ftz') {
+      inner = '<img src="Fortized icon.png" width="20" height="20" style="object-fit:contain;vertical-align:middle;display:block;" onerror="this.style.opacity=0">';
+    } else {
+      inner = '<span style="font-size:18px;">' + t.icon + '</span>';
+    }
+    return '<button id="etab-' + t.id + '" title="' + t.label + '" onclick="setEmojiTab(\'' + t.id + '\')" style="' + baseStyle + activeStyle + '">' + inner + '</button>';
+  }).join('');
+}
 function toggleEmojiPicker(targetId) {
   activeEmojiTarget = targetId;
   document.getElementById('giphy-picker')?.remove();
@@ -4314,9 +4337,7 @@ function buildEmojiPicker() {
       <input class="epp-search-inp" placeholder="🔍 Search emoji…" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 12px;outline:none;box-sizing:border-box;" oninput="searchEmojis(this.value)">
     </div>
     <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;flex-shrink:0;padding:4px 6px;">
-      ${[{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:'FTZ',label:'Fortized'},...EMOJI_PICKER_TABS.slice(2)].map(t=>`
-        <button onclick="setEmojiTab('${t.id}')" id="etab-${t.id}" title="${t.label}" style="background:${_emojiPickerTab===t.id?'rgba(255,249,62,.15)':'transparent'};border:none;color:${_emojiPickerTab===t.id?'var(--accent)':'rgba(255,255,255,.5)'};font-size:${t.id==='ftz'?'11px':'18px'};font-weight:${t.id==='ftz'?'800':'400'};padding:6px 8px;border-radius:8px;cursor:pointer;flex-shrink:0;line-height:1;transition:all .1s;${t.id==='ftz'?'font-family:\'Syne\',sans-serif;':''}">${t.id==='ftz'?'<img src="Fortized icon.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;" onerror="this.style.opacity=0">':t.icon}</button>
-      `).join('')}
+      ${buildEmojiTabBar()}
     </div>
     <div id="epp-grid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;max-height:260px;"></div>
     <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.06);font-size:10.5px;color:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
@@ -4670,15 +4691,15 @@ function buildProfileView(tab) {
           <div class="settings-section-title" style="margin-top:32px;">CONNECTIONS</div>
           <div style="background:#1c202b;border-radius:10px;padding:4px 14px;">
             ${[
-              {key:'youtube', icon:'▶', label:'YouTube', color:'#FF4444', placeholder:'https://youtube.com/@channel'},
-              {key:'roblox',  icon:'🎮', label:'Roblox',  color:'#00B2FF', placeholder:'https://roblox.com/users/...'},
-              {key:'spotify', icon:'♪',  label:'Spotify', color:'#1DB954', placeholder:'https://open.spotify.com/user/...'},
-              {key:'twitter', icon:'𝕏', label:'X/Twitter',color:'#1d9bf0', placeholder:'https://x.com/username'},
+              {key:'youtube', icon:'▶', label:'YouTube', pattern:'youtube.com', color:'#FF4444', placeholder:'https://youtube.com/@channel'},
+              {key:'roblox',  icon:'🎮', label:'Roblox',  pattern:'roblox.com',  color:'#00B2FF', placeholder:'https://roblox.com/users/...'},
+              {key:'spotify', icon:'♪',  label:'Spotify', pattern:'spotify.com', color:'#1DB954', placeholder:'https://open.spotify.com/user/...'},
+              {key:'twitter', icon:'𝕏', label:'X / Twitter', pattern:'x.com', color:'#1d9bf0', placeholder:'https://x.com/username'},
             ].map(p => `
               <div class="connected-row">
                 <div class="connected-icon" style="background:${p.color}18;color:${p.color};">${p.icon}</div>
                 <div class="connected-label">${p.label}</div>
-                <input class="settings-input" id="social-${p.key}" value="${escapeHTML((CU.socials||{})[p.key]||'')}" placeholder="${p.placeholder}" style="flex:1;font-size:12.5px;padding:7px 12px;" onchange="validateSocialLink('${p.key}','${p.label.toLowerCase()}.com',this)">
+                <input class="settings-input" id="social-${p.key}" value="${escapeHTML((CU.socials||{})[p.key]||'')}" placeholder="${p.placeholder}" style="flex:1;font-size:12.5px;padding:7px 12px;" onchange="validateSocialLink('${p.key}','${p.pattern||p.key+'.com'}',this)">
               </div>`).join('')}
           </div>
           <button class="settings-save-btn" onclick="saveSocialLinks()" style="margin-top:12px;">Save Connections</button>
@@ -4887,6 +4908,7 @@ async function updateNotifBadge() {
   const unread=notifs.filter(n=>!n.read).length;
   badge.textContent=unread;
   badge.style.display=unread>0?'flex':'none';
+  setFaviconNotif(unread>0);
 }
 
 async function toggleNotifPanel() {
@@ -4938,7 +4960,7 @@ async function buildNotifList() {
   }).join('');
 }
 
-async function markAllRead(){try{await FortizedSocial.markNotificationsRead(CU.username);await updateNotifBadge();await buildNotifList();}catch{}}
+async function markAllRead(){try{await FortizedSocial.markNotificationsRead(CU.username);await updateNotifBadge();await buildNotifList();setFaviconNotif(false);}catch{}}
 
 // ════════════════════════════════════════════
 // USER PROFILE POPUP
@@ -9463,8 +9485,12 @@ let _atelierTab = 'overview';
 
 function switchAtelierTab(tab, el) {
   _atelierTab = tab;
-  document.querySelectorAll('.atelier-nav-item').forEach(i=>i.classList.remove('active'));
+  document.querySelectorAll('.atelier-nav-item').forEach(i => i.classList.remove('active'));
   if (el) el.classList.add('active');
+  else {
+    const navEl = document.getElementById('atnav-' + tab);
+    if (navEl) navEl.classList.add('active');
+  }
   renderAtelierTab(tab);
 }
 
@@ -9473,207 +9499,427 @@ function renderAtelierTab(tab) {
   if (!el) return;
   const balance = CU?.onyx || 0;
   const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const hasRadiancePlus = CU?.radiancePlus && new Date(CU.radiancePlus) > new Date();
   const radianceDaysLeft = hasRadiance ? Math.ceil((new Date(CU.radianceUntil)-Date.now())/86400000) : 0;
+  const radiancePlusDaysLeft = hasRadiancePlus ? Math.ceil((new Date(CU.radiancePlus)-Date.now())/86400000) : 0;
 
+  // ── OVERVIEW ──────────────────────────────────────────────
   if (tab === 'overview') {
+    const completedQuests = CU?.completedQuests || [];
+    const ownedItems = CU?.shopItems || [];
     el.innerHTML = `
-      <div class="atelier-page-title">💎 Atelier</div>
-      <div class="atelier-page-sub">Your Fortized shop — buy upgrades, earn rewards.</div>
-      <div class="atelier-hero">
-        <div class="atelier-bal">
-          <div class="coin">⬡</div>
+      <!-- Onyx banner hero -->
+      <div style="position:relative;height:180px;overflow:hidden;border-radius:0;background:#050810;">
+        <img src="Onyx banner.png" style="width:100%;height:100%;object-fit:cover;opacity:.7;" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(5,8,16,0) 30%,rgba(5,8,16,.9));"></div>
+        <div style="position:absolute;bottom:22px;left:32px;display:flex;align-items:center;gap:14px;">
+          <img src="Onyx.png" style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(255,249,62,.6));" onerror="this.style.display='none'">
           <div>
-            <h3>Onyx Balance</h3>
-            <div class="amt" id="atelier-balance">${balance}</div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,249,62,.6);margin-bottom:2px;">Onyx Balance</div>
+            <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">${balance}</div>
           </div>
         </div>
-        <div class="daily-btn" id="daily-btn" onclick="claimDaily()">
-          <span>Daily Reward</span>
-          <strong>+50 Onyx</strong>
+        <div style="position:absolute;bottom:22px;right:24px;">
+          <button onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="background:rgba(255,249,62,.12);border:1px solid rgba(255,249,62,.25);border-radius:100px;color:var(--accent);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:7px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.2)'" onmouseout="this.style.background='rgba(255,249,62,.12)'">+ Earn Onyx</button>
         </div>
       </div>
-      ${hasRadiance?`
-      <div class="atelier-card" style="background:linear-gradient(135deg,rgba(255,249,62,.08),var(--panel));border-color:rgba(255,249,62,.2);display:flex;align-items:center;gap:16px;">
-        <div style="font-size:36px;">✨</div>
-        <div style="flex:1;">
-          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--accent);">Radiance Active</div>
-          <div style="font-size:12.5px;color:var(--muted-light);margin-top:2px;">${radianceDaysLeft} day${radianceDaysLeft!==1?'s':''} remaining</div>
+
+      <div style="padding:28px 32px 60px;">
+
+        <!-- Radiance status banner -->
+        ${hasRadiancePlus ? `
+        <div style="background:linear-gradient(135deg,rgba(255,120,62,.12),rgba(255,200,62,.08));border:1px solid rgba(255,160,62,.25);border-radius:14px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:14px;">
+          <div style="font-size:32px;">🌟</div>
+          <div style="flex:1;">
+            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#ff9d3e;">Radiance+ Active</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.5);margin-top:2px;">${radiancePlusDaysLeft} day${radiancePlusDaysLeft!==1?'s':''} remaining · Auto-renews</div>
+          </div>
+          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="background:rgba(255,160,62,.15);border:1px solid rgba(255,160,62,.3);border-radius:8px;color:#ff9d3e;font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer;">Manage</button>
+        </div>` : hasRadiance ? `
+        <div style="background:linear-gradient(135deg,rgba(255,249,62,.08),rgba(255,200,62,.05));border:1px solid rgba(255,220,62,.2);border-radius:14px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:14px;">
+          <div style="font-size:28px;">✨</div>
+          <div style="flex:1;">
+            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#ffd93e;">Radiance Active</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.5);margin-top:2px;">${radianceDaysLeft} day${radianceDaysLeft!==1?'s':''} remaining</div>
+          </div>
+          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="background:rgba(255,249,62,.12);border:1px solid rgba(255,249,62,.2);border-radius:8px;color:var(--accent);font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer;">Manage</button>
+        </div>` : `
+        <div style="background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.1);border-radius:14px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" onmouseover="this.style.background='rgba(255,249,62,.04)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+          <div style="font-size:28px;">✨</div>
+          <div style="flex:1;">
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,.7);">Get Radiance</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Profile glow, custom banner, and more</div>
+          </div>
+          <span style="font-size:12px;color:rgba(255,255,255,.3);">→</span>
+        </div>`}
+
+        <!-- Radiance Perks preview -->
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">Radiance Perks</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px;">
+          ${[
+            {icon:'🌟',name:'Profile Glow',desc:'Animated glow on your avatar',locked:!hasRadiance},
+            {icon:'🖼️',name:'Custom Banner',desc:'Full profile banner',locked:!hasRadiance},
+            {icon:'🔤',name:'Custom Font',desc:'Change your display font',locked:!hasRadiancePlus},
+            {icon:'📎',name:'45MB Uploads',desc:'Bigger file attachments',locked:!hasRadiance},
+            {icon:'💎',name:'Radiance Badge',desc:'Exclusive profile badge',locked:!hasRadiance},
+            {icon:'🎁',name:'Gift Radiance',desc:'Gift friends Radiance',locked:!hasRadiancePlus},
+          ].map(p => `
+            <div style="background:${p.locked?'rgba(255,255,255,.02)':'rgba(255,249,62,.04)'};border:1px solid ${p.locked?'rgba(255,255,255,.06)':'rgba(255,249,62,.15)'};border-radius:12px;padding:14px;position:relative;${p.locked?'opacity:.45':''}">
+              <div style="font-size:22px;margin-bottom:7px;">${p.icon}</div>
+              <div style="font-size:12.5px;font-weight:700;color:${p.locked?'rgba(255,255,255,.5)':'#fff'};margin-bottom:3px;">${p.name}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.35);">${p.desc}</div>
+              ${p.locked?'<div style="position:absolute;top:8px;right:8px;font-size:12px;opacity:.5;">🔒</div>':'<div style="position:absolute;top:8px;right:8px;font-size:12px;color:var(--accent);">✓</div>'}
+            </div>`).join('')}
         </div>
-        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" class="btn-a" style="font-size:12px;padding:7px 14px;">Extend</button>
-      </div>`:''}
-      <div class="atelier-section-title">Quick Actions</div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
-        ${[
-          {icon:'✨',title:'Radiance',desc:'Stand out with profile glow, badges, and more',tab:'radiance'},
-          {icon:'🎯',title:'Quests',desc:'Complete quests to earn Onyx rewards',tab:'quests'},
-          {icon:'🎁',title:'Daily Reward',desc:'Claim your +50 Onyx every 24 hours',tab:'daily'},
-          {icon:'🔤',title:'Fonts',desc:'Customize your display name font (Radiance)',tab:'fonts'},
-        ].map(item=>`
-          <div onclick="switchAtelierTab('${item.tab}',document.getElementById('atnav-${item.tab}'))" style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;cursor:pointer;transition:all .15s;display:flex;gap:14px;align-items:center;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--border)'">
-            <div style="font-size:28px;flex-shrink:0;">${item.icon}</div>
-            <div><div style="font-weight:700;font-size:14px;">${item.title}</div><div style="font-size:12px;color:var(--muted-light);margin-top:2px;">${item.desc}</div></div>
-          </div>`).join('')}
+
+        <!-- Completed Quests -->
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">Completed Quests</div>
+        <div style="position:relative;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;margin-bottom:28px;">
+          <img src="Fortized Conquer.png" style="position:absolute;right:-10px;bottom:-10px;height:90px;opacity:.12;pointer-events:none;" onerror="this.style.display='none'">
+          ${(completedQuests.length ? completedQuests.slice(0,5).map(q => `
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);">
+              <div style="width:28px;height:28px;border-radius:50%;background:rgba(62,207,110,.12);border:1px solid rgba(62,207,110,.2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">✓</div>
+              <div style="flex:1;font-size:13px;color:rgba(255,255,255,.6);">${escapeHTML(q)}</div>
+              <div style="font-size:11px;color:var(--green);font-weight:700;">Completed</div>
+            </div>`) : [`<div style="padding:20px;text-align:center;font-size:13px;color:rgba(255,255,255,.3);">No quests completed yet — <span style="color:var(--accent);cursor:pointer;" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">start one!</span></div>`]).join('')}
+        </div>
+
+        <!-- Shop preview -->
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">Shop</div>
+        <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:20px;text-align:center;cursor:pointer;" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))">
+          <div style="font-size:40px;margin-bottom:10px;opacity:.4;">🛍️</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.4);">Coming Soon</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.25);margin-top:4px;">Avatar decorations and more</div>
+        </div>
       </div>`;
-    // Restore claimed state
     refreshDailyBtn();
   }
 
+  // ── RADIANCE DWELLING ─────────────────────────────────────
   else if (tab === 'radiance') {
-    const hasRadiancePlus = CU?.radiancePlus && new Date(CU.radiancePlus) > new Date();
-    const radiancePlusDays = hasRadiancePlus ? Math.ceil((new Date(CU.radiancePlus)-Date.now())/86400000) : 0;
-    el.innerHTML = `
-      <div class="atelier-page-title">✨ Radiance</div>
-      <div class="atelier-page-sub">Two tiers — stand out your way.</div>
-      <div class="atelier-hero">
-        <div class="atelier-bal"><div class="coin">⬡</div><div><h3>Balance</h3><div class="amt" id="atelier-balance">${balance}</div></div></div>
-        <div style="text-align:right;">
-          ${hasRadiancePlus?`<div class="radplus-badge">✨+ Radiance+ · ${radiancePlusDays}d left</div>`:''}
-          ${hasRadiance&&!hasRadiancePlus?`<div class="radiance-badge">✨ Radiance · ${radianceDaysLeft}d left</div>`:''}
-        </div>
-      </div>
+    const planBasic = [{icon:'✨',t:'Profile Glow'},{icon:'🖼️',t:'Custom Banner'},{icon:'📎',t:'30MB Uploads'},{icon:'💎',t:'Radiance Badge'},{icon:'🔔',t:'Priority Notifications'}];
+    const planPlus  = [{icon:'🔤',t:'Font Selector'},{icon:'📎',t:'100MB Uploads'},{icon:'🎁',t:'Gift Radiance'},{icon:'⚡',t:'Bastion Boost'},{icon:'🌟',t:'Animated Badge'}];
+    const PRICE_BASIC = [{days:7,onyx:200,label:'7 Days'},{days:30,onyx:600,label:'30 Days',best:true},{days:90,onyx:1500,label:'90 Days'}];
+    const PRICE_PLUS  = [{days:30,onyx:1200,label:'30 Days',best:true},{days:90,onyx:3000,label:'90 Days'}];
 
-      <!-- TIER SELECTOR -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
-        <!-- BASIC RADIANCE -->
-        <div style="background:linear-gradient(135deg,rgba(255,200,62,.08),var(--panel));border:1.5px solid rgba(255,220,62,.25);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="font-size:32px;">✨</div>
+    el.innerHTML = `
+      <div style="padding:32px;max-width:700px;">
+
+        <!-- Active plan display -->
+        ${hasRadiancePlus ? `
+        <div style="background:linear-gradient(135deg,rgba(255,120,62,.15),rgba(255,200,62,.08));border:1.5px solid rgba(255,160,62,.3);border-radius:16px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:center;gap:16px;">
+          <div style="font-size:40px;">🌟</div>
+          <div style="flex:1;">
+            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#ff9d3e;">Radiance+ Active</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:3px;">${radiancePlusDaysLeft} days remaining · Auto-renews for 1200 ⬡</div>
+          </div>
+          <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;">Cancel</button>
+        </div>` : hasRadiance ? `
+        <div style="background:linear-gradient(135deg,rgba(255,249,62,.08),rgba(255,200,62,.04));border:1.5px solid rgba(255,220,62,.2);border-radius:16px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:center;gap:16px;">
+          <div style="font-size:36px;">✨</div>
+          <div style="flex:1;">
+            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#ffd93e;">Radiance Active</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:3px;">${radianceDaysLeft} days remaining · Auto-renews for 600 ⬡</div>
+          </div>
+          <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;">Cancel</button>
+        </div>` : ''}
+
+        <!-- Plans -->
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">Choose a Plan</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;">
+          <!-- Basic Radiance -->
+          <div style="background:rgba(255,249,62,.04);border:1.5px solid rgba(255,220,62,.18);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px;">
+            <div style="font-size:28px;">✨</div>
             <div>
               <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ffd93e;">Radiance</div>
-              <div style="font-size:11px;color:var(--muted-light);">Basic tier</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">Core perks</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
+              ${planBasic.map(p=>`<div style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:rgba(255,255,255,.65);"><span>${p.icon}</span>${p.t}</div>`).join('')}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+              ${PRICE_BASIC.map(pl=>`
+                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:9px;border-radius:9px;background:${pl.best?'var(--accent)':'rgba(255,255,255,.06)'};color:${pl.best?'#060810':'rgba(255,255,255,.7)'};border:1px solid ${pl.best?'transparent':'rgba(255,255,255,.1)'};font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:.15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''">
+                  <span>${pl.label}</span>
+                  <span>${pl.onyx} ⬡${pl.best?' 🔥':''}</span>
+                </button>`).join('')}
             </div>
           </div>
-          <div style="font-size:12.5px;color:var(--muted-light);line-height:1.6;">Profile glow · Custom banner · Radiance badge · 30MB uploads</div>
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-            <button class="btn-a" style="font-size:12px;padding:8px;" onclick="buyRadiance(7,200)">7 Days — 200 ⬡</button>
-            <button class="btn-a" style="font-size:12px;padding:8px;" onclick="buyRadiance(30,600)">30 Days — 600 ⬡ <span style="font-size:9px;background:#000a;padding:1px 5px;border-radius:6px;margin-left:4px;">BEST</span></button>
-            <button class="btn-a" style="font-size:12px;padding:8px;" onclick="buyRadiance(90,1500)">90 Days — 1500 ⬡</button>
-          </div>
-        </div>
-        <!-- RADIANCE+ -->
-        <div style="background:linear-gradient(135deg,rgba(255,120,62,.12),rgba(255,200,62,.06),var(--panel));border:1.5px solid rgba(255,160,62,.35);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;">
-          <div style="position:absolute;top:10px;right:12px;background:var(--accent);color:#060810;font-size:9px;font-weight:800;padding:3px 8px;border-radius:100px;">NEW</div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="font-size:32px;">🌟</div>
+          <!-- Radiance+ -->
+          <div style="background:linear-gradient(135deg,rgba(255,120,62,.1),rgba(255,200,62,.05));border:1.5px solid rgba(255,160,62,.28);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:12px;right:12px;background:var(--accent);color:#060810;font-size:9px;font-weight:800;padding:3px 8px;border-radius:100px;letter-spacing:.04em;">BEST</div>
+            <div style="font-size:28px;">🌟</div>
             <div>
               <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ff9d3e;">Radiance+</div>
-              <div style="font-size:11px;color:var(--muted-light);">Premium tier — everything in Radiance, plus more</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">All perks unlocked</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
+              ${[...planBasic,...planPlus].map(p=>`<div style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:rgba(255,255,255,.65);"><span>${p.icon}</span>${p.t}</div>`).join('')}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+              ${PRICE_PLUS.map(pl=>`
+                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:9px;border-radius:9px;background:${pl.best?'linear-gradient(90deg,#ff9d3e,#ffd93e)':'rgba(255,255,255,.06)'};color:${pl.best?'#060810':'rgba(255,255,255,.7)'};border:1px solid ${pl.best?'transparent':'rgba(255,255,255,.1)'};font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:.15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''">
+                  <span>${pl.label}</span>
+                  <span>${pl.onyx} ⬡${pl.best?' 🔥':''}</span>
+                </button>`).join('')}
             </div>
           </div>
-          <div style="font-size:12.5px;color:var(--muted-light);line-height:1.6;">All Radiance perks · Font selector · Animated badge · 100MB uploads · Bastion boost · Priority support</div>
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-            <button class="btn-a" style="font-size:12px;padding:8px;background:linear-gradient(90deg,#ff9d3e,#ffd93e);color:#060810;" onclick="buyRadiancePlus(30,1200)">30 Days — 1200 ⬡</button>
-            <button class="btn-a" style="font-size:12px;padding:8px;background:linear-gradient(90deg,#ff9d3e,#ffd93e);color:#060810;" onclick="buyRadiancePlus(90,3000)">90 Days — 3000 ⬡ <span style="font-size:9px;background:#0006;padding:1px 5px;border-radius:6px;margin-left:4px;">BEST</span></button>
-          </div>
         </div>
-      </div>
 
-      <div class="atelier-section-title">Feature Comparison</div>
-      <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
-        <div style="display:grid;grid-template-columns:1fr 80px 80px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 16px;border-bottom:1px solid var(--border);">
-          <div>Feature</div><div style="text-align:center;color:#ffd93e;">Basic</div><div style="text-align:center;color:#ff9d3e;">Plus</div>
-        </div>
-        ${[
-          ['Profile Glow','✓','✓'],['Custom Banner','✓','✓'],['Radiance Badge','✓','✓'],['30MB Uploads','✓','✓'],
-          ['Font Selector','–','✓'],['Animated Badge','–','✓'],['100MB Uploads','–','✓'],['Bastion Boost','–','✓'],['Priority Support','–','✓'],
-        ].map(([feat,basic,plus])=>`
-          <div style="display:grid;grid-template-columns:1fr 80px 80px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-            <div style="color:var(--text);">${feat}</div>
-            <div style="text-align:center;color:${basic==='✓'?'var(--green)':'var(--muted)'};">${basic}</div>
-            <div style="text-align:center;color:${plus==='✓'?'#ff9d3e':'var(--muted)'};">${plus}</div>
-          </div>`).join('')}
+        <!-- Gift Radiance -->
+        ${hasRadiancePlus ? `
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">🎁 Gift Radiance</div>
+        <div id="gift-radiance-section">
+          ${buildGiftRadianceUI()}
+        </div>` : `
+        <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px;display:flex;align-items:center;gap:12px;">
+          <div style="font-size:24px;">🎁</div>
+          <div><div style="font-size:13.5px;font-weight:600;color:rgba(255,255,255,.5);">Gift Radiance to Friends</div><div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:2px;">Requires Radiance+</div></div>
+        </div>`}
       </div>`;
   }
 
+  // ── QUESTS ────────────────────────────────────────────────
   else if (tab === 'quests') {
+    const completedQuests = CU?.completedQuests || [];
+    const today = new Date().toDateString();
+    const dailyClaimed = CU?.lastDailyReward === today || CU?.lastDaily === today;
+
+    const allQuests = [
+      {
+        id:'daily_claim', icon:'🎁', title:'Daily Claim',
+        desc:'Claim your daily Onyx reward. Come back every day!',
+        reward:50, rewardLabel:'50 Onyx',
+        action:`claimDailyQuest()`,
+        completed: dailyClaimed, progress: dailyClaimed?1:0, total:1,
+        category:'Daily',
+      },
+      {
+        id:'invite_friend', icon:'🔗', title:'Invite a Friend',
+        desc:'Generate your personal invite link and get a friend to join Fortized. Earn +9 Onyx per friend who stays 24h.',
+        reward:9, rewardLabel:'+9 Onyx per friend',
+        action:`switchAtelierTab('overview');setTimeout(()=>regeneratePersonalInvite(),100)`,
+        completed: completedQuests.includes('invite'), progress: completedQuests.includes('invite')?1:0, total:1,
+        category:'Weekly',
+      },
+      {
+        id:'join_bastion', icon:'🏰', title:'Join a Bastion',
+        desc:'Find and join a public community Bastion using Discover.',
+        reward:25, rewardLabel:'25 Onyx',
+        action:`showView('discover')`,
+        completed: completedQuests.includes('join_bastion') || (CU?.bastions||[]).length>0, progress: (CU?.bastions||[]).length>0?1:0, total:1,
+        category:'Beginner',
+      },
+      {
+        id:'add_friend', icon:'👥', title:'Add Your First Friend',
+        desc:'Send a friend request to someone on Fortized.',
+        reward:15, rewardLabel:'15 Onyx',
+        action:`openModal('modal-add-friend')`,
+        completed: completedQuests.includes('add_friend') || (CU?.friends||[]).length>0, progress: Math.min((CU?.friends||[]).length,1), total:1,
+        category:'Beginner',
+      },
+      {
+        id:'set_pfp', icon:'🖼️', title:'Set Your Avatar',
+        desc:'Upload a profile picture to personalize your account.',
+        reward:20, rewardLabel:'20 Onyx',
+        action:`showView('profile')`,
+        completed: completedQuests.includes('set_pfp') || !!CU?.pfp, progress: CU?.pfp?1:0, total:1,
+        category:'Beginner',
+      },
+    ];
+
+    const active = allQuests.filter(q => !q.completed);
+    const done   = allQuests.filter(q => q.completed);
+
     el.innerHTML = `
-      <div class="atelier-page-title">🎯 Quests</div>
-      <div class="atelier-page-sub">Complete quests to earn Onyx.</div>
-      <div class="atelier-hero">
-        <div class="atelier-bal"><div class="coin">⬡</div><div><h3>Balance</h3><div class="amt" id="atelier-balance">${balance}</div></div></div>
-      </div>
-      <div class="atelier-section-title">Active Quests</div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden;">
-          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),rgba(255,249,62,.2));"></div>
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-            <div style="font-size:26px;">🔗</div>
-            <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;">Invite Friends</div><div style="font-size:12.5px;color:var(--muted-light);">Earn +9 Onyx per friend who joins and stays 24h</div></div>
-            <div style="margin-left:auto;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">+9 ⬡</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:11px;font-family:monospace;color:var(--accent);word-break:break-all;" id="invite-link-display">Click below to generate your link</div>
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <button class="btn-a" style="flex:1;font-size:12.5px;" onclick="regeneratePersonalInvite();awardQuestBadge();">⟳ Generate Link</button>
-            <button class="btn-g" style="padding:8px 14px;font-size:12.5px;" onclick="navigator.clipboard.writeText(document.getElementById('invite-link-display').textContent).then(()=>toast('Copied!','success'))">Copy</button>
-          </div>
-        </div>
-        <div style="background:var(--panel);border:1px dashed var(--border);border-radius:16px;padding:20px;display:flex;align-items:center;gap:14px;opacity:.5;">
-          <div style="font-size:26px;">🔒</div>
-          <div><div style="font-weight:600;font-size:14px;">More Quests Coming Soon</div><div style="font-size:12px;color:var(--muted-light);">Stay tuned for new ways to earn Onyx</div></div>
-        </div>
+      <div style="padding:32px;max-width:680px;">
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;">Quests</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:28px;">Complete quests to earn Onyx and unlock rewards.</div>
+
+        ${active.length ? `
+        <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px;">AVAILABLE</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px;">
+          ${active.map(q => `
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 20px;display:flex;gap:16px;align-items:flex-start;transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'">
+              <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${q.icon}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                  <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;">${q.title}</div>
+                  <span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(255,249,62,.08);color:rgba(255,249,62,.7);letter-spacing:.04em;">${q.category}</span>
+                </div>
+                <div style="font-size:12.5px;color:rgba(255,255,255,.45);line-height:1.5;margin-bottom:10px;">${q.desc}</div>
+                <!-- Progress bar -->
+                <div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-bottom:8px;">
+                  <div style="height:100%;background:var(--accent);border-radius:2px;width:${q.total>0?Math.round(q.progress/q.total*100):0}%;transition:width .4s;"></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="font-size:11.5px;color:rgba(255,255,255,.3);">${q.progress}/${q.total} · <span style="color:var(--accent);font-weight:700;">${q.rewardLabel}</span></div>
+                  <button onclick="${q.action}" style="background:var(--accent);color:#060810;border:none;border-radius:8px;padding:6px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''">Start →</button>
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>` : ''}
+
+        ${done.length ? `
+        <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px;">COMPLETED</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${done.map(q => `
+            <div style="background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.1);border-radius:12px;padding:14px 18px;display:flex;gap:14px;align-items:center;opacity:.7;">
+              <div style="width:36px;height:36px;border-radius:10px;background:rgba(62,207,110,.1);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${q.icon}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13.5px;font-weight:700;margin-bottom:2px;">${q.title}</div>
+                <div style="font-size:11.5px;color:rgba(255,255,255,.35);">${q.rewardLabel} earned</div>
+              </div>
+              <div style="font-size:20px;color:var(--green);">✓</div>
+            </div>`).join('')}
+        </div>` : ''}
       </div>`;
-    // Restore invite link
-    if (CU?.personalInviteCode) {
-      const d = document.getElementById('invite-link-display');
-      if (d) { const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode; d.textContent=l; d.style.cursor='pointer'; d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success')); }
-    }
   }
 
-  else if (tab === 'daily') {
+  // ── SHOP ─────────────────────────────────────────────────
+  else if (tab === 'shop') {
     el.innerHTML = `
-      <div class="atelier-page-title">🎁 Daily Reward</div>
-      <div class="atelier-page-sub">Come back every day to claim your free Onyx.</div>
-      <div style="max-width:420px;margin:0 auto;text-align:center;padding-top:20px;">
-        <div style="font-size:80px;margin-bottom:20px;">🎁</div>
-        <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--accent);margin-bottom:8px;">+50 Onyx</div>
-        <div style="font-size:14px;color:var(--muted-light);margin-bottom:28px;">Claim your daily reward once every 24 hours.</div>
-        <div class="daily-btn" id="daily-btn" onclick="claimDaily()" style="margin:0 auto;width:fit-content;">
-          <span>Claim Now</span>
-          <strong>+50 Onyx</strong>
+      <div style="padding:32px;max-width:680px;">
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;">Shop</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:32px;">Unlock cosmetics and decorations for your profile.</div>
+
+        <!-- Coming soon section -->
+        <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:48px 32px;text-align:center;margin-bottom:24px;">
+          <div style="font-size:60px;margin-bottom:18px;filter:drop-shadow(0 0 24px rgba(255,249,62,.2));">🛍️</div>
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">Nothing here yet!</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.4);max-width:380px;margin:0 auto;line-height:1.65;">Avatar decorations are coming soon — animated frames, badges, and effects that work just like Discord's avatar decorations.</div>
         </div>
-        <div style="margin-top:20px;font-size:12px;color:var(--muted);">Current balance: <strong style="color:var(--accent);">${balance} Onyx</strong></div>
+
+        <!-- Preview cards (locked) -->
+        <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:14px;">COMING SOON</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          ${['Avatar Frames','Profile Effects','Name Colors'].map(name=>`
+            <div style="background:rgba(255,255,255,.02);border:1.5px dashed rgba(255,255,255,.08);border-radius:14px;padding:20px;text-align:center;">
+              <div style="font-size:32px;margin-bottom:10px;opacity:.3;">🔒</div>
+              <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.3);">${name}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.2);margin-top:4px;">In development</div>
+            </div>`).join('')}
+        </div>
       </div>`;
-    refreshDailyBtn();
   }
 
-  else if (tab === 'fonts') {
-    const hasR = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
-    el.innerHTML = hasR ? `
-      <div class="atelier-page-title">🔤 Font Selector</div>
-      <div class="atelier-page-sub">Choose a custom font for your display name (Radiance perk).</div>
-      <div id="font-selector-root"></div>` : `
-      <div class="atelier-page-title">🔤 Font Selector</div>
-      <div class="atelier-page-sub">A Radiance perk — upgrade to unlock.</div>
-      <div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:36px;text-align:center;max-width:420px;">
-        <div style="font-size:44px;margin-bottom:14px;">🔒</div>
-        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Radiance Required</div>
-        <div style="font-size:13px;color:var(--muted-light);margin-bottom:20px;">Get Radiance to unlock custom display name fonts.</div>
-        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" class="btn-a">View Radiance Plans</button>
-      </div>`;
-    if (hasR) { setTimeout(()=>buildFontSelector('font-selector-root'), 0); }
-  }
-
-  else if (tab === 'themes') {
-    el.innerHTML = `
-      <div class="atelier-page-title">🎨 Themes</div>
-      <div class="atelier-page-sub">Customize the Fortized color palette.</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:600px;">
-        ${[
-          {name:'Fortized Dark',desc:'Default dark theme',accent:'#ffd93e',bg:'#0a0d16'},
-          {name:'Midnight Blue',desc:'Deep blue vibes',accent:'#60a5fa',bg:'#070d1a'},
-          {name:'Forest',desc:'Earthy green tones',accent:'#3ecf6e',bg:'#07120d'},
-          {name:'Crimson',desc:'Bold red accents',accent:'#f87171',bg:'#120707'},
-          {name:'Violet',desc:'Purple dream',accent:'#a78bfa',bg:'#0c0714'},
-          {name:'Frost',desc:'Cool icy tones',accent:'#93c5fd',bg:'#080e18'},
-        ].map(t=>`
-          <div onclick="applyTheme('${t.name}')" style="background:${t.bg};border:2px solid ${t.accent}33;border-radius:16px;padding:18px;cursor:pointer;transition:all .15s;" onmouseenter="this.style.borderColor='${t.accent}'" onmouseleave="this.style.borderColor='${t.accent}33'">
-            <div style="width:24px;height:24px;border-radius:50%;background:${t.accent};margin-bottom:10px;box-shadow:0 0 10px ${t.accent}66;"></div>
-            <div style="font-weight:700;font-size:13.5px;color:#fff;">${t.name}</div>
-            <div style="font-size:11.5px;color:rgba(255,255,255,.4);margin-top:2px;">${t.desc}</div>
-          </div>`).join('')}
-      </div>`;
+  else {
+    el.innerHTML = `<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3></div>`;
   }
 }
+
+// ── Atelier helpers ───────────────────────────────────────
+async function purchaseRadiance(isPlus, days, cost) {
+  const balance = CU?.onyx || 0;
+  if (balance < cost) {
+    // Not enough onyx
+    const choice = await new Promise(resolve => {
+      const ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
+      ov.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:380px;width:90%;text-align:center;">
+        <div style="font-size:40px;margin-bottom:14px;">😕</div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Not Enough Onyx</div>
+        <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} ⬡</strong> but only have <strong>${balance} ⬡</strong>.<br>Complete quests to earn more Onyx!</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:#060810;font-family:'Syne',sans-serif;font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
+          <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.06);color:var(--muted-light);border:1px solid var(--border);border-radius:10px;cursor:pointer;">Not Now</button>
+        </div>
+      </div>`;
+      document.body.appendChild(ov);
+    });
+    return;
+  }
+  showCustomConfirm(`Purchase ${isPlus?'Radiance+':'Radiance'} for ${days} days (${cost} Onyx)?`, async () => {
+    CU.onyx = (CU.onyx||0) - cost;
+    const until = new Date(Date.now() + days*86400000).toISOString();
+    if (isPlus) { CU.radiancePlus = until; CU.radianceUntil = until; }
+    else { CU.radianceUntil = until; }
+    await saveUser();
+    updateOnyxDisplay();
+    toast(`✨ ${isPlus?'Radiance+':'Radiance'} active for ${days} days!`, 'success');
+    renderAtelierTab('radiance');
+  });
+}
+
+async function cancelRadiance() {
+  showCustomConfirm('Cancel your Radiance subscription? It will expire at the end of the current period.', async () => {
+    delete CU.radianceUntil;
+    delete CU.radiancePlus;
+    await saveUser();
+    toast('Radiance subscription cancelled.', 'info');
+    renderAtelierTab('radiance');
+  });
+}
+
+async function claimDailyQuest() {
+  const today = new Date().toDateString();
+  if (CU.lastDailyReward === today || CU.lastDaily === today) {
+    toast('Already claimed today! Come back tomorrow.', 'info');
+    return;
+  }
+  CU.onyx = (CU.onyx||0) + 50;
+  CU.lastDailyReward = today;
+  CU.lastDaily = today;
+  if (!CU.completedQuests) CU.completedQuests = [];
+  if (!CU.completedQuests.includes('daily_claim')) CU.completedQuests.push('daily_claim');
+  await saveUser();
+  updateOnyxDisplay();
+  animateOnyxGain(50);
+  toast('🎁 +50 Onyx claimed!', 'success');
+  renderAtelierTab('quests');
+}
+
+function buildGiftRadianceUI() {
+  const friends = CU?.friends || [];
+  const gifted = CU?.giftedRadiance || {};
+  if (!friends.length) return '<div style="font-size:13px;color:rgba(255,255,255,.3);padding:10px 0;">Add friends to gift them Radiance.</div>';
+  return `<div style="display:flex;flex-direction:column;gap:8px;">
+    ${friends.slice(0,8).map(f => {
+      const fg = gifted[f];
+      const hasGifted = fg && new Date(fg.until) > new Date();
+      const daysLeft = hasGifted ? Math.ceil((new Date(fg.until)-Date.now())/86400000) : 0;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;">
+        <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,f,32)}</div>
+        <div style="flex:1;font-size:13px;font-weight:600;">${escapeHTML(f)}</div>
+        ${hasGifted
+          ? `<span style="font-size:11.5px;color:rgba(255,255,255,.4);">${daysLeft}d left</span>
+             <button onclick="cancelGiftRadiance('${escapeHTML(f)}')" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.18);color:var(--red);font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Cancel</button>`
+          : `<button onclick="giftRadianceTo('${escapeHTML(f)}')" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:var(--accent);font-size:11px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer;">🎁 Gift</button>`}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+async function giftRadianceTo(friendUsername) {
+  const cost = 600; // 30-day gift
+  if ((CU?.onyx||0) < cost) { toast('Not enough Onyx!', 'error'); return; }
+  showCustomConfirm(`Gift 30 days of Radiance to ${friendUsername} for ${cost} Onyx?`, async () => {
+    CU.onyx = (CU.onyx||0) - cost;
+    if (!CU.giftedRadiance) CU.giftedRadiance = {};
+    const until = new Date(Date.now() + 30*86400000).toISOString();
+    CU.giftedRadiance[friendUsername] = {until, cost};
+    // Set on friend's account
+    try {
+      await firebase.database().ref('users/'+friendUsername+'/radianceUntil').set(until);
+      await firebase.database().ref('notifications/'+friendUsername).push({type:'gift',from:CU.username,msg:`${CU.username} gifted you 30 days of Radiance! ✨`,time:new Date().toISOString()});
+    } catch {}
+    await saveUser();
+    updateOnyxDisplay();
+    toast(`✨ Gifted Radiance to ${friendUsername}!`, 'success');
+    renderAtelierTab('radiance');
+  });
+}
+
+async function cancelGiftRadiance(friendUsername) {
+  showCustomConfirm(`Cancel ${friendUsername}'s gifted Radiance?`, async () => {
+    if (CU.giftedRadiance) delete CU.giftedRadiance[friendUsername];
+    try { await firebase.database().ref('users/'+friendUsername+'/radianceUntil').remove(); } catch {}
+    await saveUser();
+    toast('Gift cancelled.', 'info');
+    renderAtelierTab('radiance');
+  });
+}
+
 
 function applyTheme(name) {
   // Basic theme switching - just a stub with toast for now

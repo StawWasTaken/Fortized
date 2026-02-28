@@ -183,22 +183,45 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .reply-bar-text{flex:1;color:var(--muted-light);}
 .reply-bar-text strong{color:var(--accent);}
 .reply-bar button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}
-.chat-input-wrap{padding:0 16px 14px;flex-shrink:0;}
-.typing-indicator{display:flex;align-items:center;gap:7px;padding:4px 16px 6px;min-height:20px;font-size:12px;color:var(--muted);transition:opacity .2s;}
+.chat-input-wrap{padding:0 14px 12px;flex-shrink:0;}
+.typing-indicator{display:flex;align-items:center;gap:7px;padding:3px 14px 5px;min-height:18px;font-size:11.5px;color:var(--muted);transition:opacity .2s;}
 .typing-dots{display:flex;gap:3px;align-items:center;}
 .typing-dots span{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:typingBounce 1.2s infinite ease-in-out;}
 .typing-dots span:nth-child(2){animation-delay:.2s;}
 .typing-dots span:nth-child(3){animation-delay:.4s;}
 @keyframes typingBounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
-.chat-input-box{background:var(--panel2);border:1px solid var(--border);border-radius:14px;display:flex;align-items:flex-end;gap:5px;padding:8px 11px;transition:border-color .15s;}
-.chat-input-box:focus-within{border-color:rgba(255,249,62,.24);}
-.chat-input-box textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;resize:none;max-height:120px;line-height:1.5;padding:2px 0;}
-.chat-input-box textarea::placeholder{color:var(--muted);}
-.chat-send{width:32px;height:32px;border-radius:10px;background:var(--accent);border:none;color:#060810;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.chat-send:hover{filter:brightness(1.08);}
+/* Chat input redesign */
+.chat-input-outer{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;transition:border-color .2s,box-shadow .2s;}
+.chat-input-outer:focus-within{border-color:rgba(255,249,62,.3);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
+.chat-input-toolbar{display:flex;align-items:center;gap:1px;padding:6px 10px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.cit-btn{background:transparent;border:none;color:rgba(255,255,255,.4);cursor:pointer;width:32px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:16px;flex-shrink:0;}
+.cit-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);}
+.cit-btn.active{color:var(--accent);background:rgba(255,249,62,.1);}
+.cit-sep{width:1px;height:18px;background:rgba(255,255,255,.08);margin:0 3px;flex-shrink:0;}
+.cit-gif{background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:5px;color:rgba(255,255,255,.5);font-size:10px;font-weight:800;padding:2px 5px;cursor:pointer;letter-spacing:.04em;transition:all .15s;}
+.cit-gif:hover{border-color:rgba(255,255,255,.3);color:#fff;background:rgba(255,255,255,.06);}
+.chat-input-row{display:flex;align-items:flex-end;padding:6px 10px 8px;gap:8px;}
+.chat-input-row textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;resize:none;max-height:140px;min-height:22px;line-height:1.5;padding:0;}
+.chat-input-row textarea::placeholder{color:rgba(255,255,255,.3);}
+.chat-send-btn{width:34px;height:34px;border-radius:10px;background:var(--accent);border:none;color:#060810;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.chat-send-btn:hover{filter:brightness(1.1);transform:scale(1.05);}
+.chat-send-btn:active{transform:scale(.95);}
+/* Drag-drop overlay */
+.drop-overlay{position:fixed;inset:0;background:rgba(255,249,62,.08);border:3px dashed rgba(255,249,62,.5);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;pointer-events:none;}
+.drop-overlay.active{display:flex;}
+.drop-overlay .doi{font-size:64px;}
+.drop-overlay .dot{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);}
+/* Image crop modal */
+.crop-modal-overlay{position:fixed;inset:0;background:rgba(4,6,10,.96);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;}
+.crop-box{background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:500px;width:100%;overflow:hidden;}
+.crop-canvas-wrap{position:relative;overflow:hidden;background:#000;width:100%;aspect-ratio:1;cursor:move;}
+.crop-canvas-wrap.banner-crop{aspect-ratio:16/5;}
+/* Old aliases kept */
+.chat-input-box{background:transparent;border:none;border-radius:0;display:flex;flex-direction:column;gap:0;padding:0;transition:none;}
+.chat-input-box:focus-within{border-color:transparent;}
 .chat-input-actions{display:flex;gap:2px;align-items:center;}
 .chat-input-actions button{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
-.chat-input-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
+.chat-send{display:none;}
 .member-list{width:290px;min-width:290px;max-width:290px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;padding:12px 0;flex-shrink:0;}
 .ml-role-header{padding:6px 14px 4px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:10px;}
 .ml-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;overflow:hidden;}
@@ -1352,22 +1375,23 @@ const EMOTICON_MAP = {
 // Fortized custom emojis — hosted on GitHub
 // Base URL for the Fortized emojis folder
 const FTZ_EMOJI_BASE = 'https://raw.githubusercontent.com/stawlacasse/fortized-emojis/main/';
-const FORTIZED_EMOJIS = [
-  // Knights / Characters
-  'knight_angry','knight_happy','knight_sad','knight_surprised','knight_love',
-  'knight_laugh','knight_cool','knight_think','knight_sweat','knight_dead',
-  // Fortized brand
-  'fortized_logo','fortized_crown','fortized_shield','fortized_sword','fortized_gem',
-  // Reactions / misc
-  'ftz_fire','ftz_gg','ftz_ez','ftz_pog','ftz_kek','ftz_clap','ftz_hype',
-  'ftz_rip','ftz_wave','ftz_salute','ftz_heart','ftz_love','ftz_based',
-  'ftz_cope','ftz_ratio','ftz_w','ftz_l','ftz_skill','ftz_noob','ftz_toxic',
+// Exact filenames from the Fortized emojis GitHub folder
+// Format: [name, extension] — .gif for animated, .png for static
+const FORTIZED_EMOJIS_DATA = [
+  ['joyster_laugh',  'png'],
+  ['joyster_smirk',  'png'],
+  ['knight_angry',   'png'],
+  ['knight_bop',     'gif'],
+  ['knight_cute',    'png'],
+  ['knight_smile',   'png'],
+  ['knight_sob',     'png'],
+  ['knight_thumb_up','png'],
+  ['knight_vomito',  'png'],
 ];
-// Build lookup map: name → URL
+const FORTIZED_EMOJIS = FORTIZED_EMOJIS_DATA.map(d => d[0]);
 const FORTIZED_EMOJI_MAP = {};
-FORTIZED_EMOJIS.forEach(name => {
-  // Try .gif first, fallback to .png handled at render time
-  FORTIZED_EMOJI_MAP[name] = FTZ_EMOJI_BASE + name + '.png';
+FORTIZED_EMOJIS_DATA.forEach(([name, ext]) => {
+  FORTIZED_EMOJI_MAP[name] = FTZ_EMOJI_BASE + name + '.' + ext;
 });
 
 const QUIZ_QUESTIONS = [
@@ -1767,29 +1791,12 @@ function openDMView(username) {
           <p>Beginning of your conversation with <strong>${escapeHTML(username)}</strong>.</p>
         </div>
       </div>
-      <div class="reply-bar" id="dm-reply-bar">
-        <span class="reply-bar-text">Replying to <strong id="dm-reply-name"></strong></span>
-        <button onclick="cancelReply('dm')">✕</button>
-      </div>
+
       <div class="typing-indicator" id="dm-typing-bar" style="opacity:0;">
         <div class="typing-dots"><span></span><span></span><span></span></div>
         <span id="dm-typing-text"></span>
       </div>
-      <div class="chat-input-wrap">
-        <div class="chat-input-box">
-          <div class="chat-input-actions">
-            <button onclick="openFileUpload('dm-input')" title="Attach file" style="font-size:16px;">📎</button>
-            <button id="emoji-btn-dm" onclick="toggleEmojiPicker('dm-input')" title="Emoji">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-            </button>
-            <button onclick="openGiphyPicker('dm-input')" title="GIF" style="font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);">GIF</button>
-          </div>
-          <textarea id="dm-input" placeholder="Message ${escapeHTML(username)}…" rows="1"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();handleChatSend('dm');}"
-            oninput="autoResize(this);broadcastTyping()"></textarea>
-          <button class="chat-send" onclick="handleChatSend('dm')">➤</button>
-        </div>
-      </div>
+      \${buildChatInputBar({inputId:'dm-input',placeholder:'Message \${escapeHTML(username)}…',context:'dm'})}
     </div>`;
   loadDMMessages(username);
   setTimeout(() => showDMUserPanel(username), 80);
@@ -1847,7 +1854,7 @@ async function sendDM() {
   _stopTypingBroadcast();
   const inp=document.getElementById('dm-input');
   if (!inp||!curDM) return;
-  const text=inp.value.trim();
+  let text=preprocessMessageText(inp.value.trim());
   if (!text && !window._pendingAttachment) return;
   // Safety pre-check
   if (text) { const sw = contentSafetyCheck(text); if (sw) showContentWarning(sw); }
@@ -2040,29 +2047,12 @@ async function openGroupChatView(gcId) {
           <p>Welcome to <strong>${escapeHTML(meta.name)}</strong>! ${(meta.members||[]).length} members.</p>
         </div>
       </div>
-      <div class="reply-bar" id="gc-reply-bar" style="display:none;">
-        <span class="reply-bar-text">Replying to <strong id="gc-reply-name"></strong></span>
-        <button onclick="cancelGCReply()">✕</button>
-      </div>
+
       <div class="typing-indicator" id="gc-typing-bar" style="opacity:0;">
         <div class="typing-dots"><span></span><span></span><span></span></div>
         <span id="gc-typing-text"></span>
       </div>
-      <div class="chat-input-wrap">
-        <div class="chat-input-box">
-          <div class="chat-input-actions">
-            <button onclick="openFileUpload('gc-input')" title="Attach" style="font-size:16px;">📎</button>
-            <button id="emoji-btn-gc" onclick="toggleEmojiPicker('gc-input')" title="Emoji">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-            </button>
-            <button onclick="openGiphyPicker('gc-input')" style="font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);">GIF</button>
-          </div>
-          <textarea id="gc-input" placeholder="Message ${escapeHTML(meta.name)}…" rows="1"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGCMessage();}"
-            oninput="autoResize(this);broadcastGCTyping()"></textarea>
-          <button class="chat-send" onclick="sendGCMessage()">➤</button>
-        </div>
-      </div>
+      \${buildChatInputBar({inputId:'gc-input',placeholder:'Message \${escapeHTML(meta.name)}…',context:'gc'})}
     </div>`;
 
   // Load messages
@@ -2145,7 +2135,7 @@ async function loadGCMessages(gcId) {
 async function sendGCMessage() {
   const inp = document.getElementById('gc-input');
   if (!inp || !curGC) return;
-  const text = inp.value.trim();
+  const text = preprocessMessageText(inp.value.trim());
   if (!text && !window._pendingAttachment) return;
   inp.value=''; inp.style.height='auto';
   _stopGCTypingBroadcast();
@@ -2556,21 +2546,7 @@ function loadChatChannel(idx) {
         <span class="reply-bar-text">Replying to <strong id="ch-reply-name"></strong></span>
         <button onclick="cancelReply('ch')">✕</button>
       </div>
-      <div class="chat-input-wrap">
-        <div class="chat-input-box">
-          <div class="chat-input-actions">
-            <button onclick="openFileUpload('ch-input')" title="Attach file (30MB)" style="background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;">📎</button>
-            <button id="emoji-btn-ch" onclick="toggleEmojiPicker('ch-input')" title="Emoji" style="font-size:18px;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-            </button>
-            <button onclick="openGiphyPicker('ch-input')" title="GIF" style="font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);">GIF</button>
-          </div>
-          <textarea id="ch-input" placeholder="Message #${escapeHTML(ch.name)}…" rows="1"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChannelMsg(${idx});}"
-            oninput="autoResize(this)"></textarea>
-          <button class="chat-send" onclick="handleChatSend('ch',${idx})" title="Send"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
-        </div>
-      </div>
+      \${buildChatInputBar({inputId:'ch-input',placeholder:'Message #\${escapeHTML(ch.name)}…',context:'ch',chIdx:idx})}
     </div>`;
   loadChannelMessages(idx);
   renderMemberList();
@@ -2640,7 +2616,7 @@ const _sentEcho = new Set();
 async function sendChannelMsg(idx) {
   const inp=document.getElementById('ch-input');
   if (!inp) return;
-  const text=inp.value.trim();
+  let text=preprocessMessageText(inp.value.trim());
   if (!text) return;
   const b=CU.bastions?.[curBastion];
   const ch=b?.channels?.[idx];
@@ -2775,19 +2751,31 @@ function buildMsgActions(msg, context, id) {
 // MESSAGE ACTIONS
 // ════════════════════════════════════════════
 function replyToMsg(msgId, fromName, context) {
-  const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-  replyingTo={id:msgId,from:fromName,text:row?.dataset.text||''};
-  const bar=document.getElementById(context+'-reply-bar');
-  const nameEl=document.getElementById(context+'-reply-name');
-  if (bar) bar.classList.add('show');
-  if (nameEl) nameEl.textContent=fromName;
-  const inp=document.getElementById(context+'-input');
+  const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  replyingTo = {id:msgId, from:fromName, text:row?.dataset.text||''};
+  const inputId = context==='dm' ? 'dm-input' : context==='gc' ? 'gc-input' : 'ch-input';
+  // New style reply bar
+  const newBar = document.getElementById(inputId+'-reply-bar');
+  const newName = document.getElementById(inputId+'-reply-name');
+  if (newBar) { newBar.style.display='flex'; }
+  if (newName) newName.textContent = fromName;
+  // Old fallback
+  const bar = document.getElementById(context+'-reply-bar');
+  const nameEl = document.getElementById(context+'-reply-name');
+  if (bar && !newBar) bar.classList.add('show');
+  if (nameEl && !newName) nameEl.textContent = fromName;
+  const inp = document.getElementById(inputId);
   if (inp) inp.focus();
 }
 function cancelReply(context) {
-  replyingTo=null;
-  const bar=document.getElementById(context+'-reply-bar');
-  if (bar) bar.classList.remove('show');
+  replyingTo = null;
+  // New input bar style
+  const inputId = context==='dm' ? 'dm-input' : context==='gc' ? 'gc-input' : 'ch-input';
+  const newBar = document.getElementById(inputId+'-reply-bar');
+  if (newBar) newBar.style.display = 'none';
+  // Old style fallback
+  const oldBar = document.getElementById(context+'-reply-bar');
+  if (oldBar) oldBar.classList.remove('show');
 }
 function editMsg(msgId) {
   const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
@@ -3246,6 +3234,7 @@ function updateDOBField(){
   updateUserbar();
   renderRailBastions();
   if(typeof startVCListener==='function') startVCListener(CU.username);
+  setTimeout(initCrossDeviceSync, 800);
 
   // Hide loading screen immediately
   const loader=document.getElementById('app-loading');
@@ -3313,6 +3302,7 @@ function updateDOBField(){
 
   setInterval(async()=>{try{await updateNotifBadge();}catch{}},30000);
   initIdleDetection();
+  initDragDrop();
   clearTimeout(_st);
   }catch(e){console.error('[Fortized]',e);if(_sl)_sl.style.display='none';clearTimeout(_st);}
 })();
@@ -3942,9 +3932,20 @@ async function saveAppQuestions() {
   toast('Application form saved!', 'success');
 }
 async function updateBastionIcon(e) {
-  const file = e.target.files[0]; if(!file) return;
-  if(file.size>2*1024*1024){toast('Max 2MB','error');return;}
-  const r=new FileReader(); r.onload=async ev=>{CU.bastions[curBastion].icon=ev.target.result;await saveUser();renderBastionSidebar(document.getElementById('sidebar-scroll'));renderBSettingsMain('overview');toast('Icon updated!','success');};r.readAsDataURL(file);
+  const file = e.target.files[0]; if (!file) return;
+  if (file.size > 8*1024*1024) { toast('Max 8MB', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    showCropModal(ev.target.result, 1, async (cropped) => {
+      CU.bastions[curBastion].icon = cropped;
+      await saveUser();
+      renderRailBastions();
+      renderBastionSidebar(document.getElementById('sidebar-scroll'));
+      renderBSettingsMain('overview');
+      toast('Bastion icon updated! ✓', 'success');
+    });
+  };
+  reader.readAsDataURL(file);
 }
 async function toggleNSFW(chIdx) {
   const ch = CU.bastions[curBastion].channels[chIdx];
@@ -4223,8 +4224,8 @@ function buildEmojiPicker() {
       <input class="epp-search-inp" placeholder="🔍 Search emoji…" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 12px;outline:none;box-sizing:border-box;" oninput="searchEmojis(this.value)">
     </div>
     <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;flex-shrink:0;padding:4px 6px;">
-      ${[{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:'🏰',label:'Fortized'},...EMOJI_PICKER_TABS.slice(2)].map(t=>`
-        <button onclick="setEmojiTab('${t.id}')" id="etab-${t.id}" title="${t.label}" style="background:${_emojiPickerTab===t.id?'rgba(255,249,62,.15)':'transparent'};border:none;color:${_emojiPickerTab===t.id?'var(--accent)':'rgba(255,255,255,.5)'};font-size:18px;padding:6px 8px;border-radius:8px;cursor:pointer;flex-shrink:0;line-height:1;transition:all .1s;">${t.icon}</button>
+      ${[{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:'FTZ',label:'Fortized'},...EMOJI_PICKER_TABS.slice(2)].map(t=>`
+        <button onclick="setEmojiTab('${t.id}')" id="etab-${t.id}" title="${t.label}" style="background:${_emojiPickerTab===t.id?'rgba(255,249,62,.15)':'transparent'};border:none;color:${_emojiPickerTab===t.id?'var(--accent)':'rgba(255,255,255,.5)'};font-size:${t.id==='ftz'?'11px':'18px'};font-weight:${t.id==='ftz'?'800':'400'};padding:6px 8px;border-radius:8px;cursor:pointer;flex-shrink:0;line-height:1;transition:all .1s;${t.id==='ftz'?'font-family:\'Syne\',sans-serif;':''}">${t.id==='ftz'?'<img src="Fortized icon.png" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML=\'🏰\'">':t.icon}</button>
       `).join('')}
     </div>
     <div id="epp-grid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;max-height:260px;"></div>
@@ -4577,8 +4578,37 @@ function buildProfileView(tab) {
 async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}CU.displayName=dn;await saveUser();document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');toast('Display name updated!','success');}
 async function saveEmail(){const e=document.getElementById('email-input')?.value?.trim();CU.email=e;await saveUser();toast('Email updated!','success');}
 async function changePassword(){const old=document.getElementById('pw-old')?.value,nw=document.getElementById('pw-new')?.value,msg=document.getElementById('pw-msg');if(!old||!nw){if(msg){msg.style.color='var(--red)';msg.textContent='Fill both fields.';}return;}if(old!==CU.password){if(msg){msg.style.color='var(--red)';msg.textContent='Current password incorrect.';}return;}if(nw.length<6){if(msg){msg.style.color='var(--red)';msg.textContent='Too short.';}return;}CU.password=nw;await saveUser();if(msg){msg.style.color='var(--green)';msg.textContent='Password updated!';}document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';}
-async function updatePfp(e){const file=e.target.files[0];if(!file)return;if(file.size>2*1024*1024){toast('Max 2MB','error');return;}const r=new FileReader();r.onload=async ev=>{CU.pfp=ev.target.result;await saveUser();updateUserbar();buildProfileView('myprofile');toast('Avatar updated!','success');};r.readAsDataURL(file);}
-async function updateBanner(e){const file=e.target.files[0];if(!file)return;if(file.size>3*1024*1024){toast('Max 3MB','error');return;}const r=new FileReader();r.onload=async ev=>{CU.banner=ev.target.result;await saveUser();buildProfileView('myprofile');toast('Banner updated!','success');};r.readAsDataURL(file);}
+async function updatePfp(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 8*1024*1024) { toast('Max 8MB', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    showCropModal(ev.target.result, 1, async (cropped) => {
+      CU.pfp = cropped;
+      await saveUser();
+      updateUserbar();
+      buildProfileView('myprofile');
+      toast('Avatar updated! ✓', 'success');
+    });
+  };
+  reader.readAsDataURL(file);
+}
+async function updateBanner(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 8*1024*1024) { toast('Max 8MB', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    showCropModal(ev.target.result, 16/5, async (cropped) => {
+      CU.banner = cropped;
+      await saveUser();
+      buildProfileView('myprofile');
+      toast('Banner updated! ✓', 'success');
+    });
+  };
+  reader.readAsDataURL(file);
+}
 async function setMyStatus(s){CU.status=s;try{await FortizedSocial.setStatus(CU.username,s);}catch{}await saveUser();buildProfileView('myprofile');toast(`Status: ${s}`,'info');}
 function toggleNotifSetting(key,el){notifSettings[key]=!notifSettings[key];el.classList.toggle('on',notifSettings[key]);}
 async function saveNotifSettings(){CU.notifSettings=notifSettings;await saveUser();toast('Notification settings saved!','success');}
@@ -6508,6 +6538,77 @@ function insertGif(embedUrl, targetInputId) {
   insertGifById(embedUrl.split('/').pop(), targetInputId);
 }
 
+
+// ════════════════════════════════════════════════════════
+// CHAT INPUT BAR BUILDER — shared by DM, GC, Channel
+// ════════════════════════════════════════════════════════
+function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
+  const sendCall = context==='dm' ? "handleChatSend('dm')"
+    : context==='gc' ? "sendGCMessage()"
+    : `handleChatSend('ch',${chIdx??'curChannel'})`;
+  const keydown = context==='dm' ? "if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();handleChatSend('dm');}"
+    : context==='gc' ? "if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGCMessage();}"
+    : `if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();handleChatSend('ch',${chIdx??'curChannel'});}`;
+  
+  return `
+    <div class="chat-input-wrap">
+      <div class="chat-input-outer" id="${inputId}-outer"
+        ondragover="event.preventDefault();document.querySelector('.drop-overlay').classList.add('active')"
+        ondragleave="document.querySelector('.drop-overlay').classList.remove('active')"
+        ondrop="handleDropOnInput(event,'${inputId}')">
+        <div class="chat-input-toolbar">
+          <button class="cit-btn" onclick="openFileUpload('${inputId}')" title="Upload File">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <div class="cit-sep"></div>
+          <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${inputId==='dm-input'?'dm':inputId==='gc-input'?'gc':'ch'}" title="Emoji">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </button>
+          <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF">GIF</button>
+          <div style="flex:1;"></div>
+          <span id="${inputId}-charcount" style="font-size:10.5px;color:rgba(255,255,255,.2);"></span>
+        </div>
+        <div class="chat-input-row" id="${inputId}-reply-bar" style="display:none;padding:5px 12px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;font-size:12px;color:rgba(255,255,255,.5);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
+            <span>Replying to <strong id="${inputId}-reply-name" style="color:var(--accent);"></strong></span>
+          </div>
+          <button onclick="cancelReply('${context}')" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</button>
+        </div>
+        <div class="chat-input-row">
+          <textarea id="${inputId}" placeholder="${placeholder}" rows="1"
+            onkeydown="${keydown}"
+            oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':''}updateCharCount('${inputId}')"
+            onpaste="handlePaste(event,'${inputId}')"></textarea>
+          <button class="chat-send-btn" onclick="${sendCall}" title="Send">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function updateCharCount(inputId) {
+  const ta = document.getElementById(inputId);
+  const counter = document.getElementById(inputId+'-charcount');
+  if (!ta || !counter) return;
+  const len = ta.value.length;
+  counter.textContent = len > 1800 ? (2000-len)+' remaining' : '';
+  counter.style.color = len > 1900 ? 'var(--red)' : 'rgba(255,255,255,.2)';
+}
+
+// Pre-process text before sending: replace :shortcodes: with real emojis
+function preprocessMessageText(text) {
+  if (!text) return text;
+  // Replace :shortcode: with emoji
+  return text.replace(/:([a-zA-Z0-9_]+):/g, (match, name) => {
+    const unicode = EMOJI_SHORTCODES[name];
+    if (unicode) return unicode;
+    // Fortized emojis stay as :name: token (rendered by parseMD)
+    if (FORTIZED_EMOJI_MAP[name]) return match;
+    return match;
+  });
+}
 function parseMD(s) {
   if (!s) return '';
   // 0. GIF token from sendGifDirectly
@@ -9948,6 +10049,304 @@ function toggleEmoticonConversion(el) {
   el.classList.toggle('on', !_globalSettings.disableEmoticonConversion);
   saveGlobalSettings();
   toast('Emoticon conversion ' + (_globalSettings.disableEmoticonConversion ? 'disabled' : 'enabled'), 'info');
+}
+
+
+// ════════════════════════════════════════════════════════
+// DRAG & DROP + PASTE UPLOAD
+// ════════════════════════════════════════════════════════
+function initDragDrop() {
+  // Global drag-drop overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'drop-overlay';
+  overlay.innerHTML = '<div class="doi">📁</div><div class="dot">Drop files to upload</div>';
+  document.body.appendChild(overlay);
+
+  document.addEventListener('dragover', e => {
+    e.preventDefault();
+    overlay.classList.add('active');
+  });
+  document.addEventListener('dragleave', e => {
+    if (!e.relatedTarget || e.relatedTarget === document.documentElement) {
+      overlay.classList.remove('active');
+    }
+  });
+  document.addEventListener('drop', e => {
+    e.preventDefault();
+    overlay.classList.remove('active');
+    const files = [...e.dataTransfer.files];
+    if (!files.length) return;
+    // Figure out current active input
+    const inputId = curDM ? 'dm-input' : curGC ? 'gc-input' : curChannel !== null ? 'ch-input' : null;
+    if (!inputId) { toast('Open a chat first', 'error'); return; }
+    processUploadedFile(files[0], inputId);
+  });
+}
+
+function handleDropOnInput(e, inputId) {
+  e.preventDefault();
+  document.querySelector('.drop-overlay')?.classList.remove('active');
+  const files = [...e.dataTransfer.files];
+  if (!files.length) return;
+  processUploadedFile(files[0], inputId);
+}
+
+function handlePaste(e, inputId) {
+  const items = [...(e.clipboardData?.items || [])];
+  const imageItem = items.find(i => i.type.startsWith('image/'));
+  if (!imageItem) return; // let normal paste proceed
+  e.preventDefault();
+  const file = imageItem.getAsFile();
+  if (file) processUploadedFile(file, inputId);
+}
+
+function processUploadedFile(file, inputId) {
+  if (!file) return;
+  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const maxMB = hasRadiance ? 45 : 30;
+  if (file.size > maxMB * 1024 * 1024) { toast(`Max ${maxMB}MB`, 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    window._pendingAttachment = { name: file.name, type: file.type, data: ev.target.result, size: file.size, context: inputId };
+    showAttachmentPreview(file.name, file.type, ev.target.result, file.size, inputId.replace('-input',''));
+  };
+  reader.readAsDataURL(file);
+  toast('📎 ' + file.name + ' attached', 'info');
+}
+
+
+// ════════════════════════════════════════════════════════
+// IMAGE CROP MODAL
+// ════════════════════════════════════════════════════════
+let _cropCanvas, _cropCtx, _cropImg, _cropCallback;
+let _cropData = {x:0,y:0,scale:1,ratio:1,dragging:false,lastX:0,lastY:0};
+
+function showCropModal(src, aspectRatio, callback) {
+  _cropCallback = callback;
+  _cropData = {x:0, y:0, scale:1, ratio:aspectRatio||1, dragging:false, lastX:0, lastY:0};
+
+  const overlay = document.createElement('div');
+  overlay.className = 'crop-modal-overlay';
+  overlay.id = 'crop-modal-overlay';
+  
+  const isBanner = aspectRatio > 2;
+  const aspectClass = isBanner ? 'banner-crop' : '';
+  
+  overlay.innerHTML = `
+    <div class="crop-box" style="max-width:${isBanner?'640px':'440px'};">
+      <div style="padding:20px 22px 14px;border-bottom:1px solid var(--border);">
+        <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:4px;">✂️ Crop Image</div>
+        <div style="font-size:12.5px;color:var(--muted);">Drag to position · Scroll to zoom</div>
+      </div>
+      <div class="crop-canvas-wrap ${aspectClass}" id="crop-canvas-wrap" style="touch-action:none;">
+        <canvas id="crop-canvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+        <div style="position:absolute;inset:0;border:2px solid rgba(255,249,62,.6);pointer-events:none;border-radius:${isBanner?'0':'50%'};box-shadow:0 0 0 9999px rgba(0,0,0,.55);"></div>
+      </div>
+      <div style="padding:14px 20px;display:flex;gap:10px;align-items:center;border-top:1px solid var(--border);">
+        <span style="font-size:12px;color:var(--muted);flex:1;">🔍 Scroll to zoom in/out</span>
+        <button class="btn-g" onclick="document.getElementById('crop-modal-overlay').remove()" style="font-size:13px;padding:8px 16px;">Cancel</button>
+        <button class="btn-a" onclick="applyCrop()" style="font-size:13px;padding:8px 18px;">Apply ✓</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  // Init canvas
+  const wrap = document.getElementById('crop-canvas-wrap');
+  _cropCanvas = document.getElementById('crop-canvas');
+  _cropCtx = _cropCanvas.getContext('2d');
+  
+  _cropImg = new Image();
+  _cropImg.onload = () => {
+    const w = wrap.offsetWidth;
+    const h = wrap.offsetHeight;
+    _cropCanvas.width = w;
+    _cropCanvas.height = h;
+    // Fit image to canvas initially
+    const imgAspect = _cropImg.width / _cropImg.height;
+    const canvasAspect = w / h;
+    if (imgAspect > canvasAspect) {
+      _cropData.scale = h / _cropImg.height;
+    } else {
+      _cropData.scale = w / _cropImg.width;
+    }
+    _cropData.x = (w - _cropImg.width * _cropData.scale) / 2;
+    _cropData.y = (h - _cropImg.height * _cropData.scale) / 2;
+    drawCrop();
+  };
+  _cropImg.src = src;
+
+  // Wheel zoom
+  wrap.addEventListener('wheel', e => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 1.1 : 0.9;
+    _cropData.scale = Math.max(0.5, Math.min(5, _cropData.scale * delta));
+    drawCrop();
+  }, {passive:false});
+
+  // Drag
+  wrap.addEventListener('mousedown', e => {
+    _cropData.dragging = true; _cropData.lastX = e.clientX; _cropData.lastY = e.clientY;
+    wrap.style.cursor = 'grabbing';
+  });
+  wrap.addEventListener('mousemove', e => {
+    if (!_cropData.dragging) return;
+    _cropData.x += e.clientX - _cropData.lastX;
+    _cropData.y += e.clientY - _cropData.lastY;
+    _cropData.lastX = e.clientX; _cropData.lastY = e.clientY;
+    drawCrop();
+  });
+  wrap.addEventListener('mouseup', () => { _cropData.dragging=false; wrap.style.cursor='move'; });
+  wrap.addEventListener('mouseleave', () => { _cropData.dragging=false; wrap.style.cursor='move'; });
+  
+  // Touch
+  let lastTouchDist = 0;
+  wrap.addEventListener('touchstart', e => {
+    if (e.touches.length===1) { _cropData.dragging=true; _cropData.lastX=e.touches[0].clientX; _cropData.lastY=e.touches[0].clientY; }
+    if (e.touches.length===2) { lastTouchDist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
+    e.preventDefault();
+  }, {passive:false});
+  wrap.addEventListener('touchmove', e => {
+    if (e.touches.length===1 && _cropData.dragging) {
+      _cropData.x += e.touches[0].clientX - _cropData.lastX;
+      _cropData.y += e.touches[0].clientY - _cropData.lastY;
+      _cropData.lastX = e.touches[0].clientX; _cropData.lastY = e.touches[0].clientY;
+    }
+    if (e.touches.length===2) {
+      const dist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      _cropData.scale *= dist / lastTouchDist; lastTouchDist = dist;
+      _cropData.scale = Math.max(0.5, Math.min(5, _cropData.scale));
+    }
+    drawCrop(); e.preventDefault();
+  }, {passive:false});
+  wrap.addEventListener('touchend', () => { _cropData.dragging=false; });
+}
+
+function drawCrop() {
+  if (!_cropCanvas || !_cropImg) return;
+  _cropCtx.clearRect(0, 0, _cropCanvas.width, _cropCanvas.height);
+  _cropCtx.drawImage(_cropImg, _cropData.x, _cropData.y,
+    _cropImg.width * _cropData.scale, _cropImg.height * _cropData.scale);
+}
+
+function applyCrop() {
+  const wrap = document.getElementById('crop-canvas-wrap');
+  if (!wrap || !_cropCanvas || !_cropImg) return;
+  const w = _cropCanvas.width;
+  const h = _cropCanvas.height;
+  // Output canvas at 400x400 (or 800x250 for banner)
+  const outW = _cropData.ratio > 2 ? 800 : 400;
+  const outH = Math.round(outW / (_cropData.ratio > 2 ? _cropData.ratio : 1));
+  const out = document.createElement('canvas');
+  out.width = outW; out.height = outH;
+  const ctx = out.getContext('2d');
+  // Scale from canvas coordinates to output size
+  const scaleX = outW / w;
+  const scaleY = outH / h;
+  ctx.drawImage(_cropImg,
+    _cropData.x * scaleX, _cropData.y * scaleY,
+    _cropImg.width * _cropData.scale * scaleX,
+    _cropImg.height * _cropData.scale * scaleY);
+  const result = out.toDataURL('image/jpeg', 0.92);
+  document.getElementById('crop-modal-overlay')?.remove();
+  if (_cropCallback) _cropCallback(result);
+}
+
+
+// ════════════════════════════════════════════════════════
+// REAL-TIME CROSS-DEVICE SYNC
+// ════════════════════════════════════════════════════════
+let _profileSyncListener = null;
+let _notifSyncListener = null;
+
+function initCrossDeviceSync() {
+  if (!CU?.username) return;
+  
+  // 1. Live profile sync — when pfp/banner/onyx changes on another device, update here
+  const profileRef = firebase.database().ref('users/' + CU.username);
+  _profileSyncListener = profileRef.on('value', snap => {
+    const data = snap.val();
+    if (!data || !data.username) return;
+    // Only update if data differs (to avoid overwriting local pending changes)
+    const changed = JSON.stringify(data) !== JSON.stringify(CU);
+    if (!changed) return;
+    // Selectively update UI-relevant fields
+    if (data.pfp !== CU.pfp) {
+      CU.pfp = data.pfp;
+      updateUserbar();
+      // Update all avatar instances
+      document.querySelectorAll('.msg-av-inner img, .ua img').forEach(img => {
+        if (img.src !== data.pfp && data.pfp) img.src = data.pfp;
+      });
+    }
+    if (data.banner !== CU.banner) { CU.banner = data.banner; }
+    if (data.onyx !== CU.onyx) { CU.onyx = data.onyx; updateOnyxDisplay(); }
+    if (data.status !== CU.status) { CU.status = data.status; updateUserbar(); }
+    if (data.customStatus && JSON.stringify(data.customStatus) !== JSON.stringify(CU.customStatus)) {
+      CU.customStatus = data.customStatus;
+      refreshCustomStatusBubble?.();
+    }
+    if (data.friends && JSON.stringify(data.friends) !== JSON.stringify(CU.friends)) {
+      CU.friends = data.friends;
+    }
+    if (data.groupChats && JSON.stringify(data.groupChats) !== JSON.stringify(CU.groupChats)) {
+      CU.groupChats = data.groupChats;
+    }
+    // Update local cache
+    saveLocal();
+  });
+
+  // 2. Notification sync — new notifications in real time
+  const notifRef = firebase.database().ref('notifications/' + CU.username);
+  _notifSyncListener = notifRef.on('child_added', snap => {
+    const notif = snap.val();
+    if (!notif) return;
+    // Update badge
+    updateNotifBadge().catch(()=>{});
+    // Show system notification if supported + permission granted
+    if (Notification?.permission === 'granted' && document.hidden) {
+      let title = 'Fortized';
+      let body = 'You have a new notification';
+      if (notif.type === 'dm') { title = notif.from || 'New Message'; body = notif.data?.preview || 'Sent you a message'; }
+      else if (notif.type === 'friend_request') { title = notif.from || 'Friend Request'; body = 'Sent you a friend request'; }
+      else if (notif.type === 'mention') { title = notif.from || 'Mention'; body = 'Mentioned you'; }
+      try {
+        const n = new Notification(title, {
+          body, icon: 'Fortized icon.png', badge: 'Fortized icon.png', tag: notif.type || 'general',
+        });
+        n.onclick = () => { window.focus(); n.close(); };
+        setTimeout(() => n.close(), 8000);
+      } catch {}
+    }
+    // Play sound
+    playNotifSound(notif.type === 'mention' ? 'mention' : 'message');
+  });
+
+  // 3. Request notification permission
+  if (Notification?.permission === 'default') {
+    setTimeout(() => {
+      Notification.requestPermission().then(p => {
+        if (p === 'granted') toast('🔔 Push notifications enabled!', 'success');
+      }).catch(()=>{});
+    }, 3000);
+  }
+  
+  // 4. Online presence — write to Firebase on focus/blur/unload
+  const presenceRef = firebase.database().ref('.info/connected');
+  presenceRef.on('value', snap => {
+    if (!snap.val()) return;
+    // Set online when connected
+    const statusRef = firebase.database().ref('statuses/' + CU.username);
+    statusRef.set('online').catch(()=>{});
+    // Set offline when disconnected (Firebase handles this automatically)
+    statusRef.onDisconnect().set('offline');
+  });
+}
+
+function stopCrossDeviceSync() {
+  if (_profileSyncListener) {
+    try { firebase.database().ref('users/' + CU.username).off('value', _profileSyncListener); } catch {}
+    _profileSyncListener = null;
+  }
 }
 
 </script>

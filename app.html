@@ -254,13 +254,44 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .bc-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
 .bc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
 .bc-desc{font-size:12px;color:var(--muted-light);line-height:1.55;margin-bottom:8px;}
-.atelier-wrap{display:flex;flex:1;overflow:hidden;}
-.atelier-nav{width:200px;min-width:200px;border-right:1px solid var(--border);background:var(--channel);padding:20px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
-.atelier-nav-section{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px;}
-.atelier-nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:11px;cursor:pointer;font-size:13.5px;color:var(--muted-light);transition:all .1s;}
-.atelier-nav-item:hover{background:rgba(255,255,255,.05);color:#fff;}
+/* ── Atelier ─────────────────────────────────────── */
+.atelier-wrap{display:flex;flex:1;overflow:hidden;background:#0d1018;}
+.atelier-nav{width:220px;min-width:220px;background:#0b0e15;border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;overflow:hidden;}
+.atelier-nav-scroll{flex:1;overflow-y:auto;padding:12px 8px;}
+.atelier-nav-section{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.25);padding:14px 10px 5px;}
+.atelier-nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.5);transition:all .14s;position:relative;margin-bottom:1px;}
+.atelier-nav-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.9);}
 .atelier-nav-item.active{background:rgba(255,249,62,.1);color:var(--accent);font-weight:600;}
-.atelier-scroll{flex:1;overflow-y:auto;padding:32px 36px;}
+.atelier-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:55%;background:var(--accent);border-radius:0 3px 3px 0;box-shadow:0 0 8px rgba(255,249,62,.45);}
+.atelier-nav-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
+.atelier-nav-sep{height:1px;background:rgba(255,255,255,.05);margin:6px 10px;}
+/* Atelier sidebar bottom user panel */
+.atelier-user-panel{padding:10px 12px 14px;border-top:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.2);flex-shrink:0;}
+.atelier-user-row{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:9px;cursor:pointer;transition:background .14s;}
+.atelier-user-row:hover{background:rgba(255,255,255,.06);}
+.atelier-onyx-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.16);border-radius:100px;font-size:11.5px;font-weight:700;color:var(--accent);margin-top:6px;cursor:pointer;width:fit-content;transition:all .14s;}
+.atelier-onyx-pill:hover{background:rgba(255,249,62,.14);}
+.atelier-scroll{flex:1;overflow-y:auto;padding:0;}
+/* Quest tab chips */
+.quest-tab-chip{padding:6px 16px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .14s;}
+.quest-tab-chip.active{background:rgba(255,249,62,.1);color:var(--accent);border-color:rgba(255,249,62,.25);}
+.quest-tab-chip:not(.active){color:rgba(255,255,255,.45);}
+.quest-tab-chip:not(.active):hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);}
+/* Shop filter chips */
+.shop-filter-chip{padding:5px 14px;border-radius:100px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);transition:all .14s;}
+.shop-filter-chip:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.8);}
+.shop-filter-chip.active{background:rgba(255,249,62,.1);border-color:rgba(255,249,62,.3);color:var(--accent);}
+/* Price toggle */
+.price-toggle{display:inline-flex;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:100px;padding:3px;gap:2px;}
+.price-toggle button{padding:6px 16px;border-radius:100px;border:none;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .14s;background:transparent;color:rgba(255,255,255,.45);}
+.price-toggle button.sel{background:var(--accent);color:#060810;}
+/* Radiance pulse badge */
+@keyframes atelierPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,160,62,.5);}50%{box-shadow:0 0 0 6px rgba(255,160,62,0);}}
+.best-ribbon{position:absolute;top:0;right:0;background:linear-gradient(135deg,var(--accent),#ffb93e);color:#060810;font-size:9.5px;font-weight:900;padding:5px 14px 5px 8px;letter-spacing:.06em;clip-path:polygon(0 0,100% 0,100% 100%);border-radius:0 16px 0 0;animation:atelierPulse 2.4s ease-in-out infinite;}
+/* Perk chips */
+.perk-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:11.5px;font-weight:600;margin:3px;white-space:nowrap;}
+/* Atelier shared */
+.atel-section-hdr{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:14px;}
 .atelier-page-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px;}
 .atelier-page-sub{font-size:13px;color:var(--muted-light);margin-bottom:28px;}
 .atelier-hero{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:28px 32px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));}
@@ -794,7 +825,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
         <span>🔍</span>
         <input type="text" placeholder="Search…" id="search-input" oninput="handleSearch(this.value)">
       </div>
-      <div class="onyx-pill" onclick="showView('atelier')" id="onyx-display">
+      <div class="onyx-pill" onclick="showView('atelier')" id="onyx-display" style="display:none;">
         <img src="Onyx.png" onerror="this.style.display='none'">
         <span id="onyx-val">0</span>
       </div>
@@ -944,12 +975,39 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <!-- ATELIER VIEW -->
     <div class="view" id="view-atelier">
       <div class="atelier-wrap">
-        <!-- Sidebar nav -->
+        <!-- Sidebar nav — Guilded style -->
         <div class="atelier-nav">
-          <div class="atelier-nav-item active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">🏠 Overview</div>
-          <div class="atelier-nav-item" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">✨ Radiance Dwelling</div>
-          <div class="atelier-nav-item" id="atnav-quests" onclick="switchAtelierTab('quests',this)">🎯 Quests</div>
-          <div class="atelier-nav-item" id="atnav-shop" onclick="switchAtelierTab('shop',this)">🛍️ Shop</div>
+          <div class="atelier-nav-scroll">
+            <div class="atelier-nav-section">Account</div>
+            <div class="atelier-nav-item active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">
+              <span class="atelier-nav-icon">🏠</span>Overview
+            </div>
+            <div class="atelier-nav-item" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">
+              <span class="atelier-nav-icon">✨</span>Radiance Dwelling
+            </div>
+            <div class="atelier-nav-sep"></div>
+            <div class="atelier-nav-section">Store</div>
+            <div class="atelier-nav-item" id="atnav-quests" onclick="switchAtelierTab('quests',this)">
+              <span class="atelier-nav-icon">🎯</span>Quests
+            </div>
+            <div class="atelier-nav-item" id="atnav-shop" onclick="switchAtelierTab('shop',this)">
+              <span class="atelier-nav-icon">🛍️</span>Shop
+            </div>
+          </div>
+          <!-- Discord-style user panel at bottom -->
+          <div class="atelier-user-panel" id="atelier-user-panel">
+            <div class="atelier-user-row" onclick="showView('profile')">
+              <div id="atelier-av" style="width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:14px;"></div>
+              <div style="flex:1;min-width:0;">
+                <div id="atelier-uname" style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                <div style="font-size:11px;color:rgba(255,255,255,.35);">Settings</div>
+              </div>
+            </div>
+            <div class="atelier-onyx-pill" onclick="switchAtelierTab('overview',document.getElementById('atnav-overview'))">
+              <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;" onerror="this.style.display='none'">
+              <span id="atelier-onyx-sidebar">0</span> Onyx
+            </div>
+          </div>
         </div>
         <!-- Main content -->
         <div class="atelier-scroll" id="atelier-content">
@@ -1585,7 +1643,7 @@ function showView(v) {
   if (rBtn) rBtn.classList.add('active');
 
   // Post-show callbacks
-  if (v === 'atelier') setTimeout(() => { renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }, 0);
+  if (v === 'atelier') setTimeout(() => { updateAtelierSidebar(); renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }, 0);
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
 
@@ -1682,7 +1740,19 @@ function updateUserbar() {
   if (typeof refreshCustomStatusBubble==='function') refreshCustomStatusBubble();
 }
 function updateOnyxDisplay() {
-  ['onyx-val','atelier-balance'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=CU?.onyx||0;});
+  const bal = CU?.onyx || 0;
+  ['onyx-val','atelier-balance','atelier-onyx-sidebar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = bal;
+  });
+}
+function updateAtelierSidebar() {
+  if (!CU) return;
+  const av = document.getElementById('atelier-av');
+  const uname = document.getElementById('atelier-uname');
+  if (av) av.innerHTML = buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 34);
+  if (uname) uname.textContent = CU.displayName || CU.username;
+  updateOnyxDisplay();
 }
 function buildAvatarHTML(pfp, name, size) {
   const initial = (name||'?')[0].toUpperCase();
@@ -9491,316 +9561,353 @@ function switchAtelierTab(tab, el) {
     const navEl = document.getElementById('atnav-' + tab);
     if (navEl) navEl.classList.add('active');
   }
+  updateAtelierSidebar();
   renderAtelierTab(tab);
 }
 
 function renderAtelierTab(tab) {
   const el = document.getElementById('atelier-content');
   if (!el) return;
-  const balance = CU?.onyx || 0;
-  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
-  const hasRadiancePlus = CU?.radiancePlus && new Date(CU.radiancePlus) > new Date();
-  const radianceDaysLeft = hasRadiance ? Math.ceil((new Date(CU.radianceUntil)-Date.now())/86400000) : 0;
-  const radiancePlusDaysLeft = hasRadiancePlus ? Math.ceil((new Date(CU.radiancePlus)-Date.now())/86400000) : 0;
+  const bal = CU?.onyx || 0;
+  const hasRad   = !!(CU?.radianceUntil   && new Date(CU.radianceUntil)   > new Date());
+  const hasPlus  = !!(CU?.radiancePlus    && new Date(CU.radiancePlus)    > new Date());
+  const daysRad  = hasRad  ? Math.ceil((new Date(CU.radianceUntil)-Date.now())/86400000) : 0;
+  const daysPlus = hasPlus ? Math.ceil((new Date(CU.radiancePlus)-Date.now())/86400000)  : 0;
+  const today    = new Date().toDateString();
+  const dailyDone = CU?.lastDailyReward===today || CU?.lastDaily===today;
 
   // ── OVERVIEW ──────────────────────────────────────────────
   if (tab === 'overview') {
-    const completedQuests = CU?.completedQuests || [];
-    const ownedItems = CU?.shopItems || [];
+    const PERKS = [
+      {icon:'🌟',name:'Profile Glow',desc:'Animated glow on avatar',color:'#ffd93e',plus:false},
+      {icon:'🖼️',name:'Custom Banner',desc:'Full profile banner',color:'#60a5fa',plus:false},
+      {icon:'📎',name:'45MB Uploads',desc:'Bigger attachments',color:'#3ecf6e',plus:false},
+      {icon:'💎',name:'Radiance Badge',desc:'Exclusive badge',color:'#a78bfa',plus:false},
+      {icon:'🔤',name:'Custom Font',desc:'Change your font',color:'#fb923c',plus:true},
+      {icon:'🎁',name:'Gift Radiance',desc:'Gift friends',color:'#f472b6',plus:true},
+    ];
+    const doneQuests = (CU?.completedQuests||[]);
+    const allQ = [
+      {id:'daily_claim',icon:'🎁',title:'Daily Claim',reward:'50 Onyx'},
+      {id:'invite',icon:'🔗',title:'Invite a Friend',reward:'+9 Onyx/friend'},
+      {id:'join_bastion',icon:'🏰',title:'Join a Bastion',reward:'25 Onyx'},
+      {id:'add_friend',icon:'👥',title:'Add First Friend',reward:'15 Onyx'},
+      {id:'set_pfp',icon:'🖼️',title:'Set Avatar',reward:'20 Onyx'},
+    ];
+    const doneQ = allQ.filter(q => doneQuests.includes(q.id) || (q.id==='join_bastion'&&(CU?.bastions||[]).length>0) || (q.id==='add_friend'&&(CU?.friends||[]).length>0) || (q.id==='set_pfp'&&CU?.pfp) || (q.id==='daily_claim'&&dailyDone));
+
+    el.style.padding = '0';
     el.innerHTML = `
-      <!-- Onyx banner hero -->
-      <div style="position:relative;height:180px;overflow:hidden;border-radius:0;background:#050810;">
-        <img src="Onyx banner.png" style="width:100%;height:100%;object-fit:cover;opacity:.7;" onerror="this.style.display='none'">
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(5,8,16,0) 30%,rgba(5,8,16,.9));"></div>
-        <div style="position:absolute;bottom:22px;left:32px;display:flex;align-items:center;gap:14px;">
-          <img src="Onyx.png" style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(255,249,62,.6));" onerror="this.style.display='none'">
+      <!-- Hero banner -->
+      <div style="position:relative;height:220px;background:linear-gradient(135deg,#070a12,#141830,#0d1220);overflow:hidden;flex-shrink:0;">
+        <img src="Onyx banner.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,10,18,.1) 0%,rgba(7,10,18,.85) 100%);"></div>
+        <!-- Status pill top-left -->
+        ${hasPlus?`<div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:7px;background:rgba(255,157,62,.15);border:1px solid rgba(255,157,62,.35);border-radius:100px;padding:5px 12px;backdrop-filter:blur(8px);">
+          <span style="font-size:14px;">🌟</span><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ff9d3e;">Radiance+ · ${daysPlus}d</span>
+        </div>`:hasRad?`<div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:7px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.25);border-radius:100px;padding:5px 12px;backdrop-filter:blur(8px);">
+          <span style="font-size:14px;">✨</span><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ffd93e;">Radiance · ${daysRad}d</span>
+        </div>`:''}
+        <!-- Hero text bottom-left -->
+        <div style="position:absolute;bottom:22px;left:24px;right:24px;display:flex;align-items:flex-end;justify-content:space-between;">
           <div>
-            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,249,62,.6);margin-bottom:2px;">Onyx Balance</div>
-            <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">${balance}</div>
+            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;line-height:1;margin-bottom:5px;text-shadow:0 2px 12px rgba(0,0,0,.6);">Atelier</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.5);">Your Fortized store & rewards</div>
           </div>
-        </div>
-        <div style="position:absolute;bottom:22px;right:24px;">
-          <button onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="background:rgba(255,249,62,.12);border:1px solid rgba(255,249,62,.25);border-radius:100px;color:var(--accent);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:7px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.2)'" onmouseout="this.style.background='rgba(255,249,62,.12)'">+ Earn Onyx</button>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.5);border:1px solid rgba(255,249,62,.2);border-radius:12px;padding:10px 16px;backdrop-filter:blur(12px);">
+              <img src="Onyx.png" style="width:20px;height:20px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,249,62,.5));" onerror="this.style.display='none'">
+              <div>
+                <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">${bal}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px;">Onyx</div>
+              </div>
+            </div>
+            <button onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="background:var(--accent);color:#060810;border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;padding:9px 18px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 12px rgba(255,249,62,.25);">+ Earn Onyx</button>
+          </div>
         </div>
       </div>
 
-      <div style="padding:28px 32px 60px;">
+      <div style="padding:24px 28px 60px;display:flex;flex-direction:column;gap:28px;">
 
-        <!-- Radiance status banner -->
-        ${hasRadiancePlus ? `
-        <div style="background:linear-gradient(135deg,rgba(255,120,62,.12),rgba(255,200,62,.08));border:1px solid rgba(255,160,62,.25);border-radius:14px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:14px;">
-          <div style="font-size:32px;">🌟</div>
-          <div style="flex:1;">
-            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#ff9d3e;">Radiance+ Active</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.5);margin-top:2px;">${radiancePlusDaysLeft} day${radiancePlusDaysLeft!==1?'s':''} remaining · Auto-renews</div>
+        <!-- Radiance Perks — horizontal scroll row -->
+        <div>
+          <div class="atel-section-hdr">Radiance Perks</div>
+          <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;">
+            ${PERKS.map(p => {
+              const unlocked = p.plus ? hasPlus : hasRad;
+              return `<div style="min-width:140px;background:${unlocked?`rgba(${p.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',')}, 0.07)`:'rgba(255,255,255,.03)'};border:1px solid ${unlocked?p.color+'33':'rgba(255,255,255,.06)'};border-radius:14px;padding:16px 14px;flex-shrink:0;position:relative;overflow:hidden;${!unlocked?'opacity:.5':''}">
+                ${unlocked?`<div style="position:absolute;top:0;left:0;right:0;height:2px;background:${p.color};opacity:.6;"></div>`:''}
+                <div style="font-size:26px;margin-bottom:10px;">${p.icon}</div>
+                <div style="font-size:12.5px;font-weight:700;color:#fff;margin-bottom:3px;">${p.name}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.4);">${p.desc}</div>
+                ${p.plus?`<div style="position:absolute;top:8px;right:8px;font-size:9px;font-weight:800;color:#ff9d3e;background:rgba(255,160,62,.15);border:1px solid rgba(255,160,62,.25);padding:1px 6px;border-radius:100px;">+</div>`:''}
+                ${!unlocked?`<div style="position:absolute;bottom:10px;right:10px;font-size:14px;opacity:.4;">🔒</div>`:`<div style="position:absolute;bottom:10px;right:10px;font-size:12px;color:${p.color};">✓</div>`}
+              </div>`;
+            }).join('')}
+            ${!hasRad?`<div style="min-width:130px;background:rgba(255,249,62,.05);border:1.5px dashed rgba(255,249,62,.15);border-radius:14px;padding:16px 14px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))">
+              <div style="font-size:22px;margin-bottom:8px;">✨</div>
+              <div style="font-size:12px;font-weight:700;color:var(--accent);">Get Radiance</div>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:3px;">Unlock all perks</div>
+            </div>`:''}
           </div>
-          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="background:rgba(255,160,62,.15);border:1px solid rgba(255,160,62,.3);border-radius:8px;color:#ff9d3e;font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer;">Manage</button>
-        </div>` : hasRadiance ? `
-        <div style="background:linear-gradient(135deg,rgba(255,249,62,.08),rgba(255,200,62,.05));border:1px solid rgba(255,220,62,.2);border-radius:14px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:14px;">
-          <div style="font-size:28px;">✨</div>
-          <div style="flex:1;">
-            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#ffd93e;">Radiance Active</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.5);margin-top:2px;">${radianceDaysLeft} day${radianceDaysLeft!==1?'s':''} remaining</div>
-          </div>
-          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="background:rgba(255,249,62,.12);border:1px solid rgba(255,249,62,.2);border-radius:8px;color:var(--accent);font-size:12px;font-weight:700;padding:7px 14px;cursor:pointer;">Manage</button>
-        </div>` : `
-        <div style="background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.1);border-radius:14px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" onmouseover="this.style.background='rgba(255,249,62,.04)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
-          <div style="font-size:28px;">✨</div>
-          <div style="flex:1;">
-            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,.7);">Get Radiance</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Profile glow, custom banner, and more</div>
-          </div>
-          <span style="font-size:12px;color:rgba(255,255,255,.3);">→</span>
-        </div>`}
-
-        <!-- Radiance Perks preview -->
-        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">Radiance Perks</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px;">
-          ${[
-            {icon:'🌟',name:'Profile Glow',desc:'Animated glow on your avatar',locked:!hasRadiance},
-            {icon:'🖼️',name:'Custom Banner',desc:'Full profile banner',locked:!hasRadiance},
-            {icon:'🔤',name:'Custom Font',desc:'Change your display font',locked:!hasRadiancePlus},
-            {icon:'📎',name:'45MB Uploads',desc:'Bigger file attachments',locked:!hasRadiance},
-            {icon:'💎',name:'Radiance Badge',desc:'Exclusive profile badge',locked:!hasRadiance},
-            {icon:'🎁',name:'Gift Radiance',desc:'Gift friends Radiance',locked:!hasRadiancePlus},
-          ].map(p => `
-            <div style="background:${p.locked?'rgba(255,255,255,.02)':'rgba(255,249,62,.04)'};border:1px solid ${p.locked?'rgba(255,255,255,.06)':'rgba(255,249,62,.15)'};border-radius:12px;padding:14px;position:relative;${p.locked?'opacity:.45':''}">
-              <div style="font-size:22px;margin-bottom:7px;">${p.icon}</div>
-              <div style="font-size:12.5px;font-weight:700;color:${p.locked?'rgba(255,255,255,.5)':'#fff'};margin-bottom:3px;">${p.name}</div>
-              <div style="font-size:11px;color:rgba(255,255,255,.35);">${p.desc}</div>
-              ${p.locked?'<div style="position:absolute;top:8px;right:8px;font-size:12px;opacity:.5;">🔒</div>':'<div style="position:absolute;top:8px;right:8px;font-size:12px;color:var(--accent);">✓</div>'}
-            </div>`).join('')}
         </div>
 
-        <!-- Completed Quests -->
-        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">Completed Quests</div>
-        <div style="position:relative;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;margin-bottom:28px;">
-          <img src="Fortized Conquer.png" style="position:absolute;right:-10px;bottom:-10px;height:90px;opacity:.12;pointer-events:none;" onerror="this.style.display='none'">
-          ${(completedQuests.length ? completedQuests.slice(0,5).map(q => `
-            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);">
-              <div style="width:28px;height:28px;border-radius:50%;background:rgba(62,207,110,.12);border:1px solid rgba(62,207,110,.2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">✓</div>
-              <div style="flex:1;font-size:13px;color:rgba(255,255,255,.6);">${escapeHTML(q)}</div>
-              <div style="font-size:11px;color:var(--green);font-weight:700;">Completed</div>
-            </div>`) : [`<div style="padding:20px;text-align:center;font-size:13px;color:rgba(255,255,255,.3);">No quests completed yet — <span style="color:var(--accent);cursor:pointer;" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">start one!</span></div>`]).join('')}
+        <!-- Completed Quests — 2-col grid -->
+        <div>
+          <div class="atel-section-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>Completed Quests</span>
+            <span style="cursor:pointer;color:rgba(255,249,62,.6);font-size:11px;font-weight:700;" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">See All →</span>
+          </div>
+          ${doneQ.length ? `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            ${doneQ.slice(0,4).map(q=>`
+              <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.1);border-radius:12px;">
+                <div style="width:34px;height:34px;border-radius:10px;background:rgba(62,207,110,.1);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${q.icon}</div>
+                <div style="min-width:0;flex:1;">
+                  <div style="font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${q.title}</div>
+                  <div style="font-size:11px;color:var(--green);">+${q.reward}</div>
+                </div>
+              </div>`).join('')}
+          </div>` : `<div style="font-size:13px;color:rgba(255,255,255,.3);text-align:center;padding:18px;background:rgba(255,255,255,.02);border-radius:12px;">No quests completed yet — <span style="color:var(--accent);cursor:pointer;" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">start one!</span></div>`}
         </div>
 
-        <!-- Shop preview -->
-        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">Shop</div>
-        <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:20px;text-align:center;cursor:pointer;" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))">
-          <div style="font-size:40px;margin-bottom:10px;opacity:.4;">🛍️</div>
-          <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.4);">Coming Soon</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.25);margin-top:4px;">Avatar decorations and more</div>
+        <!-- Shop teaser -->
+        <div>
+          <div class="atel-section-hdr">Shop Preview</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            ${['Avatar Frames','Profile Effects','Name Colors'].map((name,i)=>`
+              <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;text-align:center;cursor:pointer;position:relative;overflow:hidden;" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))">
+                <div style="font-size:32px;margin-bottom:10px;opacity:.35;">${['🖼️','✨','🎨'][i]}</div>
+                <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.45);">${name}</div>
+                <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:3px;">Coming Soon</div>
+                <div style="position:absolute;top:8px;right:8px;font-size:12px;opacity:.3;">🔒</div>
+              </div>`).join('')}
+          </div>
         </div>
       </div>`;
-    refreshDailyBtn();
   }
 
   // ── RADIANCE DWELLING ─────────────────────────────────────
   else if (tab === 'radiance') {
-    const planBasic = [{icon:'✨',t:'Profile Glow'},{icon:'🖼️',t:'Custom Banner'},{icon:'📎',t:'30MB Uploads'},{icon:'💎',t:'Radiance Badge'},{icon:'🔔',t:'Priority Notifications'}];
-    const planPlus  = [{icon:'🔤',t:'Font Selector'},{icon:'📎',t:'100MB Uploads'},{icon:'🎁',t:'Gift Radiance'},{icon:'⚡',t:'Bastion Boost'},{icon:'🌟',t:'Animated Badge'}];
-    const PRICE_BASIC = [{days:7,onyx:200,label:'7 Days'},{days:30,onyx:600,label:'30 Days',best:true},{days:90,onyx:1500,label:'90 Days'}];
-    const PRICE_PLUS  = [{days:30,onyx:1200,label:'30 Days',best:true},{days:90,onyx:3000,label:'90 Days'}];
+    const PLAN_BASIC = ['✨ Profile Glow','🖼️ Custom Banner','📎 45MB Uploads','💎 Radiance Badge','🔔 Priority Notifs'];
+    const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance','⚡ Bastion Boost','🌟 Animated Badge'];
+    const PRICES = {basic:[{days:7,onyx:200},{days:30,onyx:600},{days:90,onyx:1500}], plus:[{days:30,onyx:1200},{days:90,onyx:3000}]};
 
-    el.innerHTML = `
-      <div style="padding:32px;max-width:700px;">
+    el.style.padding = '0';
+    el.innerHTML = `<div style="padding:28px;max-width:780px;">
 
-        <!-- Active plan display -->
-        ${hasRadiancePlus ? `
-        <div style="background:linear-gradient(135deg,rgba(255,120,62,.15),rgba(255,200,62,.08));border:1.5px solid rgba(255,160,62,.3);border-radius:16px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:center;gap:16px;">
-          <div style="font-size:40px;">🌟</div>
-          <div style="flex:1;">
-            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#ff9d3e;">Radiance+ Active</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:3px;">${radiancePlusDaysLeft} days remaining · Auto-renews for 1200 ⬡</div>
-          </div>
-          <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;">Cancel</button>
-        </div>` : hasRadiance ? `
-        <div style="background:linear-gradient(135deg,rgba(255,249,62,.08),rgba(255,200,62,.04));border:1.5px solid rgba(255,220,62,.2);border-radius:16px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:center;gap:16px;">
-          <div style="font-size:36px;">✨</div>
-          <div style="flex:1;">
-            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#ffd93e;">Radiance Active</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:3px;">${radianceDaysLeft} days remaining · Auto-renews for 600 ⬡</div>
-          </div>
-          <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;">Cancel</button>
-        </div>` : ''}
+      <!-- Active subscription status -->
+      ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,120,62,.15),rgba(255,200,62,.08));border:1.5px solid rgba(255,160,62,.3);border-radius:14px;padding:18px 22px;margin-bottom:28px;display:flex;align-items:center;gap:16px;">
+        <div style="font-size:36px;">🌟</div>
+        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ff9d3e;">Radiance+ Active</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.45);margin-top:2px;">${daysPlus} days remaining · Auto-renews · 1200 ⬡</div></div>
+        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;">Cancel</button>
+      </div>`:hasRad?`<div style="background:rgba(255,249,62,.07);border:1.5px solid rgba(255,220,62,.2);border-radius:14px;padding:18px 22px;margin-bottom:28px;display:flex;align-items:center;gap:16px;">
+        <div style="font-size:32px;">✨</div>
+        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ffd93e;">Radiance Active</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.45);margin-top:2px;">${daysRad} days remaining · Auto-renews · 600 ⬡</div></div>
+        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;">Cancel</button>
+      </div>`:''}
 
-        <!-- Plans -->
-        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">Choose a Plan</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;">
-          <!-- Basic Radiance -->
-          <div style="background:rgba(255,249,62,.04);border:1.5px solid rgba(255,220,62,.18);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px;">
-            <div style="font-size:28px;">✨</div>
-            <div>
-              <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ffd93e;">Radiance</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">Core perks</div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
-              ${planBasic.map(p=>`<div style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:rgba(255,255,255,.65);"><span>${p.icon}</span>${p.t}</div>`).join('')}
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-              ${PRICE_BASIC.map(pl=>`
-                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:9px;border-radius:9px;background:${pl.best?'var(--accent)':'rgba(255,255,255,.06)'};color:${pl.best?'#060810':'rgba(255,255,255,.7)'};border:1px solid ${pl.best?'transparent':'rgba(255,255,255,.1)'};font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:.15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''">
-                  <span>${pl.label}</span>
-                  <span>${pl.onyx} ⬡${pl.best?' 🔥':''}</span>
-                </button>`).join('')}
+      <!-- Plans side by side -->
+      <div class="atel-section-hdr">Choose a Plan</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
+
+        <!-- Basic Radiance -->
+        <div style="background:rgba(255,255,255,.03);border:1.5px solid rgba(255,220,62,.18);border-radius:18px;overflow:hidden;">
+          <div style="padding:22px 22px 16px;">
+            <div style="font-size:32px;margin-bottom:12px;">✨</div>
+            <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#ffd93e;margin-bottom:4px;">Radiance</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:16px;">Core perks for Fortized fans</div>
+            <!-- Perk chips -->
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:18px;">
+              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,220,62,.08);color:rgba(255,220,62,.8);border:1px solid rgba(255,220,62,.15);">${p}</span>`).join('')}
             </div>
           </div>
-          <!-- Radiance+ -->
-          <div style="background:linear-gradient(135deg,rgba(255,120,62,.1),rgba(255,200,62,.05));border:1.5px solid rgba(255,160,62,.28);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:12px;right:12px;background:var(--accent);color:#060810;font-size:9px;font-weight:800;padding:3px 8px;border-radius:100px;letter-spacing:.04em;">BEST</div>
-            <div style="font-size:28px;">🌟</div>
-            <div>
-              <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ff9d3e;">Radiance+</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">All perks unlocked</div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:5px;flex:1;">
-              ${[...planBasic,...planPlus].map(p=>`<div style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:rgba(255,255,255,.65);"><span>${p.icon}</span>${p.t}</div>`).join('')}
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-              ${PRICE_PLUS.map(pl=>`
-                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:9px;border-radius:9px;background:${pl.best?'linear-gradient(90deg,#ff9d3e,#ffd93e)':'rgba(255,255,255,.06)'};color:${pl.best?'#060810':'rgba(255,255,255,.7)'};border:1px solid ${pl.best?'transparent':'rgba(255,255,255,.1)'};font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:.15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''">
-                  <span>${pl.label}</span>
-                  <span>${pl.onyx} ⬡${pl.best?' 🔥':''}</span>
+          <!-- Segmented price toggle -->
+          <div style="padding:0 16px 18px;">
+            <div id="rad-price-sel-0" style="display:flex;flex-direction:column;gap:5px;">
+              ${PRICES.basic.map((pl,i)=>`
+                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:9px 14px;border-radius:9px;background:${i===1?'var(--accent)':'rgba(255,255,255,.05)'};color:${i===1?'#060810':'rgba(255,255,255,.65)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.09)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.14s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
+                  <span>${pl.days} Days</span>
+                  <span>${pl.onyx} ⬡${i===1?' 🔥':''}</span>
                 </button>`).join('')}
             </div>
           </div>
         </div>
 
-        <!-- Gift Radiance -->
-        ${hasRadiancePlus ? `
-        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">🎁 Gift Radiance</div>
-        <div id="gift-radiance-section">
-          ${buildGiftRadianceUI()}
-        </div>` : `
-        <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px;display:flex;align-items:center;gap:12px;">
-          <div style="font-size:24px;">🎁</div>
-          <div><div style="font-size:13.5px;font-weight:600;color:rgba(255,255,255,.5);">Gift Radiance to Friends</div><div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:2px;">Requires Radiance+</div></div>
-        </div>`}
-      </div>`;
+        <!-- Radiance+ -->
+        <div style="background:linear-gradient(160deg,rgba(255,120,62,.08),rgba(255,200,62,.04),rgba(255,255,255,.02));border:1.5px solid rgba(255,160,62,.28);border-radius:18px;overflow:hidden;position:relative;">
+          <div class="best-ribbon">BEST VALUE</div>
+          <div style="padding:22px 22px 16px;">
+            <div style="font-size:32px;margin-bottom:12px;">🌟</div>
+            <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#ff9d3e;margin-bottom:4px;">Radiance+</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:16px;">Everything unlocked</div>
+            <!-- Perk chips — basic + plus -->
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:18px;">
+              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,160,62,.08);color:rgba(255,160,62,.8);border:1px solid rgba(255,160,62,.15);">${p}</span>`).join('')}
+              ${PLAN_PLUS.map(p=>`<span class="perk-chip" style="background:rgba(255,200,62,.12);color:rgba(255,200,62,.9);border:1px solid rgba(255,200,62,.22);font-weight:800;">${p}</span>`).join('')}
+            </div>
+          </div>
+          <div style="padding:0 16px 18px;">
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              ${PRICES.plus.map((pl,i)=>`
+                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:9px 14px;border-radius:9px;background:${i===0?'linear-gradient(90deg,#ff9d3e,#ffd93e)':'rgba(255,255,255,.05)'};color:${i===0?'#060810':'rgba(255,255,255,.65)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.09)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.14s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
+                  <span>${pl.days} Days</span>
+                  <span>${pl.onyx} ⬡${i===0?' 🔥':''}</span>
+                </button>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gift Radiance -->
+      ${hasPlus?`<div class="atel-section-hdr">🎁 Gift Radiance to a Friend</div>
+      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;">
+        ${buildGiftRadianceUI()}
+      </div>`:`<div style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.07);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:12px;opacity:.6;">
+        <div style="font-size:24px;">🎁</div>
+        <div><div style="font-size:13.5px;font-weight:600;color:rgba(255,255,255,.5);">Gift Radiance</div><div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:2px;">Requires Radiance+ — upgrade to gift friends</div></div>
+      </div>`}
+    </div>`;
   }
 
   // ── QUESTS ────────────────────────────────────────────────
   else if (tab === 'quests') {
-    const completedQuests = CU?.completedQuests || [];
-    const today = new Date().toDateString();
-    const dailyClaimed = CU?.lastDailyReward === today || CU?.lastDaily === today;
-
-    const allQuests = [
-      {
-        id:'daily_claim', icon:'🎁', title:'Daily Claim',
-        desc:'Claim your daily Onyx reward. Come back every day!',
-        reward:50, rewardLabel:'50 Onyx',
-        action:`claimDailyQuest()`,
-        completed: dailyClaimed, progress: dailyClaimed?1:0, total:1,
-        category:'Daily',
-      },
-      {
-        id:'invite_friend', icon:'🔗', title:'Invite a Friend',
-        desc:'Generate your personal invite link and get a friend to join Fortized. Earn +9 Onyx per friend who stays 24h.',
-        reward:9, rewardLabel:'+9 Onyx per friend',
-        action:`switchAtelierTab('overview');setTimeout(()=>regeneratePersonalInvite(),100)`,
-        completed: completedQuests.includes('invite'), progress: completedQuests.includes('invite')?1:0, total:1,
-        category:'Weekly',
-      },
-      {
-        id:'join_bastion', icon:'🏰', title:'Join a Bastion',
-        desc:'Find and join a public community Bastion using Discover.',
-        reward:25, rewardLabel:'25 Onyx',
-        action:`showView('discover')`,
-        completed: completedQuests.includes('join_bastion') || (CU?.bastions||[]).length>0, progress: (CU?.bastions||[]).length>0?1:0, total:1,
-        category:'Beginner',
-      },
-      {
-        id:'add_friend', icon:'👥', title:'Add Your First Friend',
-        desc:'Send a friend request to someone on Fortized.',
-        reward:15, rewardLabel:'15 Onyx',
-        action:`openModal('modal-add-friend')`,
-        completed: completedQuests.includes('add_friend') || (CU?.friends||[]).length>0, progress: Math.min((CU?.friends||[]).length,1), total:1,
-        category:'Beginner',
-      },
-      {
-        id:'set_pfp', icon:'🖼️', title:'Set Your Avatar',
-        desc:'Upload a profile picture to personalize your account.',
-        reward:20, rewardLabel:'20 Onyx',
-        action:`showView('profile')`,
-        completed: completedQuests.includes('set_pfp') || !!CU?.pfp, progress: CU?.pfp?1:0, total:1,
-        category:'Beginner',
-      },
+    const completed = CU?.completedQuests || [];
+    const QUESTS_DEF = [
+      {id:'daily_claim',icon:'🎁',title:'Daily Claim',desc:'Claim your 50 Onyx reward once every day.',reward:50,unit:'Onyx',category:'Daily',
+        done: dailyDone, action:`claimDailyQuest()`},
+      {id:'invite',icon:'🔗',title:'Invite a Friend',desc:'Share your invite link — earn +9 Onyx per friend who joins and stays 24h.',reward:9,unit:'Onyx/friend',category:'Ongoing',
+        done: completed.includes('invite'), action:`regeneratePersonalInvite();switchAtelierTab('overview',document.getElementById('atnav-overview'))`},
+      {id:'join_bastion',icon:'🏰',title:'Join a Bastion',desc:'Find and join any public Bastion community.',reward:25,unit:'Onyx',category:'Beginner',
+        done: completed.includes('join_bastion')||(CU?.bastions||[]).length>0, action:`showView('discover')`},
+      {id:'add_friend',icon:'👥',title:'Add Your First Friend',desc:'Send a friend request to someone on Fortized.',reward:15,unit:'Onyx',category:'Beginner',
+        done: completed.includes('add_friend')||(CU?.friends||[]).length>0, action:`openModal('modal-add-friend')`},
+      {id:'set_pfp',icon:'🖼️',title:'Set Your Avatar',desc:'Upload a profile picture to personalize your account.',reward:20,unit:'Onyx',category:'Beginner',
+        done: completed.includes('set_pfp')||!!CU?.pfp, action:`showView('profile')`},
     ];
+    const activeQ = QUESTS_DEF.filter(q=>!q.done);
+    const doneQ   = QUESTS_DEF.filter(q=>q.done);
 
-    const active = allQuests.filter(q => !q.completed);
-    const done   = allQuests.filter(q => q.completed);
+    // Current tab state (stored locally on the element)
+    const qTab = el._questTab || 'available';
 
+    el.style.padding = '0';
     el.innerHTML = `
-      <div style="padding:32px;max-width:680px;">
-        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;">Quests</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:28px;">Complete quests to earn Onyx and unlock rewards.</div>
+      <!-- Featured quest banner -->
+      <div style="position:relative;margin:0;background:linear-gradient(135deg,#0a0d18,#141c34,#0e1528);overflow:hidden;padding:28px 28px 24px;">
+        <img src="Fortized Conquer.png" style="position:absolute;right:-20px;bottom:-20px;height:160px;opacity:.12;pointer-events:none;" onerror="this.style.display='none'">
+        <div style="position:relative;display:flex;align-items:center;gap:20px;">
+          <div style="width:64px;height:64px;border-radius:16px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;">🎁</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,249,62,.6);margin-bottom:5px;">Daily Quest</div>
+            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px;">Claim Your Daily Onyx</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.5);">Come back every day for free Onyx rewards.</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);">+50 ⬡</div>
+            <button onclick="claimDailyQuest()" style="margin-top:8px;background:${dailyDone?'rgba(255,255,255,.08)':'var(--accent)'};color:${dailyDone?'rgba(255,255,255,.3)':'#060810'};border:none;border-radius:9px;padding:8px 20px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:${dailyDone?'not-allowed':'pointer'};white-space:nowrap;">
+              ${dailyDone?'Claimed ✓':'Claim Now'}
+            </button>
+          </div>
+        </div>
+      </div>
 
-        ${active.length ? `
-        <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px;">AVAILABLE</div>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px;">
-          ${active.map(q => `
-            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 20px;display:flex;gap:16px;align-items:flex-start;transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'">
-              <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${q.icon}</div>
-              <div style="flex:1;min-width:0;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                  <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;">${q.title}</div>
-                  <span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(255,249,62,.08);color:rgba(255,249,62,.7);letter-spacing:.04em;">${q.category}</span>
-                </div>
-                <div style="font-size:12.5px;color:rgba(255,255,255,.45);line-height:1.5;margin-bottom:10px;">${q.desc}</div>
+      <div style="padding:20px 28px 60px;">
+        <!-- Tabs + filter -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+          <div style="display:flex;gap:6px;">
+            <button class="quest-tab-chip ${qTab==='available'?'active':''}" onclick="setQuestTab('available')" id="qtab-available">Available (${activeQ.length})</button>
+            <button class="quest-tab-chip ${qTab==='completed'?'active':''}" onclick="setQuestTab('completed')" id="qtab-completed">Completed (${doneQ.length})</button>
+          </div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:5px;cursor:pointer;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg> Filter
+          </div>
+        </div>
+
+        <!-- Quest grid -->
+        <div id="quest-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+          ${(qTab==='available'?activeQ:doneQ).map(q=>`
+            <div style="background:${q.done?'rgba(62,207,110,.04)':'rgba(255,255,255,.03)'};border:1px solid ${q.done?'rgba(62,207,110,.12)':'rgba(255,255,255,.07)'};border-radius:14px;overflow:hidden;transition:border-color .14s;cursor:pointer;" ${!q.done?`onmouseover="this.style.borderColor='rgba(255,249,62,.18)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'"`:''}>
+              <!-- Thumbnail area -->
+              <div style="height:80px;background:linear-gradient(135deg,${q.done?'rgba(62,207,110,.08)':'rgba(255,255,255,.03)'} 0%,rgba(0,0,0,.2) 100%);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;">
+                ${q.icon}
+                ${q.done?'<div style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:rgba(62,207,110,.8);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;">✓</div>':''}
+                <span style="position:absolute;top:8px;left:8px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(0,0,0,.5);color:rgba(255,255,255,.5);letter-spacing:.05em;">${q.category}</span>
+              </div>
+              <!-- Card body -->
+              <div style="padding:12px 14px;">
+                <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;margin-bottom:4px;">${q.title}</div>
+                <div style="font-size:11.5px;color:rgba(255,255,255,.4);line-height:1.45;margin-bottom:10px;">${q.desc}</div>
                 <!-- Progress bar -->
-                <div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-bottom:8px;">
-                  <div style="height:100%;background:var(--accent);border-radius:2px;width:${q.total>0?Math.round(q.progress/q.total*100):0}%;transition:width .4s;"></div>
+                <div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-bottom:8px;">
+                  <div style="height:100%;border-radius:2px;width:${q.done?100:0}%;background:${q.done?'var(--green)':'var(--accent)'};transition:width .4s;"></div>
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;">
-                  <div style="font-size:11.5px;color:rgba(255,255,255,.3);">${q.progress}/${q.total} · <span style="color:var(--accent);font-weight:700;">${q.rewardLabel}</span></div>
-                  <button onclick="${q.action}" style="background:var(--accent);color:#060810;border:none;border-radius:8px;padding:6px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''">Start →</button>
+                  <span style="font-size:11.5px;font-weight:700;color:${q.done?'var(--green)':'var(--accent)'};">+${q.reward} ${q.unit}</span>
+                  ${!q.done?`<button onclick="${q.action}" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:7px;color:var(--accent);font-size:11.5px;font-weight:700;padding:4px 12px;cursor:pointer;">Go →</button>`:`<span style="font-size:11px;color:rgba(255,255,255,.3);">Completed</span>`}
                 </div>
               </div>
-            </div>`).join('')}
-        </div>` : ''}
-
-        ${done.length ? `
-        <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px;">COMPLETED</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${done.map(q => `
-            <div style="background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.1);border-radius:12px;padding:14px 18px;display:flex;gap:14px;align-items:center;opacity:.7;">
-              <div style="width:36px;height:36px;border-radius:10px;background:rgba(62,207,110,.1);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${q.icon}</div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:13.5px;font-weight:700;margin-bottom:2px;">${q.title}</div>
-                <div style="font-size:11.5px;color:rgba(255,255,255,.35);">${q.rewardLabel} earned</div>
-              </div>
-              <div style="font-size:20px;color:var(--green);">✓</div>
-            </div>`).join('')}
-        </div>` : ''}
+            </div>`).join('') || `<div style="grid-column:1/-1;text-align:center;padding:36px;font-size:13.5px;color:rgba(255,255,255,.3);">${qTab==='available'?'All quests completed! 🎉':'No completed quests yet.'}</div>`}
+        </div>
       </div>`;
+
+    el._questTab = qTab;
   }
 
   // ── SHOP ─────────────────────────────────────────────────
   else if (tab === 'shop') {
+    const shopTab = el._shopTab || 'featured';
+    const CATS = ['All','Frames','Effects','Badges','Colors'];
+    const shopCat = el._shopCat || 'All';
+
+    el.style.padding = '0';
     el.innerHTML = `
-      <div style="padding:32px;max-width:680px;">
-        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;">Shop</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:32px;">Unlock cosmetics and decorations for your profile.</div>
+      <!-- Shop top tabs -->
+      <div style="padding:0 24px;border-bottom:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.15);display:flex;gap:0;align-items:center;">
+        ${['featured','browse','coming_soon'].map(t=>`
+          <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:14px 18px;background:transparent;border:none;border-bottom:2px solid ${shopTab===t?'var(--accent)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.4)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.14s;white-space:nowrap;">${t==='featured'?'Featured':t==='browse'?'Browse':'Coming Soon'}</button>`).join('')}
+        <div style="flex:1;"></div>
+        <div style="font-size:12px;color:rgba(255,255,255,.3);padding-right:4px;">${bal} ⬡ balance</div>
+      </div>
 
-        <!-- Coming soon section -->
-        <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:48px 32px;text-align:center;margin-bottom:24px;">
-          <div style="font-size:60px;margin-bottom:18px;filter:drop-shadow(0 0 24px rgba(255,249,62,.2));">🛍️</div>
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">Nothing here yet!</div>
-          <div style="font-size:14px;color:rgba(255,255,255,.4);max-width:380px;margin:0 auto;line-height:1.65;">Avatar decorations are coming soon — animated frames, badges, and effects that work just like Discord's avatar decorations.</div>
-        </div>
-
-        <!-- Preview cards (locked) -->
-        <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:14px;">COMING SOON</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-          ${['Avatar Frames','Profile Effects','Name Colors'].map(name=>`
-            <div style="background:rgba(255,255,255,.02);border:1.5px dashed rgba(255,255,255,.08);border-radius:14px;padding:20px;text-align:center;">
-              <div style="font-size:32px;margin-bottom:10px;opacity:.3;">🔒</div>
-              <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.3);">${name}</div>
-              <div style="font-size:11px;color:rgba(255,255,255,.2);margin-top:4px;">In development</div>
-            </div>`).join('')}
-        </div>
+      <div style="padding:24px 28px 60px;">
+        ${shopTab==='featured'?`
+          <!-- Featured hero card -->
+          <div style="background:linear-gradient(135deg,#0f1420,#1a1030,#0d1828);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:40px;text-align:center;margin-bottom:24px;position:relative;overflow:hidden;">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(167,139,250,.08),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(96,165,250,.06),transparent 60%);pointer-events:none;"></div>
+            <div style="font-size:60px;margin-bottom:16px;position:relative;">🛍️</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px;position:relative;">Shop Coming Soon</div>
+            <div style="font-size:14px;color:rgba(255,255,255,.45);max-width:400px;margin:0 auto 20px;line-height:1.65;position:relative;">Avatar decorations, profile effects, and more — animated items that work just like Discord's decorations.</div>
+            <button style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:100px;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;padding:9px 22px;cursor:pointer;" onclick="toast('You\\'ll be notified when the Shop launches!','success')">🔔 Notify Me</button>
+          </div>
+          <!-- 3 preview locked cards -->
+          <div class="atel-section-hdr">Upcoming Items</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+            ${[{n:'Avatar Frames',i:'🖼️',c:'#a78bfa'},{n:'Profile Effects',i:'✨',c:'#60a5fa'},{n:'Name Colors',i:'🎨',c:'#fb923c'}].map(it=>`
+              <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;position:relative;">
+                <div style="height:100px;background:linear-gradient(135deg,${it.c}15,rgba(0,0,0,.3));display:flex;align-items:center;justify-content:center;font-size:44px;opacity:.5;">${it.i}</div>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="font-size:28px;opacity:.4;">🔒</div></div>
+                <div style="padding:12px 14px;"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">${it.n}</div><div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:3px;">In development</div></div>
+              </div>`).join('')}
+          </div>`:`
+          <!-- Browse / Coming Soon state -->
+          <div style="padding:20px 0;">
+            <!-- Category filter chips -->
+            <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px;">
+              ${CATS.map(cat=>`<button class="shop-filter-chip${shopCat===cat?' active':''}" onclick="setShopCat('${cat}')">${cat}</button>`).join('')}
+            </div>
+            <div style="text-align:center;padding:60px 20px;background:rgba(255,255,255,.02);border-radius:16px;border:1px solid rgba(255,255,255,.05);">
+              <div style="font-size:48px;margin-bottom:14px;opacity:.3;">📦</div>
+              <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,.3);">No items yet</div>
+              <div style="font-size:13px;color:rgba(255,255,255,.2);margin-top:6px;">Check back when the shop launches!</div>
+            </div>
+          </div>`}
       </div>`;
+
+    el._shopTab = shopTab;
+    el._shopCat = shopCat;
   }
 
   else {
@@ -9808,116 +9915,18 @@ function renderAtelierTab(tab) {
   }
 }
 
-// ── Atelier helpers ───────────────────────────────────────
-async function purchaseRadiance(isPlus, days, cost) {
-  const balance = CU?.onyx || 0;
-  if (balance < cost) {
-    // Not enough onyx
-    const choice = await new Promise(resolve => {
-      const ov = document.createElement('div');
-      ov.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
-      ov.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:380px;width:90%;text-align:center;">
-        <div style="font-size:40px;margin-bottom:14px;">😕</div>
-        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Not Enough Onyx</div>
-        <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} ⬡</strong> but only have <strong>${balance} ⬡</strong>.<br>Complete quests to earn more Onyx!</div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:#060810;font-family:'Syne',sans-serif;font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
-          <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.06);color:var(--muted-light);border:1px solid var(--border);border-radius:10px;cursor:pointer;">Not Now</button>
-        </div>
-      </div>`;
-      document.body.appendChild(ov);
-    });
-    return;
-  }
-  showCustomConfirm(`Purchase ${isPlus?'Radiance+':'Radiance'} for ${days} days (${cost} Onyx)?`, async () => {
-    CU.onyx = (CU.onyx||0) - cost;
-    const until = new Date(Date.now() + days*86400000).toISOString();
-    if (isPlus) { CU.radiancePlus = until; CU.radianceUntil = until; }
-    else { CU.radianceUntil = until; }
-    await saveUser();
-    updateOnyxDisplay();
-    toast(`✨ ${isPlus?'Radiance+':'Radiance'} active for ${days} days!`, 'success');
-    renderAtelierTab('radiance');
-  });
+// ── Quest / Shop tab helpers ──────────────────────────────
+function setQuestTab(tab) {
+  const el = document.getElementById('atelier-content');
+  if (el) { el._questTab = tab; renderAtelierTab('quests'); }
 }
-
-async function cancelRadiance() {
-  showCustomConfirm('Cancel your Radiance subscription? It will expire at the end of the current period.', async () => {
-    delete CU.radianceUntil;
-    delete CU.radiancePlus;
-    await saveUser();
-    toast('Radiance subscription cancelled.', 'info');
-    renderAtelierTab('radiance');
-  });
+function setShopTab(tab) {
+  const el = document.getElementById('atelier-content');
+  if (el) { el._shopTab = tab; renderAtelierTab('shop'); }
 }
-
-async function claimDailyQuest() {
-  const today = new Date().toDateString();
-  if (CU.lastDailyReward === today || CU.lastDaily === today) {
-    toast('Already claimed today! Come back tomorrow.', 'info');
-    return;
-  }
-  CU.onyx = (CU.onyx||0) + 50;
-  CU.lastDailyReward = today;
-  CU.lastDaily = today;
-  if (!CU.completedQuests) CU.completedQuests = [];
-  if (!CU.completedQuests.includes('daily_claim')) CU.completedQuests.push('daily_claim');
-  await saveUser();
-  updateOnyxDisplay();
-  animateOnyxGain(50);
-  toast('🎁 +50 Onyx claimed!', 'success');
-  renderAtelierTab('quests');
-}
-
-function buildGiftRadianceUI() {
-  const friends = CU?.friends || [];
-  const gifted = CU?.giftedRadiance || {};
-  if (!friends.length) return '<div style="font-size:13px;color:rgba(255,255,255,.3);padding:10px 0;">Add friends to gift them Radiance.</div>';
-  return `<div style="display:flex;flex-direction:column;gap:8px;">
-    ${friends.slice(0,8).map(f => {
-      const fg = gifted[f];
-      const hasGifted = fg && new Date(fg.until) > new Date();
-      const daysLeft = hasGifted ? Math.ceil((new Date(fg.until)-Date.now())/86400000) : 0;
-      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;">
-        <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,f,32)}</div>
-        <div style="flex:1;font-size:13px;font-weight:600;">${escapeHTML(f)}</div>
-        ${hasGifted
-          ? `<span style="font-size:11.5px;color:rgba(255,255,255,.4);">${daysLeft}d left</span>
-             <button onclick="cancelGiftRadiance('${escapeHTML(f)}')" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.18);color:var(--red);font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Cancel</button>`
-          : `<button onclick="giftRadianceTo('${escapeHTML(f)}')" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:var(--accent);font-size:11px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer;">🎁 Gift</button>`}
-      </div>`;
-    }).join('')}
-  </div>`;
-}
-
-async function giftRadianceTo(friendUsername) {
-  const cost = 600; // 30-day gift
-  if ((CU?.onyx||0) < cost) { toast('Not enough Onyx!', 'error'); return; }
-  showCustomConfirm(`Gift 30 days of Radiance to ${friendUsername} for ${cost} Onyx?`, async () => {
-    CU.onyx = (CU.onyx||0) - cost;
-    if (!CU.giftedRadiance) CU.giftedRadiance = {};
-    const until = new Date(Date.now() + 30*86400000).toISOString();
-    CU.giftedRadiance[friendUsername] = {until, cost};
-    // Set on friend's account
-    try {
-      await firebase.database().ref('users/'+friendUsername+'/radianceUntil').set(until);
-      await firebase.database().ref('notifications/'+friendUsername).push({type:'gift',from:CU.username,msg:`${CU.username} gifted you 30 days of Radiance! ✨`,time:new Date().toISOString()});
-    } catch {}
-    await saveUser();
-    updateOnyxDisplay();
-    toast(`✨ Gifted Radiance to ${friendUsername}!`, 'success');
-    renderAtelierTab('radiance');
-  });
-}
-
-async function cancelGiftRadiance(friendUsername) {
-  showCustomConfirm(`Cancel ${friendUsername}'s gifted Radiance?`, async () => {
-    if (CU.giftedRadiance) delete CU.giftedRadiance[friendUsername];
-    try { await firebase.database().ref('users/'+friendUsername+'/radianceUntil').remove(); } catch {}
-    await saveUser();
-    toast('Gift cancelled.', 'info');
-    renderAtelierTab('radiance');
-  });
+function setShopCat(cat) {
+  const el = document.getElementById('atelier-content');
+  if (el) { el._shopCat = cat; renderAtelierTab('shop'); }
 }
 
 

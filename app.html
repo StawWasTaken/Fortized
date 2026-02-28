@@ -287,12 +287,55 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .rad-price span{font-size:12px;color:var(--muted-light);font-family:'DM Sans',sans-serif;font-weight:400;}
 .rad-feats{font-size:12px;color:var(--muted-light);line-height:1.5;}
 .atelier-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:22px;margin-bottom:14px;}
-.profile-wrap{flex:1;display:flex;overflow:hidden;}
-.profile-nav{width:210px;min-width:210px;border-right:1px solid var(--border);background:var(--channel);display:flex;flex-direction:column;padding:12px 0;overflow-y:auto;}
-.profile-nav-item{display:flex;align-items:center;gap:9px;padding:9px 14px;margin:1px 6px;border-radius:12px;cursor:pointer;font-size:13.5px;color:var(--muted-light);transition:all .1s;}
-.profile-nav-item:hover{background:rgba(255,255,255,.05);color:#fff;}
-.profile-nav-item.active{background:rgba(255,249,62,.08);color:var(--accent);}
-.profile-main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.profile-wrap{flex:1;display:flex;overflow:hidden;background:#0f1118;}
+/* Settings sidebar — Guilded/Fortized style */
+.profile-nav{width:220px;min-width:220px;background:#0f1118;display:flex;flex-direction:column;padding:20px 0 12px;overflow-y:auto;border-right:1px solid rgba(255,255,255,.04);}
+.profile-nav-section{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.25);padding:14px 20px 5px;}
+.profile-nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px 8px 20px;cursor:pointer;font-size:13.5px;color:rgba(255,255,255,.5);transition:color .15s,background .15s;position:relative;border-radius:0;}
+.profile-nav-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.85);}
+.profile-nav-item.active{color:#fff;}
+.profile-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--accent);border-radius:0 3px 3px 0;box-shadow:0 0 8px rgba(255,249,62,.4);}
+.profile-nav-item .pni-icon{font-size:15px;opacity:.6;flex-shrink:0;}
+.profile-nav-item.active .pni-icon{opacity:1;}
+.profile-nav-sep{height:1px;background:rgba(255,255,255,.05);margin:8px 20px;}
+/* Main settings area */
+.profile-main{flex:1;overflow-y:auto;background:#13161f;}
+.settings-panel{max-width:700px;padding:32px 40px 60px;margin:0 auto;}
+.settings-section-title{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06);}
+.settings-row{display:flex;align-items:flex-start;gap:16px;padding:18px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.settings-row:last-child{border-bottom:none;}
+.settings-row-label{width:160px;flex-shrink:0;}
+.settings-row-label .srl-name{font-size:13.5px;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:2px;}
+.settings-row-label .srl-desc{font-size:12px;color:rgba(255,255,255,.35);line-height:1.4;}
+.settings-row-content{flex:1;min-width:0;}
+/* Refined input */
+.settings-input{width:100%;padding:9px 14px;background:#1c202b;border:1px solid #2a2f3a;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color .15s,box-shadow .15s;box-sizing:border-box;}
+.settings-input:focus{border-color:rgba(255,249,62,.45);box-shadow:0 0 0 3px rgba(255,249,62,.08);}
+.settings-input::placeholder{color:rgba(255,255,255,.2);}
+.settings-input:disabled{opacity:.4;cursor:not-allowed;}
+/* Pill save button */
+.settings-save-btn{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#060810;border:none;border-radius:100px;padding:6px 16px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(255,249,62,.2);}
+.settings-save-btn:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 4px 14px rgba(255,249,62,.3);}
+.settings-save-btn:active{transform:translateY(0);}
+.settings-save-btn-ghost{display:inline-flex;align-items:center;gap:5px;background:transparent;color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:5px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.settings-save-btn-ghost:hover{border-color:rgba(255,255,255,.25);color:#fff;}
+/* Profile preview card */
+.profile-preview-card{background:#1e2130;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+/* Font picker tiles */
+.font-tile{padding:10px 14px;border:1.5px solid rgba(255,255,255,.08);border-radius:10px;cursor:pointer;transition:all .15s;text-align:center;}
+.font-tile:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.03);}
+.font-tile.sel{border-color:var(--accent);background:rgba(255,249,62,.06);box-shadow:0 0 0 1px rgba(255,249,62,.2);}
+.font-tile-preview{font-size:15px;font-weight:600;color:#fff;margin-bottom:3px;}
+.font-tile-name{font-size:10px;color:rgba(255,255,255,.35);}
+/* Connected account rows */
+.connected-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.connected-row:last-child{border-bottom:none;}
+.connected-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.connected-label{width:80px;font-size:13px;font-weight:600;color:rgba(255,255,255,.6);flex-shrink:0;}
+/* Danger zone */
+.danger-section-title{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(248,113,113,.5);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(248,113,113,.12);}
+.danger-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;color:rgba(248,113,113,.8);border:1.5px solid rgba(248,113,113,.25);border-radius:100px;padding:7px 18px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;}
+.danger-btn:hover{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.5);color:var(--red);}
 .profile-banner-area{width:100%;height:240px;background:linear-gradient(135deg,#0f1830,#1a0f30,#0f2030);position:relative;overflow:hidden;}
 .profile-banner-area img{width:100%;height:100%;object-fit:cover;}
 .profile-av-row{display:flex;align-items:flex-end;gap:14px;padding:0 24px;margin-top:-28px;margin-bottom:14px;}
@@ -920,10 +963,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
       </div>
     </div>
 
-    <!-- PROFILE VIEW -->
+    <!-- PROFILE VIEW / SETTINGS -->
     <div class="view" id="view-profile">
       <div class="profile-wrap">
-        <div class="profile-nav" id="profile-nav"></div>
+        <div class="profile-nav" id="profile-nav" style="flex-shrink:0;"></div>
         <div class="profile-main" id="profile-main"></div>
       </div>
     </div>
@@ -1378,7 +1421,8 @@ const EMOTICON_MAP = {
 
 // Fortized custom emojis — hosted on GitHub
 // Base URL for the Fortized emojis folder
-const FTZ_EMOJI_BASE = 'https://raw.githubusercontent.com/stawlacasse/fortized-emojis/main/';
+// Use jsDelivr CDN for reliable CORS access to GitHub-hosted images
+const FTZ_EMOJI_BASE = 'https://cdn.jsdelivr.net/gh/stawlacasse/fortized-emojis@main/';
 // Exact filenames from the Fortized emojis GitHub folder
 // Format: [name, extension] — .gif for animated, .png for static
 const FORTIZED_EMOJIS_DATA = [
@@ -1602,8 +1646,12 @@ function updateSidebar(v) {
     if (db) { const today=new Date().toDateString(); if(CU?.lastDaily===today)db.classList.add('claimed'); else db.classList.remove('claimed'); }
   } else if (v==='profile') {
     if (hdrTitle) hdrTitle.textContent = '⚙️ Settings';
-    buildProfileNav(scroll);
+    // Profile view has its own full-width nav, hide sidebar
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) sidebar.style.display = 'none';
+    buildProfileNav(document.getElementById('profile-nav'));
     buildProfileView('myprofile');
+    return; // skip sidebar scroll update
   } else if (v==='bastion') {
     renderBastionSidebar(scroll);
   } else if (v==='bsettings') {
@@ -4215,39 +4263,45 @@ let _emojiPickerTab = 'smileys';
 
 function toggleEmojiPicker(targetId) {
   activeEmojiTarget = targetId;
-  // Close GIF picker if open
   document.getElementById('giphy-picker')?.remove();
   const panel = document.getElementById('emoji-picker');
   if (panel.classList.contains('show')) { panel.classList.remove('show'); return; }
   buildEmojiPicker();
+
+  // Temporarily show off-screen to measure height
+  panel.style.visibility = 'hidden';
+  panel.style.top = '-9999px';
+  panel.style.left = '-9999px';
   panel.classList.add('show');
-  // Position above the clicked button
-  // Find the emoji button by the input it's associated with
-  const btnId = 'emoji-btn-' + (targetId.includes('dm')?'dm':targetId.includes('gc')?'gc':'ch');
-  const btn = document.getElementById(btnId);
-  if (btn) {
-    const r = btn.getBoundingClientRect();
-    const panelH = Math.min(450, window.innerHeight * 0.65);
-    const spaceAbove = r.top;
-    const spaceBelow = window.innerHeight - r.bottom;
-    if (spaceAbove > panelH || spaceAbove > spaceBelow) {
-      // Show above
-      panel.style.top = Math.max(8, r.top - panelH - 8) + 'px';
+
+  requestAnimationFrame(() => {
+    const PW = panel.offsetWidth || 380;
+    const PH = panel.offsetHeight || 440;
+    const btnId = 'emoji-btn-' + (targetId.includes('dm')?'dm':targetId.includes('gc')?'gc':'ch');
+    const btn = document.getElementById(btnId);
+    const WW = window.innerWidth, WH = window.innerHeight;
+
+    let top, left;
+    if (btn) {
+      const r = btn.getBoundingClientRect();
+      // Prefer showing above the input
+      if (r.top - PH - 8 >= 8) {
+        top = r.top - PH - 8;
+      } else {
+        top = Math.min(r.bottom + 8, WH - PH - 8);
+      }
+      left = Math.max(8, Math.min(r.left, WW - PW - 8));
     } else {
-      // Show below
-      panel.style.top = (r.bottom + 8) + 'px';
+      // Fallback: lower-left area above chat bar
+      top = WH - PH - 90;
+      left = 90;
     }
-    panel.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 396)) + 'px';
+    panel.style.top = Math.max(8, top) + 'px';
+    panel.style.left = Math.max(8, left) + 'px';
     panel.style.bottom = 'auto';
-    panel.style.maxHeight = (panelH) + 'px';
-  } else {
-    // Fallback: bottom of screen
-    panel.style.bottom = '80px';
-    panel.style.left = '80px';
-    panel.style.top = 'auto';
-  }
-  // Focus search
-  setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 60);
+    panel.style.visibility = 'visible';
+    setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
+  });
 }
 
 function buildEmojiPicker() {
@@ -4419,217 +4473,322 @@ function insertCustomEmoji(name, data) {
 // PROFILE & SETTINGS
 // ════════════════════════════════════════════
 function buildProfileNav(scroll) {
-  const sections=[
-    {section:'My Account'},
-    {id:'myprofile',icon:'👤',label:'My Profile'},
-    {id:'account',icon:'🔒',label:'Account'},
-    {id:'notifs_settings',icon:'🔔',label:'Notifications'},
-    {id:'game_collection',icon:'🎮',label:'Apps & Games'},
-    {section:'Preferences'},
-    {id:'privacy',icon:'🛡️',label:'Privacy'},
-    {id:'appearance',icon:'🎨',label:'Appearance'},
+  const sections = [
+    {type:'section', label:'MY ACCOUNT'},
+    {type:'item', id:'myprofile', icon:'👤', label:'My Profile'},
+    {type:'item', id:'account',   icon:'🔒', label:'Account'},
+    {type:'item', id:'notifs_settings', icon:'🔔', label:'Notifications'},
+    {type:'item', id:'game_collection', icon:'🎮', label:'Apps & Games'},
+    {type:'sep'},
+    {type:'section', label:'PREFERENCES'},
+    {type:'item', id:'privacy',    icon:'🛡️', label:'Privacy'},
+    {type:'item', id:'appearance', icon:'🎨', label:'Appearance'},
+    {type:'sep'},
   ];
-  scroll.innerHTML=sections.map(s=>{
-    if(s.section) return `<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 14px 4px;">${s.section}</div>`;
-    return `<div class="profile-nav-item" onclick="buildProfileView('${s.id}')">${s.icon} ${s.label}</div>`;
-  }).join('');
-  scroll.innerHTML+=`<div style="flex:1;"></div><div class="profile-nav-item" onclick="doLogout()" style="color:var(--red);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Log Out</div>`;
+  scroll.innerHTML = `
+    <div style="padding:0 20px 14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:rgba(255,255,255,.6);letter-spacing:.02em;">Settings</div>
+    ${sections.map(s => {
+      if (s.type === 'section') return `<div class="profile-nav-section">${s.label}</div>`;
+      if (s.type === 'sep') return '<div class="profile-nav-sep"></div>';
+      return `<div class="profile-nav-item" id="pnav-${s.id}" onclick="buildProfileView('${s.id}')">
+        <span class="pni-icon">${s.icon}</span>
+        <span>${s.label}</span>
+      </div>`;
+    }).join('')}
+    <div style="flex:1;"></div>
+    <div class="profile-nav-sep"></div>
+    <div class="profile-nav-item" onclick="doLogout()" style="color:rgba(248,113,113,.7);">
+      <span class="pni-icon">🚪</span>
+      <span>Log Out</span>
+    </div>`;
   buildProfileView('myprofile');
 }
 
 function buildProfileView(tab) {
-  const main=document.getElementById('profile-main'); if(!main) return;
-  document.querySelectorAll('.profile-nav-item').forEach(el=>el.classList.remove('active'));
-  const hasRadiance=CU.radianceUntil&&new Date(CU.radianceUntil)>new Date();
+  const main = document.getElementById('profile-main');
+  if (!main) return;
+  // Update active nav
+  document.querySelectorAll('.profile-nav-item').forEach(el => el.classList.remove('active'));
+  const navItem = document.getElementById('pnav-' + tab);
+  if (navItem) navItem.classList.add('active');
+  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
 
-  if(tab==='myprofile') {
-    const customStatus = CU.customStatus;
-    main.innerHTML=`
-      <!-- TWO-COLUMN LAYOUT: left=form, right=live preview -->
-      <div style="display:grid;grid-template-columns:1fr 320px;gap:0;min-height:100%;align-items:start;">
-        <!-- LEFT: settings fields -->
-        <div style="padding:28px 24px 40px;border-right:1px solid var(--border);overflow-y:auto;">
-        <!-- Display Name -->
-        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-            <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);">Display Name</div>
+  if (tab === 'myprofile') {
+    const cs = CU.customStatus;
+    const statusColors = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
+    const statusLabels = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible'};
+    const sc = statusColors[CU.status||'online'];
+
+    main.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 300px;height:100%;min-height:0;">
+        <!-- LEFT: settings form -->
+        <div style="overflow-y:auto;padding:32px 36px 60px;border-right:1px solid rgba(255,255,255,.05);">
+
+          <!-- SECTION: Profile -->
+          <div class="settings-section-title">PROFILE</div>
+
+          <!-- Banner -->
+          <div class="settings-row" style="padding-top:0;">
+            <div class="settings-row-label">
+              <div class="srl-name">Banner</div>
+              <div class="srl-desc">Shown on your profile card</div>
+            </div>
+            <div class="settings-row-content">
+              <div style="height:100px;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;background:linear-gradient(135deg,#0f1830,#1a0f30);" onclick="document.getElementById('banner-file-inp').click()">
+                ${CU.banner ? `<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;">` : ''}
+                <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
+                  <span style="font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:5px 12px;border-radius:6px;">Change Banner</span>
+                </div>
+              </div>
+              <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event)">
+              <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;">Click to upload · Recommended 960×200</div>
+            </div>
           </div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:10px;">${escapeHTML(CU.displayName||CU.username)}</div>
-          <input class="field-input" id="dn-input" value="${escapeHTML(CU.displayName||CU.username)}" maxlength="32" style="margin-bottom:8px;">
-          <button class="btn-a" onclick="saveDisplayName()" style="font-size:12.5px;padding:7px 16px;">Save</button>
-        </div>
 
-        <!-- Username (read only) -->
-        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Username</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div style="font-size:14px;font-weight:600;">@${escapeHTML(CU.username)}</div>
-            <div style="font-size:11px;color:var(--muted);background:rgba(255,255,255,.05);padding:3px 8px;border-radius:6px;">Cannot be changed</div>
+          <!-- Avatar + Display Name row -->
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="srl-name">Avatar</div>
+              <div class="srl-desc">Your profile picture</div>
+            </div>
+            <div class="settings-row-content" style="display:flex;align-items:center;gap:14px;">
+              <label style="cursor:pointer;position:relative;flex-shrink:0;">
+                <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;background:#1e2130;border:3px solid rgba(255,255,255,.08);">
+                  ${CU.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</div>`}
+                </div>
+                <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
+                  <span style="font-size:18px;">📷</span>
+                </div>
+                <input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event)">
+              </label>
+              <div style="flex:1;">
+                <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px;">Supports PNG, JPG, GIF · Max 8MB</div>
+                <div style="display:flex;gap:8px;">${renderBadgesHTML(CU)}</div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- Email -->
-        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Email Address</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-            <input class="field-input" id="email-input" value="${escapeHTML(CU.email||'')}" placeholder="your@email.com" style="flex:1;">
-            <button class="btn-g" onclick="saveEmail()" style="font-size:12.5px;padding:7px 14px;flex-shrink:0;">Save</button>
+          <!-- Display Name -->
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="srl-name">Display Name</div>
+            </div>
+            <div class="settings-row-content" style="display:flex;gap:8px;align-items:center;">
+              <input class="settings-input" id="dn-input" value="${escapeHTML(CU.displayName||CU.username)}" maxlength="32" style="flex:1;" placeholder="Your display name">
+              <button class="settings-save-btn" onclick="saveDisplayName()">Save</button>
+            </div>
           </div>
-        </div>
 
-        <!-- Password -->
-        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Password & Authentication</div>
-          <input class="field-input" id="pw-old" type="password" placeholder="Current password" style="margin-bottom:8px;">
-          <input class="field-input" id="pw-new" type="password" placeholder="New password (min 6 chars)" style="margin-bottom:8px;">
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button class="btn-a" onclick="changePassword()" style="font-size:12.5px;padding:7px 16px;">Change Password</button>
-            <div id="pw-msg" style="font-size:12px;"></div>
+          <!-- Username -->
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="srl-name">Username</div>
+              <div class="srl-desc">Cannot be changed</div>
+            </div>
+            <div class="settings-row-content">
+              <input class="settings-input" value="@${escapeHTML(CU.username)}" disabled>
+            </div>
           </div>
-        </div>
 
-        <!-- Presence / Status -->
-        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Status</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-            ${[['online','#3ecf6e','🟢','Online'],['away','#f59e0b','🟡','Away'],['dnd','#f87171','🔴','Do Not Disturb'],['invisible','#6b7280','⚫','Invisible']].map(([s,col,ic,l])=>`
-              <button onclick="setMyStatus('${s}')" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1.5px solid ${CU.status===s?col+'66':'var(--border)'};background:${CU.status===s?col+'18':'transparent'};color:${CU.status===s?col:'var(--muted-light)'};font-size:12.5px;cursor:pointer;font-weight:${CU.status===s?'700':'400'};">
-                <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;"></span>${l}
-              </button>`).join('')}
+          <!-- Bio -->
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="srl-name">About Me</div>
+              <div class="srl-desc">Max 300 characters</div>
+            </div>
+            <div class="settings-row-content">
+              <textarea class="settings-input" id="bio-input" rows="3" maxlength="300" style="resize:vertical;">${escapeHTML(CU.bio||'')}</textarea>
+              <button class="settings-save-btn" onclick="saveBio()" style="margin-top:8px;">Save</button>
+            </div>
           </div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Custom Status</div>
-          ${customStatus
-            ? `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;">
-                <span style="font-size:13px;">${customStatus.emoji} ${escapeHTML(customStatus.text)}</span>
-                <button class="btn-d" onclick="clearCustomStatus()" style="font-size:11px;padding:4px 10px;">Clear</button>
-              </div>`
-            : `<button class="btn-g" onclick="openStatusPicker()" style="font-size:12.5px;padding:8px 16px;">+ Set Custom Status</button>`
-          }
-        </div>
 
-        <!-- Bio -->
-        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">About Me</div>
-          <textarea class="field-input" id="bio-input" placeholder="Tell people about yourself…" style="resize:vertical;min-height:80px;" maxlength="300">${escapeHTML(CU.bio||'')}</textarea>
-          <button class="btn-a" onclick="saveBio()" style="font-size:12.5px;padding:7px 16px;margin-top:8px;">Save</button>
-        </div>
+          <!-- Status -->
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="srl-name">Status</div>
+              <div class="srl-desc">How others see you</div>
+            </div>
+            <div class="settings-row-content">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+                ${['online','away','dnd','invisible'].map(s => {
+                  const col = statusColors[s];
+                  const active = (CU.status||'online') === s;
+                  return `<button onclick="setMyStatus('${s}')" style="display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;border:1.5px solid ${active?col+'66':'rgba(255,255,255,.1)'};background:${active?col+'18':'transparent'};color:${active?col:'rgba(255,255,255,.5)'};font-size:12.5px;cursor:pointer;font-weight:${active?'700':'500'};transition:all .15s;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;"></span>${statusLabels[s]}
+                  </button>`;
+                }).join('')}
+              </div>
+              <!-- Custom status -->
+              ${cs?.text
+                ? `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1c202b;border:1px solid #2a2f3a;border-radius:8px;">
+                    <span style="font-size:16px;">${cs.emoji||''}</span>
+                    <span style="font-size:13px;flex:1;">${escapeHTML(cs.text)}</span>
+                    <button class="settings-save-btn-ghost" onclick="clearCustomStatus()" style="font-size:11px;padding:4px 10px;">Clear</button>
+                  </div>`
+                : `<button class="settings-save-btn-ghost" onclick="openStatusPicker()">+ Set Custom Status</button>`}
+            </div>
+          </div>
 
-        ${renderRadianceFontPicker()}
+          ${hasRadiance ? `
+          <!-- Font Picker (Radiance) -->
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="srl-name">Display Font</div>
+              <div class="srl-desc" style="color:rgba(255,215,62,.5);">✨ Radiance</div>
+            </div>
+            <div class="settings-row-content">
+              ${renderRadianceFontPicker()}
+            </div>
+          </div>` : ''}
 
-        <!-- Connected Accounts -->
-        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Connected Accounts</div>
-          ${[
-            {key:'youtube',color:'#FF0000',bg:'rgba(255,0,0,.08)',label:'YouTube',placeholder:'https://youtube.com/@channel'},
-            {key:'roblox',color:'#00B2FF',bg:'rgba(0,178,255,.08)',label:'Roblox',placeholder:'https://roblox.com/users/12345/profile'},
-            {key:'spotify',color:'#1DB954',bg:'rgba(29,185,84,.08)',label:'Spotify',placeholder:'https://open.spotify.com/user/you'},
-            {key:'twitter',color:'#1d9bf0',bg:'rgba(29,155,240,.08)',label:'X (Twitter)',placeholder:'https://x.com/yourusername'},
-          ].map(acc=>`
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${acc.bg};border:1px solid ${acc.color}33;border-radius:11px;margin-bottom:8px;">
-              <div style="font-size:12.5px;font-weight:700;color:${acc.color};min-width:68px;">${acc.label}</div>
-              <input class="field-input" id="social-${acc.key}" value="${escapeHTML(CU.socials&&CU.socials[acc.key]||'')}" placeholder="${acc.placeholder}" style="flex:1;background:rgba(0,0,0,.2);border-color:${acc.color}33;" onchange="validateSocialLink('${acc.key}','${acc.label.toLowerCase()}.com',this)">
-            </div>`).join('')}
-          <button class="btn-a" onclick="saveSocialLinks()" style="font-size:12.5px;padding:8px 18px;margin-top:4px;">Save Connections</button>
-        </div>
+          <!-- SECTION: Account -->
+          <div class="settings-section-title" style="margin-top:32px;">ACCOUNT</div>
 
-        <!-- Danger Zone -->
-        <div style="background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:14px;padding:16px 18px;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:10px;">Danger Zone</div>
-          <button class="btn-d" onclick="showCustomConfirm('Delete your account permanently? This cannot be undone.',doLogout)" style="font-size:12.5px;padding:8px 16px;">Delete Account</button>
+          <div class="settings-row">
+            <div class="settings-row-label"><div class="srl-name">Email</div></div>
+            <div class="settings-row-content" style="display:flex;gap:8px;align-items:center;">
+              <input class="settings-input" id="email-input" value="${escapeHTML(CU.email||'')}" placeholder="your@email.com" style="flex:1;">
+              <button class="settings-save-btn" onclick="saveEmail()">Save</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="srl-name">Password</div>
+            </div>
+            <div class="settings-row-content" style="display:flex;flex-direction:column;gap:8px;">
+              <input class="settings-input" id="pw-old" type="password" placeholder="Current password">
+              <input class="settings-input" id="pw-new" type="password" placeholder="New password (min 6 chars)">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <button class="settings-save-btn" onclick="changePassword()">Update Password</button>
+                <span id="pw-msg" style="font-size:12px;"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION: Connections -->
+          <div class="settings-section-title" style="margin-top:32px;">CONNECTIONS</div>
+          <div style="background:#1c202b;border-radius:10px;padding:4px 14px;">
+            ${[
+              {key:'youtube', icon:'▶', label:'YouTube', color:'#FF4444', placeholder:'https://youtube.com/@channel'},
+              {key:'roblox',  icon:'🎮', label:'Roblox',  color:'#00B2FF', placeholder:'https://roblox.com/users/...'},
+              {key:'spotify', icon:'♪',  label:'Spotify', color:'#1DB954', placeholder:'https://open.spotify.com/user/...'},
+              {key:'twitter', icon:'𝕏', label:'X/Twitter',color:'#1d9bf0', placeholder:'https://x.com/username'},
+            ].map(p => `
+              <div class="connected-row">
+                <div class="connected-icon" style="background:${p.color}18;color:${p.color};">${p.icon}</div>
+                <div class="connected-label">${p.label}</div>
+                <input class="settings-input" id="social-${p.key}" value="${escapeHTML((CU.socials||{})[p.key]||'')}" placeholder="${p.placeholder}" style="flex:1;font-size:12.5px;padding:7px 12px;" onchange="validateSocialLink('${p.key}','${p.label.toLowerCase()}.com',this)">
+              </div>`).join('')}
+          </div>
+          <button class="settings-save-btn" onclick="saveSocialLinks()" style="margin-top:12px;">Save Connections</button>
+
+          <!-- SECTION: Danger Zone -->
+          <div class="danger-section-title" style="margin-top:36px;">DANGER ZONE</div>
+          <button class="danger-btn" onclick="showCustomConfirm('Delete your account permanently? This cannot be undone.',doLogout)">
+            🗑️ Delete Account
+          </button>
         </div>
-        </div><!-- /left col -->
 
         <!-- RIGHT: Live preview -->
-        <div style="padding:24px 18px;position:sticky;top:0;border-left:1px solid var(--border);min-height:100%;background:rgba(255,255,255,.01);">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Live Preview</div>
-          <div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.5);">
-            <!-- Banner -->
-            <div style="height:120px;position:relative;cursor:pointer;" onclick="document.getElementById('banner-file-inp').click()">
-              <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0f1830,#1a0f30);">
-                ${CU.banner?`<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:``}
-              </div>
-              <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(4,6,10,.7));pointer-events:none;"></div>
-              <div style="position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.6);padding:2px 7px;border-radius:6px;font-size:10px;color:#fff;">🖼 Change Banner</div>
+        <div style="overflow-y:auto;padding:24px 20px;background:#0f1118;border-left:1px solid rgba(255,255,255,.04);">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:12px;">Live Preview</div>
+          <div class="profile-preview-card">
+            <div style="height:80px;position:relative;background:linear-gradient(135deg,#0f1830,#1a0f30);">
+              ${CU.banner ? `<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;">` : ''}
             </div>
-            <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event)">
-            <!-- Avatar + info -->
-            <div style="padding:0 14px 16px;">
-              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-28px;margin-bottom:10px;">
-                <label style="cursor:pointer;position:relative;display:inline-block;">
-                  <div style="width:68px;height:68px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);box-shadow:0 2px 10px rgba(0,0,0,.4);">
-                    ${CU.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</div>`}
-                  </div>
-                  <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0"><span style="font-size:15px;">📷</span></div>
-                  <input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event)">
-                </label>
-                <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">${renderBadgesHTML(CU)}</div>
+            <div style="padding:0 14px 14px;">
+              <div style="margin-top:-28px;margin-bottom:8px;">
+                <div style="width:56px;height:56px;border-radius:50%;border:3px solid #1e2130;overflow:hidden;background:#13161f;display:flex;align-items:center;justify-content:center;font-size:20px;">
+                  ${CU.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</span>`}
+                </div>
               </div>
-              <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:1px;">${escapeHTML(CU.displayName||CU.username)}</div>
-              <div style="font-size:11.5px;color:var(--muted);margin-bottom:6px;">@${escapeHTML(CU.username)}</div>
+              <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:1px;">${escapeHTML(CU.displayName||CU.username)}</div>
+              <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:6px;">@${escapeHTML(CU.username)}</div>
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-                <span style="width:8px;height:8px;border-radius:50%;background:${{online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280'}[CU.status||'online']||'#3ecf6e'};flex-shrink:0;"></span>
-                <span style="font-size:12px;color:var(--muted-light);">${{online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible'}[CU.status||'online']||'Online'}</span>
+                <span style="width:8px;height:8px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
+                <span style="font-size:12px;color:rgba(255,255,255,.5);">${statusLabels[CU.status||'online']||'Online'}</span>
               </div>
-              ${customStatus?`<div style="display:inline-flex;align-items:center;gap:5px;padding:2px 9px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;font-size:11px;cursor:pointer;margin-bottom:6px;" onclick="openStatusPicker()">${customStatus.emoji} ${escapeHTML(customStatus.text)}</div>`:`<div style="font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:6px;" onclick="openStatusPicker()">+ Set custom status</div>`}
-              ${CU.bio?`<div style="padding:8px 10px;background:var(--panel2);border-radius:10px;border-left:3px solid var(--accent-mid);font-size:12px;color:var(--muted-light);line-height:1.5;margin-top:4px;">${escapeHTML(CU.bio.slice(0,100)+(CU.bio.length>100?'…':''))}</div>`:''}
+              ${cs?.text ? `<div style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;background:rgba(255,255,255,.06);border-radius:100px;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:6px;">${cs.emoji||''} ${escapeHTML(cs.text)}</div>` : ''}
+              ${CU.bio ? `<div style="font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.5;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:6px;border-left:2px solid rgba(255,249,62,.2);">${escapeHTML(CU.bio.slice(0,80))}${CU.bio.length>80?'…':''}</div>` : ''}
+              <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:3px;">${renderBadgesHTML(CU)}</div>
             </div>
           </div>
-          <!-- Quick tip -->
-          <div style="margin-top:10px;padding:10px 12px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.1);border-radius:10px;">
-            <div style="font-size:10.5px;color:var(--muted-light);line-height:1.5;">💡 Click the banner or avatar in the preview to change them.</div>
-          </div>
-        </div><!-- /right col -->
-      </div><!-- /grid -->`;
-  } else if(tab==='account') {
-    main.innerHTML=`<div style="padding:24px;">
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:22px;">Account</div>
-      <div class="settings-section">
-        <div class="settings-title">Username</div>
-        <input class="field-input" value="${escapeHTML(CU.username)}" disabled style="opacity:.6;margin-bottom:4px;">
-        <div style="font-size:11.5px;color:var(--muted);">Username cannot be changed.</div>
-      </div>
-      <div class="settings-section">
-        <div class="settings-title">Email</div>
-        <input class="field-input" id="email-input" value="${escapeHTML(CU.email||'')}" placeholder="your@email.com" style="margin-bottom:8px;">
-        <button class="btn-a" onclick="saveEmail()" style="font-size:13px;padding:8px 16px;">Update Email</button>
-      </div>
-      <div class="settings-section">
-        <div class="settings-title">Change Password</div>
-        <input class="field-input" id="pw-old" type="password" placeholder="Current password" style="margin-bottom:8px;">
-        <input class="field-input" id="pw-new" type="password" placeholder="New password (min 6 chars)" style="margin-bottom:8px;">
-        <button class="btn-a" onclick="changePassword()" style="font-size:13px;padding:8px 16px;">Update Password</button>
-        <div id="pw-msg" style="margin-top:8px;font-size:12.5px;"></div>
-      </div>
-      <div class="settings-section"><div class="settings-title" style="color:var(--red);">Danger Zone</div>
-        <button class="btn-d" onclick="showCustomConfirm('Delete your account permanently?',doLogout)">Delete Account</button>
-      </div>
-    </div>`;
-  } else if(tab==='game_collection') {
-    renderGameCollectionTab(main);
-  } else if(tab==='notifs_settings') {
-    main.innerHTML=`<div style="padding:24px;">
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:22px;">Notification Settings</div>
-      ${[['messages','💬','Direct Messages','Get notified for new DMs'],['friendRequests','👥','Friend Requests','Notifications for new friend requests'],['bastionActivity','🏰','Bastion Activity','Messages and events in your Bastions'],['mentions','🔔','Mentions','When someone mentions you'],['sounds','🔊','Sound Effects','Enable notification sounds']].map(([k,icon,label,desc])=>`
-        <div class="notif-setting-row">
-          <div class="nsr-info"><div class="nsr-label">${icon} ${label}</div><div class="nsr-desc">${desc}</div></div>
-          <div class="toggle ${notifSettings[k]?'on':''}" onclick="toggleNotifSetting('${k}',this)"></div>
-        </div>`).join('')}
-      <div style="height:1px;background:var(--border);margin:16px 0;"></div>
-      <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Text & Emoji</div>
-      <div class="notif-setting-row">
-        <div class="nsr-info">
-          <div class="nsr-label">🙂 Automatically convert emoticons</div>
-          <div class="nsr-desc">Convert :) → 😊, &lt;3 → ❤️ and other emoticons in your messages</div>
+          <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,.2);line-height:1.5;">Click the avatar or banner above to change them.</div>
         </div>
-        <div class="toggle ${!_globalSettings.disableEmoticonConversion?'on':''}" onclick="toggleEmoticonConversion(this)"></div>
-      </div>
-      <button class="btn-a" style="margin-top:20px;" onclick="saveNotifSettings()">Save Settings</button>
-    </div>`;
-  } else {
-    main.innerHTML=`<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3><p>These settings are on the way!</p></div>`;
+      </div>`;
+  }
+
+  else if (tab === 'account') {
+    main.innerHTML = `
+      <div class="settings-panel">
+        <div class="settings-section-title">ACCOUNT</div>
+        <div class="settings-row">
+          <div class="settings-row-label"><div class="srl-name">Username</div><div class="srl-desc">Cannot be changed</div></div>
+          <div class="settings-row-content"><input class="settings-input" value="${escapeHTML(CU.username)}" disabled></div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label"><div class="srl-name">Email</div></div>
+          <div class="settings-row-content" style="display:flex;gap:8px;">
+            <input class="settings-input" id="email-input" value="${escapeHTML(CU.email||'')}" placeholder="your@email.com" style="flex:1;">
+            <button class="settings-save-btn" onclick="saveEmail()">Save</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label"><div class="srl-name">Change Password</div></div>
+          <div class="settings-row-content" style="display:flex;flex-direction:column;gap:8px;">
+            <input class="settings-input" id="pw-old" type="password" placeholder="Current password">
+            <input class="settings-input" id="pw-new" type="password" placeholder="New password (min 6 chars)">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button class="settings-save-btn" onclick="changePassword()">Update Password</button>
+              <span id="pw-msg" style="font-size:12px;"></span>
+            </div>
+          </div>
+        </div>
+        <div class="danger-section-title" style="margin-top:36px;">DANGER ZONE</div>
+        <button class="danger-btn" onclick="showCustomConfirm('Delete your account permanently?',doLogout)">🗑️ Delete Account</button>
+      </div>`;
+  }
+
+  else if (tab === 'notifs_settings') {
+    main.innerHTML = `
+      <div class="settings-panel">
+        <div class="settings-section-title">NOTIFICATIONS</div>
+        ${[
+          ['messages','💬','Direct Messages','New DM notifications'],
+          ['friendRequests','👥','Friend Requests','When someone adds you'],
+          ['bastionActivity','🏰','Bastion Activity','Messages in your Bastions'],
+          ['mentions','🔔','Mentions','When someone @mentions you'],
+          ['sounds','🔊','Sounds','Notification sound effects'],
+        ].map(([k,icon,label,desc]) => `
+          <div class="settings-row">
+            <div class="settings-row-label"><div class="srl-name">${icon} ${label}</div><div class="srl-desc">${desc}</div></div>
+            <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
+              <div class="toggle ${notifSettings[k]?'on':''}" onclick="toggleNotifSetting('${k}',this)"></div>
+            </div>
+          </div>`).join('')}
+        <div class="settings-section-title" style="margin-top:24px;">TEXT & EMOJI</div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <div class="srl-name">🙂 Emoticon Conversion</div>
+            <div class="srl-desc">Converts :) → 😊, &lt;3 → ❤️ automatically</div>
+          </div>
+          <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
+            <div class="toggle ${!_globalSettings?.disableEmoticonConversion?'on':''}" onclick="toggleEmoticonConversion(this)"></div>
+          </div>
+        </div>
+        <button class="settings-save-btn" onclick="saveNotifSettings()" style="margin-top:20px;">Save Settings</button>
+      </div>`;
+  }
+
+  else if (tab === 'game_collection') {
+    renderGameCollectionTab(main);
+  }
+
+  else {
+    main.innerHTML = `<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3><p>These settings are on the way!</p></div>`;
   }
 }
-
 async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}CU.displayName=dn;await saveUser();document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');toast('Display name updated!','success');}
 async function saveEmail(){const e=document.getElementById('email-input')?.value?.trim();CU.email=e;await saveUser();toast('Email updated!','success');}
 async function changePassword(){const old=document.getElementById('pw-old')?.value,nw=document.getElementById('pw-new')?.value,msg=document.getElementById('pw-msg');if(!old||!nw){if(msg){msg.style.color='var(--red)';msg.textContent='Fill both fields.';}return;}if(old!==CU.password){if(msg){msg.style.color='var(--red)';msg.textContent='Current password incorrect.';}return;}if(nw.length<6){if(msg){msg.style.color='var(--red)';msg.textContent='Too short.';}return;}CU.password=nw;await saveUser();if(msg){msg.style.color='var(--green)';msg.textContent='Password updated!';}document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';}
@@ -4664,7 +4823,17 @@ async function updateBanner(e) {
   };
   reader.readAsDataURL(file);
 }
-async function setMyStatus(s){CU.status=s;try{await FortizedSocial.setStatus(CU.username,s);}catch{}await saveUser();buildProfileView('myprofile');toast(`Status: ${s}`,'info');}
+async function setMyStatus(s) {
+  CU.status = s;
+  try { await FortizedSocial.setStatus(CU.username, s); } catch {}
+  await saveUser();
+  updateUserbar();
+  const labels = {online:'Online 🟢', away:'Away 🟡', dnd:'Do Not Disturb 🔴', invisible:'Invisible ⚫'};
+  toast(labels[s] || s, 'info');
+  // Rebuild profile view if open
+  const pm = document.getElementById('profile-main');
+  if (pm && pm.innerHTML.includes('dn-input')) buildProfileView('myprofile');
+}
 function toggleNotifSetting(key,el){notifSettings[key]=!notifSettings[key];el.classList.toggle('on',notifSettings[key]);}
 async function saveNotifSettings(){CU.notifSettings=notifSettings;await saveUser();toast('Notification settings saved!','success');}
 
@@ -6955,20 +7124,23 @@ function getDisplayFont(user) {
 }
 
 function renderRadianceFontPicker() {
-  const hasRadiance = CU.radianceUntil && new Date(CU.radianceUntil) > new Date();
-  if (!hasRadiance) return '';
-  return `
-    <div class="settings-section">
-      <div class="settings-title">Display Name Font <span style="font-size:10px;color:var(--accent);background:var(--accent-dim);padding:2px 7px;border-radius:100px;margin-left:6px;">Radiance</span></div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;">
-        ${RADIANCE_FONTS.map(f => `
-          <button onclick="previewFont('${f.id}')" style="padding:10px 14px;border-radius:12px;border:1.5px solid ${CU.displayFont===f.id?'var(--accent)':'var(--border)'};background:${CU.displayFont===f.id?'var(--accent-dim)':'var(--panel2)'};cursor:pointer;text-align:left;">
-            <div style="font-family:${f.css};font-weight:${f.weight||'600'};font-size:14px;color:#fff;margin-bottom:2px;">${escapeHTML(CU.displayName||CU.username)}</div>
-            <div style="font-size:10px;color:var(--muted);">${f.name}</div>
-          </button>`).join('')}
-      </div>
-      <button class="btn-a" onclick="saveDisplayFont()" style="font-size:13px;padding:8px 16px;">Save Font</button>
-    </div>`;
+  const hasR = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  if (!hasR) return '';
+  const fonts = [
+    {id:'default', name:'Default', css:"'DM Sans',sans-serif", weight:'400'},
+    {id:'syne',    name:'Bold Syne', css:"'Syne',sans-serif", weight:'800'},
+    {id:'serif',   name:'Elegant Serif', css:"Georgia,serif", weight:'600'},
+    {id:'mono',    name:'Monospace', css:"'Courier New',monospace", weight:'600'},
+    {id:'cursive', name:'Cursive', css:"cursive", weight:'600'},
+  ];
+  return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+    ${fonts.map(f => `
+      <div class="font-tile ${(CU.displayFont||'default')===f.id?'sel':''}" onclick="previewFont('${f.id}')">
+        <div class="font-tile-preview" style="font-family:${f.css};font-weight:${f.weight};">${escapeHTML(CU.displayName||CU.username)}</div>
+        <div class="font-tile-name">${f.name}</div>
+      </div>`).join('')}
+  </div>
+  <button class="settings-save-btn" onclick="saveDisplayFont()" style="margin-top:10px;">Apply Font</button>`;
 }
 
 function previewFont(fontId) {
@@ -7875,16 +8047,16 @@ function pickStatusMode(mode, el) {
 
 
 function pickStatusEmoji() {
-  const emojis = ['😊','🎮','🎵','💻','📚','😴','🍕','✈️','🏋️','🎨','🤔','🔥','😎','🥳','😤','💪','🌙','☀️','⚡','🐉'];
-  const btn = document.getElementById('sp-emoji');
+  const emojis = ['😊','🎮','🎵','💻','📚','😴','🍕','✈️','🏋️','🎨','🤔','🔥','😎','🥳','😤','💪','🌙','☀️','⚡','🐉','🧁','🎯','🌈','🦋','🐉','🎲','🏆','💎','🌺','🍜'];
+  const btn = document.getElementById('status-emoji-btn');
   if (!btn) return;
   const rect = btn.getBoundingClientRect();
-  showCtxMenu(rect.right+4, rect.top, emojis.map(function(e){ return {icon:e,label:e,action:function(){btn.textContent=e;}}; }));
+  showCtxMenu(rect.right+4, rect.top, emojis.map(function(em){ return {icon:em,label:em,action:function(){btn.textContent=em;}}; }));
 }
 
 async function saveCustomStatus() {
-  const emoji = (document.getElementById('sp-emoji')||{}).textContent||'😊';
-  const text = ((document.getElementById('sp-text')||{}).value||'').trim();
+  const emoji = (document.getElementById('status-emoji-btn')||{}).textContent||'😊';
+  const text = ((document.getElementById('status-text-input')||{}).value||'').trim();
   if (!text) { toast('Add some text!','error'); return; }
   CU.customStatus = {emoji, text, set:new Date().toISOString()};
   await saveUser();

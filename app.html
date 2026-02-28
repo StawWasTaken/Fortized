@@ -149,21 +149,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .chat-welcome p{font-size:13.5px;color:var(--muted-light);}
 .date-div{display:flex;align-items:center;gap:10px;padding:8px 20px;font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;}
 .date-div::before,.date-div::after{content:"";flex:1;height:1px;background:var(--border);}
-.msg-row{display:flex;padding:2px 20px;position:relative;}
-.msg-row:hover{background:rgba(255,255,255,.018);}
-.msg-row.msg-first{padding-top:16px;}
+.msg-row{display:flex;padding:1px 16px 1px 16px;position:relative;min-width:0;}
+.msg-row:hover{background:rgba(255,255,255,.025);}
+.msg-row.msg-first{padding-top:17px;}
 .msg-row.msg-editing{background:rgba(255,249,62,.04);}
-.msg-av-wrap{width:40px;min-width:40px;display:flex;justify-content:center;padding-top:2px;flex-shrink:0;}
-.msg-av-inner{width:36px;height:36px;border-radius:50%;background:var(--panel);border:1px solid var(--border);font-size:13px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;flex-shrink:0;}
+.msg-av-wrap{width:44px;min-width:44px;display:flex;justify-content:center;padding-top:1px;flex-shrink:0;}
+.msg-av-inner{width:40px;height:40px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;flex-shrink:0;}
 .msg-av-inner img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
-.msg-time-small{font-size:10px;color:var(--muted);white-space:nowrap;padding-top:4px;min-width:44px;visibility:hidden;}
+.msg-time-small{font-size:10.5px;color:var(--muted);white-space:nowrap;padding-top:5px;min-width:44px;visibility:hidden;text-align:right;}
 .msg-row.msg-cont:hover .msg-time-small{visibility:visible;}
 .msg-content-col{flex:1;min-width:0;}
-.msg-header{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;}
-.msg-author{font-size:14px;font-weight:700;color:#fff;cursor:pointer;}
+.msg-header{display:flex;align-items:center;gap:6px;margin-bottom:2px;flex-wrap:wrap;}
+.msg-author{font-size:15px;font-weight:600;color:#fff;cursor:pointer;line-height:1.3;}
 .msg-author:hover{text-decoration:underline;}
-.msg-timestamp{font-size:11px;color:var(--muted);}
-.msg-text{font-size:14px;color:var(--text);line-height:1.55;word-break:break-word;}
+.msg-timestamp{font-size:11.5px;color:var(--muted);margin-left:2px;}
+.msg-text{font-size:15px;color:var(--text);line-height:1.55;word-break:break-word;}
 .msg-text code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px;font-size:12.5px;font-family:monospace;}
 .msg-edited{font-size:10.5px;color:var(--muted);margin-left:4px;}
 .msg-reactions{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
@@ -639,6 +639,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   content: '';
   animation: none;
 }
+
+/* Role tags - Discord style */
+.role-tag{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.02em;cursor:default;vertical-align:middle;line-height:1.4;}
+.role-tag::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
 </style>
 <style id="radiance-font-style"></style>
 <body>
@@ -2659,6 +2663,21 @@ function renderMessages(container, msgs, context) {
   });
 }
 
+
+function getMsgRoleTag(fromUser, context) {
+  // Only show role tags in bastion channels, not DMs or GC
+  if (context !== 'ch' && context !== 'channel') return '';
+  if (curBastion === null) return '';
+  const b = CU?.bastions?.[curBastion];
+  if (!b) return '';
+  const roles = b.roles || [];
+  const memberRoles = (b.memberRoles || {})[fromUser] || [];
+  const pr = roles.find(r => memberRoles.includes(r.id));
+  if (!pr) return '';
+  // Discord-style pill: colored dot + name on colored bg
+  const col = pr.color || '#60a5fa';
+  return `<span class="role-tag" style="color:${col};background:${col}22;border:1px solid ${col}44;">${escapeHTML(pr.name)}</span>`;
+}
 function appendMessage(container, msg, context, prevAuthor) {
   if (!msg || !container) return;
   if (msg.from && typeof isUserBlocked === 'function' && isUserBlocked(msg.from)) return;
@@ -2691,19 +2710,19 @@ function appendMessage(container, msg, context, prevAuthor) {
   if (isFirst) {
     const avId='av-'+id.replace(/[^a-z0-9]/gi,'-');
     row.innerHTML=`
-      <div class="msg-av-wrap"><div class="msg-av-inner" id="${avId}" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;">${buildAvatarHTML(null,msg.from,36)}</div></div>
+      <div class="msg-av-wrap"><div class="msg-av-inner" id="${avId}" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;">${buildAvatarHTML(null,msg.from,40)}</div></div>
       <div class="msg-content-col">
         ${fwdHTML}${replyHTML}
         <div class="msg-header">
           <span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>
-          ${(()=>{const b=CU.bastions?.[curBastion];if(!b)return '';const roles=b.roles||[];const mr=(b.memberRoles||{})[msg.from]||[];const pr=roles.find(r=>mr.includes(r.id));return pr?`<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:100px;border:1px solid ${pr.color}44;color:${pr.color};background:${pr.color}18;">${escapeHTML(pr.name)}</span>`:'';})()}
+          ${getMsgRoleTag(msg.from, context)}
           <span class="msg-timestamp">${time}</span>
         </div>
         <div class="msg-text" id="mt-${avId}">${parseMD(escapeHTML(msg.text||''))}${editTag}</div>
         ${reactHTML?`<div class="msg-reactions">${reactHTML}</div>`:''}
       </div>
       ${buildMsgActions(msg,context,id)}`;
-    FortizedSocial.getUserByName(msg.from).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,msg.from,36);}}).catch(()=>{});
+    FortizedSocial.getUserByName(msg.from).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,msg.from,40);}}).catch(()=>{});
   } else {
     const textId='mt-c-'+id.replace(/[^a-z0-9]/gi,'-');
     row.innerHTML=`
@@ -2833,9 +2852,7 @@ function deleteMsg(msgId, context) {
           const roles = b?.roles||[];
           const mr = (b?.memberRoles||{})[fromName]||[];
           const pr = roles.find(r=>mr.includes(r.id));
-          const roleTag = pr
-            ? `<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:100px;border:1px solid ${pr.color}44;color:${pr.color};background:${pr.color}18;">${escapeHTML(pr.name)}</span>`
-            : '';
+          const roleTag = getMsgRoleTag(fromName, 'ch');
           // Rebuild content column with header prepended
           const col = next.querySelector('.msg-content-col');
           const existingContent = col ? col.innerHTML : '';
@@ -2947,7 +2964,7 @@ function buildMemberEntry(u, roles, memberRoles) {
   const rids = memberRoles[u] || [];
   const primaryRole = roles.find(r => rids.includes(r.id));
   const roleTag = primaryRole
-    ? `<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:100px;border:1px solid ${primaryRole.color}44;color:${primaryRole.color};background:${primaryRole.color}18;white-space:nowrap;flex-shrink:0;">${escapeHTML(primaryRole.name)}</span>`
+    ? `<span class="role-tag" style="color:${primaryRole.color};background:${primaryRole.color}22;border:1px solid ${primaryRole.color}44;white-space:nowrap;flex-shrink:0;">${escapeHTML(primaryRole.name)}</span>`
     : '';
   const isMe = u === CU.username;
   const displayN = isMe ? (CU.displayName||CU.username) : u;
@@ -3281,7 +3298,10 @@ function updateDOBField(){
     const np=document.getElementById('notif-panel');
     if(notifPanelOpen&&np&&!np.contains(e.target)&&e.target.id!=='rb-notifs'){notifPanelOpen=false;np.classList.remove('open');}
     const ep=document.getElementById('emoji-picker');
-    if(ep&&ep.classList.contains('show')&&!ep.contains(e.target)&&!['emoji-btn-dm','emoji-btn-ch'].includes(e.target.id))ep.classList.remove('show');
+    if(ep&&ep.classList.contains('show')&&!ep.contains(e.target)){
+      const clickedEmojiBtn = e.target.closest('[id^="emoji-btn-"]') || e.target.closest('.cit-btn');
+      if(!clickedEmojiBtn) ep.classList.remove('show');
+    }
   });
   document.querySelectorAll('.modal-overlay').forEach(overlay=>{
     overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('open');});
@@ -4241,7 +4261,7 @@ function buildEmojiPicker() {
     </div>
     <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;flex-shrink:0;padding:4px 6px;">
       ${[{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:'FTZ',label:'Fortized'},...EMOJI_PICKER_TABS.slice(2)].map(t=>`
-        <button onclick="setEmojiTab('${t.id}')" id="etab-${t.id}" title="${t.label}" style="background:${_emojiPickerTab===t.id?'rgba(255,249,62,.15)':'transparent'};border:none;color:${_emojiPickerTab===t.id?'var(--accent)':'rgba(255,255,255,.5)'};font-size:${t.id==='ftz'?'11px':'18px'};font-weight:${t.id==='ftz'?'800':'400'};padding:6px 8px;border-radius:8px;cursor:pointer;flex-shrink:0;line-height:1;transition:all .1s;${t.id==='ftz'?'font-family:\'Syne\',sans-serif;':''}">${t.id==='ftz'?`<img src='Fortized icon.png' style='width:20px;height:20px;object-fit:contain;vertical-align:middle;' onerror='this.style.display=\'none\''>`:t.icon}</button>
+        <button onclick="setEmojiTab('${t.id}')" id="etab-${t.id}" title="${t.label}" style="background:${_emojiPickerTab===t.id?'rgba(255,249,62,.15)':'transparent'};border:none;color:${_emojiPickerTab===t.id?'var(--accent)':'rgba(255,255,255,.5)'};font-size:${t.id==='ftz'?'11px':'18px'};font-weight:${t.id==='ftz'?'800':'400'};padding:6px 8px;border-radius:8px;cursor:pointer;flex-shrink:0;line-height:1;transition:all .1s;${t.id==='ftz'?'font-family:\'Syne\',sans-serif;':''}">${t.id==='ftz'?'<img src="Fortized icon.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;" onerror="this.style.opacity=0">':t.icon}</button>
       `).join('')}
     </div>
     <div id="epp-grid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;max-height:260px;"></div>
@@ -4277,20 +4297,45 @@ function renderEmojiTab(tabId) {
   }
   
   if (tabId === 'ftz') {
-    const customEmojis = curBastion !== null ? (CU?.bastions?.[curBastion]?.customEmojis||[]) : [];
-    const all = [
-      ...FORTIZED_EMOJIS.map(name => ({type:'ftz',name,url:FORTIZED_EMOJI_MAP[name]})),
-      ...customEmojis.map(ce => ({type:'custom',name:ce.name,url:ce.data})),
-    ];
-    if (!all.length) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">No Fortized emojis yet</div>';
-      return;
-    }
+    const bastionCustom = curBastion !== null ? (CU?.bastions?.[curBastion]?.customEmojis||[]) : [];
+    const ftzEmojis = FORTIZED_EMOJIS.map(name => ({type:'ftz', name, url:FORTIZED_EMOJI_MAP[name]}));
+    
     grid.style.gridTemplateColumns = 'repeat(6,1fr)';
-    grid.innerHTML = all.map(e => `
-      <div onclick="insertFortizedEmoji('${escapeHTML(e.name)}','${escapeHTML(e.url)}')" onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(e.name)}:'" title=":${escapeHTML(e.name)}:" style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;transition:background .1s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
-        <img src="${escapeHTML(e.url)}" alt=":${escapeHTML(e.name)}:" style="width:100%;height:100%;object-fit:contain;border-radius:4px;" onerror="this.parentElement.style.display='none'">
+    
+    let html = '';
+    
+    // Section: Fortized Global Emojis
+    html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">Fortized</div>`;
+    html += ftzEmojis.map(e => `
+      <div onclick="insertFortizedEmoji('${escapeHTML(e.name)}','${escapeHTML(e.url)}')"
+           onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(e.name)}:'"
+           title=":${escapeHTML(e.name)}:"
+           style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
+           onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+        <img src="${escapeHTML(e.url)}" alt=":${escapeHTML(e.name)}:"
+             style="width:100%;height:100%;object-fit:contain;"
+             onerror="this.parentElement.innerHTML='<span style=\'font-size:9px;color:rgba(255,255,255,.2);text-align:center;word-break:break-all;padding:2px;\'>${escapeHTML(e.name.replace('knight_','').replace('joyster_',''))}</span>'">
       </div>`).join('');
+
+    // Section: Per-Bastion Custom Emojis
+    if (curBastion !== null) {
+      const bName = escapeHTML(CU?.bastions?.[curBastion]?.name || 'Bastion');
+      html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:10px 4px 4px;">${bName}</div>`;
+      if (bastionCustom.length) {
+        html += bastionCustom.map(ce => `
+          <div onclick="insertFortizedEmoji('${escapeHTML(ce.name)}','${escapeHTML(ce.data)}')"
+               onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:'"
+               title=":${escapeHTML(ce.name)}:"
+               style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
+               onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+            <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
+          </div>`).join('');
+      } else {
+        html += `<div style="grid-column:1/-1;font-size:11.5px;color:rgba(255,255,255,.25);padding:4px;">No custom emojis — add them in Bastion Settings → Emojis</div>`;
+      }
+    }
+
+    grid.innerHTML = html;
     return;
   }
   
@@ -4368,13 +4413,7 @@ function insertFortizedEmoji(name, url) {
 function insertCustomEmoji(name, data) {
   insertFortizedEmoji(name, data);
 }
-function insertCustomEmoji(name, data) {
-  const ta=document.getElementById(activeEmojiTarget);
-  if(!ta) return;
-  ta.value+=`:${name}: `;
-  ta.focus();
-  document.getElementById('emoji-picker').classList.remove('show');
-}
+
 
 // ════════════════════════════════════════════
 // PROFILE & SETTINGS
@@ -10140,56 +10179,81 @@ function processUploadedFile(file, inputId) {
 // IMAGE CROP MODAL
 // ════════════════════════════════════════════════════════
 let _cropCanvas, _cropCtx, _cropImg, _cropCallback;
-let _cropData = {x:0,y:0,scale:1,ratio:1,dragging:false,lastX:0,lastY:0};
+let _cropData = {x:0,y:0,scale:1,ratio:1,dragging:false,lastX:0,lastY:0,hasAlpha:false};
+let _cropAnimId = null;
 
 function showCropModal(src, aspectRatio, callback) {
   _cropCallback = callback;
-  _cropData = {x:0, y:0, scale:1, ratio:aspectRatio||1, dragging:false, lastX:0, lastY:0};
+  _cropData = {x:0,y:0,scale:1,ratio:aspectRatio||1,dragging:false,lastX:0,lastY:0,hasAlpha:false};
+  document.getElementById('crop-modal-overlay')?.remove();
 
   const overlay = document.createElement('div');
-  overlay.className = 'crop-modal-overlay';
   overlay.id = 'crop-modal-overlay';
-  
-  const isBanner = aspectRatio > 2;
-  const aspectClass = isBanner ? 'banner-crop' : '';
-  
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);';
+
+  const isBanner = (aspectRatio||1) > 2;
+  const isAvatar = (aspectRatio||1) === 1;
+
   overlay.innerHTML = `
-    <div class="crop-box" style="max-width:${isBanner?'640px':'440px'};">
-      <div style="padding:20px 22px 14px;border-bottom:1px solid var(--border);">
-        <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:4px;">✂️ Crop Image</div>
-        <div style="font-size:12.5px;color:var(--muted);">Drag to position · Scroll to zoom</div>
+    <div style="background:#2b2d31;border-radius:8px;max-width:${isBanner?'680px':'480px'};width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.8);">
+      <div style="padding:16px 20px 12px;border-bottom:1px solid rgba(255,255,255,.07);">
+        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;margin-bottom:2px;">Edit Image</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);">Drag to reposition · Scroll or pinch to zoom</div>
       </div>
-      <div class="crop-canvas-wrap ${aspectClass}" id="crop-canvas-wrap" style="touch-action:none;">
+      <!-- Canvas area with checkered bg for transparency -->
+      <div id="crop-canvas-wrap" style="position:relative;width:100%;aspect-ratio:${isBanner?'16/5':'1/1'};cursor:grab;overflow:hidden;background:repeating-conic-gradient(#3a3c42 0% 25%, #2b2d31 0% 50%) 0 0/20px 20px;touch-action:none;">
         <canvas id="crop-canvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
-        <div style="position:absolute;inset:0;border:2px solid rgba(255,249,62,.6);pointer-events:none;border-radius:${isBanner?'0':'50%'};box-shadow:0 0 0 9999px rgba(0,0,0,.55);"></div>
+        <!-- Crop guide overlay -->
+        <div id="crop-guide" style="position:absolute;inset:0;pointer-events:none;">
+          <div style="position:absolute;inset:0;box-shadow:inset 0 0 0 9999px rgba(0,0,0,.5);border-radius:${isAvatar?'50%':'4px'};"></div>
+          <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,.7);border-radius:${isAvatar?'50%':'4px'};"></div>
+          ${!isAvatar && !isBanner ? `
+          <!-- Rule of thirds grid -->
+          <div style="position:absolute;inset:0;border-radius:4px;background:
+            linear-gradient(rgba(255,255,255,.12) 1px,transparent 1px) 0 33.3%/100% 33.3%,
+            linear-gradient(90deg,rgba(255,255,255,.12) 1px,transparent 1px) 33.3% 0/33.3% 100%;"></div>` : ''}
+        </div>
       </div>
-      <div style="padding:14px 20px;display:flex;gap:10px;align-items:center;border-top:1px solid var(--border);">
-        <span style="font-size:12px;color:var(--muted);flex:1;">🔍 Scroll to zoom in/out</span>
-        <button class="btn-g" onclick="document.getElementById('crop-modal-overlay').remove()" style="font-size:13px;padding:8px 16px;">Cancel</button>
-        <button class="btn-a" onclick="applyCrop()" style="font-size:13px;padding:8px 18px;">Apply ✓</button>
+      <!-- Controls -->
+      <div style="padding:14px 20px;display:flex;align-items:center;gap:12px;border-top:1px solid rgba(255,255,255,.07);">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          <input type="range" id="crop-zoom" min="50" max="300" value="100" style="flex:1;accent-color:var(--accent);cursor:pointer;" oninput="setCropZoom(this.value/100)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
+        </div>
+        <button onclick="resetCrop()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.6);font-size:12px;padding:6px 12px;cursor:pointer;">Reset</button>
+        <button onclick="document.getElementById('crop-modal-overlay').remove()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.7);font-size:12px;padding:6px 14px;cursor:pointer;">Cancel</button>
+        <button onclick="applyCrop()" style="background:var(--accent);border:none;border-radius:6px;color:#060810;font-size:13px;font-weight:700;padding:7px 20px;cursor:pointer;font-family:'Syne',sans-serif;">Apply</button>
       </div>
     </div>`;
+
   document.body.appendChild(overlay);
 
-  // Init canvas
   const wrap = document.getElementById('crop-canvas-wrap');
   _cropCanvas = document.getElementById('crop-canvas');
   _cropCtx = _cropCanvas.getContext('2d');
-  
+
   _cropImg = new Image();
+  _cropImg.crossOrigin = 'anonymous';
   _cropImg.onload = () => {
-    const w = wrap.offsetWidth;
-    const h = wrap.offsetHeight;
-    _cropCanvas.width = w;
-    _cropCanvas.height = h;
-    // Fit image to canvas initially
+    const w = wrap.offsetWidth || 480;
+    const h = wrap.offsetHeight || 480;
+    _cropCanvas.width = w * window.devicePixelRatio;
+    _cropCanvas.height = h * window.devicePixelRatio;
+    _cropCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    // Check if image has transparency
+    const tmp = document.createElement('canvas');
+    tmp.width = Math.min(_cropImg.width, 100); tmp.height = Math.min(_cropImg.height, 100);
+    const tc = tmp.getContext('2d');
+    tc.drawImage(_cropImg, 0, 0, tmp.width, tmp.height);
+    try {
+      const d = tc.getImageData(0, 0, tmp.width, tmp.height).data;
+      for (let i=3; i<d.length; i+=4) { if(d[i]<255){_cropData.hasAlpha=true;break;} }
+    } catch {}
+    // Fit image (cover the crop area)
     const imgAspect = _cropImg.width / _cropImg.height;
     const canvasAspect = w / h;
-    if (imgAspect > canvasAspect) {
-      _cropData.scale = h / _cropImg.height;
-    } else {
-      _cropData.scale = w / _cropImg.width;
-    }
+    _cropData.scale = imgAspect > canvasAspect ? h / _cropImg.height : w / _cropImg.width;
     _cropData.x = (w - _cropImg.width * _cropData.scale) / 2;
     _cropData.y = (h - _cropImg.height * _cropData.scale) / 2;
     drawCrop();
@@ -10199,52 +10263,75 @@ function showCropModal(src, aspectRatio, callback) {
   // Wheel zoom
   wrap.addEventListener('wheel', e => {
     e.preventDefault();
-    const delta = e.deltaY < 0 ? 1.1 : 0.9;
-    _cropData.scale = Math.max(0.5, Math.min(5, _cropData.scale * delta));
+    const factor = e.deltaY < 0 ? 1.08 : 0.93;
+    _cropData.scale = Math.max(0.2, Math.min(8, _cropData.scale * factor));
+    const slider = document.getElementById('crop-zoom');
+    if (slider) slider.value = Math.round(_cropData.scale * 100);
     drawCrop();
   }, {passive:false});
 
-  // Drag
+  // Mouse drag
   wrap.addEventListener('mousedown', e => {
-    _cropData.dragging = true; _cropData.lastX = e.clientX; _cropData.lastY = e.clientY;
-    wrap.style.cursor = 'grabbing';
+    _cropData.dragging=true; _cropData.lastX=e.clientX; _cropData.lastY=e.clientY;
+    wrap.style.cursor='grabbing';
   });
-  wrap.addEventListener('mousemove', e => {
+  document.addEventListener('mousemove', function _mv(e) {
     if (!_cropData.dragging) return;
     _cropData.x += e.clientX - _cropData.lastX;
     _cropData.y += e.clientY - _cropData.lastY;
-    _cropData.lastX = e.clientX; _cropData.lastY = e.clientY;
+    _cropData.lastX=e.clientX; _cropData.lastY=e.clientY;
     drawCrop();
   });
-  wrap.addEventListener('mouseup', () => { _cropData.dragging=false; wrap.style.cursor='move'; });
-  wrap.addEventListener('mouseleave', () => { _cropData.dragging=false; wrap.style.cursor='move'; });
-  
+  document.addEventListener('mouseup', function _mu() {
+    if (_cropData.dragging) { _cropData.dragging=false; wrap.style.cursor='grab'; }
+  });
+
   // Touch
-  let lastTouchDist = 0;
+  let _lt = 0;
   wrap.addEventListener('touchstart', e => {
-    if (e.touches.length===1) { _cropData.dragging=true; _cropData.lastX=e.touches[0].clientX; _cropData.lastY=e.touches[0].clientY; }
-    if (e.touches.length===2) { lastTouchDist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
+    if(e.touches.length===1){_cropData.dragging=true;_cropData.lastX=e.touches[0].clientX;_cropData.lastY=e.touches[0].clientY;}
+    if(e.touches.length===2){_lt=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
     e.preventDefault();
-  }, {passive:false});
+  },{passive:false});
   wrap.addEventListener('touchmove', e => {
-    if (e.touches.length===1 && _cropData.dragging) {
-      _cropData.x += e.touches[0].clientX - _cropData.lastX;
-      _cropData.y += e.touches[0].clientY - _cropData.lastY;
-      _cropData.lastX = e.touches[0].clientX; _cropData.lastY = e.touches[0].clientY;
-    }
-    if (e.touches.length===2) {
-      const dist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
-      _cropData.scale *= dist / lastTouchDist; lastTouchDist = dist;
-      _cropData.scale = Math.max(0.5, Math.min(5, _cropData.scale));
-    }
-    drawCrop(); e.preventDefault();
-  }, {passive:false});
-  wrap.addEventListener('touchend', () => { _cropData.dragging=false; });
+    if(e.touches.length===1&&_cropData.dragging){_cropData.x+=e.touches[0].clientX-_cropData.lastX;_cropData.y+=e.touches[0].clientY-_cropData.lastY;_cropData.lastX=e.touches[0].clientX;_cropData.lastY=e.touches[0].clientY;}
+    if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);_cropData.scale=Math.max(0.2,Math.min(8,_cropData.scale*(d/_lt)));_lt=d;const s=document.getElementById('crop-zoom');if(s)s.value=Math.round(_cropData.scale*100);}
+    drawCrop();e.preventDefault();
+  },{passive:false});
+  wrap.addEventListener('touchend',()=>{_cropData.dragging=false;});
+}
+
+function setCropZoom(val) {
+  _cropData.scale = Math.max(0.2, Math.min(8, val));
+  drawCrop();
+}
+
+function resetCrop() {
+  if (!_cropImg || !_cropCanvas) return;
+  const wrap = document.getElementById('crop-canvas-wrap');
+  const w = wrap ? wrap.offsetWidth : 480;
+  const h = wrap ? wrap.offsetHeight : 480;
+  const imgAspect = _cropImg.width / _cropImg.height;
+  const canvasAspect = w / h;
+  _cropData.scale = imgAspect > canvasAspect ? h / _cropImg.height : w / _cropImg.width;
+  _cropData.x = (w - _cropImg.width * _cropData.scale) / 2;
+  _cropData.y = (h - _cropImg.height * _cropData.scale) / 2;
+  const slider = document.getElementById('crop-zoom');
+  if (slider) slider.value = Math.round(_cropData.scale * 100);
+  drawCrop();
 }
 
 function drawCrop() {
   if (!_cropCanvas || !_cropImg) return;
-  _cropCtx.clearRect(0, 0, _cropCanvas.width, _cropCanvas.height);
+  const dpr = window.devicePixelRatio || 1;
+  const w = _cropCanvas.width / dpr;
+  const h = _cropCanvas.height / dpr;
+  _cropCtx.clearRect(0, 0, w, h);
+  // If no alpha, fill black bg
+  if (!_cropData.hasAlpha) {
+    _cropCtx.fillStyle = '#000';
+    _cropCtx.fillRect(0, 0, w, h);
+  }
   _cropCtx.drawImage(_cropImg, _cropData.x, _cropData.y,
     _cropImg.width * _cropData.scale, _cropImg.height * _cropData.scale);
 }
@@ -10252,22 +10339,27 @@ function drawCrop() {
 function applyCrop() {
   const wrap = document.getElementById('crop-canvas-wrap');
   if (!wrap || !_cropCanvas || !_cropImg) return;
-  const w = _cropCanvas.width;
-  const h = _cropCanvas.height;
-  // Output canvas at 400x400 (or 800x250 for banner)
-  const outW = _cropData.ratio > 2 ? 800 : 400;
-  const outH = Math.round(outW / (_cropData.ratio > 2 ? _cropData.ratio : 1));
+  const dpr = window.devicePixelRatio || 1;
+  const w = _cropCanvas.width / dpr;
+  const h = _cropCanvas.height / dpr;
+  const outW = _cropData.ratio > 2 ? 960 : 480;
+  const outH = _cropData.ratio > 2 ? Math.round(960 / _cropData.ratio) : 480;
   const out = document.createElement('canvas');
   out.width = outW; out.height = outH;
   const ctx = out.getContext('2d');
-  // Scale from canvas coordinates to output size
-  const scaleX = outW / w;
-  const scaleY = outH / h;
+  const scaleX = outW / w, scaleY = outH / h;
+  if (!_cropData.hasAlpha) {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, outW, outH);
+  }
   ctx.drawImage(_cropImg,
     _cropData.x * scaleX, _cropData.y * scaleY,
     _cropImg.width * _cropData.scale * scaleX,
     _cropImg.height * _cropData.scale * scaleY);
-  const result = out.toDataURL('image/jpeg', 0.92);
+  // Preserve alpha → PNG; no alpha → JPEG
+  const result = _cropData.hasAlpha
+    ? out.toDataURL('image/png')
+    : out.toDataURL('image/jpeg', 0.93);
   document.getElementById('crop-modal-overlay')?.remove();
   if (_cropCallback) _cropCallback(result);
 }

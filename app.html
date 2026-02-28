@@ -1373,7 +1373,7 @@ function updateSidebar(v) {
   scroll.innerHTML = '';
 
   if (v==='home') {
-    if (hdrTitle) hdrTitle.innerHTML = '<img src="Fortized icon.png" style="width:18px;height:18px;object-fit:contain;" onerror="this.style.display='none'"> Fortized';
+    if (hdrTitle) hdrTitle.textContent = 'Fortized';
     const bList = (CU?.bastions||[]).map((b,i)=>`<div class="ch-item" onclick="openBastion(${i})"><span style="font-size:16px;">${b.emblem||'🏰'}</span> ${escapeHTML(b.name)}</div>`).join('');
     scroll.innerHTML = `
       <div class="sec-label">Quick Nav</div>

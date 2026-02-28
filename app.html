@@ -346,8 +346,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .vc-btn.muted-btn{background:rgba(255,255,255,.08);color:var(--text);}
 .vc-btn.muted-btn.active{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);}
 .vc-btn.disc-btn{background:var(--red);color:#fff;}
-.emoji-picker-panel{position:fixed;width:340px;background:var(--panel2);border:1px solid var(--border);border-radius:16px;padding:0;z-index:2000;box-shadow:0 20px 50px rgba(0,0,0,.6);display:none;flex-direction:column;overflow:hidden;}
+.emoji-picker-panel{position:fixed;width:380px;background:#1e2130;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:0;z-index:9000;box-shadow:0 24px 64px rgba(0,0,0,.8);display:none;flex-direction:column;overflow:hidden;font-family:'DM Sans',sans-serif;}
 .emoji-picker-panel.show{display:flex;}
+/* Emoji autocomplete dropdown */
+.emoji-autocomplete{position:fixed;background:#1e2130;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:6px;z-index:9500;box-shadow:0 12px 40px rgba(0,0,0,.7);max-width:340px;display:none;}
+.emoji-autocomplete.show{display:flex;flex-wrap:wrap;gap:4px;}
+.ema-item{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--text);min-width:140px;flex:1;}
+.ema-item:hover,.ema-item.selected{background:rgba(255,249,62,.12);color:var(--accent);}
+.ema-item img{width:22px;height:22px;object-fit:contain;}
+.ema-item .ema-preview{font-size:20px;line-height:1;}
+.ema-item .ema-name{font-size:11.5px;color:var(--muted-light);font-family:monospace;}
 .epp-search{padding:10px 12px;border-bottom:1px solid var(--border);}
 .epp-search input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:9px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 10px;outline:none;}
 .epp-cats{display:flex;gap:2px;padding:6px 8px;border-bottom:1px solid var(--border);overflow-x:auto;}
@@ -1166,6 +1174,8 @@ let isMuted = false;
 let isDeafened = false;
 let notifPanelOpen = false;
 let notifSettings = {messages:true,friendRequests:true,bastionActivity:true,mentions:true,sounds:true};
+let _globalSettings = JSON.parse(localStorage.getItem('ftz_global_settings')||'{"disableEmoticonConversion":false}');
+function saveGlobalSettings() { localStorage.setItem('ftz_global_settings', JSON.stringify(_globalSettings)); }
 let replyingTo = null;
 let forwardMsgText = '';
 let activeEmojiTarget = null;
@@ -1202,6 +1212,164 @@ const EMOJI_CATEGORIES = [
   {icon:'🍕', label:'Food', emojis:['🍕','🍔','🍟','🌭','🍿','🧂','🥓','🥚','🍳','🧇','🥞','🧈','🍞','🥐','🥖','🫓','🥨','🧀','🥗','🥙','🌮','🌯','🫔','🥫','🍝','🍜','🍲','🍛','🍣','🍱']},
   {icon:'⚡', label:'Symbols', emojis:['⚡','🔥','❄️','🌊','🌪️','🌈','⭐','💫','✨','🎯','🏆','🥇','🎮','🎲','🃏','🎭','🎨','🎵','🎶','🎸','🎹','🎤','🎧','📱','💻','🖥️','⌨️','🖱️','📷','🎬']},
 ];
+
+// ════════════════════════════════════════════════════════════
+// EMOJI SYSTEM — Shortcodes, Emoticons, Fortized Custom Emojis
+// ════════════════════════════════════════════════════════════
+
+// Discord/Twitter emoji shortcode map (common ones)
+const EMOJI_SHORTCODES = {
+  // Smileys
+  'smile':'😄','grin':'😁','joy':'😂','rofl':'🤣','smiley':'😃','slightly_smiling_face':'🙂',
+  'blush':'😊','innocent':'😇','heart_eyes':'😍','kissing_heart':'😘','kissing':'😗',
+  'kissing_smiling_eyes':'😙','kissing_closed_eyes':'😚','yum':'😋','stuck_out_tongue':'😛',
+  'stuck_out_tongue_winking_eye':'😜','stuck_out_tongue_closed_eyes':'😝','money_mouth_face':'🤑',
+  'hugs':'🤗','thinking':'🤔','zipper_mouth_face':'🤐','raised_eyebrow':'🤨','neutral_face':'😐',
+  'expressionless':'😑','no_mouth':'😶','smirk':'😏','unamused':'😒','roll_eyes':'🙄',
+  'grimacing':'😬','lying_face':'🤥','relieved':'😌','pensive':'😔','sleepy':'😪',
+  'drooling_face':'🤤','sleeping':'😴','mask':'😷','face_with_thermometer':'🤒',
+  'face_with_head_bandage':'🤕','nauseated_face':'🤢','sneezing_face':'🤧','hot_face':'🥵',
+  'cold_face':'🥶','woozy_face':'🥴','dizzy_face':'😵','exploding_head':'🤯',
+  'cowboy_hat_face':'🤠','partying_face':'🥳','sunglasses':'😎','nerd_face':'🤓',
+  'monocle_face':'🧐','confused':'😕','worried':'😟','slightly_frowning_face':'🙁',
+  'frowning_face':'☹️','open_mouth':'😮','hushed':'😯','astonished':'😲','flushed':'😳',
+  'pleading_face':'🥺','anguished':'😧','fearful':'😨','cold_sweat':'😰','disappointed_relieved':'😥',
+  'cry':'😢','sob':'😭','scream':'😱','confounded':'😖','persevere':'😣','disappointed':'😞',
+  'sweat':'😓','weary':'😩','tired_face':'😫','yawning_face':'🥱','triumph':'😤',
+  'rage':'😡','angry':'😠','skull':'💀','skull_crossbones':'☠️','ghost':'👻',
+  'alien':'👾','space_invader':'👾','robot':'🤖','poop':'💩','clown_face':'🤡',
+  'japanese_ogre':'👹','japanese_goblin':'👺','see_no_evil':'🙈','hear_no_evil':'🙉','speak_no_evil':'🙊',
+  'wave':'👋','raised_hand':'✋','vulcan_salute':'🖖','ok_hand':'👌','pinched_fingers':'🤌',
+  'pinching_hand':'🤏','v':'✌️','crossed_fingers':'🤞','love_you_gesture':'🤟',
+  'metal':'🤘','call_me_hand':'🤙','point_left':'👈','point_right':'👉','point_up_2':'👆',
+  'point_up':'☝️','point_down':'👇','middle_finger':'🖕','raised_hand_with_fingers_splayed':'🖐️',
+  'thumbsup':'+1','thumbsdown':'-1','+1':'👍','-1':'👎','clap':'👏','raised_hands':'🙌',
+  'open_hands':'👐','pray':'🙏','handshake':'🤝','writing_hand':'✍️','nail_care':'💅',
+  'muscle':'💪','mechanical_arm':'🦾','leg':'🦵','foot':'🦶','ear':'👂','nose':'👃',
+  'eyes':'👀','eye':'👁️','tongue':'👅','lips':'👄','brain':'🧠','heart':'❤️',
+  'orange_heart':'🧡','yellow_heart':'💛','green_heart':'💚','blue_heart':'💙',
+  'purple_heart':'💜','black_heart':'🖤','white_heart':'🤍','brown_heart':'🤎',
+  'broken_heart':'💔','heart_exclamation':'❣️','two_hearts':'💕','revolving_hearts':'💞',
+  'heartbeat':'💓','heartpulse':'💗','sparkling_heart':'💖','cupid':'💘','gift_heart':'💝',
+  'heart_decoration':'💟','peace_symbol':'☮️','star':'⭐','star2':'🌟','dizzy':'💫',
+  'sparkles':'✨','boom':'💥','fire':'🔥','tada':'🎉','balloon':'🎈','confetti_ball':'🎊',
+  'gift':'🎁','trophy':'🏆','medal_sports':'🏅','first_place':'🥇','thumbsup2':'👍',
+  'white_check_mark':'✅','x':'❌','warning':'⚠️','no_entry':'⛔','sos':'🆘',
+  'lock':'🔒','unlock':'🔓','key':'🔑','bell':'🔔','no_bell':'🔕','mega':'📣',
+  'loudspeaker':'📢','mute':'🔇','sound':'🔊','loud_sound':'🔊','speaker':'🔈',
+  'satellite':'📡','bulb':'💡','electric_plug':'🔌','battery':'🔋','computer':'💻',
+  'desktop_computer':'🖥️','printer':'🖨️','keyboard':'⌨️','mouse_three_button':'🖱️',
+  'telephone_receiver':'📞','phone':'📱','iphone':'📱','pager':'📟','fax':'📠',
+  'tv':'📺','radio':'📻','camera':'📷','video_camera':'📹','movie_camera':'🎥',
+  'film_projector':'📽️','film_strip':'🎞️','telephone':'☎️','calling':'📲','mailbox':'📫',
+  'envelope':'✉️','email':'📧','inbox_tray':'📥','outbox_tray':'📤','package':'📦',
+  'label':'🏷️','bookmark':'🔖','money_with_wings':'💸','dollar':'💵','euro':'💶',
+  'pound':'💷','yen':'💴','moneybag':'💰','credit_card':'💳','gem':'💎','chart':'📈',
+  'chart_with_downwards_trend':'📉','bar_chart':'📊','clipboard':'📋','notepad_spiral':'🗒️',
+  'calendar':'📅','date':'📅','card_index':'📇','file_cabinet':'🗄️','wastebasket':'🗑️',
+  'file_folder':'📁','open_file_folder':'📂','card_box':'🗃️','memo':'📝','pencil':'✏️',
+  'pen_ballpoint':'🖊️','pen_fountain':'🖋️','black_nib':'✒️','scissors':'✂️','paperclip':'📎',
+  'link':'🔗','pushpin':'📌','triangular_flag_on_post':'🚩','white_flag':'🏳️','checkered_flag':'🏁',
+  'crossed_flags':'🎌','rainbow_flag':'🏳️‍🌈','hammer':'🔨','axe':'🪓','wrench':'🔧',
+  'screwdriver':'🪛','nut_and_bolt':'🔩','gear':'⚙️','chains':'⛓️','gun':'🔫',
+  'bomb':'💣','knife':'🔪','dagger':'🗡️','sword':'⚔️','shield':'🛡️','smoking':'🚬',
+  'coffin':'⚰️','urn':'⚱️','amphora':'🏺','crystal_ball':'🔮','mag':'🔍','mag_right':'🔎',
+  'microscope':'🔬','telescope':'🔭','satellite_dish':'📡','syringe':'💉','pill':'💊',
+  'door':'🚪','bed':'🛏️','couch_and_lamp':'🛋️','toilet':'🚽','shower':'🚿',
+  'bathtub':'🛁','shopping_cart':'🛒','atm':'🏧','put_litter_in_its_place':'🚮',
+  'potable_water':'🚰','wheelchair':'♿','mens':'🚹','womens':'🚺','restroom':'🚻',
+  'baby_symbol':'🚼','wc':'🚾','passport_control':'🛂','customs':'🛃','baggage_claim':'🛄',
+  'left_luggage':'🛅','warning2':'⚠️','children_crossing':'🚸','no_entry_sign':'🚫',
+  'prohibited':'🚫','no_bicycles':'🚳','no_smoking':'🚭','do_not_litter':'🚯',
+  'non_potable_water':'🚱','no_pedestrians':'🚷','no_mobile_phones':'📵',
+  'underage':'🔞','radioactive':'☢️','biohazard':'☣️','arrow_up':'⬆️','arrow_down':'⬇️',
+  'arrow_left':'⬅️','arrow_right':'➡️','arrow_upper_right':'↗️','arrow_lower_right':'↘️',
+  'arrow_lower_left':'↙️','arrow_upper_left':'↖️','arrow_up_down':'↕️','left_right_arrow':'↔️',
+  'arrows_counterclockwise':'🔄','back':'🔙','end':'🔚','on':'🔛','soon':'🔜','top':'🔝',
+  'place_of_worship':'🛐','atom_symbol':'⚛️','om':'🕉️','star_of_david':'✡️',
+  'eight_pointed_black_star':'✴️','latin_cross':'✝️','orthodox_cross':'☦️',
+  'star_and_crescent':'☪️','peace':'☮️','menorah':'🕎','six_pointed_star':'🔯',
+  'aries':'♈','taurus':'♉','gemini':'♊','cancer':'♋','leo':'♌','virgo':'♍',
+  'libra':'♎','scorpius':'♏','sagittarius':'♐','capricorn':'♑','aquarius':'♒',
+  'pisces':'♓','id':'🆔','atom':'⚛️','new':'🆕','up2':'🆙','cool':'🆒','free':'🆓',
+  'ng':'🆖','sos2':'🆘','information_source':'ℹ️','zero':'0️⃣','one':'1️⃣','two':'2️⃣',
+  'three':'3️⃣','four':'4️⃣','five':'5️⃣','six':'6️⃣','seven':'7️⃣','eight':'8️⃣',
+  'nine':'9️⃣','ten':'🔟','capital_abcd':'🔠','abcd':'🔡','symbols':'🔣','abc':'🔤',
+  'a':'🅰️','b':'🅱️','o2':'🅾️','parking':'🅿️','cinema':'🎦','signal_strength':'📶',
+  'koko':'🈁','ng2':'🈲','ok':'🆗','sos3':'🆘','up':'🆙','cl':'🆑',
+  // Nature
+  'sunny':'☀️','cloud':'☁️','partly_sunny':'⛅','rainbow':'🌈','snowflake':'❄️',
+  'snowman':'⛄','zap':'⚡','umbrella2':'☔','fog':'🌫️','tornado':'🌪️',
+  'wind_face':'🌬️','ocean':'🌊','droplet':'💧','sweat_drops':'💦','umbrella':'☔',
+  'high_brightness':'🔆','low_brightness':'🔅','seedling':'🌱','evergreen_tree':'🌲',
+  'deciduous_tree':'🌳','palm_tree':'🌴','cactus':'🌵','ear_of_rice':'🌾',
+  'herb':'🌿','shamrock':'☘️','four_leaf_clover':'🍀','maple_leaf':'🍁','fallen_leaf':'🍂',
+  'leaves':'🍃','mushroom':'🍄','chestnut':'🌰','shell':'🐚','globe_with_meridians':'🌐',
+  'earth_africa':'🌍','earth_americas':'🌎','earth_asia':'🌏','world_map':'🗺️',
+  'japan':'🗾','compass':'🧭','mountain_snow':'🏔️','mountain':'⛰️','volcano':'🌋',
+  'mount_fuji':'🗻','camping':'🏕️','beach_umbrella':'🏖️','desert':'🏜️','island':'🏝️',
+  'national_park':'🏞️','stadium':'🏟️','classical_building':'🏛️','building_construction':'🏗️',
+  'houses':'🏘️','derelict_house':'🏚️','house':'🏠','house_with_garden':'🏡',
+  'office':'🏢','post_office':'🏣','european_post_office':'🏤','hospital':'🏥',
+  'bank':'🏦','hotel':'🏨','convenience_store':'🏪','school':'🏫','love_hotel':'🏩',
+  'wedding':'💒','european_castle':'🏰','japanese_castle':'🏯','tent':'⛺',
+  // Activities
+  'soccer':'⚽','basketball':'🏀','football':'🏈','baseball':'⚾','softball':'🥎',
+  'tennis':'🎾','volleyball':'🏐','rugby_football':'🏉','flying_disc':'🥏',
+  '8ball':'🎱','ping_pong':'🏓','badminton':'🏸','boxing_glove':'🥊',
+  'martial_arts_uniform':'🥋','goal_net':'🥅','golf':'⛳','ice_skate':'⛸️',
+  'fishing_pole_and_fish':'🎣','diving_mask':'🤿','ski':'🎿','sled':'🛷',
+  'curling_stone':'🥌','dart':'🎯','yo_yo':'🪀','kite':'🪁','gun2':'🔫',
+  '8ball2':'🎱','video_game':'🎮','joystick':'🕹️','slot_machine':'🎰',
+  'game_die':'🎲','jigsaw':'🧩','teddy_bear':'🧸','spades':'♠️','hearts':'♥️',
+  'diamonds':'♦️','clubs':'♣️','chess_pawn':'♟️','joker':'🃏','mahjong':'🀄',
+  'flower_playing_cards':'🎴','performing_arts':'🎭','art':'🎨','thread':'🧵',
+  'sewing_needle':'🪡','yarn':'🧶','knot':'🪢','musical_score':'🎼','musical_note':'🎵',
+  'notes':'🎶','microphone':'🎤','headphones':'🎧','radio2':'📻','saxophone':'🎷',
+  'accordion':'🪗','guitar':'🎸','musical_keyboard':'🎹','trumpet':'🎺','violin':'🎻',
+  'banjo':'🪕','drum':'🥁','long_drum':'🪘',
+};
+
+// Emoticon to emoji map
+const EMOTICON_MAP = {
+  ':)':'😊', ':-)':'😊', '=)':'😊',
+  ':D':'😄', ':-D':'😄', '=D':'😄',
+  'xD':'😆', 'XD':'😆',
+  ':P':'😛', ':-P':'😛',
+  ';)':'😉', ';-)':'😉',
+  ':(':' 😞', ':-(':'😞', '=(':'😞',
+  ":'(":"😢", ":'-(":"😢",
+  '>:(':'😡', '>:-(':'😡',
+  ':|':'😐', ':-|':'😐',
+  ':O':'😮', ':-O':'😮', ':o':'😮',
+  'B)':'😎', 'B-)':'😎',
+  ':/':'😕', ':-/':'😕',
+  'o.O':'😳', 'O.o':'😳',
+  '<3':'❤️',
+  '^_^':'😊', '^_~':'😉',
+};
+
+// Fortized custom emojis — hosted on GitHub
+// Base URL for the Fortized emojis folder
+const FTZ_EMOJI_BASE = 'https://raw.githubusercontent.com/stawlacasse/fortized-emojis/main/';
+const FORTIZED_EMOJIS = [
+  // Knights / Characters
+  'knight_angry','knight_happy','knight_sad','knight_surprised','knight_love',
+  'knight_laugh','knight_cool','knight_think','knight_sweat','knight_dead',
+  // Fortized brand
+  'fortized_logo','fortized_crown','fortized_shield','fortized_sword','fortized_gem',
+  // Reactions / misc
+  'ftz_fire','ftz_gg','ftz_ez','ftz_pog','ftz_kek','ftz_clap','ftz_hype',
+  'ftz_rip','ftz_wave','ftz_salute','ftz_heart','ftz_love','ftz_based',
+  'ftz_cope','ftz_ratio','ftz_w','ftz_l','ftz_skill','ftz_noob','ftz_toxic',
+];
+// Build lookup map: name → URL
+const FORTIZED_EMOJI_MAP = {};
+FORTIZED_EMOJIS.forEach(name => {
+  // Try .gif first, fallback to .png handled at render time
+  FORTIZED_EMOJI_MAP[name] = FTZ_EMOJI_BASE + name + '.png';
+});
+
 const QUIZ_QUESTIONS = [
   {q:"What does 'NSFW' stand for?",a:"Not Safe For Work",opts:["Not Safe For Work","New Software For Web","No Spam For Winners","None So Far Witnessed"]},
   {q:"Which of these is considered harassment?",a:"Repeatedly messaging someone after they ask you to stop",opts:["Sending a friend request","Sharing a meme","Repeatedly messaging someone after they ask you to stop","Joining a public Bastion"]},
@@ -1625,6 +1793,7 @@ function openDMView(username) {
     </div>`;
   loadDMMessages(username);
   setTimeout(() => showDMUserPanel(username), 80);
+  setTimeout(() => setupEmojiAutocomplete('dm-input'), 100);
   ensureDMExists(username).catch(()=>{});
   _listenTyping(username);
 }
@@ -1899,6 +2068,7 @@ async function openGroupChatView(gcId) {
   // Load messages
   loadGCMessages(gcId);
   listenGCTyping(gcId, meta.members||[]);
+  setTimeout(() => setupEmojiAutocomplete('gc-input'), 100);
 }
 
 function showGCMemberPanel(meta) {
@@ -2404,6 +2574,7 @@ function loadChatChannel(idx) {
     </div>`;
   loadChannelMessages(idx);
   renderMemberList();
+  setTimeout(() => setupEmojiAutocomplete('ch-input'), 100);
 }
 
 // ════════════════════════════════════════════
@@ -4007,46 +4178,178 @@ async function deleteCustomEmoji(i) {
 // ════════════════════════════════════════════
 // EMOJI PICKER
 // ════════════════════════════════════════════
+// Extended emoji categories for the picker
+const EMOJI_PICKER_TABS = [
+  {id:'recent', icon:'🕐', label:'Recent'},
+  {id:'ftz',    icon:'🏰', label:'Fortized'},
+  {id:'smileys',icon:'😊', label:'Smileys', emojis:['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🥴','😴','🤤','😪','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖']},
+  {id:'gestures',icon:'👍', label:'Gestures', emojis:['👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🫀','🫁','🧠','🦷','🦴','👀','👁️','👅','👄','💋','🩸']},
+  {id:'animals', icon:'🐶', label:'Animals', emojis:['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐽','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🪱','🐛','🦋','🐌','🐞','🐜','🪲','🦟','🦗','🕷️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🦣','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🦬','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈','🐓','🦃','🦤','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦫','🦦','🦥','🐁','🐀','🐿️','🦔']},
+  {id:'food',    icon:'🍕', label:'Food', emojis:['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🧄','🧅','🥔','🌽','🥕','🫛','🧆','🥜','🫘','🌰','🍞','🥐','🥖','🫓','🥨','🥯','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🌭','🍔','🍟','🍕','🫔','🌮','🌯','🥙','🧆','🥚','🍳','🥘','🍲','🫕','🥣','🥗','🍿','🧂','🥫','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍣','🍤','🍥','🥮','🍡','🥟','🥠','🥡','🍦','🍧','🍨','🍩','🍪','🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯','🍼','🥛','☕','🫖','🍵','🧃','🥤','🧋','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧊']},
+  {id:'travel',  icon:'🌍', label:'Travel', emojis:['🌍','🌎','🌏','🌐','🗺️','🧭','🏔️','⛰️','🌋','🗻','🏕️','🏖️','🏜️','🏝️','🏞️','🏟️','🏛️','🏗️','🧱','🪨','🪵','🛖','🏘️','🏚️','🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗼','🗽','⛪','🕌','🛕','🕍','⛩️','🕋','⛲','⛺','🌁','🌃','🏙️','🌄','🌅','🌆','🌇','🌉','🎠','🎡','🎢','💈','🎪','🚂','🚃','🚄','🚅','🚆','🚇','🚈','🚉','🚊','🚝','🚞','🚋','🚌','🚍','🚎','🚐','🚑','🚒','🚓','🚔','🚕','🚖','🚗','🚘','🚙','🛻','🚚','🚛','🚜','🏎️','🏍️','🛵','🦽','🦼','🛺','🚲','🛴','🛹','🛼','🚏','🛣️','🛤️','⛽','🚧','⚓','🪝','⛵','🛶','🚤','🛳️','⛴️','🛥️','🚢','✈️','🛩️','🛫','🛬','🪂','💺','🚁','🛸','🚀','🛶','🚁','🚂']},
+  {id:'symbols', icon:'⚡', label:'Symbols', emojis:['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','🔅','🔆','〽️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🈷️','✨','🎦','🔣','ℹ️','🔤','🔡','🔠','🎵','🎶','🔔','🔕','📣','📢','🔊','🔉','🔈','🔇','📱','☎️','📞','📟','📠','🔋','🪫','🔌','💡','🔦','🕯️','🧯','🗑️','💰','💴','💵','💶','💷','💸','💳','🪙','💹','📈','📉','📊','📋','🗒️','📅','📆','🗓️','📇','🗃️','🗂️','🗄️','📁','📂','🗑️','🖊️','✒️','✏️','📝','🔍','🔎','🔏','🔐','🔒','🔓','❤️‍🔥','❤️‍🩹','🩷','🩵','🩶']},
+];
+
+let _recentEmojis = JSON.parse(localStorage.getItem('ftz_recent_emojis')||'[]');
+let _emojiPickerTab = 'smileys';
+
 function toggleEmojiPicker(targetId) {
-  activeEmojiTarget=targetId;
-  const panel=document.getElementById('emoji-picker');
-  if(panel.classList.contains('show')){panel.classList.remove('show');return;}
+  activeEmojiTarget = targetId;
+  const panel = document.getElementById('emoji-picker');
+  if (panel.classList.contains('show')) { panel.classList.remove('show'); return; }
   buildEmojiPicker();
   panel.classList.add('show');
-  // Position above button
-  const btn=document.getElementById('emoji-btn-dm')||document.getElementById('emoji-btn-ch');
-  if(btn){
-    const r=btn.getBoundingClientRect();
-    panel.style.bottom=(window.innerHeight-r.top+8)+'px';
-    panel.style.left=r.left+'px';
-    panel.style.top='auto';
+  // Position above the clicked button
+  const btn = document.getElementById('emoji-btn-' + (targetId.includes('dm')?'dm':targetId.includes('gc')?'gc':'ch'));
+  if (btn) {
+    const r = btn.getBoundingClientRect();
+    const panelH = 420;
+    const top = r.top - panelH - 8;
+    panel.style.top = Math.max(8, top) + 'px';
+    panel.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 390)) + 'px';
+    panel.style.bottom = 'auto';
   }
+  // Focus search
+  setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 60);
 }
+
 function buildEmojiPicker() {
-  const panel=document.getElementById('emoji-picker');
-  const cat=EMOJI_CATEGORIES[activeEmojiCat]||EMOJI_CATEGORIES[0];
-  const customEmojis=curBastion!==null?(CU.bastions[curBastion]?.customEmojis||[]):[];
-  panel.innerHTML=`
-    <div class="epp-search"><input type="text" placeholder="Search emoji…" oninput="searchEmojis(this.value)"></div>
-    <div class="epp-cats">${EMOJI_CATEGORIES.map((cat,i)=>`<div class="epp-cat ${i===activeEmojiCat?'active':''}" onclick="setEmojiCat(${i})">${cat.icon}</div>`).join('')}</div>
-    <div class="epp-grid" id="epp-grid">${(cat.emojis||[]).map(e=>`<div class="epp-emoji" onclick="insertEmoji('${e}')">${e}</div>`).join('')}</div>
-    ${customEmojis.length?`<div class="epp-custom-section"><div class="epp-custom-title">Custom Emojis</div><div class="epp-custom-grid">${customEmojis.map(ce=>`<div class="epp-custom-emoji" onclick="insertCustomEmoji('${escapeHTML(ce.name)}','${ce.data}')" title=":${escapeHTML(ce.name)}: "><img src="${ce.data}" alt=":${escapeHTML(ce.name)}:"></div>`).join('')}</div></div>`:''}`;
+  const panel = document.getElementById('emoji-picker');
+  if (!panel) return;
+  const customEmojis = curBastion !== null ? (CU?.bastions?.[curBastion]?.customEmojis||[]) : [];
+  
+  panel.innerHTML = `
+    <div style="padding:10px 10px 8px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;">
+      <input class="epp-search-inp" placeholder="🔍 Search emoji…" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 12px;outline:none;box-sizing:border-box;" oninput="searchEmojis(this.value)">
+    </div>
+    <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;flex-shrink:0;padding:4px 6px;">
+      ${[{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:'🏰',label:'Fortized'},...EMOJI_PICKER_TABS.slice(2)].map(t=>`
+        <button onclick="setEmojiTab('${t.id}')" id="etab-${t.id}" title="${t.label}" style="background:${_emojiPickerTab===t.id?'rgba(255,249,62,.15)':'transparent'};border:none;color:${_emojiPickerTab===t.id?'var(--accent)':'rgba(255,255,255,.5)'};font-size:18px;padding:6px 8px;border-radius:8px;cursor:pointer;flex-shrink:0;line-height:1;transition:all .1s;">${t.icon}</button>
+      `).join('')}
+    </div>
+    <div id="epp-grid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;max-height:260px;"></div>
+    <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.06);font-size:10.5px;color:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <span id="epp-hover-label">Select an emoji</span>
+    </div>
+  `;
+  renderEmojiTab(_emojiPickerTab);
 }
-function setEmojiCat(idx) { activeEmojiCat=idx; buildEmojiPicker(); }
+
+function setEmojiTab(tabId) {
+  _emojiPickerTab = tabId;
+  document.querySelectorAll('[id^=etab-]').forEach(b => {
+    const active = b.id === 'etab-' + tabId;
+    b.style.background = active ? 'rgba(255,249,62,.15)' : 'transparent';
+    b.style.color = active ? 'var(--accent)' : 'rgba(255,255,255,.5)';
+  });
+  renderEmojiTab(tabId);
+}
+
+function renderEmojiTab(tabId) {
+  const grid = document.getElementById('epp-grid');
+  if (!grid) return;
+  
+  if (tabId === 'recent') {
+    if (!_recentEmojis.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">No recent emojis yet!</div>';
+      return;
+    }
+    grid.innerHTML = _recentEmojis.map(e => renderEmojiCell(e)).join('');
+    wireEmojiHover(grid);
+    return;
+  }
+  
+  if (tabId === 'ftz') {
+    const customEmojis = curBastion !== null ? (CU?.bastions?.[curBastion]?.customEmojis||[]) : [];
+    const all = [
+      ...FORTIZED_EMOJIS.map(name => ({type:'ftz',name,url:FORTIZED_EMOJI_MAP[name]})),
+      ...customEmojis.map(ce => ({type:'custom',name:ce.name,url:ce.data})),
+    ];
+    if (!all.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">No Fortized emojis yet</div>';
+      return;
+    }
+    grid.style.gridTemplateColumns = 'repeat(6,1fr)';
+    grid.innerHTML = all.map(e => `
+      <div onclick="insertFortizedEmoji('${escapeHTML(e.name)}','${escapeHTML(e.url)}')" onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(e.name)}:'" title=":${escapeHTML(e.name)}:" style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;transition:background .1s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+        <img src="${escapeHTML(e.url)}" alt=":${escapeHTML(e.name)}:" style="width:100%;height:100%;object-fit:contain;border-radius:4px;" onerror="this.parentElement.style.display='none'">
+      </div>`).join('');
+    return;
+  }
+  
+  const tab = EMOJI_PICKER_TABS.find(t => t.id === tabId);
+  if (!tab) return;
+  grid.style.gridTemplateColumns = 'repeat(8,1fr)';
+  grid.innerHTML = (tab.emojis||[]).map(e => renderEmojiCell(e)).join('');
+  wireEmojiHover(grid);
+}
+
+function renderEmojiCell(emoji) {
+  const safe = escapeHTML(emoji);
+  return `<div onclick="insertEmoji('${safe}')" onmouseenter="document.getElementById('epp-hover-label').textContent='${safe}'" style="width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:background .1s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">${emoji}</div>`;
+}
+
+function wireEmojiHover(grid) {
+  // Done via inline handlers in renderEmojiCell
+}
+
 function searchEmojis(q) {
-  const grid=document.getElementById('epp-grid'); if(!grid) return;
-  const all=EMOJI_CATEGORIES.flatMap(cat=>cat.emojis||[]);
-  const filtered = q ? all.filter(e=>e.includes(q)) : all;
-  grid.innerHTML=filtered.map(e=>`<div class="epp-emoji" onclick="insertEmoji('${e}')">${e}</div>`).join('');
+  const grid = document.getElementById('epp-grid');
+  if (!grid) return;
+  if (!q.trim()) { renderEmojiTab(_emojiPickerTab); return; }
+  const ql = q.toLowerCase();
+  // Search unicode emojis by shortcode name
+  const matches = [];
+  const seen = new Set();
+  // Search shortcodes
+  Object.entries(EMOJI_SHORTCODES).forEach(([name, emoji]) => {
+    if (name.includes(ql) && !seen.has(emoji)) { matches.push({type:'unicode',emoji,name}); seen.add(emoji); }
+  });
+  // Search all emoji arrays
+  EMOJI_PICKER_TABS.slice(2).forEach(tab => {
+    (tab.emojis||[]).forEach(e => { if (!seen.has(e) && e.includes(q)) { matches.push({type:'unicode',emoji:e,name:e}); seen.add(e); } });
+  });
+  // Search Fortized emojis
+  FORTIZED_EMOJIS.forEach(name => {
+    if (name.includes(ql)) matches.push({type:'ftz',name,url:FORTIZED_EMOJI_MAP[name]});
+  });
+  
+  if (!matches.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);">No results for "'+escapeHTML(q)+'"</div>'; return; }
+  grid.style.gridTemplateColumns = 'repeat(8,1fr)';
+  grid.innerHTML = matches.slice(0,64).map(m => {
+    if (m.type === 'ftz') return `<div onclick="insertFortizedEmoji('${escapeHTML(m.name)}','${escapeHTML(m.url)}')" title=":${escapeHTML(m.name)}:" style="width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:3px;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'"><img src="${escapeHTML(m.url)}" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.style.display='none'"></div>`;
+    return renderEmojiCell(m.emoji);
+  }).join('');
 }
+
+function setEmojiCat(idx) { setEmojiTab(EMOJI_PICKER_TABS[idx]?.id || 'smileys'); }
+
 function insertEmoji(emoji) {
-  const ta=document.getElementById(activeEmojiTarget);
-  if(!ta) return;
-  const pos=ta.selectionStart;
-  ta.value=ta.value.slice(0,pos)+emoji+ta.value.slice(ta.selectionEnd);
-  ta.selectionStart=ta.selectionEnd=pos+emoji.length;
+  const ta = document.getElementById(activeEmojiTarget);
+  if (!ta) return;
+  const pos = ta.selectionStart;
+  ta.value = ta.value.slice(0, pos) + emoji + ta.value.slice(ta.selectionEnd);
+  ta.selectionStart = ta.selectionEnd = pos + emoji.length;
   ta.focus();
   document.getElementById('emoji-picker').classList.remove('show');
+  // Add to recent
+  _recentEmojis = [emoji, ..._recentEmojis.filter(e=>e!==emoji)].slice(0,24);
+  localStorage.setItem('ftz_recent_emojis', JSON.stringify(_recentEmojis));
+}
+
+function insertFortizedEmoji(name, url) {
+  const ta = document.getElementById(activeEmojiTarget);
+  if (!ta) return;
+  const token = ':' + name + ':';
+  const pos = ta.selectionStart;
+  ta.value = ta.value.slice(0, pos) + token + ta.value.slice(ta.selectionEnd);
+  ta.selectionStart = ta.selectionEnd = pos + token.length;
+  ta.focus();
+  document.getElementById('emoji-picker').classList.remove('show');
+}
+
+function insertCustomEmoji(name, data) {
+  insertFortizedEmoji(name, data);
 }
 function insertCustomEmoji(name, data) {
   const ta=document.getElementById(activeEmojiTarget);
@@ -4255,6 +4558,15 @@ function buildProfileView(tab) {
           <div class="nsr-info"><div class="nsr-label">${icon} ${label}</div><div class="nsr-desc">${desc}</div></div>
           <div class="toggle ${notifSettings[k]?'on':''}" onclick="toggleNotifSetting('${k}',this)"></div>
         </div>`).join('')}
+      <div style="height:1px;background:var(--border);margin:16px 0;"></div>
+      <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Text & Emoji</div>
+      <div class="notif-setting-row">
+        <div class="nsr-info">
+          <div class="nsr-label">🙂 Automatically convert emoticons</div>
+          <div class="nsr-desc">Convert :) → 😊, &lt;3 → ❤️ and other emoticons in your messages</div>
+        </div>
+        <div class="toggle ${!_globalSettings.disableEmoticonConversion?'on':''}" onclick="toggleEmoticonConversion(this)"></div>
+      </div>
       <button class="btn-a" style="margin-top:20px;" onclick="saveNotifSettings()">Save Settings</button>
     </div>`;
   } else {
@@ -6198,6 +6510,26 @@ function insertGif(embedUrl, targetInputId) {
 
 function parseMD(s) {
   if (!s) return '';
+  // 0. GIF token from sendGifDirectly
+  s = s.replace(/\[FTZGIF:([^\]]+)\]/g, (_, url) => {
+    const safe = escapeHTML(url);
+    return `<div style="margin:6px 0;max-width:320px;border-radius:12px;overflow:hidden;display:inline-block;"><img src="${safe}" style="width:100%;max-height:260px;object-fit:contain;border-radius:12px;display:block;" loading="lazy"></div>`;
+  });
+  // 0aa. :emoji_name: shortcodes → actual emoji / Fortized emoji
+  s = s.replace(/:([a-zA-Z0-9_]+):/g, (match, name) => {
+    const unicode = EMOJI_SHORTCODES[name];
+    if (unicode) return unicode;
+    // Check Fortized custom emojis (from bastion + global FORTIZED_EMOJIS)
+    const ftz = FORTIZED_EMOJI_MAP[name];
+    if (ftz) return `<img src="${escapeHTML(ftz)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;display:inline-block;">`;
+    return match; // keep original if unknown
+  });
+  // 0ab. Emoticon conversion (if enabled)
+  if (!_globalSettings?.disableEmoticonConversion) {
+    s = s.replace(/(?<![\w:])(:-?\)|=\)|;-?\)|:-?D|>:?\(|:-?\(|:-?\||:-?P|:'-?\(|<3|\^_?\^|:o|:-?O|xD|\bB\)|:\/|o\.O)(?![\w:])/g, (m) => {
+      return EMOTICON_MAP[m.replace(/-/g,'')] || m;
+    });
+  }
   // 0a. Image attachments
   s = s.replace(/\[FTZIMG:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
     return '<div style="margin:5px 0;">'
@@ -7098,7 +7430,7 @@ function openGiphyPicker(inputId) {
         <button id="gtab-favourites" onclick="switchGiphyTab('favourites','${escapeHTML(_giphyInput)}')" style="flex:1;padding:6px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted-light);font-size:11.5px;font-weight:700;cursor:pointer;transition:.15s;">⭐ Saved</button>
       </div>
     </div>
-    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>
+    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:12px;columns:2;column-gap:8px;"></div>
     <div style="padding:6px 10px;text-align:center;border-top:1px solid var(--border);font-size:10px;color:var(--muted);flex-shrink:0;">Powered by GIPHY</div>
   `;
 
@@ -7159,32 +7491,59 @@ async function searchGifs(q, inputId) {
 function renderGiphyResults(gifs, inputId) {
   const grid = document.getElementById('giphy-grid');
   if (!grid) return;
-  if (!gifs || !gifs.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">No results</div>'; return; }
+  if (!gifs || !gifs.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">No results</div>';
+    return;
+  }
+  // Use a masonry-style layout: two columns, images keep natural height
   grid.innerHTML = gifs.map(g => {
     const url = g.images?.fixed_height_small?.url || g.images?.fixed_height?.url || g.images?.original?.url || '';
-    return `<div style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:var(--panel2);aspect-ratio:4/3;" onclick="insertGifById('${g.id}','${escapeHTML(inputId)}')">
-      <img src="${escapeHTML(url)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" draggable="false" oncontextmenu="return false" ondragstart="return false">
-      <div style="position:absolute;inset:0;opacity:0;transition:.15s;background:rgba(0,0,0,.4);" class="gif-hover-overlay"></div>
-      <button onclick="event.stopPropagation();saveFavGif({id:'${g.id}',url:'${escapeHTML(url)}'})" title="Favourite" style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,.7);border:none;color:#ffd93e;border-radius:50%;width:24px;height:24px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.15s;" class="gif-fav-btn">★</button>
+    const w = parseInt(g.images?.fixed_height_small?.width || g.images?.fixed_height?.width || 200);
+    const h = parseInt(g.images?.fixed_height_small?.height || g.images?.fixed_height?.height || 150);
+    const paddingPct = Math.round((h/w)*100);
+    return `<div class="gif-card" data-id="${g.id}" data-url="${escapeHTML(url)}" data-input="${escapeHTML(inputId)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:var(--panel2);break-inside:avoid;margin-bottom:8px;">
+      <div style="position:relative;padding-bottom:${paddingPct}%;height:0;overflow:hidden;">
+        <img src="${escapeHTML(url)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loading="lazy" draggable="false">
+      </div>
+      <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.15s;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;pointer-events:none;">
+        <div style="background:rgba(0,0,0,.7);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:#fff;">Send GIF</div>
+      </div>
+      <button class="gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${g.id}',url:'${escapeHTML(url)}'})" title="Save" style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,.7);border:none;color:#ffd93e;border-radius:50%;width:24px;height:24px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.15s;pointer-events:auto;">★</button>
     </div>`;
   }).join('');
-  // Hover reveal fav button
-  grid.querySelectorAll('div[style*=aspect-ratio]').forEach(card=>{
-    card.addEventListener('mouseenter',()=>{
-      card.querySelector('.gif-hover-overlay').style.opacity='1';
-      card.querySelector('.gif-fav-btn').style.opacity='1';
-    });
-    card.addEventListener('mouseleave',()=>{
-      card.querySelector('.gif-hover-overlay').style.opacity='0';
-      card.querySelector('.gif-fav-btn').style.opacity='0';
-    });
+  // Wire hover + click
+  grid.querySelectorAll('.gif-card').forEach(card => {
+    const ov = card.querySelector('.gif-hover-overlay');
+    const fav = card.querySelector('.gif-fav-btn');
+    card.addEventListener('mouseenter', () => { ov.style.opacity='1'; fav.style.opacity='1'; });
+    card.addEventListener('mouseleave', () => { ov.style.opacity='0'; fav.style.opacity='0'; });
+    card.addEventListener('click', () => sendGifDirectly(card.dataset.id, card.dataset.input, card.dataset.url));
   });
 }
 
-function insertGifById(id, inputId) {
-  const inp = document.getElementById(inputId);
-  if (inp) { inp.value = (inp.value ? inp.value + ' ' : '') + 'https://giphy.com/gifs/' + id; inp.focus(); }
+function sendGifDirectly(id, inputId, url) {
+  // Close picker first
   document.getElementById('giphy-picker')?.remove();
+  // Build the giphy embed URL for parseMD to render
+  const gifUrl = url || ('https://media.giphy.com/media/' + id + '/giphy.gif');
+  // Use [FTZGIF] token so parseMD renders it inline directly
+  const token = '[FTZGIF:' + gifUrl + ']';
+  // Inject into chat input and trigger send
+  const inp = document.getElementById(inputId);
+  if (inp) {
+    const prev = inp.value.trim();
+    inp.value = prev ? prev + ' ' + token : token;
+    inp.focus();
+    // Auto-send immediately
+    if (inputId === 'dm-input') handleChatSend('dm');
+    else if (inputId === 'gc-input') sendGCMessage();
+    else if (inputId === 'ch-input') handleChatSend('ch', curChannel);
+  }
+}
+
+// Legacy - kept for fav gifs clicking
+function insertGifById(id, inputId, url) {
+  sendGifDirectly(id, inputId, url);
 }
 
 // ════════════════════════════════════════════
@@ -9448,6 +9807,147 @@ function refreshDailyBtn() {
     btn.classList.remove('claimed');
     btn.innerHTML = '<span>Claim Now</span><strong>+50 Onyx</strong>';
   }
+}
+
+
+// ════════════════════════════════════════════════════════════
+// :EMOJI: AUTOCOMPLETE — Discord-style dropdown
+// ════════════════════════════════════════════════════════════
+let _acSelected = 0;
+let _acResults = [];
+let _acTarget = null;
+let _acStartPos = -1;
+
+function setupEmojiAutocomplete(inputId) {
+  const ta = document.getElementById(inputId);
+  if (!ta || ta._emojiAcBound) return;
+  ta._emojiAcBound = true;
+
+  ta.addEventListener('input', () => handleEmojiAutocomplete(ta));
+  ta.addEventListener('keydown', (e) => {
+    const ac = document.getElementById('emoji-ac-panel');
+    if (!ac || !ac.classList.contains('show')) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); _acSelected = Math.min(_acSelected+1, _acResults.length-1); renderAcPanel(ta); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); _acSelected = Math.max(_acSelected-1, 0); renderAcPanel(ta); }
+    else if (e.key === 'Enter' || e.key === 'Tab') {
+      if (_acResults[_acSelected]) { e.preventDefault(); applyEmojiAc(_acResults[_acSelected], ta); }
+    }
+    else if (e.key === 'Escape') { hideEmojiAc(); }
+  });
+  ta.addEventListener('blur', () => setTimeout(hideEmojiAc, 150));
+}
+
+function handleEmojiAutocomplete(ta) {
+  const val = ta.value;
+  const pos = ta.selectionStart;
+  // Find the last ':' before cursor that starts a shortcode
+  let colonPos = -1;
+  for (let i = pos-1; i >= Math.max(0, pos-30); i--) {
+    if (val[i] === ':') { colonPos = i; break; }
+    if (/\s/.test(val[i])) break;
+  }
+  if (colonPos === -1 || pos - colonPos < 2) { hideEmojiAc(); return; }
+  const query = val.slice(colonPos+1, pos).toLowerCase();
+  if (!query || query.includes(':') || query.includes(' ')) { hideEmojiAc(); return; }
+  
+  // Find matches
+  _acResults = [];
+  const seen = new Set();
+  // Unicode shortcodes
+  Object.entries(EMOJI_SHORTCODES).forEach(([name, emoji]) => {
+    if (name.startsWith(query) && !seen.has(emoji)) {
+      _acResults.push({type:'unicode', name, emoji}); seen.add(emoji);
+    }
+  });
+  // Fortized custom emojis
+  FORTIZED_EMOJIS.forEach(name => {
+    if (name.startsWith(query)) _acResults.push({type:'ftz', name, url:FORTIZED_EMOJI_MAP[name]});
+  });
+  // Bastion custom emojis
+  if (curBastion !== null) {
+    (CU?.bastions?.[curBastion]?.customEmojis||[]).forEach(ce => {
+      if (ce.name.startsWith(query)) _acResults.push({type:'custom', name:ce.name, url:ce.data});
+    });
+  }
+  
+  _acResults = _acResults.slice(0, 10);
+  if (!_acResults.length) { hideEmojiAc(); return; }
+  
+  _acTarget = ta;
+  _acStartPos = colonPos;
+  _acSelected = 0;
+  renderAcPanel(ta);
+}
+
+function renderAcPanel(ta) {
+  let panel = document.getElementById('emoji-ac-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'emoji-ac-panel';
+    panel.className = 'emoji-autocomplete';
+    document.body.appendChild(panel);
+  }
+  // Position above the textarea
+  const rect = ta.getBoundingClientRect();
+  panel.style.cssText = `position:fixed;bottom:${window.innerHeight-rect.top+6}px;left:${rect.left}px;background:#1e2130;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:6px;z-index:9500;box-shadow:0 12px 40px rgba(0,0,0,.7);min-width:260px;max-width:380px;display:flex;flex-direction:column;gap:2px;`;
+  
+  panel.innerHTML = `
+    <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:2px 6px 5px;">Emoji Matching <span style="color:rgba(255,249,62,.7);">:${escapeHTML(ta.value.slice(_acStartPos+1, ta.selectionStart))}:</span></div>
+    ${_acResults.map((r, i) => `
+      <div onclick="applyEmojiAcById(${i})" style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;background:${i===_acSelected?'rgba(255,249,62,.12)':'transparent'};" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='${i===_acSelected?'rgba(255,249,62,.12)':'transparent'}'">
+        ${r.type==='unicode' ? `<span style="font-size:22px;line-height:1;">${r.emoji}</span>` : `<img src="${escapeHTML(r.url||'')}" style="width:24px;height:24px;object-fit:contain;" onerror="this.style.display='none'">`}
+        <span style="font-family:monospace;font-size:12.5px;color:rgba(255,255,255,.7);">:${escapeHTML(r.name)}:</span>
+        ${r.type==='ftz'?'<span style="font-size:9px;background:rgba(255,249,62,.12);color:var(--accent);padding:1px 6px;border-radius:4px;margin-left:auto;">Fortized</span>':''}
+      </div>
+    `).join('')}
+  `;
+  panel.style.display = 'flex';
+  panel.style.flexDirection = 'column';
+}
+
+function applyEmojiAcById(idx) {
+  _acSelected = idx;
+  if (_acTarget) applyEmojiAc(_acResults[idx], _acTarget);
+}
+
+function applyEmojiAc(result, ta) {
+  const pos = ta.selectionStart;
+  const before = ta.value.slice(0, _acStartPos);
+  const after = ta.value.slice(pos);
+  let insert;
+  if (result.type === 'unicode') {
+    insert = result.emoji + ' ';
+    // Add to recent
+    _recentEmojis = [result.emoji, ..._recentEmojis.filter(e=>e!==result.emoji)].slice(0,24);
+    localStorage.setItem('ftz_recent_emojis', JSON.stringify(_recentEmojis));
+  } else {
+    insert = ':' + result.name + ': ';
+  }
+  ta.value = before + insert + after;
+  ta.selectionStart = ta.selectionEnd = _acStartPos + insert.length;
+  ta.focus();
+  hideEmojiAc();
+}
+
+function hideEmojiAc() {
+  const panel = document.getElementById('emoji-ac-panel');
+  if (panel) panel.style.display = 'none';
+  _acResults = [];
+  _acStartPos = -1;
+  _acTarget = null;
+}
+
+// Wire up autocomplete when DM/GC/channel views are opened
+function wireAllEmojiAutocomplete() {
+  ['dm-input','gc-input','ch-input'].forEach(setupEmojiAutocomplete);
+}
+
+
+function toggleEmoticonConversion(el) {
+  _globalSettings.disableEmoticonConversion = !_globalSettings.disableEmoticonConversion;
+  el.classList.toggle('on', !_globalSettings.disableEmoticonConversion);
+  saveGlobalSettings();
+  toast('Emoticon conversion ' + (_globalSettings.disableEmoticonConversion ? 'disabled' : 'enabled'), 'info');
 }
 
 </script>

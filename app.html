@@ -266,11 +266,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .atelier-nav-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
 .atelier-nav-sep{height:1px;background:rgba(255,255,255,.05);margin:6px 10px;}
 /* Atelier sidebar bottom user panel */
-.atelier-user-panel{padding:10px 12px 14px;border-top:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.2);flex-shrink:0;}
-.atelier-user-row{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:9px;cursor:pointer;transition:background .14s;}
-.atelier-user-row:hover{background:rgba(255,255,255,.06);}
-.atelier-onyx-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.16);border-radius:100px;font-size:11.5px;font-weight:700;color:var(--accent);margin-top:6px;cursor:pointer;width:fit-content;transition:all .14s;}
-.atelier-onyx-pill:hover{background:rgba(255,249,62,.14);}
+/* atelier user panel removed */
 .atelier-scroll{flex:1;overflow-y:auto;padding:0;}
 /* Quest tab chips */
 .quest-tab-chip{padding:6px 16px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .14s;}
@@ -825,7 +821,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
         <span>🔍</span>
         <input type="text" placeholder="Search…" id="search-input" oninput="handleSearch(this.value)">
       </div>
-      <div class="onyx-pill" onclick="showView('atelier')" id="onyx-display" style="display:none;">
+      <div class="onyx-pill" onclick="showView('atelier')" id="onyx-display">
         <img src="Onyx.png" onerror="this.style.display='none'">
         <span id="onyx-val">0</span>
       </div>
@@ -994,20 +990,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
               <span class="atelier-nav-icon">🛍️</span>Shop
             </div>
           </div>
-          <!-- Discord-style user panel at bottom -->
-          <div class="atelier-user-panel" id="atelier-user-panel">
-            <div class="atelier-user-row" onclick="showView('profile')">
-              <div id="atelier-av" style="width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:14px;"></div>
-              <div style="flex:1;min-width:0;">
-                <div id="atelier-uname" style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-                <div style="font-size:11px;color:rgba(255,255,255,.35);">Settings</div>
-              </div>
-            </div>
-            <div class="atelier-onyx-pill" onclick="switchAtelierTab('overview',document.getElementById('atnav-overview'))">
-              <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;" onerror="this.style.display='none'">
-              <span id="atelier-onyx-sidebar">0</span> Onyx
-            </div>
-          </div>
+
         </div>
         <!-- Main content -->
         <div class="atelier-scroll" id="atelier-content">
@@ -1741,7 +1724,7 @@ function updateUserbar() {
 }
 function updateOnyxDisplay() {
   const bal = CU?.onyx || 0;
-  ['onyx-val','atelier-balance','atelier-onyx-sidebar'].forEach(id => {
+  ['onyx-val','atelier-balance'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
@@ -9775,83 +9758,133 @@ function renderAtelierTab(tab) {
   // ── QUESTS ────────────────────────────────────────────────
   else if (tab === 'quests') {
     const completed = CU?.completedQuests || [];
-    const QUESTS_DEF = [
-      {id:'daily_claim',icon:'🎁',title:'Daily Claim',desc:'Claim your 50 Onyx reward once every day.',reward:50,unit:'Onyx',category:'Daily',
-        done: dailyDone, action:`claimDailyQuest()`},
-      {id:'invite',icon:'🔗',title:'Invite a Friend',desc:'Share your invite link — earn +9 Onyx per friend who joins and stays 24h.',reward:9,unit:'Onyx/friend',category:'Ongoing',
-        done: completed.includes('invite'), action:`regeneratePersonalInvite();switchAtelierTab('overview',document.getElementById('atnav-overview'))`},
-      {id:'join_bastion',icon:'🏰',title:'Join a Bastion',desc:'Find and join any public Bastion community.',reward:25,unit:'Onyx',category:'Beginner',
-        done: completed.includes('join_bastion')||(CU?.bastions||[]).length>0, action:`showView('discover')`},
-      {id:'add_friend',icon:'👥',title:'Add Your First Friend',desc:'Send a friend request to someone on Fortized.',reward:15,unit:'Onyx',category:'Beginner',
-        done: completed.includes('add_friend')||(CU?.friends||[]).length>0, action:`openModal('modal-add-friend')`},
-      {id:'set_pfp',icon:'🖼️',title:'Set Your Avatar',desc:'Upload a profile picture to personalize your account.',reward:20,unit:'Onyx',category:'Beginner',
-        done: completed.includes('set_pfp')||!!CU?.pfp, action:`showView('profile')`},
-    ];
-    const activeQ = QUESTS_DEF.filter(q=>!q.done);
-    const doneQ   = QUESTS_DEF.filter(q=>q.done);
+    const today = new Date().toDateString();
+    const dailyLog = CU?.questsDailyLog || {};
 
-    // Current tab state (stored locally on the element)
+    // Daily claim: resets every day
+    const dailyClaimDone = isDailyQuestDone('daily_claim');
+    // Invite: resets every day (track separately)
+    const inviteDone = dailyLog.invite === today;
+
+    const QUESTS_DEF = [
+      {
+        id:'daily_claim', icon:'🎁', title:'Daily Claim', category:'Daily', daily:true,
+        desc:'Claim your free 50 Onyx reward. Refreshes every day at midnight.',
+        reward:50, unit:'Onyx', done: dailyClaimDone,
+        action:`claimDailyQuest()`
+      },
+      {
+        id:'invite', icon:'🔗', title:'Invite a Friend', category:'Daily', daily:true,
+        desc:'Share your invite link. Earn +9 Onyx for each friend who joins and stays 24h. Refreshes daily.',
+        reward:9, unit:'Onyx/friend', done: inviteDone,
+        action:`regeneratePersonalInvite();if(CU&&!CU.questsDailyLog)CU.questsDailyLog={};if(CU)CU.questsDailyLog.invite=new Date().toDateString();saveUser().catch(()=>{});switchAtelierTab('overview',document.getElementById('atnav-overview'))`
+      },
+      {
+        id:'join_bastion', icon:'🏰', title:'Join a Bastion', category:'Beginner', daily:false,
+        desc:'Find and join any public Bastion community using Discover.',
+        reward:25, unit:'Onyx',
+        done: completed.includes('join_bastion') || (CU?.bastions||[]).length > 0,
+        action:`showView('discover')`
+      },
+      {
+        id:'add_friend', icon:'👥', title:'Add Your First Friend', category:'Beginner', daily:false,
+        desc:'Send a friend request to someone on Fortized.',
+        reward:15, unit:'Onyx',
+        done: completed.includes('add_friend') || (CU?.friends||[]).length > 0,
+        action:`openModal('modal-add-friend')`
+      },
+      {
+        id:'set_pfp', icon:'🖼️', title:'Set Your Avatar', category:'Beginner', daily:false,
+        desc:'Upload a profile picture to personalize your account.',
+        reward:20, unit:'Onyx',
+        done: completed.includes('set_pfp') || !!CU?.pfp,
+        action:`showView('profile')`
+      },
+    ];
+
+    const activeQ = QUESTS_DEF.filter(q => !q.done);
+    const doneQ   = QUESTS_DEF.filter(q => q.done);
     const qTab = el._questTab || 'available';
 
+    // Quest thumbnail bg by category
+    const questBg = (q) => q.id==='daily_claim'
+      ? 'url(\'Fortized banner.png\') center/cover no-repeat,#0a0d18'
+      : q.id==='invite'
+        ? 'url(\'Fortized banner4.png\') center/cover no-repeat,#0a1428'
+        : q.done
+          ? 'linear-gradient(135deg,rgba(62,207,110,.1),rgba(0,0,0,.3))'
+          : 'linear-gradient(135deg,rgba(255,255,255,.04),rgba(0,0,0,.25))';
+
     el.style.padding = '0';
-    el.innerHTML = `
-      <!-- Featured quest banner -->
-      <div style="position:relative;margin:0;background:linear-gradient(135deg,#0a0d18,#141c34,#0e1528);overflow:hidden;padding:28px 28px 24px;">
-        <img src="Fortized Conquer.png" style="position:absolute;right:-20px;bottom:-20px;height:160px;opacity:.12;pointer-events:none;" onerror="this.style.display='none'">
-        <div style="position:relative;display:flex;align-items:center;gap:20px;">
-          <div style="width:64px;height:64px;border-radius:16px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;">🎁</div>
-          <div style="flex:1;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,249,62,.6);margin-bottom:5px;">Daily Quest</div>
-            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px;">Claim Your Daily Onyx</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.5);">Come back every day for free Onyx rewards.</div>
-          </div>
-          <div style="text-align:right;flex-shrink:0;">
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);">+50 ⬡</div>
-            <button onclick="claimDailyQuest()" style="margin-top:8px;background:${dailyDone?'rgba(255,255,255,.08)':'var(--accent)'};color:${dailyDone?'rgba(255,255,255,.3)':'#060810'};border:none;border-radius:9px;padding:8px 20px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:${dailyDone?'not-allowed':'pointer'};white-space:nowrap;">
-              ${dailyDone?'Claimed ✓':'Claim Now'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div style="padding:20px 28px 60px;">
-        <!-- Tabs + filter -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-          <div style="display:flex;gap:6px;">
-            <button class="quest-tab-chip ${qTab==='available'?'active':''}" onclick="setQuestTab('available')" id="qtab-available">Available (${activeQ.length})</button>
-            <button class="quest-tab-chip ${qTab==='completed'?'active':''}" onclick="setQuestTab('completed')" id="qtab-completed">Completed (${doneQ.length})</button>
-          </div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:5px;cursor:pointer;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg> Filter
-          </div>
-        </div>
-
-        <!-- Quest grid -->
-        <div id="quest-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
-          ${(qTab==='available'?activeQ:doneQ).map(q=>`
-            <div style="background:${q.done?'rgba(62,207,110,.04)':'rgba(255,255,255,.03)'};border:1px solid ${q.done?'rgba(62,207,110,.12)':'rgba(255,255,255,.07)'};border-radius:14px;overflow:hidden;transition:border-color .14s;cursor:pointer;" ${!q.done?`onmouseover="this.style.borderColor='rgba(255,249,62,.18)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'"`:''}>
-              <!-- Thumbnail area -->
-              <div style="height:80px;background:linear-gradient(135deg,${q.done?'rgba(62,207,110,.08)':'rgba(255,255,255,.03)'} 0%,rgba(0,0,0,.2) 100%);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;">
-                ${q.icon}
-                ${q.done?'<div style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:rgba(62,207,110,.8);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;">✓</div>':''}
-                <span style="position:absolute;top:8px;left:8px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(0,0,0,.5);color:rgba(255,255,255,.5);letter-spacing:.05em;">${q.category}</span>
-              </div>
-              <!-- Card body -->
-              <div style="padding:12px 14px;">
-                <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;margin-bottom:4px;">${q.title}</div>
-                <div style="font-size:11.5px;color:rgba(255,255,255,.4);line-height:1.45;margin-bottom:10px;">${q.desc}</div>
-                <!-- Progress bar -->
-                <div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-bottom:8px;">
-                  <div style="height:100%;border-radius:2px;width:${q.done?100:0}%;background:${q.done?'var(--green)':'var(--accent)'};transition:width .4s;"></div>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                  <span style="font-size:11.5px;font-weight:700;color:${q.done?'var(--green)':'var(--accent)'};">+${q.reward} ${q.unit}</span>
-                  ${!q.done?`<button onclick="${q.action}" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:7px;color:var(--accent);font-size:11.5px;font-weight:700;padding:4px 12px;cursor:pointer;">Go →</button>`:`<span style="font-size:11px;color:rgba(255,255,255,.3);">Completed</span>`}
-                </div>
-              </div>
-            </div>`).join('') || `<div style="grid-column:1/-1;text-align:center;padding:36px;font-size:13.5px;color:rgba(255,255,255,.3);">${qTab==='available'?'All quests completed! 🎉':'No completed quests yet.'}</div>`}
-        </div>
-      </div>`;
+    el.innerHTML = [
+      // ── Featured daily banner ──
+      '<div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#0a0d18,#141c34);">',
+        '<img src="Fortized banner.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;" onerror="this.style.display=\'none\'">',
+        '<div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(10,13,24,.9) 40%,rgba(10,13,24,.4));"></div>',
+        // Fortized Conquer knight — bottom right, tasteful size
+        '<img src="Fortized Conquer.png" style="position:absolute;right:20px;bottom:0;height:130px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 0 20px rgba(255,249,62,.2));" onerror="this.style.display=\'none\'">',
+        '<div style="position:relative;padding:28px 28px 26px;display:flex;align-items:center;gap:18px;">',
+          '<div style="width:60px;height:60px;border-radius:14px;background:rgba(255,249,62,.12);border:1.5px solid rgba(255,249,62,.25);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;backdrop-filter:blur(4px);">🎁</div>',
+          '<div style="flex:1;">',
+            '<div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.7);margin-bottom:6px;">DAILY QUEST</div>',
+            '<div style="font-family:\'Syne\',sans-serif;font-size:20px;font-weight:800;margin-bottom:5px;color:#fff;">Claim Your Daily Onyx</div>',
+            '<div style="font-size:12.5px;color:rgba(255,255,255,.5);">Refreshes every day · Free Onyx for showing up</div>',
+          '</div>',
+          '<div style="text-align:right;flex-shrink:0;margin-right:140px;">',
+            '<div style="font-family:\'Syne\',sans-serif;font-size:26px;font-weight:800;color:var(--accent);">+50 ⬡</div>',
+            `<button onclick="claimDailyQuest()" style="margin-top:8px;background:${dailyClaimDone?'rgba(255,255,255,.08)':'var(--accent)'};color:${dailyClaimDone?'rgba(255,255,255,.35)':'#060810'};border:none;border-radius:10px;padding:9px 22px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:${dailyClaimDone?'not-allowed':'pointer'};white-space:nowrap;transition:.15s;">${dailyClaimDone?'Claimed Today ✓':'Claim Now'}</button>`,
+          '</div>',
+        '</div>',
+      '</div>',
+      // ── Invite banner ──
+      '<div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#0a1428,#0d1c34);border-top:1px solid rgba(255,255,255,.05);">',
+        '<img src="Fortized banner4.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.25;" onerror="this.style.display=\'none\'">',
+        '<div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(10,20,40,.92) 50%,rgba(10,20,40,.5));"></div>',
+        '<div style="position:relative;padding:18px 28px;display:flex;align-items:center;gap:16px;">',
+          '<div style="width:46px;height:46px;border-radius:12px;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔗</div>',
+          '<div style="flex:1;">',
+            '<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(96,165,250,.7);margin-bottom:4px;">DAILY QUEST</div>',
+            '<div style="font-family:\'Syne\',sans-serif;font-size:15px;font-weight:800;margin-bottom:3px;color:#fff;">Invite a Friend</div>',
+            '<div style="font-size:12px;color:rgba(255,255,255,.45);">Share your link · +9 Onyx per friend who joins · Resets daily</div>',
+          '</div>',
+          `<button onclick="regeneratePersonalInvite();if(CU&&!CU.questsDailyLog)CU.questsDailyLog={};if(CU)CU.questsDailyLog.invite=new Date().toDateString();saveUser().catch(()=>{});switchAtelierTab('overview',document.getElementById('atnav-overview'))" style="background:${inviteDone?'rgba(255,255,255,.06)':'rgba(96,165,250,.15)'};color:${inviteDone?'rgba(255,255,255,.3)':'#93c5fd'};border:1px solid ${inviteDone?'rgba(255,255,255,.08)':'rgba(96,165,250,.25)'};border-radius:9px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;cursor:${inviteDone?'not-allowed':'pointer'};white-space:nowrap;">${inviteDone?'Done Today ✓':'+9 ⬡ Get Link'}</button>`,
+        '</div>',
+      '</div>',
+      // ── Tabs ──
+      '<div style="padding:16px 24px 0;">',
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">',
+          '<div style="display:flex;gap:6px;">',
+            `<button class="quest-tab-chip ${qTab==='available'?'active':''}" onclick="setQuestTab('available')" id="qtab-available">Available (${activeQ.length})</button>`,
+            `<button class="quest-tab-chip ${qTab==='completed'?'active':''}" onclick="setQuestTab('completed')" id="qtab-completed">Completed (${doneQ.length})</button>`,
+          '</div>',
+        '</div>',
+        // ── Quest grid ──
+        '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-bottom:40px;">',
+          (qTab === 'available' ? activeQ : doneQ).map(q => [
+            `<div style="background:${q.done?'rgba(62,207,110,.04)':'rgba(255,255,255,.03)'};border:1px solid ${q.done?'rgba(62,207,110,.1)':'rgba(255,255,255,.07)'};border-radius:14px;overflow:hidden;transition:border-color .14s;" ${!q.done?'onmouseover="this.style.borderColor=\'rgba(255,249,62,.2)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.07)\'"':''}>`,
+              `<div style="height:76px;background:${questBg(q)};position:relative;display:flex;align-items:center;justify-content:center;font-size:36px;">`,
+                q.icon,
+                q.done ? '<div style="position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:rgba(62,207,110,.85);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;">✓</div>' : '',
+                `<span style="position:absolute;top:7px;left:9px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:100px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.5);letter-spacing:.04em;backdrop-filter:blur(4px);">${q.daily?'🔄 Daily':q.category}</span>`,
+              '</div>',
+              '<div style="padding:11px 13px;">',
+                `<div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;margin-bottom:3px;">${q.title}</div>`,
+                `<div style="font-size:11px;color:rgba(255,255,255,.38);line-height:1.45;margin-bottom:9px;">${q.desc}</div>`,
+                '<div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-bottom:8px;">',
+                  `<div style="height:100%;border-radius:2px;width:${q.done?100:0}%;background:${q.done?'var(--green)':'var(--accent)'};"></div>`,
+                '</div>',
+                '<div style="display:flex;align-items:center;justify-content:space-between;">',
+                  `<span style="font-size:11.5px;font-weight:700;color:${q.done?'var(--green)':'var(--accent)'};">+${q.reward} ${q.unit}</span>`,
+                  !q.done
+                    ? `<button onclick="${q.action}" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.18);border-radius:7px;color:var(--accent);font-size:11px;font-weight:700;padding:4px 11px;cursor:pointer;">Go →</button>`
+                    : `<span style="font-size:11px;color:rgba(255,255,255,.25);">${q.daily?'Resets daily':'Completed'}</span>`,
+                '</div>',
+              '</div>',
+            '</div>',
+          ].join('')).join('') || `<div style="grid-column:1/-1;text-align:center;padding:36px;font-size:13.5px;color:rgba(255,255,255,.3);">${qTab==='available'?'All quests done today! 🎉 Come back tomorrow.':'No completed quests yet.'}</div>`,
+        '</div>',
+      '</div>',
+    ].join('');
 
     el._questTab = qTab;
   }
@@ -10887,6 +10920,148 @@ function stopCrossDeviceSync() {
     try { firebase.database().ref('users/' + CU.username).off('value', _profileSyncListener); } catch {}
     _profileSyncListener = null;
   }
+}
+
+
+// ════════════════════════════════════════════════════════════
+// ATELIER HELPER FUNCTIONS
+// ════════════════════════════════════════════════════════════
+
+async function purchaseRadiance(isPlus, days, cost) {
+  const balance = CU?.onyx || 0;
+  if (balance < cost) {
+    // Not enough onyx — show dialog
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
+    ov.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:380px;width:90%;text-align:center;">
+      <div style="font-size:40px;margin-bottom:14px;">😕</div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Not Enough Onyx</div>
+      <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} ⬡</strong> but only have <strong>${balance} ⬡</strong>.<br>Complete quests to earn more Onyx!</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:#060810;font-family:'Syne',sans-serif;font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
+        <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.06);color:var(--muted-light);border:1px solid var(--border);border-radius:10px;cursor:pointer;">Not Now</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    return;
+  }
+  showCustomConfirm(
+    `Purchase ${isPlus ? 'Radiance+' : 'Radiance'} for ${days} days (${cost} Onyx)?`,
+    async () => {
+      CU.onyx = (CU.onyx || 0) - cost;
+      const until = new Date(Date.now() + days * 86400000).toISOString();
+      if (isPlus) { CU.radiancePlus = until; CU.radianceUntil = until; }
+      else { CU.radianceUntil = until; }
+      await saveUser();
+      updateOnyxDisplay();
+      toast(`✨ ${isPlus ? 'Radiance+' : 'Radiance'} active for ${days} days!`, 'success');
+      renderAtelierTab('radiance');
+    }
+  );
+}
+
+async function cancelRadiance() {
+  showCustomConfirm(
+    'Cancel your Radiance subscription? Perks will stop when the current period ends.',
+    async () => {
+      delete CU.radianceUntil;
+      delete CU.radiancePlus;
+      await saveUser();
+      toast('Radiance subscription cancelled.', 'info');
+      renderAtelierTab('radiance');
+    }
+  );
+}
+
+function buildGiftRadianceUI() {
+  const friends = CU?.friends || [];
+  const gifted = CU?.giftedRadiance || {};
+  if (!friends.length) {
+    return '<div style="font-size:13px;color:rgba(255,255,255,.3);padding:16px;">Add friends to gift them Radiance.</div>';
+  }
+  return friends.slice(0, 8).map(f => {
+    const fg = gifted[f];
+    const hasGifted = fg && new Date(fg.until) > new Date();
+    const daysLeft = hasGifted ? Math.ceil((new Date(fg.until) - Date.now()) / 86400000) : 0;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.04);">
+      <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:13px;">${buildAvatarHTML(null, f, 34)}</div>
+      <div style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(f)}</div>
+      ${hasGifted
+        ? `<span style="font-size:11.5px;color:rgba(255,255,255,.4);">${daysLeft}d left</span>
+           <button onclick="cancelGiftRadiance('${escapeHTML(f)}')" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.18);color:var(--red);font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Cancel</button>`
+        : `<button onclick="giftRadianceTo('${escapeHTML(f)}')" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:var(--accent);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer;">🎁 Gift (600 ⬡)</button>`}
+    </div>`;
+  }).join('');
+}
+
+async function giftRadianceTo(friendUsername) {
+  const cost = 600;
+  if ((CU?.onyx || 0) < cost) { toast('Not enough Onyx!', 'error'); return; }
+  showCustomConfirm(
+    `Gift 30 days of Radiance to ${friendUsername} for ${cost} Onyx?`,
+    async () => {
+      CU.onyx = (CU.onyx || 0) - cost;
+      if (!CU.giftedRadiance) CU.giftedRadiance = {};
+      const until = new Date(Date.now() + 30 * 86400000).toISOString();
+      CU.giftedRadiance[friendUsername] = { until, cost };
+      try {
+        await firebase.database().ref('users/' + friendUsername + '/radianceUntil').set(until);
+        await firebase.database().ref('notifications/' + friendUsername).push({
+          type: 'gift', from: CU.username,
+          msg: `${CU.username} gifted you 30 days of Radiance! ✨`,
+          time: new Date().toISOString()
+        });
+      } catch {}
+      await saveUser();
+      updateOnyxDisplay();
+      toast(`✨ Gifted Radiance to ${friendUsername}!`, 'success');
+      renderAtelierTab('radiance');
+    }
+  );
+}
+
+async function cancelGiftRadiance(friendUsername) {
+  showCustomConfirm(`Cancel ${friendUsername}'s gifted Radiance?`, async () => {
+    if (CU.giftedRadiance) delete CU.giftedRadiance[friendUsername];
+    try { await firebase.database().ref('users/' + friendUsername + '/radianceUntil').remove(); } catch {}
+    await saveUser();
+    toast('Gift cancelled.', 'info');
+    renderAtelierTab('radiance');
+  });
+}
+
+async function claimDailyQuest() {
+  // Both daily claim AND invite renew every day
+  const today = new Date().toDateString();
+  if (CU.lastDailyReward === today || CU.lastDaily === today) {
+    toast('Already claimed today! Come back tomorrow 🕛', 'info');
+    return;
+  }
+  CU.onyx = (CU.onyx || 0) + 50;
+  CU.lastDailyReward = today;
+  CU.lastDaily = today;
+  // Mark daily quest as done for today (not permanently — resets each day)
+  if (!CU.questsDailyLog) CU.questsDailyLog = {};
+  CU.questsDailyLog.daily_claim = today;
+  await saveUser();
+  updateOnyxDisplay();
+  if (typeof animateOnyxGain === 'function') animateOnyxGain(50);
+  toast('🎁 +50 Onyx claimed!', 'success');
+  renderAtelierTab('quests');
+}
+
+// Check if a daily-renewing quest is done today
+function isDailyQuestDone(questId) {
+  const today = new Date().toDateString();
+  const log = CU?.questsDailyLog || {};
+  if (questId === 'daily_claim') {
+    return CU?.lastDailyReward === today || CU?.lastDaily === today;
+  }
+  if (questId === 'invite') {
+    // Invite quest: resets daily, user can earn each day by inviting
+    return log[questId] === today;
+  }
+  return false;
 }
 
 </script>

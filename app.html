@@ -68,9 +68,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Userbar — Discord-style panel */
-.userbar{height:64px;background:rgba(4,6,10,.95);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;padding:8px;gap:0;flex-shrink:0;}
-.ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:6px 10px;border-radius:12px;cursor:pointer;transition:background .14s;}
-.ua-clickable:hover{background:rgba(255,255,255,.07);}
+.userbar{height:auto;background:transparent;border-top:none;display:flex;align-items:center;padding:8px;gap:0;flex-shrink:0;}
+.ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);cursor:pointer;transition:all .14s;}
+.ua-clickable:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);}
 .ua{width:38px;height:38px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;}
 .ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;border:2.5px solid var(--rail);flex-shrink:0;}
@@ -173,7 +173,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .msg-row:hover{background:rgba(255,255,255,.025);}
 .msg-row.msg-first{padding-top:17px;}
 .msg-row.msg-editing{background:rgba(255,249,62,.04);}
-.msg-av-wrap{width:44px;min-width:44px;display:flex;justify-content:center;padding-top:1px;flex-shrink:0;}
+.msg-av-wrap{width:54px;min-width:54px;display:flex;justify-content:center;padding-top:1px;flex-shrink:0;}
 .msg-av-inner{width:40px;height:40px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;flex-shrink:0;}
 .msg-av-inner img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .msg-time-small{font-size:10.5px;color:var(--muted);white-space:nowrap;padding-top:5px;min-width:44px;visibility:hidden;text-align:right;}
@@ -183,7 +183,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .msg-author{font-size:15px;font-weight:600;color:#fff;cursor:pointer;line-height:1.3;}
 .msg-author:hover{text-decoration:underline;}
 .msg-timestamp{font-size:11.5px;color:var(--muted);margin-left:2px;}
-.msg-text{font-size:15px;color:var(--text);line-height:1.55;word-break:break-word;}
+.msg-text{font-size:15.5px;color:var(--text);line-height:1.6;word-break:break-word;}
 .msg-text code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px;font-size:12.5px;font-family:monospace;}
 .msg-edited{font-size:10.5px;color:var(--muted);margin-left:4px;}
 .msg-reactions{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
@@ -514,7 +514,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .toast.success{border-left:3px solid var(--green);color:#a3e8b8;}
 .toast.error{border-left:3px solid var(--red);color:#fca5a5;}
 .toast.info{border-left:3px solid var(--accent);color:var(--accent);}
-.ctx-menu{position:fixed;z-index:9999;background:#18191c;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px;min-width:200px;max-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04);backdrop-filter:blur(20px);animation:ctxIn .12s cubic-bezier(.22,1,.36,1);}
+.ctx-menu{position:fixed;z-index:9999;background:var(--panel2,#131822);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px;min-width:200px;max-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04);backdrop-filter:blur(20px);animation:ctxIn .12s cubic-bezier(.22,1,.36,1);}
 @keyframes vcPulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes callPulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.4);opacity:0}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -767,6 +767,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 /* Profile themes (Radiance+) */
 .profile-theme-ring{position:absolute;inset:-3px;border-radius:50%;background:var(--pt-gradient,transparent);z-index:-1;}
 .profile-theme-card-border{background:var(--pt-gradient,rgba(255,255,255,.08));padding:2px;border-radius:20px;}
+
+.msg-text.emoji-only .msg-emoji{width:2em!important;height:2em!important;}
+.msg-text.emoji-only{font-size:30px!important;line-height:1.3;}
 </style>
 <style id="radiance-font-style"></style>
 <body>
@@ -901,7 +904,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
         <input type="text" placeholder="Search…" id="search-input" oninput="handleSearch(this.value)">
       </div>
       <div class="onyx-pill" onclick="showView('atelier')" id="onyx-display">
-        <img src="Onyx.png" onerror="this.style.display='none'">
+        <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">
         <span id="onyx-val">0</span>
       </div>
     </div>
@@ -2633,7 +2636,13 @@ function renderBastionSidebar(scroll) {
   if (!b||!scroll) return;
   const hdrTitle=document.getElementById('sidebar-title');
   const hdrActs=document.getElementById('sidebar-hdr-actions');
-  if (hdrTitle) hdrTitle.textContent=(b.emblem||'🏰')+' '+b.name;
+  if (hdrTitle) {
+    if (b.banner||b.icon) {
+      hdrTitle.innerHTML = `<div style="position:relative;height:72px;margin:-12px -14px 8px;overflow:hidden;"><img src="${b.banner||b.icon}" style="width:100%;height:100%;object-fit:cover;opacity:.65;" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent,rgba(11,14,21,.85));"></div><div style="position:absolute;bottom:7px;left:11px;display:flex;align-items:center;gap:7px;"><span style="font-size:15px;">${b.emblem||'🏰'}</span><span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8);">${escapeHTML(b.name)}</span></div></div>`;
+    } else {
+      hdrTitle.textContent = (b.emblem||'🏰')+' '+b.name;
+    }
+  }
   if (hdrActs) hdrActs.innerHTML=`
     <button onclick="openBastionSettings()" title="Settings" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;">⚙️</button>
     <button onclick="openModal('modal-leave-bastion')" title="Leave" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;">🚪</button>`;
@@ -3129,16 +3138,18 @@ function deleteMsg(msgId, context) {
       row.remove();
     }
     if (msgId.startsWith('local-')) { toast('Deleted','success'); return; }
-    const ctx = context || (curDM ? 'dm' : 'ch');
+    const ctx = context || (curDM ? 'dm' : curGC ? 'gc' : 'ch');
     try {
       if (ctx==='dm') {
         await firebase.database().ref(`dms/${[CU.username,curDM].sort().join('__')}/${msgId}`).remove();
+      } else if (ctx==='gc') {
+        await firebase.database().ref(`groupChats/${curGC}/messages/${msgId}`).remove();
       } else {
         const b = CU.bastions?.[curBastion];
         const ch = b?.channels?.[curChannel];
         const bid = b?.globalId||b?.name;
         const chName = ch?.name||'general';
-        await firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`).remove();
+        if (bid && chName) await firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`).remove();
       }
     } catch {}
     toast('Message deleted','success');
@@ -5033,9 +5044,7 @@ function buildProfileView(tab) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>`).join('')}
       </div>
-      <div style="margin-top:24px;padding:14px;background:rgba(255,249,62,.05);border:1px solid rgba(255,249,62,.12);border-radius:10px;font-size:13px;color:rgba(255,255,255,.5);line-height:1.55;">
-        💡 Can't find what you're looking for? Email us at <a href="mailto:support@fortized.com" style="color:var(--accent);">support@fortized.com</a>
-      </div>
+
     </div>`;
   }
 
@@ -5309,7 +5318,7 @@ async function viewUserProfile(username) {
     : '';
   const bannerBg = u.banner
     ? `url('${u.banner}') center/cover no-repeat`
-    : `linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#0f1830'},${profileTheme?profileTheme.color2+'33':'#1a0f30'})`;
+    : `url('Profile Banner.png') center/cover no-repeat, linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#0f1830'},${profileTheme?profileTheme.color2+'33':'#1a0f30'})`;
 
   const modalEl = document.getElementById('user-modal-body');
   if (!modalEl) { openModal('modal-user'); return; }
@@ -5730,268 +5739,258 @@ function tryOpenAdmin() {
 function openAdminPanel() {
   if (!isSuperAdmin() && !isAdmin()) { toast('Access denied','error'); return; }
   if (!adminAuthed && !isSuperAdmin()) {
-    const pass = prompt('Admin password:');
-    if (!pass) return;
-    const admins = JSON.parse(localStorage.getItem('ftz_admins')||'["staw"]');
-    const stored = localStorage.getItem('ftz_admin_pass_'+CU.username);
-    if (stored && stored !== pass) { toast('Wrong password','error'); return; }
-    adminAuthed = true;
+    showCustomInput('🛡 Admin Code', 'Enter your admin access code:', (code) => {
+      if (code !== '1478') { toast('❌ Wrong code','error'); return; }
+      const admins = JSON.parse(localStorage.getItem('ftz_admins')||'["staw"]');
+      if (!admins.includes(CU.username) && !isSuperAdmin()) { toast('❌ Not an admin','error'); return; }
+      adminAuthed = true; _openAdminUI();
+    }); return;
   }
   if (isSuperAdmin()) adminAuthed = true;
+  _openAdminUI();
+}
 
-  let existing = document.getElementById('admin-panel-overlay');
-  if (existing) { existing.style.display = 'flex'; renderAdminPanel(); return; }
-
+function _openAdminUI() {
+  document.getElementById('admin-panel-overlay')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'admin-panel-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:#080b14;z-index:8000;display:flex;flex-direction:column;font-family:"DM Sans",sans-serif;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:var(--bg,#07090e);z-index:8000;display:flex;flex-direction:column;font-family:"DM Sans",sans-serif;';
   overlay.innerHTML = `
-    <div id="adm-topbar" style="height:56px;background:rgba(0,0,0,.7);border-bottom:1px solid rgba(248,113,113,.15);display:flex;align-items:center;padding:0 24px;gap:14px;flex-shrink:0;backdrop-filter:blur(12px);">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="width:9px;height:9px;border-radius:50%;background:#f87171;box-shadow:0 0 8px #f8717188;"></div>
-        <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#f87171;letter-spacing:.04em;">ADMIN CONSOLE</span>
-      </div>
-      <div style="height:18px;width:1px;background:rgba(255,255,255,.1);"></div>
-      <span style="font-size:12px;color:rgba(255,255,255,.35);">Signed in as <strong style="color:rgba(255,255,255,.6);">${escapeHTML(CU.username)}</strong>${isSuperAdmin()?' <span style="color:#ffd93e;">👑 SUPER</span>':''}</span>
-      <div style="flex:1;"></div>
-      <div id="adm-live-dot" style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#3ecf6e;">
-        <div style="width:6px;height:6px;border-radius:50%;background:#3ecf6e;animation:pulse 2s infinite;"></div>
-        Live
-      </div>
-      <button onclick="document.getElementById('admin-panel-overlay').style.display='none'" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);color:#f87171;padding:7px 16px;border-radius:10px;cursor:pointer;font-size:13px;font-family:inherit;">✕ Exit</button>
+    <div style="height:52px;background:var(--panel,#101420);border-bottom:1px solid rgba(248,113,113,.15);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:7px;"><div style="width:8px;height:8px;border-radius:50%;background:#f87171;box-shadow:0 0 6px #f8717188;"></div>
+      <span style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:#f87171;letter-spacing:.06em;">ADMIN CONSOLE</span></div>
+      <span style="font-size:11.5px;color:rgba(255,255,255,.35);">@${escapeHTML(CU.username)}${isSuperAdmin()?' 👑':''}</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:#3ecf6e;"><div style="width:5px;height:5px;border-radius:50%;background:#3ecf6e;"></div>Live</div>
+      <button onclick="document.getElementById('admin-panel-overlay').remove()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;padding:5px 14px;border-radius:8px;cursor:pointer;font-size:12.5px;">Exit</button>
     </div>
     <div style="display:flex;flex:1;overflow:hidden;">
-      <div id="admin-sidebar" style="width:230px;min-width:230px;border-right:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02);overflow-y:auto;padding:16px 10px;display:flex;flex-direction:column;gap:2px;"></div>
-      <div id="admin-main" style="flex:1;overflow-y:auto;padding:32px 36px;background:#080b14;"></div>
+      <div id="adm-nav" style="width:196px;min-width:196px;background:var(--sidebar,#0b0e15);border-right:1px solid rgba(255,255,255,.05);overflow-y:auto;padding:8px 6px;display:flex;flex-direction:column;gap:1px;flex-shrink:0;"></div>
+      <div id="adm-content" style="flex:1;overflow-y:auto;background:var(--bg,#07090e);"></div>
     </div>`;
   document.body.appendChild(overlay);
-  renderAdminPanel();
+  _renderAdminNav('dashboard');
+  _loadAdminPage('dashboard');
 }
 
-function renderAdminPanel() {
-  const sidebar = document.getElementById('admin-sidebar');
-  if (!sidebar) return;
-  const tabs = [
-    {id:'dashboard', icon:'📊', label:'Dashboard', group:'Overview'},
-    {id:'users',     icon:'🔍', label:'User Lookup', group:'Users'},
-    {id:'all_users', icon:'👥', label:'All Users', group:'Users'},
-    {id:'reports',   icon:'🚩', label:'Reports', group:'Moderation'},
-    {id:'nsfw_queue',icon:'🔞', label:'NSFW Queue', group:'Moderation'},
-    {id:'bastions',  icon:'🏰', label:'Bastions', group:'Content'},
-    {id:'audit',     icon:'📋', label:'Audit Log', group:'System'},
-    {id:'economy',   icon:'💰', label:'Economy', group:'System'},
-    ...(isSuperAdmin() ? [{id:'admins',icon:'👑',label:'Admin Mgmt',group:'System'}] : []),
+function _renderAdminNav(active) {
+  const nav = document.getElementById('adm-nav'); if (!nav) return;
+  const secs = [
+    {label:'OVERVIEW', items:[{id:'dashboard',icon:'📊',label:'Dashboard'}]},
+    {label:'MODERATION', items:[{id:'reports',icon:'🚩',label:'Reports'},{id:'bans',icon:'🔨',label:'Bans'}]},
+    {label:'USERS', items:[{id:'users',icon:'🔍',label:'User Lookup'},{id:'all_users',icon:'👥',label:'All Users'}]},
+    {label:'SYSTEM', items:[{id:'economy',icon:'💰',label:'Economy'},{id:'bastions',icon:'🏰',label:'Bastions'},{id:'audit',icon:'📋',label:'Audit'},...(isSuperAdmin()?[{id:'admins',icon:'👑',label:'Admins'}]:[]) ]},
   ];
-  const groups = [...new Set(tabs.map(t=>t.group))];
-  sidebar.innerHTML = groups.map(g => {
-    const gTabs = tabs.filter(t=>t.group===g);
-    return `<div style="font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(248,113,113,.4);padding:10px 8px 5px;">${g}</div>`
-      + gTabs.map(t => `
-        <div onclick="loadAdminTab('${t.id}')" data-admtab="${t.id}" style="display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:11px;cursor:pointer;font-size:13px;color:${adminTab===t.id?'#fff':'rgba(255,255,255,.45)'};background:${adminTab===t.id?'rgba(248,113,113,.12)':'transparent'};border:1px solid ${adminTab===t.id?'rgba(248,113,113,.2)':'transparent'};transition:all .12s;margin-bottom:1px;" onmouseenter="if('${t.id}'!==adminTab)this.style.background='rgba(255,255,255,.04)'" onmouseleave="if('${t.id}'!==adminTab)this.style.background='transparent'">
-          <span style="font-size:15px;width:20px;text-align:center;">${t.icon}</span>
-          <span>${t.label}</span>
-        </div>`).join('');
-  }).join('');
-  loadAdminTab(adminTab);
+  nav.innerHTML = secs.map(s=>`
+    <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:12px 8px 4px;">${s.label}</div>
+    ${s.items.map(t=>`<div id="adm-tab-${t.id}" onclick="_loadAdminPage('${t.id}')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:${active===t.id?'var(--accent,#fff93e)':'rgba(255,255,255,.5)'};background:${active===t.id?'rgba(255,249,62,.08)':'transparent'};transition:.12s;margin-bottom:1px;" onmouseover="if('${t.id}'!=='${active}')this.style.background='rgba(255,255,255,.05)'" onmouseout="if('${t.id}'!=='${active}')this.style.background='${active===t.id?'rgba(255,249,62,.08)':'transparent'}'">
+      <span style="font-size:14px;width:16px;text-align:center;">${t.icon}</span><span>${t.label}</span>
+      ${t.id==='reports'?'<span id="adm-rep-badge" style="margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:100px;display:none;"></span>':''}
+    </div>`).join('')}`).join('');
+  const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+  const pending = reps.filter(r=>r.status!=='resolved').length;
+  const badge = document.getElementById('adm-rep-badge');
+  if (badge) { badge.textContent=pending; badge.style.display=pending>0?'':'none'; }
 }
 
-async function loadAdminTab(tab) {
-  adminTab = tab;
-  if (tab !== 'bastions' && window._adminBastionInterval) { clearInterval(window._adminBastionInterval); window._adminBastionInterval = null; }
-  if (tab !== 'all_users' && window._adminUsersInterval) { clearInterval(window._adminUsersInterval); window._adminUsersInterval = null; }
-  document.querySelectorAll('[data-admtab]').forEach(el => {
-    const active = el.dataset.admtab === tab;
-    el.style.background = active ? 'rgba(248,113,113,.12)' : 'transparent';
-    el.style.color = active ? '#fff' : 'rgba(255,255,255,.45)';
-    el.style.borderColor = active ? 'rgba(248,113,113,.2)' : 'transparent';
-  });
+function renderAdminPanel() { _renderAdminNav('dashboard'); _loadAdminPage('dashboard'); }
 
-  const main = document.getElementById('admin-main');
-  if (!main) return;
+async function loadAdminTab(tab) { _loadAdminPage(tab); }
 
-  // ── DASHBOARD ──────────────────────────────────────────────
+async function _loadAdminPage(tab) {
+  _renderAdminNav(tab); adminTab = tab;
+  const main = document.getElementById('adm-content'); if (!main) return;
+  main.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,.3);">Loading…</div>';
+
   if (tab === 'dashboard') {
-    const reports = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+    const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
     const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
-    const audits = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
-    const pending = reports.filter(r=>r.status==='pending').length;
-    let totalUsers = '—';
-    try { const snap = await firebase.database().ref('users').get(); totalUsers = snap.exists() ? Object.keys(snap.val()).length : 0; } catch {}
-    main.innerHTML = `
-      <div style="margin-bottom:28px;">
-        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:4px;">Dashboard</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.35);">Welcome back, ${escapeHTML(CU.displayName||CU.username)}. Here's what's happening.</div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;">
+    let totalUsers = '–';
+    try { const s = await firebase.database().ref('users').get(); totalUsers = s.exists()?Object.keys(s.val()).length:0; } catch {}
+    const pending = reps.filter(r=>r.status!=='resolved').length;
+    main.innerHTML = `<div style="padding:28px 32px;">
+      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:4px;">Dashboard</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:22px;">Admin panel · ${escapeHTML(CU.displayName||CU.username)}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;">
         ${[
-          {label:'Total Users',val:totalUsers,icon:'👤',color:'#60a5fa'},
-          {label:'Pending Reports',val:pending,icon:'🚩',color:pending>0?'#f87171':'#3ecf6e'},
-          {label:'Banned Users',val:bans.length,icon:'🔨',color:'#f87171'},
-          {label:'Audit Events',val:audits.length,icon:'📋',color:'#a78bfa'},
-        ].map(s=>`
-          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:20px 18px;cursor:pointer;" onclick="loadAdminTab('${s.label==='Pending Reports'?'reports':s.label==='Banned Users'?'all_users':s.label==='Audit Events'?'audit':'all_users'}')">
-            <div style="font-size:26px;margin-bottom:10px;">${s.icon}</div>
-            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:${s.color};">${s.val}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:3px;">${s.label}</div>
-          </div>`).join('')}
+          {l:'Total Users',v:totalUsers,i:'👤',c:'#60a5fa',t:'all_users'},
+          {l:'Pending Reports',v:pending,i:'🚩',c:pending>0?'#f87171':'#3ecf6e',t:'reports'},
+          {l:'Banned',v:bans.length,i:'🔨',c:'#f87171',t:'bans'},
+          {l:'Reports Total',v:reps.length,i:'📊',c:'#a78bfa',t:'reports'},
+        ].map(s=>`<div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px;cursor:${s.t?'pointer':'default'};" ${s.t?`onclick="_loadAdminPage('${s.t}')"`:''}>
+          <div style="font-size:22px;margin-bottom:8px;">${s.i}</div>
+          <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:${s.c};">${s.v}</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:2px;">${s.l}</div>
+        </div>`).join('')}
       </div>
-      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:18px;">
-        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;">
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#f87171;margin-bottom:16px;">🚩 Recent Reports</div>
-          ${reports.slice(0,6).map(r=>`
-            <div style="display:flex;align-items:center;gap:10px;padding:9px 11px;background:rgba(255,255,255,.03);border-radius:10px;margin-bottom:6px;">
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(r.reason||'No reason')}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.3);">By ${escapeHTML(r.reporter)} · ${formatTimeAgo(r.createdAt||r.timestamp)}</div>
-              </div>
-              <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(248,113,113,.12);color:#f87171;flex-shrink:0;">${r.status||'pending'}</span>
-            </div>`).join('') || '<div style="font-size:13px;color:rgba(255,255,255,.3);padding:10px 0;">No reports yet</div>'}
-        </div>
-        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;">
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:16px;">⚡ Quick Actions</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <button onclick="loadAdminTab('users')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;">🔍 Search a User</button>
-            <button onclick="loadAdminTab('reports')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;">🚩 Review Reports</button>
-            <button onclick="loadAdminTab('economy')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;">💰 Manage Economy</button>
-            <button onclick="loadAdminTab('bastions')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;">🏰 Manage Bastions</button>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  // ── USER LOOKUP ────────────────────────────────────────────
-  else if (tab === 'users') {
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">User Lookup</div>
-      <div style="display:flex;gap:10px;margin-bottom:24px;">
-        <input id="admin-user-search" style="flex:1;max-width:380px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 16px;color:#fff;font-family:inherit;font-size:13.5px;outline:none;" placeholder="Search by username…" onkeydown="if(event.key==='Enter')adminSearchUser()">
-        <button onclick="adminSearchUser()" style="padding:10px 20px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;border-radius:12px;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:600;">Search</button>
+      <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:10px;">Recent Reports</div>
+      <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
+        ${reps.slice(0,5).map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,.04);">
+          <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:${r.status==='resolved'?'rgba(62,207,110,.1)':'rgba(248,113,113,.1)'};color:${r.status==='resolved'?'#3ecf6e':'#f87171'};flex-shrink:0;">${r.status||'pending'}</span>
+          <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;">${escapeHTML(r.reason||'–')}</div><div style="font-size:11px;color:rgba(255,255,255,.35);">by ${escapeHTML(r.reporter||'?')}</div></div>
+          ${r.status!=='resolved'?`<button onclick="resolveReport(${reps.indexOf(r)},'resolved');_loadAdminPage('dashboard')" style="background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);color:#3ecf6e;font-size:11.5px;padding:4px 10px;border-radius:7px;cursor:pointer;">Resolve</button>`:''}
+        </div>`).join('')||'<div style="padding:18px;text-align:center;color:rgba(255,255,255,.3);">No reports</div>'}
       </div>
-      <div id="admin-user-result"></div>`;
+    </div>`;
   }
-
-  // ── REPORTS, BASTIONS, AUDIT, ECONOMY, ADMINS, ALL_USERS, NSFW tabs 
-  // same content as before but restyled
-  else if (tab === 'all_users') {
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:8px;">All Users</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.35);margin-bottom:20px;">Live list of all registered users.</div>
-      <input id="all-users-search" style="width:100%;max-width:320px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:16px;" placeholder="Filter by username…" oninput="filterAllUsers(this.value)">
-      <div id="all-users-count" style="font-size:12px;color:rgba(255,255,255,.3);margin-bottom:12px;"></div>
-      <div id="all-users-list"></div>`;
-    await loadAllUsers(false);
-    window._adminUsersInterval = setInterval(() => { if (adminTab==='all_users') loadAllUsers(true); }, 3000);
-  }
-
   else if (tab === 'reports') {
-    const reports = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">Reports</div>
-      ${reports.length===0?'<div style="color:rgba(255,255,255,.3);font-size:14px;">No reports yet.</div>':
-        reports.map((r,i)=>`
-          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;margin-bottom:12px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <div>
-                <div style="font-weight:700;font-size:14px;">${escapeHTML(r.reason||'No reason')}</div>
-                <div style="font-size:11.5px;color:rgba(255,255,255,.35);">Reported by <strong>${escapeHTML(r.reporter)}</strong> · ${formatTimeAgo(r.createdAt||r.timestamp)}</div>
-              </div>
-              <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${r.status==='resolved'?'rgba(62,207,110,.1)':'rgba(248,113,113,.1)'};color:${r.status==='resolved'?'#3ecf6e':'#f87171'};">${r.status||'pending'}</span>
+    const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+    main.innerHTML = `<div style="padding:28px 32px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div><div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Reports</div><div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">${reps.length} total · ${reps.filter(r=>r.status!=='resolved').length} pending</div></div>
+        <button onclick="loadAllReportsFromFirebase()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12.5px;padding:6px 14px;cursor:pointer;">🔄 Refresh</button>
+      </div>
+      ${reps.length===0?'<div style="text-align:center;padding:60px;color:rgba(255,255,255,.3);">No reports ✓</div>':
+      `<div style="display:flex;flex-direction:column;gap:10px;">
+        ${reps.map((r,i)=>`<div style="background:var(--panel,#101420);border:1px solid ${r.status==='resolved'?'rgba(62,207,110,.1)':'rgba(255,255,255,.06)'};border-radius:12px;padding:16px 18px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+            <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${r.status==='resolved'?'rgba(62,207,110,.1)':'rgba(248,113,113,.1)'};color:${r.status==='resolved'?'#3ecf6e':'#f87171'};flex-shrink:0;">${r.status||'pending'}</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13.5px;font-weight:700;margin-bottom:4px;">${escapeHTML(r.reason||'No reason')}</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.4);">By <strong>${escapeHTML(r.reporter||'?')}</strong> · ${r.createdAt?new Date(r.createdAt).toLocaleDateString():''}</div>
+              ${r.msgText?`<div style="margin-top:7px;padding:7px 10px;background:rgba(255,255,255,.04);border-left:2px solid rgba(255,255,255,.1);border-radius:4px;font-size:12px;color:rgba(255,255,255,.5);">"${escapeHTML((r.msgText||'').slice(0,100))}…"</div>`:''}
             </div>
-            ${r.status!=='resolved'?`<div style="display:flex;gap:8px;">
-              <button onclick="resolveReport(${i},'dismissed')" style="padding:6px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);border-radius:9px;cursor:pointer;font-family:inherit;font-size:12px;">Dismiss</button>
-              <button onclick="resolveReport(${i},'warned')" style="padding:6px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#f59e0b;border-radius:9px;cursor:pointer;font-family:inherit;font-size:12px;">Warn User</button>
-              <button onclick="resolveReport(${i},'banned')" style="padding:6px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:9px;cursor:pointer;font-family:inherit;font-size:12px;">Ban User</button>
-            </div>`:''}
-          </div>`).join('')}`;
+          </div>
+          ${r.status!=='resolved'?`<div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;">
+            <button onclick="resolveReport(${i},'dismissed')" style="padding:5px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;">Dismiss</button>
+            <button onclick="resolveReport(${i},'warned')" style="padding:5px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:7px;color:#f59e0b;font-size:12px;cursor:pointer;">Warn User</button>
+            <button onclick="resolveReport(${i},'resolved')" style="padding:5px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Resolve ✓</button>
+          </div>`:`<div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:8px;">Resolved: ${r.resolution||'–'} by ${escapeHTML(r.resolvedBy||'admin')}</div>`}
+        </div>`).join('')}
+      </div>`}
+    </div>`;
   }
-
-  else if (tab === 'audit') {
-    const log = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]').reverse();
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">Audit Log</div>
-      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;">
-        ${log.length===0?'<div style="padding:20px;color:rgba(255,255,255,.3);">No events yet.</div>':
-          log.slice(0,100).map(e=>`
-            <div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,.04);">
-              <div style="font-size:11px;font-family:monospace;color:rgba(255,255,255,.25);flex-shrink:0;">${new Date(e.timestamp||e.ts||0).toLocaleString()}</div>
-              <div style="flex:1;font-size:13px;"><strong style="color:#f87171;">${escapeHTML(e.action||e.type||'event')}</strong> · ${escapeHTML(e.target||e.username||'')}</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);">by ${escapeHTML(e.by||e.admin||CU.username)}</div>
-            </div>`).join('')}
-      </div>`;
+  else if (tab === 'bans') {
+    const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+    main.innerHTML = `<div style="padding:28px 32px;">
+      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:18px;">Bans (${bans.length})</div>
+      ${bans.length?`<div style="display:flex;flex-direction:column;gap:8px;">${bans.map((b,i)=>`<div style="background:var(--panel,#101420);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+        <div style="flex:1;"><div style="font-weight:600;">${escapeHTML(b.username)}</div><div style="font-size:11.5px;color:rgba(255,255,255,.4);">Reason: ${escapeHTML(b.reason||'–')}</div></div>
+        <button onclick="unbanUser(${i})" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Unban</button>
+      </div>`).join('')}</div>`:'<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">No bans</div>'}
+    </div>`;
   }
-
+  else if (tab === 'users') {
+    main.innerHTML = `<div style="padding:28px 32px;">
+      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:16px;">User Lookup</div>
+      <div style="display:flex;gap:8px;margin-bottom:20px;">
+        <input id="adm-user-search" class="settings-input" placeholder="Search username…" style="flex:1;max-width:360px;" onkeydown="if(event.key==='Enter')adminSearchUser()">
+        <button onclick="adminSearchUser()" style="padding:9px 18px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:10px;cursor:pointer;font-weight:700;">Search</button>
+      </div>
+      <div id="adm-user-result"></div>
+    </div>`;
+  }
+  else if (tab === 'all_users') {
+    main.innerHTML = `<div style="padding:28px 32px;">
+      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:14px;">All Users</div>
+      <input class="settings-input" placeholder="Filter…" style="max-width:280px;margin-bottom:14px;" oninput="filterAllUsers(this.value)">
+      <div id="all-users-count" style="font-size:11.5px;color:rgba(255,255,255,.3);margin-bottom:12px;"></div>
+      <div id="all-users-list"></div>
+    </div>`;
+    await loadAllUsers(false);
+  }
   else if (tab === 'economy') {
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">Economy</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:700px;">
-        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;">
-          <div style="font-weight:700;font-size:15px;margin-bottom:14px;">💰 Give Onyx</div>
-          <input id="eco-username" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:10px;box-sizing:border-box;" placeholder="Username">
-          <input id="eco-amount" type="number" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:12px;box-sizing:border-box;" placeholder="Onyx amount">
-          <button onclick="adminGiveOnyx()" style="width:100%;padding:10px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;">Give Onyx</button>
+    main.innerHTML = `<div style="padding:28px 32px;">
+      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:20px;">Economy</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:580px;">
+        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
+          <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;">💰 Give Onyx</div>
+          <input class="settings-input" id="eco-username" placeholder="Username" style="margin-bottom:9px;">
+          <input class="settings-input" id="eco-amount" type="number" placeholder="Amount" style="margin-bottom:11px;">
+          <button onclick="adminGiveOnyx()" style="width:100%;padding:8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:9px;color:var(--accent);cursor:pointer;font-weight:700;">Give Onyx</button>
         </div>
-        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;">
-          <div style="font-weight:700;font-size:15px;margin-bottom:14px;">✨ Grant Radiance</div>
-          <input id="radiance-username" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:10px;box-sizing:border-box;" placeholder="Username">
-          <select id="radiance-days" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:12px;">
-            <option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="365">1 year</option>
-          </select>
-          <button onclick="adminGrantRadiance()" style="width:100%;padding:10px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;">Grant Radiance</button>
+        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
+          <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;">✨ Grant Radiance</div>
+          <input class="settings-input" id="radiance-username" placeholder="Username" style="margin-bottom:9px;">
+          <select class="settings-input" id="radiance-days" style="margin-bottom:11px;"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select>
+          <button onclick="adminGrantRadiance()" style="width:100%;padding:8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:9px;color:var(--accent);cursor:pointer;font-weight:700;">Grant Radiance</button>
         </div>
-        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;">
-          <div style="font-weight:700;font-size:15px;margin-bottom:14px;">🎫 Trial Links</div>
-          <input id="trial-days" type="number" min="1" max="365" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:12px;box-sizing:border-box;" placeholder="Days (1-365)">
-          <button onclick="generateTrialLink()" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;">Generate Trial Link</button>
-          <div id="trial-link-result" style="margin-top:12px;"></div>
-        </div>
-      </div>`;
+      </div>
+    </div>`;
   }
-
   else if (tab === 'bastions') {
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:8px;">Bastions</div>
-      <input id="admin-bastion-search" style="width:100%;max-width:320px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:16px;" placeholder="Filter by name…" oninput="filterAdminBastions(this.value)">
-      <div id="admin-bastions-list"></div>`;
+    main.innerHTML = `<div style="padding:28px 32px;">
+      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:14px;">Bastions</div>
+      <input class="settings-input" placeholder="Filter…" style="max-width:280px;margin-bottom:14px;" oninput="filterAdminBastions(this.value)">
+      <div id="admin-bastions-list"></div>
+    </div>`;
     loadAdminBastions(false);
-    window._adminBastionInterval = setInterval(() => { if (adminTab==='bastions') loadAdminBastions(true); }, 4000);
   }
-
-  else if (tab === 'nsfw_queue') {
-    const queue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">NSFW Queue</div>
-      ${queue.length===0?'<div style="color:rgba(255,255,255,.3);">Queue is empty.</div>':
-        queue.map((item,i)=>`
-          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;margin-bottom:12px;">
-            <div style="font-size:13px;margin-bottom:10px;">Uploaded by <strong>${escapeHTML(item.uploader)}</strong></div>
-            ${item.url?`<img src="${item.url}" style="max-width:200px;border-radius:10px;margin-bottom:10px;" onerror="this.remove()">`:'' }
-            <div style="display:flex;gap:8px;">
-              <button onclick="reviewNSFW(${i},'approved')" style="padding:6px 14px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;border-radius:9px;cursor:pointer;font-family:inherit;font-size:12px;">Approve</button>
-              <button onclick="reviewNSFW(${i},'rejected')" style="padding:6px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:9px;cursor:pointer;font-family:inherit;font-size:12px;">Reject</button>
-            </div>
-          </div>`).join('')}`;
+  else if (tab === 'audit') {
+    const log = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]').slice(-80).reverse();
+    main.innerHTML = `<div style="padding:28px 32px;">
+      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:16px;">Audit Log</div>
+      <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
+        ${log.length?log.map(e=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
+          <div style="font-size:10.5px;font-family:monospace;color:rgba(255,255,255,.22);flex-shrink:0;min-width:110px;">${new Date(e.timestamp||e.ts||0).toLocaleDateString()}</div>
+          <div style="flex:1;font-size:12.5px;"><strong style="color:#f87171;">${escapeHTML(e.action||'?')}</strong> · ${escapeHTML(e.target||'')}</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.3);">by ${escapeHTML(e.by||'?')}</div>
+        </div>`).join(''):'<div style="padding:18px;text-align:center;color:rgba(255,255,255,.3);">No events</div>'}
+      </div>
+    </div>`;
   }
-
   else if (tab === 'admins' && isSuperAdmin()) {
     const admins = JSON.parse(localStorage.getItem('ftz_admins')||'["staw"]');
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:24px;">Admin Management</div>
-      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;max-width:520px;margin-bottom:20px;">
-        <div style="font-weight:700;font-size:14px;margin-bottom:14px;">Current Admins</div>
-        ${admins.map((a,i)=>`
-          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:10px;margin-bottom:6px;">
-            <span style="font-size:18px;">${a===SUPER_ADMIN?'👑':'🛡️'}</span>
-            <span style="font-weight:600;flex:1;">${escapeHTML(a)}</span>
-            ${a===SUPER_ADMIN?'<span style="font-size:11px;color:#ffd93e;">SUPER ADMIN</span>':`<button onclick="removeAdmin(${i})" style="padding:4px 12px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;">Remove</button>`}
-          </div>`).join('')}
+    main.innerHTML = `<div style="padding:28px 32px;">
+      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:18px;">Admin Management</div>
+      <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;max-width:440px;margin-bottom:14px;">
+        <div style="font-weight:700;margin-bottom:10px;">Current Admins</div>
+        ${admins.map((a,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+          <span>${a===SUPER_ADMIN?'👑':'🛡️'}</span><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
+          ${a!==SUPER_ADMIN?`<button onclick="removeAdmin(${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>`:'<span style="font-size:11px;color:#ffd93e;">Super</span>'}
+        </div>`).join('')}
       </div>
-      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;max-width:520px;">
-        <div style="font-weight:700;font-size:14px;margin-bottom:14px;">Add Admin</div>
-        <input id="new-admin-username" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:10px;box-sizing:border-box;" placeholder="Username to promote">
-        <button onclick="addAdmin()" style="padding:10px 20px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;">Add Admin</button>
-      </div>`;
+      <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;max-width:440px;">
+        <div style="font-weight:700;margin-bottom:10px;">Add Admin</div>
+        <div style="display:flex;gap:7px;">
+          <input class="settings-input" id="new-admin-input" placeholder="Username" style="flex:1;">
+          <button onclick="addAdmin()" style="padding:9px 16px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:10px;cursor:pointer;font-weight:700;">Add</button>
+        </div>
+      </div>
+    </div>`;
   }
+  else main.innerHTML = '<div style="padding:32px;text-align:center;color:rgba(255,255,255,.3);">Coming soon</div>';
 }
+
+function resolveReport(idx, action) {
+  const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+  if (!reps[idx]) return;
+  reps[idx].status = action === 'resolved' ? 'resolved' : action;
+  reps[idx].resolution = action;
+  reps[idx].resolvedBy = CU.username;
+  reps[idx].resolvedAt = new Date().toISOString();
+  localStorage.setItem('ftz_reports', JSON.stringify(reps));
+  logAudit('report_'+action, reps[idx].reporter||'?', action);
+  toast('Report '+action, 'success');
+  _loadAdminPage('reports');
+}
+
+async function loadAllReportsFromFirebase() {
+  try {
+    const snap = await firebase.database().ref('reports').get();
+    if (snap.exists()) {
+      const fb = Object.values(snap.val());
+      const local = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+      const merged = [...local];
+      fb.forEach(r => { if (!merged.find(lr=>lr.id===r.id)) merged.push(r); });
+      localStorage.setItem('ftz_reports', JSON.stringify(merged));
+    }
+  } catch {}
+  _loadAdminPage('reports');
+}
+
+async function adminGiveOnyx() {
+  const username = document.getElementById('eco-username')?.value?.trim();
+  const amount = parseInt(document.getElementById('eco-amount')?.value)||0;
+  if (!username||!amount) { toast('Fill all fields','error'); return; }
+  try {
+    const u = await FortizedSocial.getUserByName(username);
+    if (!u) { toast('User not found','error'); return; }
+    await firebase.database().ref('users/'+username+'/onyx').set((u.onyx||0)+amount);
+    logAudit('give_onyx', username, '+'+amount);
+    toast('Gave '+amount+' Onyx to '+username,'success');
+  } catch { toast('Error','error'); }
+}
+
 
 async function adminSearchUser() {
   const raw = document.getElementById('admin-user-search')?.value?.trim().toLowerCase();
@@ -9859,7 +9858,7 @@ function renderAtelierTab(tab) {
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.5);border:1px solid rgba(255,249,62,.2);border-radius:12px;padding:10px 16px;backdrop-filter:blur(12px);">
-              <img src="Onyx.png" style="width:20px;height:20px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,249,62,.5));" onerror="this.style.display='none'">
+              <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">
               <div>
                 <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">${bal}</div>
                 <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px;">Onyx</div>
@@ -9943,12 +9942,12 @@ function renderAtelierTab(tab) {
       ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,120,62,.15),rgba(255,200,62,.08));border:1.5px solid rgba(255,160,62,.3);border-radius:14px;padding:18px 22px;margin-bottom:28px;display:flex;align-items:center;gap:16px;">
         <div style="font-size:36px;">🌟</div>
         <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ff9d3e;">Radiance+ Active</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.45);margin-top:2px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></div></div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.45);margin-top:2px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></div></div>
         <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;">Cancel</button>
       </div>`:hasRad?`<div style="background:rgba(255,249,62,.07);border:1.5px solid rgba(255,220,62,.2);border-radius:14px;padding:18px 22px;margin-bottom:28px;display:flex;align-items:center;gap:16px;">
         <div style="font-size:32px;">✨</div>
         <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ffd93e;">Radiance Active</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.45);margin-top:2px;">${daysRad} days remaining · Auto-renews · 600 <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></div></div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.45);margin-top:2px;">${daysRad} days remaining · Auto-renews · 600 <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></div></div>
         <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;">Cancel</button>
       </div>`:''}
 
@@ -9973,7 +9972,7 @@ function renderAtelierTab(tab) {
               ${PRICES.basic.map((pl,i)=>`
                 <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:9px 14px;border-radius:9px;background:${i===1?'var(--accent)':'rgba(255,255,255,.05)'};color:${i===1?'#060810':'rgba(255,255,255,.65)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.09)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.14s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
                   <span>${pl.days} Days</span>
-                  <span>${pl.onyx} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'">${i===1?' 🔥':''}</span>
+                  <span>${pl.onyx} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'">${i===1?' 🔥':''}</span>
                 </button>`).join('')}
             </div>
           </div>
@@ -9997,7 +9996,7 @@ function renderAtelierTab(tab) {
               ${PRICES.plus.map((pl,i)=>`
                 <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:9px 14px;border-radius:9px;background:${i===0?'linear-gradient(90deg,#ff9d3e,#ffd93e)':'rgba(255,255,255,.05)'};color:${i===0?'#060810':'rgba(255,255,255,.65)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.09)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.14s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
                   <span>${pl.days} Days</span>
-                  <span>${pl.onyx} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'">${i===0?' 🔥':''}</span>
+                  <span>${pl.onyx} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'">${i===0?' 🔥':''}</span>
                 </button>`).join('')}
             </div>
           </div>
@@ -10165,7 +10164,7 @@ function renderAtelierTab(tab) {
         ${['featured','browse','coming_soon'].map(t=>`
           <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:14px 18px;background:transparent;border:none;border-bottom:2px solid ${shopTab===t?'var(--accent)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.4)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.14s;white-space:nowrap;">${t==='featured'?'Featured':t==='browse'?'Browse':'Coming Soon'}</button>`).join('')}
         <div style="flex:1;"></div>
-        <div style="font-size:12px;color:rgba(255,255,255,.3);padding-right:4px;">${bal} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"> balance</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.3);padding-right:4px;">${bal} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"> balance</div>
       </div>
 
       <div style="padding:24px 28px 60px;">
@@ -11199,7 +11198,7 @@ async function purchaseRadiance(isPlus, days, cost) {
     ov.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:380px;width:90%;text-align:center;">
       <div style="font-size:40px;margin-bottom:14px;">😕</div>
       <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Not Enough Onyx</div>
-      <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></strong> but only have <strong>${balance} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></strong>.<br>Complete quests to earn more Onyx!</div>
+      <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></strong> but only have <strong>${balance} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></strong>.<br>Complete quests to earn more Onyx!</div>
       <div style="display:flex;gap:8px;">
         <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:#060810;font-family:'Syne',sans-serif;font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
         <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.06);color:var(--muted-light);border:1px solid var(--border);border-radius:10px;cursor:pointer;">Not Now</button>
@@ -11252,7 +11251,7 @@ function buildGiftRadianceUI() {
       ${hasGifted
         ? `<span style="font-size:11.5px;color:rgba(255,255,255,.4);">${daysLeft}d left</span>
            <button onclick="cancelGiftRadiance('${escapeHTML(f)}')" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.18);color:var(--red);font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Cancel</button>`
-        : `<button onclick="giftRadianceTo('${escapeHTML(f)}')" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:var(--accent);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer;">🎁 Gift (600 <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='<img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'">)</button>`}
+        : `<button onclick="giftRadianceTo('${escapeHTML(f)}')" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:var(--accent);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer;">🎁 Gift (600 <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'">)</button>`}
     </div>`;
   }).join('');
 }
@@ -11521,6 +11520,10 @@ function toggleOwnProfilePanel() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
         Edit Profile
       </button>
+      <button onclick="closeOwnProfilePanel();toggleAccountSwitcher()" style="width:100%;padding:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;color:rgba(255,255,255,.5);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;margin-top:4px;transition:.14s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Switch Accounts
+      </button>
     </div>`;
   
   document.body.appendChild(panel);
@@ -11619,29 +11622,56 @@ async function showMiniProfilePreview(username, anchorEl) {
 
 function applyAppearance(themeId) {
   localStorage.setItem('ftz_appearance', themeId);
-  if (themeId === 'dark_realm') {
-    document.documentElement.style.setProperty('--bg',     '#030407');
-    document.documentElement.style.setProperty('--rail',   '#020304');
-    document.documentElement.style.setProperty('--sidebar','#040508');
-    document.documentElement.style.setProperty('--channel','#050609');
-    document.documentElement.style.setProperty('--panel',  '#070a0e');
-    document.documentElement.style.setProperty('--panel2', '#090c12');
-    document.documentElement.style.setProperty('--border', '#0e1320');
-    document.documentElement.style.setProperty('--accent', '#5b7cff');
+  // ALL themes keep Fortized yellow
+  document.documentElement.style.setProperty('--accent',     '#fff93e');
+  document.documentElement.style.setProperty('--accent-dim', 'rgba(255,249,62,.1)');
+  document.documentElement.style.setProperty('--accent-mid', 'rgba(255,249,62,.22)');
+  if (themeId === 'dark_fortress') {
+    document.documentElement.style.setProperty('--bg',         '#030407');
+    document.documentElement.style.setProperty('--rail',       '#020304');
+    document.documentElement.style.setProperty('--sidebar',    '#040508');
+    document.documentElement.style.setProperty('--channel',    '#050609');
+    document.documentElement.style.setProperty('--panel',      '#070a0e');
+    document.documentElement.style.setProperty('--panel2',     '#090c12');
+    document.documentElement.style.setProperty('--panel3',     '#0b0f14');
+    document.documentElement.style.setProperty('--border',     '#0d1220');
+    document.documentElement.style.setProperty('--muted',      '#3a4458');
+    document.documentElement.style.setProperty('--muted-light','#5a6a7e');
+  } else if (themeId === 'onyx_pure') {
+    document.documentElement.style.setProperty('--bg',         '#010103');
+    document.documentElement.style.setProperty('--rail',       '#010103');
+    document.documentElement.style.setProperty('--sidebar',    '#020206');
+    document.documentElement.style.setProperty('--channel',    '#030308');
+    document.documentElement.style.setProperty('--panel',      '#04040a');
+    document.documentElement.style.setProperty('--panel2',     '#05050c');
+    document.documentElement.style.setProperty('--panel3',     '#06060e');
+    document.documentElement.style.setProperty('--border',     '#0c0c1a');
+    document.documentElement.style.setProperty('--muted',      '#2a2a3e');
+    document.documentElement.style.setProperty('--muted-light','#44445e');
   } else {
-    // Default Fortized
-    document.documentElement.style.setProperty('--bg',     '#07090e');
-    document.documentElement.style.setProperty('--rail',   '#04060a');
-    document.documentElement.style.setProperty('--sidebar','#0b0e15');
-    document.documentElement.style.setProperty('--channel','#0d1018');
-    document.documentElement.style.setProperty('--panel',  '#101420');
-    document.documentElement.style.setProperty('--panel2', '#131822');
-    document.documentElement.style.setProperty('--border', '#1c2335');
-    document.documentElement.style.setProperty('--accent', '#fff93e');
+    // Fortized Classic (default)
+    document.documentElement.style.setProperty('--bg',         '#07090e');
+    document.documentElement.style.setProperty('--rail',       '#04060a');
+    document.documentElement.style.setProperty('--sidebar',    '#0b0e15');
+    document.documentElement.style.setProperty('--channel',    '#0d1018');
+    document.documentElement.style.setProperty('--panel',      '#101420');
+    document.documentElement.style.setProperty('--panel2',     '#131822');
+    document.documentElement.style.setProperty('--panel3',     '#161c28');
+    document.documentElement.style.setProperty('--border',     '#1c2335');
+    document.documentElement.style.setProperty('--muted',      '#4e5a6f');
+    document.documentElement.style.setProperty('--muted-light','#7d8a9e');
   }
-  buildProfileView('appearance');
-  toast(themeId === 'dark_realm' ? '🌑 Dark Realm activated' : '⚡ Fortized theme restored', 'success');
+  const pm = document.getElementById('profile-main');
+  if (pm && pm.innerHTML.includes('appearance')) buildProfileView('appearance');
+  const toastMsgs = {dark_fortress:'🏰 Dark Fortress', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic'};
+  toast((toastMsgs[themeId]||'⚡ Theme')+' activated!', 'success');
 }
+
+// Apply on load
+(function() {
+  const saved = localStorage.getItem('ftz_appearance');
+  if (saved && saved !== 'fortized_classic') applyAppearance(saved);
+})();
 
 // Apply saved appearance on load
 (function() {
@@ -11666,6 +11696,20 @@ async function saveProfileTheme() {
   await saveUser();
   clearSettingsDirty();
   toast('🎨 Profile theme saved!', 'success');
+}
+
+
+async function buyAppearance(themeId, cost) {
+  const bal = CU?.onyx||0;
+  if (bal < cost) { toast('Not enough Onyx! Need '+cost+' ⬡','error'); return; }
+  const names = {onyx_pure:'Onyx Pure'};
+  showCustomConfirm(`Buy ${names[themeId]||themeId} for ${cost} Onyx?`, async () => {
+    CU.onyx = bal - cost;
+    CU.unlockedAppearances = [...(CU.unlockedAppearances||[]), themeId];
+    await saveUser(); updateOnyxDisplay();
+    applyAppearance(themeId);
+    toast(`✨ ${names[themeId]||themeId} unlocked!`, 'success');
+  });
 }
 
 </script>

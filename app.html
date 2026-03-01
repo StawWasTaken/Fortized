@@ -68,7 +68,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Userbar — Discord-style panel */
-.userbar{height:auto;background:transparent;border-top:none;display:flex;align-items:center;padding:8px;gap:0;flex-shrink:0;}
+.userbar{height:auto;background:var(--rail);border-top:1px solid rgba(255,255,255,.05);display:flex;align-items:center;padding:10px;gap:6px;flex-shrink:0;}
 .ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);cursor:pointer;transition:all .14s;}
 .ua-clickable:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);}
 .ua{width:38px;height:38px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;}
@@ -81,7 +81,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .ua-btns button{width:30px;height:30px;border-radius:8px;background:transparent;border:none;color:var(--muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .ua-btns button:hover{background:rgba(255,255,255,.07);color:#fff;}
 /* Own profile mini panel */
-.own-profile-panel{position:fixed;bottom:72px;left:10px;width:280px;background:#18191c;border:1px solid rgba(255,255,255,.12);border-radius:12px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
+.own-profile-panel{position:fixed;bottom:72px;left:10px;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
 .main{flex:1;min-width:0;display:flex;flex-direction:column;}
 .topbar{height:52px;background:rgba(8,11,18,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;}
 .topbar-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;white-space:nowrap;}
@@ -367,7 +367,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .settings-save-btn-ghost{display:inline-flex;align-items:center;gap:5px;background:transparent;color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:5px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
 .settings-save-btn-ghost:hover{border-color:rgba(255,255,255,.25);color:#fff;}
 /* Profile preview card */
-.profile-preview-card{background:#1e2130;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.profile-preview-card{background:var(--panel);border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4);}
 /* Font picker tiles */
 .font-tile{padding:10px 14px;border:1.5px solid rgba(255,255,255,.08);border-radius:10px;cursor:pointer;transition:all .15s;text-align:center;}
 .font-tile:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.03);}
@@ -459,7 +459,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .vc-btn.muted-btn{background:rgba(255,255,255,.08);color:var(--text);}
 .vc-btn.muted-btn.active{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);}
 .vc-btn.disc-btn{background:var(--red);color:#fff;}
-.emoji-picker-panel{position:fixed;width:380px;max-height:460px;background:#1e2130;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:0;z-index:9000;box-shadow:0 24px 64px rgba(0,0,0,.8);display:none;flex-direction:column;overflow:hidden;font-family:'DM Sans',sans-serif;}
+.emoji-picker-panel{position:fixed;width:440px;max-height:520px;background:#1e2130;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:0;z-index:9000;box-shadow:0 24px 64px rgba(0,0,0,.8);display:none;flex-direction:column;overflow:hidden;font-family:'DM Sans',sans-serif;}
 .emoji-picker-panel.show{display:flex;}
 /* Emoji autocomplete dropdown */
 .emoji-autocomplete{position:fixed;background:#1e2130;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:6px;z-index:9500;box-shadow:0 12px 40px rgba(0,0,0,.7);max-width:340px;display:none;}
@@ -475,7 +475,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .epp-cats::-webkit-scrollbar{height:0;}
 .epp-cat{width:30px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;flex-shrink:0;}
 .epp-cat:hover,.epp-cat.active{background:rgba(255,255,255,.08);}
-.epp-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:8px;max-height:200px;overflow-y:auto;}
+.epp-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;padding:10px;max-height:280px;overflow-y:auto;}
 .epp-emoji{width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
 .epp-emoji:hover{background:rgba(255,255,255,.08);}
 .epp-custom-section{padding:8px;border-top:1px solid var(--border);}
@@ -760,16 +760,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .ftz-notif-close:hover{color:#fff;}
 
 /* Mini profile preview (first click on avatar in chat) */
-.mini-profile-preview{position:fixed;background:#18191c;border:1px solid rgba(255,255,255,.1);border-radius:14px;z-index:4000;box-shadow:0 20px 60px rgba(0,0,0,.8);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);width:260px;}
-.mpp-banner{height:60px;position:relative;overflow:hidden;}
-.mpp-av{position:absolute;bottom:-24px;left:14px;width:56px;height:56px;border-radius:50%;overflow:hidden;border:4px solid #18191c;cursor:pointer;background:var(--panel2);}
+.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:14px;z-index:4000;box-shadow:0 20px 60px rgba(0,0,0,.8);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);width:280px;}
+.mpp-banner{height:65px;position:relative;overflow:hidden;}
+.mpp-av{position:absolute;bottom:-24px;left:14px;width:56px;height:56px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:var(--panel2);z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.5);}
 
 /* Profile themes (Radiance+) */
 .profile-theme-ring{position:absolute;inset:-3px;border-radius:50%;background:var(--pt-gradient,transparent);z-index:-1;}
 .profile-theme-card-border{background:var(--pt-gradient,rgba(255,255,255,.08));padding:2px;border-radius:20px;}
 
-.msg-text.emoji-only .msg-emoji{width:2em!important;height:2em!important;}
-.msg-text.emoji-only{font-size:30px!important;line-height:1.3;}
+.msg-text.emoji-only img{width:2.8em!important;height:2.8em!important;}
+.msg-text.emoji-only{font-size:27px!important;line-height:1.4;}
 </style>
 <style id="radiance-font-style"></style>
 <body>
@@ -810,11 +810,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   <div class="rail-btn" id="rb-home" data-tip="Home" onclick="showView('home')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
   </div>
-  <div class="rail-btn" id="rb-dms" data-tip="Messages" onclick="showView('dms')">
+  <div class="rail-btn" id="rb-dms" data-tip="Direct Messages" onclick="showView('dms')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-  </div>
-  <div class="rail-btn" id="rb-friends" data-tip="Friends" onclick="showView('friends')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
   </div>
   <!-- Notif badge hidden element (still tracks count) -->
   <span id="notif-badge" style="display:none;">0</span>
@@ -832,12 +829,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </div>
   <div style="flex:1;"></div>
-  <div class="rail-btn" data-tip="Switch Account" id="rb-switch-acct" onclick="toggleAccountSwitcher()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-  </div>
-  <div class="rail-btn" id="rb-profile" data-tip="Settings" onclick="showView('profile')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
-  </div>
 </div>
 <!-- ACCOUNT SWITCHER PANEL -->
 <div id="account-switcher-panel" style="display:none;" class="account-switcher">
@@ -1261,8 +1252,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 
 <!-- USER PROFILE -->
 <div class="modal-overlay" id="modal-user">
-  <div class="modal" style="max-width:440px;border-radius:18px;overflow:hidden;background:#1e2130;">
-    <div class="modal-body" id="user-modal-body" style="padding:0;background:#1e2130;"></div>
+  <div class="modal" style="max-width:520px;width:100%;border-radius:20px;overflow:hidden;background:var(--panel);border:1px solid var(--border);">
+    <div class="modal-body" id="user-modal-body" style="padding:0;background:transparent;"></div>
   </div>
 </div>
 
@@ -1729,7 +1720,7 @@ function updateTopbar(v) {
   if (!title) return;
   if (sep) sep.style.display = 'none';
   if (desc) desc.textContent = '';
-  const labels = {home:'🏠 Home',dms:'💬 Messages',friends:'👥 Friends',discover:'🧭 Discover',atelier:'💎 Atelier',profile:'⚙️ Settings',bsettings:'⚙️ Bastion Settings'};
+  const labels = {home:'🏠 Home',dms:'💬 Direct Messages',friends:'💬 Direct Messages',discover:'🧭 Discover',atelier:'💎 Atelier',profile:'⚙️ Settings',bsettings:'⚙️ Bastion Settings'};
   if (labels[v]) title.textContent = labels[v];
   else if (v==='bastion' && curBastion!==null) {
     const b = CU.bastions?.[curBastion];
@@ -1753,23 +1744,19 @@ function updateSidebar(v) {
     const bList = (CU?.bastions||[]).map((b,i)=>`<div class="ch-item" onclick="openBastion(${i})"><span style="font-size:16px;">${b.emblem||'🏰'}</span> ${escapeHTML(b.name)}</div>`).join('');
     scroll.innerHTML = `
       <div class="sec-label">Quick Nav</div>
-      <div class="ch-item" onclick="showView('dms')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Messages</div>
-      <div class="ch-item" onclick="showView('friends')">👥 Friends</div>
+      <div class="ch-item" onclick="showView('dms')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Direct Messages</div>
       <div class="ch-item" onclick="showView('discover')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg> Discover</div>
       <div class="ch-item" onclick="showView('atelier')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg> Atelier</div>
       ${bList?`<div class="sec-label">Your Bastions</div>`+bList:''}`;
     // renderHomePanel is called by showView with setTimeout - don't call twice
-  } else if (v==='dms') {
-    if (hdrTitle) hdrTitle.textContent = '💬 Messages';
+  } else if (v==='dms' || v==='friends') {
+    if (hdrTitle) hdrTitle.textContent = '💬 Direct Messages';
     if (hdrActs) hdrActs.innerHTML = `
       <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New DM">✏️</button>
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('gc')" style="background:transparent;border:none;color:var(--muted);font-size:14px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New Group Chat">👥</button>`;
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('gc')" style="background:transparent;border:none;color:var(--muted);font-size:14px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New Group Chat">👥</button>
+      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="Add Friend">➕</button>`;
     renderDMSidebar(scroll);
-  } else if (v==='friends') {
-    if (hdrTitle) hdrTitle.textContent = '👥 Friends';
-    if (hdrActs) hdrActs.innerHTML = `<button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="Add Friend">➕</button>`;
-    scroll.innerHTML = `<div class="ch-item active">👥 All Friends</div><div class="ch-item" onclick="openModal('modal-add-friend')">➕ Add Friend</div>`;
-    renderFriendsList();
+    if (v==='friends') { setTimeout(() => renderFriendsList('all'), 0); }
   } else if (v==='discover') {
     if (hdrTitle) hdrTitle.textContent = '🧭 Discover';
     scroll.innerHTML = `<div class="ch-item active">🌍 Public Bastions</div><div class="ch-item" onclick="openModal('modal-join-bastion')">🔗 Join by Code</div><div class="ch-item" onclick="openModal('modal-create-bastion')">✨ Create Bastion</div>`;
@@ -1934,6 +1921,9 @@ function renderDMSidebar(scroll) {
   const gcs = CU?.groupChats||[];
 
   let html = '';
+
+  // ── Friends quick link ──────────────────
+  html += `<div class="ch-item" style="margin:4px 8px;border-radius:10px;" onclick="document.getElementById('dm-chat-wrap').innerHTML='';renderFriendsList('all');">👥 Friends</div>`;
 
   // ── Direct Messages section ──────────────────
   html += '<div class="sec-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;">Direct Messages</div>';
@@ -3008,6 +2998,18 @@ function appendMessage(container, msg, context, prevAuthor) {
       ${buildMsgActions(msg,context,id)}`;
   }
   container.appendChild(row);
+  // Detect emoji-only messages and apply bigger size
+  const textEl = row.querySelector('.msg-text');
+  if (textEl) {
+    const rawText = (msg.text||'').trim();
+    // Check if message is only emojis (unicode emoji, :shortcodes:, or whitespace)
+    const stripped = rawText.replace(/:[a-zA-Z0-9_]+:/g, '').replace(/[\s\uFE0F\u200D]/g, '');
+    const emojiRegex = /^[\p{Emoji}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Emoji_Component}\p{Extended_Pictographic}\s\uFE0F\u200D]*$/u;
+    const isShortcodesOnly = /^(\s*:[a-zA-Z0-9_]+:\s*)+$/.test(rawText);
+    if (rawText.length > 0 && rawText.length <= 60 && (emojiRegex.test(stripped) || isShortcodesOnly || /^(\s*[\p{Emoji}\p{Extended_Pictographic}][\uFE0F\u200D\p{Emoji_Modifier}]*\s*)+$/u.test(rawText))) {
+      textEl.classList.add('emoji-only');
+    }
+  }
 }
 
 function copyMsgLink(msgId) {
@@ -3597,6 +3599,15 @@ function updateDOBField(){
 
   setInterval(async()=>{try{await updateNotifBadge();}catch{}},30000);
   initIdleDetection();
+  restoreCustomStatusTimer();
+  // Set online on app load (unless user chose invisible/dnd)
+  if (CU.status !== 'invisible' && CU.status !== 'dnd') {
+    CU.status = 'online';
+    broadcastStatus('online');
+  } else {
+    broadcastStatus(CU.status);
+  }
+  updateUserbar();
   initDragDrop();
   clearTimeout(_st);
   }catch(e){console.error('[Fortized]',e);if(_sl)_sl.style.display='none';clearTimeout(_st);}
@@ -4933,25 +4944,25 @@ function buildProfileView(tab) {
         <!-- RIGHT: Live preview -->
         <div style="overflow-y:auto;padding:24px 20px;background:#0f1118;border-left:1px solid rgba(255,255,255,.04);">
           <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:12px;">Live Preview</div>
-          <div class="profile-preview-card">
-            <div style="height:80px;position:relative;background:linear-gradient(135deg,#0f1830,#1a0f30);">
+          <div class="profile-preview-card" style="border-radius:16px;overflow:hidden;border:1px solid var(--border);background:var(--panel);">
+            <div style="height:100px;position:relative;background:linear-gradient(135deg,#0f1830,#1a0f30);">
               ${CU.banner ? `<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;">` : ''}
             </div>
-            <div style="padding:0 14px 14px;">
-              <div style="margin-top:-28px;margin-bottom:8px;">
-                <div style="width:56px;height:56px;border-radius:50%;border:3px solid #1e2130;overflow:hidden;background:#13161f;display:flex;align-items:center;justify-content:center;font-size:20px;">
+            <div style="padding:0 18px 18px;">
+              <div style="margin-top:-36px;margin-bottom:10px;position:relative;z-index:2;">
+                <div style="width:72px;height:72px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 16px rgba(0,0,0,.5);">
                   ${CU.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</span>`}
                 </div>
               </div>
-              <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:1px;">${escapeHTML(CU.displayName||CU.username)}</div>
-              <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:6px;">@${escapeHTML(CU.username)}</div>
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-                <span style="width:8px;height:8px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
-                <span style="font-size:12px;color:rgba(255,255,255,.5);">${statusLabels[CU.status||'online']||'Online'}</span>
+              <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;margin-bottom:2px;">${escapeHTML(CU.displayName||CU.username)}</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:8px;">@${escapeHTML(CU.username)}</div>
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+                <span style="width:10px;height:10px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
+                <span style="font-size:13px;color:rgba(255,255,255,.55);">${statusLabels[CU.status||'online']||'Online'}</span>
               </div>
-              ${cs?.text ? `<div style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;background:rgba(255,255,255,.06);border-radius:100px;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:6px;">${cs.emoji||''} ${escapeHTML(cs.text)}</div>` : ''}
-              ${CU.bio ? `<div style="font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.5;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:6px;border-left:2px solid rgba(255,249,62,.2);">${escapeHTML(CU.bio.slice(0,80))}${CU.bio.length>80?'…':''}</div>` : ''}
-              <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:3px;">${renderBadgesHTML(CU)}</div>
+              ${cs?.text ? `<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.06);border-radius:100px;font-size:12px;color:rgba(255,255,255,.5);margin-bottom:8px;">${cs.emoji||''} ${escapeHTML(cs.text)}</div>` : ''}
+              ${CU.bio ? `<div style="font-size:12.5px;color:rgba(255,255,255,.45);line-height:1.55;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:8px;border-left:2px solid rgba(255,249,62,.2);margin-bottom:8px;">${escapeHTML(CU.bio.slice(0,120))}${CU.bio.length>120?'…':''}</div>` : ''}
+              <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">${renderBadgesHTML(CU)}</div>
             </div>
           </div>
           <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,.2);line-height:1.5;">Click the avatar or banner above to change them.</div>
@@ -5049,18 +5060,24 @@ function buildProfileView(tab) {
   }
 
   else if (tab === 'appearance') {
-    const currentTheme = localStorage.getItem('ftz_appearance') || 'fortized';
+    const currentTheme = localStorage.getItem('ftz_appearance') || 'fortized_classic';
+    const unlocked = CU?.unlockedAppearances || [];
     const themes = [
-      {id:'fortized',   name:'Fortized',    desc:'The classic Fortized dark theme',            preview:['#07090e','#fff93e','#0b0e15']},
-      {id:'dark_realm', name:'Dark Realm',  desc:'Deeper darkness, minimal glow',              preview:['#030407','#5b7cff','#060810']},
+      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', preview:['#07090e','#fff93e','#0b0e15'], free:true},
+      {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   preview:['#030407','#fff93e','#060810'], free:true},
+      {id:'dark_fortress',    name:'Dark Fortress',    desc:'Ultra-dark immersive fortress',   preview:['#030407','#fff93e','#040508'], free:true},
+      {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', preview:['#010103','#fff93e','#020206'], locked:!unlocked.includes('onyx_pure')},
     ];
     main.innerHTML = `<div class="settings-panel">
       <div class="settings-section-title">APPEARANCE</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:16px;">Choose how Fortized looks for you.</div>
+      <div style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:4px;">Your client, your look.</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.3);margin-bottom:18px;">Choose how Fortized looks for you.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-        ${themes.map(t => `
-          <div onclick="applyAppearance('${t.id}')" style="border:2px solid ${currentTheme===t.id?'var(--accent)':'rgba(255,255,255,.08)'};border-radius:14px;overflow:hidden;cursor:pointer;transition:.14s;background:${currentTheme===t.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};" onmouseover="if('${t.id}'!=='${currentTheme}')this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="if('${t.id}'!=='${currentTheme}')this.style.borderColor='rgba(255,255,255,.08)'">
-            <!-- Preview -->
+        ${themes.map(t => {
+          const isActive = currentTheme===t.id;
+          const isLocked = t.locked;
+          return `
+          <div onclick="${isLocked?`toast('Purchase Onyx Pure from the Shop first!','info')`:`applyAppearance('${t.id}')`}" style="border:2px solid ${isActive?'var(--accent)':'rgba(255,255,255,.08)'};border-radius:14px;overflow:hidden;cursor:pointer;transition:.14s;background:${isActive?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};${isLocked?'opacity:.6;':''}position:relative;" onmouseover="if(!${isActive})this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="if(!${isActive})this.style.borderColor='${isActive?'var(--accent)':'rgba(255,255,255,.08)}'">
             <div style="height:80px;background:${t.preview[0]};display:flex;gap:4px;padding:8px;">
               <div style="width:20px;background:${t.preview[2]};border-radius:4px;"></div>
               <div style="flex:1;background:rgba(255,255,255,.04);border-radius:4px;padding:6px;">
@@ -5069,13 +5086,14 @@ function buildProfileView(tab) {
               </div>
             </div>
             <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;">
-              ${currentTheme===t.id?'<div style="width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>':'<div style="width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,.2);flex-shrink:0;"></div>'}
+              ${isActive?'<div style="width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>':'<div style="width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,.2);flex-shrink:0;"></div>'}
               <div>
-                <div style="font-size:13px;font-weight:700;color:${currentTheme===t.id?'var(--accent)':'#fff'};">${t.name}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.35);">${t.desc}${t.id!=='fortized'?' · Free':'· Default'}</div>
+                <div style="font-size:13px;font-weight:700;color:${isActive?'var(--accent)':'#fff'};">${t.name}${isLocked?' 🔒':''}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.35);">${t.desc}${t.free?' · Free':isLocked?' · 150 Onyx':''}</div>
               </div>
             </div>
-          </div>`).join('')}
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
   }
@@ -5166,12 +5184,7 @@ async function updateBanner(e) {
 }
 async function setMyStatus(s) {
   if (!CU?.username) return;
-  CU.status = s;
-  // Write to Firebase status path (visible to all)
-  try { await firebase.database().ref('statuses/' + CU.username).set(s); } catch {}
-  try { await FortizedSocial.setStatus(CU.username, s); } catch {}
-  await saveUser();
-  updateUserbar();
+  setUserStatus(s);
   // Re-render own profile panel if open
   const own = document.getElementById('own-profile-panel');
   if (own) { toggleOwnProfilePanel(); toggleOwnProfilePanel(); }
@@ -5325,25 +5338,25 @@ async function viewUserProfile(username) {
 
   modalEl.innerHTML = `
     <div style="${themeBorder}">
-    <div style="background:#1e2130;border-radius:${profileTheme?'18px':'0'};">
+    <div style="background:var(--panel);border-radius:${profileTheme?'18px':'0'};">
     <!-- Banner — tall -->
-    <div style="height:130px;background:${bannerBg};position:relative;overflow:hidden;border-radius:16px 16px 0 0;">
+    <div style="height:150px;background:${bannerBg};position:relative;overflow:hidden;border-radius:16px 16px 0 0;">
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.05) 40%,rgba(14,16,28,.8));"></div>
     </div>
-    <!-- Avatar row -->
-    <div style="padding:0 20px;margin-top:-44px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end;">
+    <!-- Avatar row — PFP overlaps banner -->
+    <div style="padding:0 24px;margin-top:-48px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:2;">
       <div style="position:relative;">
-        <div style="width:88px;height:88px;border-radius:50%;overflow:hidden;border:6px solid #1e2130;background:var(--panel2);box-shadow:0 4px 20px rgba(0,0,0,.6);">
-          ${buildAvatarHTML(u.pfp, u.displayName||u.username, 88)}
+        <div style="width:96px;height:96px;border-radius:50%;overflow:hidden;border:6px solid var(--panel);background:var(--panel2);box-shadow:0 4px 20px rgba(0,0,0,.6);">
+          ${buildAvatarHTML(u.pfp, u.displayName||u.username, 96)}
         </div>
-        <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:5px;right:5px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid #1e2130;"></span>
+        <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:5px;right:5px;width:18px;height:18px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;"></span>
       </div>
       <div style="display:flex;gap:6px;padding-bottom:6px;flex-wrap:wrap;justify-content:flex-end;">${renderBadgesHTML(u)}</div>
     </div>
     <!-- Name + status -->
-    <div style="padding:0 20px 14px;border-bottom:1px solid rgba(255,255,255,.07);">
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:2px;${u.displayFont&&u.displayFont!=='default'?`font-family:${getDisplayFont(u)};`:''}">${escapeHTML(u.displayName||u.username)}</div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:8px;">@${escapeHTML(u.username)}</div>
+    <div style="padding:0 24px 16px;border-bottom:1px solid rgba(255,255,255,.07);">
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:3px;${u.displayFont&&u.displayFont!=='default'?`font-family:${getDisplayFont(u)};`:''}">${escapeHTML(u.displayName||u.username)}</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:10px;">@${escapeHTML(u.username)}</div>
       <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:5px;">
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:10px;height:10px;border-radius:50%;background:${sc};"></span>
@@ -5353,32 +5366,32 @@ async function viewUserProfile(username) {
       </div>
     </div>
     <!-- Bio -->
-    ${u.bio ? `<div style="padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:6px;">About Me</div>
-      <div style="font-size:13.5px;color:rgba(255,255,255,.7);line-height:1.55;">${escapeHTML(u.bio.slice(0,200))}${u.bio.length>200?'…':''}</div>
+    ${u.bio ? `<div style="padding:14px 24px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:8px;">About Me</div>
+      <div style="font-size:14px;color:rgba(255,255,255,.7);line-height:1.6;">${escapeHTML(u.bio.slice(0,200))}${u.bio.length>200?'…':''}</div>
     </div>` : ''}
     <!-- Member since -->
-    ${u.joinedAt||u.createdAt ? `<div style="padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:4px;">Member Since</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.6);">${new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+    ${u.joinedAt||u.createdAt ? `<div style="padding:12px 24px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:5px;">Member Since</div>
+      <div style="font-size:13.5px;color:rgba(255,255,255,.6);">${new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
     </div>` : ''}
     <!-- Custom status / game activity -->
-    ${u.gameActivity?.name ? `<div style="padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.06);">
+    ${u.gameActivity?.name ? `<div style="padding:12px 24px;border-bottom:1px solid rgba(255,255,255,.06);">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:6px;">Playing a Game</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${u.gameActivity.icon||'🎮'}</div>
-        <div style="font-size:13.5px;font-weight:600;">${escapeHTML(u.gameActivity.name)}</div>
+        <div style="font-size:14px;font-weight:600;">${escapeHTML(u.gameActivity.name)}</div>
       </div>
     </div>` : ''}
     <!-- Socials -->
-    ${Object.values(socials).some(Boolean) ? `<div style="padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.06);">
+    ${Object.values(socials).some(Boolean) ? `<div style="padding:12px 24px;border-bottom:1px solid rgba(255,255,255,.06);">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:7px;">Connections</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;">
         ${[{k:'youtube',l:'YouTube',c:'#ff4444'},{k:'roblox',l:'Roblox',c:'#00b2ff'},{k:'spotify',l:'Spotify',c:'#1db954'},{k:'twitter',l:'X',c:'#1d9bf0'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid ${p.c}33;color:${p.c};font-size:12px;font-weight:600;text-decoration:none;">${p.l} →</a>`).join('')}
       </div>
     </div>` : ''}
     <!-- Actions -->
-    <div style="padding:14px 20px;">
+    <div style="padding:16px 24px;">
       ${isOwn ? `<button onclick="closeModal('modal-user');showView('profile')" style="width:100%;padding:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">✏️ Edit Profile</button>` :
        `<div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')" style="flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;min-width:120px;">Message</button>
@@ -7098,6 +7111,8 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
         ondragleave="document.querySelector('.drop-overlay').classList.remove('active')"
         ondrop="handleDropOnInput(event,'${inputId}')">
         <div class="chat-input-toolbar">
+          <span id="${inputId}-charcount" style="font-size:10.5px;color:rgba(255,255,255,.2);"></span>
+          <div style="flex:1;"></div>
           <button class="cit-btn" onclick="openFileUpload('${inputId}')" title="Upload File">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
           </button>
@@ -7106,8 +7121,6 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
           </button>
           <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF">GIF</button>
-          <div style="flex:1;"></div>
-          <span id="${inputId}-charcount" style="font-size:10.5px;color:rgba(255,255,255,.2);"></span>
         </div>
         <div class="chat-input-row" id="${inputId}-reply-bar" style="display:none;padding:5px 12px 0;border-bottom:1px solid rgba(255,255,255,.05);">
           <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;font-size:12px;color:rgba(255,255,255,.5);">
@@ -7374,65 +7387,171 @@ function buildAvatarWithStatus(pfp, name, size, status) {
   return `<div style="position:relative;display:inline-flex;flex-shrink:0;">${av}${dot}</div>`;
 }
 
-// ════════════════════════════════════════════
-// IDLE DETECTION
-// ════════════════════════════════════════════
-let _idleTimer = null;
-const IDLE_TIMEOUT = 15 * 60 * 1000; // 15 minutes
-let _prevStatus = null;
+// ════════════════════════════════════════════════════════════
+// STATUS SYSTEM — Full Implementation
+// ════════════════════════════════════════════════════════════
+// Layer 1: Core Status — Online / Away / DND / Offline (+ Invisible = appear offline)
+// Layer 2: Custom Status — emoji + text with duration
+// Layer 3: Activity Status — desktop app only (placeholder)
+// ════════════════════════════════════════════════════════════
 
+let _idleTimer = null;
+const IDLE_TIMEOUT = 7 * 60 * 1000; // 7 minutes of inactivity → Away
+let _prevStatus = null; // Stores pre-idle status to restore on activity
+let _manualStatus = null; // The status the user explicitly chose (persists through auto-away)
+let _customStatusTimer = null; // Timer for auto-clearing custom status
+
+// ── Broadcast status to Firebase (visible to all users) ──
+function broadcastStatus(status) {
+  if (!CU?.username) return;
+  // If invisible, broadcast as offline but keep internal state
+  const visible = status === 'invisible' ? 'offline' : status;
+  try { firebase.database().ref('statuses/' + CU.username).set(visible).catch(()=>{}); } catch {}
+  try { FortizedSocial.setStatus(CU.username, visible); } catch {}
+}
+
+// ── Set status (called by user action) ──
+function setUserStatus(status) {
+  if (!CU?.username) return;
+  _manualStatus = status;
+  CU.status = status;
+  _prevStatus = null; // Clear any auto-away restore
+  broadcastStatus(status);
+  saveUser().catch(()=>{});
+  updateUserbar();
+  refreshCustomStatusBubble();
+}
+
+// ── Idle / Activity Detection ──
 function resetIdleTimer() {
   if (_idleTimer) clearTimeout(_idleTimer);
+
+  // If user was auto-set to Away, restore previous status on activity
   if (CU?.status === 'away' && _prevStatus && _prevStatus !== 'away') {
-    // User came back — restore previous status
     CU.status = _prevStatus;
     _prevStatus = null;
-    try {
-    const savedStatus = CU.status || 'online';
-    const visibleStatus = savedStatus === 'invisible' ? 'offline' : savedStatus;
-    firebase.database().ref('statuses/' + CU.username).set(visibleStatus).catch(()=>{});
-    try { FortizedSocial.setStatus(CU.username, visibleStatus); } catch {}
-    if (savedStatus !== 'invisible') CU.status = 'online';
-  } catch {}
+    broadcastStatus(CU.status);
     updateUserbar();
   }
+
+  // DND and Invisible override auto-away entirely
   _idleTimer = setTimeout(() => {
-    if (CU && CU.status !== 'dnd' && CU.status !== 'invisible') {
-      _prevStatus = CU.status || 'online';
-      CU.status = 'away';
-      try { FortizedSocial.setStatus(CU.username, 'away'); } catch {}
-      updateUserbar();
-    }
+    if (!CU) return;
+    if (CU.status === 'dnd' || CU.status === 'invisible') return;
+    // Save current status and switch to away
+    _prevStatus = CU.status || 'online';
+    CU.status = 'away';
+    broadcastStatus('away');
+    updateUserbar();
   }, IDLE_TIMEOUT);
 }
 
 function initIdleDetection() {
-  ['mousemove','keydown','click','touchstart','scroll'].forEach(ev => {
+  // Track user interactions: typing, scrolling, clicking, mouse movement
+  ['mousemove','keydown','click','touchstart','scroll','mousedown'].forEach(ev => {
     document.addEventListener(ev, resetIdleTimer, { passive: true });
   });
   resetIdleTimer();
-  // Auto offline when tab hidden / page closed
+
+  // Tab visibility → handle session presence
   document.addEventListener('visibilitychange', () => {
     if (!CU?.username) return;
     if (document.hidden) {
-      try { FortizedSocial.setStatus(CU.username, 'offline'); } catch {}
+      // Tab hidden: if not DND/invisible, don't immediately go offline
+      // Just let the idle timer handle it (user might have multiple tabs)
+      // But start a shorter timer for tab-hidden
+      if (_idleTimer) clearTimeout(_idleTimer);
+      if (CU.status !== 'dnd' && CU.status !== 'invisible') {
+        _idleTimer = setTimeout(() => {
+          if (!CU || CU.status === 'dnd' || CU.status === 'invisible') return;
+          _prevStatus = CU.status || 'online';
+          CU.status = 'away';
+          broadcastStatus('away');
+          updateUserbar();
+        }, 60000); // 1 minute when tab hidden
+      }
     } else {
-      const restoreStatus = CU.status==='invisible' ? 'invisible' : (CU.status||'online');
-      try { FortizedSocial.setStatus(CU.username, restoreStatus); } catch {}
+      // Tab visible again: restore
+      resetIdleTimer();
+      if (CU.status === 'away' && _prevStatus) {
+        CU.status = _prevStatus;
+        _prevStatus = null;
+      }
+      broadcastStatus(CU.status);
+      updateUserbar();
     }
   });
+
+  // Page close → go offline
   window.addEventListener('beforeunload', () => {
     if (CU?.username) {
-      try { FortizedSocial.setStatus(CU.username, 'offline'); } catch {}
-      // Sync XHR as beacon
+      broadcastStatus('offline');
       try {
         navigator.sendBeacon && navigator.sendBeacon(
           'https://fortized-5ffcf-default-rtdb.europe-west1.firebasedatabase.app/statuses/'+CU.username+'.json',
-          JSON.stringify('offline')
+          JSON.stringify(CU.status === 'invisible' ? '"offline"' : '"offline"')
         );
       } catch {}
     }
   });
+}
+
+// ── Custom Status with auto-clear duration ──
+function setCustomStatusWithDuration(emoji, text, duration) {
+  // duration: 'forever' | '30m' | '1h' | '4h' | 'today'
+  if (!text) return;
+  const cs = { emoji: emoji || '😊', text, set: new Date().toISOString() };
+  if (duration && duration !== 'forever') {
+    let ms;
+    if (duration === '30m') ms = 30 * 60000;
+    else if (duration === '1h') ms = 60 * 60000;
+    else if (duration === '4h') ms = 4 * 60 * 60000;
+    else if (duration === 'today') {
+      const now = new Date();
+      const eod = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      ms = eod - now;
+    }
+    if (ms) {
+      cs.clearAt = new Date(Date.now() + ms).toISOString();
+      // Set auto-clear timer
+      if (_customStatusTimer) clearTimeout(_customStatusTimer);
+      _customStatusTimer = setTimeout(() => {
+        delete CU.customStatus;
+        saveUser().catch(()=>{});
+        refreshCustomStatusBubble();
+        try { FortizedSocial.setCustomStatus && FortizedSocial.setCustomStatus(CU.username, null); } catch {}
+        toast('Custom status cleared', 'info');
+      }, ms);
+    }
+  }
+  CU.customStatus = cs;
+  saveUser().catch(()=>{});
+  try { FortizedSocial.setCustomStatus && FortizedSocial.setCustomStatus(CU.username, cs); } catch {}
+  refreshCustomStatusBubble();
+}
+
+// ── Check & restore custom status timer on load ──
+function restoreCustomStatusTimer() {
+  const cs = CU?.customStatus;
+  if (!cs?.clearAt) return;
+  const remaining = new Date(cs.clearAt) - Date.now();
+  if (remaining <= 0) {
+    // Already expired
+    delete CU.customStatus;
+    saveUser().catch(()=>{});
+    return;
+  }
+  if (_customStatusTimer) clearTimeout(_customStatusTimer);
+  _customStatusTimer = setTimeout(() => {
+    delete CU.customStatus;
+    saveUser().catch(()=>{});
+    refreshCustomStatusBubble();
+    try { FortizedSocial.setCustomStatus && FortizedSocial.setCustomStatus(CU.username, null); } catch {}
+    toast('Custom status cleared', 'info');
+  }, remaining);
+}
+
+// subscribeProfileStatus — see main implementation below (line ~9348)
 }
 
 // ════════════════════════════════════════════
@@ -8085,7 +8204,7 @@ function openGiphyPicker(inputId) {
   const picker = document.createElement('div');
   picker.id = 'giphy-picker';
   picker.style.cssText = `position:fixed;left:${Math.max(8,rect.left)}px;bottom:${window.innerHeight-rect.top+8}px;`
-    + 'width:380px;max-height:460px;background:var(--panel);border:1px solid var(--border);border-radius:18px;z-index:8000;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.7);backdrop-filter:blur(20px);';
+    + 'width:440px;max-height:520px;background:var(--panel);border:1px solid var(--border);border-radius:18px;z-index:8000;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.7);backdrop-filter:blur(20px);';
 
   picker.innerHTML = `
     <div style="padding:12px 14px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
@@ -8358,7 +8477,13 @@ function openStatusPicker() {
       <div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:14px;">Custom Status Text</div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
         <button onclick="pickStatusEmoji()" id="status-emoji-btn" style="width:34px;height:34px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);cursor:pointer;font-size:16px;flex-shrink:0;">${cur.emoji||'😊'}</button>
-        <input id="status-text-input" class="field-input" placeholder="What's on your mind?" value="${escapeHTML(cur.text||'')}" style="flex:1;" maxlength="60">
+        <input id="status-text-input" class="field-input" placeholder="What's on your mind?" value="${escapeHTML(cur.text||'')}" style="flex:1;" maxlength="100">
+      </div>
+      <div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Clear After</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;">
+        ${[{id:'30m',label:'30 min'},{id:'1h',label:'1 hour'},{id:'4h',label:'4 hours'},{id:'today',label:'Today'},{id:'forever',label:"Don't Clear"}].map(d=>
+          '<button class="status-dur-btn" data-dur="'+d.id+'" onclick="document.querySelectorAll(\\'.status-dur-btn\\').forEach(b=>b.style.background=\\'transparent\\');this.style.background=\\'rgba(255,249,62,.12)\\';this.style.borderColor=\\'rgba(255,249,62,.3)\\'" style="padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;transition:.12s;">'+d.label+'</button>'
+        ).join('')}
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn-a" style="flex:1;" onclick="saveCustomStatus()">Save</button>
@@ -8371,12 +8496,10 @@ function openStatusPicker() {
 }
 
 function pickStatusMode(mode, el) {
-  CU.status = mode;
   document.querySelectorAll('.sp-mode-opt').forEach(o => o.classList.toggle('sel', o.dataset.mode===mode));
-  FortizedSocial.setStatus(CU.username, mode).catch(()=>{});
-  saveUser().catch(()=>{});
-  updateUserbar();
-  toast(`Status: ${mode}`, 'info');
+  setUserStatus(mode);
+  const labels = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible'};
+  toast(`Status: ${labels[mode]||mode}`, 'info');
 }
 
 
@@ -8392,11 +8515,11 @@ async function saveCustomStatus() {
   const emoji = (document.getElementById('status-emoji-btn')||{}).textContent||'😊';
   const text = ((document.getElementById('status-text-input')||{}).value||'').trim();
   if (!text) { toast('Add some text!','error'); return; }
-  CU.customStatus = {emoji, text, set:new Date().toISOString()};
-  await saveUser();
-  try { await FortizedSocial.setCustomStatus&&FortizedSocial.setCustomStatus(CU.username, CU.customStatus); } catch {}
-  document.getElementById('ftz-status-picker')&&document.getElementById('ftz-status-picker').remove();
-  refreshCustomStatusBubble();
+  // Get selected duration
+  const durBtn = document.querySelector('.status-dur-btn[style*="rgba(255,249,62"]');
+  const duration = durBtn ? durBtn.dataset.dur : 'forever';
+  setCustomStatusWithDuration(emoji, text, duration);
+  document.getElementById('ftz-status-picker')?.remove();
   buildProfileView('myprofile');
   toast('Status updated!','success');
 }
@@ -10164,21 +10287,37 @@ function renderAtelierTab(tab) {
         ${['featured','browse','coming_soon'].map(t=>`
           <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:14px 18px;background:transparent;border:none;border-bottom:2px solid ${shopTab===t?'var(--accent)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.4)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.14s;white-space:nowrap;">${t==='featured'?'Featured':t==='browse'?'Browse':'Coming Soon'}</button>`).join('')}
         <div style="flex:1;"></div>
-        <div style="font-size:12px;color:rgba(255,255,255,.3);padding-right:4px;">${bal} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"> balance</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.3);padding-right:4px;">${bal} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"> balance</div>
       </div>
 
       <div style="padding:24px 28px 60px;">
         ${shopTab==='featured'?`
-          <!-- Featured hero card -->
-          <div style="background:linear-gradient(135deg,#0f1420,#1a1030,#0d1828);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:40px;text-align:center;margin-bottom:24px;position:relative;overflow:hidden;">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(167,139,250,.08),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(96,165,250,.06),transparent 60%);pointer-events:none;"></div>
-            <div style="font-size:60px;margin-bottom:16px;position:relative;">🛍️</div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px;position:relative;">Shop Coming Soon</div>
-            <div style="font-size:14px;color:rgba(255,255,255,.45);max-width:400px;margin:0 auto 20px;line-height:1.65;position:relative;">Avatar decorations, profile effects, and more — animated items that work just like Discord's decorations.</div>
-            <button style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:100px;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;padding:9px 22px;cursor:pointer;" onclick="toast('You\\'ll be notified when the Shop launches!','success')">🔔 Notify Me</button>
-          </div>
-          <!-- 3 preview locked cards -->
-          <div class="atel-section-hdr">Upcoming Items</div>
+          <!-- Featured: Onyx Pure Appearance -->
+          <div class="atel-section-hdr">Appearances</div>
+          ${(function(){
+            const onyxOwned = (CU?.unlockedAppearances||[]).includes('onyx_pure');
+            return '<div style="background:linear-gradient(135deg,#010103,#08061a,#0e0a22);border:1.5px solid rgba(140,100,220,.2);border-radius:18px;overflow:hidden;margin-bottom:24px;cursor:pointer;transition:border-color .2s,box-shadow .2s;" onmouseover="this.style.borderColor=\\'rgba(140,100,220,.4)\\';this.style.boxShadow=\\'0 4px 32px rgba(100,60,180,.15)\\';" onmouseout="this.style.borderColor=\\'rgba(140,100,220,.2)\\';this.style.boxShadow=\\'none\\';">'
+              +'<div style="height:120px;background:linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%);display:flex;gap:4px;padding:14px;position:relative;">'
+              +'<div style="width:24px;background:#020206;border-radius:5px;"></div>'
+              +'<div style="flex:1;background:rgba(255,255,255,.03);border-radius:5px;padding:10px;">'
+              +'<div style="height:7px;background:#fff93e;border-radius:4px;width:45%;margin-bottom:5px;"></div>'
+              +'<div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;width:75%;"></div>'
+              +'</div>'
+              +'<div style="position:absolute;bottom:10px;right:14px;font-size:11px;color:rgba(140,100,220,.6);font-weight:700;letter-spacing:.05em;">ONYX PURE</div>'
+              +'</div>'
+              +'<div style="padding:18px 20px;display:flex;align-items:center;gap:14px;">'
+              +'<div style="flex:1;">'
+              +'<div style="font-family:\\'Syne\\',sans-serif;font-size:17px;font-weight:800;color:#fff;margin-bottom:4px;">Onyx Pure</div>'
+              +'<div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.5;">The darkest appearance. Deeper than Dark Fortress with a subtle gradient towards dark purple. Pure immersion.</div>'
+              +'</div>'
+              +(onyxOwned
+                ? '<div style="padding:10px 20px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);border-radius:12px;color:#3ecf6e;font-family:\\'Syne\\',sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'
+                : '<button onclick="event.stopPropagation();buyAppearance(\\'onyx_pure\\',150)" style="padding:10px 20px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:\\'Syne\\',sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;"><img src=\\'Onyx.png\\' style=\\'width:16px;height:16px;object-fit:contain;\\'> 150 Onyx</button>')
+              +'</div></div>';
+          })()}
+
+          <!-- More coming soon -->
+          <div class="atel-section-hdr" style="margin-top:20px;">Upcoming Items</div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
             ${[{n:'Avatar Frames',i:'🖼️',c:'#a78bfa'},{n:'Profile Effects',i:'✨',c:'#60a5fa'},{n:'Name Colors',i:'🎨',c:'#fb923c'}].map(it=>`
               <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;position:relative;">
@@ -10722,6 +10861,22 @@ function setupEmojiAutocomplete(inputId) {
 function handleEmojiAutocomplete(ta) {
   const val = ta.value;
   const pos = ta.selectionStart;
+
+  // Auto-replace completed :shortcode: patterns
+  const completedMatch = val.slice(0, pos).match(/:([a-zA-Z0-9_]+):$/);
+  if (completedMatch) {
+    const name = completedMatch[1].toLowerCase();
+    const emoji = EMOJI_SHORTCODES[name];
+    if (emoji) {
+      const before = val.slice(0, pos - completedMatch[0].length);
+      const after = val.slice(pos);
+      ta.value = before + emoji + after;
+      ta.selectionStart = ta.selectionEnd = before.length + emoji.length;
+      hideEmojiAc();
+      return;
+    }
+  }
+
   // Find the last ':' before cursor that starts a shortcode
   let colonPos = -1;
   for (let i = pos-1; i >= Math.max(0, pos-30); i--) {
@@ -10773,16 +10928,42 @@ function renderAcPanel(ta) {
   const rect = ta.getBoundingClientRect();
   panel.style.cssText = `position:fixed;bottom:${window.innerHeight-rect.top+6}px;left:${rect.left}px;background:#1e2130;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:6px;z-index:9500;box-shadow:0 12px 40px rgba(0,0,0,.7);min-width:260px;max-width:380px;display:flex;flex-direction:column;gap:2px;`;
   
-  panel.innerHTML = `
-    <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:2px 6px 5px;">Emoji Matching <span style="color:rgba(255,249,62,.7);">:${escapeHTML(ta.value.slice(_acStartPos+1, ta.selectionStart))}:</span></div>
-    ${_acResults.map((r, i) => `
-      <div onclick="applyEmojiAcById(${i})" style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;background:${i===_acSelected?'rgba(255,249,62,.12)':'transparent'};" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='${i===_acSelected?'rgba(255,249,62,.12)':'transparent'}'">
-        ${r.type==='unicode' ? `<img src="${emojiToTwemojiUrl(r.emoji)}" style="width:26px;height:26px;object-fit:contain;" onerror="this.outerHTML='<span style=\"font-size:22px;line-height:1;\">${r.emoji}</span>'">` : `<img src="${escapeHTML(r.url||'')}" style="width:24px;height:24px;object-fit:contain;" onerror="this.closest('[onclick]').style.display='none';this.style.display='none'">`}
-        <span style="font-family:monospace;font-size:12.5px;color:rgba(255,255,255,.7);">:${escapeHTML(r.name)}:</span>
-        ${r.type==='ftz'?'<span style="font-size:9px;background:rgba(255,249,62,.12);color:var(--accent);padding:1px 6px;border-radius:4px;margin-left:auto;">Fortized</span>':''}
-      </div>
-    `).join('')}
-  `;
+  const queryText = escapeHTML(ta.value.slice(_acStartPos+1, ta.selectionStart));
+  panel.innerHTML = '';
+  // Header
+  const hdr = document.createElement('div');
+  hdr.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:2px 6px 5px;';
+  hdr.innerHTML = 'Emoji Matching <span style="color:rgba(255,249,62,.7);">:' + queryText + ':</span>';
+  panel.appendChild(hdr);
+  _acResults.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.onclick = () => applyEmojiAcById(i);
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;background:' + (i===_acSelected ? 'rgba(255,249,62,.12)' : 'transparent') + ';';
+    row.onmouseover = () => { row.style.background = 'rgba(255,255,255,.07)'; };
+    row.onmouseout = () => { row.style.background = i===_acSelected ? 'rgba(255,249,62,.12)' : 'transparent'; };
+    const img = document.createElement('img');
+    if (r.type === 'unicode') {
+      img.src = emojiToTwemojiUrl(r.emoji);
+      img.style.cssText = 'width:26px;height:26px;object-fit:contain;';
+      img.onerror = function() { this.style.display = 'none'; };
+    } else {
+      img.src = r.url || '';
+      img.style.cssText = 'width:24px;height:24px;object-fit:contain;';
+      img.onerror = function() { this.style.display = 'none'; };
+    }
+    row.appendChild(img);
+    const label = document.createElement('span');
+    label.style.cssText = 'font-family:monospace;font-size:12.5px;color:rgba(255,255,255,.7);';
+    label.textContent = ':' + r.name + ':';
+    row.appendChild(label);
+    if (r.type === 'ftz') {
+      const badge = document.createElement('span');
+      badge.style.cssText = 'font-size:9px;background:rgba(255,249,62,.12);color:var(--accent);padding:1px 6px;border-radius:4px;margin-left:auto;';
+      badge.textContent = 'Fortized';
+      row.appendChild(badge);
+    }
+    panel.appendChild(row);
+  });
   panel.style.display = 'flex';
   panel.style.flexDirection = 'column';
 }
@@ -11479,18 +11660,18 @@ function toggleOwnProfilePanel() {
   panel.className = 'own-profile-panel';
   panel.innerHTML = `
     <!-- Banner + avatar -->
-    <div style="height:60px;position:relative;background:${CU?.banner?`url('${CU.banner}') center/cover no-repeat`:'linear-gradient(135deg,#1a1a2e,#0f3460)'};cursor:pointer;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')">
+    <div style="height:70px;position:relative;background:${CU?.banner?`url('${CU.banner}') center/cover no-repeat`:'linear-gradient(135deg,#1a1a2e,#0f3460)'};cursor:pointer;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')">
       <div style="position:absolute;inset:0;background:rgba(0,0,0,.3);"></div>
     </div>
-    <div style="padding:0 14px 12px;border-bottom:1px solid rgba(255,255,255,.07);">
-      <div style="margin-top:-22px;margin-bottom:8px;display:flex;align-items:flex-end;gap:8px;">
-        <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:4px solid #18191c;cursor:pointer;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')">
-          ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:20px;font-family:'Syne',sans-serif;font-weight:800;">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
+    <div style="padding:0 16px 14px;border-bottom:1px solid rgba(255,255,255,.07);">
+      <div style="margin-top:-28px;margin-bottom:10px;display:flex;align-items:flex-end;gap:8px;position:relative;z-index:2;">
+        <div style="width:60px;height:60px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.5);" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')">
+          ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;font-family:'Syne',sans-serif;font-weight:800;">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
         </div>
       </div>
-      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')">${escapeHTML(CU?.displayName||CU?.username||'')}</div>
-      <div style="font-size:11.5px;color:rgba(255,255,255,.4);">@${escapeHTML(CU?.username||'')}</div>
-      ${cs?.text?`<div style="display:flex;align-items:center;gap:5px;margin-top:5px;padding:4px 9px;background:rgba(255,255,255,.06);border-radius:100px;display:inline-flex;font-size:11.5px;color:rgba(255,255,255,.6);">${cs.emoji||''} ${escapeHTML(cs.text)}</div>`:''}
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;cursor:pointer;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')">${escapeHTML(CU?.displayName||CU?.username||'')}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.4);">@${escapeHTML(CU?.username||'')}</div>
+      ${cs?.text?`<div style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;background:rgba(255,255,255,.06);border-radius:100px;font-size:12px;color:rgba(255,255,255,.6);">${cs.emoji||''} ${escapeHTML(cs.text)}</div>`:''}
     </div>
     <!-- Status options — Discord style with descriptions -->
     <div style="padding:6px 6px 2px;">
@@ -11519,10 +11700,6 @@ function toggleOwnProfilePanel() {
       <button onclick="closeOwnProfilePanel();showView('profile')" style="width:100%;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.7);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.14s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
         Edit Profile
-      </button>
-      <button onclick="closeOwnProfilePanel();toggleAccountSwitcher()" style="width:100%;padding:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;color:rgba(255,255,255,.5);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;margin-top:4px;transition:.14s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-        Switch Accounts
       </button>
     </div>`;
   
@@ -11621,33 +11798,48 @@ async function showMiniProfilePreview(username, anchorEl) {
 
 
 function applyAppearance(themeId) {
+  // Migrate old 'fortized' id to 'fortized_classic'
+  if (themeId === 'fortized') themeId = 'fortized_classic';
   localStorage.setItem('ftz_appearance', themeId);
-  // ALL themes keep Fortized yellow
+  // ALL themes keep Fortized yellow accent
   document.documentElement.style.setProperty('--accent',     '#fff93e');
   document.documentElement.style.setProperty('--accent-dim', 'rgba(255,249,62,.1)');
   document.documentElement.style.setProperty('--accent-mid', 'rgba(255,249,62,.22)');
-  if (themeId === 'dark_fortress') {
+  if (themeId === 'dark_realm') {
     document.documentElement.style.setProperty('--bg',         '#030407');
     document.documentElement.style.setProperty('--rail',       '#020304');
-    document.documentElement.style.setProperty('--sidebar',    '#040508');
-    document.documentElement.style.setProperty('--channel',    '#050609');
-    document.documentElement.style.setProperty('--panel',      '#070a0e');
-    document.documentElement.style.setProperty('--panel2',     '#090c12');
-    document.documentElement.style.setProperty('--panel3',     '#0b0f14');
+    document.documentElement.style.setProperty('--sidebar',    '#050710');
+    document.documentElement.style.setProperty('--channel',    '#060810');
+    document.documentElement.style.setProperty('--panel',      '#080b14');
+    document.documentElement.style.setProperty('--panel2',     '#0a0e18');
+    document.documentElement.style.setProperty('--panel3',     '#0d111c');
+    document.documentElement.style.setProperty('--border',     '#141a2a');
+    document.documentElement.style.setProperty('--muted',      '#3a4458');
+    document.documentElement.style.setProperty('--muted-light','#5a6a7e');
+  } else if (themeId === 'dark_fortress') {
+    document.documentElement.style.setProperty('--bg',         '#020305');
+    document.documentElement.style.setProperty('--rail',       '#010203');
+    document.documentElement.style.setProperty('--sidebar',    '#030406');
+    document.documentElement.style.setProperty('--channel',    '#040508');
+    document.documentElement.style.setProperty('--panel',      '#05070b');
+    document.documentElement.style.setProperty('--panel2',     '#070a0f');
+    document.documentElement.style.setProperty('--panel3',     '#090d13');
     document.documentElement.style.setProperty('--border',     '#0d1220');
     document.documentElement.style.setProperty('--muted',      '#3a4458');
     document.documentElement.style.setProperty('--muted-light','#5a6a7e');
   } else if (themeId === 'onyx_pure') {
     document.documentElement.style.setProperty('--bg',         '#010103');
-    document.documentElement.style.setProperty('--rail',       '#010103');
+    document.documentElement.style.setProperty('--rail',       '#010102');
     document.documentElement.style.setProperty('--sidebar',    '#020206');
     document.documentElement.style.setProperty('--channel',    '#030308');
-    document.documentElement.style.setProperty('--panel',      '#04040a');
-    document.documentElement.style.setProperty('--panel2',     '#05050c');
-    document.documentElement.style.setProperty('--panel3',     '#06060e');
-    document.documentElement.style.setProperty('--border',     '#0c0c1a');
+    document.documentElement.style.setProperty('--panel',      '#04040c');
+    document.documentElement.style.setProperty('--panel2',     '#06060f');
+    document.documentElement.style.setProperty('--panel3',     '#080812');
+    document.documentElement.style.setProperty('--border',     '#0e0e1e');
     document.documentElement.style.setProperty('--muted',      '#2a2a3e');
     document.documentElement.style.setProperty('--muted-light','#44445e');
+    // Low gradient towards dark purple
+    document.body.style.background = 'linear-gradient(170deg, #010103 0%, #08061a 100%)';
   } else {
     // Fortized Classic (default)
     document.documentElement.style.setProperty('--bg',         '#07090e');
@@ -11661,17 +11853,13 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--muted',      '#4e5a6f');
     document.documentElement.style.setProperty('--muted-light','#7d8a9e');
   }
+  // Reset body gradient if not onyx_pure
+  if (themeId !== 'onyx_pure') document.body.style.background = '';
   const pm = document.getElementById('profile-main');
   if (pm && pm.innerHTML.includes('appearance')) buildProfileView('appearance');
-  const toastMsgs = {dark_fortress:'🏰 Dark Fortress', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic'};
+  const toastMsgs = {dark_fortress:'🏰 Dark Fortress', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic'};
   toast((toastMsgs[themeId]||'⚡ Theme')+' activated!', 'success');
 }
-
-// Apply on load
-(function() {
-  const saved = localStorage.getItem('ftz_appearance');
-  if (saved && saved !== 'fortized_classic') applyAppearance(saved);
-})();
 
 // Apply saved appearance on load
 (function() {

@@ -67,21 +67,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .fi-info{flex:1;min-width:0;}
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* Userbar — Discord-style panel */
-.userbar{height:auto;background:var(--rail);border-top:1px solid rgba(255,255,255,.05);display:flex;align-items:center;padding:10px;gap:6px;flex-shrink:0;}
-.ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);cursor:pointer;transition:all .14s;}
-.ua-clickable:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);}
-.ua{width:38px;height:38px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;}
-.ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;}
-.ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;border:2.5px solid var(--rail);flex-shrink:0;}
+/* Userbar — matches chatbar style */
+.userbar{height:auto;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;display:flex;align-items:center;padding:6px 8px;gap:6px;flex-shrink:0;margin:4px 8px 8px;}
+.ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:6px 8px;border-radius:10px;background:transparent;border:none;cursor:pointer;transition:all .14s;}
+.ua-clickable:hover{background:rgba(255,255,255,.06);}
+.ua{width:32px;height:32px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;}
+.ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
+.ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--sidebar);flex-shrink:0;}
 .ua-info{flex:1;min-width:0;}
-.ua-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ua-status-text{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.ua-name{font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ua-status-text{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
 .ua-btns{display:flex;gap:2px;flex-shrink:0;}
-.ua-btns button{width:30px;height:30px;border-radius:8px;background:transparent;border:none;color:var(--muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.ua-btns button{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .ua-btns button:hover{background:rgba(255,255,255,.07);color:#fff;}
 /* Own profile mini panel */
-.own-profile-panel{position:fixed;bottom:72px;left:10px;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
+.own-profile-panel{position:fixed;bottom:64px;left:10px;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
 .main{flex:1;min-width:0;display:flex;flex-direction:column;}
 .topbar{height:52px;background:rgba(8,11,18,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;}
 .topbar-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;white-space:nowrap;}
@@ -175,7 +175,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .msg-row.msg-editing{background:rgba(255,249,62,.04);}
 .msg-av-wrap{width:54px;min-width:54px;display:flex;justify-content:center;padding-top:1px;flex-shrink:0;}
 .msg-av-inner{width:40px;height:40px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;flex-shrink:0;}
-.msg-av-inner img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.msg-av-inner img{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
 .msg-time-small{font-size:10.5px;color:var(--muted);white-space:nowrap;padding-top:5px;min-width:44px;visibility:hidden;text-align:right;}
 .msg-row.msg-cont:hover .msg-time-small{visibility:visible;}
 .msg-content-col{flex:1;min-width:0;}
@@ -248,7 +248,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .ml-entry{display:flex;align-items:center;gap:8px;padding:5px 9px 5px 12px;margin:1px 4px;border-radius:10px;cursor:pointer;transition:background .1s;}
 .ml-entry:hover{background:rgba(255,255,255,.05);}
 .ml-av{width:30px;height:30px;border-radius:50%;background:var(--panel);border:1px solid var(--border);font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;}
-.ml-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.ml-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
 .ml-status{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--channel);}
 .ml-name{font-size:12.5px;font-weight:600;color:var(--muted-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .discover-scroll{flex:1;overflow-y:auto;padding:28px;}
@@ -768,8 +768,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .profile-theme-ring{position:absolute;inset:-3px;border-radius:50%;background:var(--pt-gradient,transparent);z-index:-1;}
 .profile-theme-card-border{background:var(--pt-gradient,rgba(255,255,255,.08));padding:2px;border-radius:20px;}
 
-.msg-text.emoji-only img{width:2.8em!important;height:2.8em!important;}
-.msg-text.emoji-only{font-size:27px!important;line-height:1.4;}
+/* Transparent PFP support — don't add opaque bg behind transparent avatars */
+.ua img,.fa img,.ml-av img,.msg-av-inner img,.mpp-av img,.profile-av-big img,.chat-welcome .w-av img,.ftz-notif-av img,.voice-avatar-ring img{background:transparent!important;}
+
+.msg-text.emoji-only img{width:1.4em!important;height:1.4em!important;}
+.msg-text.emoji-only{font-size:20px!important;line-height:1.4;}
 </style>
 <style id="radiance-font-style"></style>
 <body>
@@ -873,10 +876,13 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     </div>
     <div class="ua-btns">
       <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <button onclick="toggleDeafen()" id="deafen-btn" title="Deafen/Undeafen">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
       </button>
       <button onclick="showView('profile')" title="Settings">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
       </button>
     </div>
   </div>
@@ -1793,11 +1799,11 @@ function updateUserbar() {
   const STATUS_COLORS = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
   const STATUS_LABELS = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible',offline:'Offline'};
   const st = CU.status || 'online';
-  // Avatar — 38px, no extra border
+  // Avatar — 32px to match chatbar compact style
   if (ua) {
     const inner = CU.pfp
-      ? `<img src="${CU.pfp}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">`
-      : `<div style="width:38px;height:38px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:15px;font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</div>`;
+      ? `<img src="${CU.pfp}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">`
+      : `<div style="width:32px;height:32px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:13px;font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</div>`;
     // Keep status dot
     const dot = ua.querySelector('#ua-status-dot');
     ua.innerHTML = inner;
@@ -2899,17 +2905,24 @@ async function sendChannelMsg(idx) {
 function renderMessages(container, msgs, context) {
   container.querySelectorAll('.msg-row,.date-div').forEach(el=>el.remove());
   if (!msgs.length) return;
-  let lastDate=null, lastAuthor=null;
+  let lastDate=null, lastAuthor=null, lastTimestamp=null;
   msgs.forEach(msg=>{
     const d=msg.timestamp?new Date(msg.timestamp).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'Today';
     if (d!==lastDate) {
       const div=document.createElement('div');
       div.className='date-div'; div.textContent=d;
       container.appendChild(div);
-      lastDate=d; lastAuthor=null;
+      lastDate=d; lastAuthor=null; lastTimestamp=null;
     }
-    appendMessage(container,msg,context,lastAuthor);
+    // Discord-style: show header again if same author but 5+ minute gap
+    let effectivePrevAuthor = lastAuthor;
+    if (lastAuthor === msg.from && lastTimestamp && msg.timestamp) {
+      const gap = Math.abs(new Date(msg.timestamp) - new Date(lastTimestamp));
+      if (gap >= 5 * 60 * 1000) effectivePrevAuthor = null; // force new header
+    }
+    appendMessage(container,msg,context,effectivePrevAuthor);
     lastAuthor=msg.from;
+    lastTimestamp=msg.timestamp;
   });
 }
 
@@ -3025,7 +3038,7 @@ function copyMsgLink(msgId) {
 
 function buildMsgActions(msg, context, id) {
   const isOwn=msg.from===CU?.username;
-  const isBastionAdmin = context==='channel' && hasPerm('manage_messages');
+  const isBastionAdmin = (context==='ch' || context==='channel') && hasPerm('manage_messages');
   const safeId=escapeHTML(id);
   const safeFrom=escapeHTML(msg.from||'');
   const safeText=escapeHTML((msg.text||'').replace(/'/g,' ').slice(0,100));
@@ -3109,6 +3122,11 @@ async function saveEdit(msgId) {
   toast('Message edited','success');
 }
 function deleteMsg(msgId, context) {
+  // Capture current state at call time (not inside async callback where state might change)
+  const _curDM = curDM;
+  const _curGC = typeof curGC !== 'undefined' ? curGC : null;
+  const _curBastion = curBastion;
+  const _curChannel = curChannel;
   showCustomConfirm('Delete this message?', async () => {
     const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
     if (row) {
@@ -3117,43 +3135,37 @@ function deleteMsg(msgId, context) {
         let next = row.nextElementSibling;
         while (next && next.classList.contains('date-div')) next = next.nextElementSibling;
         if (next && next.classList.contains('msg-cont') && next.dataset.from === row.dataset.from) {
-          // Promote: give it the header from the deleted row
           next.classList.replace('msg-cont','msg-first');
           const fromName = next.dataset.from || '';
           const safeFrom = escapeHTML(fromName);
           const time = next.querySelector('.msg-time-small')?.textContent || '';
           const avId = 'av-' + next.dataset.msgid.replace(/[^a-z0-9]/gi,'-');
-          const b = CU.bastions?.[curBastion];
-          const roles = b?.roles||[];
-          const mr = (b?.memberRoles||{})[fromName]||[];
-          const pr = roles.find(r=>mr.includes(r.id));
           const roleTag = getMsgRoleTag(fromName, 'ch');
-          // Rebuild content column with header prepended
           const col = next.querySelector('.msg-content-col');
           const existingContent = col ? col.innerHTML : '';
           const avWrap = next.querySelector('.msg-av-wrap');
-          if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;">${buildAvatarHTML(null,fromName,36)}</div>`;
+          if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
           if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
-          FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,36);}}).catch(()=>{});
+          FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}}).catch(()=>{});
         }
       }
       row.remove();
     }
     if (msgId.startsWith('local-')) { toast('Deleted','success'); return; }
-    const ctx = context || (curDM ? 'dm' : curGC ? 'gc' : 'ch');
+    const ctx = context || (_curDM ? 'dm' : _curGC ? 'gc' : 'ch');
     try {
-      if (ctx==='dm') {
-        await firebase.database().ref(`dms/${[CU.username,curDM].sort().join('__')}/${msgId}`).remove();
-      } else if (ctx==='gc') {
-        await firebase.database().ref(`groupChats/${curGC}/messages/${msgId}`).remove();
+      if (ctx==='dm' && _curDM) {
+        await firebase.database().ref(`dms/${[CU.username,_curDM].sort().join('__')}/${msgId}`).remove();
+      } else if (ctx==='gc' && _curGC) {
+        await firebase.database().ref(`groupChats/${_curGC}/messages/${msgId}`).remove();
       } else {
-        const b = CU.bastions?.[curBastion];
-        const ch = b?.channels?.[curChannel];
+        const b = CU.bastions?.[_curBastion];
+        const ch = b?.channels?.[_curChannel];
         const bid = b?.globalId||b?.name;
         const chName = ch?.name||'general';
         if (bid && chName) await firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`).remove();
       }
-    } catch {}
+    } catch(e) { console.warn('Delete error:', e); }
     toast('Message deleted','success');
   });
 }
@@ -3247,8 +3259,34 @@ function buildMemberEntry(u, roles, memberRoles) {
   const displayN = isMe ? (CU.displayName||CU.username) : u;
   const pfpSrc = isMe ? CU.pfp : (_pfpCache[u] || null);
   const status = isMe ? (CU.status||'online') : 'online';
-  return `<div class="ml-entry" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)">
-    ${buildAvatarWithStatus(pfpSrc, displayN, 30, status)}
+  // Subscribe to live status for this member
+  subscribeProfileStatus(u);
+  // Fetch live status async and update the dot
+  if (!isMe) {
+    FortizedSocial.getStatus(u).then(st => {
+      const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
+      document.querySelectorAll('.profile-status-dot[data-for="'+u+'"]').forEach(el=>{el.style.background=SC[st]||SC.offline;});
+    }).catch(()=>{});
+    // Also fetch display name + pfp
+    FortizedSocial.getUserByName(u).then(ud => {
+      if (!ud) return;
+      if (ud.pfp) _pfpCache[u] = ud.pfp;
+      const entry = document.querySelector('.ml-entry[data-member="'+CSS.escape(u)+'"]');
+      if (!entry) return;
+      const nameEl = entry.querySelector('.ml-name');
+      if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
+      const avImg = entry.querySelector('img');
+      if (ud.pfp && !avImg) {
+        const avWrap = entry.querySelector('div[style*="position:relative"]');
+        if (avWrap) { const imgEl = avWrap.querySelector('span'); if(imgEl) imgEl.outerHTML = `<img src="${ud.pfp}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">`; }
+      }
+    }).catch(()=>{});
+  }
+  return `<div class="ml-entry" data-member="${escapeHTML(u)}" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)">
+    <div style="position:relative;display:inline-flex;flex-shrink:0;">
+      ${buildAvatarHTML(pfpSrc, displayN, 30)}
+      <span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:${({online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171'}[status]||'#6b7280')};border:2px solid var(--channel);"></span>
+    </div>
     <div class="ml-info" style="min-width:0;flex:1;">
       <div class="ml-name" style="color:${primaryRole?.color||'var(--muted-light)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
       ${roleTag}
@@ -3292,7 +3330,23 @@ function disconnectVoice(){
 }
 function toggleVoiceMute(){isMuted=!isMuted;if(voiceChannel!==null)joinVoice(voiceChannel);}
 function toggleVoiceDeafen(){isDeafened=!isDeafened;if(voiceChannel!==null)joinVoice(voiceChannel);}
-function toggleMic(){isMuted=!isMuted;const b=document.getElementById('mic-btn');if(b)b.textContent=isMuted?'🔇':'🎤';toast(isMuted?'Muted':'Unmuted','info');}
+function toggleMic(){
+  isMuted=!isMuted;
+  const b=document.getElementById('mic-btn');
+  if(b) b.innerHTML=isMuted
+    ?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/><line x1="1" y1="1" x2="23" y2="23" stroke="#f87171" stroke-width="2.5"/></svg>'
+    :'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+  toast(isMuted?'Muted':'Unmuted','info');
+}
+function toggleDeafen(){
+  isDeafened=!isDeafened;
+  if(isDeafened) { isMuted=true; toggleMic(); isMuted=true; }
+  const b=document.getElementById('deafen-btn');
+  if(b) b.innerHTML=isDeafened
+    ?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/><line x1="1" y1="1" x2="23" y2="23" stroke="#f87171" stroke-width="2.5"/></svg>'
+    :'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>';
+  toast(isDeafened?'Deafened':'Undeafened','info');
+}
 
 // ════════════════════════════════════════════
 // FRIENDS
@@ -7181,7 +7235,7 @@ function parseMD(s) {
     if (unicode) return unicode;
     // Check Fortized custom emojis (from bastion + global FORTIZED_EMOJIS)
     const ftz = FORTIZED_EMOJI_MAP[name];
-    if (ftz) return `<img src="${escapeHTML(ftz)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;display:inline-block;">`;
+    if (ftz) return `<img src="${escapeHTML(ftz)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;">`;
     return match; // keep original if unknown
   });
   // 0ab. Emoticon conversion (if enabled)
@@ -11740,51 +11794,67 @@ async function showMiniProfilePreview(username, anchorEl) {
   let status = 'offline';
   try { status = await FortizedSocial.getStatus(username); } catch {}
   if (username === CU?.username) { u = { ...u, ...CU }; status = CU.status || 'online'; }
+  subscribeProfileStatus(username);
 
   const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
   const SL = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible',offline:'Offline'};
   const sc = SC[status]||'#6b7280';
-  const isFriend = (CU?.friends||[]).includes(username);
   const isOwn = username === CU?.username;
+  const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
+  const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
+  const customStatus = u.customStatus;
 
   const panel = document.createElement('div');
   panel.id = 'mini-profile-preview';
   panel.className = 'mini-profile-preview';
+  // Build a mini version of the profile card
+  const bannerBg = u.banner ? `url('${u.banner}') center/cover no-repeat` : `linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#1a1a2e'},${profileTheme?profileTheme.color2+'33':'#0f3460'})`;
+  const themeBorderStyle = profileTheme ? `border:2px solid transparent;background-image:linear-gradient(var(--panel),var(--panel)),linear-gradient(135deg,${profileTheme.color1},${profileTheme.color2});background-origin:border-box;background-clip:padding-box,border-box;` : '';
   panel.innerHTML = `
     <!-- Banner -->
-    <div class="mpp-banner" style="${u.banner?`background:url('${u.banner}') center/cover no-repeat`:'background:linear-gradient(135deg,#1a1a2e,#0f3460)'}">
-      <div style="position:absolute;inset:0;background:rgba(0,0,0,.25);"></div>
+    <div style="height:70px;position:relative;overflow:hidden;background:${bannerBg};border-radius:14px 14px 0 0;">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.05) 40%,rgba(14,16,28,.7));"></div>
     </div>
-    <!-- Avatar (click → full card) -->
-    <div style="padding:0 14px 14px;margin-top:24px;">
-      <div class="mpp-av" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
-        ${buildAvatarHTML(u.pfp, u.displayName||u.username, 52)}
-        <span style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:${sc};border:2.5px solid #18191c;"></span>
-      </div>
-      <div style="margin-top:28px;">
-        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:1px;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">${escapeHTML(u.displayName||u.username)}</div>
-        <div style="font-size:11.5px;color:rgba(255,255,255,.4);margin-bottom:6px;">@${escapeHTML(u.username)}</div>
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:10px;">
-          <span style="width:8px;height:8px;border-radius:50%;background:${sc};"></span>
-          <span style="font-size:12px;color:rgba(255,255,255,.5);">${SL[status]||'Offline'}</span>
+    <!-- Avatar row overlapping banner -->
+    <div style="padding:0 14px;margin-top:-28px;margin-bottom:8px;display:flex;align-items:flex-end;gap:10px;position:relative;z-index:2;">
+      <div style="position:relative;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
+        <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);background:var(--panel2);box-shadow:0 4px 12px rgba(0,0,0,.5);">
+          ${buildAvatarHTML(u.pfp, u.displayName||u.username, 52)}
         </div>
-        ${u.bio?`<div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.45;padding:7px 9px;background:rgba(255,255,255,.04);border-radius:7px;margin-bottom:8px;">${escapeHTML(u.bio.slice(0,80))}${u.bio.length>80?'…':''}</div>`:''}
-        <div style="display:flex;gap:6px;">
-          ${!isOwn?`<button onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')" style="flex:1;padding:7px;background:var(--accent);color:#060810;border:none;border-radius:7px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Message</button>`:''}
-          <button onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="flex:1;padding:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.7);font-size:12px;cursor:pointer;">View Profile</button>
-        </div>
+        <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;"></span>
       </div>
+      <div style="flex:1;min-width:0;padding-bottom:4px;">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
+    </div>
+    <!-- Name + status section -->
+    <div style="padding:0 14px 10px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:1px;cursor:pointer;${u.displayFont&&u.displayFont!=='default'?`font-family:${getDisplayFont(u)};`:''}" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">${escapeHTML(u.displayName||u.username)}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">@${escapeHTML(u.username)}</div>
+      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+        <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="width:8px;height:8px;border-radius:50%;background:${sc};"></span>
+        <span class="profile-status-label" data-for="${escapeHTML(username)}" style="font-size:12px;color:rgba(255,255,255,.5);">${SL[status]||'Offline'}</span>
+        ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:inline-flex;align-items:center;gap:3px;padding:1px 7px;background:rgba(255,255,255,.06);border-radius:100px;font-size:11px;color:rgba(255,255,255,.45);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:none;"></span>`}
+      </div>
+    </div>
+    ${u.bio?`<div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:4px;">About Me</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.45;">${escapeHTML(u.bio.slice(0,100))}${u.bio.length>100?'...':''}</div>
+    </div>`:''}
+    <!-- Action buttons -->
+    <div style="padding:10px 14px;display:flex;gap:6px;">
+      ${!isOwn?`<button onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')" style="flex:1;padding:7px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Message</button>`:''}
+      <button onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="flex:1;padding:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.65);font-size:12px;cursor:pointer;">View Profile</button>
     </div>`;
 
   // Position near the anchor element
   document.body.appendChild(panel);
   const rect = anchorEl?.getBoundingClientRect() || {left:100, top:100, width:40};
-  const PW = panel.offsetWidth || 240;
-  const PH = panel.offsetHeight || 200;
+  const PW = panel.offsetWidth || 280;
+  const PH = panel.offsetHeight || 260;
   let left = rect.left + rect.width + 8;
   let top = rect.top;
   if (left + PW > window.innerWidth - 8) left = rect.left - PW - 8;
   if (top + PH > window.innerHeight - 8) top = window.innerHeight - PH - 8;
+  if (top < 8) top = 8;
   panel.style.left = Math.max(8, left) + 'px';
   panel.style.top = Math.max(8, top) + 'px';
 
@@ -11857,8 +11927,14 @@ function applyAppearance(themeId) {
   }
   // Reset body gradient if not onyx_pure
   if (themeId !== 'onyx_pure') document.body.style.background = '';
-  const pm = document.getElementById('profile-main');
-  if (pm && pm.innerHTML.includes('appearance')) buildProfileView('appearance');
+  // Re-render appearance settings if it's currently open
+  const activeNav = document.querySelector('.profile-nav-item.active');
+  if (activeNav && activeNav.id === 'pnav-appearance') buildProfileView('appearance');
+  // Also sync userbar and chatbar colors
+  const userbarEl = document.querySelector('.userbar');
+  const chatInputOuter = document.querySelector('.chat-input-outer');
+  if (userbarEl) userbarEl.style.background = '';
+  if (chatInputOuter) chatInputOuter.style.background = '';
   const toastMsgs = {dark_fortress:'🏰 Dark Fortress', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic'};
   toast((toastMsgs[themeId]||'⚡ Theme')+' activated!', 'success');
 }

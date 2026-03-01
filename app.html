@@ -68,8 +68,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Userbar — Discord-style panel */
-.userbar{height:64px;background:rgba(4,6,10,.95);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;padding:0 8px;gap:0;flex-shrink:0;}
-.ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background .14s;}
+.userbar{height:64px;background:rgba(4,6,10,.95);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;padding:8px;gap:0;flex-shrink:0;}
+.ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:6px 10px;border-radius:12px;cursor:pointer;transition:background .14s;}
 .ua-clickable:hover{background:rgba(255,255,255,.07);}
 .ua{width:38px;height:38px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;}
 .ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;}
@@ -514,15 +514,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .toast.success{border-left:3px solid var(--green);color:#a3e8b8;}
 .toast.error{border-left:3px solid var(--red);color:#fca5a5;}
 .toast.info{border-left:3px solid var(--accent);color:var(--accent);}
-.ctx-menu{position:fixed;z-index:9999;background:rgba(11,14,22,.98);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:6px;min-width:200px;box-shadow:0 20px 50px rgba(0,0,0,.7);backdrop-filter:blur(22px);animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
+.ctx-menu{position:fixed;z-index:9999;background:#18191c;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px;min-width:200px;max-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04);backdrop-filter:blur(20px);animation:ctxIn .12s cubic-bezier(.22,1,.36,1);}
 @keyframes vcPulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes callPulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.4);opacity:0}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes ctxIn{from{opacity:0;transform:scale(.96) translateY(-4px);}to{opacity:1;transform:none;}}
-.ctx-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;font-size:13px;color:rgba(220,228,240,.9);cursor:pointer;}
-.ctx-item:hover{background:rgba(255,255,255,.07);color:#fff;}
+.ctx-item{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:4px;font-size:14px;color:rgba(220,228,240,.85);cursor:pointer;transition:.08s;}
+.ctx-item:hover{background:var(--accent);color:#060810;}
+.ctx-item:hover svg{stroke:#060810;}
 .ctx-item.danger{color:rgba(248,113,113,.85);}
-.ctx-item.danger:hover{background:rgba(248,113,113,.12);color:var(--red);}
+.ctx-item.danger:hover{background:var(--red);color:#fff;}
+.ctx-sep{height:1px;background:rgba(255,255,255,.06);margin:4px 0;}
+.ctx-section-label{padding:6px 8px 2px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.25);}
 .ctx-sep{height:1px;background:rgba(255,255,255,.07);margin:5px 0;}
 .ctx-section-label{padding:9px 12px 4px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.22);}
 .notif-panel{position:fixed;top:52px;right:0;width:330px;max-height:calc(100vh - 60px);background:var(--sidebar);border:1px solid var(--border);border-radius:18px 0 0 18px;box-shadow:-8px 0 40px rgba(0,0,0,.5);z-index:500;transform:translateX(100%);transition:transform .22s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;}
@@ -757,9 +760,13 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .ftz-notif-close:hover{color:#fff;}
 
 /* Mini profile preview (first click on avatar in chat) */
-.mini-profile-preview{position:fixed;background:#18191c;border:1px solid rgba(255,255,255,.12);border-radius:12px;z-index:4000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);min-width:240px;}
-.mpp-banner{height:50px;position:relative;}
-.mpp-av{position:absolute;bottom:-20px;left:14px;width:52px;height:52px;border-radius:50%;overflow:hidden;border:4px solid #18191c;cursor:pointer;}
+.mini-profile-preview{position:fixed;background:#18191c;border:1px solid rgba(255,255,255,.1);border-radius:14px;z-index:4000;box-shadow:0 20px 60px rgba(0,0,0,.8);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);width:260px;}
+.mpp-banner{height:60px;position:relative;overflow:hidden;}
+.mpp-av{position:absolute;bottom:-24px;left:14px;width:56px;height:56px;border-radius:50%;overflow:hidden;border:4px solid #18191c;cursor:pointer;background:var(--panel2);}
+
+/* Profile themes (Radiance+) */
+.profile-theme-ring{position:absolute;inset:-3px;border-radius:50%;background:var(--pt-gradient,transparent);z-index:-1;}
+.profile-theme-card-border{background:var(--pt-gradient,rgba(255,255,255,.08));padding:2px;border-radius:20px;}
 </style>
 <style id="radiance-font-style"></style>
 <body>
@@ -1251,8 +1258,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 
 <!-- USER PROFILE -->
 <div class="modal-overlay" id="modal-user">
-  <div class="modal" style="max-width:340px;border-radius:18px;overflow:hidden;">
-    <div class="modal-body" id="user-modal-body" style="padding:24px;padding-top:0;background:#1e2130;"></div>
+  <div class="modal" style="max-width:440px;border-radius:18px;overflow:hidden;background:#1e2130;">
+    <div class="modal-body" id="user-modal-body" style="padding:0;background:#1e2130;"></div>
   </div>
 </div>
 
@@ -2598,13 +2605,26 @@ async function startNewDM() {
 // ════════════════════════════════════════════
 function openBastion(idx) {
   if (idx<0||!CU.bastions?.[idx]) return;
-  curBastion=idx; curChannel=null;
+  const prevBastion = curBastion;
+  curBastion = idx; curChannel = null;
   document.querySelectorAll('.rail-bastion').forEach(el=>el.classList.remove('active'));
-  const rb=document.getElementById('rl-b-'+idx);
+  const rb = document.getElementById('rl-b-'+idx);
   if (rb) rb.classList.add('active');
   showView('bastion');
-  const wrap=document.getElementById('bastion-chat-wrap');
-  if (wrap) wrap.innerHTML=`<div class="empty-state"><div class="ei">🏰</div><h3>Pick a channel</h3><p>Select a text or voice channel from the sidebar.</p></div>`;
+  // Auto-select last used channel for this bastion
+  const b = CU.bastions[idx];
+  const lastChKey = 'ftz_last_ch_' + (b.globalId||b.name||idx);
+  const lastChIdx = parseInt(localStorage.getItem(lastChKey)||'-1');
+  const chs = b.channels||[];
+  // Find first text channel as fallback
+  const fallbackCh = chs.findIndex(ch => ch.type !== 'voice' && ch.type !== 'forum');
+  const autoChIdx = (lastChIdx >= 0 && lastChIdx < chs.length) ? lastChIdx : fallbackCh;
+  if (autoChIdx >= 0) {
+    setTimeout(() => selectChannel(autoChIdx), 80);
+  } else {
+    const wrap = document.getElementById('bastion-chat-wrap');
+    if (wrap) wrap.innerHTML=`<div class="empty-state"><div class="ei">🏰</div><h3>Pick a channel</h3><p>Select a text or voice channel from the sidebar.</p></div>`;
+  }
   document.getElementById('member-list').innerHTML='';
 }
 
@@ -2696,6 +2716,11 @@ function selectChannel(idx) {
   const ch=b?.channels?.[idx];
   if (!ch) return;
   curChannel=idx;
+  // Remember last channel for this bastion
+  if (curBastion !== null && CU.bastions?.[curBastion]) {
+    const b = CU.bastions[curBastion];
+    localStorage.setItem('ftz_last_ch_' + (b.globalId||b.name||curBastion), idx);
+  }
   document.querySelectorAll('.ch-item').forEach(el=>el.classList.remove('active'));
   const el=document.getElementById('ch-sb-'+idx);
   if (el) el.classList.add('active');
@@ -2763,9 +2788,12 @@ function loadChatChannel(idx) {
   const desc=document.getElementById('tb-desc');
   if (sep) sep.style.display='';
   if (desc) desc.textContent='#'+ch.name;
+  const bastionBanner = b?.banner || b?.icon || '';
   wrap.innerHTML=`
     <div class="chat-wrap">
       <div class="chat-msgs" id="ch-msgs-${idx}">
+        <!-- Bastion banner in channel welcome -->
+        ${bastionBanner ? `<div style="width:100%;height:120px;background:url('${bastionBanner}') center/cover no-repeat;position:relative;flex-shrink:0;overflow:hidden;"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.2),rgba(0,0,0,.5));"></div><div style="position:absolute;bottom:12px;left:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);">${escapeHTML(b.name||'')}</div></div>` : ''}
         <div class="chat-welcome">
           <div class="w-av" style="font-size:26px;background:var(--panel2);">#</div>
           <h3>#${escapeHTML(ch.name)}${nsfwBadge}</h3>
@@ -3206,7 +3234,7 @@ function buildMemberEntry(u, roles, memberRoles) {
   const displayN = isMe ? (CU.displayName||CU.username) : u;
   const pfpSrc = isMe ? CU.pfp : (_pfpCache[u] || null);
   const status = isMe ? (CU.status||'online') : 'online';
-  return `<div class="ml-entry" onclick="viewUserProfile('${escapeHTML(u)}')">
+  return `<div class="ml-entry" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)">
     ${buildAvatarWithStatus(pfpSrc, displayN, 30, status)}
     <div class="ml-info" style="min-width:0;flex:1;">
       <div class="ml-name" style="color:${primaryRole?.color||'var(--muted-light)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
@@ -4068,8 +4096,9 @@ function renderBSettingsMain(tab) {
       <button class="btn-a" style="margin-bottom:18px;font-size:13px;" onclick="generateInvite()">Generate Invite Link</button>
       ${invites.length ? invites.map((inv,i)=>`
         <div style="padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;">
-          <div class="invite-link-box"><span>${location.href.split('?')[0]}?invite=${inv.code}</span>
-            <button class="btn-g" style="padding:4px 10px;font-size:12px;" onclick="copyInvite('${inv.code}')">Copy</button>
+          <div class="invite-link-box" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;">
+            <span style="flex:1;font-size:12px;font-family:monospace;color:rgba(255,255,255,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${'https://fortized.com/app.html?invite='+inv.code}</span>
+            <button class="btn-g" style="padding:4px 10px;font-size:12px;flex-shrink:0;" onclick="copyInvite('${inv.code}')">Copy</button>
           </div>
           <div style="font-size:12px;color:var(--muted);">Uses: ${inv.uses||0} · ${inv.expires?'Expires: '+new Date(inv.expires).toLocaleDateString():'No expiry'}</div>
           <button class="btn-d" style="padding:4px 10px;font-size:12px;margin-top:6px;" onclick="revokeInvite(${i})">Revoke</button>
@@ -4241,13 +4270,22 @@ async function saveAutoMod() {
 }
 async function generateInvite() {
   const b = CU.bastions[curBastion];
-  const code = CU.username.slice(0,4)+(Date.now()).toString(36).toUpperCase();
-  b.invites = [...(b.invites||[]), {code, uses:0, created:new Date().toISOString()}];
-  await saveUser(); renderBSettingsMain('invites');
-  toast('Invite created!', 'success');
+  const code = CU.username.slice(0,4)+(Date.now()).toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase();
+  const invite = {code, uses:0, created:new Date().toISOString(), createdBy: CU.username};
+  b.invites = [...(b.invites||[]), invite];
+  await saveUser();
+  // Also update global bastion so invite resolves
+  try {
+    const bid = b.globalId || b.name;
+    await firebase.database().ref('globalBastions/'+bid+'/invites').set(b.invites);
+  } catch {}
+  renderBSettingsMain('invites');
+  toast('🔗 Invite created!', 'success');
+  // Auto-copy
+  navigator.clipboard.writeText('https://fortized.com/app.html?invite='+code).then(()=>toast('Copied to clipboard!','info')).catch(()=>{});
 }
 function copyInvite(code) {
-  navigator.clipboard.writeText(location.href.split('?')[0]+'?invite='+code).then(()=>toast('Invite link copied!','success')).catch(()=>toast('Copy failed','error'));
+  navigator.clipboard.writeText('https://fortized.com/app.html?invite='+code).then(()=>toast('🔗 Invite link copied!','success')).catch(()=>toast('Copy failed','error'));
 }
 async function revokeInvite(i) {
   CU.bastions[curBastion].invites.splice(i,1);
@@ -4695,9 +4733,10 @@ function buildProfileNav(scroll) {
     {type:'item', id:'account',   icon:'🔒', label:'Account'},
     {type:'item', id:'notifs_settings', icon:'🔔', label:'Notifications'},
     {type:'item', id:'game_collection', icon:'🎮', label:'Apps & Games'},
+    {type:'item', id:'profile_theme',   icon:'🎨', label:'Profile Theme'},
     {type:'sep'},
     {type:'section', label:'PREFERENCES'},
-    {type:'item', id:'privacy',    icon:'🛡️', label:'Privacy'},
+    {type:'item', id:'help_center', icon:'❓', label:'Help Center'},
     {type:'item', id:'appearance', icon:'🎨', label:'Appearance'},
     {type:'sep'},
   ];
@@ -4791,7 +4830,7 @@ function buildProfileView(tab) {
             </div>
             <div class="settings-row-content" style="display:flex;gap:8px;align-items:center;">
               <input class="settings-input" id="dn-input" value="${escapeHTML(CU.displayName||CU.username)}" maxlength="32" style="flex:1;" placeholder="Your display name">
-              <button class="settings-save-btn" onclick="saveDisplayName()">Save</button>
+              
             </div>
           </div>
 
@@ -4814,36 +4853,11 @@ function buildProfileView(tab) {
             </div>
             <div class="settings-row-content">
               <textarea class="settings-input" id="bio-input" rows="3" maxlength="300" style="resize:vertical;">${escapeHTML(CU.bio||'')}</textarea>
-              <button class="settings-save-btn" onclick="saveBio()" style="margin-top:8px;">Save</button>
+              
             </div>
           </div>
 
-          <!-- Status -->
-          <div class="settings-row">
-            <div class="settings-row-label">
-              <div class="srl-name">Status</div>
-              <div class="srl-desc">How others see you</div>
-            </div>
-            <div class="settings-row-content">
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-                ${['online','away','dnd','invisible'].map(s => {
-                  const col = statusColors[s];
-                  const active = (CU.status||'online') === s;
-                  return `<button onclick="setMyStatus('${s}')" style="display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;border:1.5px solid ${active?col+'66':'rgba(255,255,255,.1)'};background:${active?col+'18':'transparent'};color:${active?col:'rgba(255,255,255,.5)'};font-size:12.5px;cursor:pointer;font-weight:${active?'700':'500'};transition:all .15s;">
-                    <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;"></span>${statusLabels[s]}
-                  </button>`;
-                }).join('')}
-              </div>
-              <!-- Custom status -->
-              ${cs?.text
-                ? `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1c202b;border:1px solid #2a2f3a;border-radius:8px;">
-                    <span style="font-size:16px;">${cs.emoji||''}</span>
-                    <span style="font-size:13px;flex:1;">${escapeHTML(cs.text)}</span>
-                    <button class="settings-save-btn-ghost" onclick="clearCustomStatus()" style="font-size:11px;padding:4px 10px;">Clear</button>
-                  </div>`
-                : `<button class="settings-save-btn-ghost" onclick="openStatusPicker()">+ Set Custom Status</button>`}
-            </div>
-          </div>
+
 
           ${hasRadiance ? `
           <!-- Font Picker (Radiance) -->
@@ -4864,7 +4878,7 @@ function buildProfileView(tab) {
             <div class="settings-row-label"><div class="srl-name">Email</div></div>
             <div class="settings-row-content" style="display:flex;gap:8px;align-items:center;">
               <input class="settings-input" id="email-input" value="${escapeHTML(CU.email||'')}" placeholder="your@email.com" style="flex:1;">
-              <button class="settings-save-btn" onclick="saveEmail()">Save</button>
+              
             </div>
           </div>
 
@@ -4998,6 +5012,109 @@ function buildProfileView(tab) {
 
   else if (tab === 'game_collection') {
     renderGameCollectionTab(main);
+  }
+
+  else if (tab === 'help_center') {
+    main.innerHTML = `<div class="settings-panel">
+      <div class="settings-section-title">HELP CENTER</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${[
+          {label:'Fortized Support', url:'https://fortized.com/support.html', icon:'🆘', desc:'Get help with your account, bastions, and more'},
+          {label:'Privacy Policy',   url:'https://fortized.com/privacy.html',  icon:'🔒', desc:'How we handle your data and privacy'},
+          {label:'Terms of Service', url:'https://fortized.com/terms.html',    icon:'📜', desc:'Our terms and community guidelines'},
+          {label:'Fortized Blog',    url:'https://fortized.com/blog.html',     icon:'📰', desc:'News, updates, and announcements'},
+        ].map(link => `
+          <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#1c202b;border:1px solid #2a2f3a;border-radius:10px;text-decoration:none;transition:.14s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)'" onmouseout="this.style.borderColor='#2a2f3a'">
+            <div style="font-size:22px;flex-shrink:0;">${link.icon}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;">${link.label}</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.4);">${link.desc}</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>`).join('')}
+      </div>
+      <div style="margin-top:24px;padding:14px;background:rgba(255,249,62,.05);border:1px solid rgba(255,249,62,.12);border-radius:10px;font-size:13px;color:rgba(255,255,255,.5);line-height:1.55;">
+        💡 Can't find what you're looking for? Email us at <a href="mailto:support@fortized.com" style="color:var(--accent);">support@fortized.com</a>
+      </div>
+    </div>`;
+  }
+
+  else if (tab === 'appearance') {
+    const currentTheme = localStorage.getItem('ftz_appearance') || 'fortized';
+    const themes = [
+      {id:'fortized',   name:'Fortized',    desc:'The classic Fortized dark theme',            preview:['#07090e','#fff93e','#0b0e15']},
+      {id:'dark_realm', name:'Dark Realm',  desc:'Deeper darkness, minimal glow',              preview:['#030407','#5b7cff','#060810']},
+    ];
+    main.innerHTML = `<div class="settings-panel">
+      <div class="settings-section-title">APPEARANCE</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:16px;">Choose how Fortized looks for you.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        ${themes.map(t => `
+          <div onclick="applyAppearance('${t.id}')" style="border:2px solid ${currentTheme===t.id?'var(--accent)':'rgba(255,255,255,.08)'};border-radius:14px;overflow:hidden;cursor:pointer;transition:.14s;background:${currentTheme===t.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};" onmouseover="if('${t.id}'!=='${currentTheme}')this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="if('${t.id}'!=='${currentTheme}')this.style.borderColor='rgba(255,255,255,.08)'">
+            <!-- Preview -->
+            <div style="height:80px;background:${t.preview[0]};display:flex;gap:4px;padding:8px;">
+              <div style="width:20px;background:${t.preview[2]};border-radius:4px;"></div>
+              <div style="flex:1;background:rgba(255,255,255,.04);border-radius:4px;padding:6px;">
+                <div style="height:6px;background:${t.preview[1]};border-radius:3px;width:50%;margin-bottom:4px;"></div>
+                <div style="height:4px;background:rgba(255,255,255,.12);border-radius:2px;width:80%;"></div>
+              </div>
+            </div>
+            <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;">
+              ${currentTheme===t.id?'<div style="width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>':'<div style="width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,.2);flex-shrink:0;"></div>'}
+              <div>
+                <div style="font-size:13px;font-weight:700;color:${currentTheme===t.id?'var(--accent)':'#fff'};">${t.name}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.35);">${t.desc}${t.id!=='fortized'?' · Free':'· Default'}</div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  else if (tab === 'profile_theme') {
+    const hasPlus = CU?.radiancePlus && new Date(CU.radiancePlus) > new Date();
+    const pt = CU?.profileTheme || { color1: '#a855f7', color2: '#3b82f6' };
+    if (!hasPlus) {
+      main.innerHTML = `<div class="settings-panel">
+        <div class="settings-section-title">PROFILE THEME</div>
+        <div style="background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.1);border-radius:14px;padding:36px;text-align:center;">
+          <div style="font-size:40px;margin-bottom:12px;">🔒</div>
+          <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:8px;">Radiance+ Required</div>
+          <div style="font-size:13.5px;color:rgba(255,255,255,.45);max-width:320px;margin:0 auto 20px;line-height:1.6;">Profile themes let you add a gradient stroke and custom colors around your profile card and avatar.</div>
+          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" class="btn-a" style="font-size:13px;">Get Radiance+</button>
+        </div>
+      </div>`;
+    } else {
+      main.innerHTML = `<div class="settings-panel">
+        <div class="settings-section-title">PROFILE THEME</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:20px;">Your profile card and avatar will have a gradient stroke matching these colors. <span style="color:rgba(255,200,62,.8);">Radiance+</span></div>
+        <!-- Color pickers -->
+        <div class="settings-row">
+          <div class="settings-row-label"><div class="srl-name">Color 1</div></div>
+          <div class="settings-row-content">
+            <input type="color" id="pt-color1" value="${pt.color1}" style="width:48px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;" oninput="previewProfileTheme()">
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label"><div class="srl-name">Color 2</div></div>
+          <div class="settings-row-content">
+            <input type="color" id="pt-color2" value="${pt.color2}" style="width:48px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.2);cursor:pointer;" oninput="previewProfileTheme()">
+          </div>
+        </div>
+        <!-- Preview -->
+        <div style="margin-top:16px;">
+          <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:10px;">Preview</div>
+          <div id="pt-preview" style="display:inline-block;padding:3px;border-radius:50%;background:linear-gradient(135deg,${pt.color1},${pt.color2});">
+            <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:3px solid #18191c;">
+              ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;font-family:'Syne',sans-serif;font-weight:800;">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
+            </div>
+          </div>
+          <div style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.35);">The profile card will have a gradient border using your chosen colors.</div>
+        </div>
+        <button class="settings-save-btn" onclick="saveProfileTheme()" style="margin-top:18px;">Save Theme</button>
+        <button class="settings-save-btn-ghost" onclick="CU.profileTheme=null;saveUser();buildProfileView('profile_theme')" style="margin-top:8px;margin-left:8px;">Reset to Default</button>
+      </div>`;
+    }
   }
 
   else {
@@ -5176,99 +5293,100 @@ async function viewUserProfile(username) {
   const hasPending = (CU.friendRequestsSent||[]).includes(username);
   const blocked = JSON.parse(localStorage.getItem('ftz_blocked')||'[]');
   const isBlocked = blocked.includes(username);
+  const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
+  const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
 
   const STATUS_COLOR = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
   const STATUS_LABEL = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible',offline:'Offline'};
   const sc = STATUS_COLOR[status]||'#6b7280';
-
   const socials = u.socials || {};
-  const games = u.gameCollection || [];
   const customStatus = u.customStatus;
+  const games = u.gameCollection || [];
+
+  // Profile theme border
+  const themeBorder = profileTheme
+    ? `background:linear-gradient(135deg,${profileTheme.color1},${profileTheme.color2});padding:3px;border-radius:20px;`
+    : '';
+  const bannerBg = u.banner
+    ? `url('${u.banner}') center/cover no-repeat`
+    : `linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#0f1830'},${profileTheme?profileTheme.color2+'33':'#1a0f30'})`;
 
   const modalEl = document.getElementById('user-modal-body');
   if (!modalEl) { openModal('modal-user'); return; }
 
-  // Build the card — Discord/Guilded style
-  // Profile card: banner top, avatar overlapping, content below
-  const bannerStyle = u.banner
-    ? `background:url('${u.banner}') center/cover no-repeat`
-    : `background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)`;
-
-  let actionButtons = '';
-  if (isOwn) {
-    actionButtons = `<button onclick="closeModal('modal-user');showView('profile')" style="width:100%;padding:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.13)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
-      Edit Profile
-    </button>`;
-  } else {
-    actionButtons = `<div style="display:flex;gap:8px;">
-      <button onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')" style="flex:1;padding:9px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;">
-        Message
-      </button>
-      ${isFriend
-        ? `<button onclick="closeModal('modal-user');removeFriend('${escapeHTML(username)}')" style="padding:9px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;">Unfriend</button>`
-        : hasPending
-          ? `<button disabled style="padding:9px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.3);font-size:12.5px;">Pending…</button>`
-          : `<button onclick="quickAddFriend('${escapeHTML(username)}')" style="padding:9px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.14)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">Add Friend</button>`}
-    </div>`;
-  }
-
   modalEl.innerHTML = `
-    <!-- Banner -->
-    <div style="height:100px;${bannerStyle};margin:-24px -24px 0;border-radius:18px 18px 0 0;position:relative;overflow:hidden;">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 40%,rgba(16,20,32,.7));"></div>
+    <div style="${themeBorder}">
+    <div style="background:#1e2130;border-radius:${profileTheme?'18px':'0'};">
+    <!-- Banner — tall -->
+    <div style="height:130px;background:${bannerBg};position:relative;overflow:hidden;border-radius:16px 16px 0 0;">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.05) 40%,rgba(14,16,28,.8));"></div>
     </div>
     <!-- Avatar row -->
-    <div style="padding:0 18px;margin-top:-36px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-end;">
+    <div style="padding:0 20px;margin-top:-44px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end;">
       <div style="position:relative;">
-        <div style="width:74px;height:74px;border-radius:50%;overflow:hidden;border:5px solid var(--panel);background:var(--panel2);box-shadow:0 4px 16px rgba(0,0,0,.5);">
-          ${buildAvatarHTML(u.pfp, u.displayName||u.username, 74)}
+        <div style="width:88px;height:88px;border-radius:50%;overflow:hidden;border:6px solid #1e2130;background:var(--panel2);box-shadow:0 4px 20px rgba(0,0,0,.6);">
+          ${buildAvatarHTML(u.pfp, u.displayName||u.username, 88)}
         </div>
-        <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;background:${sc};border:3px solid var(--panel);"></span>
+        <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:5px;right:5px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid #1e2130;"></span>
       </div>
-      <div style="display:flex;gap:6px;padding-bottom:4px;">${renderBadgesHTML(u)}</div>
+      <div style="display:flex;gap:6px;padding-bottom:6px;flex-wrap:wrap;justify-content:flex-end;">${renderBadgesHTML(u)}</div>
     </div>
-    <!-- Name + tag -->
-    <div style="padding:0 18px 14px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;margin-bottom:1px;">${escapeHTML(u.displayName||u.username)}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px;">@${escapeHTML(u.username)}</div>
-      <!-- Status + custom status -->
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+    <!-- Name + status -->
+    <div style="padding:0 20px 14px;border-bottom:1px solid rgba(255,255,255,.07);">
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:2px;${u.displayFont&&u.displayFont!=='default'?`font-family:${getDisplayFont(u)};`:''}">${escapeHTML(u.displayName||u.username)}</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:8px;">@${escapeHTML(u.username)}</div>
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:5px;">
-          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:9px;height:9px;border-radius:50%;background:${sc};"></span>
-          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:12.5px;color:rgba(255,255,255,.5);">${STATUS_LABEL[status]||'Offline'}</span>
+          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:10px;height:10px;border-radius:50%;background:${sc};"></span>
+          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:13px;color:rgba(255,255,255,.55);">${STATUS_LABEL[status]||'Offline'}</span>
         </div>
-        ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(255,255,255,.06);border-radius:100px;font-size:11.5px;color:rgba(255,255,255,.5);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></span>`}
+        ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;background:rgba(255,255,255,.06);border-radius:100px;font-size:12px;color:rgba(255,255,255,.5);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></span>`}
       </div>
     </div>
     <!-- Bio -->
-    ${u.bio ? `<div style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:5px;">About Me</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.65);line-height:1.55;">${escapeHTML(u.bio.slice(0,180))}${u.bio.length>180?'…':''}</div>
+    ${u.bio ? `<div style="padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:6px;">About Me</div>
+      <div style="font-size:13.5px;color:rgba(255,255,255,.7);line-height:1.55;">${escapeHTML(u.bio.slice(0,200))}${u.bio.length>200?'…':''}</div>
     </div>` : ''}
-    <!-- Game activity -->
-    ${u.gameActivity?.name ? `<div style="padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:7px;">Playing a Game</div>
+    <!-- Member since -->
+    ${u.joinedAt||u.createdAt ? `<div style="padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:4px;">Member Since</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.6);">${new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+    </div>` : ''}
+    <!-- Custom status / game activity -->
+    ${u.gameActivity?.name ? `<div style="padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:6px;">Playing a Game</div>
       <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${u.gameActivity.icon||'🎮'}</div>
-        <div><div style="font-size:13.5px;font-weight:700;">${escapeHTML(u.gameActivity.name)}</div></div>
+        <div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${u.gameActivity.icon||'🎮'}</div>
+        <div style="font-size:13.5px;font-weight:600;">${escapeHTML(u.gameActivity.name)}</div>
       </div>
     </div>` : ''}
     <!-- Socials -->
-    ${Object.values(socials).some(Boolean) ? `<div style="padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:7px;">Connected</div>
+    ${Object.values(socials).some(Boolean) ? `<div style="padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:7px;">Connections</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;">
-        ${[{k:'youtube',l:'YouTube',c:'#ff4444'},{k:'roblox',l:'Roblox',c:'#00b2ff'},{k:'spotify',l:'Spotify',c:'#1db954'},{k:'twitter',l:'X / Twitter',c:'#1d9bf0'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid ${p.c}33;color:${p.c};font-size:12px;font-weight:600;text-decoration:none;">${p.l} →</a>`).join('')}
+        ${[{k:'youtube',l:'YouTube',c:'#ff4444'},{k:'roblox',l:'Roblox',c:'#00b2ff'},{k:'spotify',l:'Spotify',c:'#1db954'},{k:'twitter',l:'X',c:'#1d9bf0'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid ${p.c}33;color:${p.c};font-size:12px;font-weight:600;text-decoration:none;">${p.l} →</a>`).join('')}
       </div>
     </div>` : ''}
     <!-- Actions -->
-    <div style="padding:12px 18px;">
-      ${actionButtons}
-      ${!isOwn ? `<div style="display:flex;gap:8px;margin-top:8px;">
-        <button onclick="toggleBlockUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:7px;border:1px solid ${isBlocked?'rgba(248,113,113,.4)':'rgba(255,255,255,.08)'};background:${isBlocked?'rgba(248,113,113,.08)':'transparent'};color:${isBlocked?'var(--red)':'rgba(255,255,255,.4)'};font-size:11.5px;cursor:pointer;">${isBlocked?'Unblock':'Block'}</button>
-        <button onclick="reportUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:11.5px;cursor:pointer;">Report</button>
-        <button onclick="closeModal('modal-user')" style="flex:1;padding:7px;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:11.5px;cursor:pointer;">Close</button>
-      </div>` : `<button onclick="closeModal('modal-user')" style="width:100%;padding:7px;margin-top:8px;border-radius:7px;border:1px solid rgba(255,255,255,.06);background:transparent;color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;">Close</button>`}
+    <div style="padding:14px 20px;">
+      ${isOwn ? `<button onclick="closeModal('modal-user');showView('profile')" style="width:100%;padding:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">✏️ Edit Profile</button>` :
+       `<div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')" style="flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;min-width:120px;">Message</button>
+          ${isFriend ? `<button onclick="closeModal('modal-user');removeFriend('${escapeHTML(username)}')" style="padding:10px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:9px;color:var(--red);font-size:13px;cursor:pointer;">Unfriend</button>` :
+            hasPending ? `<button disabled style="padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.3);font-size:12.5px;">Pending…</button>` :
+            `<button onclick="quickAddFriend('${escapeHTML(username)}')" style="padding:10px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">Add Friend</button>`}
+          <button onclick="startVoiceCall('${escapeHTML(username)}');closeModal('modal-user')" style="width:42px;height:42px;border-radius:9px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+          </button>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button onclick="toggleBlockUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${isBlocked?'rgba(248,113,113,.3)':'rgba(255,255,255,.08)'};background:transparent;color:${isBlocked?'var(--red)':'rgba(255,255,255,.4)'};font-size:12px;cursor:pointer;">${isBlocked?'Unblock':'Block'}</button>
+          <button onclick="reportUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;">Report</button>
+          <button onclick="closeModal('modal-user')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;">Close</button>
+        </div>`}
+    </div>
+    </div>
     </div>`;
 
   openModal('modal-user');
@@ -6415,12 +6533,21 @@ function showRailBastionCtx(e, idx) {
   e.preventDefault();
   const b = CU.bastions?.[idx];
   if (!b) return;
+  const isOwner = b.owner === CU.username;
   const items = [
-    { icon: '🏰', label: 'Open Bastion', action: () => openBastion(idx) },
-    { icon: '⚙️', label: 'Settings', action: () => { openBastion(idx); openBastionSettings(); }, show: b.owner === CU.username },
-    { icon: '🔗', label: 'Invite Link', action: () => { openBastion(idx); openBastionSettings('invites'); }, show: b.owner === CU.username },
+    { section: true, label: b.name },
+    { icon: '🏰', label: 'Open Bastion',      action: () => openBastion(idx) },
+    { icon: '🔔', label: 'Mark All Read',      action: () => toast('All read!', 'success') },
+    ...(isOwner ? [
+      { sep: true },
+      { icon: '🔗', label: 'Invite People',     action: () => { openBastion(idx); openBastionSettings('invites'); } },
+      { icon: '⚙️', label: 'Bastion Settings',  action: () => { openBastion(idx); openBastionSettings(); } },
+      { icon: '🎨', label: 'Edit Banner',        action: () => { openBastion(idx); openBastionSettings('overview'); } },
+      { icon: '👥', label: 'Manage Members',     action: () => { openBastion(idx); openBastionSettings('members'); } },
+    ] : []),
+    { sep: true },
     { icon: '🚪', label: 'Leave Bastion', action: () => leaveBastion(idx), danger: true },
-  ].filter(it => it.show !== false);
+  ];
   showCtxMenu(e.clientX, e.clientY, items);
 }
 
@@ -7346,7 +7473,7 @@ function renderRadianceFontPicker() {
         <div class="font-tile-name">${f.name}</div>
       </div>`).join('')}
   </div>
-  <button class="settings-save-btn" onclick="saveDisplayFont()" style="margin-top:10px;">Apply Font</button>`;
+  `;
 }
 
 function previewFont(fontId) {
@@ -9715,7 +9842,7 @@ function renderAtelierTab(tab) {
     el.style.padding = '0';
     el.innerHTML = `
       <!-- Hero banner -->
-      <div style="position:relative;height:220px;background:linear-gradient(135deg,#070a12,#141830,#0d1220);overflow:hidden;flex-shrink:0;">
+      <div style="position:relative;height:240px;background:linear-gradient(135deg,#070a12,#141830,#0d1220);overflow:hidden;flex-shrink:0;">
         <img src="Onyx banner.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;" onerror="this.style.display='none'">
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,10,18,.1) 0%,rgba(7,10,18,.85) 100%);"></div>
         <!-- Status pill top-left -->
@@ -9968,7 +10095,7 @@ function renderAtelierTab(tab) {
     el.style.padding = '0';
     el.innerHTML = [
       // ── Quest page header ──
-      '<div style="position:relative;overflow:hidden;height:130px;background:#0a0d18;flex-shrink:0;">',
+      '<div style="position:relative;overflow:hidden;height:190px;background:#0a0d18;flex-shrink:0;">',
         '<img src="Fortized banner2.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6;" onerror="this.style.display=\'none\'">',
         '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,9,18,.15),rgba(7,9,18,.8));"></div>',
         '<div style="position:absolute;bottom:18px;left:28px;">',
@@ -10651,7 +10778,7 @@ function renderAcPanel(ta) {
     <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:2px 6px 5px;">Emoji Matching <span style="color:rgba(255,249,62,.7);">:${escapeHTML(ta.value.slice(_acStartPos+1, ta.selectionStart))}:</span></div>
     ${_acResults.map((r, i) => `
       <div onclick="applyEmojiAcById(${i})" style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;background:${i===_acSelected?'rgba(255,249,62,.12)':'transparent'};" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='${i===_acSelected?'rgba(255,249,62,.12)':'transparent'}'">
-        ${r.type==='unicode' ? `<span style="font-size:22px;line-height:1;">${r.emoji}</span>` : `<img src="${escapeHTML(r.url||'')}" style="width:24px;height:24px;object-fit:contain;" onerror="this.style.display='none'">`}
+        ${r.type==='unicode' ? `<img src="${emojiToTwemojiUrl(r.emoji)}" style="width:26px;height:26px;object-fit:contain;" onerror="this.outerHTML='<span style=\"font-size:22px;line-height:1;\">${r.emoji}</span>'">` : `<img src="${escapeHTML(r.url||'')}" style="width:24px;height:24px;object-fit:contain;" onerror="this.closest('[onclick]').style.display='none';this.style.display='none'">`}
         <span style="font-family:monospace;font-size:12.5px;color:rgba(255,255,255,.7);">:${escapeHTML(r.name)}:</span>
         ${r.type==='ftz'?'<span style="font-size:9px;background:rgba(255,249,62,.12);color:var(--accent);padding:1px 6px;border-radius:4px;margin-left:auto;">Fortized</span>':''}
       </div>
@@ -11366,18 +11493,27 @@ function toggleOwnProfilePanel() {
       <div style="font-size:11.5px;color:rgba(255,255,255,.4);">@${escapeHTML(CU?.username||'')}</div>
       ${cs?.text?`<div style="display:flex;align-items:center;gap:5px;margin-top:5px;padding:4px 9px;background:rgba(255,255,255,.06);border-radius:100px;display:inline-flex;font-size:11.5px;color:rgba(255,255,255,.6);">${cs.emoji||''} ${escapeHTML(cs.text)}</div>`:''}
     </div>
-    <!-- Status options -->
-    <div style="padding:8px 8px 4px;">
-      ${STATUS_OPTS.map(s=>`
-        <div onclick="setMyStatus('${s.id}');closeOwnProfilePanel()" style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:background .12s;${st===s.id?'background:rgba(255,255,255,.07);':''}" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='${st===s.id?'rgba(255,255,255,.07)':'transparent'}'">
-          <span style="width:10px;height:10px;border-radius:50%;background:${s.color};flex-shrink:0;${st===s.id?'box-shadow:0 0 6px '+s.color+'88;':''}"></span>
-          <span style="font-size:13.5px;font-weight:${st===s.id?'700':'500'};color:${st===s.id?'#fff':'rgba(255,255,255,.7)'};">${s.label}</span>
-          ${st===s.id?'<svg style="margin-left:auto;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>':''}
+    <!-- Status options — Discord style with descriptions -->
+    <div style="padding:6px 6px 2px;">
+      ${[
+        {id:'online',    label:'Online',           color:'#3ecf6e', desc:null},
+        {id:'away',      label:'Idle',             color:'#f59e0b', desc:null},
+        {id:'dnd',       label:'Do Not Disturb',   color:'#f87171', desc:'You will not receive desktop notifications'},
+        {id:'invisible', label:'Invisible',        color:'#6b7280', desc:'You will appear offline'},
+      ].map(s=>`
+        <div onclick="setMyStatus('${s.id}');closeOwnProfilePanel()" style="display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:7px;cursor:pointer;transition:background .12s;${st===s.id?'background:rgba(255,255,255,.07);':''}" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='${st===s.id?'rgba(255,255,255,.07)':'transparent'}'">
+          <span style="width:13px;height:13px;border-radius:50%;background:${s.color};flex-shrink:0;${st===s.id?'box-shadow:0 0 8px '+s.color+'99;':''}"></span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13.5px;font-weight:${st===s.id?'700':'500'};color:${st===s.id?'#fff':'rgba(255,255,255,.75)'};">${s.label}</div>
+            ${s.desc?`<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px;">${s.desc}</div>`:''}
+          </div>
+          ${st===s.id?'<svg style="flex-shrink:0;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>':''}
         </div>`).join('')}
-      <div onclick="openStatusPicker();closeOwnProfilePanel()" style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='transparent'">
-        <span style="width:10px;height:10px;border-radius:2px;border:1.5px solid rgba(255,255,255,.4);flex-shrink:0;"></span>
-        <span style="font-size:13.5px;color:rgba(255,255,255,.55);">${cs?.text?'Edit Custom Status':'Set Custom Status'}</span>
-      </div>
+    </div>
+    <div style="height:1px;background:rgba(255,255,255,.06);margin:4px 10px;"></div>
+    <div onclick="openStatusPicker();closeOwnProfilePanel()" style="display:flex;align-items:center;gap:11px;padding:9px 10px;margin:2px 6px;border-radius:7px;cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='transparent'">
+      <span style="font-size:13px;">✏️</span>
+      <span style="font-size:13px;color:rgba(255,255,255,.55);">${cs?.text?'Edit Custom Status':'Edit Custom Status'}</span>
     </div>
     <!-- Edit Profile button -->
     <div style="padding:4px 8px 10px;border-top:1px solid rgba(255,255,255,.06);margin-top:4px;">
@@ -11478,6 +11614,58 @@ async function showMiniProfilePreview(username, anchorEl) {
       }
     });
   }, 100);
+}
+
+
+function applyAppearance(themeId) {
+  localStorage.setItem('ftz_appearance', themeId);
+  if (themeId === 'dark_realm') {
+    document.documentElement.style.setProperty('--bg',     '#030407');
+    document.documentElement.style.setProperty('--rail',   '#020304');
+    document.documentElement.style.setProperty('--sidebar','#040508');
+    document.documentElement.style.setProperty('--channel','#050609');
+    document.documentElement.style.setProperty('--panel',  '#070a0e');
+    document.documentElement.style.setProperty('--panel2', '#090c12');
+    document.documentElement.style.setProperty('--border', '#0e1320');
+    document.documentElement.style.setProperty('--accent', '#5b7cff');
+  } else {
+    // Default Fortized
+    document.documentElement.style.setProperty('--bg',     '#07090e');
+    document.documentElement.style.setProperty('--rail',   '#04060a');
+    document.documentElement.style.setProperty('--sidebar','#0b0e15');
+    document.documentElement.style.setProperty('--channel','#0d1018');
+    document.documentElement.style.setProperty('--panel',  '#101420');
+    document.documentElement.style.setProperty('--panel2', '#131822');
+    document.documentElement.style.setProperty('--border', '#1c2335');
+    document.documentElement.style.setProperty('--accent', '#fff93e');
+  }
+  buildProfileView('appearance');
+  toast(themeId === 'dark_realm' ? '🌑 Dark Realm activated' : '⚡ Fortized theme restored', 'success');
+}
+
+// Apply saved appearance on load
+(function() {
+  const saved = localStorage.getItem('ftz_appearance');
+  if (saved) applyAppearance(saved);
+})();
+
+
+function previewProfileTheme() {
+  const c1 = document.getElementById('pt-color1')?.value || '#a855f7';
+  const c2 = document.getElementById('pt-color2')?.value || '#3b82f6';
+  const prev = document.getElementById('pt-preview');
+  if (prev) prev.style.background = `linear-gradient(135deg,${c1},${c2})`;
+  markSettingsDirty();
+}
+
+async function saveProfileTheme() {
+  const c1 = document.getElementById('pt-color1')?.value;
+  const c2 = document.getElementById('pt-color2')?.value;
+  if (!c1 || !c2) return;
+  CU.profileTheme = { color1: c1, color2: c2 };
+  await saveUser();
+  clearSettingsDirty();
+  toast('🎨 Profile theme saved!', 'success');
 }
 
 </script>

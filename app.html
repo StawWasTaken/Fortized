@@ -15,20 +15,34 @@
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;}
 ::selection{background:rgba(255,249,62,.2);}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#1e2840;border-radius:4px;}
-.rail{width:68px;min-width:68px;background:var(--rail);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;z-index:10;overflow-y:auto;}
-.rail-logo{width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
-.rail-logo img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,249,62,.3));}
-.rail-sep{width:30px;height:1px;background:var(--border);margin:5px 0;opacity:.4;}
-.rail-btn{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative;flex-shrink:0;font-size:18px;}
-.rail-btn:hover{background:rgba(255,255,255,.07);border-radius:12px;}
-.rail-btn.active{background:var(--accent-dim);border-radius:12px;}
-.rail-btn.active::before{content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:3px;height:22px;background:var(--accent);border-radius:0 4px 4px 0;}
-.rail-btn[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:#0c1020;border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:600;padding:5px 10px;border-radius:9px;white-space:nowrap;z-index:999;pointer-events:none;}
-.rail-bastion{width:42px;height:42px;border-radius:14px;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;transition:all .15s;position:relative;overflow:hidden;flex-shrink:0;}
-.rail-bastion:hover,.rail-bastion.active{border-color:var(--accent);border-radius:12px;background:var(--accent-dim);}
-.rail-bastion.active::before{content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:3px;height:22px;background:var(--accent);border-radius:0 4px 4px 0;}
-.rail-bastion img{width:100%;height:100%;object-fit:cover;border-radius:12px;}
-.rail-notif-badge{position:absolute;top:2px;right:2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--rail);padding:0 2px;}
+/* ── Discord-style Rail ────────────────────────────── */
+.rail{width:72px;min-width:72px;background:#1e1f22;display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:2px;z-index:10;overflow-y:auto;overflow-x:hidden;}
+.rail::-webkit-scrollbar{display:none;}
+/* Logo pill at top */
+.rail-logo{width:48px;height:48px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#fff93e;transition:border-radius .2s;margin-bottom:4px;flex-shrink:0;}
+.rail-logo:hover{border-radius:16px;}
+.rail-logo img{width:30px;height:30px;object-fit:contain;}
+/* Divider */
+.rail-sep{width:32px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;margin:4px 0;flex-shrink:0;}
+/* Nav buttons — Discord pill shape */
+.rail-btn{width:48px;height:48px;border-radius:50%;background:#313338;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-radius .18s,background .18s;position:relative;flex-shrink:0;font-size:0;color:rgba(255,255,255,.8);}
+.rail-btn svg{width:24px;height:24px;flex-shrink:0;}
+.rail-btn:hover{border-radius:16px;background:var(--accent);}
+.rail-btn:hover svg{color:#060810;}
+.rail-btn.active{border-radius:16px;background:var(--accent);}
+.rail-btn.active svg{color:#060810;}
+/* Left pill indicator */
+.rail-btn.active::before{content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:4px;height:40%;background:#fff;border-radius:0 4px 4px 0;}
+.rail-btn:hover::before{content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:4px;height:24px;background:#fff;border-radius:0 4px 4px 0;}
+/* Tooltip */
+.rail-btn[data-tip]:hover::after,.rail-bastion[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%);background:#18191c;color:#fff;font-size:14px;font-weight:700;padding:7px 12px;border-radius:6px;white-space:nowrap;z-index:999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.5);}
+/* Bastion icons — same pill behavior */
+.rail-bastion{width:48px;height:48px;border-radius:50%;background:#313338;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;transition:border-radius .18s,background .18s;position:relative;overflow:visible;flex-shrink:0;}
+.rail-bastion:hover,.rail-bastion.active{border-radius:16px;}
+.rail-bastion.active::before{content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:4px;height:40%;background:#fff;border-radius:0 4px 4px 0;}
+.rail-bastion:hover::before{content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:4px;height:24px;background:#fff;border-radius:0 4px 4px 0;}
+.rail-bastion img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
+.rail-notif-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #1e1f22;padding:0 2px;z-index:1;}
 .sidebar{width:240px;min-width:240px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
 .sidebar-header{height:52px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex-shrink:0;gap:7px;background:rgba(0,0,0,.15);}
 .sidebar-header .hdr-actions{margin-left:auto;display:flex;gap:2px;}
@@ -617,7 +631,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .radplus-badge { display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,120,62,.2),rgba(255,200,62,.15));border:1px solid rgba(255,160,62,.35);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:#ff9d3e; }
 
 /* ── SWITCH ACCOUNTS ──────────────────────────────── */
-.account-switcher { position:fixed;bottom:70px;left:78px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:10px;min-width:220px;z-index:2000;box-shadow:0 20px 50px rgba(0,0,0,.7);animation:ctxIn .14s cubic-bezier(.22,1,.36,1); }
+.account-switcher { position:fixed;bottom:70px;left:82px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:10px;min-width:220px;z-index:2000;box-shadow:0 20px 50px rgba(0,0,0,.7);animation:ctxIn .14s cubic-bezier(.22,1,.36,1); }
 .acct-item { display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;cursor:pointer;transition:background .1s; }
 .acct-item:hover { background:rgba(255,255,255,.06); }
 .acct-item.active-acct { background:rgba(255,249,62,.07); }
@@ -742,27 +756,47 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   <div class="np-list" id="np-list"><div style="padding:20px;text-align:center;font-size:13px;color:var(--muted);">Loading…</div></div>
 </div>
 
-<!-- RAIL -->
+<!-- RAIL — Discord style -->
 <div class="rail" id="rail">
+  <!-- Fortized logo pill -->
   <div class="rail-logo" onclick="showView('home')" data-tip="Home">
-    <img src="Fortized icon.png" onerror="this.style.display='none'">
+    <img src="Fortized icon.png" onerror="this.outerHTML='<span style=\'font-size:22px;\'>⚔️</span>'">
   </div>
   <div class="rail-sep"></div>
-  <div class="rail-btn" id="rb-home" data-tip="Home" onclick="showView('home')">🏠</div>
-  <div class="rail-btn" id="rb-dms" data-tip="Messages" onclick="showView('dms')">💬</div>
-  <div class="rail-btn" id="rb-friends" data-tip="Friends" onclick="showView('friends')">👥</div>
+  <!-- Nav items with SVG icons -->
+  <div class="rail-btn" id="rb-home" data-tip="Home" onclick="showView('home')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+  </div>
+  <div class="rail-btn" id="rb-dms" data-tip="Messages" onclick="showView('dms')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+  </div>
+  <div class="rail-btn" id="rb-friends" data-tip="Friends" onclick="showView('friends')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+  </div>
   <div class="rail-btn" id="rb-notifs" data-tip="Notifications" onclick="toggleNotifPanel()" style="position:relative;">
-    🔔<span class="rail-notif-badge" id="notif-badge" style="display:none;">0</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+    <span class="rail-notif-badge" id="notif-badge" style="display:none;">0</span>
   </div>
   <div class="rail-sep"></div>
-  <div class="rail-btn" id="rb-discover" data-tip="Discover" onclick="showView('discover')">🧭</div>
-  <div class="rail-btn" id="rb-atelier" data-tip="Atelier (Shop)" onclick="showView('atelier')">💎</div>
+  <div class="rail-btn" id="rb-discover" data-tip="Discover" onclick="showView('discover')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
+  </div>
+  <div class="rail-btn" id="rb-atelier" data-tip="Atelier" onclick="showView('atelier')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg>
+  </div>
   <div class="rail-sep"></div>
+  <!-- Bastions -->
   <div id="rail-bastions"></div>
-  <div class="rail-btn" data-tip="Create Bastion" onclick="openModal('modal-create-bastion')" style="margin-top:4px;">➕</div>
+  <div class="rail-btn" data-tip="Create Bastion" onclick="openModal('modal-create-bastion')" style="margin-top:2px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </div>
   <div style="flex:1;"></div>
-  <div class="rail-btn" data-tip="Switch Account" id="rb-switch-acct" onclick="toggleAccountSwitcher()">👤</div>
-  <div class="rail-btn" id="rb-profile" data-tip="Profile & Settings" onclick="showView('profile')">⚙️</div>
+  <div class="rail-btn" data-tip="Switch Account" id="rb-switch-acct" onclick="toggleAccountSwitcher()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+  </div>
+  <div class="rail-btn" id="rb-profile" data-tip="Settings" onclick="showView('profile')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+  </div>
 </div>
 <!-- ACCOUNT SWITCHER PANEL -->
 <div id="account-switcher-panel" style="display:none;" class="account-switcher">
@@ -1183,9 +1217,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 
 <!-- USER PROFILE -->
 <div class="modal-overlay" id="modal-user">
-  <div class="modal">
-    <div class="modal-bar"></div>
-    <div class="modal-body" id="user-modal-body" style="padding-top:0;"></div>
+  <div class="modal" style="max-width:340px;border-radius:18px;overflow:hidden;">
+    <div class="modal-body" id="user-modal-body" style="padding:24px;padding-top:0;background:#1e2130;"></div>
   </div>
 </div>
 
@@ -1744,11 +1777,17 @@ function buildAvatarHTML(pfp, name, size) {
   return `<span style="font-size:${Math.floor(size/2.2)}px;">${initial}</span>`;
 }
 function renderRailBastions() {
-  const c = document.getElementById('rail-bastions');
-  if (!c) return;
-  c.innerHTML = (CU?.bastions||[]).map((b,i)=>`
-    <div class="rail-bastion ${curBastion===i?'active':''}" id="rl-b-${i}" onclick="openBastion(${i})" oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})" data-tip="${escapeHTML(b.name)}" style="margin-bottom:4px;">
-      ${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`:(b.emblem||'🏰')}
+  const cont = document.getElementById('rail-bastions');
+  if (!cont) return;
+  cont.innerHTML = (CU?.bastions||[]).map((b,i)=>`
+    <div class="rail-bastion ${curBastion===i?'active':''}" id="rl-b-${i}"
+      onclick="openBastion(${i})"
+      oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})"
+      data-tip="${escapeHTML(b.name)}"
+      style="margin-bottom:6px;${curBastion===i?'background:var(--accent);':b.icon?'':'background:#313338;'}">
+      ${b.icon
+        ? `<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
+        : `<span style="font-size:20px;">${b.emblem||'🏰'}</span>`}
     </div>`).join('');
 }
 
@@ -4474,9 +4513,22 @@ function renderEmojiTab(tabId) {
   wireEmojiHover(grid);
 }
 
+function emojiToTwemojiUrl(emoji) {
+  // Convert emoji char to codepoint(s) for Twemoji URL
+  const codePoints = [...emoji].map(c => c.codePointAt(0).toString(16)).filter(c => c !== 'fe0f').join('-');
+  return 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/' + codePoints + '.svg';
+}
+
 function renderEmojiCell(emoji) {
   const safe = escapeHTML(emoji);
-  return `<div onclick="insertEmoji('${safe}')" onmouseenter="document.getElementById('epp-hover-label').textContent='${safe}'" style="width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:background .1s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">${emoji}</div>`;
+  const url = emojiToTwemojiUrl(emoji);
+  return `<div onclick="insertEmoji('${safe}')" title="${safe}" 
+    onmouseenter="document.getElementById('epp-hover-label').textContent='${safe}'" 
+    style="width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .1s;padding:3px;"
+    onmouseover="this.style.background='rgba(255,255,255,.1)'" 
+    onmouseout="this.style.background='transparent'">
+    <img src="${url}" style="width:24px;height:24px;object-fit:contain;" loading="lazy" onerror="this.outerHTML='<span style=\'font-size:20px;\'>${emoji}</span>'">
+  </div>`;
 }
 
 function wireEmojiHover(grid) {
@@ -5027,7 +5079,6 @@ async function viewUserProfile(username) {
   let status = 'offline';
   try { status = await FortizedSocial.getStatus(username); } catch {}
   if (username === CU.username) status = CU.status || 'online';
-  // Subscribe to real-time status updates for this profile
   subscribeProfileStatus(username);
 
   const isOwn = username === CU.username;
@@ -5035,126 +5086,101 @@ async function viewUserProfile(username) {
   const hasPending = (CU.friendRequestsSent||[]).includes(username);
   const blocked = JSON.parse(localStorage.getItem('ftz_blocked')||'[]');
   const isBlocked = blocked.includes(username);
-  const hasRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
 
-  const SC = { online:'#3ecf6e', away:'#f59e0b', dnd:'#f87171', invisible:'#6b7280', offline:'#6b7280' };
-  const SL = { online:'Online', away:'Away', dnd:'Do Not Disturb', invisible:'Invisible', offline:'Offline' };
-  const sc = SC[status] || SC.offline;
+  const STATUS_COLOR = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
+  const STATUS_LABEL = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible',offline:'Offline'};
+  const sc = STATUS_COLOR[status]||'#6b7280';
 
   const socials = u.socials || {};
-  const socialPlatforms = [
-    {k:'youtube', label:'YouTube', color:'#FF0000', bg:'rgba(255,0,0,.1)'},
-    {k:'roblox', label:'Roblox', color:'#00B2FF', bg:'rgba(0,178,255,.1)'},
-    {k:'spotify', label:'Spotify', color:'#1DB954', bg:'rgba(29,185,84,.1)'},
-    {k:'twitter', label:'X / Twitter', color:'#1d9bf0', bg:'rgba(29,155,240,.1)'},
-  ];
-  const socialHTML = socialPlatforms.filter(p => socials[p.k]).map(p =>
-    `<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:9px;border:1px solid ${p.color}40;background:${p.bg};color:${p.color};font-size:12px;font-weight:700;text-decoration:none;">${p.label} →</a>`
-  ).join('');
-
-  const gameCollection = u.gameCollection || u.registeredGames || [];
-  const joinedDate = u.joinedAt ? new Date(u.joinedAt).toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}) : null;
+  const games = u.gameCollection || [];
+  const customStatus = u.customStatus;
 
   const modalEl = document.getElementById('user-modal-body');
+  if (!modalEl) { openModal('modal-user'); return; }
 
+  // Build the card — Discord/Guilded style
+  // Profile card: banner top, avatar overlapping, content below
+  const bannerStyle = u.banner
+    ? `background:url('${u.banner}') center/cover no-repeat`
+    : `background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)`;
+
+  let actionButtons = '';
   if (isOwn) {
-    modalEl.innerHTML = `
-      <div style="position:relative;height:240px;background:linear-gradient(135deg,#0f1830,#1a0f30);margin:-24px -24px 0;overflow:hidden;border-radius:18px 18px 0 0;">
-        <img src="${u.banner||''}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 45%,rgba(4,6,10,.75));pointer-events:none;"></div>
-      </div>
-      <div style="padding:0 22px 20px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-52px;margin-bottom:16px;">
-          <div style="position:relative;">
-            <div style="width:100px;height:100px;border-radius:50%;background:var(--panel2);border:5px solid var(--panel);overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.5);">${buildAvatarHTML(u.pfp,u.displayName||u.username,100)}</div>
-            <span style="position:absolute;bottom:6px;right:6px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid var(--panel);box-shadow:0 0 0 2px rgba(0,0,0,.3);"></span>
-          </div>
-          <div style="display:flex;gap:6px;padding-bottom:4px;">
-            <button class="btn-a" onclick="closeModal('modal-user');showView('profile')" style="font-size:12.5px;padding:8px 16px;">Edit Profile</button>
-            <button class="btn-g" onclick="closeModal('modal-user')" style="font-size:12.5px;padding:8px 14px;">Close</button>
-          </div>
-        </div>
-        <div style="margin-bottom:10px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.1;">${escapeHTML(u.displayName||u.username)}</div>
-            ${renderBadgesHTML(u)}
-          </div>
-          <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">@${escapeHTML(u.username)}</div>
-        ${u.bio?`<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">About Me</div><div style="font-size:13px;color:var(--muted-light);line-height:1.55;">${escapeHTML(u.bio)}</div></div>`:''}
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:9px;height:9px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
-          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:12.5px;color:var(--muted-light);">${SL[status]||status}</span>
-        </div>
-        ${u.customStatus?.text?`<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;font-size:11.5px;margin-bottom:10px;">${u.customStatus.emoji||''} ${escapeHTML(u.customStatus.text)}</div>`:`<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;padding:3px 10px;border-radius:100px;font-size:11.5px;margin-bottom:10px;"></div>`}
-        ${socialHTML?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">${socialHTML}</div>`:''}
-        ${joinedDate?`<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Member Since</div><div style="font-size:13px;color:var(--muted-light);">${joinedDate}</div></div>`:''}
-        <div style="display:flex;gap:8px;">
-          <button class="btn-a" onclick="closeModal('modal-user');showView('profile')" style="flex:1;justify-content:center;font-size:13px;">Edit Profile</button>
-          <button class="btn-g" onclick="closeModal('modal-user')" style="flex:1;justify-content:center;font-size:13px;">Close</button>
-        </div>
-      </div>`;
+    actionButtons = `<button onclick="closeModal('modal-user');showView('profile')" style="width:100%;padding:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.13)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
+      Edit Profile
+    </button>`;
   } else {
-    const gameHTML = gameCollection.length
-      ? '<div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Apps & Games</div><div style="display:flex;flex-wrap:wrap;gap:5px;">'
-        + gameCollection.slice(0,6).map(g=>`<div style="display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;font-size:12px;"><span>${g.icon||'🎮'}</span><span style="font-weight:600;">${escapeHTML(g.name)}</span></div>`).join('')
-        + (gameCollection.length>6?`<span style="font-size:11px;color:var(--muted);align-self:center;">+${gameCollection.length-6} more</span>`:'')
-        + '</div></div>'
-      : '';
-
-    modalEl.innerHTML = `
-      <!-- BANNER 680×240 -->
-      <div style="position:relative;height:240px;background:linear-gradient(135deg,#0f1830,#1a0f30);margin:-24px -24px 0;overflow:hidden;border-radius:18px 18px 0 0;">
-        <img src="${u.banner||''}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 45%,rgba(4,6,10,.75));pointer-events:none;"></div>
-      </div>
-      <div style="padding:0 22px 20px;">
-        <!-- Avatar + action buttons -->
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:-52px;margin-bottom:16px;">
-          <div style="position:relative;">
-            <div style="width:100px;height:100px;border-radius:50%;background:var(--panel2);border:5px solid var(--panel);overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.6);">${buildAvatarHTML(u.pfp,u.displayName||u.username,100)}</div>
-            <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:6px;right:6px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid var(--panel);box-shadow:0 0 0 2px rgba(0,0,0,.3);"></span>
-          </div>
-          <div style="display:flex;gap:6px;padding-bottom:4px;">
-            <button class="btn-a" onclick="closeModal('modal-user');openDMChat('${escapeHTML(u.username)}')" style="font-size:12.5px;padding:8px 16px;display:flex;align-items:center;gap:5px;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message
-            </button>
-            <button onclick="startVoiceCall('${escapeHTML(u.username)}');closeModal('modal-user')" title="Voice Call" style="width:36px;height:36px;border-radius:50%;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.3);color:#3ecf6e;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
-            </button>
-            ${isFriend
-              ? `<button class="btn-d" onclick="closeModal('modal-user');removeFriend('${escapeHTML(u.username)}')" style="font-size:12px;padding:8px 14px;">Unfriend</button>`
-              : hasPending
-                ? `<button class="btn-g" disabled style="font-size:12px;padding:8px 14px;opacity:.6;">Request Sent ✓</button>`
-                : `<button class="btn-g" onclick="quickAddFriend('${escapeHTML(u.username)}')" style="font-size:12px;padding:8px 14px;">+ Add Friend</button>`
-            }
-          </div>
-        </div>
-        <!-- Name + badges -->
-        <div style="margin-bottom:10px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.1;">${escapeHTML(u.displayName||u.username)}</div>
-            ${renderBadgesHTML(u)}
-            ${u.gameActivity?.name?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:100px;padding:2px 9px;font-size:10.5px;font-weight:600;">${u.gameActivity.icon||'🎮'} ${escapeHTML(u.gameActivity.name)}</div>`:''}
-          </div>
-          <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">@${escapeHTML(u.username)}</div>
-          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
-            <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:10px;height:10px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
-            <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:13px;color:var(--muted-light);">${SL[status]||status}</span>
-            ${u.customStatus?.text?`<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;font-size:11.5px;">${u.customStatus.emoji||''} ${escapeHTML(u.customStatus.text)}</span>`:`<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></span>`}
-          </div>
-        </div>
-        <div style="height:1px;background:rgba(255,255,255,.06);margin:10px 0 12px;"></div>
-        ${u.bio?`<div style="margin-bottom:12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">About Me</div><div style="font-size:13px;color:var(--muted-light);line-height:1.6;padding:10px 12px;background:var(--panel2);border-radius:10px;border-left:3px solid var(--accent-mid);">${escapeHTML(u.bio)}</div></div>`:''}
-        ${gameHTML}
-        ${socialHTML?`<div style="margin-bottom:12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Connected Accounts</div><div style="display:flex;flex-wrap:wrap;gap:5px;">${socialHTML}</div></div>`:''}
-        ${joinedDate?`<div style="display:flex;align-items:center;gap:5px;margin-bottom:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span style="font-size:12px;color:var(--muted);">Member since ${joinedDate}</span></div>`:''}
-        <div style="display:flex;gap:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);">
-          <button onclick="toggleBlockUser('${escapeHTML(u.username)}')" style="flex:1;padding:8px;border-radius:10px;border:1px solid ${isBlocked?'rgba(248,113,113,.4)':'var(--border)'};background:${isBlocked?'rgba(248,113,113,.1)':'transparent'};color:${isBlocked?'var(--red)':'var(--muted-light)'};font-size:12px;cursor:pointer;font-weight:600;">${isBlocked?'Unblock':'Block'}</button>
-          <button onclick="reportUser('${escapeHTML(u.username)}')" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted-light);font-size:12px;cursor:pointer;font-weight:600;">Report</button>
-          <button onclick="closeModal('modal-user')" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted-light);font-size:12px;cursor:pointer;font-weight:600;">Close</button>
-        </div>
-      </div>`;
+    actionButtons = `<div style="display:flex;gap:8px;">
+      <button onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')" style="flex:1;padding:9px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;">
+        Message
+      </button>
+      ${isFriend
+        ? `<button onclick="closeModal('modal-user');removeFriend('${escapeHTML(username)}')" style="padding:9px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;">Unfriend</button>`
+        : hasPending
+          ? `<button disabled style="padding:9px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.3);font-size:12.5px;">Pending…</button>`
+          : `<button onclick="quickAddFriend('${escapeHTML(username)}')" style="padding:9px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.14)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">Add Friend</button>`}
+    </div>`;
   }
+
+  modalEl.innerHTML = `
+    <!-- Banner -->
+    <div style="height:100px;${bannerStyle};margin:-24px -24px 0;border-radius:18px 18px 0 0;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 40%,rgba(16,20,32,.7));"></div>
+    </div>
+    <!-- Avatar row -->
+    <div style="padding:0 18px;margin-top:-36px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-end;">
+      <div style="position:relative;">
+        <div style="width:74px;height:74px;border-radius:50%;overflow:hidden;border:5px solid var(--panel);background:var(--panel2);box-shadow:0 4px 16px rgba(0,0,0,.5);">
+          ${buildAvatarHTML(u.pfp, u.displayName||u.username, 74)}
+        </div>
+        <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;background:${sc};border:3px solid var(--panel);"></span>
+      </div>
+      <div style="display:flex;gap:6px;padding-bottom:4px;">${renderBadgesHTML(u)}</div>
+    </div>
+    <!-- Name + tag -->
+    <div style="padding:0 18px 14px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;margin-bottom:1px;">${escapeHTML(u.displayName||u.username)}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px;">@${escapeHTML(u.username)}</div>
+      <!-- Status + custom status -->
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:9px;height:9px;border-radius:50%;background:${sc};"></span>
+          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:12.5px;color:rgba(255,255,255,.5);">${STATUS_LABEL[status]||'Offline'}</span>
+        </div>
+        ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(255,255,255,.06);border-radius:100px;font-size:11.5px;color:rgba(255,255,255,.5);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></span>`}
+      </div>
+    </div>
+    <!-- Bio -->
+    ${u.bio ? `<div style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:5px;">About Me</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.65);line-height:1.55;">${escapeHTML(u.bio.slice(0,180))}${u.bio.length>180?'…':''}</div>
+    </div>` : ''}
+    <!-- Game activity -->
+    ${u.gameActivity?.name ? `<div style="padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:7px;">Playing a Game</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${u.gameActivity.icon||'🎮'}</div>
+        <div><div style="font-size:13.5px;font-weight:700;">${escapeHTML(u.gameActivity.name)}</div></div>
+      </div>
+    </div>` : ''}
+    <!-- Socials -->
+    ${Object.values(socials).some(Boolean) ? `<div style="padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:7px;">Connected</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">
+        ${[{k:'youtube',l:'YouTube',c:'#ff4444'},{k:'roblox',l:'Roblox',c:'#00b2ff'},{k:'spotify',l:'Spotify',c:'#1db954'},{k:'twitter',l:'X / Twitter',c:'#1d9bf0'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid ${p.c}33;color:${p.c};font-size:12px;font-weight:600;text-decoration:none;">${p.l} →</a>`).join('')}
+      </div>
+    </div>` : ''}
+    <!-- Actions -->
+    <div style="padding:12px 18px;">
+      ${actionButtons}
+      ${!isOwn ? `<div style="display:flex;gap:8px;margin-top:8px;">
+        <button onclick="toggleBlockUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:7px;border:1px solid ${isBlocked?'rgba(248,113,113,.4)':'rgba(255,255,255,.08)'};background:${isBlocked?'rgba(248,113,113,.08)':'transparent'};color:${isBlocked?'var(--red)':'rgba(255,255,255,.4)'};font-size:11.5px;cursor:pointer;">${isBlocked?'Unblock':'Block'}</button>
+        <button onclick="reportUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:11.5px;cursor:pointer;">Report</button>
+        <button onclick="closeModal('modal-user')" style="flex:1;padding:7px;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:11.5px;cursor:pointer;">Close</button>
+      </div>` : `<button onclick="closeModal('modal-user')" style="width:100%;padding:7px;margin-top:8px;border-radius:7px;border:1px solid rgba(255,255,255,.06);background:transparent;color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;">Close</button>`}
+    </div>`;
+
   openModal('modal-user');
 }
 
@@ -9806,14 +9832,24 @@ function renderAtelierTab(tab) {
     const doneQ   = QUESTS_DEF.filter(q => q.done);
     const qTab = el._questTab || 'available';
 
-    // Quest thumbnail bg by category
-    const questBg = (q) => q.id==='daily_claim'
-      ? 'url(\'Fortized banner.png\') center/cover no-repeat,#0a0d18'
-      : q.id==='invite'
-        ? 'url(\'Fortized banner4.png\') center/cover no-repeat,#0a1428'
-        : q.done
-          ? 'linear-gradient(135deg,rgba(62,207,110,.1),rgba(0,0,0,.3))'
-          : 'linear-gradient(135deg,rgba(255,255,255,.04),rgba(0,0,0,.25))';
+    // Quest thumbnail bg — all have banner images with 0.85 dark overlay
+    const QUEST_BANNERS = {
+      daily_claim: 'Fortized banner.png',
+      invite:      'Fortized banner4.png',
+      join_bastion:'Fortized banner.png',
+      add_friend:  'Fortized banner4.png',
+      set_pfp:     'Fortized banner.png',
+    };
+    const questThumbHTML = (q) => {
+      const banner = QUEST_BANNERS[q.id] || 'Fortized banner.png';
+      return `<div style="height:76px;position:relative;overflow:hidden;background:#0a0d18;">
+        <img src="${banner}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.85);"></div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;">${q.icon}</div>
+        ${q.done?'<div style="position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:50%;background:rgba(62,207,110,.9);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:800;">✓</div>':''}
+        <span style="position:absolute;top:7px;left:8px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:100px;background:rgba(0,0,0,.7);color:rgba(255,255,255,.6);letter-spacing:.04em;backdrop-filter:blur(4px);">${q.daily?'🔄 Daily':q.category}</span>
+      </div>`;
+    };
 
     el.style.padding = '0';
     el.innerHTML = [
@@ -9862,11 +9898,7 @@ function renderAtelierTab(tab) {
         '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-bottom:40px;">',
           (qTab === 'available' ? activeQ : doneQ).map(q => [
             `<div style="background:${q.done?'rgba(62,207,110,.04)':'rgba(255,255,255,.03)'};border:1px solid ${q.done?'rgba(62,207,110,.1)':'rgba(255,255,255,.07)'};border-radius:14px;overflow:hidden;transition:border-color .14s;" ${!q.done?'onmouseover="this.style.borderColor=\'rgba(255,249,62,.2)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.07)\'"':''}>`,
-              `<div style="height:76px;background:${questBg(q)};position:relative;display:flex;align-items:center;justify-content:center;font-size:36px;">`,
-                q.icon,
-                q.done ? '<div style="position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:rgba(62,207,110,.85);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;">✓</div>' : '',
-                `<span style="position:absolute;top:7px;left:9px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:100px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.5);letter-spacing:.04em;backdrop-filter:blur(4px);">${q.daily?'🔄 Daily':q.category}</span>`,
-              '</div>',
+              questThumbHTML(q),
               '<div style="padding:11px 13px;">',
                 `<div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;margin-bottom:3px;">${q.title}</div>`,
                 `<div style="font-size:11px;color:rgba(255,255,255,.38);line-height:1.45;margin-bottom:9px;">${q.desc}</div>`,

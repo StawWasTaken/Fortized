@@ -5076,8 +5076,13 @@ function buildProfileView(tab) {
         ${themes.map(t => {
           const isActive = currentTheme===t.id;
           const isLocked = t.locked;
+          const borderCol = isActive ? 'var(--accent)' : 'rgba(255,255,255,.08)';
+          const bgCol = isActive ? 'rgba(255,249,62,.06)' : 'rgba(255,255,255,.02)';
+          const txtCol = isActive ? 'var(--accent)' : '#fff';
+          const clickAction = isLocked ? "toast('Purchase Onyx Pure from the Shop first!','info')" : "applyAppearance('" + t.id + "')";
+          const opac = isLocked ? 'opacity:.6;' : '';
           return `
-          <div onclick="${isLocked?`toast('Purchase Onyx Pure from the Shop first!','info')`:`applyAppearance('${t.id}')`}" style="border:2px solid ${isActive?'var(--accent)':'rgba(255,255,255,.08)'};border-radius:14px;overflow:hidden;cursor:pointer;transition:.14s;background:${isActive?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};${isLocked?'opacity:.6;':''}position:relative;" onmouseover="if(!${isActive})this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="if(!${isActive})this.style.borderColor='${isActive?'var(--accent)':'rgba(255,255,255,.08)}'">
+          <div onclick="${clickAction}" style="border:2px solid ${borderCol};border-radius:14px;overflow:hidden;cursor:pointer;transition:.14s;background:${bgCol};${opac}position:relative;" onmouseover="if(!${isActive})this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="if(!${isActive})this.style.borderColor='${borderCol}'">
             <div style="height:80px;background:${t.preview[0]};display:flex;gap:4px;padding:8px;">
               <div style="width:20px;background:${t.preview[2]};border-radius:4px;"></div>
               <div style="flex:1;background:rgba(255,255,255,.04);border-radius:4px;padding:6px;">
@@ -5086,10 +5091,10 @@ function buildProfileView(tab) {
               </div>
             </div>
             <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;">
-              ${isActive?'<div style="width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>':'<div style="width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,.2);flex-shrink:0;"></div>'}
+              ${isActive ? '<div style="width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>' : '<div style="width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,.2);flex-shrink:0;"></div>'}
               <div>
-                <div style="font-size:13px;font-weight:700;color:${isActive?'var(--accent)':'#fff'};">${t.name}${isLocked?' 🔒':''}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.35);">${t.desc}${t.free?' · Free':isLocked?' · 150 Onyx':''}</div>
+                <div style="font-size:13px;font-weight:700;color:${txtCol};">${t.name}${isLocked ? ' 🔒' : ''}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.35);">${t.desc}${t.free ? ' · Free' : isLocked ? ' · 150 Onyx' : ''}</div>
               </div>
             </div>
           </div>`;
@@ -7552,7 +7557,6 @@ function restoreCustomStatusTimer() {
 }
 
 // subscribeProfileStatus — see main implementation below (line ~9348)
-}
 
 // ════════════════════════════════════════════
 // RADIANCE FONT SELECTOR
@@ -8482,7 +8486,7 @@ function openStatusPicker() {
       <div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Clear After</div>
       <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;">
         ${[{id:'30m',label:'30 min'},{id:'1h',label:'1 hour'},{id:'4h',label:'4 hours'},{id:'today',label:'Today'},{id:'forever',label:"Don't Clear"}].map(d=>
-          '<button class="status-dur-btn" data-dur="'+d.id+'" onclick="document.querySelectorAll(\\'.status-dur-btn\\').forEach(b=>b.style.background=\\'transparent\\');this.style.background=\\'rgba(255,249,62,.12)\\';this.style.borderColor=\\'rgba(255,249,62,.3)\\'" style="padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;transition:.12s;">'+d.label+'</button>'
+          `<button class="status-dur-btn" data-dur="${d.id}" onclick="document.querySelectorAll('.status-dur-btn').forEach(b=>b.style.background='transparent');this.style.background='rgba(255,249,62,.12)';this.style.borderColor='rgba(255,249,62,.3)'" style="padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;transition:.12s;">${d.label}</button>`
         ).join('')}
       </div>
       <div style="display:flex;gap:8px;">
@@ -10294,27 +10298,25 @@ function renderAtelierTab(tab) {
         ${shopTab==='featured'?`
           <!-- Featured: Onyx Pure Appearance -->
           <div class="atel-section-hdr">Appearances</div>
-          ${(function(){
-            const onyxOwned = (CU?.unlockedAppearances||[]).includes('onyx_pure');
-            return '<div style="background:linear-gradient(135deg,#010103,#08061a,#0e0a22);border:1.5px solid rgba(140,100,220,.2);border-radius:18px;overflow:hidden;margin-bottom:24px;cursor:pointer;transition:border-color .2s,box-shadow .2s;" onmouseover="this.style.borderColor=\\'rgba(140,100,220,.4)\\';this.style.boxShadow=\\'0 4px 32px rgba(100,60,180,.15)\\';" onmouseout="this.style.borderColor=\\'rgba(140,100,220,.2)\\';this.style.boxShadow=\\'none\\';">'
-              +'<div style="height:120px;background:linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%);display:flex;gap:4px;padding:14px;position:relative;">'
-              +'<div style="width:24px;background:#020206;border-radius:5px;"></div>'
-              +'<div style="flex:1;background:rgba(255,255,255,.03);border-radius:5px;padding:10px;">'
-              +'<div style="height:7px;background:#fff93e;border-radius:4px;width:45%;margin-bottom:5px;"></div>'
-              +'<div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;width:75%;"></div>'
-              +'</div>'
-              +'<div style="position:absolute;bottom:10px;right:14px;font-size:11px;color:rgba(140,100,220,.6);font-weight:700;letter-spacing:.05em;">ONYX PURE</div>'
-              +'</div>'
-              +'<div style="padding:18px 20px;display:flex;align-items:center;gap:14px;">'
-              +'<div style="flex:1;">'
-              +'<div style="font-family:\\'Syne\\',sans-serif;font-size:17px;font-weight:800;color:#fff;margin-bottom:4px;">Onyx Pure</div>'
-              +'<div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.5;">The darkest appearance. Deeper than Dark Fortress with a subtle gradient towards dark purple. Pure immersion.</div>'
-              +'</div>'
-              +(onyxOwned
-                ? '<div style="padding:10px 20px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);border-radius:12px;color:#3ecf6e;font-family:\\'Syne\\',sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'
-                : '<button onclick="event.stopPropagation();buyAppearance(\\'onyx_pure\\',150)" style="padding:10px 20px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:\\'Syne\\',sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;"><img src=\\'Onyx.png\\' style=\\'width:16px;height:16px;object-fit:contain;\\'> 150 Onyx</button>')
-              +'</div></div>';
-          })()}
+          <div style="background:linear-gradient(135deg,#010103,#08061a,#0e0a22);border:1.5px solid rgba(140,100,220,.2);border-radius:18px;overflow:hidden;margin-bottom:24px;cursor:pointer;transition:border-color .2s,box-shadow .2s;" onmouseover="this.style.borderColor='rgba(140,100,220,.4)';this.style.boxShadow='0 4px 32px rgba(100,60,180,.15)'" onmouseout="this.style.borderColor='rgba(140,100,220,.2)';this.style.boxShadow='none'">
+            <div style="height:120px;background:linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%);display:flex;gap:4px;padding:14px;position:relative;">
+              <div style="width:24px;background:#020206;border-radius:5px;"></div>
+              <div style="flex:1;background:rgba(255,255,255,.03);border-radius:5px;padding:10px;">
+                <div style="height:7px;background:#fff93e;border-radius:4px;width:45%;margin-bottom:5px;"></div>
+                <div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;width:75%;"></div>
+              </div>
+              <div style="position:absolute;bottom:10px;right:14px;font-size:11px;color:rgba(140,100,220,.6);font-weight:700;letter-spacing:.05em;">ONYX PURE</div>
+            </div>
+            <div style="padding:18px 20px;display:flex;align-items:center;gap:14px;">
+              <div style="flex:1;">
+                <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;margin-bottom:4px;">Onyx Pure</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.5;">The darkest appearance. Deeper than Dark Fortress with a subtle gradient towards dark purple. Pure immersion.</div>
+              </div>
+              ${(CU?.unlockedAppearances||[]).includes('onyx_pure')
+                ? '<div style="padding:10px 20px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);border-radius:12px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'
+                : `<button onclick="event.stopPropagation();buyAppearance('onyx_pure',150)" style="padding:10px 20px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;"><img src='Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 150 Onyx</button>`}
+            </div>
+          </div>
 
           <!-- More coming soon -->
           <div class="atel-section-hdr" style="margin-top:20px;">Upcoming Items</div>

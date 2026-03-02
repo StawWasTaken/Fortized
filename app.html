@@ -12,39 +12,33 @@
 <style>
 :root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.22);--bg:#07090e;--rail:#04060a;--sidebar:#0b0e15;--channel:#0d1018;--panel:#101420;--panel2:#131822;--panel3:#161c28;--border:#1c2335;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;overflow:hidden;}
-body{background:#000;color:var(--text);font-family:'DM Sans',sans-serif;display:flex;}
+body{background:var(--rail);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;}
 ::selection{background:rgba(255,249,62,.2);}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#1e2840;border-radius:4px;}
-/* ── Discord-style Rail ────────────────────────────── */
-.rail{width:72px;min-width:72px;background:#000;display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:2px;z-index:10;overflow-y:auto;overflow-x:hidden;}
-.rail::-webkit-scrollbar{display:none;}
-/* Logo pill at top */
-.rail-logo{width:48px;height:48px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#fff93e;transition:border-radius .2s;margin-bottom:4px;flex-shrink:0;}
-.rail-logo:hover{border-radius:16px;}
-.rail-logo img{width:30px;height:30px;object-fit:contain;}
-/* Divider */
-.rail-sep{width:32px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;margin:4px 0;flex-shrink:0;}
-/* Nav buttons — Discord pill shape */
-.rail-btn{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-radius .18s,background .18s;position:relative;flex-shrink:0;font-size:0;color:rgba(255,255,255,.8);}
-.rail-btn svg{width:24px;height:24px;flex-shrink:0;}
-.rail-btn:hover{border-radius:16px;background:var(--accent);color:#060810;}
-.rail-btn:hover svg{color:#060810;}
-.rail-btn.active{border-radius:16px;background:var(--accent);color:#060810;}
+/* ── Horizontal Top Nav ────────────────────────────── */
+.top-nav{height:52px;min-height:52px;background:var(--sidebar);display:flex;align-items:center;padding:0 12px;gap:4px;z-index:10;flex-shrink:0;}
+.top-nav-logo{width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--accent);transition:border-radius .2s,transform .15s;flex-shrink:0;margin-right:6px;}
+.top-nav-logo:hover{border-radius:14px;transform:scale(1.05);}
+.top-nav-logo img{width:22px;height:22px;object-fit:contain;}
+.rail-sep{width:1px;height:24px;background:rgba(255,255,255,.08);margin:0 6px;flex-shrink:0;}
+.rail-btn{width:36px;height:36px;border-radius:10px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .14s,color .14s;position:relative;flex-shrink:0;font-size:0;color:rgba(255,255,255,.5);}
+.rail-btn svg{width:20px;height:20px;flex-shrink:0;}
+.rail-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
+.rail-btn.active{background:var(--accent);color:#060810;}
 .rail-btn.active svg{color:#060810;}
-/* Left pill indicator */
-.rail-btn.active::before{content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:4px;height:40%;background:#fff;border-radius:0 4px 4px 0;}
-.rail-btn:hover::before{content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:4px;height:24px;background:#fff;border-radius:0 4px 4px 0;}
-/* Tooltip */
-.rail-btn[data-tip]:hover::after,.rail-bastion[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%);background:#18191c;color:#fff;font-size:14px;font-weight:700;padding:7px 12px;border-radius:6px;white-space:nowrap;z-index:999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.5);}
-/* Bastion icons — same pill behavior */
-.rail-bastion{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;transition:border-radius .18s,background .18s;position:relative;overflow:visible;flex-shrink:0;}
-.rail-bastion:hover,.rail-bastion.active{border-radius:16px;}
-.rail-bastion.active::before{content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:4px;height:40%;background:#fff;border-radius:0 4px 4px 0;}
-.rail-bastion:hover::before{content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:4px;height:24px;background:#fff;border-radius:0 4px 4px 0;}
+.rail-btn.active::before,.rail-btn:hover::before{display:none;}
+.rail-btn[data-tip]:hover::after,.rail-bastion[data-tip]:hover::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#18191c;color:#fff;font-size:12px;font-weight:700;padding:5px 10px;border-radius:6px;white-space:nowrap;z-index:999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.5);}
+.rail-bastion{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:border-radius .14s,background .14s;position:relative;overflow:visible;flex-shrink:0;}
+.rail-bastion:hover,.rail-bastion.active{border-radius:12px;}
+.rail-bastion.active{outline:2px solid var(--accent);outline-offset:1px;}
+.rail-bastion.active::before,.rail-bastion:hover::before{display:none;}
 .rail-bastion img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
-.rail-notif-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--rail);padding:0 2px;z-index:1;}
-.sidebar{width:240px;min-width:240px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;border-top-left-radius:12px;}
-.sidebar-header{height:52px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex-shrink:0;gap:7px;background:rgba(0,0,0,.15);border-top-left-radius:12px;}
+.rail-notif-badge{position:absolute;top:-2px;right:-2px;min-width:14px;height:14px;border-radius:7px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 2px;z-index:1;}
+.top-nav-spacer{flex:1;}
+/* ── App Body ────────────────────────────────────── */
+.app-body{display:flex;flex:1;min-height:0;overflow:hidden;background:var(--bg);border-top-left-radius:14px;border-top-right-radius:14px;}
+.sidebar{width:240px;min-width:240px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.sidebar-header{height:48px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex-shrink:0;gap:7px;background:rgba(0,0,0,.15);}
 .sidebar-header .hdr-actions{margin-left:auto;display:flex;gap:2px;}
 .sidebar-header .hdr-actions button{width:28px;height:28px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .sidebar-header .hdr-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
@@ -81,8 +75,8 @@ body{background:#000;color:var(--text);font-family:'DM Sans',sans-serif;display:
 .ua-btns button{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .ua-btns button:hover{background:rgba(255,255,255,.07);color:#fff;}
 /* Own profile mini panel */
-.own-profile-panel{position:fixed;bottom:64px;left:10px;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
-.main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);}
+.own-profile-panel{position:fixed;bottom:64px;left:4px;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
 .topbar{height:52px;background:rgba(8,11,18,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;}
 .topbar-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;white-space:nowrap;}
 .tb-sep{width:1px;height:18px;background:var(--border);margin:0 2px;}
@@ -694,7 +688,7 @@ body{background:#000;color:var(--text);font-family:'DM Sans',sans-serif;display:
 .radplus-badge { display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,120,62,.2),rgba(255,200,62,.15));border:1px solid rgba(255,160,62,.35);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:#ff9d3e; }
 
 /* ── SWITCH ACCOUNTS ──────────────────────────────── */
-.account-switcher { position:fixed;bottom:70px;left:82px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:10px;min-width:220px;z-index:2000;box-shadow:0 20px 50px rgba(0,0,0,.7);animation:ctxIn .14s cubic-bezier(.22,1,.36,1); }
+.account-switcher { position:fixed;bottom:70px;left:10px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:10px;min-width:220px;z-index:2000;box-shadow:0 20px 50px rgba(0,0,0,.7);animation:ctxIn .14s cubic-bezier(.22,1,.36,1); }
 .acct-item { display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;cursor:pointer;transition:background .1s; }
 .acct-item:hover { background:rgba(255,255,255,.06); }
 .acct-item.active-acct { background:rgba(255,249,62,.07); }
@@ -852,21 +846,19 @@ body{background:#000;color:var(--text);font-family:'DM Sans',sans-serif;display:
   <div class="np-list" id="np-list"><div style="padding:20px;text-align:center;font-size:13px;color:var(--muted);">Loading…</div></div>
 </div>
 
-<!-- RAIL — Discord style -->
-<div class="rail" id="rail">
-  <!-- Fortized logo pill -->
-  <div class="rail-logo" onclick="showView('home')" data-tip="Home">
-    <img src="Fortized icon.png" onerror="this.outerHTML='<span style=\'font-size:22px;\'>⚔️</span>'">
+<!-- TOP NAV — Horizontal -->
+<div class="top-nav" id="rail">
+  <!-- Fortized logo -->
+  <div class="top-nav-logo" onclick="showView('home')" data-tip="Home">
+    <img src="Fortized icon.png" onerror="this.outerHTML='<span style=\'font-size:16px;\'>⚔️</span>'">
   </div>
-  <div class="rail-sep"></div>
-  <!-- Nav items with SVG icons -->
+  <!-- Nav items -->
   <div class="rail-btn" id="rb-home" data-tip="Home" onclick="showView('home')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
   </div>
   <div class="rail-btn" id="rb-dms" data-tip="Direct Messages" onclick="showView('dms')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
   </div>
-  <!-- Notif badge hidden element (still tracks count) -->
   <span id="notif-badge" style="display:none;">0</span>
   <div class="rail-sep"></div>
   <div class="rail-btn" id="rb-discover" data-tip="Discover" onclick="showView('discover')">
@@ -876,12 +868,23 @@ body{background:#000;color:var(--text);font-family:'DM Sans',sans-serif;display:
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg>
   </div>
   <div class="rail-sep"></div>
-  <!-- Bastions -->
-  <div id="rail-bastions"></div>
-  <div class="rail-btn" data-tip="Create Bastion" onclick="openModal('modal-create-bastion')" style="margin-top:2px;">
+  <!-- Bastions (inline) -->
+  <div id="rail-bastions" style="display:flex;gap:4px;align-items:center;"></div>
+  <div class="rail-btn" data-tip="Create Bastion" onclick="openModal('modal-create-bastion')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </div>
-  <div style="flex:1;"></div>
+  <!-- Spacer -->
+  <div class="top-nav-spacer"></div>
+  <!-- Search -->
+  <div class="tb-search" id="topnav-search">
+    <span>🔍</span>
+    <input type="text" placeholder="Search…" id="search-input" oninput="handleSearch(this.value)">
+  </div>
+  <!-- Onyx pill -->
+  <div class="onyx-pill" onclick="showView('atelier')" id="onyx-display">
+    <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">
+    <span id="onyx-val">0</span>
+  </div>
 </div>
 <!-- ACCOUNT SWITCHER PANEL -->
 <div id="account-switcher-panel" style="display:none;" class="account-switcher">
@@ -898,6 +901,9 @@ body{background:#000;color:var(--text);font-family:'DM Sans',sans-serif;display:
     </div>
   </div>
 </div>
+
+<!-- APP BODY (sidebar + main, rounded corners) -->
+<div class="app-body" id="app-body">
 
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
@@ -940,21 +946,12 @@ body{background:#000;color:var(--text);font-family:'DM Sans',sans-serif;display:
 
 <!-- MAIN AREA -->
 <div class="main">
-  <!-- TOPBAR -->
+  <!-- TOPBAR (context info only — search & onyx are in top-nav) -->
   <div class="topbar" id="topbar">
     <div class="topbar-title" id="topbar-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg> Home</div>
     <div class="tb-sep" id="tb-sep" style="display:none;"></div>
     <div class="tb-desc" id="tb-desc"></div>
-    <div class="tb-actions" id="tb-actions">
-      <div class="tb-search">
-        <span>🔍</span>
-        <input type="text" placeholder="Search…" id="search-input" oninput="handleSearch(this.value)">
-      </div>
-      <div class="onyx-pill" onclick="showView('atelier')" id="onyx-display">
-        <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">
-        <span id="onyx-val">0</span>
-      </div>
-    </div>
+    <div class="tb-actions" id="tb-actions"></div>
   </div>
 
   <!-- CONTENT VIEWS -->
@@ -1173,6 +1170,7 @@ body{background:#000;color:var(--text);font-family:'DM Sans',sans-serif;display:
 
   </div><!-- /content -->
 </div><!-- /main -->
+</div><!-- /app-body -->
 
 <!-- ═══════════════════════════════════════════
      MODALS
@@ -1944,7 +1942,7 @@ function renderRailBastions() {
       onclick="openBastion(${i})"
       oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})"
       data-tip="${escapeHTML(b.name)}"
-      style="margin-bottom:6px;${curBastion===i?'background:var(--accent);':b.icon?'':'background:#313338;'}">
+      style="${curBastion===i?'background:var(--accent);':b.icon?'':'background:#313338;'}">
       ${b.icon
         ? `<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
         : `<span style="font-size:20px;">${b.emblem||'🏰'}</span>`}

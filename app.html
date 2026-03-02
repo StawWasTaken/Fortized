@@ -1200,8 +1200,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg>
       <span>Atelier</span>
     </div>
-    <div class="rail-sep"></div>
+    <div class="rail-sep" style="margin:10px 12px;"></div>
     <!-- Bastions -->
+    <div style="padding:2px 14px 4px;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.18);">Bastions</div>
     <div id="rail-bastions"></div>
     <div class="rail-btn" onclick="openModal('modal-create-bastion')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1486,14 +1487,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
               <span class="atelier-nav-icon">🛍️</span>Shop
             </div>
           </div>
-          <!-- Onyx balance in nav bottom -->
-          <div style="padding:8px 12px 14px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.04);">
-            <div class="onyx-pill" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="width:100%;justify-content:center;border-radius:14px;padding:8px 14px;">
-              <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;">
-              <span id="atelier-nav-balance">0</span>
-              <span style="font-size:10px;color:rgba(255,249,62,.5);margin-left:2px;">Onyx</span>
-            </div>
-          </div>
+          <!-- Onyx balance removed from nav bottom -->
         </div>
         <!-- Main content -->
         <div class="atelier-scroll" id="atelier-content">
@@ -2200,7 +2194,9 @@ function toast(msg, type='info') {
 // ════════════════════════════════════════════
 // VIEW MANAGEMENT
 // ════════════════════════════════════════════
+let _currentView = 'home';
 function showView(v) {
+  _currentView = v;
   // Clean up GC panel when leaving DMs view
   if (v !== 'dms') document.getElementById('gc-member-panel')?.remove();
 
@@ -2252,12 +2248,8 @@ function updateTopbar(v) {
   if (!title) return;
   if (sep) sep.style.display = 'none';
   if (desc) desc.textContent = '';
-  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'Settings',bsettings:'Bastion Settings'};
+  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'Settings',bsettings:'Bastion Settings',bastion:'Bastions'};
   if (labels[v]) title.textContent = labels[v];
-  else if (v==='bastion' && curBastion!==null) {
-    const b = CU.bastions?.[curBastion];
-    title.textContent = b?.name || 'Bastion';
-  }
   updateOnyxDisplay();
 }
 
@@ -2366,17 +2358,15 @@ function updateUserbar() {
 function updateUserbarWidth() {
   const ub = document.querySelector('.userbar');
   if (!ub) return;
-  const ctx = document.getElementById('sidebar-ctx');
-  const ctxVisible = ctx && ctx.style.display !== 'none';
-  if (ctxVisible) {
-    ub.style.width = 'calc(210px + 240px - 12px)';
-  } else {
+  if (_currentView === 'home') {
     ub.style.width = 'calc(210px - 12px)';
+  } else {
+    ub.style.width = 'calc(210px + 240px - 12px)';
   }
 }
 function updateOnyxDisplay() {
   const bal = CU?.onyx || 0;
-  ['onyx-val','atelier-balance','atelier-nav-balance'].forEach(id => {
+  ['onyx-val','atelier-balance'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
@@ -2401,7 +2391,8 @@ function renderRailBastions() {
   cont.innerHTML = (CU?.bastions||[]).map((b,i)=>`
     <div class="rail-bastion ${curBastion===i?'active':''}" id="rl-b-${i}"
       onclick="openBastion(${i})"
-      oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})">
+      oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})"
+      style="margin-bottom:3px;">
       <div class="bastion-icon">${b.icon
         ? `<img src="${b.icon}">`
         : `<span>${b.emblem||'🏰'}</span>`}</div>
@@ -3130,6 +3121,8 @@ async function loadDMMessages(username) {
       if (curDM!==username) return;
       const el=document.getElementById('dm-msgs');
       if (el) {
+        const mid = msg.id||(msg.from+msg.timestamp);
+        if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
         const dmEchoKey='dm|'+(msg.from||'')+'|'+(msg.text||'');
         if(msg.from===CU.username && _sentEcho.has(dmEchoKey)){
           _sentEcho.delete(dmEchoKey);
@@ -3417,6 +3410,8 @@ async function loadGCMessages(gcId) {
       const el = document.getElementById('gc-msgs');
       if (!el) return;
       const msg = snap.val();
+      const mid = msg.id||(msg.from+msg.timestamp);
+      if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
       const echoKey = 'gc|'+msg.from+'|'+(msg.text||'');
       if (msg.from===CU.username && _sentEcho.has(echoKey)) { _sentEcho.delete(echoKey); return; }
       appendMessage(el, msg, 'gc', null);
@@ -3424,7 +3419,23 @@ async function loadGCMessages(gcId) {
       if (msg.from!==CU.username) playNotifSound('message');
     });
     _gcListener = () => ref.off('child_added', handler);
+    // Attach live edit/remove listeners for GC
+    _attachGCLiveEdits(gcId);
   } catch(e) { console.error('loadGCMessages', e); }
+}
+
+let _gcEditListenerPath = null;
+function _attachGCLiveEdits(gcId) {
+  const path = 'groupChats/'+gcId+'/messages';
+  if (_gcEditListenerPath) {
+    try { firebase.database().ref(_gcEditListenerPath).off('child_changed'); } catch{}
+    try { firebase.database().ref(_gcEditListenerPath).off('child_removed'); } catch{}
+    _gcEditListenerPath = null;
+  }
+  _gcEditListenerPath = path;
+  const ref = firebase.database().ref(path);
+  ref.on('child_changed', snap => _liveUpdateMessage(snap, 'gc'));
+  ref.on('child_removed', snap => _liveRemoveMessage(snap));
 }
 
 async function sendGCMessage() {
@@ -3975,8 +3986,7 @@ function loadChatChannel(idx) {
   const wrap=document.getElementById('bastion-chat-wrap');
   if (!wrap) return;
   const nsfwBadge=ch.nsfw?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(248,113,113,.15);color:var(--red);margin-left:6px;">NSFW</span>`:'';
-  const topTitle=document.getElementById('topbar-title');
-  if (topTitle) topTitle.textContent = '#' + ch.name;
+  // Room name is displayed in the room-topbar above the chat, not in the main Fortized topbar
   const sep=document.getElementById('tb-sep');
   const desc=document.getElementById('tb-desc');
   if (sep) sep.style.display='none';
@@ -4032,6 +4042,8 @@ async function loadChannelMessages(idx) {
       if (curChannel!==idx) return;
       const el=document.getElementById('ch-msgs-'+idx);
       if (el){
+        const mid = msg.id||(msg.from+msg.timestamp);
+        if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
         const echoKey = (msg.from||'') + '|' + (msg.text||'');
         if (msg.from===CU.username && _sentEcho.has(echoKey)) {
           _sentEcho.delete(echoKey); // suppress our own echo
@@ -8001,7 +8013,7 @@ function handleContextMenu(e) {
   const isSidebarBlank = isSidebar && !target.closest('.rail-btn') && !target.closest('.rail-bastion') && !target.closest('.userbar') && !target.closest('.sidebar-logo') && !target.closest('.onyx-pill');
   const isChatArea = target.closest('.msg-list') || target.closest('.chat-main') || target.closest('#chat-area');
   const isSystemMsg = msgRow && msgRow.classList.contains('msg-system');
-  const context = curDM ? 'dm' : 'ch';
+  const context = curDM ? 'dm' : curGC ? 'gc' : 'ch';
 
   // ── 1) User context menu (clicking on author name) ──
   if (isAuthor && !isSystemMsg) {
@@ -8082,8 +8094,9 @@ function handleContextMenu(e) {
       moderationGroup.items.push({ icon: _ctxSvg('edit'), label: 'Edit', action: () => editMsg(msgId, context) });
     }
     moderationGroup.items.push({ icon: _ctxSvg('report'), label: 'Report Message', action: () => reportMessage(msgId, text) });
-    if (isOwn) {
-      moderationGroup.items.push({ icon: _ctxSvg('trash'), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context, true) });
+    const isBastionAdminCtx = inBastion && hasPerm('manage_messages');
+    if (isOwn || isBastionAdminCtx) {
+      moderationGroup.items.push({ icon: _ctxSvg('trash'), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
     }
 
     const groups = [primaryGroup, interactionGroup, orgGroup, moderationGroup];

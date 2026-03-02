@@ -16,34 +16,37 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 ::selection{background:rgba(255,249,62,.2);}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#1e2840;border-radius:4px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
-.sidebar{width:240px;min-width:240px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;}
-.sidebar-logo{width:100%;padding:14px 14px 6px;display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0;}
-.sidebar-logo-icon{width:38px;height:38px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;transition:border-radius .2s,transform .15s;flex-shrink:0;}
-.sidebar-logo:hover .sidebar-logo-icon{border-radius:14px;transform:scale(1.06);}
-.sidebar-logo-icon img{width:22px;height:22px;object-fit:contain;}
-.sidebar-logo-text{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:.02em;color:#fff;}
+.sidebar{width:260px;min-width:260px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;}
+.sidebar-logo{width:100%;padding:18px 16px 10px;display:flex;align-items:center;gap:12px;cursor:pointer;flex-shrink:0;}
+.sidebar-logo-icon{width:42px;height:42px;border-radius:14px;background:var(--accent);display:flex;align-items:center;justify-content:center;transition:border-radius .2s,transform .15s;flex-shrink:0;}
+.sidebar-logo:hover .sidebar-logo-icon{border-radius:16px;transform:scale(1.06);}
+.sidebar-logo-icon img{width:24px;height:24px;object-fit:contain;}
+.sidebar-logo-text{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;letter-spacing:.02em;color:#fff;}
 .sidebar-logo.active .sidebar-logo-icon{box-shadow:0 0 0 2px var(--accent);}
-.sidebar-nav{padding:6px 8px;display:flex;flex-direction:column;gap:2px;flex-shrink:0;}
-.rail-sep{height:1px;background:rgba(255,255,255,.06);margin:4px 6px;flex-shrink:0;}
-.rail-btn{height:34px;border-radius:10px;background:transparent;display:flex;align-items:center;gap:10px;padding:0 10px;cursor:pointer;transition:background .14s,color .14s;position:relative;flex-shrink:0;font-size:13px;font-weight:600;color:rgba(255,255,255,.5);}
-.rail-btn svg{width:18px;height:18px;flex-shrink:0;}
+.sidebar-nav{padding:8px 10px;display:flex;flex-direction:column;gap:3px;flex-shrink:0;}
+.rail-sep{height:1px;background:rgba(255,255,255,.06);margin:6px 8px;flex-shrink:0;}
+.rail-btn{height:40px;border-radius:12px;background:transparent;display:flex;align-items:center;gap:12px;padding:0 12px;cursor:pointer;transition:background .14s,color .14s;position:relative;flex-shrink:0;font-size:14px;font-weight:600;color:rgba(255,255,255,.5);}
+.rail-btn svg{width:20px;height:20px;flex-shrink:0;}
 .rail-btn:hover{background:rgba(255,255,255,.06);color:#fff;}
 .rail-btn.active{background:var(--accent);color:#060810;}
 .rail-btn.active svg{color:#060810;}
 .rail-btn.active::before,.rail-btn:hover::before{display:none;}
+.nav-badge{margin-left:auto;min-width:20px;height:20px;border-radius:10px;background:var(--red);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px;}
 .rail-btn[data-tip]:hover::after{display:none;}
-.rail-bastion{height:34px;border-radius:10px;background:rgba(255,255,255,.04);display:flex;align-items:center;gap:10px;padding:0 10px;cursor:pointer;font-size:13px;font-weight:600;color:rgba(255,255,255,.55);transition:background .14s;position:relative;overflow:visible;flex-shrink:0;}
+.rail-bastion{height:40px;border-radius:12px;background:rgba(255,255,255,.04);display:flex;align-items:center;gap:12px;padding:0 12px;cursor:pointer;font-size:14px;font-weight:600;color:rgba(255,255,255,.55);transition:background .14s;position:relative;overflow:visible;flex-shrink:0;}
 .rail-bastion:hover{background:rgba(255,255,255,.06);color:#fff;}
 .rail-bastion.active{background:rgba(255,249,62,.1);color:var(--accent);}
 .rail-bastion.active::before,.rail-bastion:hover::before{display:none;}
 .rail-bastion[data-tip]:hover::after{display:none;}
-.rail-bastion .bastion-icon{width:24px;height:24px;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:14px;background:rgba(255,255,255,.06);}
+.rail-bastion .bastion-icon{width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:15px;background:rgba(255,255,255,.06);}
 .rail-bastion .bastion-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
 .rail-notif-badge{position:absolute;top:4px;right:6px;min-width:14px;height:14px;border-radius:7px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 2px;z-index:1;}
 .sidebar-header{height:40px;display:flex;align-items:center;padding:0 14px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex-shrink:0;gap:7px;border-top:1px solid rgba(255,255,255,.04);}
 .sidebar-header .hdr-actions{margin-left:auto;display:flex;gap:2px;}
 .sidebar-header .hdr-actions button{width:28px;height:28px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .sidebar-header .hdr-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
+/* ── Secondary Sidebar (context panel) ────────────── */
+.sidebar-ctx{width:220px;min-width:220px;background:var(--channel);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-left:1px solid rgba(255,255,255,.04);}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
 .topbar{height:48px;background:var(--sidebar);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
@@ -68,7 +71,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Userbar — matches chatbar style */
-.userbar{height:auto;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;display:flex;align-items:center;padding:6px 8px;gap:6px;flex-shrink:0;margin:4px 8px 8px;}
+.userbar{min-height:52px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;margin:6px 10px 10px;}
 .ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:6px 8px;border-radius:10px;background:transparent;border:none;cursor:pointer;transition:all .14s;}
 .ua-clickable:hover{background:rgba(255,255,255,.06);}
 .ua{width:32px;height:32px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;}
@@ -248,6 +251,13 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .r-pill{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:100px;padding:2px 9px;font-size:12.5px;cursor:pointer;}
 .r-pill:hover{background:rgba(255,255,255,.09);}
 .r-pill.mine{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);}
+.r-pill.super-react{animation:sr-pulse .5s ease;transform-origin:center;}
+@keyframes sr-pulse{0%{transform:scale(1);}30%{transform:scale(1.3);}60%{transform:scale(0.95);}100%{transform:scale(1);}}
+.sr-particle{position:fixed;font-size:18px;pointer-events:none;z-index:99999;animation-duration:1s;animation-fill-mode:forwards;animation-timing-function:cubic-bezier(.2,.6,.3,1);}
+@keyframes sr-float{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-80px) scale(.6);}}
+@keyframes sr-spin{0%{opacity:1;transform:translateY(0) rotate(0deg) scale(1);}100%{opacity:0;transform:translateY(-70px) rotate(360deg) scale(.5);}}
+@keyframes sr-bounce{0%{opacity:1;transform:translate(0,0) scale(1);}50%{transform:translate(15px,-50px) scale(1.2);}100%{opacity:0;transform:translate(30px,-90px) scale(.4);}}
+@keyframes sr-zigzag{0%{opacity:1;transform:translate(0,0) scale(1);}33%{transform:translate(-20px,-30px) scale(1.1);}66%{transform:translate(20px,-60px) scale(.8);}100%{opacity:0;transform:translate(-10px,-90px) scale(.3);}}
 .msg-acts{display:none;gap:2px;position:absolute;right:14px;top:-14px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:3px;z-index:10;}
 .msg-row:hover .msg-acts{display:flex;}
 .msg-acts button{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;transition:all .1s;}
@@ -572,20 +582,20 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .toast.success{border-left:3px solid var(--green);color:#a3e8b8;}
 .toast.error{border-left:3px solid var(--red);color:#fca5a5;}
 .toast.info{border-left:3px solid var(--accent);color:var(--accent);}
-.ctx-menu{position:fixed;z-index:9999;background:var(--panel2,#131822);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px;min-width:200px;max-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04);backdrop-filter:blur(20px);animation:ctxIn .12s cubic-bezier(.22,1,.36,1);}
+.ctx-menu{position:fixed;z-index:9999;background:var(--panel2,#131822);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:6px;min-width:210px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.05),0 0 60px -10px rgba(255,249,62,.04);backdrop-filter:blur(24px);animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
 @keyframes vcPulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes callPulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.4);opacity:0}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes ctxIn{from{opacity:0;transform:scale(.96) translateY(-4px);}to{opacity:1;transform:none;}}
-.ctx-item{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:4px;font-size:14px;color:rgba(220,228,240,.85);cursor:pointer;transition:.08s;}
+.ctx-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;font-size:13.5px;font-weight:500;color:rgba(220,228,240,.85);cursor:pointer;transition:background .1s,color .1s;}
 .ctx-item:hover{background:var(--accent);color:#060810;}
 .ctx-item:hover svg{stroke:#060810;}
+.ctx-item svg{width:16px;height:16px;flex-shrink:0;opacity:.7;}
+.ctx-item:hover svg{opacity:1;}
 .ctx-item.danger{color:rgba(248,113,113,.85);}
 .ctx-item.danger:hover{background:var(--red);color:#fff;}
-.ctx-sep{height:1px;background:rgba(255,255,255,.06);margin:4px 0;}
-.ctx-section-label{padding:6px 8px 2px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.25);}
-.ctx-sep{height:1px;background:rgba(255,255,255,.07);margin:5px 0;}
-.ctx-section-label{padding:9px 12px 4px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.22);}
+.ctx-sep{height:1px;background:rgba(255,255,255,.06);margin:4px 6px;}
+.ctx-section-label{padding:8px 10px 4px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.22);}
 .notif-panel{position:fixed;top:52px;right:0;width:330px;max-height:calc(100vh - 60px);background:var(--sidebar);border:1px solid var(--border);border-radius:18px 0 0 18px;box-shadow:-8px 0 40px rgba(0,0,0,.5);z-index:500;transform:translateX(100%);transition:transform .22s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;}
 .notif-panel.open{transform:translateX(0);}
 .np-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
@@ -863,9 +873,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
   <div class="sidebar-nav" id="rail">
     <div class="rail-btn" id="rb-dms" onclick="showView('dms')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-      <span>Messages</span>
+      <span>Direct Messages</span>
+      <span id="notif-badge" class="nav-badge" style="display:none;">0</span>
     </div>
-    <span id="notif-badge" style="display:none;">0</span>
     <div class="rail-btn" id="rb-discover" onclick="showView('discover')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
       <span>Discover</span>
@@ -882,22 +892,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
       <span>Create Bastion</span>
     </div>
   </div>
-  <!-- Context content (channels, friends, etc.) -->
-  <div class="sidebar-header" id="sidebar-header">
-    <span id="sidebar-title">Home</span>
-    <div class="hdr-actions" id="sidebar-hdr-actions"></div>
-  </div>
-  <div class="sidebar-scroll" id="sidebar-scroll"></div>
-  <!-- Voice connected -->
-  <div class="voice-connected-bar" id="voice-connected-bar">
-    <div class="vcb-top">
-      <span class="vcb-name" id="vcb-channel-name">🎙 Connected</span>
-      <button class="vcb-disc" onclick="disconnectVoice()">Disconnect</button>
-    </div>
-    <div class="vcb-participants" id="vcb-participants"></div>
-  </div>
+  <div style="flex:1;"></div>
   <!-- Onyx pill in sidebar -->
-  <div style="padding:4px 8px;flex-shrink:0;">
+  <div style="padding:6px 10px;flex-shrink:0;">
     <div class="onyx-pill" onclick="showView('atelier')" id="onyx-display" style="width:100%;justify-content:center;">
       <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;">
       <span id="onyx-val">0</span>
@@ -940,6 +937,22 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
       <div style="width:28px;height:28px;border-radius:50%;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);display:flex;align-items:center;justify-content:center;font-size:12px;">→</div>
       <span style="font-size:13px;font-weight:600;">Log Out</span>
     </div>
+  </div>
+</div>
+
+<!-- SECONDARY SIDEBAR — context content (channels, friends, etc.) -->
+<div class="sidebar-ctx" id="sidebar-ctx" style="display:none;">
+  <div class="sidebar-header" id="sidebar-header">
+    <span id="sidebar-title">Home</span>
+    <div class="hdr-actions" id="sidebar-hdr-actions"></div>
+  </div>
+  <div class="sidebar-scroll" id="sidebar-scroll"></div>
+  <div class="voice-connected-bar" id="voice-connected-bar">
+    <div class="vcb-top">
+      <span class="vcb-name" id="vcb-channel-name">🎙 Connected</span>
+      <button class="vcb-disc" onclick="disconnectVoice()">Disconnect</button>
+    </div>
+    <div class="vcb-participants" id="vcb-participants"></div>
   </div>
 </div>
 
@@ -1826,15 +1839,17 @@ function updateSidebar(v) {
   const hdrTitle = document.getElementById('sidebar-title');
   const hdrActs = document.getElementById('sidebar-hdr-actions');
   const hdr = document.getElementById('sidebar-header');
+  const ctx = document.getElementById('sidebar-ctx');
   if (!scroll) return;
   if (hdrActs) hdrActs.innerHTML = '';
   scroll.innerHTML = '';
 
+  // Views that use the secondary sidebar
+  const ctxViews = ['dms','friends','discover','bastion','bsettings','atelier'];
+  if (ctx) ctx.style.display = ctxViews.includes(v) ? 'flex' : 'none';
+
   if (v==='home') {
     if (hdr) hdr.style.display = 'none';
-    if (hdrTitle) hdrTitle.textContent = '';
-    scroll.innerHTML = '';
-    // renderHomePanel is called by showView with setTimeout - don't call twice
   } else if (v==='dms' || v==='friends') {
     if (hdr) hdr.style.display = '';
     if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
@@ -1858,11 +1873,9 @@ function updateSidebar(v) {
     if (db) { const today=new Date().toDateString(); if(CU?.lastDaily===today)db.classList.add('claimed'); else db.classList.remove('claimed'); }
   } else if (v==='profile') {
     if (hdr) hdr.style.display = 'none';
-    if (hdrTitle) hdrTitle.textContent = 'Settings';
-    // Profile takes full width - sidebar not needed but keep it in DOM
     buildProfileNav(document.getElementById('profile-nav'));
     buildProfileView('myprofile');
-    return; // skip sidebar scroll update
+    return;
   } else if (v==='bastion') {
     if (hdr) hdr.style.display = '';
     renderBastionSidebar(scroll);
@@ -2158,7 +2171,52 @@ const JOYSTER_QUIPS = [
   "Ahahaha! You're still reading these?",
   "I'm watching you~ hehehehe!",
   "Click me. I dare you. Do it.",
+  "Come on... boost your Bastion already! Oh yeah, you broke. Haha!",
+  "You've been staring at the home page for a while... everything okay?",
+  "Fun fact: I can see your screen. Just kidding. ...or am I?",
+  "Go touch some grass! ...kidding, stay here forever.",
+  "Your Bastion could use some love. And channels. And members. And—",
+  "I bet you haven't changed your status in weeks. Prove me wrong!",
+  "Did you know you can react with emojis? Try it! React to EVERYTHING!",
+  "You should DM someone. Anyone. Even yourself. Wait, can you do that?",
+  "Ahahaha! I just told the BEST joke and you missed it!",
+  "Pro tip: the Atelier has shiny things. Shiny. Things.",
+  "If you're reading this, you're officially my best friend. Don't tell the others.",
+  "I've been standing here for hours. My legs hurt. Do I even have legs?",
+  "Your profile pic is... interesting. That's all I'll say.",
+  "Imagine having 0 Onyx. Oh wait, you don't have to imagine!",
+  "Hehehehe~ I know what you did last session...",
+  "Roses are red, Onyx is dark, stop reading my bubbles, go chat in the park!",
 ];
+function _getJoysterStatusJoke() {
+  const status = CU?.status || 'online';
+  const statusJokes = {
+    online: [
+      "Oh look who's online! The legend themselves!",
+      "Online and ready to do... absolutely nothing? Classic.",
+    ],
+    away: [
+      "Away? More like A-BORING! Haha get it? ...I'll see myself out.",
+      "Marked as away but still reading my jokes. Busted!",
+      "Away from keyboard, but never away from my heart~ Ahahaha!",
+    ],
+    dnd: [
+      "Do Not Disturb? Challenge accepted. HEHEHE!",
+      "DND mode ON. Joyster mode? Also ON. Good luck.",
+      "Do Not Disturb... but I'm a jester, disturbing is my JOB!",
+    ],
+    invisible: [
+      "I can see you, invisible person! ...just kidding. Or am I?",
+      "Invisible? Sneaky sneaky~ Who are you hiding from?",
+      "Going invisible? Very mysterious. Very spy. Much wow.",
+    ],
+    offline: [
+      "Wait, you're offline? Then who am I talking to?!",
+    ]
+  };
+  const jokes = statusJokes[status] || statusJokes.online;
+  return jokes[Math.floor(Math.random() * jokes.length)];
+}
 
 function _startJoysterBubbles() {
   if (_joysterBubbleTimer) clearInterval(_joysterBubbleTimer);
@@ -2169,11 +2227,34 @@ function _startJoysterBubbles() {
 function _showJoysterBubble() {
   const bubble = document.getElementById('joyster-bubble');
   if (!bubble) return;
-  // Pick a random quip (avoid repeating the last one)
-  let idx;
-  do { idx = Math.floor(Math.random() * JOYSTER_QUIPS.length); } while (idx === _joysterLastTip && JOYSTER_QUIPS.length > 1);
-  _joysterLastTip = idx;
-  bubble.textContent = JOYSTER_QUIPS[idx];
+  let text;
+  const roll = Math.random();
+  if (roll < 0.2) {
+    // Status-based joke
+    text = _getJoysterStatusJoke();
+  } else if (roll < 0.3 && (CU?.onyx || 0) < 50) {
+    // Broke joke
+    const brokeJokes = [
+      "Your Onyx balance is looking a bit... sad. Haha!",
+      `${CU?.onyx || 0} Onyx? That's not even enough for a sticker. Ahahaha!`,
+      "Claim your daily Onyx! I'm begging you! Your wallet is crying!",
+    ];
+    text = brokeJokes[Math.floor(Math.random() * brokeJokes.length)];
+  } else if (roll < 0.4 && (CU?.bastions || []).length === 0) {
+    // No bastions joke
+    const noBastionJokes = [
+      "Zero Bastions? That's bold. Create one already!",
+      "No Bastions? What is this, a social app with no socializing?",
+    ];
+    text = noBastionJokes[Math.floor(Math.random() * noBastionJokes.length)];
+  } else {
+    // Normal quip
+    let idx;
+    do { idx = Math.floor(Math.random() * JOYSTER_QUIPS.length); } while (idx === _joysterLastTip && JOYSTER_QUIPS.length > 1);
+    _joysterLastTip = idx;
+    text = JOYSTER_QUIPS[idx];
+  }
+  bubble.textContent = text;
   bubble.classList.add('show');
   setTimeout(() => bubble.classList.remove('show'), 7000);
 }
@@ -2207,6 +2288,12 @@ const _JOYSTER_CLICK_QUIPS = [
   "You think you're funny?",
   "Poke poke poke... really?",
   "I'm a jester, not a button!",
+  "OW! ...just kidding, I'm digital!",
+  "Keep clicking and I'll start charging Onyx!",
+  "Hey! Personal space! ...actually, I don't have any. Continue.",
+  "That's it, I'm filing a complaint with the Bastion council!",
+  "Click me one more time and I'll— hehe okay do it again!",
+  "Warning: excessive Joyster clicking may cause spontaneous laughter!",
 ];
 
 function _joysterEasterEgg() {
@@ -3539,13 +3626,93 @@ async function forwardToDM(username) {
   } catch { toast('Forward failed','error'); }
 }
 function addReactionUI(e, msgId, context) {
-  const emojis=['👍','❤️','😂','😮','😢','🔥','✨','👀','🎉','💯'];
+  const emojis=['👍','❤️','😂','😮','😢','🔥','✨','👀','🎉','💯','😍','💀','🤣','😭','🥺','💜'];
   showCtxMenu(e.clientX,e.clientY,emojis.map(em=>({icon:em,label:em,action:()=>toggleReaction(msgId,em,context)})));
 }
-function toggleReaction(msgId,emoji,context) {
-  const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+async function toggleReaction(msgId, emoji, context) {
+  if (!CU?.username) return;
+  const me = CU.username.toLowerCase();
+  let refPath = '';
+  if (context === 'dm' && curDM) {
+    const sorted = [me, curDM.toLowerCase()].sort().join('__');
+    refPath = `dms/${sorted}/${msgId}/reactions/${emoji}`;
+  } else if (context === 'gc' && typeof _curGC !== 'undefined' && _curGC) {
+    refPath = `groupChats/${_curGC}/messages/${msgId}/reactions/${emoji}`;
+  } else if (context === 'ch' && curBastion !== null) {
+    const b = CU.bastions?.[curBastion];
+    const ch = b?.channels?.[curChannel];
+    if (!b || !ch) return;
+    const bid = b.globalId || b.name;
+    refPath = `bastionMsgs/${bid}/${ch.name}/${msgId}/reactions/${emoji}`;
+  }
+  if (!refPath) { toast('Reacted with ' + emoji, 'success'); return; }
+  try {
+    const ref = firebase.database().ref(refPath);
+    const snap = await ref.get();
+    let users = snap.val() || [];
+    if (!Array.isArray(users)) users = Object.values(users);
+    if (users.includes(me)) {
+      users = users.filter(u => u !== me);
+    } else {
+      users.push(me);
+    }
+    if (users.length === 0) await ref.remove();
+    else await ref.set(users);
+    // Update the UI locally
+    updateReactionUI(msgId, emoji, users, context);
+  } catch (err) {
+    console.error('Reaction error:', err);
+    toast('Reacted with ' + emoji, 'success');
+  }
+}
+function updateReactionUI(msgId, emoji, users, context) {
+  const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
   if (!row) return;
-  toast('Reacted with '+emoji,'success');
+  let container = row.querySelector('.msg-reactions');
+  if (!container) {
+    const col = row.querySelector('.msg-content-col') || row.querySelector('.msg-text')?.parentElement;
+    if (!col) return;
+    container = document.createElement('div');
+    container.className = 'msg-reactions';
+    col.appendChild(container);
+  }
+  // Find or create the pill for this emoji
+  let pill = container.querySelector(`[data-emoji="${CSS.escape(emoji)}"]`);
+  const me = CU?.username?.toLowerCase();
+  const isMine = users.includes(me);
+  if (users.length === 0 && pill) { pill.remove(); return; }
+  if (!pill) {
+    pill = document.createElement('span');
+    pill.className = 'r-pill';
+    pill.setAttribute('data-emoji', emoji);
+    pill.onclick = () => toggleReaction(msgId, emoji, context);
+    container.appendChild(pill);
+  }
+  pill.className = 'r-pill' + (isMine ? ' mine' : '');
+  pill.innerHTML = emoji + ' ' + users.length;
+  // Super reaction animation (Radiance / Radiance+ users)
+  const tier = CU?.radianceTier || CU?.subscription || '';
+  if (isMine && (tier === 'radiance' || tier === 'radiance_plus' || tier === 'radiance+')) {
+    triggerSuperReaction(pill, emoji);
+  }
+}
+function triggerSuperReaction(pill, emoji) {
+  pill.classList.add('super-react');
+  // Spawn floating emojis
+  const rect = pill.getBoundingClientRect();
+  const anims = ['sr-float','sr-spin','sr-bounce','sr-zigzag'];
+  for (let i = 0; i < 5; i++) {
+    const span = document.createElement('span');
+    span.className = 'sr-particle';
+    span.textContent = emoji;
+    span.style.left = (rect.left + rect.width/2 + (Math.random()-0.5)*30) + 'px';
+    span.style.top = (rect.top) + 'px';
+    span.style.animationName = anims[Math.floor(Math.random()*anims.length)];
+    span.style.animationDelay = (i * 0.06) + 's';
+    document.body.appendChild(span);
+    setTimeout(() => span.remove(), 1200);
+  }
+  setTimeout(() => pill.classList.remove('super-react'), 600);
 }
 function scrollToMsg(msgId) {
   const el=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);

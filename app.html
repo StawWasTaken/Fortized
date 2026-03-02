@@ -2535,11 +2535,11 @@ function renderDMSidebar(scroll) {
     html += friends.map(f=>`
       <div class="friend-item" id="dm-fi-${f}" onclick="openDMView('${escapeHTML(f)}')">
         <div style="position:relative;flex-shrink:0;">
-          <div class="fa" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(null,f,34)}</div>
+          <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(null,f,34)}</div>
           <span class="profile-status-dot" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:#6b7280;border:2px solid var(--channel);"></span>
         </div>
         <div class="fi-info" style="min-width:0;flex:1;">
-          <div class="fi-name" style="font-weight:600;">${escapeHTML(f)}</div>
+          <div class="fi-name" id="dm-dn-${escapeHTML(f)}" style="font-weight:600;">${escapeHTML(f)}</div>
           <div id="dm-preview-${f}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:130px;"></div>
         </div>
       </div>`).join('');
@@ -2564,12 +2564,22 @@ function renderDMSidebar(scroll) {
 
   scroll.innerHTML = html;
 
-  // ── Async: status dots + DM previews ─────────
+  // ── Async: fetch real PFPs, display names, status dots + DM previews ─────────
   friends.forEach(async f => {
     try {
-      const s = await FortizedSocial.getStatus(f);
-      const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
-      document.querySelectorAll(`.profile-status-dot[data-for="${f}"]`).forEach(d=>d.style.background=SC[s]||SC.offline);
+      const u = await FortizedSocial.getUserByName(f);
+      if (u) {
+        // Update avatar with real PFP
+        const avEl = document.getElementById('dm-av-'+f);
+        if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
+        // Update display name
+        const dnEl = document.getElementById('dm-dn-'+f);
+        if (dnEl) dnEl.textContent = u.displayName || f;
+        // Update status dot
+        const st = u.status || 'offline';
+        const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
+        document.querySelectorAll(`.profile-status-dot[data-for="${f}"]`).forEach(d=>d.style.background=SC[st]||SC.offline);
+      }
     } catch {}
     try {
       const msgs = await FortizedSocial.getDMMessages(CU.username, f);
@@ -2620,9 +2630,9 @@ function renderDMFriendsHome() {
   if (filter === 'all' && pending.length) {
     html += `<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">PENDING — ${pending.length}</div>`;
     pending.forEach(f => {
-      html += `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;transition:background .12s;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background=''">
-        <div style="position:relative;flex-shrink:0;"><div class="fa" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(null,f,40)}</div></div>
-        <div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div><div style="font-size:11.5px;color:var(--muted);">Incoming friend request</div></div>
+      html += `<div id="dm-home-pending-${escapeHTML(f)}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;transition:background .12s;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background=''">
+        <div style="position:relative;flex-shrink:0;"><div class="fa" id="dm-home-pav-${escapeHTML(f)}" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(null,f,40)}</div></div>
+        <div style="flex:1;min-width:0;"><div id="dm-home-pdn-${escapeHTML(f)}" style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div><div style="font-size:11.5px;color:var(--muted);">Incoming friend request</div></div>
         <div style="display:flex;gap:6px;">
           <button class="btn-a" style="padding:6px 14px;font-size:12px;" onclick="acceptFriend('${escapeHTML(f)}')">Accept</button>
           <button class="btn-g" style="padding:6px 14px;font-size:12px;" onclick="declineFriend('${escapeHTML(f)}')">Ignore</button>
@@ -2637,11 +2647,11 @@ function renderDMFriendsHome() {
   friends.forEach(f => {
     html += `<div class="dm-friend-row" data-user="${escapeHTML(f)}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;transition:background .12s;cursor:pointer;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background=''" onclick="openDMView('${escapeHTML(f)}')">
       <div style="position:relative;flex-shrink:0;">
-        <div class="fa" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(null,f,40)}</div>
+        <div class="fa" id="dm-home-av-${escapeHTML(f)}" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(null,f,40)}</div>
         <span class="dm-home-status" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;border-radius:50%;background:#6b7280;border:2.5px solid var(--bg);"></span>
       </div>
       <div style="flex:1;min-width:0;">
-        <div style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div>
+        <div id="dm-home-dn-${escapeHTML(f)}" style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div>
         <div class="dm-home-status-text" data-for="${escapeHTML(f)}" style="font-size:11.5px;color:var(--muted);">Offline</div>
       </div>
       <div style="display:flex;gap:6px;">
@@ -2652,11 +2662,26 @@ function renderDMFriendsHome() {
 
   list.innerHTML = html;
 
-  // Async: fetch statuses
-  friends.forEach(async f => {
+  // Async: fetch real PFPs, display names, and statuses
+  const allUsers = [...new Set([...friends, ...pending])];
+  allUsers.forEach(async f => {
     try {
       const u = await FortizedSocial.getUserByName(f);
       if (!u) return;
+
+      // Update friend row avatar + display name
+      const avEl = document.getElementById('dm-home-av-'+f);
+      if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 40);
+      const dnEl = document.getElementById('dm-home-dn-'+f);
+      if (dnEl) dnEl.textContent = u.displayName || f;
+
+      // Update pending row avatar + display name
+      const pavEl = document.getElementById('dm-home-pav-'+f);
+      if (pavEl) pavEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 40);
+      const pdnEl = document.getElementById('dm-home-pdn-'+f);
+      if (pdnEl) pdnEl.textContent = u.displayName || f;
+
+      // Status dot + text
       const st = u.status || 'offline';
       const STATUS_COLORS = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
       const STATUS_LABELS = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Offline',offline:'Offline'};
@@ -2683,6 +2708,9 @@ function dmFriendsFilter(filter, btn) {
 function showDMFriendsHome() {
   const wrap = document.getElementById('dm-chat-wrap');
   if (!wrap) return;
+  // Hide user panel when returning to friends home
+  const dmPanel = document.getElementById('dm-user-panel');
+  if (dmPanel) dmPanel.style.display = 'none';
   wrap.innerHTML = `
     <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
       <div style="max-width:700px;">
@@ -2692,7 +2720,7 @@ function showDMFriendsHome() {
         <div id="dm-friends-tabs" style="display:flex;gap:5px;margin-bottom:20px;">
           <button class="disc-tab" onclick="dmFriendsFilter('online',this)">Online</button>
           <button class="disc-tab active" onclick="dmFriendsFilter('all',this)">All</button>
-          <button class="disc-tab" onclick="openModal('modal-add-friend')" style="background:rgba(62,207,110,.1);color:var(--green);border-color:rgba(62,207,110,.2);">+ Add Friend</button>
+          <button class="disc-tab" onclick="openModal('modal-add-friend')" style="background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;">+ Add Friend</button>
         </div>
         <div id="dm-friends-list"></div>
       </div>

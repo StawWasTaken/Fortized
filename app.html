@@ -17,28 +17,30 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#1e2840;border-radius:4px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
 .sidebar{width:210px;min-width:210px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;}
-.sidebar-logo{width:100%;padding:18px 16px 10px;display:flex;align-items:center;gap:12px;cursor:pointer;flex-shrink:0;}
-.sidebar-logo-icon{width:42px;height:42px;border-radius:14px;background:var(--accent);display:flex;align-items:center;justify-content:center;transition:border-radius .2s,transform .15s;flex-shrink:0;}
-.sidebar-logo:hover .sidebar-logo-icon{border-radius:16px;transform:scale(1.06);}
+.sidebar-logo{width:100%;padding:18px 16px 12px;display:flex;align-items:center;gap:12px;cursor:pointer;flex-shrink:0;}
+.sidebar-logo-icon{width:42px;height:42px;border-radius:16px;background:var(--accent);display:flex;align-items:center;justify-content:center;transition:border-radius .25s cubic-bezier(.22,1,.36,1),transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s;flex-shrink:0;}
+.sidebar-logo:hover .sidebar-logo-icon{border-radius:18px;transform:scale(1.08);box-shadow:0 4px 20px rgba(255,249,62,.2);}
 .sidebar-logo-icon img{width:24px;height:24px;object-fit:contain;}
 .sidebar-logo-text{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;letter-spacing:.02em;color:#fff;}
-.sidebar-logo.active .sidebar-logo-icon{box-shadow:0 0 0 2px var(--accent);}
-.sidebar-nav{padding:8px 10px;display:flex;flex-direction:column;gap:3px;flex-shrink:0;}
-.rail-sep{height:1px;background:rgba(255,255,255,.06);margin:6px 8px;flex-shrink:0;}
-.rail-btn{height:40px;border-radius:12px;background:transparent;display:flex;align-items:center;gap:12px;padding:0 12px;cursor:pointer;transition:background .14s,color .14s;position:relative;flex-shrink:0;font-size:14px;font-weight:600;color:rgba(255,255,255,.5);}
-.rail-btn svg{width:20px;height:20px;flex-shrink:0;}
-.rail-btn:hover{background:rgba(255,255,255,.06);color:#fff;}
-.rail-btn.active{background:var(--accent);color:#060810;}
+.sidebar-logo.active .sidebar-logo-icon{box-shadow:0 0 0 2px var(--accent),0 4px 20px rgba(255,249,62,.15);}
+.sidebar-nav{padding:8px 10px;display:flex;flex-direction:column;gap:2px;flex-shrink:0;}
+.rail-sep{height:1px;background:rgba(255,255,255,.06);margin:8px 12px;flex-shrink:0;border-radius:1px;}
+.rail-btn{height:42px;border-radius:14px;background:transparent;display:flex;align-items:center;gap:12px;padding:0 14px;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);position:relative;flex-shrink:0;font-size:13.5px;font-weight:600;color:rgba(255,255,255,.45);}
+.rail-btn svg{width:20px;height:20px;flex-shrink:0;transition:transform .18s cubic-bezier(.22,1,.36,1);}
+.rail-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);}
+.rail-btn:hover svg{transform:scale(1.08);}
+.rail-btn.active{background:var(--accent);color:#060810;box-shadow:0 2px 16px rgba(255,249,62,.2);}
 .rail-btn.active svg{color:#060810;}
 .rail-btn.active::before,.rail-btn:hover::before{display:none;}
 .nav-badge{margin-left:auto;min-width:20px;height:20px;border-radius:10px;background:var(--red);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px;}
 .rail-btn[data-tip]:hover::after{display:none;}
-.rail-bastion{height:40px;border-radius:12px;background:rgba(255,255,255,.04);display:flex;align-items:center;gap:12px;padding:0 12px;cursor:pointer;font-size:14px;font-weight:600;color:rgba(255,255,255,.55);transition:background .14s;position:relative;overflow:visible;flex-shrink:0;}
-.rail-bastion:hover{background:rgba(255,255,255,.06);color:#fff;}
-.rail-bastion.active{background:rgba(255,249,62,.1);color:var(--accent);}
+.rail-bastion{height:42px;border-radius:14px;background:rgba(255,255,255,.03);display:flex;align-items:center;gap:12px;padding:0 14px;cursor:pointer;font-size:13.5px;font-weight:600;color:rgba(255,255,255,.5);transition:all .18s cubic-bezier(.22,1,.36,1);position:relative;overflow:visible;flex-shrink:0;}
+.rail-bastion:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);}
+.rail-bastion.active{background:rgba(255,249,62,.08);color:var(--accent);box-shadow:0 0 0 1px rgba(255,249,62,.12) inset;}
 .rail-bastion.active::before,.rail-bastion:hover::before{display:none;}
 .rail-bastion[data-tip]:hover::after{display:none;}
-.rail-bastion .bastion-icon{width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:15px;background:rgba(255,255,255,.06);}
+.rail-bastion .bastion-icon{width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:15px;background:rgba(255,255,255,.06);transition:transform .18s cubic-bezier(.22,1,.36,1);}
+.rail-bastion:hover .bastion-icon{transform:scale(1.06);}
 .rail-bastion .bastion-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
 .rail-notif-badge{position:absolute;top:4px;right:6px;min-width:14px;height:14px;border-radius:7px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 2px;z-index:1;}
 .sidebar-header{height:40px;display:flex;align-items:center;padding:0 14px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex-shrink:0;gap:7px;border-top:1px solid rgba(255,255,255,.04);}
@@ -71,7 +73,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Userbar — matches chatbar style */
-.userbar{min-height:52px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;margin:6px 4px 8px;width:calc(100% - 8px);box-sizing:border-box;}
+.userbar{min-height:52px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:18px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;margin:6px 6px 8px;width:calc(100% - 12px);box-sizing:border-box;backdrop-filter:blur(8px);transition:background .2s,border-color .2s;}
+.userbar:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.09);}
 .ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:6px 8px;border-radius:10px;background:transparent;border:none;cursor:pointer;transition:all .14s;}
 .ua-clickable:hover{background:rgba(255,255,255,.06);}
 .ua{width:32px;height:32px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;}
@@ -85,7 +88,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ua-btns button:hover{background:rgba(255,255,255,.07);color:#fff;}
 /* Own profile mini panel */
 .own-profile-panel{position:fixed;bottom:64px;left:4px;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
-.main{flex:1;min-width:0;display:flex;flex-direction:row;background:var(--bg);border-top-left-radius:14px;overflow:hidden;border-top:1px solid rgba(255,255,255,.06);border-left:1px solid rgba(255,255,255,.06);}
+.main{flex:1;min-width:0;display:flex;flex-direction:row;background:var(--bg);border-top-left-radius:16px;overflow:hidden;border-top:1px solid rgba(255,255,255,.06);border-left:1px solid rgba(255,255,255,.06);}
 .tb-sep{width:1px;height:18px;background:var(--border);margin:0 2px;}
 .tb-desc{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
 .tb-actions{margin-left:auto;display:flex;align-items:center;gap:6px;}
@@ -381,57 +384,56 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .bc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
 .bc-desc{font-size:12px;color:var(--muted-light);line-height:1.55;margin-bottom:8px;}
 /* ── Atelier ─────────────────────────────────────── */
-.atelier-wrap{display:flex;flex:1;overflow:hidden;background:#0d1018;}
-.atelier-nav{width:220px;min-width:220px;background:#0b0e15;border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;overflow:hidden;}
-.atelier-nav-scroll{flex:1;overflow-y:auto;padding:12px 8px;}
-.atelier-nav-section{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.25);padding:14px 10px 5px;}
-.atelier-nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.5);transition:all .14s;position:relative;margin-bottom:1px;}
+.atelier-wrap{display:flex;flex:1;overflow:hidden;background:#0c0f17;}
+.atelier-nav{width:230px;min-width:230px;background:linear-gradient(180deg,#0a0d14,#0b0e16);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;overflow:hidden;}
+.atelier-nav-scroll{flex:1;overflow-y:auto;padding:16px 10px;}
+.atelier-nav-section{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:16px 12px 6px;}
+.atelier-nav-item{display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:14px;cursor:pointer;font-size:13.5px;color:rgba(255,255,255,.45);transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;margin-bottom:2px;}
 .atelier-nav-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.9);}
-.atelier-nav-item.active{background:rgba(255,249,62,.1);color:var(--accent);font-weight:600;}
-.atelier-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:55%;background:var(--accent);border-radius:0 3px 3px 0;box-shadow:0 0 8px rgba(255,249,62,.45);}
-.atelier-nav-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
-.atelier-nav-sep{height:1px;background:rgba(255,255,255,.05);margin:6px 10px;}
-/* Atelier sidebar bottom user panel */
-/* atelier user panel removed */
-.atelier-scroll{flex:1;overflow-y:auto;padding:0;}
+.atelier-nav-item.active{background:rgba(255,249,62,.08);color:var(--accent);font-weight:600;box-shadow:0 0 0 1px rgba(255,249,62,.1) inset;}
+.atelier-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:50%;background:var(--accent);border-radius:0 4px 4px 0;box-shadow:0 0 12px rgba(255,249,62,.4);}
+.atelier-nav-icon{font-size:16px;flex-shrink:0;width:22px;text-align:center;}
+.atelier-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 12px;border-radius:1px;}
+.atelier-scroll{flex:1;overflow-y:auto;padding:0;scroll-behavior:smooth;}
 /* Quest tab chips */
-.quest-tab-chip{padding:6px 16px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .14s;}
-.quest-tab-chip.active{background:rgba(255,249,62,.1);color:var(--accent);border-color:rgba(255,249,62,.25);}
-.quest-tab-chip:not(.active){color:rgba(255,255,255,.45);}
-.quest-tab-chip:not(.active):hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);}
+.quest-tab-chip{padding:7px 18px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .2s cubic-bezier(.22,1,.36,1);background:rgba(255,255,255,.03);}
+.quest-tab-chip.active{background:rgba(255,249,62,.1);color:var(--accent);border-color:rgba(255,249,62,.25);box-shadow:0 2px 12px rgba(255,249,62,.1);}
+.quest-tab-chip:not(.active){color:rgba(255,255,255,.4);}
+.quest-tab-chip:not(.active):hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);}
 /* Shop filter chips */
-.shop-filter-chip{padding:5px 14px;border-radius:100px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);transition:all .14s;}
-.shop-filter-chip:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.8);}
-.shop-filter-chip.active{background:rgba(255,249,62,.1);border-color:rgba(255,249,62,.3);color:var(--accent);}
+.shop-filter-chip{padding:6px 16px;border-radius:100px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);transition:all .2s cubic-bezier(.22,1,.36,1);background:rgba(255,255,255,.02);}
+.shop-filter-chip:hover{border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.8);background:rgba(255,255,255,.05);}
+.shop-filter-chip.active{background:rgba(255,249,62,.1);border-color:rgba(255,249,62,.3);color:var(--accent);box-shadow:0 2px 12px rgba(255,249,62,.08);}
 /* Price toggle */
-.price-toggle{display:inline-flex;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:100px;padding:3px;gap:2px;}
-.price-toggle button{padding:6px 16px;border-radius:100px;border:none;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .14s;background:transparent;color:rgba(255,255,255,.45);}
+.price-toggle{display:inline-flex;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:100px;padding:3px;gap:2px;}
+.price-toggle button{padding:6px 16px;border-radius:100px;border:none;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .18s;background:transparent;color:rgba(255,255,255,.4);}
 .price-toggle button.sel{background:var(--accent);color:#060810;}
 /* Radiance pulse badge */
 @keyframes atelierPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,160,62,.5);}50%{box-shadow:0 0 0 6px rgba(255,160,62,0);}}
-.best-ribbon{position:absolute;top:0;right:0;background:linear-gradient(135deg,var(--accent),#ffb93e);color:#060810;font-size:9.5px;font-weight:900;padding:5px 14px 5px 8px;letter-spacing:.06em;clip-path:polygon(0 0,100% 0,100% 100%);border-radius:0 16px 0 0;animation:atelierPulse 2.4s ease-in-out infinite;}
+.best-ribbon{position:absolute;top:0;right:0;background:linear-gradient(135deg,var(--accent),#ffb93e);color:#060810;font-size:9.5px;font-weight:900;padding:5px 14px 5px 8px;letter-spacing:.06em;clip-path:polygon(0 0,100% 0,100% 100%);border-radius:0 20px 0 0;animation:atelierPulse 2.4s ease-in-out infinite;}
 /* Perk chips */
-.perk-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:11.5px;font-weight:600;margin:3px;white-space:nowrap;}
+.perk-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:100px;font-size:11.5px;font-weight:600;margin:3px;white-space:nowrap;transition:transform .15s;}
+.perk-chip:hover{transform:translateY(-1px);}
 /* Atelier shared */
-.atel-section-hdr{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:14px;}
+.atel-section-hdr{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:16px;}
 .atelier-page-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px;}
 .atelier-page-sub{font-size:13px;color:var(--muted-light);margin-bottom:28px;}
-.atelier-hero{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:28px 32px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));}
+.atelier-hero{background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:28px 32px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));}
 .atelier-bal{display:flex;align-items:center;gap:16px;}
 .atelier-bal .coin{width:48px;height:48px;border-radius:50%;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);display:flex;align-items:center;justify-content:center;font-size:24px;}
 .atelier-bal h3{font-size:12px;font-weight:600;color:var(--muted-light);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
 .atelier-bal .amt{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:var(--accent);line-height:1;}
-.daily-btn{display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.18);border-radius:16px;padding:16px 28px;cursor:pointer;transition:all .15s;}
-.daily-btn:hover{background:rgba(255,249,62,.12);transform:translateY(-1px);}
+.daily-btn{display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);border-radius:20px;padding:18px 28px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);}
+.daily-btn:hover{background:rgba(255,249,62,.1);transform:translateY(-2px);box-shadow:0 6px 24px rgba(255,249,62,.1);}
 .daily-btn span{font-size:11px;color:var(--muted-light);}
 .daily-btn strong{font-family:'Syne',sans-serif;font-size:14px;color:var(--accent);}
 .daily-btn.claimed{opacity:.45;cursor:not-allowed;pointer-events:none;}
 .atelier-section-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:#fff;}
 .atelier-section-title::before{content:"";width:14px;height:3px;background:var(--accent);border-radius:2px;}
 .radiance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;}
-.rad-card{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
-.rad-card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,249,62,.03),transparent);opacity:0;transition:opacity .18s;}
-.rad-card:hover{border-color:rgba(255,249,62,.28);transform:translateY(-3px);box-shadow:0 8px 32px rgba(255,249,62,.08);}
+.rad-card{background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;}
+.rad-card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,249,62,.03),transparent);opacity:0;transition:opacity .22s;}
+.rad-card:hover{border-color:rgba(255,249,62,.28);transform:translateY(-4px);box-shadow:0 12px 40px rgba(255,249,62,.08);}
 .rad-card:hover::before{opacity:1;}
 .rad-card.bv{border-color:rgba(255,249,62,.2);background:linear-gradient(135deg,rgba(255,249,62,.06),var(--panel));}
 .best-badge{position:absolute;top:12px;right:12px;background:var(--accent);color:#060810;font-size:9px;font-weight:800;padding:3px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:.05em;}
@@ -439,7 +441,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rad-price{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);}
 .rad-price span{font-size:12px;color:var(--muted-light);font-family:'DM Sans',sans-serif;font-weight:400;}
 .rad-feats{font-size:12px;color:var(--muted-light);line-height:1.5;}
-.atelier-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:22px;margin-bottom:14px;}
+.atelier-card{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:22px;margin-bottom:14px;transition:border-color .2s;}
+.atelier-card:hover{border-color:rgba(255,255,255,.1);}
 .profile-wrap{flex:1;display:flex;overflow:hidden;background:#0f1118;}
 /* Settings sidebar — Guilded/Fortized style */
 .profile-nav{width:220px;min-width:220px;background:#0f1118;display:flex;flex-direction:column;padding:20px 0 12px;overflow-y:auto;border-right:1px solid rgba(255,255,255,.04);}
@@ -1219,8 +1222,20 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
     <!-- ATELIER VIEW -->
     <div class="view" id="view-atelier">
       <div class="atelier-wrap">
-        <!-- Sidebar nav — Guilded style -->
+        <!-- Sidebar nav — modern Fortized style -->
         <div class="atelier-nav">
+          <!-- Atelier branding header -->
+          <div style="padding:20px 16px 12px;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.08);border-radius:16px;">
+              <div style="width:36px;height:36px;border-radius:12px;background:rgba(255,249,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <img src="Onyx.png" style="width:18px;height:18px;object-fit:contain;" onerror="this.outerHTML='<span style=\"font-size:16px;\">💎</span>'">
+              </div>
+              <div>
+                <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;line-height:1;">Atelier</div>
+                <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:2px;">Store & Rewards</div>
+              </div>
+            </div>
+          </div>
           <div class="atelier-nav-scroll">
             <div class="atelier-nav-section">Account</div>
             <div class="atelier-nav-item active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">
@@ -1238,7 +1253,14 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
               <span class="atelier-nav-icon">🛍️</span>Shop
             </div>
           </div>
-
+          <!-- Onyx balance in nav bottom -->
+          <div style="padding:8px 12px 14px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.04);">
+            <div class="onyx-pill" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="width:100%;justify-content:center;border-radius:14px;padding:8px 14px;">
+              <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;">
+              <span id="atelier-nav-balance">0</span>
+              <span style="font-size:10px;color:rgba(255,249,62,.5);margin-left:2px;">Onyx</span>
+            </div>
+          </div>
         </div>
         <!-- Main content -->
         <div class="atelier-scroll" id="atelier-content">
@@ -2102,7 +2124,7 @@ function updateUserbar() {
 }
 function updateOnyxDisplay() {
   const bal = CU?.onyx || 0;
-  ['onyx-val','atelier-balance'].forEach(id => {
+  ['onyx-val','atelier-balance','atelier-nav-balance'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
@@ -11852,36 +11874,36 @@ function renderAtelierTab(tab) {
     el.style.padding = '0';
     el.innerHTML = `
       <!-- Hero banner -->
-      <div style="position:relative;height:240px;background:linear-gradient(135deg,#070a12,#141830,#0d1220);overflow:hidden;flex-shrink:0;">
-        <img src="Onyx banner.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;" onerror="this.style.display='none'">
+      <div style="position:relative;height:260px;background:linear-gradient(135deg,#070a12,#141830,#0d1220);overflow:hidden;flex-shrink:0;">
+        <img src="Onyx banner.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;" onerror="this.style.display='none'">
         <div class="hero-sparkles" id="atelier-sparkles"></div>
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,10,18,.1) 0%,rgba(7,10,18,.85) 100%);"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,10,18,.05) 0%,rgba(7,10,18,.9) 100%);"></div>
         <!-- Status pill top-left -->
-        ${hasPlus?`<div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:7px;background:rgba(255,157,62,.15);border:1px solid rgba(255,157,62,.35);border-radius:100px;padding:5px 12px;backdrop-filter:blur(8px);">
+        ${hasPlus?`<div style="position:absolute;top:18px;left:22px;display:flex;align-items:center;gap:8px;background:rgba(255,157,62,.12);border:1px solid rgba(255,157,62,.3);border-radius:100px;padding:6px 14px;backdrop-filter:blur(12px);">
           <span style="font-size:14px;">🌟</span><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ff9d3e;">Radiance+ · ${daysPlus}d</span>
-        </div>`:hasRad?`<div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:7px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.25);border-radius:100px;padding:5px 12px;backdrop-filter:blur(8px);">
+        </div>`:hasRad?`<div style="position:absolute;top:18px;left:22px;display:flex;align-items:center;gap:8px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.2);border-radius:100px;padding:6px 14px;backdrop-filter:blur(12px);">
           <span style="font-size:14px;">✨</span><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ffd93e;">Radiance · ${daysRad}d</span>
         </div>`:''}
         <!-- Hero text bottom-left -->
-        <div style="position:absolute;bottom:22px;left:24px;right:24px;display:flex;align-items:flex-end;justify-content:space-between;">
+        <div style="position:absolute;bottom:24px;left:28px;right:28px;display:flex;align-items:flex-end;justify-content:space-between;">
           <div>
-            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;line-height:1;margin-bottom:5px;text-shadow:0 2px 12px rgba(0,0,0,.6);">Atelier</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.5);">Your Fortized store & rewards</div>
+            <div style="font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:#fff;line-height:1;margin-bottom:6px;text-shadow:0 2px 16px rgba(0,0,0,.6);">Atelier</div>
+            <div style="font-size:13.5px;color:rgba(255,255,255,.45);">Your Fortized store & rewards</div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.5);border:1px solid rgba(255,249,62,.2);border-radius:12px;padding:10px 16px;backdrop-filter:blur(12px);">
-              <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.45);border:1px solid rgba(255,249,62,.15);border-radius:18px;padding:12px 18px;backdrop-filter:blur(16px);">
+              <img src="Onyx.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">
               <div>
                 <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">${bal}</div>
-                <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px;">Onyx</div>
+                <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;">Onyx</div>
               </div>
             </div>
-            <button onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="background:var(--accent);color:#060810;border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;padding:9px 18px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 12px rgba(255,249,62,.25);">+ Earn Onyx</button>
+            <button onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="background:var(--accent);color:#060810;border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;padding:10px 20px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 20px rgba(255,249,62,.2);transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 28px rgba(255,249,62,.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(255,249,62,.2)'">+ Earn Onyx</button>
           </div>
         </div>
       </div>
 
-      <div style="padding:24px 28px 60px;display:flex;flex-direction:column;gap:28px;">
+      <div style="padding:28px 32px 60px;display:flex;flex-direction:column;gap:32px;">
 
         <!-- Radiance Perks — horizontal scroll row -->
         <div>
@@ -11889,19 +11911,19 @@ function renderAtelierTab(tab) {
           <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;">
             ${PERKS.map(p => {
               const unlocked = p.plus ? hasPlus : hasRad;
-              return `<div style="min-width:140px;background:${unlocked?`rgba(${p.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',')}, 0.07)`:'rgba(255,255,255,.03)'};border:1px solid ${unlocked?p.color+'33':'rgba(255,255,255,.06)'};border-radius:14px;padding:16px 14px;flex-shrink:0;position:relative;overflow:hidden;${!unlocked?'opacity:.5':''}">
-                ${unlocked?`<div style="position:absolute;top:0;left:0;right:0;height:2px;background:${p.color};opacity:.6;"></div>`:''}
-                <div style="font-size:26px;margin-bottom:10px;">${p.icon}</div>
-                <div style="font-size:12.5px;font-weight:700;color:#fff;margin-bottom:3px;">${p.name}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.4);">${p.desc}</div>
-                ${p.plus?`<div style="position:absolute;top:8px;right:8px;font-size:9px;font-weight:800;color:#ff9d3e;background:rgba(255,160,62,.15);border:1px solid rgba(255,160,62,.25);padding:1px 6px;border-radius:100px;">+</div>`:''}
-                ${!unlocked?`<div style="position:absolute;bottom:10px;right:10px;font-size:14px;opacity:.4;">🔒</div>`:`<div style="position:absolute;bottom:10px;right:10px;font-size:12px;color:${p.color};">✓</div>`}
+              return `<div style="min-width:145px;background:${unlocked?`rgba(${p.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',')}, 0.06)`:'rgba(255,255,255,.025)'};border:1px solid ${unlocked?p.color+'28':'rgba(255,255,255,.05)'};border-radius:18px;padding:18px 16px;flex-shrink:0;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);${!unlocked?'opacity:.45':''}" ${unlocked?`onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px ${p.color}15'" onmouseout="this.style.transform='';this.style.boxShadow='none'"`:''}>
+                ${unlocked?`<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${p.color},transparent);opacity:.5;"></div>`:''}
+                <div style="font-size:28px;margin-bottom:12px;">${p.icon}</div>
+                <div style="font-size:12.5px;font-weight:700;color:#fff;margin-bottom:4px;">${p.name}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.4;">${p.desc}</div>
+                ${p.plus?`<div style="position:absolute;top:10px;right:10px;font-size:9px;font-weight:800;color:#ff9d3e;background:rgba(255,160,62,.12);border:1px solid rgba(255,160,62,.2);padding:2px 7px;border-radius:100px;">+</div>`:''}
+                ${!unlocked?`<div style="position:absolute;bottom:12px;right:12px;font-size:14px;opacity:.35;">🔒</div>`:`<div style="position:absolute;bottom:12px;right:12px;font-size:12px;color:${p.color};">✓</div>`}
               </div>`;
             }).join('')}
-            ${!hasRad?`<div style="min-width:130px;background:rgba(255,249,62,.05);border:1.5px dashed rgba(255,249,62,.15);border-radius:14px;padding:16px 14px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))">
-              <div style="font-size:22px;margin-bottom:8px;">✨</div>
+            ${!hasRad?`<div style="min-width:135px;background:rgba(255,249,62,.04);border:1.5px dashed rgba(255,249,62,.12);border-radius:18px;padding:18px 16px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" onmouseover="this.style.background='rgba(255,249,62,.07)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255,249,62,.04)';this.style.transform=''">
+              <div style="font-size:24px;margin-bottom:10px;">✨</div>
               <div style="font-size:12px;font-weight:700;color:var(--accent);">Get Radiance</div>
-              <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:3px;">Unlock all perks</div>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:4px;">Unlock all perks</div>
             </div>`:''}
           </div>
         </div>
@@ -11910,31 +11932,31 @@ function renderAtelierTab(tab) {
         <div>
           <div class="atel-section-hdr" style="display:flex;align-items:center;justify-content:space-between;">
             <span>Completed Quests</span>
-            <span style="cursor:pointer;color:rgba(255,249,62,.6);font-size:11px;font-weight:700;" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">See All →</span>
+            <span style="cursor:pointer;color:rgba(255,249,62,.5);font-size:11px;font-weight:700;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.5)'" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">See All →</span>
           </div>
           ${doneQ.length ? `
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             ${doneQ.slice(0,4).map(q=>`
-              <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.1);border-radius:12px;">
-                <div style="width:34px;height:34px;border-radius:10px;background:rgba(62,207,110,.1);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${q.icon}</div>
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(62,207,110,.035);border:1px solid rgba(62,207,110,.08);border-radius:16px;transition:all .18s;" onmouseover="this.style.background='rgba(62,207,110,.06)';this.style.borderColor='rgba(62,207,110,.15)'" onmouseout="this.style.background='rgba(62,207,110,.035)';this.style.borderColor='rgba(62,207,110,.08)'">
+                <div style="width:36px;height:36px;border-radius:12px;background:rgba(62,207,110,.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${q.icon}</div>
                 <div style="min-width:0;flex:1;">
                   <div style="font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${q.title}</div>
                   <div style="font-size:11px;color:var(--green);">+${q.reward}</div>
                 </div>
               </div>`).join('')}
-          </div>` : `<div style="font-size:13px;color:rgba(255,255,255,.3);text-align:center;padding:18px;background:rgba(255,255,255,.02);border-radius:12px;">No quests completed yet — <span style="color:var(--accent);cursor:pointer;" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">start one!</span></div>`}
+          </div>` : `<div style="font-size:13px;color:rgba(255,255,255,.25);text-align:center;padding:22px;background:rgba(255,255,255,.02);border-radius:16px;border:1px solid rgba(255,255,255,.04);">No quests completed yet — <span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">start one!</span></div>`}
         </div>
 
         <!-- Shop teaser -->
         <div>
           <div class="atel-section-hdr">Shop Preview</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
             ${['Avatar Frames','Profile Effects','Name Colors'].map((name,i)=>`
-              <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;text-align:center;cursor:pointer;position:relative;overflow:hidden;" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))">
-                <div style="font-size:32px;margin-bottom:10px;opacity:.35;">${['🖼️','✨','🎨'][i]}</div>
-                <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.45);">${name}</div>
-                <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:3px;">Coming Soon</div>
-                <div style="position:absolute;top:8px;right:8px;font-size:12px;opacity:.3;">🔒</div>
+              <div style="background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.06);border-radius:18px;padding:22px;text-align:center;cursor:pointer;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" onmouseover="this.style.borderColor='rgba(255,255,255,.12)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.transform=''">
+                <div style="font-size:34px;margin-bottom:12px;opacity:.3;">${['🖼️','✨','🎨'][i]}</div>
+                <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.4);">${name}</div>
+                <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Coming Soon</div>
+                <div style="position:absolute;top:10px;right:10px;font-size:12px;opacity:.25;">🔒</div>
               </div>`).join('')}
           </div>
         </div>
@@ -11963,67 +11985,67 @@ function renderAtelierTab(tab) {
     const PRICES = {basic:[{days:7,onyx:200},{days:30,onyx:600},{days:90,onyx:1500}], plus:[{days:30,onyx:1200},{days:90,onyx:3000}]};
 
     el.style.padding = '0';
-    el.innerHTML = `<div style="padding:28px;max-width:780px;">
+    el.innerHTML = `<div style="padding:32px;max-width:800px;">
 
       <!-- Active subscription status -->
-      ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,120,62,.15),rgba(255,200,62,.08));border:1.5px solid rgba(255,160,62,.3);border-radius:14px;padding:18px 22px;margin-bottom:28px;display:flex;align-items:center;gap:16px;">
-        <div style="font-size:36px;">🌟</div>
+      ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,120,62,.12),rgba(255,200,62,.06));border:1.5px solid rgba(255,160,62,.25);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
+        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.12);display:flex;align-items:center;justify-content:center;font-size:28px;">🌟</div>
         <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ff9d3e;">Radiance+ Active</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.45);margin-top:2px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></div></div>
-        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;">Cancel</button>
-      </div>`:hasRad?`<div style="background:rgba(255,249,62,.07);border:1.5px solid rgba(255,220,62,.2);border-radius:14px;padding:18px 22px;margin-bottom:28px;display:flex;align-items:center;gap:16px;">
-        <div style="font-size:32px;">✨</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:3px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
+        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:12px;color:var(--red);font-size:12px;padding:8px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
+      </div>`:hasRad?`<div style="background:rgba(255,249,62,.05);border:1.5px solid rgba(255,220,62,.15);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
+        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;font-size:28px;">✨</div>
         <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ffd93e;">Radiance Active</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.45);margin-top:2px;">${daysRad} days remaining · Auto-renews · 600 <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></div></div>
-        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;padding:7px 14px;cursor:pointer;">Cancel</button>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:3px;">${daysRad} days remaining · Auto-renews · 600 <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
+        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:12px;color:var(--red);font-size:12px;padding:8px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
       </div>`:''}
 
       <!-- Plans side by side -->
       <div class="atel-section-hdr">Choose a Plan</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:32px;">
 
         <!-- Basic Radiance -->
-        <div style="background:rgba(255,255,255,.03);border:1.5px solid rgba(255,220,62,.18);border-radius:18px;overflow:hidden;">
-          <div style="padding:22px 22px 16px;">
-            <div style="font-size:32px;margin-bottom:12px;">✨</div>
-            <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#ffd93e;margin-bottom:4px;">Radiance</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:16px;">Core perks for Fortized fans</div>
+        <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,220,62,.15);border-radius:22px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,220,62,.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,220,62,.15)';this.style.transform=''">
+          <div style="padding:24px 24px 18px;">
+            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px;">✨</div>
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ffd93e;margin-bottom:5px;">Radiance</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Core perks for Fortized fans</div>
             <!-- Perk chips -->
-            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:18px;">
-              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,220,62,.08);color:rgba(255,220,62,.8);border:1px solid rgba(255,220,62,.15);">${p}</span>`).join('')}
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px;">
+              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,220,62,.07);color:rgba(255,220,62,.75);border:1px solid rgba(255,220,62,.12);">${p}</span>`).join('')}
             </div>
           </div>
-          <!-- Segmented price toggle -->
-          <div style="padding:0 16px 18px;">
-            <div id="rad-price-sel-0" style="display:flex;flex-direction:column;gap:5px;">
+          <!-- Price buttons -->
+          <div style="padding:0 18px 20px;">
+            <div id="rad-price-sel-0" style="display:flex;flex-direction:column;gap:6px;">
               ${PRICES.basic.map((pl,i)=>`
-                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:9px 14px;border-radius:9px;background:${i===1?'var(--accent)':'rgba(255,255,255,.05)'};color:${i===1?'#060810':'rgba(255,255,255,.65)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.09)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.14s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
+                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===1?'var(--accent)':'rgba(255,255,255,.04)'};color:${i===1?'#060810':'rgba(255,255,255,.6)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;" onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
                   <span>${pl.days} Days</span>
-                  <span>${pl.onyx} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'">${i===1?' 🔥':''}</span>
+                  <span>${pl.onyx} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">${i===1?' 🔥':''}</span>
                 </button>`).join('')}
             </div>
           </div>
         </div>
 
         <!-- Radiance+ -->
-        <div style="background:linear-gradient(160deg,rgba(255,120,62,.08),rgba(255,200,62,.04),rgba(255,255,255,.02));border:1.5px solid rgba(255,160,62,.28);border-radius:18px;overflow:hidden;position:relative;">
+        <div style="background:linear-gradient(160deg,rgba(255,120,62,.07),rgba(255,200,62,.03),rgba(255,255,255,.015));border:1.5px solid rgba(255,160,62,.22);border-radius:22px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,160,62,.4)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(255,160,62,.08)'" onmouseout="this.style.borderColor='rgba(255,160,62,.22)';this.style.transform='';this.style.boxShadow='none'">
           <div class="best-ribbon">BEST VALUE</div>
-          <div style="padding:22px 22px 16px;">
-            <div style="font-size:32px;margin-bottom:12px;">🌟</div>
-            <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#ff9d3e;margin-bottom:4px;">Radiance+</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:16px;">Everything unlocked</div>
+          <div style="padding:24px 24px 18px;">
+            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px;">🌟</div>
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ff9d3e;margin-bottom:5px;">Radiance+</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Everything unlocked</div>
             <!-- Perk chips — basic + plus -->
-            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:18px;">
-              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,160,62,.08);color:rgba(255,160,62,.8);border:1px solid rgba(255,160,62,.15);">${p}</span>`).join('')}
-              ${PLAN_PLUS.map(p=>`<span class="perk-chip" style="background:rgba(255,200,62,.12);color:rgba(255,200,62,.9);border:1px solid rgba(255,200,62,.22);font-weight:800;">${p}</span>`).join('')}
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px;">
+              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,160,62,.07);color:rgba(255,160,62,.75);border:1px solid rgba(255,160,62,.12);">${p}</span>`).join('')}
+              ${PLAN_PLUS.map(p=>`<span class="perk-chip" style="background:rgba(255,200,62,.1);color:rgba(255,200,62,.85);border:1px solid rgba(255,200,62,.18);font-weight:800;">${p}</span>`).join('')}
             </div>
           </div>
-          <div style="padding:0 16px 18px;">
-            <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="padding:0 18px 20px;">
+            <div style="display:flex;flex-direction:column;gap:6px;">
               ${PRICES.plus.map((pl,i)=>`
-                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:9px 14px;border-radius:9px;background:${i===0?'linear-gradient(90deg,#ff9d3e,#ffd93e)':'rgba(255,255,255,.05)'};color:${i===0?'#060810':'rgba(255,255,255,.65)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.09)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.14s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
+                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===0?'linear-gradient(90deg,#ff9d3e,#ffd93e)':'rgba(255,255,255,.04)'};color:${i===0?'#060810':'rgba(255,255,255,.6)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;" onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
                   <span>${pl.days} Days</span>
-                  <span>${pl.onyx} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'">${i===0?' 🔥':''}</span>
+                  <span>${pl.onyx} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">${i===0?' 🔥':''}</span>
                 </button>`).join('')}
             </div>
           </div>
@@ -12032,11 +12054,11 @@ function renderAtelierTab(tab) {
 
       <!-- Gift Radiance -->
       ${hasPlus?`<div class="atel-section-hdr">🎁 Gift Radiance to a Friend</div>
-      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;">
+      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:20px;overflow:hidden;">
         ${buildGiftRadianceUI()}
-      </div>`:`<div style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.07);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:12px;opacity:.6;">
-        <div style="font-size:24px;">🎁</div>
-        <div><div style="font-size:13.5px;font-weight:600;color:rgba(255,255,255,.5);">Gift Radiance</div><div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:2px;">Requires Radiance+ — upgrade to gift friends</div></div>
+      </div>`:`<div style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.06);border-radius:20px;padding:18px 22px;display:flex;align-items:center;gap:14px;opacity:.55;">
+        <div style="width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:22px;">🎁</div>
+        <div><div style="font-size:13.5px;font-weight:600;color:rgba(255,255,255,.5);">Gift Radiance</div><div style="font-size:12px;color:rgba(255,255,255,.28);margin-top:3px;">Requires Radiance+ — upgrade to gift friends</div></div>
       </div>`}
     </div>`;
   }
@@ -12109,68 +12131,68 @@ function renderAtelierTab(tab) {
     };
     const questThumbHTML = (q) => {
       const banner = QUEST_BANNERS[q.id] || 'Fortized banner.png';
-      return `<div style="height:76px;position:relative;overflow:hidden;background:#0a0d18;">
+      return `<div style="height:80px;position:relative;overflow:hidden;background:#0a0d18;border-radius:18px 18px 0 0;">
         <img src="${banner}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
-        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.85);"></div>
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;">${q.icon}</div>
-        ${q.done?'<div style="position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:50%;background:rgba(62,207,110,.9);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:800;">✓</div>':''}
-        <span style="position:absolute;top:7px;left:8px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:100px;background:rgba(0,0,0,.7);color:rgba(255,255,255,.6);letter-spacing:.04em;backdrop-filter:blur(4px);">${q.daily?'🔄 Daily':q.category}</span>
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.82);"></div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;">${q.icon}</div>
+        ${q.done?'<div style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:rgba(62,207,110,.9);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:800;">✓</div>':''}
+        <span style="position:absolute;top:8px;left:10px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:100px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.55);letter-spacing:.04em;backdrop-filter:blur(6px);">${q.daily?'🔄 Daily':q.category}</span>
       </div>`;
     };
 
     el.style.padding = '0';
     el.innerHTML = [
       // ── Quest page header ──
-      '<div style="position:relative;overflow:hidden;height:190px;background:#0a0d18;flex-shrink:0;">',
-        '<img src="Fortized banner2.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6;" onerror="this.style.display=\'none\'">',
-        '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,9,18,.15),rgba(7,9,18,.8));"></div>',
-        '<div style="position:absolute;bottom:18px;left:28px;">',
-          '<div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.7);margin-bottom:4px;">FORTIZED</div>',
-          `<div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);">Quests · Earn Onyx</div>`,
+      '<div style="position:relative;overflow:hidden;height:200px;background:#0a0d18;flex-shrink:0;">',
+        '<img src="Fortized banner2.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55;" onerror="this.style.display=\'none\'">',
+        '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,9,18,.1),rgba(7,9,18,.85));"></div>',
+        '<div style="position:absolute;bottom:22px;left:32px;">',
+          '<div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.6);margin-bottom:5px;">FORTIZED</div>',
+          `<div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5);">Quests · Earn Onyx</div>`,
         '</div>',
       '</div>',
 // ── Invite banner ──
-      '<div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#0a1428,#0d1c34);border-top:1px solid rgba(255,255,255,.05);">',
-        '<img src="Fortized banner4.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.25;" onerror="this.style.display=\'none\'">',
-        '<div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(10,20,40,.92) 50%,rgba(10,20,40,.5));"></div>',
-        '<div style="position:relative;padding:18px 28px;display:flex;align-items:center;gap:16px;">',
-          '<div style="width:46px;height:46px;border-radius:12px;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔗</div>',
+      '<div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#0a1428,#0d1c34);border-top:1px solid rgba(255,255,255,.04);">',
+        '<img src="Fortized banner4.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.2;" onerror="this.style.display=\'none\'">',
+        '<div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(10,20,40,.9) 50%,rgba(10,20,40,.45));"></div>',
+        '<div style="position:relative;padding:20px 32px;display:flex;align-items:center;gap:16px;">',
+          '<div style="width:48px;height:48px;border-radius:16px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.18);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔗</div>',
           '<div style="flex:1;">',
-            '<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(96,165,250,.7);margin-bottom:4px;">DAILY QUEST</div>',
-            '<div style="font-family:\'Syne\',sans-serif;font-size:15px;font-weight:800;margin-bottom:3px;color:#fff;">Invite a Friend</div>',
-            '<div style="font-size:12px;color:rgba(255,255,255,.45);">Share your link · +9 Onyx per friend who joins · Resets daily</div>',
+            '<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(96,165,250,.65);margin-bottom:4px;">DAILY QUEST</div>',
+            '<div style="font-family:\'Syne\',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;color:#fff;">Invite a Friend</div>',
+            '<div style="font-size:12px;color:rgba(255,255,255,.4);">Share your link · +9 Onyx per friend who joins · Resets daily</div>',
           '</div>',
-          `<button onclick="regeneratePersonalInvite();if(CU&&!CU.questsDailyLog)CU.questsDailyLog={};if(CU)CU.questsDailyLog.invite=new Date().toDateString();saveUser().catch(()=>{});switchAtelierTab('overview',document.getElementById('atnav-overview'))" style="background:${inviteDone?'rgba(255,255,255,.06)':'rgba(96,165,250,.15)'};color:${inviteDone?'rgba(255,255,255,.3)':'#93c5fd'};border:1px solid ${inviteDone?'rgba(255,255,255,.08)':'rgba(96,165,250,.25)'};border-radius:9px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;cursor:${inviteDone?'not-allowed':'pointer'};white-space:nowrap;">${inviteDone?'Done Today ✓':'+9 ⬡ Get Link'}</button>`,
+          `<button onclick="regeneratePersonalInvite();if(CU&&!CU.questsDailyLog)CU.questsDailyLog={};if(CU)CU.questsDailyLog.invite=new Date().toDateString();saveUser().catch(()=>{});switchAtelierTab('overview',document.getElementById('atnav-overview'))" style="background:${inviteDone?'rgba(255,255,255,.05)':'rgba(96,165,250,.12)'};color:${inviteDone?'rgba(255,255,255,.25)':'#93c5fd'};border:1px solid ${inviteDone?'rgba(255,255,255,.06)':'rgba(96,165,250,.2)'};border-radius:14px;padding:9px 20px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;cursor:${inviteDone?'not-allowed':'pointer'};white-space:nowrap;transition:all .18s;">${inviteDone?'Done Today ✓':'+9 ⬡ Get Link'}</button>`,
         '</div>',
       '</div>',
       // ── Tabs ──
-      '<div style="padding:16px 24px 0;">',
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">',
-          '<div style="display:flex;gap:6px;">',
+      '<div style="padding:20px 28px 0;">',
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">',
+          '<div style="display:flex;gap:8px;">',
             `<button class="quest-tab-chip ${qTab==='available'?'active':''}" onclick="setQuestTab('available')" id="qtab-available">Available (${activeQ.length})</button>`,
             `<button class="quest-tab-chip ${qTab==='completed'?'active':''}" onclick="setQuestTab('completed')" id="qtab-completed">Completed (${doneQ.length})</button>`,
           '</div>',
         '</div>',
         // ── Quest grid ──
-        '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-bottom:40px;">',
+        '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding-bottom:40px;">',
           (qTab === 'available' ? activeQ : doneQ).map(q => [
-            `<div style="background:${q.done?'rgba(62,207,110,.04)':'rgba(255,255,255,.03)'};border:1px solid ${q.done?'rgba(62,207,110,.1)':'rgba(255,255,255,.07)'};border-radius:14px;overflow:hidden;transition:border-color .14s;" ${!q.done?'onmouseover="this.style.borderColor=\'rgba(255,249,62,.2)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.07)\'"':''}>`,
+            `<div style="background:${q.done?'rgba(62,207,110,.035)':'rgba(255,255,255,.025)'};border:1px solid ${q.done?'rgba(62,207,110,.08)':'rgba(255,255,255,.06)'};border-radius:18px;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);" ${!q.done?`onmouseover="this.style.borderColor='rgba(255,249,62,.18)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.transform='';this.style.boxShadow='none'"`:''}>`,
               questThumbHTML(q),
-              '<div style="padding:11px 13px;">',
-                `<div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;margin-bottom:3px;">${q.title}</div>`,
-                `<div style="font-size:11px;color:rgba(255,255,255,.38);line-height:1.45;margin-bottom:9px;">${q.desc}</div>`,
-                '<div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-bottom:8px;">',
-                  `<div style="height:100%;border-radius:2px;width:${q.done?100:0}%;background:${q.done?'var(--green)':'var(--accent)'};"></div>`,
+              '<div style="padding:14px 16px;">',
+                `<div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;margin-bottom:4px;">${q.title}</div>`,
+                `<div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.5;margin-bottom:10px;">${q.desc}</div>`,
+                '<div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-bottom:10px;">',
+                  `<div style="height:100%;border-radius:2px;width:${q.done?100:0}%;background:${q.done?'var(--green)':'var(--accent)'};transition:width .3s;"></div>`,
                 '</div>',
                 '<div style="display:flex;align-items:center;justify-content:space-between;">',
                   `<span style="font-size:11.5px;font-weight:700;color:${q.done?'var(--green)':'var(--accent)'};">+${q.reward} ${q.unit}</span>`,
                   !q.done
-                    ? `<button onclick="${q.action}" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.18);border-radius:7px;color:var(--accent);font-size:11px;font-weight:700;padding:4px 11px;cursor:pointer;">Go →</button>`
-                    : `<span style="font-size:11px;color:rgba(255,255,255,.25);">${q.daily?'Resets daily':'Completed'}</span>`,
+                    ? `<button onclick="${q.action}" style="background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);border-radius:12px;color:var(--accent);font-size:11px;font-weight:700;padding:5px 14px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.14)'" onmouseout="this.style.background='rgba(255,249,62,.08)'">Go →</button>`
+                    : `<span style="font-size:11px;color:rgba(255,255,255,.2);">${q.daily?'Resets daily':'Completed'}</span>`,
                 '</div>',
               '</div>',
             '</div>',
-          ].join('')).join('') || `<div style="grid-column:1/-1;text-align:center;padding:36px;font-size:13.5px;color:rgba(255,255,255,.3);">${qTab==='available'?'All quests done today! 🎉 Come back tomorrow.':'No completed quests yet.'}</div>`,
+          ].join('')).join('') || `<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:13.5px;color:rgba(255,255,255,.25);background:rgba(255,255,255,.015);border-radius:18px;border:1px solid rgba(255,255,255,.04);">${qTab==='available'?'All quests done today! 🎉 Come back tomorrow.':'No completed quests yet.'}</div>`,
         '</div>',
       '</div>',
     ].join('');
@@ -12187,57 +12209,57 @@ function renderAtelierTab(tab) {
     el.style.padding = '0';
     el.innerHTML = `
       <!-- Shop top tabs -->
-      <div style="padding:0 24px;border-bottom:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.15);display:flex;gap:0;align-items:center;">
+      <div style="padding:0 28px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(0,0,0,.12);display:flex;gap:0;align-items:center;">
         ${['featured','browse','coming_soon'].map(t=>`
-          <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:14px 18px;background:transparent;border:none;border-bottom:2px solid ${shopTab===t?'var(--accent)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.4)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.14s;white-space:nowrap;">${t==='featured'?'Featured':t==='browse'?'Browse':'Coming Soon'}</button>`).join('')}
+          <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:15px 20px;background:transparent;border:none;border-bottom:2px solid ${shopTab===t?'var(--accent)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.35)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;" onmouseover="if(!this.style.borderBottomColor.includes('var'))this.style.color='rgba(255,255,255,.7)'" onmouseout="if(!this.style.borderBottomColor.includes('var'))this.style.color='rgba(255,255,255,.35)'">${t==='featured'?'Featured':t==='browse'?'Browse':'Coming Soon'}</button>`).join('')}
         <div style="flex:1;"></div>
-        <div style="font-size:12px;color:rgba(255,255,255,.3);padding-right:4px;">${bal} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"> balance</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.25);padding-right:4px;">${bal} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"> balance</div>
       </div>
 
-      <div style="padding:24px 28px 60px;">
+      <div style="padding:28px 32px 60px;">
         ${shopTab==='featured'?`
           <!-- Featured: Onyx Pure Appearance -->
           <div class="atel-section-hdr">Appearances</div>
-          <div style="background:linear-gradient(135deg,#010103,#08061a,#0e0a22);border:1.5px solid rgba(140,100,220,.2);border-radius:18px;overflow:hidden;margin-bottom:24px;cursor:pointer;transition:border-color .2s,box-shadow .2s;" onmouseover="this.style.borderColor='rgba(140,100,220,.4)';this.style.boxShadow='0 4px 32px rgba(100,60,180,.15)'" onmouseout="this.style.borderColor='rgba(140,100,220,.2)';this.style.boxShadow='none'">
-            <div style="height:120px;background:linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%);display:flex;gap:4px;padding:14px;position:relative;">
-              <div style="width:24px;background:#020206;border-radius:5px;"></div>
-              <div style="flex:1;background:rgba(255,255,255,.03);border-radius:5px;padding:10px;">
-                <div style="height:7px;background:#fff93e;border-radius:4px;width:45%;margin-bottom:5px;"></div>
-                <div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;width:75%;"></div>
+          <div style="background:linear-gradient(135deg,#010103,#08061a,#0e0a22);border:1.5px solid rgba(140,100,220,.18);border-radius:22px;overflow:hidden;margin-bottom:28px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(140,100,220,.35)';this.style.boxShadow='0 8px 40px rgba(100,60,180,.12)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(140,100,220,.18)';this.style.boxShadow='none';this.style.transform=''">
+            <div style="height:130px;background:linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%);display:flex;gap:4px;padding:16px;position:relative;border-radius:22px 22px 0 0;">
+              <div style="width:26px;background:#020206;border-radius:8px;"></div>
+              <div style="flex:1;background:rgba(255,255,255,.025);border-radius:8px;padding:12px;">
+                <div style="height:7px;background:#fff93e;border-radius:100px;width:45%;margin-bottom:6px;"></div>
+                <div style="height:5px;background:rgba(255,255,255,.07);border-radius:100px;width:75%;"></div>
               </div>
-              <div style="position:absolute;bottom:10px;right:14px;font-size:11px;color:rgba(140,100,220,.6);font-weight:700;letter-spacing:.05em;">ONYX PURE</div>
+              <div style="position:absolute;bottom:12px;right:16px;font-size:11px;color:rgba(140,100,220,.55);font-weight:700;letter-spacing:.05em;">ONYX PURE</div>
             </div>
-            <div style="padding:18px 20px;display:flex;align-items:center;gap:14px;">
+            <div style="padding:20px 22px;display:flex;align-items:center;gap:16px;">
               <div style="flex:1;">
-                <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;margin-bottom:4px;">Onyx Pure</div>
-                <div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.5;">The darkest appearance. Deeper than Dark Fortress with a subtle gradient towards dark purple. Pure immersion.</div>
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:5px;">Onyx Pure</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.55;">The darkest appearance. Deeper than Dark Fortress with a subtle gradient towards dark purple. Pure immersion.</div>
               </div>
               ${(CU?.unlockedAppearances||[]).includes('onyx_pure')
-                ? '<div style="padding:10px 20px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.25);border-radius:12px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'
-                : `<button onclick="event.stopPropagation();buyAppearance('onyx_pure',150)" style="padding:10px 20px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;"><img src='Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 150 Onyx</button>`}
+                ? '<div style="padding:10px 22px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:14px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'
+                : `<button onclick="event.stopPropagation();buyAppearance('onyx_pure',150)" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(255,249,62,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(255,249,62,.15)'"><img src='Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 150 Onyx</button>`}
             </div>
           </div>
 
           <!-- More coming soon -->
-          <div class="atel-section-hdr" style="margin-top:20px;">Upcoming Items</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div class="atel-section-hdr" style="margin-top:24px;">Upcoming Items</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
             ${[{n:'Avatar Frames',i:'🖼️',c:'#a78bfa'},{n:'Profile Effects',i:'✨',c:'#60a5fa'},{n:'Name Colors',i:'🎨',c:'#fb923c'}].map(it=>`
-              <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;position:relative;">
-                <div style="height:100px;background:linear-gradient(135deg,${it.c}15,rgba(0,0,0,.3));display:flex;align-items:center;justify-content:center;font-size:44px;opacity:.5;">${it.i}</div>
-                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="font-size:28px;opacity:.4;">🔒</div></div>
-                <div style="padding:12px 14px;"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">${it.n}</div><div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:3px;">Coming soon</div></div>
+              <div style="background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.06);border-radius:18px;overflow:hidden;position:relative;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,255,255,.12)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.transform=''">
+                <div style="height:105px;background:linear-gradient(135deg,${it.c}12,rgba(0,0,0,.25));display:flex;align-items:center;justify-content:center;font-size:46px;opacity:.45;border-radius:18px 18px 0 0;">${it.i}</div>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="font-size:28px;opacity:.35;">🔒</div></div>
+                <div style="padding:14px 16px;"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.45);">${it.n}</div><div style="font-size:11px;color:rgba(255,255,255,.2);margin-top:4px;">Coming soon</div></div>
               </div>`).join('')}
           </div>`:`
           <!-- Browse / Coming Soon state -->
           <div style="padding:20px 0;">
             <!-- Category filter chips -->
-            <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;">
               ${CATS.map(cat=>`<button class="shop-filter-chip${shopCat===cat?' active':''}" onclick="setShopCat('${cat}')">${cat}</button>`).join('')}
             </div>
-            <div style="text-align:center;padding:60px 20px;background:rgba(255,255,255,.02);border-radius:16px;border:1px solid rgba(255,255,255,.05);">
-              <div style="font-size:48px;margin-bottom:14px;opacity:.3;">📦</div>
-              <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,.3);">No items yet</div>
-              <div style="font-size:13px;color:rgba(255,255,255,.2);margin-top:6px;">Check back when the shop launches!</div>
+            <div style="text-align:center;padding:60px 24px;background:rgba(255,255,255,.015);border-radius:20px;border:1px solid rgba(255,255,255,.04);">
+              <div style="font-size:48px;margin-bottom:16px;opacity:.25;">📦</div>
+              <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,.25);">No items yet</div>
+              <div style="font-size:13px;color:rgba(255,255,255,.18);margin-top:7px;">Check back when the shop launches!</div>
             </div>
           </div>`}
       </div>`;

@@ -862,20 +862,42 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .toast.success{border-left:3px solid var(--green);color:#a3e8b8;}
 .toast.error{border-left:3px solid var(--red);color:#fca5a5;}
 .toast.info{border-left:3px solid var(--accent);color:var(--accent);}
-.ctx-menu{position:fixed;z-index:9999;background:var(--panel2,#131822);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:6px;min-width:210px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.05),0 0 60px -10px rgba(255,249,62,.04);backdrop-filter:blur(24px);animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
+.ctx-menu{position:fixed;z-index:9999;background:rgba(16,20,32,.92);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:6px 0;min-width:230px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.04);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:ctxIn .1s cubic-bezier(.22,1,.36,1);display:none;overflow:hidden;}
+.ctx-menu.ctx-visible{display:block;}
 @keyframes vcPulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes callPulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.4);opacity:0}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes ctxIn{from{opacity:0;transform:scale(.96) translateY(-4px);}to{opacity:1;transform:none;}}
-.ctx-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;font-size:13.5px;font-weight:500;color:rgba(220,228,240,.85);cursor:pointer;transition:background .1s,color .1s;}
-.ctx-item:hover{background:var(--accent);color:#060810;}
-.ctx-item:hover svg{stroke:#060810;}
-.ctx-item svg{width:16px;height:16px;flex-shrink:0;opacity:.7;}
-.ctx-item:hover svg{opacity:1;}
-.ctx-item.danger{color:rgba(248,113,113,.85);}
-.ctx-item.danger:hover{background:var(--red);color:#fff;}
-.ctx-sep{height:1px;background:rgba(255,255,255,.06);margin:4px 6px;}
-.ctx-section-label{padding:8px 10px 4px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.22);}
+@keyframes ctxIn{from{opacity:0;transform:scale(.95) translateY(-3px);}to{opacity:1;transform:none;}}
+@keyframes ctxRipple{0%{transform:scale(0);opacity:.18;}100%{transform:scale(2.5);opacity:0;}}
+@keyframes ctxCheck{0%{stroke-dashoffset:20;}100%{stroke-dashoffset:0;}}
+.ctx-group{padding:4px 8px;}
+.ctx-group+.ctx-group{border-top:1px solid rgba(255,255,255,.05);margin-left:8px;margin-right:8px;padding-top:4px;}
+.ctx-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:500;color:rgba(220,228,240,.8);cursor:pointer;transition:background .12s,color .12s,transform .08s;position:relative;overflow:hidden;min-height:34px;}
+.ctx-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.95);}
+.ctx-item:hover::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:2.5px;height:55%;background:var(--accent);border-radius:0 2px 2px 0;opacity:1;}
+.ctx-item:active{transform:scale(.98);}
+.ctx-item .ctx-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.55;transition:opacity .12s;}
+.ctx-item:hover .ctx-icon{opacity:.9;}
+.ctx-item .ctx-icon svg{width:15px;height:15px;}
+.ctx-item .ctx-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ctx-item .ctx-hint{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.18);margin-left:auto;padding-left:12px;flex-shrink:0;font-family:'SF Mono','Cascadia Code',monospace;}
+.ctx-item.danger{color:rgba(248,113,113,.8);}
+.ctx-item.danger:hover{background:rgba(248,113,113,.08);color:rgba(248,113,113,.95);}
+.ctx-item.danger:hover::before{background:var(--red);}
+.ctx-item.danger .ctx-icon{opacity:.55;}
+.ctx-item.danger:hover .ctx-icon{opacity:.9;}
+.ctx-item.disabled{opacity:.3;pointer-events:none;}
+.ctx-section-label{padding:8px 12px 4px;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.18);}
+.ctx-sep{height:1px;background:rgba(255,255,255,.05);margin:4px 8px;}
+/* Mobile bottom-sheet context menu */
+@media(max-width:768px){
+.ctx-menu{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;max-width:100%!important;width:100%!important;border-radius:18px 18px 0 0!important;max-height:70vh;overflow-y:auto;animation:ctxSlideUp .2s cubic-bezier(.22,1,.36,1)!important;padding-bottom:env(safe-area-inset-bottom,8px);}
+.ctx-item{min-height:44px;padding:10px 16px;font-size:14px;}
+.ctx-group{padding:4px 10px;}
+.ctx-section-label{padding:10px 16px 5px;font-size:10px;}
+.ctx-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9998;animation:fadeIn .15s;}
+}
+@keyframes ctxSlideUp{from{opacity:0;transform:translateY(100%);}to{opacity:1;transform:translateY(0);}}
 .notif-panel{position:fixed;top:52px;right:0;width:330px;max-height:calc(100vh - 60px);background:var(--sidebar);border:1px solid var(--border);border-radius:18px 0 0 18px;box-shadow:-8px 0 40px rgba(0,0,0,.5);z-index:500;transform:translateX(100%);transition:transform .22s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;}
 .notif-panel.open{transform:translateX(0);}
 .np-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
@@ -1138,7 +1160,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 </div>
 
 <!-- CONTEXT MENU -->
-<div class="ctx-menu" id="ctx-menu" style="display:none;"></div>
+<div class="ctx-menu" id="ctx-menu"></div>
+<div id="ctx-overlay" style="display:none;"></div>
 
 <!-- EMOJI PICKER -->
 <div class="emoji-picker-panel" id="emoji-picker"></div>
@@ -4403,9 +4426,18 @@ async function forwardToDM(username) {
     toast('Forwarded to '+username,'success');
   } catch { toast('Forward failed','error'); }
 }
-function addReactionUI(e, msgId, context) {
+function addReactionUI(eOrMsgId, msgIdOrCtx, contextOrNone) {
+  // Support both (event, msgId, context) and (msgId, context) signatures
+  let x, y, msgId, context;
+  if (typeof eOrMsgId === 'object' && eOrMsgId.clientX !== undefined) {
+    x = eOrMsgId.clientX; y = eOrMsgId.clientY;
+    msgId = msgIdOrCtx; context = contextOrNone;
+  } else {
+    x = window.innerWidth / 2 - 100; y = window.innerHeight / 2 - 100;
+    msgId = eOrMsgId; context = msgIdOrCtx;
+  }
   const emojis=['👍','❤️','😂','😮','😢','🔥','✨','👀','🎉','💯','😍','💀','🤣','😭','🥺','💜'];
-  showCtxMenu(e.clientX,e.clientY,emojis.map(em=>({icon:em,label:em,action:()=>toggleReaction(msgId,em,context)})));
+  showCtxMenu(x, y, [{ label: 'React', items: emojis.map(em=>({icon:em,label:em,action:()=>toggleReaction(msgId,em,context)})) }]);
 }
 async function toggleReaction(msgId, emoji, context) {
   if (!CU?.username) return;
@@ -4863,7 +4895,7 @@ function pickCBEmoji(){
   const emojis=['🏰','⚔️','🛡️','🔮','🏹','🌟','🔥','❄️','🌊','⛩️','🎮','🎨','🎵','🎭','🎯','🧩','⚡','🌺','🦋','🐉','🦅','🌈','🦁','🐺','🦊','🎪','🚀','💫','🌙','☀️'];
   const x=event&&event.clientX||window.innerWidth/2;
   const y=event&&event.clientY||window.innerHeight/2;
-  showCtxMenu(x,y,emojis.map(e=>({icon:e,label:e,action:()=>selectCBEmoji(e)})));
+  showCtxMenu(x,y,[{items:emojis.map(e=>({icon:e,label:e,action:()=>selectCBEmoji(e)}))}]);
 }
 function setCBVis(v,btn){
   cbVisibility=v;
@@ -4993,7 +5025,7 @@ function updateDOBField(){
   document.addEventListener('contextmenu',e=>{e.preventDefault();handleContextMenu(e);});
   document.addEventListener('click',e=>{
     const menu=document.getElementById('ctx-menu');
-    if(menu&&!menu.contains(e.target))menu.style.display='none';
+    if(menu&&!menu.contains(e.target))_closeCtxMenu();
     const np=document.getElementById('notif-panel');
     if(notifPanelOpen&&np&&!np.contains(e.target)&&e.target.id!=='rb-notifs'){notifPanelOpen=false;np.classList.remove('open');}
     const ep=document.getElementById('emoji-picker');
@@ -5005,7 +5037,7 @@ function updateDOBField(){
   document.querySelectorAll('.modal-overlay').forEach(overlay=>{
     overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('open');});
   });
-  document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key==='A')tryOpenAdmin();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')_closeCtxMenu();if(e.ctrlKey&&e.shiftKey&&e.key==='A')tryOpenAdmin();});
 
   // Background refresh
   setTimeout(async()=>{
@@ -7833,69 +7865,314 @@ async function doLogout() {
 // ════════════════════════════════════════════
 
 // ════════════════════════════════════════════
-// CONTEXT MENU
+// CONTEXT MENU — Redesigned System
 // ════════════════════════════════════════════
-function handleContextMenu(e) {
-  const menu=document.getElementById('ctx-menu');
-  const target=e.target;
-  let items=[];
-  const msgRow=target.closest('.msg-row');
-  const isInput=target.tagName==='TEXTAREA'||target.tagName==='INPUT';
 
-  if(msgRow) {
-    const msgId=msgRow.dataset.msgid;
-    const text=msgRow.dataset.text||'';
-    const isOwn=msgRow.dataset.from===CU.username;
-    const svgReply='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>';
-    const svgEmoji='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>';
-    const svgFwd='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg>';
-    const svgCopy='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
-    const svgPin='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h5l-4 5 2 7-6-4-6 4 2-7-4-5h5z"/></svg>';
-    const svgEdit='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
-    const svgDel='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
-    const svgReport='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
-    items=[
-      {section:true,label:'Message'},
-      {icon:svgReply,label:'Reply',action:()=>replyToMsg(msgId,msgRow.querySelector('.msg-author')?.textContent||'',curDM?'dm':'ch')},
-      {icon:svgEmoji,label:'Add Reaction',action:()=>addReactionUI(msgId,curDM?'dm':'ch')},
-      {icon:svgFwd,label:'Forward',action:()=>forwardMsg(text)},
-      {icon:svgCopy,label:'Copy Text',action:()=>navigator.clipboard.writeText(text)},
-      {icon:svgPin,label:'Pin Message',action:()=>pinMessage(msgId,text)},
-      {sep:true},
-      {icon:svgReport,label:'Report Message',action:()=>reportMessage(msgId,text)},
-      ...(isOwn?[{sep:true},{icon:svgEdit,label:'Edit',action:()=>editMsg(msgId,curDM?'dm':'ch')},{icon:svgDel,label:'Delete',danger:true,action:()=>deleteMsg(msgId,curDM?'dm':'ch',true)}]:[]),
-    ];
-  } else if(isInput) {
-    items=[
-      {icon:'📋',label:'Paste',action:async()=>{const t=await navigator.clipboard.readText();target.value+=t;}},
-      {icon:'📄',label:'Copy',action:()=>navigator.clipboard.writeText(target.value)},
-      {icon:'☑️',label:'Select All',action:()=>{target.select();}},
-    ];
-  } else {
-    items=[
-      {icon:'🏠',label:'Go Home',action:()=>showView('home')},
-      {icon:'🔄',label:'Refresh',action:()=>location.reload()},
-    ];
-    if(window.getSelection()?.toString()) items.unshift({icon:'📋',label:'Copy Selection',action:()=>navigator.clipboard.writeText(window.getSelection().toString())});
-  }
+// SVG icon library for context menus
+const _ctxIcons = {
+  reply:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>',
+  emoji:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  forward:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg>',
+  copy:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>',
+  check:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4,12 10,18 20,6"/></svg>',
+  pin:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1V2H8v4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24z"/></svg>',
+  unpin:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="2" x2="22" y2="22"/><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1V2H8v4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24z"/></svg>',
+  bookmark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>',
+  thread:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>',
+  star:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>',
+  globe:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>',
+  edit:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+  trash:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>',
+  report:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+  home:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>',
+  refresh:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>',
+  search:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>',
+  switchAcct:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17,11 19,13 23,9"/></svg>',
+  logout:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  paste:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>',
+  selectAll:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="9,11 12,14 22,4"/></svg>',
+  profile:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  mention:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 006 0v-1a10 10 0 10-3.92 7.94"/></svg>',
+  addFriend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
+  message:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>',
+  roles:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  mute:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>',
+  kick:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>',
+  ban:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+  markRead: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',
+  create:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  leave:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+};
 
-  showCtxMenu(e.clientX,e.clientY,items);
+function _ctxSvg(name) {
+  return _ctxIcons[name] || '';
 }
 
-function showCtxMenu(x,y,items) {
-  const menu=document.getElementById('ctx-menu');
-  menu.style.display='block';menu.innerHTML='';
-  items.forEach(item=>{
-    if(item.sep){const s=document.createElement('div');s.className='ctx-sep';menu.appendChild(s);}
-    else if(item.section){const l=document.createElement('div');l.className='ctx-section-label';l.textContent=item.label;menu.appendChild(l);}
-    else{const el=document.createElement('div');el.className='ctx-item'+(item.danger?' danger':'');el.innerHTML=`<span>${item.icon||''}</span><span>${item.label}</span>`;if(item.action)el.onclick=e=>{e.stopPropagation();item.action();menu.style.display='none';};menu.appendChild(el);}
+// Close context menu
+function _closeCtxMenu() {
+  const menu = document.getElementById('ctx-menu');
+  const overlay = document.getElementById('ctx-overlay');
+  if (menu) { menu.classList.remove('ctx-visible'); menu.innerHTML = ''; }
+  if (overlay) overlay.style.display = 'none';
+}
+
+// Build context menu items from grouped structure
+// groups = [ { label?, items: [ { icon, label, hint?, action?, danger?, disabled? } ] } ]
+function showCtxMenu(x, y, groups) {
+  _closeCtxMenu();
+  const menu = document.getElementById('ctx-menu');
+  const overlay = document.getElementById('ctx-overlay');
+  menu.innerHTML = '';
+
+  const isMobile = window.innerWidth <= 768;
+
+  groups.forEach((group, gi) => {
+    const gDiv = document.createElement('div');
+    gDiv.className = 'ctx-group';
+    if (group.label) {
+      const lbl = document.createElement('div');
+      lbl.className = 'ctx-section-label';
+      lbl.textContent = group.label;
+      gDiv.appendChild(lbl);
+    }
+    group.items.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'ctx-item' + (item.danger ? ' danger' : '') + (item.disabled ? ' disabled' : '');
+      el.innerHTML =
+        `<span class="ctx-icon">${item.icon || ''}</span>` +
+        `<span class="ctx-label">${item.label}</span>` +
+        (item.hint ? `<span class="ctx-hint">${item.hint}</span>` : '');
+
+      if (item.action && !item.disabled) {
+        el.onclick = ev => {
+          ev.stopPropagation();
+          // Copy action feedback
+          if (item.copyFeedback) {
+            const iconSpan = el.querySelector('.ctx-icon');
+            const origIcon = iconSpan.innerHTML;
+            item.action();
+            iconSpan.innerHTML = _ctxSvg('check');
+            iconSpan.style.opacity = '1';
+            el.querySelector('.ctx-label').textContent = 'Copied!';
+            setTimeout(() => _closeCtxMenu(), 500);
+            return;
+          }
+          item.action();
+          _closeCtxMenu();
+        };
+      }
+      gDiv.appendChild(el);
+    });
+    menu.appendChild(gDiv);
   });
-  menu.style.left=x+'px';menu.style.top=y+'px';
-  requestAnimationFrame(()=>{
-    const r=menu.getBoundingClientRect();
-    if(r.right>window.innerWidth)menu.style.left=(x-r.width)+'px';
-    if(r.bottom>window.innerHeight)menu.style.top=(y-r.height)+'px';
-  });
+
+  if (isMobile) {
+    // Bottom-sheet mode
+    menu.style.left = '';
+    menu.style.top = '';
+    menu.style.right = '';
+    menu.style.bottom = '';
+    if (overlay) { overlay.style.display = 'block'; overlay.className = 'ctx-overlay'; overlay.onclick = _closeCtxMenu; }
+  } else {
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+  }
+
+  menu.classList.add('ctx-visible');
+
+  if (!isMobile) {
+    requestAnimationFrame(() => {
+      const r = menu.getBoundingClientRect();
+      if (r.right > window.innerWidth - 8) menu.style.left = Math.max(8, x - r.width) + 'px';
+      if (r.bottom > window.innerHeight - 8) menu.style.top = Math.max(8, y - r.height) + 'px';
+    });
+  }
+}
+
+// ── Main Context Menu Handler ──
+function handleContextMenu(e) {
+  const target = e.target;
+  const msgRow = target.closest('.msg-row');
+  const isInput = target.tagName === 'TEXTAREA' || target.tagName === 'INPUT';
+  const isAuthor = target.closest('.msg-author');
+  const isSidebar = target.closest('.sidebar');
+  const isSidebarLogo = target.closest('.sidebar-logo');
+  const isSidebarBlank = isSidebar && !target.closest('.rail-btn') && !target.closest('.rail-bastion') && !target.closest('.userbar') && !target.closest('.sidebar-logo') && !target.closest('.onyx-pill');
+  const isChatArea = target.closest('.msg-list') || target.closest('.chat-main') || target.closest('#chat-area');
+  const isSystemMsg = msgRow && msgRow.classList.contains('msg-system');
+  const context = curDM ? 'dm' : 'ch';
+
+  // ── 1) User context menu (clicking on author name) ──
+  if (isAuthor && !isSystemMsg) {
+    const username = isAuthor.dataset.author || isAuthor.textContent.trim();
+    const isMe = username === CU?.username;
+    const inBastion = curBastion !== null;
+    const b = inBastion ? CU.bastions?.[curBastion] : null;
+    const isOwner = b?.owner === CU?.username;
+
+    const profileGroup = {
+      label: 'Profile',
+      items: [
+        { icon: _ctxSvg('profile'), label: 'View Profile', action: () => viewUserProfile(username) },
+        { icon: _ctxSvg('message'), label: 'Message', action: () => openDMView(username), disabled: isMe },
+        { icon: _ctxSvg('mention'), label: 'Mention', action: () => { const ta = document.querySelector('.chat-input-row textarea'); if (ta) { ta.value += `@${username} `; ta.focus(); } } },
+        ...(!isMe ? [{ icon: _ctxSvg('addFriend'), label: 'Add Friend', action: () => quickAddFriend(username) }] : []),
+      ]
+    };
+
+    const groups = [profileGroup];
+
+    if (inBastion && !isMe) {
+      const bastionItems = [];
+      bastionItems.push({ icon: _ctxSvg('roles'), label: 'View Roles', action: () => viewUserProfile(username) });
+      bastionItems.push({ icon: _ctxSvg('mute'), label: 'Mute', action: () => toast('User muted', 'success') });
+      if (isOwner) {
+        bastionItems.push({ icon: _ctxSvg('kick'), label: 'Kick', action: () => toast('User kicked', 'success'), danger: true });
+        bastionItems.push({ icon: _ctxSvg('ban'), label: 'Ban', action: () => toast('User banned', 'success'), danger: true });
+      }
+      groups.push({ label: 'Bastion', items: bastionItems });
+    }
+
+    showCtxMenu(e.clientX, e.clientY, groups);
+    return;
+  }
+
+  // ── 2) Message context menu ──
+  if (msgRow && !isSystemMsg) {
+    const msgId = msgRow.dataset.msgid;
+    const text = msgRow.dataset.text || '';
+    const isOwn = msgRow.dataset.from === CU?.username;
+    const isPinned = msgRow.classList.contains('pinned');
+    const inBastion = curBastion !== null;
+
+    const primaryGroup = {
+      label: 'Primary',
+      items: [
+        { icon: _ctxSvg('reply'), label: 'Reply', hint: 'R', action: () => replyToMsg(msgId, msgRow.querySelector('.msg-author')?.textContent || '', context) },
+        { icon: _ctxSvg('emoji'), label: 'React', action: () => addReactionUI(msgId, context) },
+        { icon: _ctxSvg('forward'), label: 'Forward', action: () => forwardMsg(text) },
+        { icon: _ctxSvg('copy'), label: 'Copy Text', hint: 'C', action: () => navigator.clipboard.writeText(text), copyFeedback: true },
+      ]
+    };
+
+    const interactionGroup = {
+      label: 'Interaction',
+      items: [
+        { icon: isPinned ? _ctxSvg('unpin') : _ctxSvg('pin'), label: isPinned ? 'Unpin Message' : 'Pin Message', action: () => pinMessage(msgId, text) },
+        { icon: _ctxSvg('bookmark'), label: 'Save to Vault', action: () => { try { let vault = JSON.parse(localStorage.getItem('ftz_vault') || '[]'); vault.push({ msgId, text, from: msgRow.dataset.from, savedAt: Date.now() }); localStorage.setItem('ftz_vault', JSON.stringify(vault)); toast('Saved to Vault', 'success'); } catch { toast('Could not save', 'error'); } } },
+        ...(inBastion ? [{ icon: _ctxSvg('thread'), label: 'Create Thread', action: () => toast('Threads coming soon', 'info') }] : []),
+      ]
+    };
+
+    const orgGroup = {
+      label: 'Organization',
+      items: [
+        { icon: _ctxSvg('star'), label: 'Mark as Important', action: () => { msgRow.style.boxShadow = '0 0 0 1px rgba(255,249,62,.15) inset'; toast('Marked as important', 'success'); } },
+        { icon: _ctxSvg('globe'), label: 'Translate', disabled: true },
+      ]
+    };
+
+    const moderationGroup = {
+      label: 'Moderation',
+      items: []
+    };
+
+    if (isOwn) {
+      moderationGroup.items.push({ icon: _ctxSvg('edit'), label: 'Edit', action: () => editMsg(msgId, context) });
+    }
+    moderationGroup.items.push({ icon: _ctxSvg('report'), label: 'Report Message', action: () => reportMessage(msgId, text) });
+    if (isOwn) {
+      moderationGroup.items.push({ icon: _ctxSvg('trash'), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context, true) });
+    }
+
+    const groups = [primaryGroup, interactionGroup, orgGroup, moderationGroup];
+    showCtxMenu(e.clientX, e.clientY, groups);
+    return;
+  }
+
+  // ── 3) System message — limited actions ──
+  if (isSystemMsg) {
+    const text = msgRow?.dataset?.text || msgRow?.textContent?.trim() || '';
+    showCtxMenu(e.clientX, e.clientY, [
+      { items: [
+        { icon: _ctxSvg('copy'), label: 'Copy Text', action: () => navigator.clipboard.writeText(text), copyFeedback: true },
+      ]}
+    ]);
+    return;
+  }
+
+  // ── 4) Input field context menu ──
+  if (isInput) {
+    showCtxMenu(e.clientX, e.clientY, [
+      { items: [
+        { icon: _ctxSvg('paste'), label: 'Paste', action: async () => { const t = await navigator.clipboard.readText(); target.value += t; } },
+        { icon: _ctxSvg('copy'), label: 'Copy', action: () => navigator.clipboard.writeText(target.value), copyFeedback: true },
+        { icon: _ctxSvg('selectAll'), label: 'Select All', action: () => { target.select(); } },
+      ]}
+    ]);
+    return;
+  }
+
+  // ── 5) Sidebar logo / blank area context menu ──
+  if (isSidebarLogo || isSidebarBlank) {
+    const groups = [
+      { items: [
+        { icon: _ctxSvg('home'), label: 'Go Home', action: () => showView('home') },
+        { icon: _ctxSvg('search'), label: 'Search', action: () => { const s = document.querySelector('.topbar-search input'); if (s) { s.focus(); s.click(); } else { toast('Search coming soon', 'info'); } } },
+        { icon: _ctxSvg('settings'), label: 'Settings', action: () => showView('profile') },
+        { icon: _ctxSvg('switchAcct'), label: 'Switch Account', action: () => toggleAccountSwitcher() },
+      ]},
+      { items: [
+        { icon: _ctxSvg('logout'), label: 'Logout', danger: true, action: () => doLogout() },
+      ]}
+    ];
+    showCtxMenu(e.clientX, e.clientY, groups);
+    return;
+  }
+
+  // ── 6) Empty chat space context menu ──
+  if (isChatArea) {
+    const inBastion = curBastion !== null;
+    const b = inBastion ? CU.bastions?.[curBastion] : null;
+    const isOwner = b?.owner === CU?.username;
+
+    const items = [
+      { icon: _ctxSvg('refresh'), label: 'Refresh', action: () => location.reload() },
+      { icon: _ctxSvg('markRead'), label: 'Mark All as Read', action: () => toast('All read!', 'success') },
+    ];
+
+    if (window.getSelection()?.toString()) {
+      items.unshift({ icon: _ctxSvg('copy'), label: 'Copy Selection', action: () => navigator.clipboard.writeText(window.getSelection().toString()), copyFeedback: true });
+    }
+
+    const groups = [{ items }];
+
+    if (inBastion) {
+      const bastionItems = [];
+      if (isOwner) {
+        bastionItems.push({ icon: _ctxSvg('create'), label: 'Create Room', action: () => openBastionSettings('rooms') });
+        bastionItems.push({ icon: _ctxSvg('settings'), label: 'Bastion Settings', action: () => openBastionSettings() });
+      }
+      if (bastionItems.length) groups.push({ label: 'Bastion', items: bastionItems });
+      groups.push({ items: [
+        { icon: _ctxSvg('leave'), label: 'Leave Bastion', danger: true, action: () => leaveBastion(curBastion) },
+      ]});
+    }
+
+    showCtxMenu(e.clientX, e.clientY, groups);
+    return;
+  }
+
+  // ── 7) Fallback — generic context menu ──
+  const fallbackItems = [
+    { icon: _ctxSvg('home'), label: 'Go Home', action: () => showView('home') },
+    { icon: _ctxSvg('refresh'), label: 'Refresh', action: () => location.reload() },
+  ];
+  if (window.getSelection()?.toString()) {
+    fallbackItems.unshift({ icon: _ctxSvg('copy'), label: 'Copy Selection', action: () => navigator.clipboard.writeText(window.getSelection().toString()), copyFeedback: true });
+  }
+  showCtxMenu(e.clientX, e.clientY, [{ items: fallbackItems }]);
 }
 
 // ════════════════════════════════════════════
@@ -8934,21 +9211,25 @@ function showRailBastionCtx(e, idx) {
   const b = CU.bastions?.[idx];
   if (!b) return;
   const isOwner = b.owner === CU.username;
-  const items = [
-    { section: true, label: b.name },
-    { icon: '🏰', label: 'Open Bastion',      action: () => openBastion(idx) },
-    { icon: '🔔', label: 'Mark All Read',      action: () => toast('All read!', 'success') },
-    ...(isOwner ? [
-      { sep: true },
-      { icon: '🔗', label: 'Invite People',     action: () => { openBastion(idx); openBastionSettings('invites'); } },
-      { icon: '⚙️', label: 'Bastion Settings',  action: () => { openBastion(idx); openBastionSettings(); } },
-      { icon: '🎨', label: 'Edit Banner',        action: () => { openBastion(idx); openBastionSettings('overview'); } },
-      { icon: '👥', label: 'Manage Members',     action: () => { openBastion(idx); openBastionSettings('members'); } },
-    ] : []),
-    { sep: true },
-    { icon: '🚪', label: 'Leave Bastion', action: () => leaveBastion(idx), danger: true },
+  const groups = [
+    { label: b.name, items: [
+      { icon: _ctxSvg('home'), label: 'Open Bastion', action: () => openBastion(idx) },
+      { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => toast('All read!', 'success') },
+    ]},
+    ...(isOwner ? [{
+      label: 'Manage',
+      items: [
+        { icon: _ctxSvg('addFriend'), label: 'Invite People', action: () => { openBastion(idx); openBastionSettings('invites'); } },
+        { icon: _ctxSvg('settings'), label: 'Bastion Settings', action: () => { openBastion(idx); openBastionSettings(); } },
+        { icon: _ctxSvg('edit'), label: 'Edit Banner', action: () => { openBastion(idx); openBastionSettings('overview'); } },
+        { icon: _ctxSvg('profile'), label: 'Manage Members', action: () => { openBastion(idx); openBastionSettings('members'); } },
+      ]
+    }] : []),
+    { items: [
+      { icon: _ctxSvg('leave'), label: 'Leave Bastion', action: () => leaveBastion(idx), danger: true },
+    ]},
   ];
-  showCtxMenu(e.clientX, e.clientY, items);
+  showCtxMenu(e.clientX, e.clientY, groups);
 }
 
 // ════════════════════════════════════════════
@@ -11256,7 +11537,7 @@ function pickStatusEmoji() {
   const btn = document.getElementById('status-emoji-btn');
   if (!btn) return;
   const rect = btn.getBoundingClientRect();
-  showCtxMenu(rect.right+4, rect.top, emojis.map(function(em){ return {icon:em,label:em,action:function(){btn.textContent=em;}}; }));
+  showCtxMenu(rect.right+4, rect.top, [{items:emojis.map(function(em){ return {icon:em,label:em,action:function(){btn.textContent=em;}}; })}]);
 }
 
 async function saveCustomStatus() {

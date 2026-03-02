@@ -48,34 +48,44 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .sidebar-header .hdr-actions button{width:28px;height:28px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .sidebar-header .hdr-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
 /* ── Bastion Sidebar 2027 ────────────────────────── */
-.bastion-banner-hero{position:relative;width:100%;height:140px;overflow:hidden;flex-shrink:0;border-radius:0 0 18px 18px;margin-bottom:-20px;}
-.bastion-banner-hero img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.7) saturate(1.1);}
+.bastion-banner-hero{position:relative;width:100%;height:120px;overflow:hidden;flex-shrink:0;border-radius:0 0 18px 18px;margin-bottom:0;}
+.bastion-banner-hero img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.65) saturate(1.1);}
 .bastion-banner-hero .bb-gradient{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,16,24,0) 0%,rgba(13,16,24,.55) 50%,var(--channel) 100%);}
 .bastion-banner-hero .bb-noise{position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");opacity:.5;pointer-events:none;mix-blend-mode:overlay;}
 .bastion-banner-hero .bb-glow{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:120%;height:40px;background:radial-gradient(ellipse at center,rgba(255,249,62,.06) 0%,transparent 70%);pointer-events:none;}
-.bastion-identity{position:relative;z-index:2;padding:0 14px;display:flex;align-items:flex-end;gap:12px;}
-.bastion-emblem{width:48px;height:48px;border-radius:16px;background:var(--panel);border:2.5px solid var(--channel);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:transform .2s,box-shadow .2s;}
+.bastion-banner-hero .bb-emblem{position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);z-index:3;}
+.bastion-banner-hero .bb-emblem .bastion-emblem{width:56px;height:56px;border-radius:18px;background:var(--panel);border:3px solid var(--channel);display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:transform .2s,box-shadow .2s;}
+.bastion-banner-hero .bb-emblem .bastion-emblem:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(0,0,0,.6);}
+.bastion-banner-hero .bb-emblem .bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:15px;}
+.bastion-identity{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;padding:32px 14px 0;gap:2px;}
+.bastion-identity.no-banner{padding-top:14px;}
+.bastion-emblem{width:56px;height:56px;border-radius:18px;background:var(--panel);border:3px solid var(--channel);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:transform .2s,box-shadow .2s;}
 .bastion-emblem:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(0,0,0,.5);}
-.bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:13px;}
-.bastion-meta{flex:1;min-width:0;padding-bottom:4px;}
-.bastion-meta .bm-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.02em;text-shadow:0 1px 8px rgba(0,0,0,.4);}
-.bastion-meta .bm-tagline{font-size:11px;color:rgba(255,255,255,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
-.bastion-stats-row{display:flex;align-items:center;gap:8px;padding:10px 14px 6px;flex-shrink:0;}
+.bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:15px;}
+.bastion-meta{text-align:center;min-width:0;width:100%;padding:0 4px;}
+.bastion-meta .bm-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;word-break:break-word;overflow-wrap:break-word;letter-spacing:-.02em;text-shadow:0 1px 8px rgba(0,0,0,.4);line-height:1.3;}
+.bastion-meta .bm-tagline{font-size:11px;color:rgba(255,255,255,.45);word-break:break-word;overflow-wrap:break-word;margin-top:2px;line-height:1.3;}
+.bastion-stats-row{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px 6px;flex-shrink:0;flex-wrap:wrap;}
 .bastion-stats-row .bs-chip{display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.35);padding:4px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:100px;transition:all .15s;cursor:default;}
 .bastion-stats-row .bs-chip:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);}
 .bastion-stats-row .bs-chip.boost{background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(251,191,36,.04));border-color:rgba(255,249,62,.12);color:rgba(255,249,62,.7);cursor:pointer;}
 .bastion-stats-row .bs-chip.boost:hover{background:linear-gradient(135deg,rgba(255,249,62,.1),rgba(251,191,36,.08));border-color:rgba(255,249,62,.22);}
-.bastion-quick-actions{display:flex;gap:4px;padding:0 10px 8px;flex-shrink:0;}
+.bastion-quick-actions{display:flex;justify-content:center;gap:4px;padding:0 10px 8px;flex-shrink:0;}
 .bastion-quick-actions button{flex:1;height:30px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:rgba(255,255,255,.4);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
 .bastion-quick-actions button:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.1);}
 .sidebar-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);margin:4px 12px;flex-shrink:0;}
-/* Channel categories - 2027 */
+/* Channel categories - 2027 collapsible */
+.ch-cat-wrap{}
 .ch-category{display:flex;align-items:center;gap:6px;padding:14px 12px 6px;font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.2);cursor:pointer;transition:color .15s;user-select:none;}
 .ch-category:hover{color:rgba(255,255,255,.35);}
 .ch-category .cat-icon{font-size:12px;opacity:.6;}
+.ch-category .cat-chevron{font-size:8px;transition:transform .25s ease;margin-right:2px;display:inline-block;color:rgba(255,255,255,.2);}
+.ch-category:hover .cat-chevron{color:rgba(255,255,255,.4);}
+.ch-cat-wrap.collapsed .cat-chevron{transform:rotate(-90deg);}
 .ch-category .cat-add{margin-left:auto;font-size:14px;opacity:0;transition:opacity .15s;background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;}
 .ch-category:hover .cat-add{opacity:1;}
-.ch-category .cat-chevron{font-size:8px;transition:transform .2s;margin-left:auto;}
+.ch-cat-items{overflow:hidden;transition:max-height .25s ease,opacity .2s ease;max-height:1000px;opacity:1;}
+.ch-cat-wrap.collapsed .ch-cat-items{max-height:0;opacity:0;}
 /* Channel items - 2027 */
 .ch-item-2027{display:flex;align-items:center;gap:9px;padding:7px 10px;margin:1px 8px;border-radius:12px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.35);transition:all .14s cubic-bezier(.22,1,.36,1);position:relative;font-weight:500;}
 .ch-item-2027:hover{background:rgba(255,255,255,.045);color:rgba(255,255,255,.8);}
@@ -3472,18 +3482,20 @@ function renderBastionSidebar(scroll) {
   const isOwner=b.owner===CU.username;
   const chs=b.channels||[];
 
-  // ── Banner Hero ──
+  // ── Banner Hero with centered icon ──
   let html='';
+  const emblemHTML=b.icon?`<img src="${escapeHTML(b.icon)}" onerror="this.outerHTML='🏰'">`:(b.emblem||'🏰');
   if (bannerSrc) {
     html+=`<div class="bastion-banner-hero">
       <img src="${escapeHTML(bannerSrc)}" onerror="this.parentElement.style.display='none'" alt="">
       <div class="bb-gradient"></div><div class="bb-noise"></div><div class="bb-glow"></div>
+      <div class="bb-emblem"><div class="bastion-emblem">${emblemHTML}</div></div>
     </div>`;
   }
 
-  // ── Identity row ──
-  html+=`<div class="bastion-identity" style="${bannerSrc?'':'padding-top:14px;'}">
-    <div class="bastion-emblem">${b.icon?`<img src="${escapeHTML(b.icon)}" onerror="this.outerHTML='🏰'">`:(b.emblem||'🏰')}</div>
+  // ── Identity (centered name below icon) ──
+  html+=`<div class="bastion-identity${bannerSrc?' ':' no-banner '}">
+    ${bannerSrc?'':`<div class="bastion-emblem">${emblemHTML}</div>`}
     <div class="bastion-meta">
       <div class="bm-name">${escapeHTML(b.name)}</div>
       ${b.tagline?`<div class="bm-tagline">${escapeHTML(b.tagline)}</div>`:''}
@@ -3510,7 +3522,7 @@ function renderBastionSidebar(scroll) {
 
   html+=`<div class="sidebar-divider"></div>`;
 
-  // ── Channel categories ──
+  // ── Channel categories (collapsible) ──
   const textChs=chs.filter(c=>c.type==='text'||!c.type);
   const voiceChs=chs.filter(c=>c.type==='voice');
   const forumChs=chs.filter(c=>c.type==='forum');
@@ -3519,96 +3531,98 @@ function renderBastionSidebar(scroll) {
   const eventChs=chs.filter(c=>c.type==='event');
   const automationChs=chs.filter(c=>c.type==='automation');
 
-  // Helper to render a channel category
-  function chCategory(icon, label, type, channels, renderFn) {
-    if (!channels.length && !isOwner) return '';
-    let out=`<div class="ch-category"><span class="cat-icon">${icon}</span> ${label}${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'${type}')">+</button>`:''}</div>`;
-    channels.forEach(ch => { out += renderFn(ch); });
-    return out;
+  // Collapsed state key per bastion
+  const collapseKey='ftz_cat_collapsed_'+(b.globalId||b.name||curBastion);
+  let collapsedCats={};
+  try{collapsedCats=JSON.parse(localStorage.getItem(collapseKey)||'{}');}catch(e){}
+
+  // Helper: collapsible category wrapper
+  function catWrap(catId, icon, label, type, contentHTML) {
+    if (!contentHTML && !isOwner) return '';
+    const isCollapsed=!!collapsedCats[catId];
+    return `<div class="ch-cat-wrap${isCollapsed?' collapsed':''}" data-cat="${catId}">
+      <div class="ch-category" onclick="toggleChCat(this,'${catId}')">
+        <span class="cat-chevron">▼</span><span class="cat-icon">${icon}</span> ${label}${isOwner?`<button class="cat-add" onclick="event.stopPropagation();addChannel(${curBastion},'${type}')">+</button>`:''}
+      </div>
+      <div class="ch-cat-items">${contentHTML||''}</div>
+    </div>`;
   }
 
   // Text channels
-  if (textChs.length||isOwner) {
-    html+=`<div class="ch-category"><span class="cat-icon">📝</span> TEXT${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'text')">+</button>`:''}</div>`;
-    chs.forEach((ch,i)=>{
-      if (ch.type==='voice'||ch.type==='forum'||ch.type==='announcement'||ch.type==='poll'||ch.type==='event'||ch.type==='automation') return;
-      const tier=getAgeTier(CU?.dateOfBirth);
-      const blocked=ch.nsfw&&tier==='child';
-      const nsfwTag=ch.nsfw?`<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:rgba(248,113,113,.6);flex-shrink:0;">18+</span>`:'';
-      const focusBadge=ch.focusMode?'<span class="focus-mode-badge">FOCUS</span>':'';
-      html+=`<div class="ch-item-2027 ${curChannel===i?'active':''}" id="ch-sb-${i}" ${blocked?'style="opacity:.35;pointer-events:none;"':''}onclick="selectChannel(${i})">
-        <span class="ch-hash">#</span><span class="ch-name">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${blocked?'<span title="Age blocked" style="margin-left:auto;opacity:.4;">🔒</span>':''}
-      </div>`;
-    });
-  }
+  let textHTML='';
+  chs.forEach((ch,i)=>{
+    if (ch.type==='voice'||ch.type==='forum'||ch.type==='announcement'||ch.type==='poll'||ch.type==='event'||ch.type==='automation') return;
+    const tier=getAgeTier(CU?.dateOfBirth);
+    const blocked=ch.nsfw&&tier==='child';
+    const nsfwTag=ch.nsfw?`<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:rgba(248,113,113,.6);flex-shrink:0;">18+</span>`:'';
+    const focusBadge=ch.focusMode?'<span class="focus-mode-badge">FOCUS</span>':'';
+    textHTML+=`<div class="ch-item-2027 ${curChannel===i?'active':''}" id="ch-sb-${i}" ${blocked?'style="opacity:.35;pointer-events:none;"':''}onclick="selectChannel(${i})">
+      <span class="ch-hash">#</span><span class="ch-name">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${blocked?'<span title="Age blocked" style="margin-left:auto;opacity:.4;">🔒</span>':''}
+    </div>`;
+  });
+  if (textHTML||isOwner) html+=catWrap('text','📝','TEXT','text',textHTML);
 
   // Forums
-  if (forumChs.length||isOwner) {
-    html+=`<div class="ch-category"><span class="cat-icon">💬</span> FORUMS${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'forum')">+</button>`:''}</div>`;
-    forumChs.forEach(function(ch){
-      const ri=chs.indexOf(ch);
-      html+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="openForumChannel(${ri})">
-        <span class="ch-hash">💬</span><span class="ch-name">${escapeHTML(ch.name)}</span>
-      </div>`;
-    });
-  }
+  let forumHTML='';
+  forumChs.forEach(function(ch){
+    const ri=chs.indexOf(ch);
+    forumHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="openForumChannel(${ri})">
+      <span class="ch-hash">💬</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+    </div>`;
+  });
+  if (forumHTML||isOwner) html+=catWrap('forum','💬','FORUMS','forum',forumHTML);
 
   // Voice
-  if (voiceChs.length||isOwner) {
-    html+=`<div class="ch-category"><span class="cat-icon">🎙</span> VOICE${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'voice')">+</button>`:''}</div>`;
-    chs.forEach((ch,i)=>{
-      if (ch.type!=='voice') return;
-      const live=voiceConnected&&voiceChannel===i;
-      html+=`<div class="vc-item-2027 ${live?'active-vc':''}" onclick="selectChannel(${i})">
-        <span class="vc-icon">🎙</span><span class="ch-name">${escapeHTML(ch.name)}</span>
-        ${live?'<span class="vc-live">LIVE</span>':''}
-      </div>`;
-    });
-  }
+  let voiceHTML='';
+  chs.forEach((ch,i)=>{
+    if (ch.type!=='voice') return;
+    const live=voiceConnected&&voiceChannel===i;
+    voiceHTML+=`<div class="vc-item-2027 ${live?'active-vc':''}" onclick="selectChannel(${i})">
+      <span class="vc-icon">🎙</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+      ${live?'<span class="vc-live">LIVE</span>':''}
+    </div>`;
+  });
+  if (voiceHTML||isOwner) html+=catWrap('voice','🎙','VOICE','voice',voiceHTML);
 
   // Announcements
-  if (announcementChs.length||isOwner) {
-    html+=`<div class="ch-category"><span class="cat-icon">📢</span> ANNOUNCEMENTS${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'announcement')">+</button>`:''}</div>`;
-    announcementChs.forEach(function(ch){
-      const ri=chs.indexOf(ch);
-      html+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
-        <span class="ch-hash">📢</span><span class="ch-name">${escapeHTML(ch.name)}</span>
-      </div>`;
-    });
-  }
+  let announceHTML='';
+  announcementChs.forEach(function(ch){
+    const ri=chs.indexOf(ch);
+    announceHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+      <span class="ch-hash">📢</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+    </div>`;
+  });
+  if (announceHTML||isOwner) html+=catWrap('announcement','📢','ANNOUNCEMENTS','announcement',announceHTML);
 
   // Polls
-  if (pollChs.length||isOwner) {
-    html+=`<div class="ch-category"><span class="cat-icon">🗳</span> POLLS${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'poll')">+</button>`:''}</div>`;
-    pollChs.forEach(function(ch){
-      const ri=chs.indexOf(ch);
-      html+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
-        <span class="ch-hash">🗳</span><span class="ch-name">${escapeHTML(ch.name)}</span>
-      </div>`;
-    });
-  }
+  let pollHTML='';
+  pollChs.forEach(function(ch){
+    const ri=chs.indexOf(ch);
+    pollHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+      <span class="ch-hash">🗳</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+    </div>`;
+  });
+  if (pollHTML||isOwner) html+=catWrap('poll','🗳','POLLS','poll',pollHTML);
 
   // Events
-  if (eventChs.length||isOwner) {
-    html+=`<div class="ch-category"><span class="cat-icon">🎮</span> EVENTS${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'event')">+</button>`:''}</div>`;
-    eventChs.forEach(function(ch){
-      const ri=chs.indexOf(ch);
-      html+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
-        <span class="ch-hash">🎮</span><span class="ch-name">${escapeHTML(ch.name)}</span>
-      </div>`;
-    });
-  }
+  let eventHTML='';
+  eventChs.forEach(function(ch){
+    const ri=chs.indexOf(ch);
+    eventHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+      <span class="ch-hash">🎮</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+    </div>`;
+  });
+  if (eventHTML||isOwner) html+=catWrap('event','🎮','EVENTS','event',eventHTML);
 
   // Automation
-  if (automationChs.length||isOwner) {
-    html+=`<div class="ch-category"><span class="cat-icon">🧩</span> AUTOMATION${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'automation')">+</button>`:''}</div>`;
-    automationChs.forEach(function(ch){
-      const ri=chs.indexOf(ch);
-      html+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
-        <span class="ch-hash">🧩</span><span class="ch-name">${escapeHTML(ch.name)}</span>
-      </div>`;
-    });
-  }
+  let autoHTML='';
+  automationChs.forEach(function(ch){
+    const ri=chs.indexOf(ch);
+    autoHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+      <span class="ch-hash">🧩</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+    </div>`;
+  });
+  if (autoHTML||isOwner) html+=catWrap('automation','🧩','AUTOMATION','automation',autoHTML);
 
   const vcb=document.getElementById('voice-connected-bar');
   if (voiceConnected&&vcb) {
@@ -3619,6 +3633,21 @@ function renderBastionSidebar(scroll) {
     if (vcp) vcp.innerHTML=voiceParticipants.map(p=>`<div class="vcb-part">${buildAvatarHTML(p.pfp,p.name,18)} ${escapeHTML(p.name)}</div>`).join('');
   } else if (vcb) vcb.classList.remove('show');
   scroll.innerHTML=html;
+}
+
+// Toggle collapsible channel category
+function toggleChCat(el, catId) {
+  const wrap=el.closest('.ch-cat-wrap');
+  if (!wrap) return;
+  wrap.classList.toggle('collapsed');
+  // Persist state
+  const b=CU.bastions?.[curBastion];
+  const collapseKey='ftz_cat_collapsed_'+(b?.globalId||b?.name||curBastion);
+  let collapsedCats={};
+  try{collapsedCats=JSON.parse(localStorage.getItem(collapseKey)||'{}');}catch(e){}
+  if (wrap.classList.contains('collapsed')) collapsedCats[catId]=true;
+  else delete collapsedCats[catId];
+  localStorage.setItem(collapseKey,JSON.stringify(collapsedCats));
 }
 
 async function leaveBastion(idx) {

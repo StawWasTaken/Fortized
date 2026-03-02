@@ -9738,48 +9738,76 @@ function parseMD(s) {
       return `<img src="${url}" alt="${emoji}" class="msg-emoji" style="width:1.25em;height:1.25em;object-fit:contain;vertical-align:-0.25em;display:inline-block;" loading="lazy" onerror="this.outerHTML='${emoji}'">`;
     } catch { return emoji; }
   });
+  // ═══════════════════════════════════════════════════════
+  // PROTECT all HTML generated above from text formatting
+  // Extract HTML tags + blocks into placeholders, format
+  // only the plain text parts, then restore.
+  // ═══════════════════════════════════════════════════════
+  var _mdSlots = [];
+  // Protect complete HTML blocks (divs, iframes, etc.) first
+  s = s.replace(/<div[\s\S]*?<\/div>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/<a[\s\S]*?<\/a>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/<img[^>]*>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/<iframe[\s\S]*?<\/iframe>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/<video[\s\S]*?<\/video>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/<audio[\s\S]*?<\/audio>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/<button[\s\S]*?<\/button>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/<svg[\s\S]*?<\/svg>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/<span[^>]*>[\s\S]*?<\/span>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  // Protect any remaining HTML tags
+  s = s.replace(/<[^>]+>/g, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+
   // ── LAYER 1: Block-level elements (code blocks, quotes) ──
   // Triple backtick code blocks (```lang\ncode\n```)
   s = s.replace(/```(\w*)\n?([\s\S]*?)```/g, function(_, lang, code) {
     const cid = 'cb-'+Math.random().toString(36).slice(2,8);
-    const langLabel = lang ? `<span class="code-lang">${escapeHTML(lang)}</span>` : '';
-    return `<div class="msg-code-block" id="${cid}">${langLabel}<button class="code-copy" onclick="event.stopPropagation();_copyCodeBlock('${cid}')">Copy</button><code>${escapeHTML(code.trim())}</code></div>`;
+    const langLabel = lang ? '<span class="code-lang">'+escapeHTML(lang)+'</span>' : '';
+    const block = '<div class="msg-code-block" id="'+cid+'">'+langLabel+'<button class="code-copy" onclick="event.stopPropagation();_copyCodeBlock(\''+cid+'\')">Copy</button><code>'+escapeHTML(code.trim())+'</code></div>';
+    _mdSlots.push(block); return '\x00MD'+(_mdSlots.length-1)+'\x00';
   });
   // Collapsible quote blocks (>> lines)
   s = s.replace(/(?:^|\n)&gt;&gt;\s*([\s\S]*?)(?=\n(?!&gt;)|$)/gm, function(_, text) {
     const qid = 'q-'+Math.random().toString(36).slice(2,8);
-    return `\n<div class="msg-quote msg-quote-collapsible" id="${qid}" onclick="this.classList.toggle('expanded')">${text.trim()}</div>`;
+    const block = '<div class="msg-quote msg-quote-collapsible" id="'+qid+'" onclick="this.classList.toggle(\'expanded\')">'+text.trim()+'</div>';
+    _mdSlots.push(block); return '\n\x00MD'+(_mdSlots.length-1)+'\x00';
   });
   // Single-line quote blocks (> line)
   s = s.replace(/(?:^|\n)&gt;\s+(.+?)(?=\n|$)/gm, function(_, text) {
-    return `\n<div class="msg-quote">${text.trim()}</div>`;
+    const block = '<div class="msg-quote">'+text.trim()+'</div>';
+    _mdSlots.push(block); return '\n\x00MD'+(_mdSlots.length-1)+'\x00';
   });
 
-  // ── LAYER 2: Mentions ──
+  // ── LAYER 2: Mentions (only in plain text, not inside HTML) ──
   // @everyone
-  s = s.replace(/@everyone/g, `<span class="mention mention-everyone" onmouseenter="_showMentionBadge(this,'Mass Mention')" onmouseleave="_hideMentionBadge(this)">@everyone<span class="mention-badge">Mass Mention</span></span>`);
+  s = s.replace(/@everyone/g, function(m) {
+    const h = '<span class="mention mention-everyone" onmouseenter="_showMentionBadge(this,\'Mass Mention\')" onmouseleave="_hideMentionBadge(this)">@everyone<span class="mention-badge">Mass Mention</span></span>';
+    _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00';
+  });
   // @here
   s = s.replace(/@here/g, function() {
     const onlineCount = _getOnlineMemberCount();
-    return `<span class="mention mention-here" onmouseenter="_showMentionBadge(this,'Notifying ${onlineCount} online')" onmouseleave="_hideMentionBadge(this)">@here<span class="mention-badge">Notifying ${onlineCount} online</span></span>`;
+    const h = '<span class="mention mention-here" onmouseenter="_showMentionBadge(this,\'Notifying '+onlineCount+' online\')" onmouseleave="_hideMentionBadge(this)">@here<span class="mention-badge">Notifying '+onlineCount+' online</span></span>';
+    _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00';
   });
   // @user and @role mentions
   s = s.replace(/@([\w]+)/g, function(match, name) {
-    if (name === 'everyone' || name === 'here') return match; // already handled
+    if (name === 'everyone' || name === 'here') return match;
+    var h;
     if (curBastion !== null) {
       const b = CU?.bastions?.[curBastion];
       if (b) {
         const role = (b.roles||[]).find(r => r.name.toLowerCase() === name.toLowerCase());
         if (role) {
           const col = role.color || '#60a5fa';
-          return `<span class="mention mention-role" style="background:${col}18;color:${col};" onmouseenter="_showRolePreview(event,this,'${escapeHTML(role.name)}')" onmouseleave="_hidePreview()">@${escapeHTML(role.name)}</span>`;
+          h = '<span class="mention mention-role" style="background:'+col+'18;color:'+col+';" onmouseenter="_showRolePreview(event,this,\''+escapeHTML(role.name)+'\')" onmouseleave="_hidePreview()">@'+escapeHTML(role.name)+'</span>';
+          _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00';
         }
       }
     }
-    // @user mention
-    return `<span class="mention mention-user" onmouseenter="_showUserMentionPreview(event,this,'${escapeHTML(name)}')" onmouseleave="_hidePreview()" onclick="_scrollToUserMsg('${escapeHTML(name)}')">@${escapeHTML(name)}</span>`;
+    h = '<span class="mention mention-user" onmouseenter="_showUserMentionPreview(event,this,\''+escapeHTML(name)+'\')" onmouseleave="_hidePreview()" onclick="_scrollToUserMsg(\''+escapeHTML(name)+'\')">@'+escapeHTML(name)+'</span>';
+    _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00';
   });
-  // #room mentions
+  // #room mentions — only match standalone #word, not inside placeholders
   s = s.replace(/#([\w-]+)/g, function(match, name) {
     if (curBastion === null) return match;
     const b = CU?.bastions?.[curBastion];
@@ -9788,46 +9816,42 @@ function parseMD(s) {
     const cat = (b.categories||[]).find(c => c.name.toLowerCase() === name.toLowerCase());
     if (ch) {
       const chIdx = (b.channels||[]).indexOf(ch);
-      return `<span class="mention mention-room" onclick="selectChannel(${chIdx})" onmouseenter="_showRoomPreview(event,this,'${escapeHTML(ch.name)}')" onmouseleave="_hidePreview()">#${escapeHTML(ch.name)}</span>`;
+      const h = '<span class="mention mention-room" onclick="selectChannel('+chIdx+')" onmouseenter="_showRoomPreview(event,this,\''+escapeHTML(ch.name)+'\')" onmouseleave="_hidePreview()">#'+escapeHTML(ch.name)+'</span>';
+      _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00';
     }
     if (cat) {
-      return `<span class="mention mention-room" onmouseenter="_showCatPreview(event,this,'${escapeHTML(cat.id)}')" onmouseleave="_hidePreview()">#${escapeHTML(cat.name)}</span>`;
+      const h = '<span class="mention mention-room" onmouseenter="_showCatPreview(event,this,\''+escapeHTML(cat.id)+'\')" onmouseleave="_hidePreview()">#'+escapeHTML(cat.name)+'</span>';
+      _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00';
     }
     return match;
   });
 
   // ── LAYER 3: Structured Titles ──
-  // ///Subtitle/// → small uppercase
-  s = s.replace(/\/\/\/(.+?)\/\/\//g, '<div class="msg-subtitle">$1</div>');
-  // //Title2// → medium heading
-  s = s.replace(/\/\/(.+?)\/\//g, '<div class="msg-title2">$1</div>');
-  // /Title1/ → large heading
-  s = s.replace(/(?<![a-zA-Z0-9:])\/([^\/\n][^\n]*?)\/(?![a-zA-Z0-9])/g, '<div class="msg-title1">$1</div>');
+  s = s.replace(/\/\/\/(.+?)\/\/\//g, function(_,t) { const h='<div class="msg-subtitle">'+t+'</div>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/\/\/(.+?)\/\//g, function(_,t) { const h='<div class="msg-title2">'+t+'</div>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/(?<![a-zA-Z0-9:])\/([^\/\n\x00][^\n\x00]*?)\/(?![a-zA-Z0-9])/g, function(_,t) { const h='<div class="msg-title1">'+t+'</div>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
 
   // ── LAYER 4: Dividers ──
-  s = s.replace(/(?:^|\n)---(?:\n|$)/g, '<div class="msg-divider"></div>');
+  s = s.replace(/(?:^|\n)---(?:\n|$)/g, function() { const h='<div class="msg-divider"></div>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
 
   // ── LAYER 5: Inline formatting ──
-  // Spoilers ||text||
-  s = s.replace(/\|\|(.+?)\|\|/g, '<span class="msg-spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>');
-  // Highlight ==text==
-  s = s.replace(/==(.+?)==/g, '<span class="msg-highlight">$1</span>');
-  // Small text ~text~ (but not ~~strikethrough~~)
-  s = s.replace(/(?<!~)~(?!~)(.+?)(?<!~)~(?!~)/g, '<span class="msg-small">$1</span>');
-  // Strikethrough ~~text~~
+  s = s.replace(/\|\|(.+?)\|\|/g, function(_,t) { const h='<span class="msg-spoiler" onclick="this.classList.toggle(\'revealed\')">'+t+'</span>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/==(.+?)==/g, function(_,t) { const h='<span class="msg-highlight">'+t+'</span>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/(?<!~)~(?!~)(.+?)(?<!~)~(?!~)/g, function(_,t) { const h='<span class="msg-small">'+t+'</span>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
   s = s.replace(/~~(.+?)~~/g, '<s>$1</s>');
-  // Bold italic ***text***
   s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-  // Bold **text**
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // Italic *text*
   s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  // Inline code `text`
-  s = s.replace(/`(.+?)`/g, '<code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:5px;font-family:\'Courier New\',monospace;font-size:12px;">$1</code>');
-  // "citation" (legacy — works with escaped quotes)
-  s = s.replace(/&quot;([^&]+?)&quot;/g, '<span style="font-style:italic;color:rgba(255,255,255,.45);border-left:2px solid rgba(255,255,255,.1);padding-left:8px;">$1</span>');
+  s = s.replace(/`(.+?)`/g, function(_,t) { const h='<code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:5px;font-family:\'Courier New\',monospace;font-size:12px;">'+t+'</code>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/&quot;([^&]+?)&quot;/g, function(_,t) { const h='<span style="font-style:italic;color:rgba(255,255,255,.45);border-left:2px solid rgba(255,255,255,.1);padding-left:8px;">'+t+'</span>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
   // Newlines
   s = s.replace(/\n/g, '<br>');
+
+  // ═══════ RESTORE all protected HTML ═══════
+  // Multiple passes to handle nested placeholders
+  for (var _rp = 0; _rp < 5; _rp++) {
+    s = s.replace(/\x00MD(\d+)\x00/g, function(_, idx) { return _mdSlots[parseInt(idx)] || ''; });
+  }
   return s;
 }
 

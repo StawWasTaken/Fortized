@@ -232,7 +232,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Userbar — spans both sidebars */
-.userbar{min-height:52px;max-height:52px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:18px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;margin:6px 6px 8px;box-sizing:border-box;backdrop-filter:blur(8px);transition:background .2s,border-color .2s;position:fixed;bottom:0;left:0;z-index:15;width:calc(210px - 12px);margin:6px 6px 8px;}
+.userbar{min-height:52px;max-height:52px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:14px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;box-sizing:border-box;backdrop-filter:blur(8px);transition:background .2s,border-color .2s,width .25s ease;position:fixed;bottom:0;left:0;z-index:15;width:calc(210px - 12px);margin:6px 6px 8px;}
 .userbar:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.09);}
 .ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:6px 8px;border-radius:10px;background:transparent;border:none;cursor:pointer;transition:all .14s;}
 .ua-clickable:hover{background:rgba(255,255,255,.06);}
@@ -464,7 +464,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .cit-gif{background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:5px;color:rgba(255,255,255,.35);font-size:9.5px;font-weight:800;padding:2px 6px;cursor:pointer;letter-spacing:.06em;transition:all .15s;font-family:'Syne',sans-serif;}
 .cit-gif:hover{border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.8);background:rgba(255,255,255,.04);}
 .chat-input-row{display:flex;align-items:flex-end;padding:6px 10px 8px;gap:8px;}
-.chat-input-row textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;resize:none;max-height:140px;min-height:22px;line-height:1.55;padding:2px 0;}
+.chat-input-row textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;resize:none;max-height:140px;min-height:22px;line-height:1.55;padding:2px 0;position:relative;z-index:2;}
+.ci-preview-wrap textarea{width:100%;}
 .chat-input-row textarea::placeholder{color:rgba(255,255,255,.2);}
 .chat-send-btn{width:32px;height:32px;border-radius:10px;background:var(--accent);border:none;color:#060810;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;box-shadow:0 2px 8px rgba(255,249,62,.15);}
 .chat-send-btn:hover{filter:brightness(1.06);transform:scale(1.04);box-shadow:0 4px 14px rgba(255,249,62,.2);}
@@ -569,6 +570,26 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .focus-mode-chat .chat-input-outer{border-color:rgba(255,255,255,.03);}
 .focus-mode-chat .msg-row{border-bottom:1px solid rgba(255,255,255,.015);padding-bottom:6px;margin-bottom:2px;}
 .focus-mode-badge{display:inline-flex;align-items:center;gap:3px;font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(96,165,250,.06);color:rgba(96,165,250,.6);border:1px solid rgba(96,165,250,.1);margin-left:auto;letter-spacing:.05em;flex-shrink:0;}
+/* ── Text Selection Formatting Panel ─────────────── */
+.fmt-sel-panel{position:fixed;display:none;background:rgba(20,23,35,.97);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:3px;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,.5);backdrop-filter:blur(14px);flex-direction:row;gap:1px;animation:fmtPanelIn .12s ease-out;}
+.fmt-sel-panel.show{display:flex;}
+@keyframes fmtPanelIn{from{opacity:0;transform:translateY(4px) scale(.95);}to{opacity:1;transform:translateY(0) scale(1);}}
+.fmt-sel-btn{background:transparent;border:none;color:rgba(255,255,255,.55);cursor:pointer;width:32px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;transition:all .12s;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;}
+.fmt-sel-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
+.fmt-sel-btn svg{width:15px;height:15px;}
+.fmt-sel-sep{width:1px;background:rgba(255,255,255,.08);margin:4px 1px;}
+/* ── Live Formatting Preview Overlay ─────────────── */
+.chat-input-row .ci-preview-wrap{position:relative;flex:1;min-width:0;}
+.ci-preview{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;font-family:'DM Sans',sans-serif;font-size:13.5px;line-height:1.55;padding:2px 0;color:var(--text);white-space:pre-wrap;word-wrap:break-word;overflow:hidden;z-index:1;}
+.ci-preview .ci-bold{font-weight:700;}
+.ci-preview .ci-italic{font-style:italic;}
+.ci-preview .ci-strike{text-decoration:line-through;opacity:.6;}
+.ci-preview .ci-code{font-family:'JetBrains Mono','Fira Code',monospace;font-size:12px;background:rgba(255,255,255,.06);border-radius:4px;padding:0 4px;}
+.ci-preview .ci-spoiler{background:rgba(255,255,255,.12);border-radius:4px;padding:0 3px;color:transparent;text-shadow:none;}
+.ci-preview .ci-highlight{background:rgba(255,249,62,.12);color:rgba(255,249,62,.85);border-radius:3px;padding:0 2px;}
+.ci-preview .ci-smalltext{font-size:10.5px;opacity:.6;}
+.ci-preview .ci-mention{color:#60a5fa;font-weight:600;}
+.ci-preview .ci-room-ref{color:#a78bfa;font-weight:600;}
 /* ── Atelier ─────────────────────────────────────── */
 .atelier-wrap{display:flex;flex:1;overflow:hidden;background:#0c0f17;}
 .atelier-nav{width:230px;min-width:230px;background:linear-gradient(180deg,#0a0d14,#0b0e16);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;overflow:hidden;}
@@ -1102,6 +1123,19 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- TEXT SELECTION FORMATTING PANEL -->
+<div class="fmt-sel-panel" id="fmt-sel-panel">
+  <button class="fmt-sel-btn" onclick="_fmtWrap('**')" title="Bold"><b>B</b></button>
+  <button class="fmt-sel-btn" onclick="_fmtWrap('*')" title="Italic"><i>I</i></button>
+  <button class="fmt-sel-btn" onclick="_fmtWrap('~~')" title="Strikethrough"><s>S</s></button>
+  <div class="fmt-sel-sep"></div>
+  <button class="fmt-sel-btn" onclick="_fmtWrap('`')" title="Code" style="font-family:'JetBrains Mono',monospace;font-size:13px;">&lt;/&gt;</button>
+  <button class="fmt-sel-btn" onclick="_fmtWrap('||')" title="Spoiler"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  <button class="fmt-sel-btn" onclick="_fmtWrap('==')" title="Highlight" style="color:rgba(255,249,62,.7);">H</button>
+  <div class="fmt-sel-sep"></div>
+  <button class="fmt-sel-btn" onclick="_fmtInsertLink()" title="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></button>
+</div>
 
 <!-- CONTEXT MENU -->
 <div class="ctx-menu" id="ctx-menu" style="display:none;"></div>
@@ -2008,6 +2042,10 @@ function openExternalLink(e, url) {
 function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  // Sync live preview overlay height
+  if (el._previewEl) {
+    el._previewEl.style.height = el.style.height;
+  }
 }
 // Silent send — hold send button to send without notification
 let _silentSendTimer = null;
@@ -2214,6 +2252,7 @@ function updateSidebar(v) {
   const ctxViews = ['dms','friends','discover','bastion'];
   const ctxVisible = ctxViews.includes(v);
   if (ctx) ctx.style.display = ctxVisible ? 'flex' : 'none';
+  updateUserbarWidth();
 
   if (v==='home') {
     if (hdr) hdr.style.display = 'none';
@@ -2249,6 +2288,7 @@ function updateSidebar(v) {
   } else if (v==='bsettings') {
     // bsettings has its own nav inside view-bsettings; hide sidebar-ctx
     if (ctx) ctx.style.display = 'none';
+    updateUserbarWidth();
     renderBSettingsNav();
   }
 }
@@ -2299,6 +2339,17 @@ function updateUserbar() {
   // Sync status to Firebase for everyone to see
   try { if (CU.username && st !== 'offline') FortizedSocial.setStatus(CU.username, st).catch(()=>{}); } catch {}
   updateOnyxDisplay();
+}
+function updateUserbarWidth() {
+  const ub = document.querySelector('.userbar');
+  if (!ub) return;
+  const ctx = document.getElementById('sidebar-ctx');
+  const ctxVisible = ctx && ctx.style.display !== 'none';
+  if (ctxVisible) {
+    ub.style.width = 'calc(210px + 240px - 12px)';
+  } else {
+    ub.style.width = 'calc(210px - 12px)';
+  }
 }
 function updateOnyxDisplay() {
   const bal = CU?.onyx || 0;
@@ -13941,6 +13992,194 @@ function toggleEmoticonConversion(el) {
   saveGlobalSettings();
   toast('Emoticon conversion ' + (_globalSettings.disableEmoticonConversion ? 'disabled' : 'enabled'), 'info');
 }
+
+// ════════════════════════════════════════════════════════
+// TEXT SELECTION FORMATTING PANEL
+// ════════════════════════════════════════════════════════
+var _fmtActiveTA = null;
+var _fmtSelStart = 0;
+var _fmtSelEnd = 0;
+
+function _initFmtPanel() {
+  document.addEventListener('mouseup', function(e) {
+    setTimeout(function() {
+      var panel = document.getElementById('fmt-sel-panel');
+      if (!panel) return;
+      // Check if any chat textarea has a selection
+      var textareas = document.querySelectorAll('.chat-input-row textarea');
+      var foundTA = null;
+      for (var i = 0; i < textareas.length; i++) {
+        var ta = textareas[i];
+        if (ta.selectionStart !== ta.selectionEnd && document.activeElement === ta) {
+          foundTA = ta;
+          break;
+        }
+      }
+      if (!foundTA) { _hideFmtPanel(); return; }
+      _fmtActiveTA = foundTA;
+      _fmtSelStart = foundTA.selectionStart;
+      _fmtSelEnd = foundTA.selectionEnd;
+      // Position panel above the textarea
+      var taRect = foundTA.getBoundingClientRect();
+      var panelW = 280;
+      var px = taRect.left + (taRect.width / 2) - (panelW / 2);
+      var py = taRect.top - 42;
+      if (px < 8) px = 8;
+      if (px + panelW > window.innerWidth - 8) px = window.innerWidth - panelW - 8;
+      if (py < 8) py = taRect.bottom + 6;
+      panel.style.left = px + 'px';
+      panel.style.top = py + 'px';
+      panel.classList.add('show');
+    }, 10);
+  });
+  document.addEventListener('mousedown', function(e) {
+    var panel = document.getElementById('fmt-sel-panel');
+    if (panel && panel.classList.contains('show') && !panel.contains(e.target)) {
+      _hideFmtPanel();
+    }
+  });
+}
+
+function _hideFmtPanel() {
+  var panel = document.getElementById('fmt-sel-panel');
+  if (panel) panel.classList.remove('show');
+  _fmtActiveTA = null;
+}
+
+function _fmtWrap(marker) {
+  if (!_fmtActiveTA) return;
+  var ta = _fmtActiveTA;
+  var start = _fmtSelStart;
+  var end = _fmtSelEnd;
+  var val = ta.value;
+  var selected = val.substring(start, end);
+  if (!selected) { _hideFmtPanel(); return; }
+  var wrapped = marker + selected + marker;
+  ta.value = val.substring(0, start) + wrapped + val.substring(end);
+  ta.selectionStart = start;
+  ta.selectionEnd = start + wrapped.length;
+  ta.focus();
+  ta.dispatchEvent(new Event('input', {bubbles:true}));
+  _hideFmtPanel();
+}
+
+function _fmtInsertLink() {
+  if (!_fmtActiveTA) return;
+  var ta = _fmtActiveTA;
+  var start = _fmtSelStart;
+  var end = _fmtSelEnd;
+  var val = ta.value;
+  var selected = val.substring(start, end);
+  if (!selected) { _hideFmtPanel(); return; }
+  var wrapped = '[' + selected + '](url)';
+  ta.value = val.substring(0, start) + wrapped + val.substring(end);
+  // Select "url" for easy replacement
+  var urlStart = start + selected.length + 3;
+  ta.selectionStart = urlStart;
+  ta.selectionEnd = urlStart + 3;
+  ta.focus();
+  ta.dispatchEvent(new Event('input', {bubbles:true}));
+  _hideFmtPanel();
+}
+
+// Init on load
+setTimeout(_initFmtPanel, 500);
+
+// ════════════════════════════════════════════════════════
+// LIVE FORMATTING PREVIEW IN CHAT INPUT
+// ════════════════════════════════════════════════════════
+function _setupLivePreview(ta) {
+  if (ta._livePreviewInit) return;
+  ta._livePreviewInit = true;
+  // Wrap textarea in a relative container if not already
+  var parent = ta.parentNode;
+  if (!parent.classList.contains('ci-preview-wrap')) {
+    var wrap = document.createElement('div');
+    wrap.className = 'ci-preview-wrap';
+    wrap.style.cssText = 'position:relative;flex:1;min-width:0;display:flex;';
+    parent.insertBefore(wrap, ta);
+    wrap.appendChild(ta);
+    // Create overlay div
+    var preview = document.createElement('div');
+    preview.className = 'ci-preview';
+    wrap.appendChild(preview);
+    ta._previewEl = preview;
+  }
+  // Sync on input
+  ta.addEventListener('input', function() { _updateLivePreview(ta); });
+  ta.addEventListener('scroll', function() { if (ta._previewEl) ta._previewEl.scrollTop = ta.scrollTop; });
+  // Initial render
+  _updateLivePreview(ta);
+}
+
+function _updateLivePreview(ta) {
+  var el = ta._previewEl;
+  if (!el) return;
+  var val = ta.value;
+  if (!val) { el.innerHTML = ''; ta.style.color = ''; return; }
+  // Check if there's any formatting syntax — if not, don't show overlay
+  if (!/[*~`|=@#\[]/.test(val)) { el.innerHTML = ''; ta.style.color = ''; return; }
+  // Apply live formatting
+  var html = _liveFormatPreview(val);
+  // Only use overlay if formatting was actually applied
+  if (html !== escapeHTML(val)) {
+    el.innerHTML = html;
+    ta.style.color = 'transparent';
+    ta.style.caretColor = 'var(--text)';
+    // Sync scroll
+    el.scrollTop = ta.scrollTop;
+  } else {
+    el.innerHTML = '';
+    ta.style.color = '';
+  }
+}
+
+function _liveFormatPreview(text) {
+  var s = escapeHTML(text);
+  // Block code ``` ... ``` — render as code style
+  s = s.replace(/```([^`]*?)```/g, '<span class="ci-code">```$1```</span>');
+  // Inline code
+  s = s.replace(/`([^`\n]+?)`/g, '<span class="ci-code">`$1`</span>');
+  // Bold italic ***text***
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<span class="ci-bold ci-italic">***$1***</span>');
+  // Bold **text**
+  s = s.replace(/\*\*(.+?)\*\*/g, '<span class="ci-bold">**$1**</span>');
+  // Italic *text*
+  s = s.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<span class="ci-italic">*$1*</span>');
+  // Strikethrough ~~text~~
+  s = s.replace(/~~(.+?)~~/g, '<span class="ci-strike">~~$1~~</span>');
+  // Spoiler ||text||
+  s = s.replace(/\|\|(.+?)\|\|/g, '<span class="ci-spoiler">||$1||</span>');
+  // Highlight ==text==
+  s = s.replace(/==(.+?)==/g, '<span class="ci-highlight">==$1==</span>');
+  // Small text --text--
+  s = s.replace(/--([^-]+?)--/g, '<span class="ci-smalltext">--$1--</span>');
+  // @mentions
+  s = s.replace(/@(\w+)/g, '<span class="ci-mention">@$1</span>');
+  // #room references
+  s = s.replace(/#(\w[\w-]*)/g, '<span class="ci-room-ref">#$1</span>');
+  return s;
+}
+
+// Hook into buildChatInputBar — after textarea is inserted, setup live preview
+var _origAutoResize = typeof autoResize === 'function' ? autoResize : null;
+function _hookLivePreviewOnInput() {
+  // Observe DOM for new textareas in chat-input-row
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      m.addedNodes.forEach(function(n) {
+        if (n.nodeType !== 1) return;
+        var tas = n.querySelectorAll ? n.querySelectorAll('.chat-input-row textarea') : [];
+        tas.forEach(function(ta) { _setupLivePreview(ta); });
+        if (n.matches && n.matches('.chat-input-row textarea')) _setupLivePreview(n);
+      });
+    });
+  });
+  observer.observe(document.body, {childList:true, subtree:true});
+  // Also setup existing textareas
+  document.querySelectorAll('.chat-input-row textarea').forEach(function(ta) { _setupLivePreview(ta); });
+}
+setTimeout(_hookLivePreviewOnInput, 800);
 
 
 // ════════════════════════════════════════════════════════

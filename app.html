@@ -12,11 +12,11 @@
 <style>
 :root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.22);--bg:#07090e;--rail:#04060a;--sidebar:#0b0e15;--channel:#0d1018;--panel:#101420;--panel2:#131822;--panel3:#161c28;--border:#1c2335;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;overflow:hidden;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;}
+body{background:#000;color:var(--text);font-family:'DM Sans',sans-serif;display:flex;}
 ::selection{background:rgba(255,249,62,.2);}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#1e2840;border-radius:4px;}
 /* ── Discord-style Rail ────────────────────────────── */
-.rail{width:72px;min-width:72px;background:var(--rail);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:2px;z-index:10;overflow-y:auto;overflow-x:hidden;}
+.rail{width:72px;min-width:72px;background:#000;display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:2px;z-index:10;overflow-y:auto;overflow-x:hidden;}
 .rail::-webkit-scrollbar{display:none;}
 /* Logo pill at top */
 .rail-logo{width:48px;height:48px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#fff93e;transition:border-radius .2s;margin-bottom:4px;flex-shrink:0;}
@@ -43,8 +43,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .rail-bastion:hover::before{content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:4px;height:24px;background:#fff;border-radius:0 4px 4px 0;}
 .rail-bastion img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
 .rail-notif-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--rail);padding:0 2px;z-index:1;}
-.sidebar{width:240px;min-width:240px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.sidebar-header{height:52px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex-shrink:0;gap:7px;background:rgba(0,0,0,.15);}
+.sidebar{width:240px;min-width:240px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;border-top-left-radius:12px;}
+.sidebar-header{height:52px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex-shrink:0;gap:7px;background:rgba(0,0,0,.15);border-top-left-radius:12px;}
 .sidebar-header .hdr-actions{margin-left:auto;display:flex;gap:2px;}
 .sidebar-header .hdr-actions button{width:28px;height:28px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .sidebar-header .hdr-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
@@ -82,7 +82,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .ua-btns button:hover{background:rgba(255,255,255,.07);color:#fff;}
 /* Own profile mini panel */
 .own-profile-panel{position:fixed;bottom:64px;left:10px;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
-.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);}
 .topbar{height:52px;background:rgba(8,11,18,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;}
 .topbar-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;white-space:nowrap;}
 .tb-sep{width:1px;height:18px;background:var(--border);margin:0 2px;}
@@ -138,7 +138,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .hero-joyster-img:hover{transform:scale(1.05);}
 @keyframes joysterIdle{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 /* Joyster speech bubble — sits inside .home-hero, positioned absolute */
-.joyster-bubble{position:absolute;top:20px;right:120px;transform:scale(.88) translateY(6px);background:var(--panel);border:1px solid rgba(255,249,62,.18);border-radius:14px;padding:8px 16px;font-size:12.5px;font-style:italic;color:rgba(255,255,255,.82);width:max-content;max-width:220px;white-space:nowrap;opacity:0;transition:opacity .3s ease, transform .3s cubic-bezier(.22,1,.36,1);pointer-events:none;z-index:10;box-shadow:0 6px 24px rgba(0,0,0,.35);text-align:center;}
+.joyster-bubble{position:absolute;top:20px;right:120px;transform:scale(.88) translateY(6px);background:var(--panel);border:1px solid rgba(255,249,62,.18);border-radius:14px;padding:8px 16px;font-size:12.5px;font-style:italic;color:rgba(255,255,255,.82);width:max-content;max-width:240px;white-space:normal;word-wrap:break-word;opacity:0;transition:opacity .3s ease, transform .3s cubic-bezier(.22,1,.36,1);pointer-events:none;z-index:10;box-shadow:0 6px 24px rgba(0,0,0,.35);text-align:center;}
 .joyster-bubble::after{content:'';position:absolute;bottom:-6px;right:30px;border:6px solid transparent;border-top-color:var(--panel);}
 .joyster-bubble.show{opacity:1;transform:scale(1) translateY(0);}
 /* Knight background ghost */
@@ -2171,7 +2171,7 @@ function _showJoysterBubble() {
   _joysterLastTip = idx;
   bubble.textContent = JOYSTER_QUIPS[idx];
   bubble.classList.add('show');
-  setTimeout(() => bubble.classList.remove('show'), 4500);
+  setTimeout(() => bubble.classList.remove('show'), 7000);
 }
 
 function _joysterSay(text, duration) {
@@ -10363,6 +10363,7 @@ function renderAtelierTab(tab) {
       <!-- Hero banner -->
       <div style="position:relative;height:240px;background:linear-gradient(135deg,#070a12,#141830,#0d1220);overflow:hidden;flex-shrink:0;">
         <img src="Onyx banner.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;" onerror="this.style.display='none'">
+        <div class="hero-sparkles" id="atelier-sparkles"></div>
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,10,18,.1) 0%,rgba(7,10,18,.85) 100%);"></div>
         <!-- Status pill top-left -->
         ${hasPlus?`<div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:7px;background:rgba(255,157,62,.15);border:1px solid rgba(255,157,62,.35);border-radius:100px;padding:5px 12px;backdrop-filter:blur(8px);">
@@ -10447,6 +10448,21 @@ function renderAtelierTab(tab) {
           </div>
         </div>
       </div>`;
+    // Init sparkles for atelier banner
+    requestAnimationFrame(() => {
+      const sc = document.getElementById('atelier-sparkles');
+      if (sc && !sc.children.length) {
+        for (let i = 0; i < 14; i++) {
+          const s = document.createElement('div');
+          s.className = 'hero-sparkle';
+          s.style.left = Math.random() * 100 + '%';
+          s.style.top = (20 + Math.random() * 60) + '%';
+          s.style.animationDelay = (Math.random() * 6) + 's';
+          s.style.animationDuration = (4 + Math.random() * 4) + 's';
+          sc.appendChild(s);
+        }
+      }
+    });
   }
 
   // ── RADIANCE DWELLING ─────────────────────────────────────
@@ -10711,19 +10727,26 @@ function renderAtelierTab(tab) {
             </div>
           </div>
 
-          <!-- Shop Items -->
-          <div class="atel-section-hdr" style="margin-top:20px;">Shop Items</div>
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
-            ${SHOP_ITEMS.map(item=>renderShopItemCard(item)).join('')}
+          <!-- More coming soon -->
+          <div class="atel-section-hdr" style="margin-top:20px;">Upcoming Items</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+            ${[{n:'Avatar Frames',i:'🖼️',c:'#a78bfa'},{n:'Profile Effects',i:'✨',c:'#60a5fa'},{n:'Name Colors',i:'🎨',c:'#fb923c'}].map(it=>`
+              <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;position:relative;">
+                <div style="height:100px;background:linear-gradient(135deg,${it.c}15,rgba(0,0,0,.3));display:flex;align-items:center;justify-content:center;font-size:44px;opacity:.5;">${it.i}</div>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="font-size:28px;opacity:.4;">🔒</div></div>
+                <div style="padding:12px 14px;"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">${it.n}</div><div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:3px;">Coming soon</div></div>
+              </div>`).join('')}
           </div>`:`
-          <!-- Browse tab with category filters -->
+          <!-- Browse / Coming Soon state -->
           <div style="padding:20px 0;">
+            <!-- Category filter chips -->
             <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px;">
               ${CATS.map(cat=>`<button class="shop-filter-chip${shopCat===cat?' active':''}" onclick="setShopCat('${cat}')">${cat}</button>`).join('')}
             </div>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
-              ${SHOP_ITEMS.filter(i=>shopCat==='All'||i.cat===shopCat).map(item=>renderShopItemCard(item)).join('')}
-              ${SHOP_ITEMS.filter(i=>shopCat==='All'||i.cat===shopCat).length===0?`<div style="grid-column:1/-1;text-align:center;padding:60px 20px;background:rgba(255,255,255,.02);border-radius:16px;border:1px solid rgba(255,255,255,.05);"><div style="font-size:48px;margin-bottom:14px;opacity:.3;">📦</div><div style="font-size:16px;font-weight:600;color:rgba(255,255,255,.3);">No items in this category</div></div>`:''}
+            <div style="text-align:center;padding:60px 20px;background:rgba(255,255,255,.02);border-radius:16px;border:1px solid rgba(255,255,255,.05);">
+              <div style="font-size:48px;margin-bottom:14px;opacity:.3;">📦</div>
+              <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,.3);">No items yet</div>
+              <div style="font-size:13px;color:rgba(255,255,255,.2);margin-top:6px;">Check back when the shop launches!</div>
             </div>
           </div>`}
       </div>`;
@@ -12321,65 +12344,6 @@ async function buyAppearance(themeId, cost) {
   });
 }
 
-// ── Shop Items ──────────────────────────────────────
-const SHOP_ITEMS = [
-  {id:'golden_frame',    name:'Golden Frame',    cat:'Frames',  cost:120, icon:'🖼️', color:'#f59e0b', desc:'A shimmering golden ring around your avatar everywhere.'},
-  {id:'midnight_aura',   name:'Midnight Aura',   cat:'Effects', cost:200, icon:'✨',  color:'#8b5cf6', desc:'Dark swirling particle effect on your profile card.'},
-  {id:'crimson_name',    name:'Crimson Name',    cat:'Colors',  cost:100, icon:'🎨',  color:'#ef4444', desc:'Your display name appears in striking crimson red.'},
-  {id:'sapphire_name',   name:'Sapphire Name',   cat:'Colors',  cost:100, icon:'🎨',  color:'#3b82f6', desc:'Your display name appears in deep sapphire blue.'},
-];
-
-function _ownsShopItem(id) { return (CU?.unlockedShopItems||[]).includes(id); }
-function _isShopItemEquipped(id) { return CU?.equippedItems?.[id.split('_')[0]] === id || (CU?.equippedItems||{})[_shopItemSlot(id)] === id; }
-function _shopItemSlot(id) { const item = SHOP_ITEMS.find(i=>i.id===id); if (!item) return 'misc'; const map={Frames:'frame',Effects:'effect',Colors:'nameColor'}; return map[item.cat]||'misc'; }
-
-async function buyShopItem(id) {
-  const item = SHOP_ITEMS.find(i=>i.id===id);
-  if (!item) return;
-  if (_ownsShopItem(id)) { equipShopItem(id); return; }
-  const bal = CU?.onyx||0;
-  if (bal < item.cost) { toast('Not enough Onyx! Need '+item.cost+' ⬡','error'); return; }
-  showCustomConfirm(`Buy ${item.name} for ${item.cost} Onyx?`, async () => {
-    CU.onyx = (CU.onyx||0) - item.cost;
-    CU.unlockedShopItems = [...(CU.unlockedShopItems||[]), id];
-    if (!CU.equippedItems) CU.equippedItems = {};
-    CU.equippedItems[_shopItemSlot(id)] = id;
-    await saveUser(); updateOnyxDisplay();
-    toast(`✨ ${item.name} unlocked & equipped!`, 'success');
-    renderAtelierTab('shop');
-  });
-}
-
-function equipShopItem(id) {
-  const slot = _shopItemSlot(id);
-  if (!CU.equippedItems) CU.equippedItems = {};
-  if (CU.equippedItems[slot] === id) {
-    delete CU.equippedItems[slot];
-    toast(`Unequipped ${SHOP_ITEMS.find(i=>i.id===id)?.name||id}`, 'info');
-  } else {
-    CU.equippedItems[slot] = id;
-    toast(`Equipped ${SHOP_ITEMS.find(i=>i.id===id)?.name||id}!`, 'success');
-  }
-  saveUser(); renderAtelierTab('shop');
-}
-
-function renderShopItemCard(item) {
-  const owned = _ownsShopItem(item.id);
-  const equipped = _isShopItemEquipped(item.id);
-  return `<div style="background:rgba(255,255,255,.025);border:1.5px solid ${owned?'rgba(62,207,110,.25)':'rgba(255,255,255,.07)'};border-radius:16px;overflow:hidden;transition:border-color .2s,box-shadow .2s;cursor:pointer;" onmouseover="this.style.borderColor='${item.color}44';this.style.boxShadow='0 4px 24px ${item.color}15'" onmouseout="this.style.borderColor='${owned?'rgba(62,207,110,.25)':'rgba(255,255,255,.07)'}';this.style.boxShadow='none'" onclick="buyShopItem('${item.id}')">
-    <div style="height:90px;background:linear-gradient(135deg,${item.color}20,rgba(0,0,0,.3));display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;">
-      ${item.icon}
-      ${equipped?'<div style="position:absolute;top:8px;right:8px;background:rgba(62,207,110,.15);border:1px solid rgba(62,207,110,.3);border-radius:100px;padding:2px 8px;font-size:10px;font-weight:700;color:#3ecf6e;">Equipped</div>':''}
-    </div>
-    <div style="padding:14px 16px;">
-      <div style="font-size:13.5px;font-weight:700;color:#fff;margin-bottom:4px;">${item.name}</div>
-      <div style="font-size:11.5px;color:rgba(255,255,255,.4);line-height:1.45;margin-bottom:10px;">${item.desc}</div>
-      ${owned
-        ? `<div style="display:flex;align-items:center;gap:6px;"><div style="padding:6px 14px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);border-radius:10px;color:#3ecf6e;font-size:12px;font-weight:700;">${equipped?'Equipped':'Owned'}</div>${!equipped?'<div style="font-size:11px;color:rgba(255,255,255,.3);">Click to equip</div>':''}</div>`
-        : `<div style="display:flex;align-items:center;gap:5px;padding:6px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);border-radius:10px;width:fit-content;"><img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;"><span style="font-size:12px;font-weight:700;color:var(--accent);">${item.cost}</span></div>`}
-    </div>
-  </div>`;
-}
 
 </script>
 </body>

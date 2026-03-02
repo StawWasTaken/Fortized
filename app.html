@@ -137,8 +137,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .hero-joyster-img{height:180px;object-fit:contain;filter:drop-shadow(0 12px 32px rgba(255,249,62,.12));animation:joysterIdle 4s ease-in-out infinite;cursor:pointer;transition:transform .2s;}
 .hero-joyster-img:hover{transform:scale(1.05);}
 @keyframes joysterIdle{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
-/* Joyster speech bubble */
-.joyster-bubble{position:absolute;top:12px;right:160px;background:var(--panel);border:1px solid rgba(255,249,62,.15);border-radius:14px 14px 4px 14px;padding:8px 14px;font-size:12px;color:rgba(255,255,255,.7);max-width:180px;white-space:nowrap;opacity:0;transform:scale(.9) translateY(4px);transition:all .2s;pointer-events:none;z-index:3;box-shadow:0 6px 20px rgba(0,0,0,.3);}
+/* Joyster speech bubble — sits inside .home-hero, positioned absolute */
+.joyster-bubble{position:absolute;top:20px;right:36px;transform:scale(.88) translateY(6px);background:var(--panel);border:1px solid rgba(255,249,62,.18);border-radius:14px;padding:8px 16px;font-size:12.5px;font-style:italic;color:rgba(255,255,255,.82);width:max-content;max-width:220px;white-space:nowrap;opacity:0;transition:opacity .3s ease, transform .3s cubic-bezier(.22,1,.36,1);pointer-events:none;z-index:10;box-shadow:0 6px 24px rgba(0,0,0,.35);text-align:center;}
+.joyster-bubble::after{content:'';position:absolute;bottom:-6px;right:60px;border:6px solid transparent;border-top-color:var(--panel);}
 .joyster-bubble.show{opacity:1;transform:scale(1) translateY(0);}
 /* Knight background ghost */
 .hero-knight-bg{position:absolute;right:-30px;bottom:-20px;height:280px;opacity:.04;filter:blur(2px) grayscale(.5);pointer-events:none;z-index:0;}
@@ -992,9 +993,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
             </div>
             <!-- Joyster character (right side) -->
             <div class="hero-joyster-wrap" id="hero-joyster-wrap">
-              <div class="joyster-bubble" id="joyster-bubble"></div>
-              <img src="fortized emojis/joyster_smirk.png" id="joyster-main" class="hero-joyster-img" alt="Joyster" onerror="this.src='Fortized Knight.png'" onclick="_joysterEasterEgg()">
+              <img src="Joyster.png" id="joyster-main" class="hero-joyster-img" alt="Joyster" onerror="this.src='Fortized Knight.png'" onclick="_joysterEasterEgg()">
             </div>
+            <div class="joyster-bubble" id="joyster-bubble"></div>
           </div>
 
           <!-- STAT STRIP 2.0 -->
@@ -1048,7 +1049,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
             <div class="rp-friends-scroll" id="rp-friends"></div>
           </div>
           <div class="rp-section">
-            <div class="rp-title">
+            <div class="rp-title" style="cursor:pointer;" onclick="window.open('blog.html','_blank')">
               <span>Latest from Fortized</span>
               <span style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;"></span>
             </div>
@@ -2021,14 +2022,16 @@ function renderHomePanel() {
     _loadRPFriends(friends0, rpF, rpOC);
   }
 
-  // Right panel: News
+  // Right panel: News — real articles from the Fortized Blog
   const rpN = document.getElementById('rp-news');
   if (rpN) rpN.innerHTML = [
-    {tag:'Update',title:'Group Chats, Embeds & Badges now live!',date:'Feb 2026',isNew:true},
-    {tag:'Feature',title:'Radiance+ tier launched in Atelier',date:'Feb 2026',isNew:true},
-    {tag:'Safety',title:'Enhanced age-gating & content scanning',date:'Jan 2026',isNew:false},
+    {id:'betalive', tag:'Launch', title:'Fortized Beta is LIVE!', date:'Feb 22, 2026', isNew:true},
+    {id:'whatisfortized', tag:'R&D', title:'What is Fortized?', date:'Feb 22, 2026', isNew:true},
+    {id:'atelier', tag:'R&D', title:'Introducing The Atelier', date:'Feb 21, 2026', isNew:true},
+    {id:'gates', tag:'Announcement', title:'The Gates are Unlocking', date:'Feb 21, 2026', isNew:false},
+    {id:'safety', tag:'Safety', title:'How Stawdio Safety Protects Your Bastion', date:'Feb 20, 2026', isNew:false},
   ].map(n=>`
-    <div class="rp-news-item" onclick="toast('Opening article...','info')">
+    <div class="rp-news-item" onclick="window.open('blog.html?article=${n.id}','_blank')">
       ${n.isNew?'<div class="rp-news-badge"></div>':''}
       <div class="rp-news-tag">${n.tag}</div>
       <div class="rp-news-title">${n.title}</div>
@@ -2122,63 +2125,94 @@ function _initHeroEffects() {
 // ── Joyster character interactions ──
 let _joysterBubbleTimer = null;
 let _joysterClickCount = 0;
-const JOYSTER_TIPS = [
-  "Don't forget to boost your Bastion!",
-  "Check out Party Rooms today!",
-  "Collect Onyx in the Atelier!",
-  "Try setting a custom status!",
-  "Invite friends to your Bastion!",
-  "Explore new communities!",
-  "Customize your profile theme!",
-  "React to messages with emojis!",
+let _joysterLastTip = -1;
+
+// Joyster is a playful jester — cheeky, laughing, smirking
+const JOYSTER_QUIPS = [
+  "Ahahaha! Don't just stand there!",
+  "Psst... boost your Bastion already!",
+  "Don't make me laugh! ...too late!",
+  "Hehehehe~ try the Party Rooms!",
+  "You look confused. I love it.",
+  "Collect Onyx or I'll collect yours!",
+  "Invite friends! More chaos = more fun!",
+  "Explore stuff! I dare you!",
+  "Customize your profile... or don't. I'll judge you either way.",
+  "Ahahaha! You're still reading these?",
+  "I'm watching you~ hehehehe!",
+  "Click me. I dare you. Do it.",
 ];
 
 function _startJoysterBubbles() {
   if (_joysterBubbleTimer) clearInterval(_joysterBubbleTimer);
-  // Show first bubble after 3s, then every 15s
   setTimeout(() => _showJoysterBubble(), 3000);
-  _joysterBubbleTimer = setInterval(() => _showJoysterBubble(), 15000);
+  _joysterBubbleTimer = setInterval(() => _showJoysterBubble(), 18000);
 }
 
 function _showJoysterBubble() {
   const bubble = document.getElementById('joyster-bubble');
   if (!bubble) return;
-  bubble.textContent = JOYSTER_TIPS[Math.floor(Math.random() * JOYSTER_TIPS.length)];
+  // Pick a random quip (avoid repeating the last one)
+  let idx;
+  do { idx = Math.floor(Math.random() * JOYSTER_QUIPS.length); } while (idx === _joysterLastTip && JOYSTER_QUIPS.length > 1);
+  _joysterLastTip = idx;
+  bubble.textContent = JOYSTER_QUIPS[idx];
   bubble.classList.add('show');
-  setTimeout(() => bubble.classList.remove('show'), 4000);
+  setTimeout(() => bubble.classList.remove('show'), 4500);
+}
+
+function _joysterSay(text, duration) {
+  const bubble = document.getElementById('joyster-bubble');
+  if (!bubble) return;
+  bubble.textContent = text;
+  bubble.classList.add('show');
+  setTimeout(() => bubble.classList.remove('show'), duration || 2500);
 }
 
 function _joysterReact(reaction) {
   const img = document.getElementById('joyster-main');
   if (!img) return;
   if (reaction === 'wink' || reaction === 'excited') {
-    img.src = 'fortized emojis/joyster_laugh.png';
-    img.style.transform = 'scale(1.08)';
+    img.style.transform = 'scale(1.1) rotate(3deg)';
+    _joysterSay("Ahahaha! Go on~", 1800);
   } else if (reaction === 'point') {
-    img.src = 'fortized emojis/joyster_smirk.png';
-    img.style.transform = 'scale(1.04) rotate(-3deg)';
+    img.style.transform = 'scale(1.06) rotate(-4deg)';
+    _joysterSay("Ooh, good choice!", 1800);
   } else {
-    img.src = 'fortized emojis/joyster_smirk.png';
     img.style.transform = '';
   }
 }
 
+const _JOYSTER_CLICK_QUIPS = [
+  "Hehe, that tickles!",
+  "Ahahaha stop it!",
+  "Don't make me laugh!",
+  "You think you're funny?",
+  "Poke poke poke... really?",
+  "I'm a jester, not a button!",
+];
+
 function _joysterEasterEgg() {
   _joysterClickCount++;
   const img = document.getElementById('joyster-main');
-  const bubble = document.getElementById('joyster-bubble');
+
+  // Bouncy poke animation every click
+  if (img) {
+    const angle = (Math.random() - 0.5) * 16;
+    img.style.transform = `scale(1.18) rotate(${angle}deg)`;
+    setTimeout(() => { if (img) img.style.transform = ''; }, 250);
+  }
+
   if (_joysterClickCount === 3) {
-    if (bubble) { bubble.textContent = "Stop poking me! 😤"; bubble.classList.add('show'); setTimeout(()=>bubble.classList.remove('show'),2000); }
-    if (img) img.src = 'fortized emojis/knight_angry.png';
-    setTimeout(() => { if(img) img.src = 'fortized emojis/joyster_smirk.png'; }, 2500);
+    _joysterSay("Ahahaha! Stop poking me!", 2500);
   } else if (_joysterClickCount === 5) {
-    if (bubble) { bubble.textContent = "Ok ok, here's 1 Onyx! 💎"; bubble.classList.add('show'); setTimeout(()=>bubble.classList.remove('show'),3000); }
-    if (img) img.src = 'fortized emojis/joyster_laugh.png';
-    setTimeout(() => { if(img) img.src = 'fortized emojis/joyster_smirk.png'; _joysterClickCount=0; }, 3000);
-    toast('+1 Onyx from Joyster! 💎','success');
-    if (CU) { CU.onyx = (CU.onyx||0)+1; saveUser(); updateOnyxDisplay(); }
+    _joysterSay("Fine fine, here's 1 Onyx! Hehehehe~", 3000);
+    toast('+1 Onyx from Joyster!', 'success');
+    if (CU) { CU.onyx = (CU.onyx || 0) + 1; saveUser(); updateOnyxDisplay(); }
+    _joysterClickCount = 0;
   } else {
-    if (img) { img.style.transform = 'scale(1.15) rotate(5deg)'; setTimeout(()=>{ img.style.transform=''; },200); }
+    const quip = _JOYSTER_CLICK_QUIPS[Math.floor(Math.random() * _JOYSTER_CLICK_QUIPS.length)];
+    _joysterSay(quip, 2000);
   }
 }
 

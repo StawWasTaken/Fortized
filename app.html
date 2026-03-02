@@ -1392,6 +1392,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
           <div class="color-swatches" id="re-colors"></div>
         </div>
       </div>
+      <div id="re-extras"></div>
       <div class="settings-title">Permissions</div>
       <div id="re-perms" style="max-height:300px;overflow-y:auto;"></div>
       <div class="modal-actions" style="margin-top:16px;">
@@ -1493,13 +1494,20 @@ let activeReportData = null;
 const SUPER_ADMIN = 'staw';
 const ROLE_COLORS = ['#fbbf24','#f87171','#34d399','#60a5fa','#a78bfa','#f472b6','#fb923c','#22d3ee'];
 const PERMISSIONS = [
-  ['send_messages','Send Messages'],['read_history','Read History'],
-  ['add_reactions','Add Reactions'],['attach_files','Attach Files'],
-  ['mention_everyone','Mention Everyone'],['manage_messages','Manage Messages'],
-  ['kick_members','Kick Members'],['ban_members','Ban Members'],
-  ['manage_channels','Manage Channels'],['manage_roles','Manage Roles'],
-  ['administrator','Administrator'],
+  ['send_messages','Send Messages','General'],['read_history','Read History','General'],
+  ['add_reactions','Add Reactions','Text'],['attach_files','Attach Files','Text'],
+  ['mention_everyone','Mention Everyone','Text'],['embed_links','Embed Links','Text'],
+  ['manage_messages','Manage Messages','Moderation'],['kick_members','Kick Members','Moderation'],
+  ['ban_members','Ban Members','Moderation'],['timeout_members','Timeout Members','Moderation'],
+  ['manage_channels','Manage Channels','General'],['manage_roles','Manage Roles','General'],
+  ['connect_voice','Connect to Voice','Voice/Party'],['speak','Speak in Voice','Voice/Party'],
+  ['mute_members','Mute Members','Voice/Party'],['deafen_members','Deafen Members','Voice/Party'],
+  ['manage_events','Manage Events','Automation'],['manage_polls','Manage Polls','Automation'],
+  ['manage_bots','Manage Bots','Automation'],['view_audit_log','View Audit Log','Moderation'],
+  ['manage_emojis','Manage Emojis','Boost'],['use_custom_emojis','Use Custom Emojis','Boost'],
+  ['administrator','Administrator','General'],
 ];
+const PERM_GROUPS = ['General','Text','Voice/Party','Automation','Moderation','Boost'];
 let activeEmojiCat = 0;
 const EMOJI_CATEGORIES = [
   {icon:'😊', label:'Smileys', emojis:['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🥴','😴','🤤','😪','😵','🤯','🤠','🥳','😎','🤓','🧐']},
@@ -3064,10 +3072,16 @@ function renderBastionSidebar(scroll) {
   const hdrTitle=document.getElementById('sidebar-title');
   const hdrActs=document.getElementById('sidebar-hdr-actions');
   if (hdrTitle) {
+    const boostLv=b.boostLevel||0;
+    const visIcon=b.public!==false?'🌍':'🔒';
+    const boostBadge=boostLv>0?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(251,191,36,.06));color:#fbbf24;border:1px solid rgba(251,191,36,.2);">⚡${boostLv}</span>`:'';
+    const memberBadge=`<span style="font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:3px;">👥 ${b.memberCount||1}</span>`;
+    const visBadge=`<span style="font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:2px;">${visIcon}</span>`;
+    const taglineHTML=b.tagline?`<div style="font-size:11px;color:var(--muted-light);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">${escapeHTML(b.tagline)}</div>`:'';
     if (b.banner||b.icon) {
-      hdrTitle.innerHTML = `<div style="position:relative;height:72px;margin:-12px -14px 8px;overflow:hidden;"><img src="${b.banner||b.icon}" style="width:100%;height:100%;object-fit:cover;opacity:.65;" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent,rgba(11,14,21,.85));"></div><div style="position:absolute;bottom:7px;left:11px;display:flex;align-items:center;gap:7px;"><span style="font-size:15px;">${b.emblem||'🏰'}</span><span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8);">${escapeHTML(b.name)}</span></div></div>`;
+      hdrTitle.innerHTML = `<div style="position:relative;height:88px;margin:-12px -14px 8px;overflow:hidden;"><img src="${b.banner||b.icon}" style="width:100%;height:100%;object-fit:cover;opacity:.55;" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(11,14,21,.92));"></div><div style="position:absolute;bottom:7px;left:11px;right:11px;"><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:16px;">${b.emblem||'🏰'}</span><span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8);">${escapeHTML(b.name)}</span></div>${taglineHTML}<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">${visBadge}${memberBadge}${boostBadge}</div></div></div>`;
     } else {
-      hdrTitle.textContent = (b.emblem||'🏰')+' '+b.name;
+      hdrTitle.innerHTML = `<div style="padding:4px 0;"><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:16px;">${b.emblem||'🏰'}</span><span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;">${escapeHTML(b.name)}</span></div>${taglineHTML}<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">${visBadge}${memberBadge}${boostBadge}</div></div>`;
     }
   }
   if (hdrActs) hdrActs.innerHTML=`
@@ -3089,11 +3103,15 @@ function renderBastionSidebar(scroll) {
   const textChs=chs.filter(c=>c.type==='text'||!c.type);
   const voiceChs=chs.filter(c=>c.type==='voice');
   const forumChs=chs.filter(c=>c.type==='forum');
+  const announcementChs=chs.filter(c=>c.type==='announcement');
+  const pollChs=chs.filter(c=>c.type==='poll');
+  const eventChs=chs.filter(c=>c.type==='event');
+  const automationChs=chs.filter(c=>c.type==='automation');
 
   if (textChs.length||isOwner) {
     html+=`<div class="cat-row">📝 TEXT CHANNELS ${isOwner?`<button onclick="addChannel(${curBastion},'text')">+</button>`:''}  </div>`;
     chs.forEach((ch,i)=>{
-      if (ch.type==='voice'||ch.type==='forum') return;
+      if (ch.type==='voice'||ch.type==='forum'||ch.type==='announcement'||ch.type==='poll'||ch.type==='event'||ch.type==='automation') return;
       const tier=getAgeTier(CU?.dateOfBirth);
       const blocked=ch.nsfw&&tier==='child';
       const nsfwTag=ch.nsfw?`<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:1px 5px;border-radius:4px;flex-shrink:0;">NSFW</span>`:'';
@@ -3117,6 +3135,42 @@ function renderBastionSidebar(scroll) {
       if (ch.type!=='voice') return;
       const live=voiceConnected&&voiceChannel===i;
       html+=`<div class="voice-ch-item ${live?'active-vc':''}" onclick="selectChannel(${i})"><span>🎙</span><span>${escapeHTML(ch.name)}</span>${live?'<span style="font-size:9px;color:var(--green);margin-left:auto;">● LIVE</span>':''}</div>`;
+    });
+  }
+  if (announcementChs.length||isOwner) {
+    html+=`<div class="cat-row">📢 ANNOUNCEMENTS ${isOwner?`<button onclick="addChannel(${curBastion},'announcement')">+</button>`:''}</div>`;
+    announcementChs.forEach(function(ch){
+      const ri=chs.indexOf(ch);
+      html+=`<div class="ch-item ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+        <span>📢</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>
+      </div>`;
+    });
+  }
+  if (pollChs.length||isOwner) {
+    html+=`<div class="cat-row">🗳 POLLS ${isOwner?`<button onclick="addChannel(${curBastion},'poll')">+</button>`:''}</div>`;
+    pollChs.forEach(function(ch){
+      const ri=chs.indexOf(ch);
+      html+=`<div class="ch-item ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+        <span>🗳</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>
+      </div>`;
+    });
+  }
+  if (eventChs.length||isOwner) {
+    html+=`<div class="cat-row">🎮 EVENTS ${isOwner?`<button onclick="addChannel(${curBastion},'event')">+</button>`:''}</div>`;
+    eventChs.forEach(function(ch){
+      const ri=chs.indexOf(ch);
+      html+=`<div class="ch-item ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+        <span>🎮</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>
+      </div>`;
+    });
+  }
+  if (automationChs.length||isOwner) {
+    html+=`<div class="cat-row">🧩 AUTOMATION ${isOwner?`<button onclick="addChannel(${curBastion},'automation')">+</button>`:''}</div>`;
+    automationChs.forEach(function(ch){
+      const ri=chs.indexOf(ch);
+      html+=`<div class="ch-item ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+        <span>🧩</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>
+      </div>`;
     });
   }
 
@@ -4214,12 +4268,24 @@ function renderBastionTemplateGrid() {
     {id:'artisan',emoji:'🎨',name:'Artisans',desc:'Create & showcase'},
     {id:'academy',emoji:'🎓',name:'Academy',desc:'Teaching & courses'},
   ];
-  grid.innerHTML = templates.map(t => `
-    <div class="tmpl-card" id="tmpl-${t.id}" onclick="selectBastionTemplate('${t.id}','${t.emoji}','${t.name}')">
+  const chIcon={text:'#',voice:'🎙',forum:'💬',announcement:'📢',poll:'🗳',event:'🎮',automation:'🧩'};
+  grid.innerHTML = templates.map(t => {
+    const tmpl=BASTION_TEMPLATES[t.id];
+    const previewChs=(tmpl?.channels||[]).slice(0,5).map(c=>`<div style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--muted-light);padding:2px 0;"><span style="font-size:10px;opacity:.7;">${chIcon[c.type]||'#'}</span>${c.name}</div>`).join('');
+    const previewRoles=(tmpl?.roles||[]).slice(0,3).map(r=>`<span style="font-size:9px;padding:1px 6px;border-radius:100px;border:1px solid ${r.color}44;color:${r.color};background:${r.color}11;">${r.name}</span>`).join(' ');
+    return `<div class="tmpl-card" id="tmpl-${t.id}" onclick="selectBastionTemplate('${t.id}','${t.emoji}','${t.name}')" style="position:relative;">
       <div class="tmpl-emoji">${t.emoji}</div>
       <div class="tmpl-name">${t.name}</div>
       <div class="tmpl-desc">${t.desc}</div>
-    </div>`).join('');
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px;">Channels</div>
+        ${previewChs}
+        ${(tmpl?.channels||[]).length>5?`<div style="font-size:10px;color:var(--muted);">+${tmpl.channels.length-5} more</div>`:''}
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:6px;margin-bottom:3px;">Roles</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;">${previewRoles}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 function showBastionStep1() {
   _selectedBastionTemplate = null;
@@ -4272,14 +4338,12 @@ const BASTION_TEMPLATES = {
   gaming: {
     emoji:'🎮', color:'#1e3a5f',
     channels:[
-      {name:'announcements',type:'text',desc:'Server news and updates'},
-      {name:'general',type:'text',desc:'General gaming chat'},
-      {name:'lfg',type:'text',desc:'Looking for group'},
-      {name:'clips',type:'text',desc:'Share your best moments'},
-      {name:'meta',type:'text',desc:'Game strategy and meta discussion'},
-      {name:'events',type:'text',desc:'Upcoming events and tournaments'},
-      {name:'voice-lobby',type:'voice',desc:'Chill voice channel'},
-      {name:'game-room',type:'voice',desc:'In-game voice chat'},
+      {name:'general',type:'text',desc:'General discussion'},
+      {name:'party-room',type:'voice',desc:'Party voice chat'},
+      {name:'game-events',type:'event',desc:'Scheduled game sessions',events:[]},
+      {name:'strategy',type:'forum',desc:'Strategy discussions'},
+      {name:'media',type:'text',desc:'Screenshots & clips'},
+      {name:'game-polls',type:'poll',desc:'Vote on games',polls:[]},
     ],
     roles:[
       {id:'admin',name:'Admin',color:'#fbbf24'},
@@ -4292,13 +4356,12 @@ const BASTION_TEMPLATES = {
   fellowship: {
     emoji:'🤝', color:'#2d1b4e',
     channels:[
-      {name:'announcements',type:'text',desc:'Bastion announcements'},
-      {name:'general',type:'text',desc:'Hang out and chat'},
-      {name:'hangout',type:'text',desc:'Off-topic conversations'},
-      {name:'events',type:'text',desc:'Community events'},
-      {name:'memes',type:'text',desc:'Memes and fun'},
-      {name:'introductions',type:'text',desc:'Introduce yourself!'},
-      {name:'lounge',type:'voice',desc:'Voice lounge'},
+      {name:'welcome',type:'text',desc:'Welcome new members'},
+      {name:'announcements',type:'announcement',desc:'Important announcements',restricted:true},
+      {name:'general',type:'text',desc:'General chat'},
+      {name:'hangout',type:'voice',desc:'Voice hangout'},
+      {name:'events',type:'event',desc:'Community events',events:[]},
+      {name:'polls',type:'poll',desc:'Community votes',polls:[]},
     ],
     roles:[
       {id:'admin',name:'Admin',color:'#fbbf24'},
@@ -4310,14 +4373,12 @@ const BASTION_TEMPLATES = {
   guild: {
     emoji:'⚔️', color:'#3b1a1a',
     channels:[
-      {name:'announcements',type:'text',desc:'Guild announcements'},
-      {name:'general',type:'text',desc:'Guild chat'},
-      {name:'strategy',type:'text',desc:'Tactics and planning'},
-      {name:'recruitment',type:'text',desc:'Recruit new members'},
-      {name:'war-log',type:'text',desc:'Battle reports'},
-      {name:'off-topic',type:'text',desc:'Non-guild chat'},
-      {name:'war-room',type:'voice',desc:'Strategy calls'},
-      {name:'chill-zone',type:'voice',desc:'Relax voice channel'},
+      {name:'war-council',type:'text',desc:'Strategy (restricted)'},
+      {name:'announcements',type:'announcement',desc:'Guild announcements',restricted:true},
+      {name:'party-room',type:'voice',desc:'Voice coordination'},
+      {name:'raid-planning',type:'forum',desc:'Plan raids'},
+      {name:'event-calendar',type:'event',desc:'Guild events',events:[]},
+      {name:'automation',type:'automation',desc:'Bot commands',botLogs:true},
     ],
     roles:[
       {id:'admin',name:'Guild Master',color:'#fbbf24'},
@@ -4331,14 +4392,12 @@ const BASTION_TEMPLATES = {
   study: {
     emoji:'📚', color:'#0d2618',
     channels:[
-      {name:'announcements',type:'text',desc:'Study group updates'},
-      {name:'general',type:'text',desc:'General study chat'},
-      {name:'resources',type:'text',desc:'Share study materials'},
-      {name:'help',type:'text',desc:'Ask questions here'},
-      {name:'progress',type:'text',desc:'Share your wins'},
-      {name:'accountability',type:'text',desc:'Daily check-ins'},
-      {name:'study-hall',type:'voice',desc:'Silent study session'},
-      {name:'group-session',type:'voice',desc:'Group discussion'},
+      {name:'notes',type:'text',desc:'Shared notes'},
+      {name:'discussion',type:'forum',desc:'Study discussions'},
+      {name:'study-room',type:'voice',desc:'Study together'},
+      {name:'quizzes',type:'poll',desc:'Study polls',polls:[]},
+      {name:'resources',type:'text',desc:'Study resources'},
+      {name:'study-sessions',type:'event',desc:'Scheduled sessions',events:[]},
     ],
     roles:[
       {id:'admin',name:'Admin',color:'#fbbf24'},
@@ -4350,13 +4409,11 @@ const BASTION_TEMPLATES = {
   artisan: {
     emoji:'🎨', color:'#2d0a2a',
     channels:[
-      {name:'announcements',type:'text',desc:'Studio announcements'},
-      {name:'showcase',type:'text',desc:'Share your finished works'},
-      {name:'wip',type:'text',desc:'Work in progress — show your process'},
-      {name:'feedback',type:'text',desc:'Request and give constructive feedback'},
-      {name:'resources',type:'text',desc:'Tutorials, references, and tools'},
-      {name:'commissions',type:'text',desc:'Open commissions and requests'},
-      {name:'art-talk',type:'voice',desc:'Art discussion voice channel'},
+      {name:'showcase',type:'text',desc:'Show your work'},
+      {name:'critique',type:'forum',desc:'Get feedback'},
+      {name:'creative-lounge',type:'voice',desc:'Create together'},
+      {name:'commissions',type:'text',desc:'Commission requests'},
+      {name:'art-polls',type:'poll',desc:'Vote on art',polls:[]},
     ],
     roles:[
       {id:'admin',name:'Admin',color:'#fbbf24'},
@@ -4368,13 +4425,12 @@ const BASTION_TEMPLATES = {
   academy: {
     emoji:'🎓', color:'#0a1a2e',
     channels:[
-      {name:'announcements',type:'text',desc:'Academy announcements'},
-      {name:'general',type:'text',desc:'Student lounge'},
-      {name:'q-and-a',type:'text',desc:'Questions and answers'},
-      {name:'resources',type:'text',desc:'Course materials and links'},
-      {name:'projects',type:'text',desc:'Submit and discuss projects'},
-      {name:'office-hours',type:'voice',desc:'Talk to instructors'},
-      {name:'group-study',type:'voice',desc:'Study together'},
+      {name:'lectures',type:'announcement',desc:'Lecture announcements',restricted:true},
+      {name:'lecture-hall',type:'voice',desc:'Voice lectures'},
+      {name:'assignments',type:'forum',desc:'Assignments & submissions'},
+      {name:'class-polls',type:'poll',desc:'Class votes',polls:[]},
+      {name:'events',type:'event',desc:'Academic events',events:[]},
+      {name:'resources',type:'text',desc:'Course materials'},
     ],
     roles:[
       {id:'admin',name:'Instructor',color:'#fbbf24'},
@@ -4405,6 +4461,7 @@ async function createBastion() {
       ];
   const bastion = {
     name, desc: desc||tmpl?.description||'',
+    tagline: '',
     emblem: cbSelectedEmoji||(tmpl?.emoji)||'🏰',
     icon: cbIconData||null,
     channels: _chs,
@@ -4412,7 +4469,7 @@ async function createBastion() {
     owner: CU.username,
     public: cbVisibility === 'public',
     memberRoles: {[CU.username]:['admin']},
-    automod: {blockLinks:false,antiSpam:true,mentionLimit:10,keywords:[]},
+    automod: {blockLinks:false,antiSpam:true,antiRaid:false,slowMode:false,blockInvites:false,imageOnly:false,newAccountFilter:false,profanityFilter:false,mentionLimit:10,keywords:[]},
     boostLevel: 0,
     customEmojis: [],
     invites: [],
@@ -4447,7 +4504,12 @@ async function addChannel(bastionIdx, type) {
     if (!name?.trim()) return;
     const b = CU.bastions[bastionIdx];
     if (!b) return;
-    b.channels = [...(b.channels||[]), {name:name.trim().toLowerCase().replace(/\s+/g,'-'), type, desc:''}];
+    const ch = {name:name.trim().toLowerCase().replace(/\s+/g,'-'), type, desc:''};
+    if (type==='announcement') ch.restricted = true;
+    if (type==='poll') ch.polls = [];
+    if (type==='event') ch.events = [];
+    if (type==='automation') ch.botLogs = true;
+    b.channels = [...(b.channels||[]), ch];
     await saveUser();
     renderBastionSidebar(document.getElementById('sidebar-scroll'));
     toast(`#${name} created`, 'success');
@@ -4549,6 +4611,8 @@ function renderBSettingsMain(tab) {
         <div style="flex:1;">
           <div class="settings-title">Bastion Name</div>
           <input class="field-input" id="bs-name" value="${escapeHTML(b.name)}" style="margin-bottom:8px;">
+          <div class="settings-title">Tagline <span style="font-size:11px;color:var(--muted);font-weight:400;">— shown on Bastion Shell</span></div>
+          <input class="field-input" id="bs-tagline" value="${escapeHTML(b.tagline||'')}" placeholder="A short slogan for your bastion…" maxlength="60" style="margin-bottom:8px;">
           <div class="settings-title">Description</div>
           <input class="field-input" id="bs-desc" value="${escapeHTML(b.desc||'')}">
         </div>
@@ -4593,7 +4657,7 @@ function renderBSettingsMain(tab) {
         </div>
         ${catChs.map((ch,i)=>{const realIdx=(b.channels||[]).indexOf(ch);return `
           <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;margin-left:12px;">
-            <span style="color:var(--muted);">${ch.type==='voice'?'🎙':'#'}</span>
+            <span style="color:var(--muted);">${ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':ch.type==='event'?'🎮':ch.type==='automation'?'🧩':'#'}</span>
             <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
             ${ch.nsfw?'<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
             <button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleNSFW(${realIdx})">${ch.nsfw?'SFW':'NSFW'}</button>
@@ -4603,7 +4667,7 @@ function renderBSettingsMain(tab) {
     }).join('');
     const uncatHTML = uncatChs.map(ch=>{const realIdx=(b.channels||[]).indexOf(ch);return `
       <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;">
-        <span style="color:var(--muted);">${ch.type==='voice'?'🎙':'#'}</span>
+        <span style="color:var(--muted);">${ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':ch.type==='event'?'🎮':ch.type==='automation'?'🧩':'#'}</span>
         <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
         ${ch.nsfw?'<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
         <button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleNSFW(${realIdx})">${ch.nsfw?'SFW':'NSFW'}</button>
@@ -4615,51 +4679,78 @@ function renderBSettingsMain(tab) {
         <button class="btn-g" onclick="addCategoryPrompt()" style="font-size:13px;">+ Category</button>
         <button class="btn-a" onclick="addChannel(curBastion,'text')" style="font-size:13px;">+ Text Channel</button>
         <button class="btn-g" onclick="addChannel(curBastion,'voice')" style="font-size:13px;">+ Voice Channel</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'announcement')" style="font-size:13px;">+ Announcement</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'poll')" style="font-size:13px;">+ Poll</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'event')" style="font-size:13px;">+ Event</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'automation')" style="font-size:13px;">+ Automation</button>
       </div>
       ${catHTML}
       ${uncatHTML||(!cats.length?'<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No channels yet. Create some above!</div>':'')}`;
   }
   else if (tab==='roles') {
-    const rolesHTML = (b.roles||[]).map((r,i)=>`
-      <div class="role-item" onclick="editRole(${i})">
+    const sortedRoles = (b.roles||[]).map((r,i)=>({...r,_idx:i})).sort((a,b_)=>(b_.priority||0)-(a.priority||0));
+    const rolesHTML = sortedRoles.map(r=>`
+      <div class="role-item" onclick="editRole(${r._idx})" style="position:relative;">
         <div class="role-dot" style="background:${r.color};"></div>
         <div class="role-name">${escapeHTML(r.name)}</div>
-        <div style="font-size:12px;color:var(--muted);">${(r.permissions||[]).length} perms</div>
+        ${r.displayAsTag?'<span style="font-size:9px;padding:2px 6px;border-radius:100px;border:1px solid '+r.color+'33;color:'+r.color+';background:'+r.color+'15;">Tag</span>':''}
+        <div style="font-size:11px;color:var(--muted);margin-left:auto;display:flex;align-items:center;gap:6px;">
+          <span title="Priority">#${r.priority||0}</span>
+          <span>${(r.permissions||[]).length} perms</span>
+        </div>
         <span style="color:var(--muted);">→</span>
       </div>`).join('');
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">🛡️ Roles</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🛡️ Roles 2.0</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Roles are sorted by priority (highest first). Higher priority roles override lower ones.</div>
       <button class="btn-a" style="margin-bottom:16px;font-size:13px;" onclick="createNewRole()">+ Create Role</button>
       ${rolesHTML||'<div style="color:var(--muted);font-size:13.5px;">No roles created yet.</div>'}`;
   }
   else if (tab==='emojis') {
-    const limit = [15,25,35][(b.boostLevel||0)] || 15;
+    const slotsByLevel = [15,25,35,50];
+    const limit = slotsByLevel[b.boostLevel||0] || 15;
     const emojis = b.customEmojis || [];
     const slots = Array.from({length:limit}).map((_,i)=>{
       const e = emojis[i];
       return e ? `<div class="emoji-slot filled"><img src="${e.data}" alt="${escapeHTML(e.name)}"><div class="es-name">:${escapeHTML(e.name)}:</div><div class="es-del" onclick="event.stopPropagation();deleteCustomEmoji(${i})">✕</div></div>`
         : `<div class="emoji-slot" onclick="uploadCustomEmoji()">+</div>`;
     }).join('');
+    const nextLimit = slotsByLevel[Math.min((b.boostLevel||0)+1,3)];
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">😊 Custom Emojis</div>
-      <div style="font-size:13px;color:var(--muted-light);margin-bottom:16px;">${emojis.length}/${limit} slots used · Boost to unlock more</div>
-      <input id="emoji-file-input" type="file" accept="image/*,image/gif" style="display:none;" onchange="processEmojiUpload(event)">
-      <div class="emoji-upload-grid">${slots}</div>`;
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">😊 Custom Emoji Manager</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:4px;">${emojis.length}/${limit} slots used</div>
+      <div style="width:100%;height:6px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-bottom:6px;">
+        <div style="height:100%;width:${Math.min(100,(emojis.length/limit)*100)}%;background:linear-gradient(90deg,var(--accent),var(--accent-mid));border-radius:3px;transition:width .3s;"></div>
+      </div>
+      ${(b.boostLevel||0)<3?`<div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Boost to Level ${(b.boostLevel||0)+1} for ${nextLimit} slots · <span style="color:var(--accent);cursor:pointer;" onclick="renderBSettingsMain('boost')">Boost →</span></div>`
+      :`<div style="font-size:11px;color:var(--green);margin-bottom:16px;">Maximum emoji slots unlocked!</div>`}
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="btn-a" style="font-size:13px;" onclick="uploadCustomEmoji()">Upload Emoji</button>
+        <input id="emoji-file-input" type="file" accept="image/*,image/gif" style="display:none;" onchange="processEmojiUpload(event)">
+      </div>
+      <div class="emoji-upload-grid">${slots}</div>
+      ${emojis.length?`<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;">Quick Reference</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${emojis.map(e=>`<div style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:var(--panel);border:1px solid var(--border);border-radius:8px;font-size:11px;"><img src="${e.data}" style="width:16px;height:16px;border-radius:3px;"><code style="color:var(--muted-light);">:${escapeHTML(e.name)}:</code></div>`).join('')}</div></div>`:''}`;
   }
   else if (tab==='automod') {
     const am = b.automod || {};
+    const amRules = [
+      {key:'blockLinks',icon:'🔗',title:'Block Links',desc:'Prevent members from posting external links in text channels.'},
+      {key:'antiSpam',icon:'⚡',title:'Anti-Spam (Caps)',desc:'Block messages with excessive capitalization (>70% caps).'},
+      {key:'antiRaid',icon:'🛡️',title:'Anti-Raid',desc:'Automatically lock the bastion when mass joins are detected (10+ joins/min).'},
+      {key:'slowMode',icon:'🐌',title:'Slow Mode',desc:'Limit how fast members can send messages (1 msg every 5 seconds).'},
+      {key:'blockInvites',icon:'🔒',title:'Block Invite Links',desc:'Prevent members from posting invite links to other bastions.'},
+      {key:'imageOnly',icon:'🖼️',title:'Image-Only Channels',desc:'Allow only image/file attachments in designated channels.'},
+      {key:'newAccountFilter',icon:'👶',title:'New Account Filter',desc:'Flag messages from accounts younger than 7 days.'},
+      {key:'profanityFilter',icon:'🤬',title:'Profanity Filter',desc:'Automatically filter commonly offensive language.'},
+    ];
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">🤖 AutoMod</div>
-      <div class="automod-rule">
-        <div class="amr-header"><span style="font-size:20px;">🔗</span><div class="amr-title">Block Links</div>
-          <div class="amr-enabled"><span>${am.blockLinks?'Enabled':'Disabled'}</span><div class="toggle ${am.blockLinks?'on':''}" onclick="toggleAM('blockLinks',this)"></div></div></div>
-        <div class="amr-desc">Prevent members from posting external links in text channels.</div>
-      </div>
-      <div class="automod-rule">
-        <div class="amr-header"><span style="font-size:20px;">⚡</span><div class="amr-title">Anti-Spam (Caps)</div>
-          <div class="amr-enabled"><span>${am.antiSpam?'Enabled':'Disabled'}</span><div class="toggle ${am.antiSpam?'on':''}" onclick="toggleAM('antiSpam',this)"></div></div></div>
-        <div class="amr-desc">Block messages with excessive capitalization (>70% caps).</div>
-      </div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🤖 AutoMod 2.0</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Modular safety toggles. Enable or disable each rule independently.</div>
+      ${amRules.map(r=>`<div class="automod-rule">
+        <div class="amr-header"><span style="font-size:20px;">${r.icon}</span><div class="amr-title">${r.title}</div>
+          <div class="amr-enabled"><span>${am[r.key]?'Enabled':'Disabled'}</span><div class="toggle ${am[r.key]?'on':''}" onclick="toggleAM('${r.key}',this)"></div></div></div>
+        <div class="amr-desc">${r.desc}</div>
+      </div>`).join('')}
       <div class="automod-rule">
         <div class="amr-header"><span style="font-size:20px;">📢</span><div class="amr-title">Mention Limit</div></div>
         <div class="amr-desc">Max mentions per message: <strong>${am.mentionLimit||10}</strong></div>
@@ -4681,60 +4772,122 @@ function renderBSettingsMain(tab) {
   else if (tab==='invites') {
     const invites = b.invites || [];
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">🔗 Invite Links</div>
-      <button class="btn-a" style="margin-bottom:18px;font-size:13px;" onclick="generateInvite()">Generate Invite Link</button>
-      ${invites.length ? invites.map((inv,i)=>`
-        <div style="padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;">
-          <div class="invite-link-box" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;">
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🔗 Invite Manager</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:16px;">Create and manage invite links for your bastion.</div>
+      <div style="padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:18px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Generate New Invite</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <select id="invite-expiry" class="field-input" style="width:auto;min-width:120px;">
+            <option value="">No expiry</option>
+            <option value="1">1 hour</option>
+            <option value="24">24 hours</option>
+            <option value="168">7 days</option>
+            <option value="720">30 days</option>
+          </select>
+          <select id="invite-max-uses" class="field-input" style="width:auto;min-width:120px;">
+            <option value="0">Unlimited uses</option>
+            <option value="1">1 use</option>
+            <option value="5">5 uses</option>
+            <option value="10">10 uses</option>
+            <option value="25">25 uses</option>
+            <option value="100">100 uses</option>
+          </select>
+          <button class="btn-a" style="font-size:13px;padding:8px 16px;" onclick="generateInvite()">Generate</button>
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--muted);">Active Invites (${invites.length})</div>
+      ${invites.length ? invites.map((inv,i)=>{
+        const expired=inv.expires&&new Date(inv.expires)<new Date();
+        const maxedOut=inv.maxUses&&inv.uses>=inv.maxUses;
+        return `<div style="padding:12px 16px;background:var(--panel);border:1px solid ${expired||maxedOut?'rgba(248,113,113,.2)':'var(--border)'};border-radius:14px;margin-bottom:8px;${expired||maxedOut?'opacity:.6;':''}">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;">
             <span style="flex:1;font-size:12px;font-family:monospace;color:rgba(255,255,255,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${'https://fortized.com/app.html?invite='+inv.code}</span>
             <button class="btn-g" style="padding:4px 10px;font-size:12px;flex-shrink:0;" onclick="copyInvite('${inv.code}')">Copy</button>
           </div>
-          <div style="font-size:12px;color:var(--muted);">Uses: ${inv.uses||0} · ${inv.expires?'Expires: '+new Date(inv.expires).toLocaleDateString():'No expiry'}</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:6px;font-size:12px;color:var(--muted);">
+            <span>Uses: ${inv.uses||0}${inv.maxUses?'/'+inv.maxUses:''}</span>
+            <span>By: ${escapeHTML(inv.createdBy||'Unknown')}</span>
+            <span>${inv.expires?(expired?'⛔ Expired':'Expires: '+new Date(inv.expires).toLocaleDateString()):'No expiry'}</span>
+            ${expired||maxedOut?'<span style="color:var(--red);font-weight:700;">Inactive</span>':''}
+          </div>
           <button class="btn-d" style="padding:4px 10px;font-size:12px;margin-top:6px;" onclick="revokeInvite(${i})">Revoke</button>
-        </div>`).join('')
-        : '<div style="color:var(--muted);font-size:13.5px;">No active invite links.</div>'}`;
+        </div>`;
+      }).join('')
+        : '<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No active invite links. Generate one above!</div>'}`;
   }
   else if (tab==='members') {
-    main.innerHTML = `<div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">👥 Members</div><div id="bsettings-members-list"><div style="color:var(--muted);">Loading…</div></div>`;
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">👥 Members</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:16px;">${b.memberCount||1} member${(b.memberCount||1)!==1?'s':''}</div>
+      <input class="field-input" id="member-search" placeholder="Search members…" oninput="filterBSettingsMembers(this.value)" style="margin-bottom:14px;">
+      <div id="bsettings-members-list"><div style="color:var(--muted);">Loading…</div></div>`;
     loadBastionMembersList();
   }
   else if (tab==='bans') {
     const bans = b.bans || [];
+    const isOwner=b.owner===CU.username;
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">🔨 Bans</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🔨 Bans</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:16px;">${bans.length} banned member${bans.length!==1?'s':''}</div>
+      ${isOwner?`<div style="display:flex;gap:8px;margin-bottom:18px;">
+        <input class="field-input" id="ban-username-input" placeholder="Username to ban" style="flex:1;">
+        <input class="field-input" id="ban-reason-input" placeholder="Reason (optional)" style="flex:1;">
+        <button class="btn-d" style="font-size:13px;padding:8px 14px;flex-shrink:0;" onclick="banMemberByName()">Ban</button>
+      </div>`:''}
       ${bans.length ? bans.map((ban,i)=>`
         <div style="padding:12px 16px;background:var(--panel);border:1px solid rgba(248,113,113,.2);border-radius:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
           <span style="font-size:18px;">🚫</span>
-          <div style="flex:1;"><div style="font-weight:600;">${escapeHTML(ban.username)}</div><div style="font-size:12px;color:var(--muted);">Reason: ${escapeHTML(ban.reason||'N/A')}</div></div>
+          <div style="flex:1;"><div style="font-weight:600;">${escapeHTML(ban.username)}</div><div style="font-size:12px;color:var(--muted);">Reason: ${escapeHTML(ban.reason||'N/A')}</div><div style="font-size:11px;color:var(--muted);">${ban.date?new Date(ban.date).toLocaleDateString():''}</div></div>
           <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="unbanMember(${i})">Unban</button>
         </div>`).join('')
-        : '<div style="color:var(--muted);font-size:13.5px;">No banned members.</div>'}`;
+        : '<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No banned members.</div>'}`;
   }
   else if (tab==='boost') {
     const level = b.boostLevel || 0;
-    const costs = [500, 1000, 2000];
-    const perks = [
-      'Level 1: 25 custom emoji slots, animated icon',
-      'Level 2: 35 custom emoji slots, HD voice quality',
-      'Level 3: 50 custom emoji slots, custom invite splash',
+    const boostCost = 90; // 90 Onyx/month per boost level
+    const tiers = [
+      {name:'Reinforced',perks:['25 custom emoji slots','Animated bastion icon','Custom invite background','128kbps voice quality'],color:'#60a5fa'},
+      {name:'Fortified',perks:['35 custom emoji slots','HD banner (1920×480)','256kbps HD voice quality','15 minute voice message limit','Custom role icons'],color:'#a78bfa'},
+      {name:'Sovereign',perks:['50 custom emoji slots','Vanity invite URL','384kbps voice quality','Custom bastion splash screen','Priority support badge'],color:'#fbbf24'},
     ];
+    const tierCards = tiers.map((t,i)=>{
+      const lv=i+1;
+      const isActive=level>=lv;
+      const isNext=level===lv-1;
+      const monthlyCost=boostCost*lv;
+      return `<div style="padding:16px;border-radius:14px;border:1.5px solid ${isActive?t.color+'55':'var(--border)'};background:${isActive?t.color+'10':'var(--panel)'};position:relative;${isNext?'box-shadow:0 0 20px '+t.color+'20;':''}">
+        ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="font-size:20px;">⚡</span>
+          <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
+            <div style="font-size:11px;color:var(--muted);">${monthlyCost} Onyx/month</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
+          ${t.perks.map(p=>`<div style="font-size:12.5px;color:var(--muted-light);display:flex;align-items:center;gap:6px;"><span style="color:${isActive?'var(--green)':'var(--muted)'};">${isActive?'✓':'○'}</span>${p}</div>`).join('')}
+        </div>
+        ${!isActive&&isNext?`<button class="btn-a" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;">⚡ Boost for ${monthlyCost} Onyx</button>`:''}
+        ${!isActive&&!isNext?`<div style="font-size:11px;color:var(--muted);text-align:center;">Requires Level ${lv-1} first</div>`:''}
+      </div>`;
+    }).join('');
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">⚡ Bastion Boost</div>
-      <div class="boost-level-bar">
-        <div style="font-size:22px;">⚡</div>
-        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--accent);">Level ${level} Bastion</div>
-          <div style="font-size:12px;color:var(--muted-light);">${15+((level)*10)} emoji slots</div></div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">⚡ Bastion Boosts 2.0</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Boost your bastion with Onyx to unlock perks. 90 Onyx per level per month.</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;">
+        <span style="font-size:20px;">💎</span>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Your Onyx Balance</div><div style="font-size:11px;color:var(--muted);">Available to spend</div></div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">${CU.onyx||0}</div>
       </div>
-      ${level < 3 ? `<div style="margin-top:16px;">
-        <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:8px;">Next Boost: Level ${level+1}</div>
-        <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">${perks[level]}</div>
-        <div style="font-size:13px;color:var(--accent);margin-bottom:12px;font-weight:700;">Cost: ${costs[level]} Onyx (You have: ${CU.onyx})</div>
-        <button class="btn-a" onclick="boostBastion(${level+1},${costs[level]})">⚡ Boost to Level ${level+1}</button>
-      </div>` : `<div style="color:var(--green);font-size:14px;font-weight:700;margin-top:12px;">✓ Maximum boost level reached!</div>`}`;
+      <div style="display:grid;gap:12px;">${tierCards}</div>
+      ${level>=3?`<div style="text-align:center;margin-top:16px;padding:12px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:12px;"><span style="font-size:16px;">👑</span><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fbbf24;margin-top:4px;">Sovereign Level — Maximum Boost!</div></div>`:''}`;
   }
   else if (tab==='danger') {
     main.innerHTML = `
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">⚠️ Danger Zone</div>
+      ${b.owner===CU.username?`<div style="padding:16px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:16px;margin-bottom:14px;">
+        <div style="font-weight:700;margin-bottom:6px;">Transfer Ownership</div>
+        <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">Transfer this bastion to another member. You will lose owner privileges.</div>
+        <div style="display:flex;gap:8px;"><input class="field-input" id="transfer-owner-input" placeholder="Username" style="flex:1;"><button class="btn-g" onclick="transferBastionOwnership()">Transfer</button></div>
+      </div>`:''}
       <div style="padding:16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:16px;margin-bottom:14px;">
         <div style="font-weight:700;margin-bottom:6px;">Leave Bastion</div>
         <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">You'll need an invite to rejoin.</div>
@@ -4755,9 +4908,11 @@ function renderBSettingsMain(tab) {
 async function saveBastionOverview() {
   const b = CU.bastions[curBastion];
   b.name = document.getElementById('bs-name')?.value?.trim() || b.name;
+  b.tagline = document.getElementById('bs-tagline')?.value?.trim() || '';
   b.desc = document.getElementById('bs-desc')?.value?.trim() || '';
   await saveUser();
   renderRailBastions();
+  renderBastionSidebar(document.getElementById('sidebar-scroll'));
   toast('Bastion updated!', 'success');
 }
 async function setBastionVis(isPublic) {
@@ -4860,17 +5015,19 @@ async function saveAutoMod() {
 async function generateInvite() {
   const b = CU.bastions[curBastion];
   const code = CU.username.slice(0,4)+(Date.now()).toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase();
+  const expiryHours=parseInt(document.getElementById('invite-expiry')?.value)||0;
+  const maxUses=parseInt(document.getElementById('invite-max-uses')?.value)||0;
   const invite = {code, uses:0, created:new Date().toISOString(), createdBy: CU.username};
+  if(expiryHours)invite.expires=new Date(Date.now()+expiryHours*3600000).toISOString();
+  if(maxUses)invite.maxUses=maxUses;
   b.invites = [...(b.invites||[]), invite];
   await saveUser();
-  // Also update global bastion so invite resolves
   try {
     const bid = b.globalId || b.name;
     await firebase.database().ref('globalBastions/'+bid+'/invites').set(b.invites);
   } catch {}
   renderBSettingsMain('invites');
   toast('🔗 Invite created!', 'success');
-  // Auto-copy
   navigator.clipboard.writeText('https://fortized.com/app.html?invite='+code).then(()=>toast('Copied to clipboard!','info')).catch(()=>{});
 }
 function copyInvite(code) {
@@ -4921,6 +5078,25 @@ async function unbanMember(i) {
   CU.bastions[curBastion].bans.splice(i,1);
   await saveUser(); renderBSettingsMain('bans'); toast('Member unbanned','success');
 }
+function filterBSettingsMembers(q) {
+  const items=document.querySelectorAll('#bsettings-members-list > div');
+  const query=q.toLowerCase();
+  items.forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(query)?'':'none';});
+}
+async function banMemberByName() {
+  const username=document.getElementById('ban-username-input')?.value?.trim();
+  const reason=document.getElementById('ban-reason-input')?.value?.trim()||'';
+  if(!username){toast('Enter a username','error');return;}
+  const b=CU.bastions[curBastion];
+  if(!b)return;
+  b.bans=b.bans||[];
+  if(b.bans.find(ban=>ban.username===username)){toast('Already banned','error');return;}
+  b.bans.push({username,reason,date:new Date().toISOString()});
+  try{await FortizedSocial.removeBastionMember(b.globalId||b.name,username);}catch{}
+  await saveUser();
+  renderBSettingsMain('bans');
+  toast(`${username} banned`,'success');
+}
 async function boostBastion(level, cost) {
   if((CU.onyx||0)<cost){toast('Not enough Onyx!','error');return;}
   showCustomConfirm(`Boost to Level ${level} for ${cost} Onyx?`, async ()=>{
@@ -4947,6 +5123,21 @@ async function deleteBastion() {
     await saveUser(); curBastion=null; renderRailBastions(); showView('home'); toast('Bastion deleted','info');
   });
 }
+async function transferBastionOwnership() {
+  const newOwner=document.getElementById('transfer-owner-input')?.value?.trim();
+  if(!newOwner){toast('Enter a username','error');return;}
+  const b=CU.bastions[curBastion];
+  if(!b||b.owner!==CU.username)return;
+  showCustomConfirm(`Transfer ownership of ${b.name} to ${newOwner}? You will lose owner privileges.`, async ()=>{
+    b.owner=newOwner;
+    if(!b.memberRoles)b.memberRoles={};
+    b.memberRoles[newOwner]=['admin'];
+    await saveUser();
+    try{await firebase.database().ref('globalBastions/'+(b.globalId||b.name)).update({owner:newOwner});}catch{}
+    renderBSettingsMain('danger');
+    toast(`Ownership transferred to ${newOwner}`,'success');
+  });
+}
 
 // ════════════════════════════════════════════
 // ROLES
@@ -4968,11 +5159,30 @@ function openRoleEditor() {
   const r=currentRoleEditing;
   document.getElementById('re-name').value=r.name;
   document.getElementById('re-colors').innerHTML=ROLE_COLORS.map(c=>`<div class="color-swatch ${r.color===c?'sel':''}" style="background:${c};" onclick="selectRoleColor('${c}')"></div>`).join('');
-  document.getElementById('re-perms').innerHTML=PERMISSIONS.map(([key,,desc])=>`
-    <div class="perm-row">
-      <div class="perm-info"><div class="perm-label">${key.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}</div><div style="font-size:12px;color:var(--muted-light);">${desc}</div></div>
-      <div class="toggle ${(r.permissions||[]).includes(key)?'on':''}" onclick="toggleRolePerm('${key}',this)"></div>
-    </div>`).join('');
+  // Priority & Display as Tag
+  const extraEl=document.getElementById('re-extras');
+  if(extraEl) extraEl.innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+      <div style="flex:1;"><div style="font-size:12px;font-weight:700;margin-bottom:4px;">Priority</div>
+        <div style="display:flex;align-items:center;gap:8px;"><input type="range" id="re-priority" min="0" max="100" value="${r.priority||0}" style="flex:1;accent-color:var(--accent);"><span id="re-priority-val" style="font-size:13px;font-weight:700;min-width:24px;text-align:center;">${r.priority||0}</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;font-weight:700;">Display as Tag</span><div class="toggle ${r.displayAsTag?'on':''}" onclick="currentRoleEditing.displayAsTag=!currentRoleEditing.displayAsTag;this.classList.toggle('on')"></div></div>
+    </div>`;
+  const prSlider=document.getElementById('re-priority');
+  if(prSlider)prSlider.oninput=function(){document.getElementById('re-priority-val').textContent=this.value;currentRoleEditing.priority=parseInt(this.value);};
+  // Grouped permissions
+  const permsEl=document.getElementById('re-perms');
+  let permsHTML='';
+  PERM_GROUPS.forEach(group=>{
+    const groupPerms=PERMISSIONS.filter(p=>p[2]===group);
+    if(!groupPerms.length)return;
+    permsHTML+=`<div style="margin-bottom:16px;"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);">${group}</div>`;
+    groupPerms.forEach(([key,label])=>{
+      permsHTML+=`<div class="perm-row"><div class="perm-info"><div class="perm-label">${label}</div></div><div class="toggle ${(r.permissions||[]).includes(key)?'on':''}" onclick="toggleRolePerm('${key}',this)"></div></div>`;
+    });
+    permsHTML+=`</div>`;
+  });
+  if(permsEl)permsEl.innerHTML=permsHTML;
   openModal('modal-role-editor');
 }
 function selectRoleColor(color) {
@@ -4988,6 +5198,8 @@ function toggleRolePerm(key, el) {
 async function saveRole() {
   const b=CU.bastions[curBastion];
   currentRoleEditing.name=document.getElementById('re-name').value.trim()||currentRoleEditing.name;
+  const prSlider=document.getElementById('re-priority');
+  if(prSlider) currentRoleEditing.priority=parseInt(prSlider.value)||0;
   if('_idx' in currentRoleEditing) {
     const idx=currentRoleEditing._idx;
     delete currentRoleEditing._idx;

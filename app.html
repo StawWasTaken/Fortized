@@ -43,22 +43,69 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rail-bastion:hover .bastion-icon{transform:scale(1.06);}
 .rail-bastion .bastion-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
 .rail-notif-badge{position:absolute;top:4px;right:6px;min-width:14px;height:14px;border-radius:7px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 2px;z-index:1;}
-.sidebar-header{height:40px;display:flex;align-items:center;padding:0 14px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex-shrink:0;gap:7px;border-top:1px solid rgba(255,255,255,.04);}
+.sidebar-header{min-height:40px;display:flex;align-items:center;padding:0 14px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex-shrink:0;gap:7px;border-top:1px solid rgba(255,255,255,.04);}
 .sidebar-header .hdr-actions{margin-left:auto;display:flex;gap:2px;}
 .sidebar-header .hdr-actions button{width:28px;height:28px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .sidebar-header .hdr-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
+/* ── Bastion Sidebar 2027 ────────────────────────── */
+.bastion-banner-hero{position:relative;width:100%;height:140px;overflow:hidden;flex-shrink:0;border-radius:0 0 18px 18px;margin-bottom:-20px;}
+.bastion-banner-hero img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.7) saturate(1.1);}
+.bastion-banner-hero .bb-gradient{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,16,24,0) 0%,rgba(13,16,24,.55) 50%,var(--channel) 100%);}
+.bastion-banner-hero .bb-noise{position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");opacity:.5;pointer-events:none;mix-blend-mode:overlay;}
+.bastion-banner-hero .bb-glow{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:120%;height:40px;background:radial-gradient(ellipse at center,rgba(255,249,62,.06) 0%,transparent 70%);pointer-events:none;}
+.bastion-identity{position:relative;z-index:2;padding:0 14px;display:flex;align-items:flex-end;gap:12px;}
+.bastion-emblem{width:48px;height:48px;border-radius:16px;background:var(--panel);border:2.5px solid var(--channel);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:transform .2s,box-shadow .2s;}
+.bastion-emblem:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(0,0,0,.5);}
+.bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:13px;}
+.bastion-meta{flex:1;min-width:0;padding-bottom:4px;}
+.bastion-meta .bm-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.02em;text-shadow:0 1px 8px rgba(0,0,0,.4);}
+.bastion-meta .bm-tagline{font-size:11px;color:rgba(255,255,255,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.bastion-stats-row{display:flex;align-items:center;gap:8px;padding:10px 14px 6px;flex-shrink:0;}
+.bastion-stats-row .bs-chip{display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.35);padding:4px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:100px;transition:all .15s;cursor:default;}
+.bastion-stats-row .bs-chip:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);}
+.bastion-stats-row .bs-chip.boost{background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(251,191,36,.04));border-color:rgba(255,249,62,.12);color:rgba(255,249,62,.7);cursor:pointer;}
+.bastion-stats-row .bs-chip.boost:hover{background:linear-gradient(135deg,rgba(255,249,62,.1),rgba(251,191,36,.08));border-color:rgba(255,249,62,.22);}
+.bastion-quick-actions{display:flex;gap:4px;padding:0 10px 8px;flex-shrink:0;}
+.bastion-quick-actions button{flex:1;height:30px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:rgba(255,255,255,.4);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
+.bastion-quick-actions button:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.1);}
+.sidebar-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);margin:4px 12px;flex-shrink:0;}
+/* Channel categories - 2027 */
+.ch-category{display:flex;align-items:center;gap:6px;padding:14px 12px 6px;font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.2);cursor:pointer;transition:color .15s;user-select:none;}
+.ch-category:hover{color:rgba(255,255,255,.35);}
+.ch-category .cat-icon{font-size:12px;opacity:.6;}
+.ch-category .cat-add{margin-left:auto;font-size:14px;opacity:0;transition:opacity .15s;background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;}
+.ch-category:hover .cat-add{opacity:1;}
+.ch-category .cat-chevron{font-size:8px;transition:transform .2s;margin-left:auto;}
+/* Channel items - 2027 */
+.ch-item-2027{display:flex;align-items:center;gap:9px;padding:7px 10px;margin:1px 8px;border-radius:12px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.35);transition:all .14s cubic-bezier(.22,1,.36,1);position:relative;font-weight:500;}
+.ch-item-2027:hover{background:rgba(255,255,255,.045);color:rgba(255,255,255,.8);}
+.ch-item-2027.active{background:rgba(255,249,62,.07);color:var(--accent);font-weight:600;box-shadow:0 0 0 1px rgba(255,249,62,.08) inset;}
+.ch-item-2027.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:55%;background:var(--accent);border-radius:0 3px 3px 0;box-shadow:0 0 10px rgba(255,249,62,.3);}
+.ch-item-2027 .ch-hash{font-size:15px;font-weight:700;color:rgba(255,255,255,.15);transition:color .14s;width:18px;text-align:center;flex-shrink:0;}
+.ch-item-2027:hover .ch-hash{color:rgba(255,255,255,.3);}
+.ch-item-2027.active .ch-hash{color:rgba(255,249,62,.5);}
+.ch-item-2027 .ch-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* Voice channel items - 2027 */
+.vc-item-2027{display:flex;align-items:center;gap:9px;padding:7px 10px;margin:1px 8px;border-radius:12px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.35);transition:all .14s;font-weight:500;}
+.vc-item-2027:hover{background:rgba(62,207,110,.04);color:rgba(255,255,255,.7);}
+.vc-item-2027.active-vc{background:rgba(62,207,110,.06);color:var(--green);font-weight:600;}
+.vc-item-2027 .vc-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0;opacity:.5;}
+.vc-item-2027.active-vc .vc-icon{opacity:1;}
+.vc-item-2027 .vc-live{font-size:9px;font-weight:800;color:var(--green);margin-left:auto;display:flex;align-items:center;gap:3px;}
+.vc-item-2027 .vc-live::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);animation:vcPulse 1.5s ease-in-out infinite;}
+@keyframes vcPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.7);}}
 /* ── Secondary Sidebar (context panel) ────────────── */
-.sidebar-ctx{width:220px;min-width:220px;background:var(--channel);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid rgba(255,255,255,.04);}
+.sidebar-ctx{width:240px;min-width:240px;background:var(--channel);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid rgba(255,255,255,.04);}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
 .topbar{height:48px;background:var(--sidebar);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
 .topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap;color:#fff;}
-.sidebar-scroll{flex:1;overflow-y:auto;padding:6px 0;}
+.sidebar-scroll{flex:1;overflow-y:auto;padding:0;scroll-behavior:smooth;scrollbar-width:thin;}
 .sec-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 14px 5px;display:flex;align-items:center;justify-content:space-between;}
 .sec-label button{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;}
-.ch-item{display:flex;align-items:center;gap:8px;padding:6px 8px;margin:1px 6px;border-radius:10px;cursor:pointer;font-size:12.5px;color:var(--muted);transition:all .1s;}
-.ch-item:hover{background:rgba(255,255,255,.05);color:var(--text);}
-.ch-item.active{background:rgba(255,249,62,.08);color:var(--accent);}
+.ch-item{display:flex;align-items:center;gap:9px;padding:7px 10px;margin:1px 8px;border-radius:12px;cursor:pointer;font-size:12.5px;color:var(--muted);transition:all .14s cubic-bezier(.22,1,.36,1);}
+.ch-item:hover{background:rgba(255,255,255,.04);color:var(--text);}
+.ch-item.active{background:rgba(255,249,62,.07);color:var(--accent);}
 .cat-row{display:flex;align-items:center;gap:5px;padding:10px 8px 4px 10px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;}
 .cat-row button{margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;font-size:14px;opacity:0;}
 .cat-row:hover button{opacity:1;}
@@ -351,15 +398,17 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .chat-input-actions{display:flex;gap:2px;align-items:center;}
 .chat-input-actions button{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
 .chat-send{display:none;}
-.member-list{width:290px;min-width:290px;max-width:290px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;padding:12px 0;flex-shrink:0;}
-.ml-role-header{padding:6px 14px 4px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:10px;}
+.member-list{width:260px;min-width:260px;max-width:260px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);overflow-y:auto;padding:14px 0;flex-shrink:0;}
+.ml-role-header{padding:8px 16px 5px;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.18);margin-top:12px;}
+.ml-role-header:first-child{margin-top:0;}
 .ml-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;overflow:hidden;}
-.ml-entry{display:flex;align-items:center;gap:8px;padding:5px 9px 5px 12px;margin:1px 4px;border-radius:10px;cursor:pointer;transition:background .1s;}
-.ml-entry:hover{background:rgba(255,255,255,.05);}
+.ml-entry{display:flex;align-items:center;gap:9px;padding:6px 10px 6px 14px;margin:1px 6px;border-radius:12px;cursor:pointer;transition:all .14s cubic-bezier(.22,1,.36,1);}
+.ml-entry:hover{background:rgba(255,255,255,.04);}
 .ml-av{width:30px;height:30px;border-radius:50%;background:var(--panel);border:1px solid var(--border);font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;}
 .ml-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
 .ml-status{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--channel);}
-.ml-name{font-size:12.5px;font-weight:600;color:var(--muted-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ml-name{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .14s;}
+.ml-entry:hover .ml-name{color:rgba(255,255,255,.8);}
 .discover-scroll{flex:1;overflow-y:auto;padding:28px;}
 .disc-hero{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:38px 36px;margin-bottom:28px;}
 .disc-hero h2{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px;}
@@ -383,32 +432,35 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .bc-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
 .bc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
 .bc-desc{font-size:12px;color:var(--muted-light);line-height:1.55;margin-bottom:8px;}
-/* ── Bastion Mood ───────────────────────────────── */
-.bastion-mood-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:4px 6px 6px;border-radius:12px;cursor:default;transition:all .25s;font-size:12px;font-weight:600;position:relative;overflow:hidden;}
+/* ── Bastion Mood 2027 ──────────────────────────── */
+.bastion-mood-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:2px 10px 4px;border-radius:14px;cursor:default;transition:all .3s cubic-bezier(.22,1,.36,1);font-size:11.5px;font-weight:600;position:relative;overflow:hidden;backdrop-filter:blur(8px);}
+.bastion-mood-bar:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.15);}
 .bastion-mood-bar::before{content:"";position:absolute;inset:0;opacity:.06;pointer-events:none;transition:background .5s;}
-.bastion-mood-bar .mood-emoji{font-size:16px;flex-shrink:0;animation:moodPulse 3s ease-in-out infinite;}
-.bastion-mood-bar .mood-label{color:rgba(255,255,255,.7);flex:1;}
-.bastion-mood-bar .mood-lock{font-size:10px;color:rgba(255,255,255,.25);margin-left:auto;}
-@keyframes moodPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+.bastion-mood-bar .mood-emoji{font-size:15px;flex-shrink:0;animation:moodPulse 3s ease-in-out infinite;}
+.bastion-mood-bar .mood-label{color:rgba(255,255,255,.6);flex:1;letter-spacing:.02em;}
+.bastion-mood-bar .mood-lock{font-size:10px;color:rgba(255,255,255,.2);margin-left:auto;}
+@keyframes moodPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
 /* Mood ambient particles */
 .mood-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
 .mood-particle{position:absolute;width:2px;height:2px;border-radius:50%;opacity:0;animation:moodFloat 8s ease-in-out infinite;}
 @keyframes moodFloat{0%{opacity:0;transform:translateY(10px) scale(.5);}30%{opacity:.5;}60%{opacity:.3;transform:translateY(-40px) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(.3);}}
-/* ── Bastion Reputation ────────────────────────── */
-.rep-shield{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:100px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);color:rgba(255,249,62,.7);cursor:default;flex-shrink:0;transition:all .15s;}
-.rep-shield:hover{background:rgba(255,249,62,.1);border-color:rgba(255,249,62,.25);}
-.rep-tooltip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(16,20,32,.96);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 12px;font-size:11px;color:rgba(255,255,255,.7);white-space:nowrap;z-index:50;pointer-events:none;opacity:0;transition:opacity .15s;box-shadow:0 6px 20px rgba(0,0,0,.5);}
+/* ── Bastion Reputation 2027 ──────────────────── */
+.rep-shield{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(255,249,62,.05);border:1px solid rgba(255,249,62,.1);color:rgba(255,249,62,.6);cursor:default;flex-shrink:0;transition:all .2s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(4px);}
+.rep-shield:hover{background:rgba(255,249,62,.1);border-color:rgba(255,249,62,.25);transform:scale(1.05);}
+.rep-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(10,13,20,.97);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 14px;font-size:11px;color:rgba(255,255,255,.65);white-space:nowrap;z-index:50;pointer-events:none;opacity:0;transition:opacity .2s;box-shadow:0 8px 32px rgba(0,0,0,.6);backdrop-filter:blur(12px);}
 .rep-shield:hover .rep-tooltip{opacity:1;}
-/* ── Focus Mode ────────────────────────────────── */
-.focus-mode-chat .chat-msgs{background:rgba(255,255,255,.012);}
-.focus-mode-chat .msg-text{font-size:14px;color:rgba(221,227,237,.75);letter-spacing:.015em;line-height:1.7;}
+/* ── Focus Mode 2027 ──────────────────────────── */
+.focus-mode-chat .chat-msgs{background:rgba(255,255,255,.008);}
+.focus-mode-chat .msg-text{font-size:14.5px;color:rgba(221,227,237,.7);letter-spacing:.02em;line-height:1.75;}
 .focus-mode-chat .msg-reactions,.focus-mode-chat .cit-gif,.focus-mode-chat .msg-acts button[title="React"]{display:none!important;}
-.focus-mode-chat .typing-dots span{background:rgba(255,255,255,.12);}
-.focus-mode-chat .chat-input-outer{border-color:rgba(255,255,255,.04);}
-.focus-mode-badge{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(96,165,250,.08);color:rgba(96,165,250,.7);border:1px solid rgba(96,165,250,.15);margin-left:6px;letter-spacing:.04em;}
-/* Joyster Intervention */
-.joyster-intervention{display:flex;align-items:center;gap:10px;padding:8px 20px;font-size:12px;color:rgba(255,255,255,.35);font-style:italic;}
-.joyster-intervention .ji-icon{width:20px;height:20px;border-radius:50%;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.focus-mode-chat .typing-dots span{background:rgba(255,255,255,.08);}
+.focus-mode-chat .chat-input-outer{border-color:rgba(255,255,255,.03);}
+.focus-mode-chat .msg-row{border-bottom:1px solid rgba(255,255,255,.015);padding-bottom:6px;margin-bottom:2px;}
+.focus-mode-badge{display:inline-flex;align-items:center;gap:3px;font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(96,165,250,.06);color:rgba(96,165,250,.6);border:1px solid rgba(96,165,250,.1);margin-left:auto;letter-spacing:.05em;flex-shrink:0;}
+/* Joyster Intervention 2027 */
+.joyster-intervention{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:12px;color:rgba(255,255,255,.3);font-style:italic;animation:jiSlideIn .3s cubic-bezier(.22,1,.36,1) both;}
+@keyframes jiSlideIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.joyster-intervention .ji-icon{width:22px;height:22px;border-radius:50%;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
 .joyster-intervention .ji-text{flex:1;}
 /* ── Atelier ─────────────────────────────────────── */
 .atelier-wrap{display:flex;flex:1;overflow:hidden;background:#0c0f17;}
@@ -575,11 +627,12 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .voice-ch-item{display:flex;align-items:center;gap:8px;padding:6px 8px;margin:1px 6px;border-radius:10px;cursor:pointer;font-size:12.5px;color:var(--muted);transition:all .1s;}
 .voice-ch-item:hover{background:rgba(255,255,255,.05);color:var(--text);}
 .voice-ch-item.active-vc{background:rgba(62,207,110,.06);color:var(--green);}
-.voice-connected-bar{background:rgba(62,207,110,.06);border:1px solid rgba(62,207,110,.15);border-radius:12px;padding:10px 14px;margin:8px 8px 4px;display:none;}
+.voice-connected-bar{background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.1);border-radius:14px;padding:10px 14px;margin:6px 10px 6px;display:none;backdrop-filter:blur(8px);transition:all .2s;}
 .voice-connected-bar.show{display:block;}
 .vcb-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .vcb-name{font-size:12px;font-weight:600;color:var(--green);flex:1;}
-.vcb-disc{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.2);color:var(--red);font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px;cursor:pointer;}
+.vcb-disc{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.15);color:var(--red);font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;cursor:pointer;transition:all .15s;}
+.vcb-disc:hover{background:rgba(248,113,113,.2);}
 .vcb-part{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted-light);}
 .voice-panel{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:20px;padding:40px;}
 .voice-panel-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
@@ -746,8 +799,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .quiz-progress{display:flex;gap:6px;justify-content:center;margin-bottom:20px;}
 .quiz-dot{width:8px;height:8px;border-radius:50%;background:var(--border);}
 .quiz-dot.done{background:var(--green);}.quiz-dot.current{background:var(--accent);}
-.boost-bar{background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted-light);cursor:pointer;margin:8px 8px 4px;}
-.boost-bar .bl{font-weight:700;color:var(--accent);}
+.boost-bar{display:none;}
+.boost-bar .bl{display:none;}
   /* Radiance display name font - updated dynamically */
   .radiance-name { font-family: var(--radiance-font, inherit); }
 .tmpl-card{padding:14px 8px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s;}
@@ -2082,7 +2135,7 @@ function updateSidebar(v) {
     buildProfileView('myprofile');
     return;
   } else if (v==='bastion') {
-    if (hdr) hdr.style.display = '';
+    // Header hidden — bastion sidebar renders its own hero banner
     renderBastionSidebar(scroll);
   } else if (v==='bsettings') {
     // bsettings has its own nav inside view-bsettings; hide sidebar-ctx
@@ -3401,36 +3454,11 @@ function openBastion(idx) {
 function renderBastionSidebar(scroll) {
   const b=CU.bastions?.[curBastion];
   if (!b||!scroll) return;
+  const hdr=document.getElementById('sidebar-header');
   const hdrTitle=document.getElementById('sidebar-title');
   const hdrActs=document.getElementById('sidebar-hdr-actions');
-  if (hdrTitle) {
-    const boostLv=b.boostLevel||0;
-    const visIcon=b.public!==false?'🌍':'🔒';
-    const boostBadge=boostLv>0?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(251,191,36,.06));color:#fbbf24;border:1px solid rgba(251,191,36,.2);">⚡${boostLv}</span>`:'';
-    const memberBadge=`<span style="font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:3px;">👥 ${b.memberCount||1}</span>`;
-    const visBadge=`<span style="font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:2px;">${visIcon}</span>`;
-    const taglineHTML=b.tagline?`<div style="font-size:11px;color:var(--muted-light);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">${escapeHTML(b.tagline)}</div>`:'';
-    const bannerSrc = b.banner||b.icon||'';
-    if (bannerSrc) {
-      const hdrEl = document.createElement('div');
-      hdrEl.style.cssText='position:relative;height:88px;margin:-12px -14px 8px;overflow:hidden;';
-      const img = document.createElement('img');
-      img.src = bannerSrc;
-      img.style.cssText='width:100%;height:100%;object-fit:cover;opacity:.55;display:block;';
-      img.onerror=function(){this.style.display='none';};
-      hdrEl.appendChild(img);
-      const overlay = document.createElement('div');
-      overlay.innerHTML = `<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(11,14,21,.92));"></div><div style="position:absolute;bottom:7px;left:11px;right:11px;"><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:16px;">${b.emblem||'🏰'}</span><span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8);">${escapeHTML(b.name)}</span></div>${taglineHTML}<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">${visBadge}${memberBadge}${boostBadge}</div></div>`;
-      while(overlay.firstChild) hdrEl.appendChild(overlay.firstChild);
-      hdrTitle.innerHTML = '';
-      hdrTitle.appendChild(hdrEl);
-    } else {
-      hdrTitle.innerHTML = `<div style="padding:4px 0;"><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:16px;">${b.emblem||'🏰'}</span><span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;">${escapeHTML(b.name)}</span></div>${taglineHTML}<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">${visBadge}${memberBadge}${boostBadge}</div></div>`;
-    }
-  }
-  if (hdrActs) hdrActs.innerHTML=`
-    <button onclick="openBastionSettings()" title="Settings" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;">⚙️</button>
-    <button onclick="openModal('modal-leave-bastion')" title="Leave" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;">🚪</button>`;
+  // Hide the default header — we render everything inside scroll
+  if (hdr) hdr.style.display='none';
 
   const lv=document.getElementById('leave-title');
   const ls=document.getElementById('leave-sub');
@@ -3440,12 +3468,49 @@ function renderBastionSidebar(scroll) {
   if (lb) lb.onclick=()=>leaveBastion(curBastion);
 
   const boostLv=b.boostLevel||0;
-  let html=`<div class="boost-bar" onclick="openBastionSettings('boost')">⚡ Level <span class="bl">${boostLv}</span> Bastion<button style="background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;margin-left:auto;">Boost →</button></div>`;
-  // Bastion Mood Bar
-  html += renderMoodBar(b);
-  const chs=b.channels||[];
+  const bannerSrc=b.banner||b.icon||'';
   const isOwner=b.owner===CU.username;
+  const chs=b.channels||[];
 
+  // ── Banner Hero ──
+  let html='';
+  if (bannerSrc) {
+    html+=`<div class="bastion-banner-hero">
+      <img src="${escapeHTML(bannerSrc)}" onerror="this.parentElement.style.display='none'" alt="">
+      <div class="bb-gradient"></div><div class="bb-noise"></div><div class="bb-glow"></div>
+    </div>`;
+  }
+
+  // ── Identity row ──
+  html+=`<div class="bastion-identity" style="${bannerSrc?'':'padding-top:14px;'}">
+    <div class="bastion-emblem">${b.icon?`<img src="${escapeHTML(b.icon)}" onerror="this.outerHTML='🏰'">`:(b.emblem||'🏰')}</div>
+    <div class="bastion-meta">
+      <div class="bm-name">${escapeHTML(b.name)}</div>
+      ${b.tagline?`<div class="bm-tagline">${escapeHTML(b.tagline)}</div>`:''}
+    </div>
+  </div>`;
+
+  // ── Stats row (visibility, members, boost) ──
+  const visIcon=b.public!==false?'🌍':'🔒';
+  html+=`<div class="bastion-stats-row">
+    <span class="bs-chip">${visIcon} ${b.public!==false?'Public':'Private'}</span>
+    <span class="bs-chip">👥 ${b.memberCount||1}</span>
+    ${boostLv>0?`<span class="bs-chip boost" onclick="openBastionSettings('boost')">⚡ Lv.${boostLv}</span>`:''}
+  </div>`;
+
+  // ── Quick Actions ──
+  html+=`<div class="bastion-quick-actions">
+    <button onclick="openBastionSettings()" title="Settings">⚙️ Settings</button>
+    <button onclick="openBastionSettings('boost')" title="Boost">⚡ Boost</button>
+    <button onclick="openModal('modal-leave-bastion')" title="Leave">🚪</button>
+  </div>`;
+
+  // ── Mood Bar ──
+  html+=renderMoodBar(b);
+
+  html+=`<div class="sidebar-divider"></div>`;
+
+  // ── Channel categories ──
   const textChs=chs.filter(c=>c.type==='text'||!c.type);
   const voiceChs=chs.filter(c=>c.type==='voice');
   const forumChs=chs.filter(c=>c.type==='forum');
@@ -3454,69 +3519,93 @@ function renderBastionSidebar(scroll) {
   const eventChs=chs.filter(c=>c.type==='event');
   const automationChs=chs.filter(c=>c.type==='automation');
 
+  // Helper to render a channel category
+  function chCategory(icon, label, type, channels, renderFn) {
+    if (!channels.length && !isOwner) return '';
+    let out=`<div class="ch-category"><span class="cat-icon">${icon}</span> ${label}${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'${type}')">+</button>`:''}</div>`;
+    channels.forEach(ch => { out += renderFn(ch); });
+    return out;
+  }
+
+  // Text channels
   if (textChs.length||isOwner) {
-    html+=`<div class="cat-row">📝 TEXT CHANNELS ${isOwner?`<button onclick="addChannel(${curBastion},'text')">+</button>`:''}  </div>`;
+    html+=`<div class="ch-category"><span class="cat-icon">📝</span> TEXT${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'text')">+</button>`:''}</div>`;
     chs.forEach((ch,i)=>{
       if (ch.type==='voice'||ch.type==='forum'||ch.type==='announcement'||ch.type==='poll'||ch.type==='event'||ch.type==='automation') return;
       const tier=getAgeTier(CU?.dateOfBirth);
       const blocked=ch.nsfw&&tier==='child';
-      const nsfwTag=ch.nsfw?`<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:1px 5px;border-radius:4px;flex-shrink:0;">NSFW</span>`:'';
-      const focusBadge=ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':'';
-      html+=`<div class="ch-item ${curChannel===i?'active':''}" id="ch-sb-${i}" ${blocked?'style="opacity:.4;pointer-events:none;"':''}onclick="selectChannel(${i})">
-        <span>#</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${blocked?'<span title="Age blocked">🔒</span>':''}
+      const nsfwTag=ch.nsfw?`<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:rgba(248,113,113,.6);flex-shrink:0;">18+</span>`:'';
+      const focusBadge=ch.focusMode?'<span class="focus-mode-badge">FOCUS</span>':'';
+      html+=`<div class="ch-item-2027 ${curChannel===i?'active':''}" id="ch-sb-${i}" ${blocked?'style="opacity:.35;pointer-events:none;"':''}onclick="selectChannel(${i})">
+        <span class="ch-hash">#</span><span class="ch-name">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${blocked?'<span title="Age blocked" style="margin-left:auto;opacity:.4;">🔒</span>':''}
       </div>`;
     });
   }
+
+  // Forums
   if (forumChs.length||isOwner) {
-    html+=`<div class="cat-row">💬 FORUMS ${isOwner?`<button onclick="addChannel(${curBastion},'forum')">+</button>`:''}</div>`;
+    html+=`<div class="ch-category"><span class="cat-icon">💬</span> FORUMS${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'forum')">+</button>`:''}</div>`;
     forumChs.forEach(function(ch){
       const ri=chs.indexOf(ch);
-      html+=`<div class="ch-item ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="openForumChannel(${ri})">
-        <span>💬</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>
+      html+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="openForumChannel(${ri})">
+        <span class="ch-hash">💬</span><span class="ch-name">${escapeHTML(ch.name)}</span>
       </div>`;
     });
   }
+
+  // Voice
   if (voiceChs.length||isOwner) {
-    html+=`<div class="cat-row">🎙 VOICE ${isOwner?`<button onclick="addChannel(${curBastion},'voice')">+</button>`:''}  </div>`;
+    html+=`<div class="ch-category"><span class="cat-icon">🎙</span> VOICE${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'voice')">+</button>`:''}</div>`;
     chs.forEach((ch,i)=>{
       if (ch.type!=='voice') return;
       const live=voiceConnected&&voiceChannel===i;
-      html+=`<div class="voice-ch-item ${live?'active-vc':''}" onclick="selectChannel(${i})"><span>🎙</span><span>${escapeHTML(ch.name)}</span>${live?'<span style="font-size:9px;color:var(--green);margin-left:auto;">● LIVE</span>':''}</div>`;
+      html+=`<div class="vc-item-2027 ${live?'active-vc':''}" onclick="selectChannel(${i})">
+        <span class="vc-icon">🎙</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+        ${live?'<span class="vc-live">LIVE</span>':''}
+      </div>`;
     });
   }
+
+  // Announcements
   if (announcementChs.length||isOwner) {
-    html+=`<div class="cat-row">📢 ANNOUNCEMENTS ${isOwner?`<button onclick="addChannel(${curBastion},'announcement')">+</button>`:''}</div>`;
+    html+=`<div class="ch-category"><span class="cat-icon">📢</span> ANNOUNCEMENTS${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'announcement')">+</button>`:''}</div>`;
     announcementChs.forEach(function(ch){
       const ri=chs.indexOf(ch);
-      html+=`<div class="ch-item ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
-        <span>📢</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>
+      html+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+        <span class="ch-hash">📢</span><span class="ch-name">${escapeHTML(ch.name)}</span>
       </div>`;
     });
   }
+
+  // Polls
   if (pollChs.length||isOwner) {
-    html+=`<div class="cat-row">🗳 POLLS ${isOwner?`<button onclick="addChannel(${curBastion},'poll')">+</button>`:''}</div>`;
+    html+=`<div class="ch-category"><span class="cat-icon">🗳</span> POLLS${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'poll')">+</button>`:''}</div>`;
     pollChs.forEach(function(ch){
       const ri=chs.indexOf(ch);
-      html+=`<div class="ch-item ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
-        <span>🗳</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>
+      html+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+        <span class="ch-hash">🗳</span><span class="ch-name">${escapeHTML(ch.name)}</span>
       </div>`;
     });
   }
+
+  // Events
   if (eventChs.length||isOwner) {
-    html+=`<div class="cat-row">🎮 EVENTS ${isOwner?`<button onclick="addChannel(${curBastion},'event')">+</button>`:''}</div>`;
+    html+=`<div class="ch-category"><span class="cat-icon">🎮</span> EVENTS${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'event')">+</button>`:''}</div>`;
     eventChs.forEach(function(ch){
       const ri=chs.indexOf(ch);
-      html+=`<div class="ch-item ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
-        <span>🎮</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>
+      html+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+        <span class="ch-hash">🎮</span><span class="ch-name">${escapeHTML(ch.name)}</span>
       </div>`;
     });
   }
+
+  // Automation
   if (automationChs.length||isOwner) {
-    html+=`<div class="cat-row">🧩 AUTOMATION ${isOwner?`<button onclick="addChannel(${curBastion},'automation')">+</button>`:''}</div>`;
+    html+=`<div class="ch-category"><span class="cat-icon">🧩</span> AUTOMATION${isOwner?`<button class="cat-add" onclick="addChannel(${curBastion},'automation')">+</button>`:''}</div>`;
     automationChs.forEach(function(ch){
       const ri=chs.indexOf(ch);
-      html+=`<div class="ch-item ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
-        <span>🧩</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>
+      html+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+        <span class="ch-hash">🧩</span><span class="ch-name">${escapeHTML(ch.name)}</span>
       </div>`;
     });
   }
@@ -3558,7 +3647,7 @@ function selectChannel(idx) {
     const b = CU.bastions[curBastion];
     localStorage.setItem('ftz_last_ch_' + (b.globalId||b.name||curBastion), idx);
   }
-  document.querySelectorAll('.ch-item').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.ch-item,.ch-item-2027,.vc-item-2027').forEach(el=>el.classList.remove('active'));
   const el=document.getElementById('ch-sb-'+idx);
   if (el) el.classList.add('active');
 
@@ -4086,6 +4175,15 @@ async function toggleReaction(msgId, emoji, context) {
     }
     if (users.length === 0) await ref.remove();
     else await ref.set(users);
+    // Award reputation for reactions in bastions
+    if (context === 'ch' && !users.includes(me) === false && curBastion !== null) {
+      const b = CU.bastions?.[curBastion];
+      if (b) {
+        const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+        const msgAuthor = row?.dataset?.from;
+        if (msgAuthor && msgAuthor !== me) awardReactionRep(b.globalId||b.name, msgAuthor);
+      }
+    }
     // Update the UI locally
     updateReactionUI(msgId, emoji, users, context);
   } catch (err) {
@@ -14056,13 +14154,13 @@ function renderMoodBar(b) {
   const lockIcon = b.moodLocked ? '<span class="mood-lock">🔒</span>' : '';
   // Generate subtle particles
   let particles = '';
-  for (let i = 0; i < 5; i++) {
-    const left = 10 + Math.random() * 80;
-    const delay = Math.random() * 6;
-    const dur = 6 + Math.random() * 4;
+  for (let i = 0; i < 6; i++) {
+    const left = 8 + Math.random() * 84;
+    const delay = Math.random() * 7;
+    const dur = 6 + Math.random() * 5;
     particles += `<div class="mood-particle" style="left:${left}%;bottom:0;background:${particleColor};animation-delay:${delay}s;animation-duration:${dur}s;"></div>`;
   }
-  return `<div class="bastion-mood-bar" style="background:${tint};border:1px solid ${particleColor}15;" title="Bastion Mood: ${displayLabel}">
+  return `<div class="bastion-mood-bar" style="background:${tint};border:1px solid ${particleColor}12;" title="Bastion Mood: ${displayLabel}">
     <div class="mood-particles">${particles}</div>
     <span class="mood-emoji">${displayEmoji}</span>
     <span class="mood-label">${displayLabel}</span>

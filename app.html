@@ -560,6 +560,29 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .voice-avatar-ring img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .voice-avatar-ring.speaking{border-color:var(--green);}
 .voice-avatar-name{font-size:12px;color:var(--text);}
+/* ── Bot / Automation System ── */
+.bot-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;gap:14px;transition:all .12s;cursor:pointer;}
+.bot-card:hover{border-color:rgba(167,139,250,.25);background:rgba(167,139,250,.03);}
+.bot-av{width:48px;height:48px;border-radius:14px;background:rgba(167,139,250,.1);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;}
+.bot-av img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.bot-meta{flex:1;min-width:0;}
+.bot-name{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;}
+.bot-name .ftz-badge{font-size:9px;padding:1px 5px;}
+.bot-desc{font-size:12px;color:var(--muted-light);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bot-stats{display:flex;gap:10px;margin-top:6px;font-size:10.5px;color:var(--muted);}
+.bot-perm-tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:10.5px;font-weight:600;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.5);}
+.bot-perm-tag.granted{background:rgba(62,207,110,.08);border-color:rgba(62,207,110,.2);color:#3ecf6e;}
+.block-editor{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;min-height:300px;}
+.block-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;margin-bottom:6px;font-size:12.5px;transition:all .12s;}
+.block-row:hover{border-color:rgba(167,139,250,.2);background:rgba(167,139,250,.03);}
+.block-row .block-type{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:6px;flex-shrink:0;}
+.block-row .block-type.when{background:rgba(96,165,250,.12);color:#60a5fa;}
+.block-row .block-type.then{background:rgba(62,207,110,.12);color:#3ecf6e;}
+.block-row .block-type.if{background:rgba(251,191,36,.12);color:#fbbf24;}
+.block-row .block-val{flex:1;min-width:0;}
+.block-row .block-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;opacity:0;transition:.12s;}
+.block-row:hover .block-del{opacity:1;}
+.arsenal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
 .voice-controls{display:flex;gap:12px;align-items:center;margin-top:8px;}
 .vc-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;}
 .vc-btn.muted-btn{background:rgba(255,255,255,.08);color:var(--text);}
@@ -1809,9 +1832,9 @@ function _silentSendEnd(btn) {
 function scrollBottom(id) {
   const el = document.getElementById(id);
   if (el) {
-    // Use instant scroll for auto-scroll to avoid fighting with rapid message appends
     el.scrollTop = el.scrollHeight;
-    _updateChatScrollState(el);
+    // Update state if tracked
+    if (_chatAutoScroll[el.id]) _chatAutoScroll[el.id].atBottom = true;
   }
 }
 function scrollToMsg(msgId) {
@@ -1981,7 +2004,7 @@ function updateSidebar(v) {
   scroll.innerHTML = '';
 
   // Views that use the secondary sidebar
-  const ctxViews = ['dms','friends','discover','bastion','bsettings'];
+  const ctxViews = ['dms','friends','discover','bastion'];
   if (ctx) ctx.style.display = ctxViews.includes(v) ? 'flex' : 'none';
 
   if (v==='home') {
@@ -2016,8 +2039,8 @@ function updateSidebar(v) {
     if (hdr) hdr.style.display = '';
     renderBastionSidebar(scroll);
   } else if (v==='bsettings') {
-    if (hdr) hdr.style.display = '';
-    if (hdrTitle) hdrTitle.textContent = 'Bastion Settings';
+    // bsettings has its own nav inside view-bsettings; hide sidebar-ctx
+    if (ctx) ctx.style.display = 'none';
     renderBSettingsNav();
   }
 }
@@ -3209,8 +3232,18 @@ function renderBastionSidebar(scroll) {
     const memberBadge=`<span style="font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:3px;">👥 ${b.memberCount||1}</span>`;
     const visBadge=`<span style="font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:2px;">${visIcon}</span>`;
     const taglineHTML=b.tagline?`<div style="font-size:11px;color:var(--muted-light);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">${escapeHTML(b.tagline)}</div>`:'';
-    if (b.banner||b.icon) {
-      hdrTitle.innerHTML = `<div style="position:relative;height:88px;margin:-12px -14px 8px;overflow:hidden;"><img src="${b.banner||b.icon}" style="width:100%;height:100%;object-fit:cover;opacity:.55;" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(11,14,21,.92));"></div><div style="position:absolute;bottom:7px;left:11px;right:11px;"><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:16px;">${b.emblem||'🏰'}</span><span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8);">${escapeHTML(b.name)}</span></div>${taglineHTML}<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">${visBadge}${memberBadge}${boostBadge}</div></div></div>`;
+    const bannerSrc = b.banner||b.icon||'';
+    if (bannerSrc) {
+      const hdrEl = document.createElement('div');
+      hdrEl.style.cssText='position:relative;height:88px;margin:-12px -14px 8px;overflow:hidden;';
+      const img = document.createElement('img');
+      img.src = bannerSrc;
+      img.style.cssText='width:100%;height:100%;object-fit:cover;opacity:.55;display:block;';
+      img.onerror=function(){this.style.display='none';};
+      hdrEl.appendChild(img);
+      hdrEl.innerHTML += `<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(11,14,21,.92));"></div><div style="position:absolute;bottom:7px;left:11px;right:11px;"><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:16px;">${b.emblem||'🏰'}</span><span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8);">${escapeHTML(b.name)}</span></div>${taglineHTML}<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">${visBadge}${memberBadge}${boostBadge}</div></div>`;
+      hdrTitle.innerHTML = '';
+      hdrTitle.appendChild(hdrEl);
     } else {
       hdrTitle.innerHTML = `<div style="padding:4px 0;"><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:16px;">${b.emblem||'🏰'}</span><span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;">${escapeHTML(b.name)}</span></div>${taglineHTML}<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">${visBadge}${memberBadge}${boostBadge}</div></div>`;
     }
@@ -3411,12 +3444,13 @@ function loadChatChannel(idx) {
   const desc=document.getElementById('tb-desc');
   if (sep) sep.style.display='none';
   if (desc) desc.textContent='';
-  const bastionBanner = b?.banner || b?.icon || '';
+  const bastionBanner = b?.banner || '';
+  const bannerSafe = bastionBanner ? escapeHTML(bastionBanner) : '';
   wrap.innerHTML=`
     <div class="chat-wrap">
       <div class="chat-msgs" id="ch-msgs-${idx}">
         <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Return to Present</button></div>
-        ${bastionBanner ? `<div style="width:100%;height:120px;background:url('${bastionBanner}') center/cover no-repeat;position:relative;flex-shrink:0;overflow:hidden;"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.2),rgba(0,0,0,.5));"></div><div style="position:absolute;bottom:12px;left:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);">${escapeHTML(b.name||'')}</div></div>` : ''}
+        ${bannerSafe ? `<div style="width:100%;height:120px;position:relative;flex-shrink:0;overflow:hidden;"><img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.15),rgba(11,14,21,.7));"></div><div style="position:absolute;bottom:12px;left:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);">${escapeHTML(b.name||'')}</div></div>` : ''}
         <div class="chat-welcome">
           <div class="w-av" style="font-size:26px;background:var(--panel2);">#</div>
           <h3>#${escapeHTML(ch.name)}${nsfwBadge}</h3>
@@ -4721,7 +4755,8 @@ function renderBSettingsNav(activeTab) {
     {id:'roles',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',label:'Roles'},
     {id:'emojis',icon:'😊',label:'Custom Emojis'},
     {label:'Moderation'},
-    {id:'automod',icon:'🤖',label:'AutoMod'},
+    {id:'automod',icon:'🛡️',label:'AutoMod'},
+    {id:'bots',icon:'🤖',label:'Bots'},
     {id:'invites',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',label:'Invites'},
     {id:'members',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',label:'Members'},
     {id:'bans',icon:'🔨',label:'Bans'},
@@ -5052,6 +5087,35 @@ function renderBSettingsMain(tab) {
         <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">Permanently deletes all channels, messages, and settings. Cannot be undone.</div>
         <button class="btn-d" onclick="deleteBastion()">Delete Bastion</button>
       </div>`:''}`;
+  }
+  else if (tab==='bots') {
+    const bots = (b.deployedBots||[]);
+    const availBots = (CU.bots||[]).filter(bot=>!bots.find(db=>db.id===bot.id));
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🤖 Bastion Bots</div>
+      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Manage bots deployed to this bastion. Bots can automate tasks, moderate, and respond to commands.</div>
+      <div style="display:flex;gap:8px;margin-bottom:20px;">
+        <button class="btn-a" onclick="openDeployBotPicker()" style="font-size:12.5px;">+ Deploy Bot</button>
+        <button class="btn-g" onclick="buildProfileView('my_bots')" style="font-size:12.5px;">Manage My Bots →</button>
+      </div>
+      <div id="bastion-bots-list">
+        ${bots.length ? bots.map(bot => `
+          <div class="bot-card" style="margin-bottom:8px;">
+            <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
+            <div class="bot-meta">
+              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot">BOT</span></div>
+              <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
+              <div class="bot-stats"><span>Owner: @${escapeHTML(bot.owner||CU.username)}</span><span>•</span><span>${(bot.commands||[]).length} commands</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+              <button class="btn-g" style="font-size:11px;padding:4px 10px;" onclick="toggleBastionBot('${escapeHTML(bot.id)}')">
+                ${bot.enabled!==false?'Disable':'Enable'}
+              </button>
+              <button class="btn-g" style="font-size:11px;padding:4px 10px;color:var(--red);" onclick="removeBastionBot('${escapeHTML(bot.id)}')">Remove</button>
+            </div>
+          </div>
+        `).join('') : '<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No bots deployed yet. Click "Deploy Bot" to add one.</div>'}
+      </div>`;
   }
   else {
     main.innerHTML = `<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3><p>This section is in development.</p></div>`;
@@ -5426,6 +5490,656 @@ async function deleteCustomEmoji(i) {
 }
 
 // ════════════════════════════════════════════
+// FORTIZED AUTOMATION SYSTEM (BOTS)
+// ════════════════════════════════════════════
+
+const BOT_PERMISSIONS = [
+  {key:'read_messages', label:'Read Messages', icon:'👁️', desc:'View channel messages'},
+  {key:'send_messages', label:'Send Messages', icon:'💬', desc:'Post messages in channels'},
+  {key:'manage_roles', label:'Manage Roles', icon:'🛡️', desc:'Assign/remove roles'},
+  {key:'moderate', label:'Moderate Content', icon:'🔨', desc:'Delete messages, timeout users'},
+  {key:'manage_channels', label:'Manage Channels', icon:'📝', desc:'Create/edit/delete channels'},
+  {key:'manage_events', label:'Manage Events', icon:'🎮', desc:'Create and manage events'},
+  {key:'add_reactions', label:'Add Reactions', icon:'😊', desc:'React to messages'},
+  {key:'manage_onyx', label:'Manage Onyx', icon:'💎', desc:'Grant/deduct Onyx'},
+];
+
+const BLOCK_TRIGGERS = [
+  {id:'on_message', label:'Message Sent', icon:'💬', desc:'When a message is sent in a channel'},
+  {id:'on_join', label:'User Joins', icon:'👋', desc:'When a new member joins the bastion'},
+  {id:'on_leave', label:'User Leaves', icon:'🚪', desc:'When a member leaves'},
+  {id:'on_role_assign', label:'Role Assigned', icon:'🛡️', desc:'When a role is given to a user'},
+  {id:'on_command', label:'Slash Command', icon:'⌨️', desc:'When a /command is used'},
+  {id:'on_reaction', label:'Reaction Added', icon:'😊', desc:'When a user reacts to a message'},
+];
+
+const BLOCK_ACTIONS = [
+  {id:'send_message', label:'Send Message', icon:'💬', color:'#3ecf6e'},
+  {id:'assign_role', label:'Assign Role', icon:'🛡️', color:'#60a5fa'},
+  {id:'remove_role', label:'Remove Role', icon:'🔓', color:'#f59e0b'},
+  {id:'add_onyx', label:'Add Onyx', icon:'💎', color:'#fbbf24'},
+  {id:'delete_message', label:'Delete Message', icon:'🗑️', color:'#f87171'},
+  {id:'timeout_user', label:'Timeout User', icon:'⏰', color:'#f87171'},
+  {id:'trigger_quest', label:'Trigger Quest', icon:'⚔️', color:'#a78bfa'},
+];
+
+const BLOCK_CONDITIONS = [
+  {id:'if_has_role', label:'User Has Role', icon:'🛡️'},
+  {id:'if_contains', label:'Message Contains', icon:'🔍'},
+  {id:'if_cooldown', label:'Cooldown Timer', icon:'⏱️'},
+  {id:'if_random', label:'Random Chance', icon:'🎲'},
+  {id:'if_channel', label:'In Specific Channel', icon:'#'},
+];
+
+// ─── Arsenal: sample community bots ───
+const ARSENAL_BOTS = [
+  {id:'raidshield', name:'RaidShield', emblem:'🛡️', bio:'Auto-moderation: anti-raid, anti-spam, and link filtering.', owner:'Fortized', rating:4.8, reviews:142, commands:['/raidshield config','/raidshield status','/raidshield logs'], version:'2.1', category:'Moderation', scripts:[{trigger:'on_join',condition:'if_cooldown',action:'timeout_user',config:{cooldownSec:3,timeoutMin:5,msg:'Raid protection triggered.'}}]},
+  {id:'warannouncer', name:'War Announcer', emblem:'📯', bio:'Schedule event pings and war announcements with countdowns.', owner:'Tyrianum', rating:4.5, reviews:87, commands:['/announce','/schedule','/countdown'], version:'1.4', category:'Events', scripts:[{trigger:'on_command',action:'send_message',config:{cmd:'/announce',template:'📢 **Announcement:** {text}'}}]},
+  {id:'onyx_booster', name:'Onyx Booster', emblem:'💎', bio:'Custom quest integration: reward Onyx for activity, messages, and milestones.', owner:'Fortized', rating:4.9, reviews:231, commands:['/daily','/leaderboard','/reward'], version:'3.0', category:'Economy', scripts:[{trigger:'on_message',condition:'if_cooldown',action:'add_onyx',config:{amount:1,cooldownSec:60}}]},
+  {id:'rankmaster', name:'RankMaster', emblem:'📊', bio:'XP system with level roles, leaderboards, and rank cards.', owner:'Fortified', rating:4.6, reviews:164, commands:['/rank','/level','/xp','/top'], version:'2.3', category:'Leveling', scripts:[{trigger:'on_message',action:'add_onyx',config:{amount:1}}]},
+  {id:'reaction_roles', name:'Reaction Roles', emblem:'🎭', bio:'Let members pick roles by reacting to a message. Clean and simple.', owner:'Fortized', rating:4.7, reviews:198, commands:['/reactionrole create','/reactionrole edit','/reactionrole remove'], version:'1.8', category:'Utility', scripts:[{trigger:'on_reaction',action:'assign_role',config:{}}]},
+  {id:'bastion_logger', name:'Bastion Logger', emblem:'📋', bio:'Full audit trail: track joins, leaves, bans, role changes, and channel edits.', owner:'Fortized', rating:4.4, reviews:76, commands:['/logs','/audit','/history'], version:'1.2', category:'Moderation', scripts:[{trigger:'on_join',action:'send_message',config:{template:'📥 **{user}** joined the bastion.'}}]},
+];
+
+// ─── My Bots view in user settings ───
+function renderMyBotsView(main) {
+  const bots = CU.bots || [];
+  main.innerHTML = `
+    <div style="max-width:680px;">
+      <div class="settings-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>MY BOTS</span>
+        <button class="btn-a" onclick="openCreateBotModal()" style="font-size:12px;padding:6px 16px;">+ Create Bot</button>
+      </div>
+      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Build programmable entities that automate tasks, respond to commands, and connect to events in your Bastions.</div>
+      <div id="my-bots-list">
+        ${bots.length ? bots.map((bot,i) => `
+          <div class="bot-card" style="margin-bottom:10px;" onclick="openBotEditor(${i})">
+            <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
+            <div class="bot-meta">
+              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot">BOT</span>
+                ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">● Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">○ Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">🔒 Private</span>'}
+              </div>
+              <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
+              <div class="bot-stats">
+                <span>${bot.scriptType==='block'?'🧱 Block Script':'⚙️ Advanced'}</span>
+                <span>•</span>
+                <span>${(bot.commands||[]).length} commands</span>
+                <span>•</span>
+                <span>${(bot.scripts||[]).length} scripts</span>
+                <span>•</span>
+                <span>Created ${new Date(bot.createdAt||Date.now()).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+        `).join('') : `
+          <div style="text-align:center;padding:40px 20px;">
+            <div style="font-size:36px;margin-bottom:12px;">🤖</div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;">No Bots Yet</div>
+            <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:16px;">Create your first bot to start automating your Bastions.</div>
+            <button class="btn-a" onclick="openCreateBotModal()">Create Bot</button>
+          </div>
+        `}
+      </div>
+    </div>`;
+}
+
+// ─── Create Bot Modal ───
+let _createBotStep = 1;
+function openCreateBotModal() {
+  _createBotStep = 1;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.id = 'modal-create-bot';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-bar"></div>
+      <div class="modal-body" id="create-bot-body"></div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  renderCreateBotStep(1);
+}
+
+function renderCreateBotStep(step) {
+  const body = document.getElementById('create-bot-body');
+  if (!body) return;
+  _createBotStep = step;
+
+  if (step === 1) {
+    body.innerHTML = `
+      <div class="modal-title">🤖 Create a Bot</div>
+      <div class="modal-sub" style="margin-bottom:16px;">Step 1 of 3 — Identity</div>
+      <div style="display:flex;gap:14px;margin-bottom:16px;">
+        <div style="width:64px;height:64px;border-radius:16px;background:var(--panel2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;" onclick="document.getElementById('bot-avatar-upload').click()" id="bot-avatar-prev">🤖</div>
+        <input id="bot-avatar-upload" type="file" accept="image/*" style="display:none;" onchange="previewBotAvatar(event)">
+        <div style="flex:1;">
+          <input class="modal-input" id="cbot-name" placeholder="Bot Name" maxlength="32">
+          <input class="modal-input" id="cbot-bio" placeholder="Short bio…" maxlength="120" style="margin-top:8px;">
+        </div>
+      </div>
+      <div class="settings-title">Visibility</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <label style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);cursor:pointer;text-align:center;font-size:12px;" onclick="this.querySelector('input').checked=true;document.querySelectorAll('.cb-vis-opt').forEach(e=>e.style.borderColor='var(--border)');this.style.borderColor='rgba(167,139,250,.4)'" class="cb-vis-opt"><input type="radio" name="bot-vis" value="private" checked style="display:none;"> 🔒 Private</label>
+        <label style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);cursor:pointer;text-align:center;font-size:12px;" onclick="this.querySelector('input').checked=true;document.querySelectorAll('.cb-vis-opt').forEach(e=>e.style.borderColor='var(--border)');this.style.borderColor='rgba(167,139,250,.4)'" class="cb-vis-opt"><input type="radio" name="bot-vis" value="unlisted" style="display:none;"> 🔗 Unlisted</label>
+        <label style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);cursor:pointer;text-align:center;font-size:12px;" onclick="this.querySelector('input').checked=true;document.querySelectorAll('.cb-vis-opt').forEach(e=>e.style.borderColor='var(--border)');this.style.borderColor='rgba(167,139,250,.4)'" class="cb-vis-opt"><input type="radio" name="bot-vis" value="public" style="display:none;"> 🌍 Public</label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-g" onclick="document.getElementById('modal-create-bot').remove()">Cancel</button>
+        <button class="btn-a" onclick="renderCreateBotStep(2)">Next →</button>
+      </div>`;
+  } else if (step === 2) {
+    body.innerHTML = `
+      <div class="modal-title">🤖 Script Type</div>
+      <div class="modal-sub" style="margin-bottom:16px;">Step 2 of 3 — Choose how your bot is programmed</div>
+      <div style="display:flex;gap:10px;margin-bottom:20px;">
+        <div id="stype-block" class="vis-opt active" onclick="document.querySelectorAll('#create-bot-body .vis-opt').forEach(e=>e.classList.remove('active'));this.classList.add('active')" style="flex:1;cursor:pointer;">
+          <div style="font-size:28px;">🧱</div>
+          <div style="font-size:13px;font-weight:700;">Block Scripting</div>
+          <div style="font-size:11px;color:var(--muted-light);">Visual drag-and-drop logic blocks. No coding required.</div>
+        </div>
+        <div id="stype-advanced" class="vis-opt" onclick="document.querySelectorAll('#create-bot-body .vis-opt').forEach(e=>e.classList.remove('active'));this.classList.add('active')" style="flex:1;cursor:pointer;opacity:.5;">
+          <div style="font-size:28px;">⚙️</div>
+          <div style="font-size:13px;font-weight:700;">Advanced</div>
+          <div style="font-size:11px;color:var(--muted-light);">Coming in a future update.</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-g" onclick="renderCreateBotStep(1)">← Back</button>
+        <button class="btn-a" onclick="renderCreateBotStep(3)">Next →</button>
+      </div>`;
+  } else if (step === 3) {
+    body.innerHTML = `
+      <div class="modal-title">🔐 Permissions</div>
+      <div class="modal-sub" style="margin-bottom:16px;">Step 3 of 3 — What can your bot do?</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;max-height:260px;overflow-y:auto;">
+        ${BOT_PERMISSIONS.map(p => `
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .12s;" onmouseover="this.style.borderColor='rgba(167,139,250,.2)'" onmouseout="this.style.borderColor='var(--border)'">
+            <input type="checkbox" value="${p.key}" class="cbot-perm" ${['read_messages','send_messages','add_reactions'].includes(p.key)?'checked':''} style="accent-color:var(--accent);">
+            <span style="font-size:14px;">${p.icon}</span>
+            <div style="flex:1;">
+              <div style="font-size:12.5px;font-weight:600;">${p.label}</div>
+              <div style="font-size:11px;color:var(--muted);">${p.desc}</div>
+            </div>
+          </label>
+        `).join('')}
+      </div>
+      <div class="modal-actions">
+        <button class="btn-g" onclick="renderCreateBotStep(2)">← Back</button>
+        <button class="btn-a" onclick="finalizeBotCreation()">Create Bot</button>
+      </div>`;
+  }
+}
+
+function previewBotAvatar(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const prev = document.getElementById('bot-avatar-prev');
+    if (prev) { prev.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">`; prev.dataset.avatarData = ev.target.result; }
+  };
+  reader.readAsDataURL(file);
+}
+
+function finalizeBotCreation() {
+  const name = document.getElementById('cbot-name')?.value?.trim();
+  if (!name) { toast('Bot name is required', 'error'); return; }
+  const bio = document.getElementById('cbot-bio')?.value?.trim() || '';
+  const vis = document.querySelector('input[name="bot-vis"]:checked')?.value || 'private';
+  const scriptType = document.getElementById('stype-advanced')?.classList.contains('active') ? 'advanced' : 'block';
+  const perms = [...document.querySelectorAll('.cbot-perm:checked')].map(el => el.value);
+  const avatarPrev = document.getElementById('bot-avatar-prev');
+  const avatar = avatarPrev?.dataset?.avatarData || '';
+
+  const bot = {
+    id: 'bot_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+    name, bio, avatar,
+    emblem: '🤖',
+    visibility: vis,
+    scriptType,
+    permissions: perms,
+    commands: [],
+    scripts: [],
+    owner: CU.username,
+    createdAt: new Date().toISOString(),
+    version: '1.0',
+    enabled: true,
+  };
+
+  if (!CU.bots) CU.bots = [];
+  CU.bots.push(bot);
+  saveUser();
+  document.getElementById('modal-create-bot')?.remove();
+  toast(`Bot "${name}" created!`, 'success');
+  buildProfileView('my_bots');
+}
+
+// ─── Bot Editor ───
+let _editingBotIdx = null;
+function openBotEditor(idx) {
+  _editingBotIdx = idx;
+  const bot = CU.bots?.[idx];
+  if (!bot) return;
+  const main = document.getElementById('profile-main');
+  if (!main) return;
+
+  main.innerHTML = `
+    <div style="max-width:720px;padding-bottom:40px;">
+      <button class="btn-g" onclick="buildProfileView('my_bots')" style="margin-bottom:16px;font-size:12px;">← Back to My Bots</button>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
+        <div class="bot-av" style="width:56px;height:56px;font-size:26px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot">BOT</span></div>
+          <div style="font-size:12px;color:var(--muted);">Owner: @${escapeHTML(bot.owner)} · Created ${new Date(bot.createdAt).toLocaleDateString()} · v${bot.version}</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <button class="btn-g" onclick="toggleBot(${idx})" style="font-size:12px;">${bot.enabled!==false?'🟢 Enabled':'🔴 Disabled'}</button>
+          <button class="btn-d" onclick="deleteBot(${idx})" style="font-size:12px;">Delete</button>
+        </div>
+      </div>
+
+      <!-- Bot Info -->
+      <div class="settings-section-title">IDENTITY</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+        <div><div class="settings-title">Name</div><input class="field-input" id="be-name" value="${escapeHTML(bot.name)}"></div>
+        <div><div class="settings-title">Bio</div><input class="field-input" id="be-bio" value="${escapeHTML(bot.bio||'')}"></div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div class="settings-title">Visibility</div>
+        <select class="field-input" id="be-vis" style="padding:8px 12px;">
+          <option value="private" ${bot.visibility==='private'?'selected':''}>🔒 Private</option>
+          <option value="unlisted" ${bot.visibility==='unlisted'?'selected':''}>🔗 Unlisted</option>
+          <option value="public" ${bot.visibility==='public'?'selected':''}>🌍 Public (Arsenal)</option>
+        </select>
+      </div>
+      <button class="btn-a" onclick="saveBotIdentity(${idx})" style="margin-bottom:24px;">Save Identity</button>
+
+      <!-- Permissions -->
+      <div class="settings-section-title">PERMISSIONS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px;">
+        ${BOT_PERMISSIONS.map(p => `
+          <span class="bot-perm-tag ${bot.permissions?.includes(p.key)?'granted':''}" onclick="toggleBotPerm(${idx},'${p.key}',this)" style="cursor:pointer;">${p.icon} ${p.label}</span>
+        `).join('')}
+      </div>
+
+      <!-- Commands -->
+      <div class="settings-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>COMMANDS</span>
+        <button class="btn-g" onclick="addBotCommand(${idx})" style="font-size:11px;padding:4px 10px;">+ Add Command</button>
+      </div>
+      <div id="bot-commands-list" style="margin-bottom:24px;">
+        ${(bot.commands||[]).length ? (bot.commands||[]).map((cmd,ci) => `
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;">
+            <span style="font-family:monospace;font-size:13px;color:var(--accent);font-weight:700;">/${escapeHTML(cmd.name)}</span>
+            <span style="flex:1;font-size:12px;color:var(--muted);">${escapeHTML(cmd.desc||'No description')}</span>
+            <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;" onclick="removeBotCommand(${idx},${ci})">×</button>
+          </div>
+        `).join('') : '<div style="font-size:12.5px;color:var(--muted);padding:12px;">No commands yet. Add slash commands for your bot.</div>'}
+      </div>
+
+      <!-- Block Scripting -->
+      <div class="settings-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>🧱 BLOCK SCRIPTS</span>
+        <button class="btn-g" onclick="addBotScript(${idx})" style="font-size:11px;padding:4px 10px;">+ Add Script</button>
+      </div>
+      <div class="block-editor" id="bot-scripts-editor">
+        ${(bot.scripts||[]).length ? (bot.scripts||[]).map((s,si) => renderBlockScriptRow(s, idx, si)).join('') : `
+          <div style="text-align:center;padding:30px;color:var(--muted);font-size:12.5px;">
+            <div style="font-size:28px;margin-bottom:8px;">🧱</div>
+            No scripts yet. Add your first automation block.
+          </div>
+        `}
+      </div>
+    </div>`;
+}
+
+function renderBlockScriptRow(script, botIdx, scriptIdx) {
+  const trigger = BLOCK_TRIGGERS.find(t => t.id === script.trigger) || {icon:'❓',label:'Unknown'};
+  const action = BLOCK_ACTIONS.find(a => a.id === script.action) || {icon:'❓',label:'Unknown',color:'#888'};
+  const cond = script.condition ? (BLOCK_CONDITIONS.find(c => c.id === script.condition) || {icon:'❓',label:'Unknown'}) : null;
+  return `<div class="block-row">
+    <span class="block-type when">WHEN</span>
+    <span class="block-val">${trigger.icon} ${trigger.label}</span>
+    ${cond ? `<span class="block-type if">IF</span><span class="block-val">${cond.icon} ${cond.label}</span>` : ''}
+    <span class="block-type then">THEN</span>
+    <span class="block-val" style="color:${action.color};">${action.icon} ${action.label}</span>
+    <button class="block-del" onclick="event.stopPropagation();removeBotScript(${botIdx},${scriptIdx})">×</button>
+  </div>`;
+}
+
+function saveBotIdentity(idx) {
+  const bot = CU.bots?.[idx]; if (!bot) return;
+  bot.name = document.getElementById('be-name')?.value?.trim() || bot.name;
+  bot.bio = document.getElementById('be-bio')?.value?.trim() || '';
+  bot.visibility = document.getElementById('be-vis')?.value || 'private';
+  saveUser();
+  toast('Bot identity saved!', 'success');
+}
+
+function toggleBotPerm(idx, perm, el) {
+  const bot = CU.bots?.[idx]; if (!bot) return;
+  if (!bot.permissions) bot.permissions = [];
+  if (bot.permissions.includes(perm)) {
+    bot.permissions = bot.permissions.filter(p => p !== perm);
+    el.classList.remove('granted');
+  } else {
+    bot.permissions.push(perm);
+    el.classList.add('granted');
+  }
+  saveUser();
+}
+
+function addBotCommand(idx) {
+  const name = prompt('Command name (without /):');
+  if (!name || !name.trim()) return;
+  const desc = prompt('Command description (optional):') || '';
+  const bot = CU.bots?.[idx]; if (!bot) return;
+  if (!bot.commands) bot.commands = [];
+  bot.commands.push({name: name.trim().toLowerCase().replace(/\s+/g,'_'), desc: desc.trim()});
+  saveUser();
+  openBotEditor(idx);
+}
+
+function removeBotCommand(idx, cmdIdx) {
+  const bot = CU.bots?.[idx]; if (!bot) return;
+  (bot.commands||[]).splice(cmdIdx, 1);
+  saveUser();
+  openBotEditor(idx);
+}
+
+function addBotScript(idx) {
+  const bot = CU.bots?.[idx]; if (!bot) return;
+  // Open script builder modal
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.id = 'modal-add-script';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-bar"></div>
+      <div class="modal-body">
+        <div class="modal-title">🧱 Add Script Block</div>
+        <div class="modal-sub" style="margin-bottom:14px;">Configure: When X happens → Then do Y</div>
+        <div class="settings-title">WHEN (Trigger)</div>
+        <select class="field-input" id="script-trigger" style="padding:8px 12px;margin-bottom:12px;">
+          ${BLOCK_TRIGGERS.map(t => `<option value="${t.id}">${t.icon} ${t.label} — ${t.desc}</option>`).join('')}
+        </select>
+        <div class="settings-title">IF (Condition) — optional</div>
+        <select class="field-input" id="script-condition" style="padding:8px 12px;margin-bottom:12px;">
+          <option value="">No condition</option>
+          ${BLOCK_CONDITIONS.map(c => `<option value="${c.id}">${c.icon} ${c.label}</option>`).join('')}
+        </select>
+        <div class="settings-title">THEN (Action)</div>
+        <select class="field-input" id="script-action" style="padding:8px 12px;margin-bottom:16px;">
+          ${BLOCK_ACTIONS.map(a => `<option value="${a.id}">${a.icon} ${a.label}</option>`).join('')}
+        </select>
+        <div class="modal-actions">
+          <button class="btn-g" onclick="document.getElementById('modal-add-script').remove()">Cancel</button>
+          <button class="btn-a" onclick="saveNewScript(${idx})">Add Script</button>
+        </div>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function saveNewScript(idx) {
+  const bot = CU.bots?.[idx]; if (!bot) return;
+  const trigger = document.getElementById('script-trigger')?.value;
+  const condition = document.getElementById('script-condition')?.value || '';
+  const action = document.getElementById('script-action')?.value;
+  if (!trigger || !action) { toast('Select trigger and action', 'error'); return; }
+  if (!bot.scripts) bot.scripts = [];
+  const script = {trigger, action, config:{}};
+  if (condition) script.condition = condition;
+  bot.scripts.push(script);
+  saveUser();
+  document.getElementById('modal-add-script')?.remove();
+  openBotEditor(idx);
+  toast('Script block added!', 'success');
+}
+
+function removeBotScript(idx, sIdx) {
+  const bot = CU.bots?.[idx]; if (!bot) return;
+  (bot.scripts||[]).splice(sIdx, 1);
+  saveUser();
+  openBotEditor(idx);
+}
+
+function toggleBot(idx) {
+  const bot = CU.bots?.[idx]; if (!bot) return;
+  bot.enabled = bot.enabled === false;
+  saveUser();
+  openBotEditor(idx);
+  toast(bot.enabled ? 'Bot enabled' : 'Bot disabled', 'info');
+}
+
+function deleteBot(idx) {
+  if (!confirm('Permanently delete this bot? This cannot be undone.')) return;
+  CU.bots.splice(idx, 1);
+  saveUser();
+  buildProfileView('my_bots');
+  toast('Bot deleted', 'info');
+}
+
+// ─── Bot Arsenal (Community Hub) ───
+function renderArsenalView(main) {
+  const categories = [...new Set(ARSENAL_BOTS.map(b => b.category))];
+  main.innerHTML = `
+    <div style="max-width:780px;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;">🏪 The Arsenal</div>
+      </div>
+      <div style="font-size:13px;color:var(--muted-light);margin-bottom:20px;">Browse bots created by the community. Deploy them to your Bastions with one click.</div>
+      <div style="display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;" id="arsenal-chips">
+        <button class="gif-chip active" onclick="_arsenalFilter(this,'all')" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(167,139,250,.15);background:rgba(167,139,250,.07);color:#a78bfa;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:'DM Sans',sans-serif;">All</button>
+        ${categories.map(c => `<button class="gif-chip" onclick="_arsenalFilter(this,'${escapeHTML(c)}')" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.03);color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:'DM Sans',sans-serif;">${escapeHTML(c)}</button>`).join('')}
+      </div>
+      <div class="arsenal-grid" id="arsenal-grid">
+        ${ARSENAL_BOTS.map(bot => renderArsenalCard(bot)).join('')}
+      </div>
+    </div>`;
+}
+
+function renderArsenalCard(bot) {
+  return `<div class="bot-card" style="flex-direction:column;gap:10px;cursor:default;">
+    <div style="display:flex;gap:12px;align-items:center;">
+      <div class="bot-av">${bot.emblem||'🤖'}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot">BOT</span></div>
+        <div style="font-size:11px;color:var(--muted);">by @${escapeHTML(bot.owner)} · v${bot.version}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:3px;font-size:12px;color:#fbbf24;">⭐ ${bot.rating}</div>
+    </div>
+    <div style="font-size:12.5px;color:var(--muted-light);line-height:1.5;">${escapeHTML(bot.bio)}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+      ${(bot.commands||[]).map(c => `<span style="font-family:monospace;font-size:10.5px;padding:2px 7px;border-radius:6px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.15);color:#a78bfa;">${escapeHTML(c)}</span>`).join('')}
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+      <span style="font-size:11px;color:var(--muted);">${bot.reviews} reviews</span>
+      <span style="font-size:11px;color:var(--muted);">•</span>
+      <span style="font-size:11px;color:var(--muted);">${escapeHTML(bot.category)}</span>
+      <div style="margin-left:auto;">
+        <button class="btn-a" style="font-size:11px;padding:5px 14px;" onclick="deployArsenalBot('${bot.id}')">Deploy to Bastion</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function _arsenalFilter(btn, category) {
+  // Update chip state
+  btn.parentElement.querySelectorAll('.gif-chip').forEach(b => {b.style.background='rgba(255,255,255,.03)';b.style.borderColor='rgba(255,255,255,.05)';b.style.color='rgba(255,255,255,.4)';});
+  btn.style.background='rgba(167,139,250,.07)';btn.style.borderColor='rgba(167,139,250,.15)';btn.style.color='#a78bfa';
+  const grid = document.getElementById('arsenal-grid');
+  if (!grid) return;
+  const bots = category === 'all' ? ARSENAL_BOTS : ARSENAL_BOTS.filter(b => b.category === category);
+  grid.innerHTML = bots.map(b => renderArsenalCard(b)).join('');
+}
+
+function deployArsenalBot(botId) {
+  const arsenalBot = ARSENAL_BOTS.find(b => b.id === botId);
+  if (!arsenalBot) return;
+  // Show bastion picker
+  const bastions = CU.bastions || [];
+  if (!bastions.length) { toast('You need a bastion first', 'error'); return; }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.id = 'modal-deploy-bot';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-bar"></div>
+      <div class="modal-body">
+        <div class="modal-title">Deploy ${escapeHTML(arsenalBot.name)}</div>
+        <div class="modal-sub" style="margin-bottom:14px;">Choose a bastion to deploy this bot to.</div>
+        <div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;margin-bottom:16px;">
+          ${bastions.map((b,i) => `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .12s;" onmouseover="this.style.borderColor='rgba(167,139,250,.3)'" onmouseout="this.style.borderColor='var(--border)'" onclick="confirmDeployBot('${botId}',${i})">
+              <span style="font-size:18px;">${b.emblem||'🏰'}</span>
+              <div style="flex:1;"><div style="font-weight:600;font-size:13px;">${escapeHTML(b.name)}</div><div style="font-size:11px;color:var(--muted);">${(b.channels||[]).length} channels</div></div>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn-g" onclick="document.getElementById('modal-deploy-bot').remove()" style="width:100%;">Cancel</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function confirmDeployBot(arsenalBotId, bastionIdx) {
+  const arsenalBot = ARSENAL_BOTS.find(b => b.id === arsenalBotId);
+  const b = CU.bastions?.[bastionIdx];
+  if (!arsenalBot || !b) return;
+  if (!b.deployedBots) b.deployedBots = [];
+  if (b.deployedBots.find(db => db.id === arsenalBotId)) {
+    toast('Bot already deployed to this bastion', 'info');
+    document.getElementById('modal-deploy-bot')?.remove();
+    return;
+  }
+  b.deployedBots.push({
+    id: arsenalBot.id,
+    name: arsenalBot.name,
+    emblem: arsenalBot.emblem,
+    bio: arsenalBot.bio,
+    owner: arsenalBot.owner,
+    commands: arsenalBot.commands,
+    scripts: arsenalBot.scripts,
+    enabled: true,
+    deployedAt: new Date().toISOString(),
+  });
+  saveUser();
+  document.getElementById('modal-deploy-bot')?.remove();
+  toast(`${arsenalBot.name} deployed to ${b.name}!`, 'success');
+}
+
+function openDeployBotPicker() {
+  const myBots = CU.bots || [];
+  if (!myBots.length) { toast('Create a bot first in Settings → Developer → My Bots', 'info'); return; }
+  const b = CU.bastions?.[curBastion];
+  if (!b) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.id = 'modal-deploy-mybot';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-bar"></div>
+      <div class="modal-body">
+        <div class="modal-title">Deploy Bot to ${escapeHTML(b.name)}</div>
+        <div class="modal-sub" style="margin-bottom:14px;">Choose one of your bots to deploy.</div>
+        <div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;margin-bottom:16px;">
+          ${myBots.map((bot,i) => `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .12s;" onmouseover="this.style.borderColor='rgba(167,139,250,.3)'" onmouseout="this.style.borderColor='var(--border)'" onclick="deployMyBot(${i})">
+              <div class="bot-av" style="width:36px;height:36px;font-size:16px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
+              <div style="flex:1;"><div style="font-weight:600;font-size:13px;">${escapeHTML(bot.name)}</div><div style="font-size:11px;color:var(--muted);">${(bot.commands||[]).length} commands · ${(bot.scripts||[]).length} scripts</div></div>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn-g" onclick="document.getElementById('modal-deploy-mybot').remove()" style="width:100%;">Cancel</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function deployMyBot(botIdx) {
+  const bot = CU.bots?.[botIdx];
+  const b = CU.bastions?.[curBastion];
+  if (!bot || !b) return;
+  if (!b.deployedBots) b.deployedBots = [];
+  if (b.deployedBots.find(db => db.id === bot.id)) {
+    toast('Bot already deployed here', 'info');
+    document.getElementById('modal-deploy-mybot')?.remove();
+    return;
+  }
+  b.deployedBots.push({
+    id: bot.id, name: bot.name, emblem: bot.emblem, avatar: bot.avatar,
+    bio: bot.bio, owner: bot.owner, commands: bot.commands, scripts: bot.scripts,
+    enabled: true, deployedAt: new Date().toISOString(),
+  });
+  saveUser();
+  document.getElementById('modal-deploy-mybot')?.remove();
+  renderBSettingsMain('bots');
+  toast(`${bot.name} deployed!`, 'success');
+}
+
+function toggleBastionBot(botId) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const db = (b.deployedBots||[]).find(d => d.id === botId);
+  if (db) { db.enabled = db.enabled === false; saveUser(); renderBSettingsMain('bots'); }
+}
+
+function removeBastionBot(botId) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  b.deployedBots = (b.deployedBots||[]).filter(d => d.id !== botId);
+  saveUser();
+  renderBSettingsMain('bots');
+  toast('Bot removed from bastion', 'info');
+}
+
+// ── Bot identity in profiles ──
+function getBotProfile(bot) {
+  return {
+    name: bot.name,
+    bio: bot.bio || '',
+    avatar: bot.avatar || '',
+    emblem: bot.emblem || '🤖',
+    owner: bot.owner,
+    createdAt: bot.createdAt,
+    commands: bot.commands || [],
+    scripts: bot.scripts || [],
+    scriptType: bot.scriptType || 'block',
+    isBot: true,
+  };
+}
+
+// ── Superadmin bot controls ──
+function renderAdminBotControls() {
+  if (!CU?.isSuperAdmin) return '';
+  return `
+    <div class="settings-section-title">SUPERADMIN BOT CONTROLS</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn-g" onclick="adminListAllBots()" style="text-align:left;padding:10px 14px;">
+        <div style="font-weight:600;">View All Platform Bots</div>
+        <div style="font-size:11px;color:var(--muted);">Audit scripts, suspend, or delete any bot</div>
+      </button>
+      <button class="btn-g" onclick="adminConvertToBot()" style="text-align:left;padding:10px 14px;">
+        <div style="font-weight:600;">Convert Account to Bot</div>
+        <div style="font-size:11px;color:var(--muted);">Turn a user account into a BOT entity</div>
+      </button>
+    </div>`;
+}
+
+function adminListAllBots() {
+  toast('Platform bot audit — coming in next update', 'info');
+}
+
+function adminConvertToBot() {
+  const username = prompt('Username to convert to BOT:');
+  if (!username || !username.trim()) return;
+  toast(`Account @${username.trim()} flagged as BOT. This takes effect on next login.`, 'success');
+}
+
+// ════════════════════════════════════════════
 // EMOJI PICKER
 // ════════════════════════════════════════════
 // Extended emoji categories for the picker
@@ -5725,6 +6439,10 @@ function buildProfileNav(scroll) {
     {type:'item', id:'notifs_settings', icon:'🔔', label:'Notifications'},
     {type:'item', id:'game_collection', icon:'🎮', label:'Apps & Games'},
     {type:'item', id:'profile_theme',   icon:'🎨', label:'Profile Theme'},
+    {type:'sep'},
+    {type:'section', label:'DEVELOPER'},
+    {type:'item', id:'my_bots', icon:'🤖', label:'My Bots'},
+    {type:'item', id:'arsenal', icon:'🏪', label:'Bot Arsenal'},
     {type:'sep'},
     {type:'section', label:'PREFERENCES'},
     {type:'item', id:'help_center', icon:'❓', label:'Help Center'},
@@ -6118,6 +6836,12 @@ function buildProfileView(tab) {
     }
   }
 
+  else if (tab === 'my_bots') {
+    renderMyBotsView(main);
+  }
+  else if (tab === 'arsenal') {
+    renderArsenalView(main);
+  }
   else {
     main.innerHTML = `<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3><p>These settings are on the way!</p></div>`;
   }
@@ -9151,6 +9875,7 @@ async function updateBastionBanner(e) {
       CU.bastions[curBastion].banner = cropped;
       await saveUser();
       renderBSettingsMain('overview');
+      renderBastionSidebar(document.getElementById('sidebar-scroll'));
       toast('Bastion banner updated! ✓', 'success');
     });
   };

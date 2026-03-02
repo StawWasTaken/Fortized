@@ -138,8 +138,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .hero-joyster-img:hover{transform:scale(1.05);}
 @keyframes joysterIdle{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 /* Joyster speech bubble — sits inside .home-hero, positioned absolute */
-.joyster-bubble{position:absolute;top:20px;right:36px;transform:scale(.88) translateY(6px);background:var(--panel);border:1px solid rgba(255,249,62,.18);border-radius:14px;padding:8px 16px;font-size:12.5px;font-style:italic;color:rgba(255,255,255,.82);width:max-content;max-width:220px;white-space:nowrap;opacity:0;transition:opacity .3s ease, transform .3s cubic-bezier(.22,1,.36,1);pointer-events:none;z-index:10;box-shadow:0 6px 24px rgba(0,0,0,.35);text-align:center;}
-.joyster-bubble::after{content:'';position:absolute;bottom:-6px;right:60px;border:6px solid transparent;border-top-color:var(--panel);}
+.joyster-bubble{position:absolute;top:20px;right:120px;transform:scale(.88) translateY(6px);background:var(--panel);border:1px solid rgba(255,249,62,.18);border-radius:14px;padding:8px 16px;font-size:12.5px;font-style:italic;color:rgba(255,255,255,.82);width:max-content;max-width:220px;white-space:nowrap;opacity:0;transition:opacity .3s ease, transform .3s cubic-bezier(.22,1,.36,1);pointer-events:none;z-index:10;box-shadow:0 6px 24px rgba(0,0,0,.35);text-align:center;}
+.joyster-bubble::after{content:'';position:absolute;bottom:-6px;right:30px;border:6px solid transparent;border-top-color:var(--panel);}
 .joyster-bubble.show{opacity:1;transform:scale(1) translateY(0);}
 /* Knight background ghost */
 .hero-knight-bg{position:absolute;right:-30px;bottom:-20px;height:280px;opacity:.04;filter:blur(2px) grayscale(.5);pointer-events:none;z-index:0;}
@@ -2031,7 +2031,7 @@ function renderHomePanel() {
     {id:'gates', tag:'Announcement', title:'The Gates are Unlocking', date:'Feb 21, 2026', isNew:false},
     {id:'safety', tag:'Safety', title:'How Stawdio Safety Protects Your Bastion', date:'Feb 20, 2026', isNew:false},
   ].map(n=>`
-    <div class="rp-news-item" onclick="window.open('blog.html?article=${n.id}','_blank')">
+    <div class="rp-news-item" onclick="window.open('blog.html?article=${n.id}','_blank','noopener,noreferrer')">
       ${n.isNew?'<div class="rp-news-badge"></div>':''}
       <div class="rp-news-tag">${n.tag}</div>
       <div class="rp-news-title">${n.title}</div>
@@ -2126,6 +2126,19 @@ function _initHeroEffects() {
 let _joysterBubbleTimer = null;
 let _joysterClickCount = 0;
 let _joysterLastTip = -1;
+const _JOYSTER_DAILY_LIMIT = 5;
+function _getJoysterDailyCount() {
+  const today = new Date().toISOString().slice(0,10);
+  const stored = JSON.parse(localStorage.getItem('joyster_daily')||'{}');
+  if (stored.date !== today) return 0;
+  return stored.count || 0;
+}
+function _incJoysterDailyCount() {
+  const today = new Date().toISOString().slice(0,10);
+  const stored = JSON.parse(localStorage.getItem('joyster_daily')||'{}');
+  const count = (stored.date === today ? stored.count || 0 : 0) + 1;
+  localStorage.setItem('joyster_daily', JSON.stringify({date:today, count}));
+}
 
 // Joyster is a playful jester — cheeky, laughing, smirking
 const JOYSTER_QUIPS = [
@@ -2206,9 +2219,15 @@ function _joysterEasterEgg() {
   if (_joysterClickCount === 3) {
     _joysterSay("Ahahaha! Stop poking me!", 2500);
   } else if (_joysterClickCount === 5) {
-    _joysterSay("Fine fine, here's 1 Onyx! Hehehehe~", 3000);
-    toast('+1 Onyx from Joyster!', 'success');
-    if (CU) { CU.onyx = (CU.onyx || 0) + 1; saveUser(); updateOnyxDisplay(); }
+    if (_getJoysterDailyCount() >= _JOYSTER_DAILY_LIMIT) {
+      _joysterSay("No more Onyx today! Come back tomorrow~", 3000);
+      toast('Joyster daily limit reached (5/day)', 'info');
+    } else {
+      _joysterSay("Fine fine, here's 1 Onyx! Hehehehe~", 3000);
+      toast('+1 Onyx from Joyster!', 'success');
+      if (CU) { CU.onyx = (CU.onyx || 0) + 1; saveUser(); updateOnyxDisplay(); }
+      _incJoysterDailyCount();
+    }
     _joysterClickCount = 0;
   } else {
     const quip = _JOYSTER_CLICK_QUIPS[Math.floor(Math.random() * _JOYSTER_CLICK_QUIPS.length)];
@@ -12173,6 +12192,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <div style="padding:10px 14px;display:flex;gap:6px;">
       ${!isOwn?`<button onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')" style="flex:1;padding:7px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Message</button>`:''}
       <button onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="flex:1;padding:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.65);font-size:12px;cursor:pointer;">View Profile</button>
+      ${isOwn?`<button onclick="document.getElementById('mini-profile-preview')?.remove();toggleAccountSwitcher()" style="flex:1;padding:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.65);font-size:12px;cursor:pointer;white-space:nowrap;">Add & Switch</button>`:''}
     </div>`;
 
   // Position near the anchor element

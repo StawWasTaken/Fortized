@@ -16,7 +16,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 ::selection{background:rgba(255,249,62,.2);}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#1e2840;border-radius:4px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
-.sidebar{width:210px;min-width:210px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;}
+.sidebar{width:210px;min-width:210px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:68px;}
 .sidebar-logo{width:100%;padding:18px 16px 12px;display:flex;align-items:center;gap:12px;cursor:pointer;flex-shrink:0;}
 .sidebar-logo-icon{width:42px;height:42px;border-radius:16px;background:var(--accent);display:flex;align-items:center;justify-content:center;transition:border-radius .25s cubic-bezier(.22,1,.36,1),transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s;flex-shrink:0;}
 .sidebar-logo:hover .sidebar-logo-icon{border-radius:18px;transform:scale(1.08);box-shadow:0 4px 20px rgba(255,249,62,.2);}
@@ -39,29 +39,42 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rail-bastion.active{background:rgba(255,249,62,.08);color:var(--accent);box-shadow:0 0 0 1px rgba(255,249,62,.12) inset;}
 .rail-bastion.active::before,.rail-bastion:hover::before{display:none;}
 .rail-bastion[data-tip]:hover::after{display:none;}
-.rail-bastion .bastion-icon{width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:15px;background:rgba(255,255,255,.06);transition:transform .18s cubic-bezier(.22,1,.36,1);}
+.rail-bastion .bastion-icon{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:17px;background:rgba(255,255,255,.06);transition:transform .18s cubic-bezier(.22,1,.36,1);}
 .rail-bastion:hover .bastion-icon{transform:scale(1.06);}
 .rail-bastion .bastion-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
 .rail-notif-badge{position:absolute;top:4px;right:6px;min-width:14px;height:14px;border-radius:7px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 2px;z-index:1;}
+/* Bastion dropdown popup */
+.bastion-dropdown{position:absolute;left:calc(100% + 8px);top:0;width:220px;background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:14px;z-index:2000;box-shadow:0 12px 40px rgba(0,0,0,.6);overflow:hidden;animation:bastionDropIn .15s cubic-bezier(.22,1,.36,1) both;backdrop-filter:blur(16px);}
+@keyframes bastionDropIn{from{opacity:0;transform:translateX(-6px);}to{opacity:1;transform:none;}}
+.bastion-dropdown .bd-header{padding:12px 14px 8px;border-bottom:1px solid rgba(255,255,255,.06);}
+.bastion-dropdown .bd-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bastion-dropdown .bd-info{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);}
+.bastion-dropdown .bd-chip{display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.45);padding:3px 8px;background:rgba(255,255,255,.04);border-radius:100px;}
+.bastion-dropdown .bd-actions{padding:6px;}
+.bastion-dropdown .bd-action{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:10px;cursor:pointer;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.6);transition:all .12s;}
+.bastion-dropdown .bd-action:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);}
+.bastion-dropdown .bd-action.danger{color:rgba(248,113,113,.7);}
+.bastion-dropdown .bd-action.danger:hover{background:rgba(248,113,113,.08);color:rgba(248,113,113,.9);}
+.bastion-dropdown .bd-action .bd-icon{width:18px;text-align:center;font-size:13px;flex-shrink:0;}
 .sidebar-header{min-height:40px;display:flex;align-items:center;padding:0 14px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex-shrink:0;gap:7px;border-top:1px solid rgba(255,255,255,.04);}
 .sidebar-header .hdr-actions{margin-left:auto;display:flex;gap:2px;}
 .sidebar-header .hdr-actions button{width:28px;height:28px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .sidebar-header .hdr-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
 /* ── Bastion Sidebar 2027 ────────────────────────── */
-.bastion-banner-hero{position:relative;width:100%;height:120px;overflow:hidden;flex-shrink:0;border-radius:0 0 18px 18px;margin-bottom:0;}
+.bastion-banner-hero{position:relative;width:100%;height:160px;overflow:hidden;flex-shrink:0;border-radius:0 0 18px 18px;margin-bottom:0;}
 .bastion-banner-hero img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.65) saturate(1.1);}
 .bastion-banner-hero .bb-gradient{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,16,24,0) 0%,rgba(13,16,24,.55) 50%,var(--channel) 100%);}
 .bastion-banner-hero .bb-noise{position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");opacity:.5;pointer-events:none;mix-blend-mode:overlay;}
 .bastion-banner-hero .bb-glow{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:120%;height:40px;background:radial-gradient(ellipse at center,rgba(255,249,62,.06) 0%,transparent 70%);pointer-events:none;}
-.bastion-banner-hero .bb-emblem{position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);z-index:3;}
-.bastion-banner-hero .bb-emblem .bastion-emblem{width:56px;height:56px;border-radius:18px;background:var(--panel);border:3px solid var(--channel);display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:transform .2s,box-shadow .2s;}
+.bastion-banner-hero .bb-emblem{position:absolute;bottom:-34px;left:50%;transform:translateX(-50%);z-index:3;}
+.bastion-banner-hero .bb-emblem .bastion-emblem{width:68px;height:68px;border-radius:20px;background:var(--panel);border:3px solid var(--channel);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:transform .2s,box-shadow .2s;}
 .bastion-banner-hero .bb-emblem .bastion-emblem:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(0,0,0,.6);}
-.bastion-banner-hero .bb-emblem .bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:15px;}
-.bastion-identity{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;padding:32px 14px 0;gap:2px;}
+.bastion-banner-hero .bb-emblem .bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:17px;}
+.bastion-identity{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;padding:40px 14px 0;gap:2px;}
 .bastion-identity.no-banner{padding-top:14px;}
-.bastion-emblem{width:56px;height:56px;border-radius:18px;background:var(--panel);border:3px solid var(--channel);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:transform .2s,box-shadow .2s;}
+.bastion-emblem{width:68px;height:68px;border-radius:20px;background:var(--panel);border:3px solid var(--channel);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:transform .2s,box-shadow .2s;}
 .bastion-emblem:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(0,0,0,.5);}
-.bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:15px;}
+.bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:17px;}
 .bastion-meta{text-align:center;min-width:0;width:100%;padding:0 4px;}
 .bastion-meta .bm-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;word-break:break-word;overflow-wrap:break-word;letter-spacing:-.02em;text-shadow:0 1px 8px rgba(0,0,0,.4);line-height:1.3;}
 .bastion-meta .bm-tagline{font-size:11px;color:rgba(255,255,255,.45);word-break:break-word;overflow-wrap:break-word;margin-top:2px;line-height:1.3;}
@@ -129,8 +142,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .fi-info{flex:1;min-width:0;}
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* Userbar — matches chatbar style */
-.userbar{min-height:52px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:18px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;margin:6px 6px 8px;width:calc(100% - 12px);box-sizing:border-box;backdrop-filter:blur(8px);transition:background .2s,border-color .2s;}
+/* Userbar — spans both sidebars */
+.userbar{min-height:52px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:18px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;margin:6px 6px 8px;width:calc(100% - 12px);box-sizing:border-box;backdrop-filter:blur(8px);transition:background .2s,border-color .2s,width .25s ease;position:fixed;bottom:0;left:0;z-index:15;width:calc(210px - 12px);margin:6px 6px 8px;}
+.userbar.wide{width:calc(210px + 240px - 12px);}
 .userbar:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.09);}
 .ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:6px 8px;border-radius:10px;background:transparent;border:none;cursor:pointer;transition:all .14s;}
 .ua-clickable:hover{background:rgba(255,255,255,.06);}
@@ -144,7 +158,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ua-btns button{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .ua-btns button:hover{background:rgba(255,255,255,.07);color:#fff;}
 /* Own profile mini panel */
-.own-profile-panel{position:fixed;bottom:64px;left:4px;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
+.own-profile-panel{position:fixed;bottom:72px;left:4px;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
 .main{flex:1;min-width:0;display:flex;flex-direction:row;background:var(--bg);border-top-left-radius:16px;overflow:hidden;border-top:1px solid rgba(255,255,255,.06);border-left:1px solid rgba(255,255,255,.06);}
 .tb-sep{width:1px;height:18px;background:var(--border);margin:0 2px;}
 .tb-desc{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
@@ -467,11 +481,6 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .focus-mode-chat .chat-input-outer{border-color:rgba(255,255,255,.03);}
 .focus-mode-chat .msg-row{border-bottom:1px solid rgba(255,255,255,.015);padding-bottom:6px;margin-bottom:2px;}
 .focus-mode-badge{display:inline-flex;align-items:center;gap:3px;font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(96,165,250,.06);color:rgba(96,165,250,.6);border:1px solid rgba(96,165,250,.1);margin-left:auto;letter-spacing:.05em;flex-shrink:0;}
-/* Joyster Intervention 2027 */
-.joyster-intervention{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:12px;color:rgba(255,255,255,.3);font-style:italic;animation:jiSlideIn .3s cubic-bezier(.22,1,.36,1) both;}
-@keyframes jiSlideIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
-.joyster-intervention .ji-icon{width:22px;height:22px;border-radius:50%;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
-.joyster-intervention .ji-text{flex:1;}
 /* ── Atelier ─────────────────────────────────────── */
 .atelier-wrap{display:flex;flex:1;overflow:hidden;background:#0c0f17;}
 .atelier-nav{width:230px;min-width:230px;background:linear-gradient(180deg,#0a0d14,#0b0e16);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;overflow:hidden;}
@@ -715,7 +724,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .emoji-info-popover .eip-name{font-family:monospace;font-size:12px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:8px;}
 .emoji-info-popover .eip-type{font-size:11px;color:rgba(255,255,255,.3);text-align:center;padding:4px 10px;background:rgba(255,255,255,.04);border-radius:6px;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);z-index:1000;align-items:center;justify-content:center;}
-.modal-overlay.open{display:flex;}
+.modal-overlay.open,.modal-overlay.show{display:flex;}
 .modal{background:var(--panel);border:1px solid var(--border);border-radius:20px;width:100%;max-width:680px;overflow:hidden;animation:mIn .2s cubic-bezier(.22,1,.36,1) both;box-shadow:0 32px 80px rgba(0,0,0,.7);}
 .modal.wide{max-width:580px;}
 .modal.tall{max-height:80vh;display:flex;flex-direction:column;}
@@ -2114,7 +2123,11 @@ function updateSidebar(v) {
 
   // Views that use the secondary sidebar
   const ctxViews = ['dms','friends','discover','bastion'];
-  if (ctx) ctx.style.display = ctxViews.includes(v) ? 'flex' : 'none';
+  const ctxVisible = ctxViews.includes(v);
+  if (ctx) ctx.style.display = ctxVisible ? 'flex' : 'none';
+  // Toggle userbar width to span both sidebars
+  const ub = document.querySelector('.userbar');
+  if (ub) { if (ctxVisible) ub.classList.add('wide'); else ub.classList.remove('wide'); }
 
   if (v==='home') {
     if (hdr) hdr.style.display = 'none';
@@ -2227,13 +2240,68 @@ function renderRailBastions() {
   if (!cont) return;
   cont.innerHTML = (CU?.bastions||[]).map((b,i)=>`
     <div class="rail-bastion ${curBastion===i?'active':''}" id="rl-b-${i}"
-      onclick="openBastion(${i})"
+      onclick="toggleBastionDropdown(event,${i})"
+      ondblclick="openBastion(${i})"
       oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})">
       <div class="bastion-icon">${b.icon
         ? `<img src="${b.icon}">`
         : `<span>${b.emblem||'🏰'}</span>`}</div>
       <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(b.name)}</span>
     </div>`).join('');
+}
+
+function toggleBastionDropdown(e, idx) {
+  e.stopPropagation();
+  // Close any existing dropdown
+  const existing = document.querySelector('.bastion-dropdown');
+  if (existing) { existing.remove(); return; }
+
+  const b = CU.bastions?.[idx];
+  if (!b) return;
+  const el = document.getElementById('rl-b-'+idx);
+  if (!el) return;
+
+  const visIcon = b.public !== false ? '🌍' : '🔒';
+  const visLabel = b.public !== false ? 'Public' : 'Private';
+  const memberCount = b.memberCount || 1;
+  const boostLv = b.boostLevel || 0;
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'bastion-dropdown';
+  dropdown.innerHTML = `
+    <div class="bd-header">
+      <div class="bd-name">${escapeHTML(b.name)}</div>
+    </div>
+    <div class="bd-info">
+      <span class="bd-chip">${visIcon} ${visLabel}</span>
+      <span class="bd-chip">👥 ${memberCount} member${memberCount!==1?'s':''}</span>
+      ${boostLv > 0 ? `<span class="bd-chip" style="color:rgba(255,249,62,.7);background:rgba(255,249,62,.06);">⚡ Level ${boostLv}</span>` : '<span class="bd-chip">⚡ No Boost</span>'}
+    </div>
+    <div class="bd-actions">
+      <div class="bd-action" onclick="openBastion(${idx});document.querySelector('.bastion-dropdown')?.remove()">
+        <span class="bd-icon">🏰</span> Open Bastion
+      </div>
+      <div class="bd-action" onclick="openBastion(${idx});openBastionSettings();document.querySelector('.bastion-dropdown')?.remove()">
+        <span class="bd-icon">⚙️</span> Settings
+      </div>
+      <div class="bd-action" onclick="openBastion(${idx});openBastionSettings('boost');document.querySelector('.bastion-dropdown')?.remove()">
+        <span class="bd-icon">⚡</span> Boost
+      </div>
+      <div class="bd-action danger" onclick="document.querySelector('.bastion-dropdown')?.remove();leaveBastion(${idx})">
+        <span class="bd-icon">🚪</span> Leave Bastion
+      </div>
+    </div>`;
+
+  el.style.position = 'relative';
+  el.appendChild(dropdown);
+
+  // Close on outside click
+  setTimeout(() => document.addEventListener('mousedown', function _closeBd(ev) {
+    if (!dropdown.contains(ev.target)) {
+      dropdown.remove();
+      document.removeEventListener('mousedown', _closeBd);
+    }
+  }), 50);
 }
 
 // ════════════════════════════════════════════
@@ -3768,8 +3836,6 @@ function loadChatChannel(idx) {
   loadChannelMessages(idx);
   renderMemberList();
   setTimeout(() => { setupEmojiAutocomplete('ch-input'); _initChatScroll(document.getElementById('ch-msgs-'+idx)); }, 100);
-  // Reset silence timer for Joyster interventions
-  resetChatSilenceTimer();
 }
 
 // ════════════════════════════════════════════
@@ -3857,9 +3923,6 @@ async function sendChannelMsg(idx) {
   }
   // Award message reputation
   awardMessageRep(b.globalId||b.name, CU.username);
-  // Track for Joyster intervention burst detection
-  checkMessageBurst();
-  resetChatSilenceTimer();
   try { await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text); }
   catch { toast('Failed to send','error'); }
 }
@@ -5085,7 +5148,6 @@ function renderBSettingsNav(activeTab) {
     {label:'Living Bastion'},
     {id:'mood',icon:'🏰',label:'Bastion Mood'},
     {id:'reputation',icon:'🛡️',label:'Reputation'},
-    {id:'joysterbot',icon:'🎭',label:'Joyster'},
     {label:'Perks'},
     {id:'boost',icon:'⚡',label:'Boost'},
     {label:'Danger'},
@@ -5470,44 +5532,6 @@ function renderBSettingsMain(tab) {
         <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:12px;">Reset all reputation scores for a fresh season. This cannot be undone.</div>
         <button class="btn-d" onclick="showCustomConfirm('Reset all reputation for this Bastion?',()=>resetBastionReputation('${escapeHTML(bastionId)}'))">Reset Reputation</button>
       </div>`:''}`;
-  }
-  else if (tab==='joysterbot') {
-    const settings = getInterventionSettings(b);
-    main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🎭 Joyster Interventions</div>
-      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Joyster becomes a lightweight, playful system presence. He never interrupts — only appears as subtle system-style messages during milestones and moments.</div>
-      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
-        <div style="font-weight:700;margin-bottom:12px;">Enable Joyster</div>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <input type="checkbox" id="ji-enable" ${settings.enabled?'checked':''} onchange="toggleJoysterIntervention(this.checked)">
-          <span style="font-size:13px;">Enable Joyster presence in this Bastion</span>
-        </label>
-      </div>
-      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
-        <div style="font-weight:700;margin-bottom:12px;">Frequency</div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn-g ${settings.frequency==='low'?'active':''}" style="flex:1;font-size:12px;padding:8px;${settings.frequency==='low'?'background:var(--accent-dim);color:var(--accent);border-color:var(--accent-mid);':''}" onclick="setJoysterFrequency('low')">🐢 Low</button>
-          <button class="btn-g ${settings.frequency==='normal'||!settings.frequency?'active':''}" style="flex:1;font-size:12px;padding:8px;${settings.frequency==='normal'||!settings.frequency?'background:var(--accent-dim);color:var(--accent);border-color:var(--accent-mid);':''}" onclick="setJoysterFrequency('normal')">⚡ Normal</button>
-          <button class="btn-g ${settings.frequency==='chaos'?'active':''}" style="flex:1;font-size:12px;padding:8px;${settings.frequency==='chaos'?'background:var(--accent-dim);color:var(--accent);border-color:var(--accent-mid);':''}" onclick="setJoysterFrequency('chaos')">🔥 Chaos</button>
-        </div>
-      </div>
-      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
-        <div style="font-weight:700;margin-bottom:12px;">Scope</div>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <input type="checkbox" id="ji-party-only" ${settings.partyOnly?'checked':''} onchange="setJoysterPartyOnly(this.checked)">
-          <span style="font-size:13px;">Restrict to Party Rooms only</span>
-        </label>
-      </div>
-      <div style="padding:16px;background:rgba(255,249,62,.03);border:1px solid rgba(255,249,62,.08);border-radius:16px;">
-        <div style="font-weight:700;margin-bottom:8px;">Preview Triggers</div>
-        <div style="font-size:12px;color:var(--muted-light);line-height:1.8;">
-          🤫 Chat goes silent for 2 hours → Joyster comments<br>
-          🔥 50+ messages in 5 minutes → Joyster reacts<br>
-          ⚡ Someone boosts → Joyster acknowledges<br>
-          👋 New member joins → Joyster welcomes<br>
-          🎯 Milestone reached → Joyster celebrates
-        </div>
-      </div>`;
   }
   else if (tab==='danger') {
     main.innerHTML = `
@@ -14283,86 +14307,6 @@ function toggleChannelFocusMode(chIdx) {
 }
 
 // ════════════════════════════════════════════
-// JOYSTER INTERVENTIONS (Opt-in)
-// ════════════════════════════════════════════
-const _JOYSTER_INTERVENTIONS = {
-  silence: [
-    "It's quiet in here… plotting something? 👀",
-    "Hello? Anyone home? ...echo... echo...",
-    "The silence is deafening. Someone say something!",
-    "I swear I heard a cricket. Oh wait, that was me."
-  ],
-  burst: [
-    "Alright alright, save some energy for the raid.",
-    "Slow down! My jester brain can't keep up!",
-    "This chat is moving faster than my jokes land!",
-    "Someone call the fire department, this chat is LIT!"
-  ],
-  boost: [
-    "Power increased. Walls reinforced.",
-    "A boost?! The Fortress grows stronger!",
-    "Boost detected! The walls shine brighter!",
-    "Someone just leveled up the Bastion. Respect."
-  ],
-  milestone: [
-    "Whoa, look at us! Growing stronger every day!",
-    "Another milestone! The Fortress stands tall!",
-    "Progress! Achievement unlocked!"
-  ],
-  newMember: [
-    "A new ally has arrived! Welcome to the Bastion!",
-    "Fresh recruit spotted! Show them around!",
-    "The ranks grow stronger. Welcome!"
-  ]
-};
-
-let _interventionLastTime = {};
-const _INTERVENTION_COOLDOWNS = {low: 600000, normal: 300000, chaos: 120000};
-
-function getInterventionSettings(b) {
-  return b?.joysterIntervention || {enabled: false, frequency: 'normal', partyOnly: false};
-}
-
-function shouldIntervene(b, type) {
-  const settings = getInterventionSettings(b);
-  if (!settings.enabled) return false;
-  const cooldown = _INTERVENTION_COOLDOWNS[settings.frequency] || 300000;
-  const now = Date.now();
-  const lastTime = _interventionLastTime[type] || 0;
-  if (now - lastTime < cooldown) return false;
-  return true;
-}
-
-function buildJoysterIntervention(type) {
-  const lines = _JOYSTER_INTERVENTIONS[type];
-  if (!lines) return '';
-  const text = lines[Math.floor(Math.random() * lines.length)];
-  return `<div class="joyster-intervention">
-    <div class="ji-icon">🎭</div>
-    <span class="ji-text">${text}</span>
-  </div>`;
-}
-
-function triggerJoysterIntervention(container, type) {
-  const b = CU?.bastions?.[curBastion];
-  if (!b || !shouldIntervene(b, type)) return;
-  const settings = getInterventionSettings(b);
-  if (settings.partyOnly) {
-    const ch = b?.channels?.[curChannel];
-    if (!ch || !ch.name?.includes('party')) return;
-  }
-  _interventionLastTime[type] = Date.now();
-  const html = buildJoysterIntervention(type);
-  if (!html || !container) return;
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  container.appendChild(div.firstElementChild);
-  // Auto-fade after 15 seconds
-  setTimeout(() => {
-    const el = container.querySelector('.joyster-intervention:last-of-type');
-    if (el) { el.style.opacity = '0'; el.style.transition = 'opacity .5s'; setTimeout(() => el.remove(), 500); }
-  }, 15000);
-}
 
 // Mood settings handlers
 function toggleMoodDisabled(val) {
@@ -14401,50 +14345,6 @@ function saveCustomMood() {
   toast('Custom mood saved!', 'success');
 }
 
-// Joyster intervention settings handlers
-function toggleJoysterIntervention(val) {
-  const b = CU?.bastions?.[curBastion]; if (!b) return;
-  if (!b.joysterIntervention) b.joysterIntervention = {enabled:false,frequency:'normal',partyOnly:false};
-  b.joysterIntervention.enabled = val;
-  saveUser();
-  toast(val ? 'Joyster enabled for this Bastion' : 'Joyster disabled', 'success');
-}
-function setJoysterFrequency(freq) {
-  const b = CU?.bastions?.[curBastion]; if (!b) return;
-  if (!b.joysterIntervention) b.joysterIntervention = {enabled:false,frequency:'normal',partyOnly:false};
-  b.joysterIntervention.frequency = freq;
-  saveUser();
-  renderBSettingsMain('joysterbot');
-}
-function setJoysterPartyOnly(val) {
-  const b = CU?.bastions?.[curBastion]; if (!b) return;
-  if (!b.joysterIntervention) b.joysterIntervention = {enabled:false,frequency:'normal',partyOnly:false};
-  b.joysterIntervention.partyOnly = val;
-  saveUser();
-}
-
-// Chat silence tracker for interventions
-let _chatSilenceTimer = null;
-function resetChatSilenceTimer() {
-  if (_chatSilenceTimer) clearTimeout(_chatSilenceTimer);
-  _chatSilenceTimer = setTimeout(() => {
-    const msgsEl = curChannel !== null ? document.getElementById('ch-msgs-' + curChannel) : null;
-    if (msgsEl) triggerJoysterIntervention(msgsEl, 'silence');
-  }, 7200000); // 2 hours
-}
-
-// Message burst detector
-let _recentMsgTimestamps = [];
-function checkMessageBurst() {
-  const now = Date.now();
-  _recentMsgTimestamps.push(now);
-  _recentMsgTimestamps = _recentMsgTimestamps.filter(t => now - t < 300000);
-  if (_recentMsgTimestamps.length >= 50) {
-    const msgsEl = curChannel !== null ? document.getElementById('ch-msgs-' + curChannel) : null;
-    if (msgsEl) triggerJoysterIntervention(msgsEl, 'burst');
-    _recentMsgTimestamps = [];
-  }
-}
 
 async function buyAppearance(themeId, cost) {
   const bal = CU?.onyx||0;

@@ -61,8 +61,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .sidebar-header .hdr-actions button{width:28px;height:28px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .sidebar-header .hdr-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
 /* ── Bastion Sidebar 2027 ────────────────────────── */
-.bastion-banner-hero{position:relative;width:100%;height:160px;overflow:hidden;flex-shrink:0;border-radius:0 0 18px 18px;margin-bottom:0;}
-.bastion-banner-hero img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.65) saturate(1.1);}
+.bastion-banner-hero{position:relative;width:100%;height:160px;overflow:visible;flex-shrink:0;border-radius:0 0 18px 18px;margin-bottom:0;}
+.bastion-banner-hero img{width:100%;height:160px;object-fit:cover;display:block;filter:brightness(.65) saturate(1.1);border-radius:0 0 18px 18px;}
+.bastion-banner-hero .bb-gradient,.bastion-banner-hero .bb-noise,.bastion-banner-hero .bb-glow{border-radius:0 0 18px 18px;}
 .bastion-banner-hero .bb-gradient{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,16,24,0) 0%,rgba(13,16,24,.55) 50%,var(--channel) 100%);}
 .bastion-banner-hero .bb-noise{position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");opacity:.5;pointer-events:none;mix-blend-mode:overlay;}
 .bastion-banner-hero .bb-glow{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:120%;height:40px;background:radial-gradient(ellipse at center,rgba(255,249,62,.06) 0%,transparent 70%);pointer-events:none;}
@@ -86,6 +87,39 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .bastion-quick-actions{display:flex;justify-content:center;gap:4px;padding:0 10px 8px;flex-shrink:0;}
 .bastion-quick-actions button{flex:1;height:30px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:rgba(255,255,255,.4);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
 .bastion-quick-actions button:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.1);}
+/* ── Bastion Name Dropdown (Discord-style) ──── */
+.bastion-name-dropdown{position:absolute;top:100%;left:10px;right:10px;background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:12px;z-index:2000;box-shadow:0 12px 40px rgba(0,0,0,.6);overflow:hidden;animation:bndDropIn .15s cubic-bezier(.22,1,.36,1) both;backdrop-filter:blur(16px);margin-top:4px;}
+@keyframes bndDropIn{from{opacity:0;transform:translateY(-6px) scale(.97);}to{opacity:1;transform:none;}}
+.bastion-name-dropdown .bnd-info{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);}
+.bastion-name-dropdown .bnd-chip{display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.45);padding:3px 8px;background:rgba(255,255,255,.04);border-radius:100px;}
+.bastion-name-dropdown .bnd-actions{padding:6px;}
+.bastion-name-dropdown .bnd-action{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:10px;cursor:pointer;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.6);transition:all .12s;}
+.bastion-name-dropdown .bnd-action:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);}
+.bastion-name-dropdown .bnd-action.danger{color:rgba(248,113,113,.7);}
+.bastion-name-dropdown .bnd-action.danger:hover{background:rgba(248,113,113,.08);color:rgba(248,113,113,.9);}
+.bastion-name-dropdown .bnd-action .bnd-icon{width:18px;text-align:center;font-size:13px;flex-shrink:0;}
+.bm-name-clickable{cursor:pointer;display:flex;align-items:center;gap:4px;transition:color .15s;}
+.bm-name-clickable:hover{color:var(--accent);}
+.bm-name-clickable .bm-chevron{font-size:10px;opacity:.4;transition:transform .2s,opacity .2s;}
+.bm-name-clickable:hover .bm-chevron{opacity:.7;}
+.bm-name-clickable.open .bm-chevron{transform:rotate(180deg);opacity:.7;}
+/* ── Room Top Bar (above chat) ──── */
+.room-topbar{height:42px;min-height:42px;background:var(--channel);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.04);}
+.room-topbar .rt-hash{font-size:16px;font-weight:700;color:rgba(255,255,255,.15);}
+.room-topbar .rt-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;}
+.room-topbar .rt-desc{font-size:12px;color:var(--muted);margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+.room-topbar .rt-sep{width:1px;height:18px;background:rgba(255,255,255,.06);}
+/* ── Bot badge ──── */
+.bot-badge{display:inline-flex;align-items:center;gap:2px;font-size:8.5px;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(96,165,250,.15);color:#60a5fa;border:1px solid rgba(96,165,250,.25);letter-spacing:.04em;flex-shrink:0;line-height:1.3;vertical-align:middle;}
+.ml-entry.bot-entry .ml-name{color:rgba(96,165,250,.7);}
+/* ── System messages (join/leave/bot) ──── */
+.msg-row.msg-system{padding:4px 20px;margin:2px 0;background:transparent;}
+.msg-row.msg-system:hover{background:rgba(255,255,255,.01);}
+.msg-row.msg-system .msg-system-content{display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.35);font-weight:500;}
+.msg-row.msg-system .msg-system-icon{font-size:14px;flex-shrink:0;opacity:.6;}
+.msg-row.msg-system .msg-system-text{flex:1;}
+.msg-row.msg-system .msg-system-text strong{color:rgba(255,255,255,.55);font-weight:600;}
+.msg-row.msg-system .msg-system-time{font-size:10px;color:rgba(255,255,255,.15);flex-shrink:0;}
 .sidebar-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);margin:4px 12px;flex-shrink:0;}
 /* Channel categories - 2027 collapsible */
 .ch-cat-wrap{}
@@ -143,8 +177,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Userbar — spans both sidebars */
-.userbar{min-height:52px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:18px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;margin:6px 6px 8px;width:calc(100% - 12px);box-sizing:border-box;backdrop-filter:blur(8px);transition:background .2s,border-color .2s,width .25s ease;position:fixed;bottom:0;left:0;z-index:15;width:calc(210px - 12px);margin:6px 6px 8px;}
-.userbar.wide{width:calc(210px + 240px - 12px);}
+.userbar{min-height:52px;max-height:52px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:18px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;margin:6px 6px 8px;box-sizing:border-box;backdrop-filter:blur(8px);transition:background .2s,border-color .2s;position:fixed;bottom:0;left:0;z-index:15;width:calc(210px - 12px);margin:6px 6px 8px;}
 .userbar:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.09);}
 .ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:6px 8px;border-radius:10px;background:transparent;border:none;cursor:pointer;transition:all .14s;}
 .ua-clickable:hover{background:rgba(255,255,255,.06);}
@@ -2125,9 +2158,6 @@ function updateSidebar(v) {
   const ctxViews = ['dms','friends','discover','bastion'];
   const ctxVisible = ctxViews.includes(v);
   if (ctx) ctx.style.display = ctxVisible ? 'flex' : 'none';
-  // Toggle userbar width to span both sidebars
-  const ub = document.querySelector('.userbar');
-  if (ub) { if (ctxVisible) ub.classList.add('wide'); else ub.classList.remove('wide'); }
 
   if (v==='home') {
     if (hdr) hdr.style.display = 'none';
@@ -2240,8 +2270,7 @@ function renderRailBastions() {
   if (!cont) return;
   cont.innerHTML = (CU?.bastions||[]).map((b,i)=>`
     <div class="rail-bastion ${curBastion===i?'active':''}" id="rl-b-${i}"
-      onclick="toggleBastionDropdown(event,${i})"
-      ondblclick="openBastion(${i})"
+      onclick="openBastion(${i})"
       oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})">
       <div class="bastion-icon">${b.icon
         ? `<img src="${b.icon}">`
@@ -3521,7 +3550,7 @@ function openBastion(idx) {
   const fallbackCh = chs.findIndex(ch => ch.type !== 'voice' && ch.type !== 'forum');
   const autoChIdx = (lastChIdx >= 0 && lastChIdx < chs.length) ? lastChIdx : fallbackCh;
   if (autoChIdx >= 0) {
-    setTimeout(() => selectChannel(autoChIdx), 80);
+    selectChannel(autoChIdx);
   } else {
     const wrap = document.getElementById('bastion-chat-wrap');
     if (wrap) wrap.innerHTML=`<div class="empty-state"><div class="ei">🏰</div><h3>Pick a channel</h3><p>Select a text or voice channel from the sidebar.</p></div>`;
@@ -3561,28 +3590,14 @@ function renderBastionSidebar(scroll) {
     </div>`;
   }
 
-  // ── Identity (centered name below icon) ──
-  html+=`<div class="bastion-identity${bannerSrc?' ':' no-banner '}">
+  // ── Identity (centered name below icon) with clickable dropdown ──
+  html+=`<div class="bastion-identity${bannerSrc?' ':' no-banner '}" style="position:relative;">
     ${bannerSrc?'':`<div class="bastion-emblem">${emblemHTML}</div>`}
     <div class="bastion-meta">
-      <div class="bm-name">${escapeHTML(b.name)}</div>
+      <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)} <span class="bm-chevron">▼</span></div>
       ${b.tagline?`<div class="bm-tagline">${escapeHTML(b.tagline)}</div>`:''}
     </div>
-  </div>`;
-
-  // ── Stats row (visibility, members, boost) ──
-  const visIcon=b.public!==false?'🌍':'🔒';
-  html+=`<div class="bastion-stats-row">
-    <span class="bs-chip">${visIcon} ${b.public!==false?'Public':'Private'}</span>
-    <span class="bs-chip">👥 ${b.memberCount||1}</span>
-    ${boostLv>0?`<span class="bs-chip boost" onclick="openBastionSettings('boost')">⚡ Lv.${boostLv}</span>`:''}
-  </div>`;
-
-  // ── Quick Actions ──
-  html+=`<div class="bastion-quick-actions">
-    <button onclick="openBastionSettings()" title="Settings">⚙️ Settings</button>
-    <button onclick="openBastionSettings('boost')" title="Boost">⚡ Boost</button>
-    <button onclick="openModal('modal-leave-bastion')" title="Leave">🚪</button>
+    <div id="bastion-name-dd-anchor"></div>
   </div>`;
 
   // ── Mood Bar ──
@@ -3590,14 +3605,12 @@ function renderBastionSidebar(scroll) {
 
   html+=`<div class="sidebar-divider"></div>`;
 
-  // ── Channel categories (collapsible) ──
+  // ── Room categories (collapsible) ──
   const textChs=chs.filter(c=>c.type==='text'||!c.type);
   const voiceChs=chs.filter(c=>c.type==='voice');
   const forumChs=chs.filter(c=>c.type==='forum');
   const announcementChs=chs.filter(c=>c.type==='announcement');
   const pollChs=chs.filter(c=>c.type==='poll');
-  const eventChs=chs.filter(c=>c.type==='event');
-  const automationChs=chs.filter(c=>c.type==='automation');
 
   // Collapsed state key per bastion
   const collapseKey='ftz_cat_collapsed_'+(b.globalId||b.name||curBastion);
@@ -3619,7 +3632,7 @@ function renderBastionSidebar(scroll) {
   // Text channels
   let textHTML='';
   chs.forEach((ch,i)=>{
-    if (ch.type==='voice'||ch.type==='forum'||ch.type==='announcement'||ch.type==='poll'||ch.type==='event'||ch.type==='automation') return;
+    if (ch.type==='voice'||ch.type==='forum'||ch.type==='announcement'||ch.type==='poll') return;
     const tier=getAgeTier(CU?.dateOfBirth);
     const blocked=ch.nsfw&&tier==='child';
     const nsfwTag=ch.nsfw?`<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:rgba(248,113,113,.6);flex-shrink:0;">18+</span>`:'';
@@ -3628,7 +3641,7 @@ function renderBastionSidebar(scroll) {
       <span class="ch-hash">#</span><span class="ch-name">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${blocked?'<span title="Age blocked" style="margin-left:auto;opacity:.4;">🔒</span>':''}
     </div>`;
   });
-  if (textHTML||isOwner) html+=catWrap('text','📝','TEXT','text',textHTML);
+  if (textHTML||isOwner) html+=catWrap('text','📝','TEXT ROOMS','text',textHTML);
 
   // Forums
   let forumHTML='';
@@ -3638,7 +3651,7 @@ function renderBastionSidebar(scroll) {
       <span class="ch-hash">💬</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
-  if (forumHTML||isOwner) html+=catWrap('forum','💬','FORUMS','forum',forumHTML);
+  if (forumHTML||isOwner) html+=catWrap('forum','💬','FORUM ROOMS','forum',forumHTML);
 
   // Voice
   let voiceHTML='';
@@ -3650,7 +3663,7 @@ function renderBastionSidebar(scroll) {
       ${live?'<span class="vc-live">LIVE</span>':''}
     </div>`;
   });
-  if (voiceHTML||isOwner) html+=catWrap('voice','🎙','VOICE','voice',voiceHTML);
+  if (voiceHTML||isOwner) html+=catWrap('voice','🎉','PARTY ROOMS','voice',voiceHTML);
 
   // Announcements
   let announceHTML='';
@@ -3660,7 +3673,7 @@ function renderBastionSidebar(scroll) {
       <span class="ch-hash">📢</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
-  if (announceHTML||isOwner) html+=catWrap('announcement','📢','ANNOUNCEMENTS','announcement',announceHTML);
+  if (announceHTML||isOwner) html+=catWrap('announcement','📢','ANNOUNCEMENT ROOMS','announcement',announceHTML);
 
   // Polls
   let pollHTML='';
@@ -3670,27 +3683,9 @@ function renderBastionSidebar(scroll) {
       <span class="ch-hash">🗳</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
-  if (pollHTML||isOwner) html+=catWrap('poll','🗳','POLLS','poll',pollHTML);
+  if (pollHTML||isOwner) html+=catWrap('poll','🗳','POLL ROOMS','poll',pollHTML);
 
-  // Events
-  let eventHTML='';
-  eventChs.forEach(function(ch){
-    const ri=chs.indexOf(ch);
-    eventHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
-      <span class="ch-hash">🎮</span><span class="ch-name">${escapeHTML(ch.name)}</span>
-    </div>`;
-  });
-  if (eventHTML||isOwner) html+=catWrap('event','🎮','EVENTS','event',eventHTML);
 
-  // Automation
-  let autoHTML='';
-  automationChs.forEach(function(ch){
-    const ri=chs.indexOf(ch);
-    autoHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
-      <span class="ch-hash">🧩</span><span class="ch-name">${escapeHTML(ch.name)}</span>
-    </div>`;
-  });
-  if (autoHTML||isOwner) html+=catWrap('automation','🧩','AUTOMATION','automation',autoHTML);
 
   const vcb=document.getElementById('voice-connected-bar');
   if (voiceConnected&&vcb) {
@@ -3716,6 +3711,47 @@ function toggleChCat(el, catId) {
   if (wrap.classList.contains('collapsed')) collapsedCats[catId]=true;
   else delete collapsedCats[catId];
   localStorage.setItem(collapseKey,JSON.stringify(collapsedCats));
+}
+
+function toggleBastionNameDropdown(e) {
+  e.stopPropagation();
+  const existing = document.querySelector('.bastion-name-dropdown');
+  const toggle = document.getElementById('bastion-name-toggle');
+  if (existing) { existing.remove(); if(toggle)toggle.classList.remove('open'); return; }
+  const b = CU.bastions?.[curBastion];
+  if (!b) return;
+  if(toggle) toggle.classList.add('open');
+  const anchor = document.getElementById('bastion-name-dd-anchor');
+  if (!anchor) return;
+  const visIcon = b.public !== false ? '🌍' : '🔒';
+  const visLabel = b.public !== false ? 'Public' : 'Private';
+  const memberCount = b.memberCount || 1;
+  const boostLv = b.boostLevel || 0;
+  const isOwner = b.owner === CU.username;
+  const dd = document.createElement('div');
+  dd.className = 'bastion-name-dropdown';
+  dd.innerHTML = `
+    <div class="bnd-info">
+      <span class="bnd-chip">${visIcon} ${visLabel}</span>
+      <span class="bnd-chip">👥 ${memberCount} member${memberCount!==1?'s':''}</span>
+      <span class="bnd-chip">${boostLv>0?'⚡ Lv.'+boostLv:'⚡ No Boost'}</span>
+    </div>
+    <div class="bnd-actions">
+      ${isOwner?`<div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings()"><span class="bnd-icon">⚙️</span> Settings</div>`:''}
+      <div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('boost')"><span class="bnd-icon">⚡</span> Boost</div>
+      <div class="bnd-action danger" onclick="closeBastionNameDD();openModal('modal-leave-bastion')"><span class="bnd-icon">🚪</span> Leave Bastion</div>
+    </div>`;
+  anchor.appendChild(dd);
+  setTimeout(() => document.addEventListener('mousedown', function _closeBnd(ev) {
+    if (!dd.contains(ev.target) && ev.target !== toggle) {
+      closeBastionNameDD();
+      document.removeEventListener('mousedown', _closeBnd);
+    }
+  }), 50);
+}
+function closeBastionNameDD() {
+  document.querySelector('.bastion-name-dropdown')?.remove();
+  document.getElementById('bastion-name-toggle')?.classList.remove('open');
 }
 
 async function leaveBastion(idx) {
@@ -3815,14 +3851,21 @@ function loadChatChannel(idx) {
   if (desc) desc.textContent='';
   const bastionBanner = b?.banner || '';
   const bannerSafe = bastionBanner ? escapeHTML(bastionBanner) : '';
+  const chTypeIcon = ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':'#';
   wrap.innerHTML=`
     <div class="chat-wrap">
+      <div class="room-topbar">
+        <span class="rt-hash">${chTypeIcon}</span>
+        <span class="rt-name">${escapeHTML(ch.name)}</span>
+        ${ch.desc?`<span class="rt-sep"></span><span class="rt-desc">${escapeHTML(ch.desc)}</span>`:''}
+        ${nsfwBadge}
+      </div>
       <div class="chat-msgs" id="ch-msgs-${idx}">
         <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Return to Present</button></div>
         ${bannerSafe ? `<div style="width:100%;height:120px;position:relative;flex-shrink:0;overflow:hidden;"><img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.15),rgba(11,14,21,.7));"></div><div style="position:absolute;bottom:12px;left:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);">${escapeHTML(b.name||'')}</div></div>` : ''}
         <div class="chat-welcome">
-          <div class="w-av" style="font-size:26px;background:var(--panel2);">#</div>
-          <h3>#${escapeHTML(ch.name)}${nsfwBadge}</h3>
+          <div class="w-av" style="font-size:26px;background:var(--panel2);">${chTypeIcon}</div>
+          <h3>${escapeHTML(ch.name)}${nsfwBadge}</h3>
           <p>${escapeHTML(ch.desc||'Welcome to #'+ch.name+'!')}</p>
         </div>
       </div>
@@ -3981,9 +4024,23 @@ function getMsgRoleColor(fromUser, context) {
 }
 function appendMessage(container, msg, context, prevAuthor) {
   if (!msg || !container) return;
-  if (msg.from && typeof isUserBlocked === 'function' && isUserBlocked(msg.from)) return;
+  if (msg.from && msg.from !== '__system__' && typeof isUserBlocked === 'function' && isUserBlocked(msg.from)) return;
   const id=msg.id||(msg.from+msg.timestamp);
   if (document.querySelector(`[data-msgid="${CSS.escape(id)}"]`)) return;
+  // System messages (join, bot deploy, etc.)
+  if (msg.from === '__system__') {
+    const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+    const row=document.createElement('div');
+    row.className='msg-row msg-system';
+    row.dataset.msgid=id;
+    row.innerHTML=`<div class="msg-system-content">
+      <span class="msg-system-icon">${msg.systemIcon||'→'}</span>
+      <span class="msg-system-text">${parseMD(escapeHTML(msg.text||''))}</span>
+      <span class="msg-system-time">${time}</span>
+    </div>`;
+    container.appendChild(row);
+    return;
+  }
   const isFirst=msg.from!==prevAuthor;
   const isOwn=msg.from===CU?.username;
   const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):(msg.time||'');
@@ -4387,6 +4444,14 @@ async function renderMemberList() {
     ml.innerHTML += `<div class="ml-role-header">Members — ${onlineList.length}</div>`;
     onlineList.forEach(u => ml.innerHTML += buildMemberEntry(u, roles, memberRoles));
   }
+  // Bots section — show deployed bots
+  const deployedBots = b.deployedBots || [];
+  if (deployedBots.length) {
+    ml.innerHTML += `<div class="ml-role-header">Bots — ${deployedBots.length}</div>`;
+    deployedBots.forEach(bot => {
+      ml.innerHTML += buildBotMemberEntry(bot);
+    });
+  }
 }
 
 function buildMemberEntry(u, roles, memberRoles) {
@@ -4432,6 +4497,58 @@ function buildMemberEntry(u, roles, memberRoles) {
       <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${roleTag}${renderRepShield(CU?.bastions?.[curBastion]?.globalId||CU?.bastions?.[curBastion]?.name,u)}</div>
     </div>
   </div>`;
+}
+
+function buildBotMemberEntry(bot) {
+  const emblem = bot.emblem || '🤖';
+  const name = bot.name || 'Bot';
+  return `<div class="ml-entry bot-entry" onclick="showBotProfilePreview('${escapeHTML(bot.id||bot.name)}',this)">
+    <div style="position:relative;display:inline-flex;flex-shrink:0;">
+      <div style="width:30px;height:30px;border-radius:50%;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">${emblem}</div>
+      <span style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#60a5fa;border:2px solid var(--channel);"></span>
+    </div>
+    <div class="ml-info" style="min-width:0;flex:1;">
+      <div style="display:flex;align-items:center;gap:4px;">
+        <span class="ml-name" style="color:rgba(96,165,250,.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(name)}</span>
+        <span class="bot-badge">BOT</span>
+      </div>
+      <div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(bot.bio||'Integrated bot')}</div>
+    </div>
+  </div>`;
+}
+
+function showBotProfilePreview(botId, el) {
+  const b = CU.bastions?.[curBastion];
+  if (!b) return;
+  const bot = (b.deployedBots||[]).find(db => (db.id||db.name) === botId);
+  if (!bot) return;
+  // Remove existing preview
+  document.querySelector('.bot-profile-preview')?.remove();
+  const rect = el.getBoundingClientRect();
+  const panel = document.createElement('div');
+  panel.className = 'bot-profile-preview';
+  panel.style.cssText = `position:fixed;z-index:5000;background:var(--panel);border:1px solid rgba(96,165,250,.2);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.7);width:280px;padding:0;overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);`;
+  const left = rect.left - 290;
+  const top = Math.min(rect.top, window.innerHeight - 280);
+  panel.style.left = (left > 0 ? left : rect.right + 10) + 'px';
+  panel.style.top = top + 'px';
+  panel.innerHTML = `
+    <div style="background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(96,165,250,.05));padding:20px;text-align:center;">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(96,165,250,.12);border:2px solid rgba(96,165,250,.25);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 8px;">${bot.emblem||'🤖'}</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
+        <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">${escapeHTML(bot.name)}</span>
+        <span class="bot-badge">BOT</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted-light);margin-top:4px;">by ${escapeHTML(bot.owner||'Unknown')}</div>
+    </div>
+    <div style="padding:12px 16px;">
+      <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:10px;">${escapeHTML(bot.bio||'No description')}</div>
+      ${(bot.commands||[]).length?`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Commands</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${(bot.commands||[]).slice(0,6).map(c=>`<span style="font-family:monospace;font-size:10px;padding:2px 6px;border-radius:5px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.15);color:#60a5fa;">${escapeHTML(typeof c==='string'?c:'/'+c.name)}</span>`).join('')}</div>`:''}
+    </div>`;
+  document.body.appendChild(panel);
+  setTimeout(() => document.addEventListener('mousedown', function _close(ev) {
+    if (!panel.contains(ev.target)) { panel.remove(); document.removeEventListener('mousedown', _close); }
+  }), 50);
 }
 
 // ════════════════════════════════════════════
@@ -4619,13 +4736,11 @@ async function promptJoinPublicBastion(bastionId){
     renderRailBastions();
     toast('Joined '+b.name+'!','success');
     openBastion(CU.bastions.length-1);
-    // Welcome message in first text channel
+    // Welcome system message in first text channel
     const wName = CU.displayName||CU.username;
-    const wMsg = Math.random()<0.5
-      ? '→ Everyone, welcome **'+wName+'**!'
-      : '→ Glad you\u2019re here, **'+wName+'**.';
+    const wMsg = '**'+wName+'** joined the bastion. Welcome!';
     const wCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
-    try { await FortizedSocial.sendBastionChannelMessage(b.id||b.name, wCh.name, 'Fortized', wMsg); } catch {}
+    try { await FortizedSocial.sendBastionChannelMessage(b.id||b.name, wCh.name, '__system__', wMsg); } catch {}
   }catch(e){toast('Failed to join','error');console.error(e);}
 }
 
@@ -4841,7 +4956,7 @@ function renderBastionTemplateGrid() {
     {id:'artisan',emoji:'🎨',name:'Artisans',desc:'Create & showcase'},
     {id:'academy',emoji:'🎓',name:'Academy',desc:'Teaching & courses'},
   ];
-  const chIcon={text:'#',voice:'🎙',forum:'💬',announcement:'📢',poll:'🗳',event:'🎮',automation:'🧩'};
+  const chIcon={text:'#',voice:'🎙',forum:'💬',announcement:'📢',poll:'🗳'};
   grid.innerHTML = templates.map(t => {
     const tmpl=BASTION_TEMPLATES[t.id];
     const previewChs=(tmpl?.channels||[]).slice(0,5).map(c=>`<div style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--muted-light);padding:2px 0;"><span style="font-size:10px;opacity:.7;">${chIcon[c.type]||'#'}</span>${c.name}</div>`).join('');
@@ -4913,7 +5028,6 @@ const BASTION_TEMPLATES = {
     channels:[
       {name:'general',type:'text',desc:'General discussion'},
       {name:'party-room',type:'voice',desc:'Party voice chat'},
-      {name:'game-events',type:'event',desc:'Scheduled game sessions',events:[]},
       {name:'strategy',type:'forum',desc:'Strategy discussions'},
       {name:'media',type:'text',desc:'Screenshots & clips'},
       {name:'game-polls',type:'poll',desc:'Vote on games',polls:[]},
@@ -4933,7 +5047,6 @@ const BASTION_TEMPLATES = {
       {name:'announcements',type:'announcement',desc:'Important announcements',restricted:true},
       {name:'general',type:'text',desc:'General chat'},
       {name:'hangout',type:'voice',desc:'Voice hangout'},
-      {name:'events',type:'event',desc:'Community events',events:[]},
       {name:'polls',type:'poll',desc:'Community votes',polls:[]},
     ],
     roles:[
@@ -4950,8 +5063,7 @@ const BASTION_TEMPLATES = {
       {name:'announcements',type:'announcement',desc:'Guild announcements',restricted:true},
       {name:'party-room',type:'voice',desc:'Voice coordination'},
       {name:'raid-planning',type:'forum',desc:'Plan raids'},
-      {name:'event-calendar',type:'event',desc:'Guild events',events:[]},
-      {name:'automation',type:'automation',desc:'Bot commands',botLogs:true},
+      {name:'raid-polls',type:'poll',desc:'Guild votes',polls:[]},
     ],
     roles:[
       {id:'admin',name:'Guild Master',color:'#fbbf24'},
@@ -4970,7 +5082,6 @@ const BASTION_TEMPLATES = {
       {name:'study-room',type:'voice',desc:'Study together'},
       {name:'quizzes',type:'poll',desc:'Study polls',polls:[]},
       {name:'resources',type:'text',desc:'Study resources'},
-      {name:'study-sessions',type:'event',desc:'Scheduled sessions',events:[]},
     ],
     roles:[
       {id:'admin',name:'Admin',color:'#fbbf24'},
@@ -5002,7 +5113,6 @@ const BASTION_TEMPLATES = {
       {name:'lecture-hall',type:'voice',desc:'Voice lectures'},
       {name:'assignments',type:'forum',desc:'Assignments & submissions'},
       {name:'class-polls',type:'poll',desc:'Class votes',polls:[]},
-      {name:'events',type:'event',desc:'Academic events',events:[]},
       {name:'resources',type:'text',desc:'Course materials'},
     ],
     roles:[
@@ -5073,15 +5183,14 @@ async function createBastion() {
 // CHANNEL MANAGEMENT
 // ════════════════════════════════════════════
 async function addChannel(bastionIdx, type) {
-  showCustomInput('Add Channel', `Name for new ${type} channel:`, async (name) => {
+  const typeLabel = type==='voice'?'party':type;
+  showCustomInput('Add Room', `Name for new ${typeLabel} room:`, async (name) => {
     if (!name?.trim()) return;
     const b = CU.bastions[bastionIdx];
     if (!b) return;
     const ch = {name:name.trim().toLowerCase().replace(/\s+/g,'-'), type, desc:''};
     if (type==='announcement') ch.restricted = true;
     if (type==='poll') ch.polls = [];
-    if (type==='event') ch.events = [];
-    if (type==='automation') ch.botLogs = true;
     b.channels = [...(b.channels||[]), ch];
     await saveUser();
     renderBastionSidebar(document.getElementById('sidebar-scroll'));
@@ -5136,7 +5245,7 @@ function renderBSettingsNav(activeTab) {
   const sections = [
     {label:'Bastion'},
     {id:'overview',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',label:'Overview'},
-    {id:'channels',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',label:'Channels'},
+    {id:'channels',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',label:'Rooms Management'},
     {id:'roles',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',label:'Roles'},
     {id:'emojis',icon:'😊',label:'Custom Emojis'},
     {label:'Moderation'},
@@ -5224,13 +5333,13 @@ function renderBSettingsMain(tab) {
       return `<div style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;">
           <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);flex:1;">${escapeHTML(cat.name)}</span>
-          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','text')">+ Text</button>
-          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','voice')">+ Voice</button>
+          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','text')">+ Text Room</button>
+          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','voice')">+ Party Room</button>
           <button class="btn-d" style="font-size:11px;padding:3px 8px;" onclick="deleteCategory('${cat.id}')">✕</button>
         </div>
         ${catChs.map((ch,i)=>{const realIdx=(b.channels||[]).indexOf(ch);return `
           <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;margin-left:12px;">
-            <span style="color:var(--muted);">${ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':ch.type==='event'?'🎮':ch.type==='automation'?'🧩':'#'}</span>
+            <span style="color:var(--muted);">${ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':'#'}</span>
             <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
             ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
             ${ch.nsfw?'<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
@@ -5242,7 +5351,7 @@ function renderBSettingsMain(tab) {
     }).join('');
     const uncatHTML = uncatChs.map(ch=>{const realIdx=(b.channels||[]).indexOf(ch);return `
       <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;">
-        <span style="color:var(--muted);">${ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':ch.type==='event'?'🎮':ch.type==='automation'?'🧩':'#'}</span>
+        <span style="color:var(--muted);">${ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':'#'}</span>
         <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
         ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
         ${ch.nsfw?'<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
@@ -5251,15 +5360,14 @@ function renderBSettingsMain(tab) {
         <button class="btn-d" style="padding:4px 9px;font-size:11px;" onclick="deleteChannel(${realIdx})">✕</button>
       </div>`;}).join('');
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:20px;">📝 Channels & Categories</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:20px;">📝 Rooms Management</div>
       <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
         <button class="btn-g" onclick="addCategoryPrompt()" style="font-size:13px;">+ Category</button>
-        <button class="btn-a" onclick="addChannel(curBastion,'text')" style="font-size:13px;">+ Text Channel</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'voice')" style="font-size:13px;">+ Voice Channel</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'announcement')" style="font-size:13px;">+ Announcement</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'poll')" style="font-size:13px;">+ Poll</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'event')" style="font-size:13px;">+ Event</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'automation')" style="font-size:13px;">+ Automation</button>
+        <button class="btn-a" onclick="addChannel(curBastion,'text')" style="font-size:13px;">+ Text Room</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'voice')" style="font-size:13px;">+ Party Room</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'announcement')" style="font-size:13px;">+ Announcement Room</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'poll')" style="font-size:13px;">+ Poll Room</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'forum')" style="font-size:13px;">+ Forum Room</button>
       </div>
       ${catHTML}
       ${uncatHTML||(!cats.length?'<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No channels yet. Create some above!</div>':'')}`;
@@ -6493,6 +6601,9 @@ function confirmDeployBot(arsenalBotId, bastionIdx) {
   saveUser();
   document.getElementById('modal-deploy-bot')?.remove();
   toast(`${arsenalBot.name} deployed to ${b.name}!`, 'success');
+  // System message for bot integration
+  const bCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
+  try { FortizedSocial.sendBastionChannelMessage(b.globalId||b.name, bCh.name, '__system__', '**'+arsenalBot.name+'** has been integrated into the bastion.'); } catch {}
 }
 
 function openDeployBotPicker() {
@@ -6544,6 +6655,9 @@ function deployMyBot(botIdx) {
   document.getElementById('modal-deploy-mybot')?.remove();
   renderBSettingsMain('bots');
   toast(`${bot.name} deployed!`, 'success');
+  // System message for bot integration
+  const bCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
+  try { FortizedSocial.sendBastionChannelMessage(b.globalId||b.name, bCh.name, '__system__', '**'+bot.name+'** has been integrated into the bastion.'); } catch {}
 }
 
 function toggleBastionBot(botId) {
@@ -8863,7 +8977,8 @@ async function addCategoryPrompt() {
 }
 
 async function addChannelToCategory(catId, type) {
-  showCustomInput('Add Channel', `Name for new ${type} channel:`, async (name) => {
+  const typeLabel = type==='voice'?'party':type;
+  showCustomInput('Add Room', `Name for new ${typeLabel} room:`, async (name) => {
     if (!name?.trim()) return;
     const b = CU.bastions[curBastion];
     if (!b) return;

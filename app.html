@@ -71,7 +71,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Userbar — matches chatbar style */
-.userbar{min-height:52px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;margin:6px 5px 8px;}
+.userbar{min-height:52px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;margin:6px 4px 8px;width:calc(100% - 8px);box-sizing:border-box;}
 .ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:6px 8px;border-radius:10px;background:transparent;border:none;cursor:pointer;transition:all .14s;}
 .ua-clickable:hover{background:rgba(255,255,255,.06);}
 .ua{width:32px;height:32px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;}
@@ -1147,11 +1147,18 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
     <!-- DMs VIEW -->
     <div class="view" id="view-dms">
       <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
-        <div class="empty-state">
-          <div class="ei">💬</div>
-          <h3>No conversation selected</h3>
-          <p>Choose a friend from the sidebar to start chatting.</p>
-          <button class="btn-a" onclick="openModal('modal-new-dm')">➕ New Message</button>
+        <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
+          <div style="max-width:700px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+              <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;">Friends</h2>
+            </div>
+            <div id="dm-friends-tabs" style="display:flex;gap:5px;margin-bottom:20px;">
+              <button class="disc-tab" onclick="dmFriendsFilter('online',this)">Online</button>
+              <button class="disc-tab active" onclick="dmFriendsFilter('all',this)">All</button>
+              <button class="disc-tab" onclick="openModal('modal-add-friend')" style="background:rgba(62,207,110,.1);color:var(--green);border-color:rgba(62,207,110,.2);">+ Add Friend</button>
+            </div>
+            <div id="dm-friends-list"></div>
+          </div>
         </div>
       </div>
       <div id="dm-user-panel" style="display:none;width:280px;min-width:280px;max-width:280px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
@@ -1972,6 +1979,7 @@ function showView(v) {
   if (v === 'atelier') setTimeout(() => { updateAtelierSidebar(); renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }, 0);
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
+  if (v === 'dms') setTimeout(() => { if (document.getElementById('dm-friends-home')) renderDMFriendsHome(); }, 50);
 
   updateTopbar(v);
   updateSidebar(v);
@@ -2519,7 +2527,7 @@ function renderDMSidebar(scroll) {
   let html = '';
 
   // ── Friends quick link ──────────────────
-  html += `<div class="ch-item" style="margin:4px 8px;border-radius:10px;" onclick="document.getElementById('dm-chat-wrap').innerHTML='';renderFriendsList('all');">👥 Friends</div>`;
+  html += `<div class="ch-item" style="margin:4px 8px;border-radius:10px;" onclick="showDMFriendsHome()">👥 Friends</div>`;
 
   // ── Direct Messages section ──────────────────
   html += '<div class="sec-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;">Direct Messages</div>';
@@ -2586,6 +2594,110 @@ function renderDMSidebar(scroll) {
       }
     } catch {}
   });
+}
+
+// ── DM Friends Home (shown when no DM selected) ──
+let _dmFriendsFilter = 'all';
+function renderDMFriendsHome() {
+  const list = document.getElementById('dm-friends-list');
+  if (!list) return;
+  const friends = CU?.friends || [];
+  const filter = _dmFriendsFilter;
+
+  if (!friends.length) {
+    list.innerHTML = `<div style="text-align:center;padding:40px 20px;">
+      <div style="font-size:36px;margin-bottom:12px;">👥</div>
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;">No Friends Yet</div>
+      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:16px;">Add friends by their username to start chatting!</div>
+      <button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button>
+    </div>`;
+    return;
+  }
+
+  // Build friend cards with async status lookup
+  let html = '';
+  const pending = CU?.friendRequestsReceived || [];
+  if (filter === 'all' && pending.length) {
+    html += `<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">PENDING — ${pending.length}</div>`;
+    pending.forEach(f => {
+      html += `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;transition:background .12s;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background=''">
+        <div style="position:relative;flex-shrink:0;"><div class="fa" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(null,f,40)}</div></div>
+        <div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div><div style="font-size:11.5px;color:var(--muted);">Incoming friend request</div></div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-a" style="padding:6px 14px;font-size:12px;" onclick="acceptFriend('${escapeHTML(f)}')">Accept</button>
+          <button class="btn-g" style="padding:6px 14px;font-size:12px;" onclick="declineFriend('${escapeHTML(f)}')">Ignore</button>
+        </div>
+      </div>`;
+    });
+    html += '<div style="height:12px;"></div>';
+  }
+
+  html += `<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">${filter==='online'?'ONLINE':'ALL FRIENDS'} — ${friends.length}</div>`;
+
+  friends.forEach(f => {
+    html += `<div class="dm-friend-row" data-user="${escapeHTML(f)}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;transition:background .12s;cursor:pointer;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background=''" onclick="openDMView('${escapeHTML(f)}')">
+      <div style="position:relative;flex-shrink:0;">
+        <div class="fa" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(null,f,40)}</div>
+        <span class="dm-home-status" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;border-radius:50%;background:#6b7280;border:2.5px solid var(--bg);"></span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div>
+        <div class="dm-home-status-text" data-for="${escapeHTML(f)}" style="font-size:11.5px;color:var(--muted);">Offline</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-g" style="padding:6px 12px;font-size:12px;" onclick="event.stopPropagation();openDMView('${escapeHTML(f)}')">💬 Message</button>
+      </div>
+    </div>`;
+  });
+
+  list.innerHTML = html;
+
+  // Async: fetch statuses
+  friends.forEach(async f => {
+    try {
+      const u = await FortizedSocial.getUserByName(f);
+      if (!u) return;
+      const st = u.status || 'offline';
+      const STATUS_COLORS = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
+      const STATUS_LABELS = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Offline',offline:'Offline'};
+      const dot = document.querySelector(`.dm-home-status[data-for="${CSS.escape(f)}"]`);
+      if (dot) dot.style.background = STATUS_COLORS[st] || '#6b7280';
+      const text = document.querySelector(`.dm-home-status-text[data-for="${CSS.escape(f)}"]`);
+      if (text) text.textContent = u.customStatus || STATUS_LABELS[st] || 'Offline';
+      // If filtering online and user is offline, hide row
+      if (filter === 'online' && (st === 'offline' || st === 'invisible')) {
+        const row = document.querySelector(`.dm-friend-row[data-user="${CSS.escape(f)}"]`);
+        if (row) row.style.display = 'none';
+      }
+    } catch {}
+  });
+}
+
+function dmFriendsFilter(filter, btn) {
+  _dmFriendsFilter = filter;
+  document.querySelectorAll('#dm-friends-tabs .disc-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderDMFriendsHome();
+}
+
+function showDMFriendsHome() {
+  const wrap = document.getElementById('dm-chat-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
+      <div style="max-width:700px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;">Friends</h2>
+        </div>
+        <div id="dm-friends-tabs" style="display:flex;gap:5px;margin-bottom:20px;">
+          <button class="disc-tab" onclick="dmFriendsFilter('online',this)">Online</button>
+          <button class="disc-tab active" onclick="dmFriendsFilter('all',this)">All</button>
+          <button class="disc-tab" onclick="openModal('modal-add-friend')" style="background:rgba(62,207,110,.1);color:var(--green);border-color:rgba(62,207,110,.2);">+ Add Friend</button>
+        </div>
+        <div id="dm-friends-list"></div>
+      </div>
+    </div>`;
+  renderDMFriendsHome();
 }
 
 let _dmListener = null;
@@ -2912,7 +3024,7 @@ function showGCMemberPanel(meta) {
     <div style="padding:12px 14px;flex:1;overflow-y:auto;">
       <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Members — ${(meta.members||[]).length}</div>
       ${(meta.members||[]).map(m=>`
-        <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;cursor:pointer;transition:background .1s;" onclick="openUserProfile('${escapeHTML(m)}')" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='transparent'">
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;cursor:pointer;transition:background .1s;" onclick="showMiniProfilePreview('${escapeHTML(m)}',this)" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='transparent'">
           <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,m,28)}</div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(m)}</div>
@@ -3150,7 +3262,7 @@ async function leaveGroupChat(gcId) {
       curGC = null;
       document.getElementById('gc-member-panel')?.remove();
       const wrap = document.getElementById('dm-chat-wrap');
-      if (wrap) wrap.innerHTML='<div class="empty-state"><div class="ei">💬</div><h3>No conversation selected</h3><p>Choose a DM or group from the sidebar.</p></div>';
+      if (wrap) showDMFriendsHome();
       renderDMSidebar(document.getElementById('sidebar-scroll'));
       toast('Left the group','info');
     } catch(e){ toast('Failed to leave','error'); }
@@ -3173,7 +3285,7 @@ async function deleteGroupChat(gcId) {
       curGC = null;
       document.getElementById('gc-member-panel')?.remove();
       const wrap = document.getElementById('dm-chat-wrap');
-      if (wrap) wrap.innerHTML='<div class="empty-state"><div class="ei">💬</div><h3>No conversation selected</h3></div>';
+      if (wrap) showDMFriendsHome();
       renderDMSidebar(document.getElementById('sidebar-scroll'));
       toast('Group deleted','info');
     } catch(e){ toast('Failed to delete','error'); }
@@ -3241,7 +3353,9 @@ function renderBastionSidebar(scroll) {
       img.style.cssText='width:100%;height:100%;object-fit:cover;opacity:.55;display:block;';
       img.onerror=function(){this.style.display='none';};
       hdrEl.appendChild(img);
-      hdrEl.innerHTML += `<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(11,14,21,.92));"></div><div style="position:absolute;bottom:7px;left:11px;right:11px;"><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:16px;">${b.emblem||'🏰'}</span><span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8);">${escapeHTML(b.name)}</span></div>${taglineHTML}<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">${visBadge}${memberBadge}${boostBadge}</div></div>`;
+      const overlay = document.createElement('div');
+      overlay.innerHTML = `<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(11,14,21,.92));"></div><div style="position:absolute;bottom:7px;left:11px;right:11px;"><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:16px;">${b.emblem||'🏰'}</span><span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8);">${escapeHTML(b.name)}</span></div>${taglineHTML}<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">${visBadge}${memberBadge}${boostBadge}</div></div>`;
+      while(overlay.firstChild) hdrEl.appendChild(overlay.firstChild);
       hdrTitle.innerHTML = '';
       hdrTitle.appendChild(hdrEl);
     } else {
@@ -4776,10 +4890,6 @@ function renderBSettingsMain(tab) {
   const main = document.getElementById('bsettings-main');
   const b = CU.bastions[curBastion];
   if (!main||!b) return;
-  // Update nav active
-  document.querySelectorAll('.bsettings-nav-item').forEach(el => el.classList.remove('active'));
-  const navItem = [...document.querySelectorAll('.bsettings-nav-item')].find(el=>el.textContent.includes(tab[0].toUpperCase()+tab.slice(1)));
-  // Re-render nav with correct active
   renderBSettingsNav(tab);
 
   if (tab==='overview') {
@@ -5951,7 +6061,7 @@ function renderArsenalCard(bot) {
     </div>
     <div style="font-size:12.5px;color:var(--muted-light);line-height:1.5;">${escapeHTML(bot.bio)}</div>
     <div style="display:flex;flex-wrap:wrap;gap:4px;">
-      ${(bot.commands||[]).map(c => `<span style="font-family:monospace;font-size:10.5px;padding:2px 7px;border-radius:6px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.15);color:#a78bfa;">${escapeHTML(c)}</span>`).join('')}
+      ${(bot.commands||[]).map(c => `<span style="font-family:monospace;font-size:10.5px;padding:2px 7px;border-radius:6px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.15);color:#a78bfa;">${escapeHTML(typeof c==='string'?c:'/'+c.name)}</span>`).join('')}
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
       <span style="font-size:11px;color:var(--muted);">${bot.reviews} reviews</span>

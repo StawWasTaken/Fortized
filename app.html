@@ -383,6 +383,33 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .bc-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
 .bc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
 .bc-desc{font-size:12px;color:var(--muted-light);line-height:1.55;margin-bottom:8px;}
+/* ── Bastion Mood ───────────────────────────────── */
+.bastion-mood-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:4px 6px 6px;border-radius:12px;cursor:default;transition:all .25s;font-size:12px;font-weight:600;position:relative;overflow:hidden;}
+.bastion-mood-bar::before{content:"";position:absolute;inset:0;opacity:.06;pointer-events:none;transition:background .5s;}
+.bastion-mood-bar .mood-emoji{font-size:16px;flex-shrink:0;animation:moodPulse 3s ease-in-out infinite;}
+.bastion-mood-bar .mood-label{color:rgba(255,255,255,.7);flex:1;}
+.bastion-mood-bar .mood-lock{font-size:10px;color:rgba(255,255,255,.25);margin-left:auto;}
+@keyframes moodPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+/* Mood ambient particles */
+.mood-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+.mood-particle{position:absolute;width:2px;height:2px;border-radius:50%;opacity:0;animation:moodFloat 8s ease-in-out infinite;}
+@keyframes moodFloat{0%{opacity:0;transform:translateY(10px) scale(.5);}30%{opacity:.5;}60%{opacity:.3;transform:translateY(-40px) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(.3);}}
+/* ── Bastion Reputation ────────────────────────── */
+.rep-shield{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:100px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);color:rgba(255,249,62,.7);cursor:default;flex-shrink:0;transition:all .15s;}
+.rep-shield:hover{background:rgba(255,249,62,.1);border-color:rgba(255,249,62,.25);}
+.rep-tooltip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(16,20,32,.96);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 12px;font-size:11px;color:rgba(255,255,255,.7);white-space:nowrap;z-index:50;pointer-events:none;opacity:0;transition:opacity .15s;box-shadow:0 6px 20px rgba(0,0,0,.5);}
+.rep-shield:hover .rep-tooltip{opacity:1;}
+/* ── Focus Mode ────────────────────────────────── */
+.focus-mode-chat .chat-msgs{background:rgba(255,255,255,.012);}
+.focus-mode-chat .msg-text{font-size:14px;color:rgba(221,227,237,.75);letter-spacing:.015em;line-height:1.7;}
+.focus-mode-chat .msg-reactions,.focus-mode-chat .cit-gif,.focus-mode-chat .msg-acts button[title="React"]{display:none!important;}
+.focus-mode-chat .typing-dots span{background:rgba(255,255,255,.12);}
+.focus-mode-chat .chat-input-outer{border-color:rgba(255,255,255,.04);}
+.focus-mode-badge{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(96,165,250,.08);color:rgba(96,165,250,.7);border:1px solid rgba(96,165,250,.15);margin-left:6px;letter-spacing:.04em;}
+/* Joyster Intervention */
+.joyster-intervention{display:flex;align-items:center;gap:10px;padding:8px 20px;font-size:12px;color:rgba(255,255,255,.35);font-style:italic;}
+.joyster-intervention .ji-icon{width:20px;height:20px;border-radius:50%;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.joyster-intervention .ji-text{flex:1;}
 /* ── Atelier ─────────────────────────────────────── */
 .atelier-wrap{display:flex;flex:1;overflow:hidden;background:#0c0f17;}
 .atelier-nav{width:230px;min-width:230px;background:linear-gradient(180deg,#0a0d14,#0b0e16);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;overflow:hidden;}
@@ -3414,6 +3441,8 @@ function renderBastionSidebar(scroll) {
 
   const boostLv=b.boostLevel||0;
   let html=`<div class="boost-bar" onclick="openBastionSettings('boost')">⚡ Level <span class="bl">${boostLv}</span> Bastion<button style="background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;margin-left:auto;">Boost →</button></div>`;
+  // Bastion Mood Bar
+  html += renderMoodBar(b);
   const chs=b.channels||[];
   const isOwner=b.owner===CU.username;
 
@@ -3432,8 +3461,9 @@ function renderBastionSidebar(scroll) {
       const tier=getAgeTier(CU?.dateOfBirth);
       const blocked=ch.nsfw&&tier==='child';
       const nsfwTag=ch.nsfw?`<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:1px 5px;border-radius:4px;flex-shrink:0;">NSFW</span>`:'';
+      const focusBadge=ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':'';
       html+=`<div class="ch-item ${curChannel===i?'active':''}" id="ch-sb-${i}" ${blocked?'style="opacity:.4;pointer-events:none;"':''}onclick="selectChannel(${i})">
-        <span>#</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>${nsfwTag}${blocked?'<span title="Age blocked">🔒</span>':''}
+        <span>#</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${blocked?'<span title="Age blocked">🔒</span>':''}
       </div>`;
     });
   }
@@ -3612,9 +3642,16 @@ function loadChatChannel(idx) {
       </div>
       ${buildChatInputBar({inputId:'ch-input',placeholder:'Message #'+escapeHTML(ch.name)+'…',context:'ch',chIdx:idx})}
     </div>`;
+  // Apply focus mode if enabled
+  if (ch.focusMode) {
+    const chatWrapEl = wrap.querySelector('.chat-wrap');
+    if (chatWrapEl) chatWrapEl.classList.add('focus-mode-chat');
+  }
   loadChannelMessages(idx);
   renderMemberList();
   setTimeout(() => { setupEmojiAutocomplete('ch-input'); _initChatScroll(document.getElementById('ch-msgs-'+idx)); }, 100);
+  // Reset silence timer for Joyster interventions
+  resetChatSilenceTimer();
 }
 
 // ════════════════════════════════════════════
@@ -3700,6 +3737,11 @@ async function sendChannelMsg(idx) {
     appendMessage(msgsEl,msg,'ch',lastAuthor);
     scrollBottom('ch-msgs-'+idx);
   }
+  // Award message reputation
+  awardMessageRep(b.globalId||b.name, CU.username);
+  // Track for Joyster intervention burst detection
+  checkMessageBurst();
+  resetChatSilenceTimer();
   try { await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text); }
   catch { toast('Failed to send','error'); }
 }
@@ -4197,7 +4239,7 @@ function buildMemberEntry(u, roles, memberRoles) {
     </div>
     <div class="ml-info" style="min-width:0;flex:1;">
       <div class="ml-name" style="color:${primaryRole?.color||'var(--muted-light)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
-      ${roleTag}
+      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${roleTag}${renderRepShield(CU?.bastions?.[curBastion]?.globalId||CU?.bastions?.[curBastion]?.name,u)}</div>
     </div>
   </div>`;
 }
@@ -4913,6 +4955,10 @@ function renderBSettingsNav(activeTab) {
     {id:'invites',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',label:'Invites'},
     {id:'members',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',label:'Members'},
     {id:'bans',icon:'🔨',label:'Bans'},
+    {label:'Living Bastion'},
+    {id:'mood',icon:'🏰',label:'Bastion Mood'},
+    {id:'reputation',icon:'🛡️',label:'Reputation'},
+    {id:'joysterbot',icon:'🎭',label:'Joyster'},
     {label:'Perks'},
     {id:'boost',icon:'⚡',label:'Boost'},
     {label:'Danger'},
@@ -4997,7 +5043,9 @@ function renderBSettingsMain(tab) {
           <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;margin-left:12px;">
             <span style="color:var(--muted);">${ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':ch.type==='event'?'🎮':ch.type==='automation'?'🧩':'#'}</span>
             <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
+            ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
             ${ch.nsfw?'<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
+            ${ch.type!=='voice'?`<button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleChannelFocusMode(${realIdx})">${ch.focusMode?'Unfocus':'🧭 Focus'}</button>`:''}
             <button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleNSFW(${realIdx})">${ch.nsfw?'SFW':'NSFW'}</button>
             <button class="btn-d" style="padding:4px 9px;font-size:11px;" onclick="deleteChannel(${realIdx})">✕</button>
           </div>`;}).join('')}
@@ -5007,7 +5055,9 @@ function renderBSettingsMain(tab) {
       <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;">
         <span style="color:var(--muted);">${ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':ch.type==='event'?'🎮':ch.type==='automation'?'🧩':'#'}</span>
         <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
+        ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
         ${ch.nsfw?'<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
+        ${ch.type!=='voice'?`<button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleChannelFocusMode(${realIdx})">${ch.focusMode?'Unfocus':'🧭 Focus'}</button>`:''}
         <button class="btn-g" style="padding:4px 9px;font-size:11px;" onclick="toggleNSFW(${realIdx})">${ch.nsfw?'SFW':'NSFW'}</button>
         <button class="btn-d" style="padding:4px 9px;font-size:11px;" onclick="deleteChannel(${realIdx})">✕</button>
       </div>`;}).join('');
@@ -5217,6 +5267,120 @@ function renderBSettingsMain(tab) {
       </div>
       <div style="display:grid;gap:12px;">${tierCards}</div>
       ${level>=3?`<div style="text-align:center;margin-top:16px;padding:12px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:12px;"><span style="font-size:16px;">👑</span><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fbbf24;margin-top:4px;">Sovereign Level — Maximum Boost!</div></div>`:''}`;
+  }
+  else if (tab==='mood') {
+    const curMood = calculateBastionMood(b);
+    const moodInfo = curMood ? BASTION_MOODS[curMood] : null;
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🏰 Bastion Mood</div>
+      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Your Bastion has a live Mood State based on activity, time, and engagement. It changes the sidebar atmosphere.</div>
+      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
+        <div style="font-weight:700;margin-bottom:8px;">Current Mood</div>
+        ${curMood ? `<div style="display:flex;align-items:center;gap:10px;font-size:18px;"><span>${moodInfo.emoji}</span><span style="font-family:'Syne',sans-serif;font-weight:800;">${moodInfo.label}</span></div>` : '<div style="color:var(--muted);">Mood is disabled</div>'}
+      </div>
+      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
+        <div style="font-weight:700;margin-bottom:12px;">Settings</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
+          <input type="checkbox" id="mood-disable-toggle" ${b.moodDisabled?'checked':''} onchange="toggleMoodDisabled(this.checked)">
+          <span style="font-size:13px;">Disable automatic mood</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:14px;">
+          <input type="checkbox" id="mood-lock-toggle" ${b.moodLocked?'checked':''} onchange="toggleMoodLocked(this.checked)">
+          <span style="font-size:13px;">Lock mood manually</span>
+        </label>
+        <div id="mood-lock-options" style="${b.moodLocked?'':'display:none;'}">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Select locked mood:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${Object.entries(BASTION_MOODS).map(([k,m]) => `<button class="btn-g ${b.lockedMood===k?'active':''}" style="font-size:12px;padding:6px 12px;${b.lockedMood===k?'background:var(--accent-dim);color:var(--accent);border-color:var(--accent-mid);':''}" onclick="setLockedMood('${k}')">${m.emoji} ${m.label}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+      ${b.boostLevel>=2?`
+      <div style="padding:16px;background:rgba(255,249,62,.03);border:1px solid rgba(255,249,62,.1);border-radius:16px;">
+        <div style="font-weight:700;margin-bottom:8px;">Custom Mood <span style="font-size:10px;color:var(--accent);font-weight:600;">Boost Lv2+</span></div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input class="field-input" id="custom-mood-emoji" placeholder="Emoji" value="${escapeHTML(b.customMood?.emoji||'')}" style="width:60px;text-align:center;">
+          <input class="field-input" id="custom-mood-label" placeholder="Mood name" value="${escapeHTML(b.customMood?.label||'')}" style="flex:1;">
+        </div>
+        <button class="btn-a" onclick="saveCustomMood()" style="font-size:12px;">Save Custom Mood</button>
+      </div>`:'<div style="padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--muted);">⚡ Custom Moods require Boost Level 2+</div>'}`;
+  }
+  else if (tab==='reputation') {
+    const bastionId = b.globalId||b.name;
+    const repData = JSON.parse(localStorage.getItem('ftz_rep_'+bastionId)||'{}');
+    const sorted = Object.entries(repData).sort((a,b_)=>b_[1]-a[1]).slice(0,10);
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🛡️ Bastion Reputation</div>
+      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Members earn Reputation through reactions, polls, events, boosting, and engagement. It's Bastion-specific — not global clout farming.</div>
+      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
+        <div style="font-weight:700;margin-bottom:12px;">Top Contributors</div>
+        ${sorted.length ? sorted.map(([user,score],i) => {
+          const tier = getRepTier(score);
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;margin-bottom:4px;background:${i<3?'rgba(255,249,62,.03)':'transparent'};">
+            <span style="font-size:14px;font-weight:800;color:${i<3?'var(--accent)':'var(--muted)'};width:24px;text-align:center;">#${i+1}</span>
+            <span style="flex:1;font-size:13px;font-weight:600;">${escapeHTML(user)}</span>
+            <span class="rep-shield" style="color:${tier.color};border-color:${tier.color}33;background:${tier.color}12;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              ${score}
+            </span>
+            <span style="font-size:10px;color:var(--muted);">${tier.label}</span>
+          </div>`;
+        }).join('') : '<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No reputation data yet. Engagement builds reputation!</div>'}
+      </div>
+      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
+        <div style="font-weight:700;margin-bottom:8px;">How Reputation is Earned</div>
+        <div style="font-size:12.5px;color:var(--muted-light);line-height:1.7;">
+          📝 Messages: +1 per message (capped at 30/day)<br>
+          ❤️ Reactions received: +2 per reaction<br>
+          🗳 Poll participation: +5 per vote<br>
+          ⚡ Boosting: +25 per boost<br>
+          📣 Mentions: +3 per positive mention
+        </div>
+      </div>
+      ${b.owner===CU.username?`
+      <div style="padding:16px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.15);border-radius:16px;">
+        <div style="font-weight:700;margin-bottom:8px;">Season Reset</div>
+        <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:12px;">Reset all reputation scores for a fresh season. This cannot be undone.</div>
+        <button class="btn-d" onclick="showCustomConfirm('Reset all reputation for this Bastion?',()=>resetBastionReputation('${escapeHTML(bastionId)}'))">Reset Reputation</button>
+      </div>`:''}`;
+  }
+  else if (tab==='joysterbot') {
+    const settings = getInterventionSettings(b);
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🎭 Joyster Interventions</div>
+      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Joyster becomes a lightweight, playful system presence. He never interrupts — only appears as subtle system-style messages during milestones and moments.</div>
+      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
+        <div style="font-weight:700;margin-bottom:12px;">Enable Joyster</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="ji-enable" ${settings.enabled?'checked':''} onchange="toggleJoysterIntervention(this.checked)">
+          <span style="font-size:13px;">Enable Joyster presence in this Bastion</span>
+        </label>
+      </div>
+      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
+        <div style="font-weight:700;margin-bottom:12px;">Frequency</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-g ${settings.frequency==='low'?'active':''}" style="flex:1;font-size:12px;padding:8px;${settings.frequency==='low'?'background:var(--accent-dim);color:var(--accent);border-color:var(--accent-mid);':''}" onclick="setJoysterFrequency('low')">🐢 Low</button>
+          <button class="btn-g ${settings.frequency==='normal'||!settings.frequency?'active':''}" style="flex:1;font-size:12px;padding:8px;${settings.frequency==='normal'||!settings.frequency?'background:var(--accent-dim);color:var(--accent);border-color:var(--accent-mid);':''}" onclick="setJoysterFrequency('normal')">⚡ Normal</button>
+          <button class="btn-g ${settings.frequency==='chaos'?'active':''}" style="flex:1;font-size:12px;padding:8px;${settings.frequency==='chaos'?'background:var(--accent-dim);color:var(--accent);border-color:var(--accent-mid);':''}" onclick="setJoysterFrequency('chaos')">🔥 Chaos</button>
+        </div>
+      </div>
+      <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
+        <div style="font-weight:700;margin-bottom:12px;">Scope</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="ji-party-only" ${settings.partyOnly?'checked':''} onchange="setJoysterPartyOnly(this.checked)">
+          <span style="font-size:13px;">Restrict to Party Rooms only</span>
+        </label>
+      </div>
+      <div style="padding:16px;background:rgba(255,249,62,.03);border:1px solid rgba(255,249,62,.08);border-radius:16px;">
+        <div style="font-weight:700;margin-bottom:8px;">Preview Triggers</div>
+        <div style="font-size:12px;color:var(--muted-light);line-height:1.8;">
+          🤫 Chat goes silent for 2 hours → Joyster comments<br>
+          🔥 50+ messages in 5 minutes → Joyster reacts<br>
+          ⚡ Someone boosts → Joyster acknowledges<br>
+          👋 New member joins → Joyster welcomes<br>
+          🎯 Milestone reached → Joyster celebrates
+        </div>
+      </div>`;
   }
   else if (tab==='danger') {
     main.innerHTML = `
@@ -13844,6 +14008,316 @@ async function saveProfileTheme() {
   toast('🎨 Profile theme saved!', 'success');
 }
 
+
+// ════════════════════════════════════════════
+// BASTION MOOD SYSTEM
+// ════════════════════════════════════════════
+const BASTION_MOODS = {
+  strategic: {emoji:'🟢',label:'Strategic',tint:'rgba(62,207,110,.08)',particle:'#3ecf6e'},
+  chaotic:   {emoji:'🔥',label:'Chaotic',tint:'rgba(248,113,113,.08)',particle:'#f87171'},
+  celebrating:{emoji:'🎉',label:'Celebrating',tint:'rgba(255,249,62,.08)',particle:'#fff93e'},
+  focused:   {emoji:'📚',label:'Focused',tint:'rgba(96,165,250,.08)',particle:'#60a5fa'},
+  chill:     {emoji:'😌',label:'Chill',tint:'rgba(167,139,250,.08)',particle:'#a78bfa'},
+  hype:      {emoji:'⚡',label:'Hype',tint:'rgba(251,191,36,.08)',particle:'#fbbf24'}
+};
+
+function calculateBastionMood(b) {
+  if (!b) return 'strategic';
+  if (b.moodLocked && b.lockedMood) return b.lockedMood;
+  if (b.moodDisabled) return null;
+  // Simulate mood from bastion state
+  const chs = b.channels || [];
+  const hasParty = chs.some(c => c.name && c.name.includes('party'));
+  const hasStudy = chs.some(c => c.name && (c.name.includes('study') || c.name.includes('notes') || c.name.includes('lecture')));
+  const hasPoll = chs.some(c => c.type === 'poll');
+  const hasEvent = chs.some(c => c.type === 'event');
+  const hour = new Date().getHours();
+  const memberCount = b.memberCount || 1;
+  // Time-of-day factor
+  if (hour >= 22 || hour < 6) return 'chill';
+  if (hasEvent && hour >= 18) return 'celebrating';
+  if (hasParty && memberCount > 5) return 'chaotic';
+  if (hasStudy) return 'focused';
+  if (hasPoll) return 'strategic';
+  if (memberCount > 10) return 'hype';
+  return 'strategic';
+}
+
+function renderMoodBar(b) {
+  if (!b) return '';
+  const moodKey = calculateBastionMood(b);
+  if (!moodKey) return '';
+  const mood = BASTION_MOODS[moodKey] || BASTION_MOODS.strategic;
+  const customMood = b.customMood && b.boostLevel >= 2 ? b.customMood : null;
+  const displayEmoji = customMood ? customMood.emoji : mood.emoji;
+  const displayLabel = customMood ? customMood.label : mood.label;
+  const tint = mood.tint;
+  const particleColor = mood.particle;
+  const lockIcon = b.moodLocked ? '<span class="mood-lock">🔒</span>' : '';
+  // Generate subtle particles
+  let particles = '';
+  for (let i = 0; i < 5; i++) {
+    const left = 10 + Math.random() * 80;
+    const delay = Math.random() * 6;
+    const dur = 6 + Math.random() * 4;
+    particles += `<div class="mood-particle" style="left:${left}%;bottom:0;background:${particleColor};animation-delay:${delay}s;animation-duration:${dur}s;"></div>`;
+  }
+  return `<div class="bastion-mood-bar" style="background:${tint};border:1px solid ${particleColor}15;" title="Bastion Mood: ${displayLabel}">
+    <div class="mood-particles">${particles}</div>
+    <span class="mood-emoji">${displayEmoji}</span>
+    <span class="mood-label">${displayLabel}</span>
+    ${lockIcon}
+  </div>`;
+}
+
+// ════════════════════════════════════════════
+// BASTION REPUTATION SYSTEM
+// ════════════════════════════════════════════
+function getReputation(bastionId, username) {
+  const key = 'ftz_rep_' + (bastionId || 'unknown');
+  const data = JSON.parse(localStorage.getItem(key) || '{}');
+  return data[username] || 0;
+}
+
+function addReputation(bastionId, username, amount) {
+  const key = 'ftz_rep_' + (bastionId || 'unknown');
+  const data = JSON.parse(localStorage.getItem(key) || '{}');
+  data[username] = (data[username] || 0) + amount;
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function getRepTier(score) {
+  if (score >= 2000) return {label:'Legendary',pct:'Top 1%',color:'#fbbf24'};
+  if (score >= 1000) return {label:'Veteran',pct:'Top 5%',color:'#f59e0b'};
+  if (score >= 500)  return {label:'Elite',pct:'Top 10%',color:'#60a5fa'};
+  if (score >= 200)  return {label:'Trusted',pct:'Top 25%',color:'#a78bfa'};
+  if (score >= 50)   return {label:'Active',pct:'Top 50%',color:'#3ecf6e'};
+  return {label:'New',pct:'—',color:'var(--muted)'};
+}
+
+function renderRepShield(bastionId, username) {
+  const rep = getReputation(bastionId, username);
+  if (rep < 10) return '';
+  const tier = getRepTier(rep);
+  return `<span class="rep-shield" style="color:${tier.color};border-color:${tier.color}33;background:${tier.color}12;">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    ${rep}
+    <span class="rep-tooltip">Reputation: ${rep}<br>${tier.label} · ${tier.pct} Contributor</span>
+  </span>`;
+}
+
+// Award rep on reactions
+function awardReactionRep(bastionId, targetUser) {
+  if (targetUser === CU?.username) return;
+  addReputation(bastionId, targetUser, 2);
+}
+
+// Award rep on boost
+function awardBoostRep(bastionId, username) {
+  addReputation(bastionId, username, 25);
+}
+
+// Award rep for poll participation
+function awardPollRep(bastionId, username) {
+  addReputation(bastionId, username, 5);
+}
+
+// Award rep for message (small amount, capped)
+function awardMessageRep(bastionId, username) {
+  const key = 'ftz_rep_msg_' + bastionId + '_' + username + '_' + new Date().toDateString();
+  const count = parseInt(localStorage.getItem(key) || '0');
+  if (count >= 30) return; // cap at 30 message rep per day
+  localStorage.setItem(key, count + 1);
+  addReputation(bastionId, username, 1);
+}
+
+// Admin: reset reputation for a bastion
+function resetBastionReputation(bastionId) {
+  localStorage.removeItem('ftz_rep_' + (bastionId || 'unknown'));
+  toast('Reputation reset for this season', 'success');
+}
+
+// ════════════════════════════════════════════
+// FOCUS MODE CHANNELS
+// ════════════════════════════════════════════
+function isChannelFocusMode(b, chIdx) {
+  const ch = b?.channels?.[chIdx];
+  return ch?.focusMode === true;
+}
+
+function toggleChannelFocusMode(chIdx) {
+  const b = CU?.bastions?.[curBastion];
+  if (!b || !b.channels?.[chIdx]) return;
+  b.channels[chIdx].focusMode = !b.channels[chIdx].focusMode;
+  saveUser();
+  if (curChannel === chIdx) selectChannel(chIdx);
+  renderBastionSidebar(document.getElementById('sidebar-scroll'));
+  toast(b.channels[chIdx].focusMode ? 'Focus Mode enabled' : 'Focus Mode disabled', 'success');
+}
+
+// ════════════════════════════════════════════
+// JOYSTER INTERVENTIONS (Opt-in)
+// ════════════════════════════════════════════
+const _JOYSTER_INTERVENTIONS = {
+  silence: [
+    "It's quiet in here… plotting something? 👀",
+    "Hello? Anyone home? ...echo... echo...",
+    "The silence is deafening. Someone say something!",
+    "I swear I heard a cricket. Oh wait, that was me."
+  ],
+  burst: [
+    "Alright alright, save some energy for the raid.",
+    "Slow down! My jester brain can't keep up!",
+    "This chat is moving faster than my jokes land!",
+    "Someone call the fire department, this chat is LIT!"
+  ],
+  boost: [
+    "Power increased. Walls reinforced.",
+    "A boost?! The Fortress grows stronger!",
+    "Boost detected! The walls shine brighter!",
+    "Someone just leveled up the Bastion. Respect."
+  ],
+  milestone: [
+    "Whoa, look at us! Growing stronger every day!",
+    "Another milestone! The Fortress stands tall!",
+    "Progress! Achievement unlocked!"
+  ],
+  newMember: [
+    "A new ally has arrived! Welcome to the Bastion!",
+    "Fresh recruit spotted! Show them around!",
+    "The ranks grow stronger. Welcome!"
+  ]
+};
+
+let _interventionLastTime = {};
+const _INTERVENTION_COOLDOWNS = {low: 600000, normal: 300000, chaos: 120000};
+
+function getInterventionSettings(b) {
+  return b?.joysterIntervention || {enabled: false, frequency: 'normal', partyOnly: false};
+}
+
+function shouldIntervene(b, type) {
+  const settings = getInterventionSettings(b);
+  if (!settings.enabled) return false;
+  const cooldown = _INTERVENTION_COOLDOWNS[settings.frequency] || 300000;
+  const now = Date.now();
+  const lastTime = _interventionLastTime[type] || 0;
+  if (now - lastTime < cooldown) return false;
+  return true;
+}
+
+function buildJoysterIntervention(type) {
+  const lines = _JOYSTER_INTERVENTIONS[type];
+  if (!lines) return '';
+  const text = lines[Math.floor(Math.random() * lines.length)];
+  return `<div class="joyster-intervention">
+    <div class="ji-icon">🎭</div>
+    <span class="ji-text">${text}</span>
+  </div>`;
+}
+
+function triggerJoysterIntervention(container, type) {
+  const b = CU?.bastions?.[curBastion];
+  if (!b || !shouldIntervene(b, type)) return;
+  const settings = getInterventionSettings(b);
+  if (settings.partyOnly) {
+    const ch = b?.channels?.[curChannel];
+    if (!ch || !ch.name?.includes('party')) return;
+  }
+  _interventionLastTime[type] = Date.now();
+  const html = buildJoysterIntervention(type);
+  if (!html || !container) return;
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  container.appendChild(div.firstElementChild);
+  // Auto-fade after 15 seconds
+  setTimeout(() => {
+    const el = container.querySelector('.joyster-intervention:last-of-type');
+    if (el) { el.style.opacity = '0'; el.style.transition = 'opacity .5s'; setTimeout(() => el.remove(), 500); }
+  }, 15000);
+}
+
+// Mood settings handlers
+function toggleMoodDisabled(val) {
+  const b = CU?.bastions?.[curBastion]; if (!b) return;
+  b.moodDisabled = val;
+  saveUser();
+  renderBastionSidebar(document.getElementById('sidebar-scroll'));
+  toast(val ? 'Mood disabled' : 'Mood re-enabled', 'success');
+}
+function toggleMoodLocked(val) {
+  const b = CU?.bastions?.[curBastion]; if (!b) return;
+  b.moodLocked = val;
+  if (val && !b.lockedMood) b.lockedMood = 'strategic';
+  saveUser();
+  const opts = document.getElementById('mood-lock-options');
+  if (opts) opts.style.display = val ? '' : 'none';
+  renderBastionSidebar(document.getElementById('sidebar-scroll'));
+  toast(val ? 'Mood locked' : 'Mood unlocked', 'success');
+}
+function setLockedMood(key) {
+  const b = CU?.bastions?.[curBastion]; if (!b) return;
+  b.lockedMood = key;
+  b.moodLocked = true;
+  saveUser();
+  renderBSettingsMain('mood');
+  renderBastionSidebar(document.getElementById('sidebar-scroll'));
+}
+function saveCustomMood() {
+  const b = CU?.bastions?.[curBastion]; if (!b) return;
+  const emoji = document.getElementById('custom-mood-emoji')?.value?.trim();
+  const label = document.getElementById('custom-mood-label')?.value?.trim();
+  if (!emoji || !label) { toast('Enter both emoji and name', 'error'); return; }
+  b.customMood = {emoji, label};
+  saveUser();
+  renderBastionSidebar(document.getElementById('sidebar-scroll'));
+  toast('Custom mood saved!', 'success');
+}
+
+// Joyster intervention settings handlers
+function toggleJoysterIntervention(val) {
+  const b = CU?.bastions?.[curBastion]; if (!b) return;
+  if (!b.joysterIntervention) b.joysterIntervention = {enabled:false,frequency:'normal',partyOnly:false};
+  b.joysterIntervention.enabled = val;
+  saveUser();
+  toast(val ? 'Joyster enabled for this Bastion' : 'Joyster disabled', 'success');
+}
+function setJoysterFrequency(freq) {
+  const b = CU?.bastions?.[curBastion]; if (!b) return;
+  if (!b.joysterIntervention) b.joysterIntervention = {enabled:false,frequency:'normal',partyOnly:false};
+  b.joysterIntervention.frequency = freq;
+  saveUser();
+  renderBSettingsMain('joysterbot');
+}
+function setJoysterPartyOnly(val) {
+  const b = CU?.bastions?.[curBastion]; if (!b) return;
+  if (!b.joysterIntervention) b.joysterIntervention = {enabled:false,frequency:'normal',partyOnly:false};
+  b.joysterIntervention.partyOnly = val;
+  saveUser();
+}
+
+// Chat silence tracker for interventions
+let _chatSilenceTimer = null;
+function resetChatSilenceTimer() {
+  if (_chatSilenceTimer) clearTimeout(_chatSilenceTimer);
+  _chatSilenceTimer = setTimeout(() => {
+    const msgsEl = curChannel !== null ? document.getElementById('ch-msgs-' + curChannel) : null;
+    if (msgsEl) triggerJoysterIntervention(msgsEl, 'silence');
+  }, 7200000); // 2 hours
+}
+
+// Message burst detector
+let _recentMsgTimestamps = [];
+function checkMessageBurst() {
+  const now = Date.now();
+  _recentMsgTimestamps.push(now);
+  _recentMsgTimestamps = _recentMsgTimestamps.filter(t => now - t < 300000);
+  if (_recentMsgTimestamps.length >= 50) {
+    const msgsEl = curChannel !== null ? document.getElementById('ch-msgs-' + curChannel) : null;
+    if (msgsEl) triggerJoysterIntervention(msgsEl, 'burst');
+    _recentMsgTimestamps = [];
+  }
+}
 
 async function buyAppearance(themeId, cost) {
   const bal = CU?.onyx||0;

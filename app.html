@@ -120,6 +120,61 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-row.msg-system .msg-system-text{flex:1;}
 .msg-row.msg-system .msg-system-text strong{color:rgba(255,255,255,.55);font-weight:600;}
 .msg-row.msg-system .msg-system-time{font-size:10px;color:rgba(255,255,255,.15);flex-shrink:0;}
+/* ── Enhanced Mentions ──── */
+.mention{display:inline;padding:0 4px;border-radius:6px;cursor:pointer;font-weight:600;font-size:inherit;transition:background .12s,color .12s;position:relative;}
+.mention:hover{filter:brightness(1.2);}
+.mention-user{background:rgba(96,165,250,.12);color:#60a5fa;border:none;}
+.mention-user:hover{background:rgba(96,165,250,.22);}
+.mention-everyone{background:rgba(255,249,62,.1);color:var(--accent);border:none;}
+.mention-everyone:hover{background:rgba(255,249,62,.2);}
+.mention-here{background:rgba(62,207,110,.1);color:#3ecf6e;border:none;}
+.mention-here:hover{background:rgba(62,207,110,.2);}
+.mention-role{border:none;}
+.mention-room{background:rgba(167,139,250,.1);color:#a78bfa;cursor:pointer;border:none;}
+.mention-room:hover{background:rgba(167,139,250,.2);}
+.mention-badge{position:absolute;top:-20px;left:50%;transform:translateX(-50%);padding:2px 8px;border-radius:6px;font-size:9px;font-weight:700;background:#1e2130;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;}
+.mention:hover .mention-badge{opacity:1;}
+/* ── Mention Hover Preview ──── */
+.mention-preview{position:fixed;z-index:6000;background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:14px;box-shadow:0 12px 44px rgba(0,0,0,.7);width:260px;overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
+.mention-preview .mp-header{padding:14px 16px 10px;display:flex;align-items:center;gap:10px;}
+.mention-preview .mp-body{padding:0 16px 14px;}
+.mention-preview .mp-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);transition:all .12s;}
+.mention-preview .mp-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
+/* ── Block Code ──── */
+.msg-code-block{position:relative;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;padding-top:28px;margin:6px 0;font-family:'Courier New',monospace;font-size:12.5px;line-height:1.6;color:rgba(255,255,255,.75);white-space:pre-wrap;word-break:break-all;overflow-x:auto;}
+.msg-code-block .code-lang{position:absolute;top:6px;left:12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.2);}
+.msg-code-block .code-copy{position:absolute;top:6px;right:8px;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.35);cursor:pointer;transition:all .12s;}
+.msg-code-block .code-copy:hover{background:rgba(255,255,255,.12);color:rgba(255,255,255,.6);}
+/* ── Quote Blocks ──── */
+.msg-quote{border-left:3px solid rgba(255,249,62,.3);background:rgba(255,255,255,.02);padding:6px 14px;margin:4px 0;border-radius:0 8px 8px 0;font-size:13px;color:rgba(255,255,255,.55);line-height:1.55;}
+.msg-quote-collapsible{max-height:80px;overflow:hidden;position:relative;cursor:pointer;transition:max-height .3s ease;}
+.msg-quote-collapsible.expanded{max-height:none;}
+.msg-quote-collapsible:not(.expanded)::after{content:'Click to expand…';position:absolute;bottom:0;left:0;right:0;padding:8px 14px 4px;background:linear-gradient(to bottom,transparent,var(--channel));font-size:10.5px;color:rgba(255,249,62,.5);font-weight:600;text-align:center;}
+/* ── Divider ──── */
+.msg-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);margin:10px 0;}
+/* ── Small Text ──── */
+.msg-small{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;}
+/* ── Highlight ──── */
+.msg-highlight{background:rgba(255,249,62,.12);padding:0 3px;border-radius:4px;color:rgba(255,249,62,.85);}
+/* ── Structured Titles ──── */
+.msg-title1{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin:12px 0 6px;line-height:1.3;color:#fff;}
+.msg-title2{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin:10px 0 4px;line-height:1.35;color:rgba(255,255,255,.9);}
+.msg-subtitle{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin:8px 0 4px;color:rgba(255,255,255,.4);}
+/* ── Improved Spoilers ──── */
+.msg-spoiler{display:inline;padding:0 4px;border-radius:5px;background:rgba(255,255,255,.1);color:transparent;cursor:pointer;transition:color .3s,background .3s;user-select:none;filter:blur(4px);-webkit-filter:blur(4px);}
+.msg-spoiler.revealed{color:rgba(255,255,255,.8);background:rgba(255,255,255,.05);filter:none;-webkit-filter:none;user-select:auto;}
+/* ── Smart Suggestion Panel ──── */
+.suggest-panel{position:fixed;background:#1e2130;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:6px;z-index:9500;box-shadow:0 12px 40px rgba(0,0,0,.7);min-width:240px;max-width:360px;max-height:300px;overflow-y:auto;animation:ctxIn .12s cubic-bezier(.22,1,.36,1);}
+.suggest-panel .sp-header{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:2px 8px 5px;}
+.suggest-panel .sp-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .1s;}
+.suggest-panel .sp-item:hover,.suggest-panel .sp-item.selected{background:rgba(255,249,62,.1);}
+.suggest-panel .sp-item .sp-icon{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.suggest-panel .sp-item .sp-label{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.7);}
+.suggest-panel .sp-item .sp-sub{font-size:10px;color:rgba(255,255,255,.3);}
+.suggest-panel .sp-item .sp-badge{font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:auto;flex-shrink:0;}
+/* ── Message Outline Mode ──── */
+.msg-outline{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px 20px;margin:4px 0;}
+.msg-outline .msg-text{font-size:13.5px;line-height:1.7;}
 .sidebar-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);margin:4px 12px;flex-shrink:0;}
 /* Channel categories - 2027 collapsible */
 .ch-cat-wrap{}
@@ -1685,6 +1740,7 @@ let curBastion = null;
 let curChannel = null;
 let curDM = null;
 let voiceConnected = false;
+let _outlineMode = false;
 let voiceChannel = null;
 let voiceParticipants = [];
 let isMuted = false;
@@ -3049,7 +3105,9 @@ async function sendDM() {
   _sentEcho.add(dmEchoKey);
   setTimeout(()=>_sentEcho.delete(dmEchoKey),6000);
   const msgsEl=document.getElementById('dm-msgs');
-  const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep};
+  const isOutline = _outlineMode;
+  _outlineMode = false;
+  const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
   if(msgsEl){
     const lastRows=msgsEl.querySelectorAll('.msg-row');
     const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
@@ -3957,7 +4015,9 @@ async function sendChannelMsg(idx) {
   _sentEcho.add(echoKey);
   setTimeout(() => _sentEcho.delete(echoKey), 5000);
   const msgsEl=document.getElementById('ch-msgs-'+idx);
-  const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep};
+  const isOutline = _outlineMode;
+  _outlineMode = false;
+  const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
   if(msgsEl){
     const lastRows=msgsEl.querySelectorAll('.msg-row');
     const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
@@ -4068,12 +4128,13 @@ function appendMessage(container, msg, context, prevAuthor) {
   const safeText=escapeHTML((msg.text||'').slice(0,100).replace(/'/g,' '));
   const safeFrom=escapeHTML(msg.from||'');
 
+  const outlineWrap = msg.outline ? 'msg-outline' : '';
   if (isFirst) {
     const avId='av-'+id.replace(/[^a-z0-9]/gi,'-');
     const stripeHTML=roleColor?`<div class="msg-role-stripe" style="background:${roleColor};"></div>`:'';
     row.innerHTML=`${stripeHTML}
       <div class="msg-av-wrap"><div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,msg.from,38)}</div></div>
-      <div class="msg-content-col">
+      <div class="msg-content-col ${outlineWrap}">
         ${fwdHTML}${replyHTML}
         <div class="msg-header">
           <span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>
@@ -9377,10 +9438,10 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
   const sendCall = context==='dm' ? "handleChatSend('dm')"
     : context==='gc' ? "sendGCMessage()"
     : `handleChatSend('ch',${chIdx??'curChannel'})`;
-  const keydown = context==='dm' ? "if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();handleChatSend('dm');}"
-    : context==='gc' ? "if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGCMessage();}"
-    : `if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();handleChatSend('ch',${chIdx??'curChannel'});}`;
-  
+  const keydown = context==='dm' ? "if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();if(event.altKey){_outlineMode=true;}handleChatSend('dm');}"
+    : context==='gc' ? "if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();if(event.altKey){_outlineMode=true;}sendGCMessage();}"
+    : `if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();if(event.altKey){_outlineMode=true;}handleChatSend('ch',${chIdx??'curChannel'});}`;
+
   return `
     <div class="chat-input-wrap">
       <div class="chat-input-outer" id="${inputId}-outer"
@@ -9677,13 +9738,296 @@ function parseMD(s) {
       return `<img src="${url}" alt="${emoji}" class="msg-emoji" style="width:1.25em;height:1.25em;object-fit:contain;vertical-align:-0.25em;display:inline-block;" loading="lazy" onerror="this.outerHTML='${emoji}'">`;
     } catch { return emoji; }
   });
-  // Markdown formatting
-  return s
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g,'<em>$1</em>')
-    .replace(/`(.+?)`/g,'<code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;font-family:monospace;">$1</code>')
-    .replace(/~~(.+?)~~/g,'<s>$1</s>')
-    .replace(/\n/g,'<br>');
+  // ── LAYER 1: Block-level elements (code blocks, quotes) ──
+  // Triple backtick code blocks (```lang\ncode\n```)
+  s = s.replace(/```(\w*)\n?([\s\S]*?)```/g, function(_, lang, code) {
+    const cid = 'cb-'+Math.random().toString(36).slice(2,8);
+    const langLabel = lang ? `<span class="code-lang">${escapeHTML(lang)}</span>` : '';
+    return `<div class="msg-code-block" id="${cid}">${langLabel}<button class="code-copy" onclick="event.stopPropagation();_copyCodeBlock('${cid}')">Copy</button><code>${escapeHTML(code.trim())}</code></div>`;
+  });
+  // Collapsible quote blocks (>> lines)
+  s = s.replace(/(?:^|\n)&gt;&gt;\s*([\s\S]*?)(?=\n(?!&gt;)|$)/gm, function(_, text) {
+    const qid = 'q-'+Math.random().toString(36).slice(2,8);
+    return `\n<div class="msg-quote msg-quote-collapsible" id="${qid}" onclick="this.classList.toggle('expanded')">${text.trim()}</div>`;
+  });
+  // Single-line quote blocks (> line)
+  s = s.replace(/(?:^|\n)&gt;\s+(.+?)(?=\n|$)/gm, function(_, text) {
+    return `\n<div class="msg-quote">${text.trim()}</div>`;
+  });
+
+  // ── LAYER 2: Mentions ──
+  // @everyone
+  s = s.replace(/@everyone/g, `<span class="mention mention-everyone" onmouseenter="_showMentionBadge(this,'Mass Mention')" onmouseleave="_hideMentionBadge(this)">@everyone<span class="mention-badge">Mass Mention</span></span>`);
+  // @here
+  s = s.replace(/@here/g, function() {
+    const onlineCount = _getOnlineMemberCount();
+    return `<span class="mention mention-here" onmouseenter="_showMentionBadge(this,'Notifying ${onlineCount} online')" onmouseleave="_hideMentionBadge(this)">@here<span class="mention-badge">Notifying ${onlineCount} online</span></span>`;
+  });
+  // @user and @role mentions
+  s = s.replace(/@([\w]+)/g, function(match, name) {
+    if (name === 'everyone' || name === 'here') return match; // already handled
+    if (curBastion !== null) {
+      const b = CU?.bastions?.[curBastion];
+      if (b) {
+        const role = (b.roles||[]).find(r => r.name.toLowerCase() === name.toLowerCase());
+        if (role) {
+          const col = role.color || '#60a5fa';
+          return `<span class="mention mention-role" style="background:${col}18;color:${col};" onmouseenter="_showRolePreview(event,this,'${escapeHTML(role.name)}')" onmouseleave="_hidePreview()">@${escapeHTML(role.name)}</span>`;
+        }
+      }
+    }
+    // @user mention
+    return `<span class="mention mention-user" onmouseenter="_showUserMentionPreview(event,this,'${escapeHTML(name)}')" onmouseleave="_hidePreview()" onclick="_scrollToUserMsg('${escapeHTML(name)}')">@${escapeHTML(name)}</span>`;
+  });
+  // #room mentions
+  s = s.replace(/#([\w-]+)/g, function(match, name) {
+    if (curBastion === null) return match;
+    const b = CU?.bastions?.[curBastion];
+    if (!b) return match;
+    const ch = (b.channels||[]).find(c => c.name === name.toLowerCase());
+    const cat = (b.categories||[]).find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (ch) {
+      const chIdx = (b.channels||[]).indexOf(ch);
+      return `<span class="mention mention-room" onclick="selectChannel(${chIdx})" onmouseenter="_showRoomPreview(event,this,'${escapeHTML(ch.name)}')" onmouseleave="_hidePreview()">#${escapeHTML(ch.name)}</span>`;
+    }
+    if (cat) {
+      return `<span class="mention mention-room" onmouseenter="_showCatPreview(event,this,'${escapeHTML(cat.id)}')" onmouseleave="_hidePreview()">#${escapeHTML(cat.name)}</span>`;
+    }
+    return match;
+  });
+
+  // ── LAYER 3: Structured Titles ──
+  // ///Subtitle/// → small uppercase
+  s = s.replace(/\/\/\/(.+?)\/\/\//g, '<div class="msg-subtitle">$1</div>');
+  // //Title2// → medium heading
+  s = s.replace(/\/\/(.+?)\/\//g, '<div class="msg-title2">$1</div>');
+  // /Title1/ → large heading
+  s = s.replace(/(?<![a-zA-Z0-9:])\/([^\/\n][^\n]*?)\/(?![a-zA-Z0-9])/g, '<div class="msg-title1">$1</div>');
+
+  // ── LAYER 4: Dividers ──
+  s = s.replace(/(?:^|\n)---(?:\n|$)/g, '<div class="msg-divider"></div>');
+
+  // ── LAYER 5: Inline formatting ──
+  // Spoilers ||text||
+  s = s.replace(/\|\|(.+?)\|\|/g, '<span class="msg-spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>');
+  // Highlight ==text==
+  s = s.replace(/==(.+?)==/g, '<span class="msg-highlight">$1</span>');
+  // Small text ~text~ (but not ~~strikethrough~~)
+  s = s.replace(/(?<!~)~(?!~)(.+?)(?<!~)~(?!~)/g, '<span class="msg-small">$1</span>');
+  // Strikethrough ~~text~~
+  s = s.replace(/~~(.+?)~~/g, '<s>$1</s>');
+  // Bold italic ***text***
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  // Bold **text**
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Italic *text*
+  s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // Inline code `text`
+  s = s.replace(/`(.+?)`/g, '<code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:5px;font-family:\'Courier New\',monospace;font-size:12px;">$1</code>');
+  // "citation" (legacy — works with escaped quotes)
+  s = s.replace(/&quot;([^&]+?)&quot;/g, '<span style="font-style:italic;color:rgba(255,255,255,.45);border-left:2px solid rgba(255,255,255,.1);padding-left:8px;">$1</span>');
+  // Newlines
+  s = s.replace(/\n/g, '<br>');
+  return s;
+}
+
+function _copyCodeBlock(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const code = el.querySelector('code');
+  if (!code) return;
+  navigator.clipboard.writeText(code.textContent).then(() => {
+    const btn = el.querySelector('.code-copy');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500); }
+  }).catch(() => {});
+}
+
+function _showMentionBadge(el, text) {
+  const badge = el.querySelector('.mention-badge');
+  if (badge) { badge.textContent = text; badge.style.opacity = '1'; }
+}
+function _hideMentionBadge(el) {
+  const badge = el.querySelector('.mention-badge');
+  if (badge) badge.style.opacity = '0';
+}
+
+function _getOnlineMemberCount() {
+  if (curBastion === null) return '?';
+  const b = CU?.bastions?.[curBastion];
+  return b?.memberCount || 1;
+}
+
+// ════════════════════════════════════════════
+// MENTION HOVER PREVIEWS
+// ════════════════════════════════════════════
+let _mentionPreviewTimer = null;
+
+function _showUserMentionPreview(e, el, username) {
+  _hidePreview();
+  _mentionPreviewTimer = setTimeout(() => {
+    const rect = el.getBoundingClientRect();
+    const panel = document.createElement('div');
+    panel.className = 'mention-preview';
+    panel.id = 'mention-preview-panel';
+    const left = Math.min(rect.left, window.innerWidth - 280);
+    const top = rect.bottom + 6;
+    panel.style.left = left + 'px';
+    panel.style.top = (top + 280 > window.innerHeight ? rect.top - 180 : top) + 'px';
+    const pfp = _pfpCache[username] || null;
+    const isMe = username === CU?.username;
+    const displayName = isMe ? (CU?.displayName || username) : username;
+    const status = isMe ? (CU?.status || 'online') : 'online';
+    const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
+    // Role tag in bastion
+    let roleHTML = '';
+    if (curBastion !== null) {
+      const b = CU?.bastions?.[curBastion];
+      const rids = (b?.memberRoles||{})[username] || [];
+      const pr = (b?.roles||[]).find(r => rids.includes(r.id));
+      if (pr) roleHTML = `<span class="role-tag" style="color:${pr.color};background:${pr.color}22;border:1px solid ${pr.color}44;font-size:10px;">${escapeHTML(pr.name)}</span>`;
+    }
+    panel.innerHTML = `
+      <div class="mp-header">
+        <div style="position:relative;flex-shrink:0;">
+          ${buildAvatarHTML(pfp, displayName, 36)}
+          <span style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${SC[status]||SC.offline};border:2px solid var(--panel);"></span>
+        </div>
+        <div style="min-width:0;flex:1;">
+          <div style="font-weight:700;font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(displayName)}</div>
+          <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">${roleHTML}<span style="font-size:10px;color:var(--muted);">${status}</span></div>
+        </div>
+      </div>
+      <div class="mp-body">
+        <button class="mp-btn" onclick="event.stopPropagation();_hidePreview();openDMChat('${escapeHTML(username)}')">💬 Message</button>
+      </div>`;
+    document.body.appendChild(panel);
+    // Fetch real data
+    if (!isMe) {
+      FortizedSocial.getUserByName(username).then(u => {
+        if (!u) return;
+        const nameEl = panel.querySelector('.mp-header div div');
+        if (nameEl && u.displayName) nameEl.textContent = u.displayName;
+        const avWrap = panel.querySelector('.mp-header > div:first-child');
+        if (avWrap && u.pfp) avWrap.innerHTML = buildAvatarHTML(u.pfp, u.displayName||username, 36) + avWrap.querySelector('span').outerHTML;
+      }).catch(()=>{});
+      FortizedSocial.getStatus(username).then(st => {
+        const dotEl = panel.querySelector('.mp-header span[style*="border-radius:50%"]');
+        if (dotEl) dotEl.style.background = SC[st]||SC.offline;
+        const statusEl = panel.querySelector('.mp-body span, .mp-header span[style*="font-size:10px"]');
+      }).catch(()=>{});
+    }
+  }, 250);
+}
+
+function _showRolePreview(e, el, roleName) {
+  _hidePreview();
+  _mentionPreviewTimer = setTimeout(() => {
+    const rect = el.getBoundingClientRect();
+    const b = CU?.bastions?.[curBastion];
+    if (!b) return;
+    const role = (b.roles||[]).find(r => r.name === roleName);
+    if (!role) return;
+    const memberCount = Object.entries(b.memberRoles||{}).filter(([_,rids]) => rids.includes(role.id)).length;
+    const perms = (role.permissions||[]).slice(0, 5).map(p => p.replace(/_/g,' ')).join(', ');
+    const panel = document.createElement('div');
+    panel.className = 'mention-preview';
+    panel.id = 'mention-preview-panel';
+    const left = Math.min(rect.left, window.innerWidth - 280);
+    const top = rect.bottom + 6;
+    panel.style.left = left + 'px';
+    panel.style.top = (top + 200 > window.innerHeight ? rect.top - 160 : top) + 'px';
+    panel.innerHTML = `
+      <div class="mp-header">
+        <div class="role-dot" style="width:14px;height:14px;border-radius:50%;background:${role.color||'#60a5fa'};flex-shrink:0;box-shadow:0 0 8px ${role.color||'#60a5fa'}44;"></div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:14px;color:${role.color||'#60a5fa'};">${escapeHTML(role.name)}</div>
+          <div style="font-size:10px;color:var(--muted);">👥 ${memberCount} member${memberCount!==1?'s':''}</div>
+        </div>
+      </div>
+      <div class="mp-body">
+        ${perms ? `<div style="font-size:10px;color:rgba(255,255,255,.3);"><strong style="color:rgba(255,255,255,.5);">Permissions:</strong> ${escapeHTML(perms)}${(role.permissions||[]).length>5?'…':''}</div>` : ''}
+      </div>`;
+    document.body.appendChild(panel);
+  }, 250);
+}
+
+function _showRoomPreview(e, el, roomName) {
+  _hidePreview();
+  _mentionPreviewTimer = setTimeout(() => {
+    const rect = el.getBoundingClientRect();
+    const b = CU?.bastions?.[curBastion];
+    if (!b) return;
+    const ch = (b.channels||[]).find(c => c.name === roomName);
+    if (!ch) return;
+    const typeLabel = {text:'Text Room',voice:'Party Room',forum:'Forum Room',announcement:'Announcement Room',poll:'Poll Room'}[ch.type]||'Room';
+    const typeIcon = {text:'#',voice:'🎉',forum:'💬',announcement:'📢',poll:'🗳'}[ch.type]||'#';
+    const panel = document.createElement('div');
+    panel.className = 'mention-preview';
+    panel.id = 'mention-preview-panel';
+    const left = Math.min(rect.left, window.innerWidth - 280);
+    const top = rect.bottom + 6;
+    panel.style.left = left + 'px';
+    panel.style.top = (top + 160 > window.innerHeight ? rect.top - 140 : top) + 'px';
+    panel.innerHTML = `
+      <div class="mp-header">
+        <div style="width:32px;height:32px;border-radius:10px;background:rgba(167,139,250,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${typeIcon}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:13px;color:#fff;">#${escapeHTML(ch.name)}</div>
+          <div style="font-size:10px;color:var(--muted);">${typeLabel}</div>
+        </div>
+      </div>
+      <div class="mp-body">
+        ${ch.desc ? `<div style="font-size:11.5px;color:rgba(255,255,255,.45);line-height:1.5;">${escapeHTML(ch.desc)}</div>` : '<div style="font-size:11px;color:var(--muted);">No description</div>'}
+      </div>`;
+    document.body.appendChild(panel);
+  }, 250);
+}
+
+function _showCatPreview(e, el, catId) {
+  _hidePreview();
+  _mentionPreviewTimer = setTimeout(() => {
+    const rect = el.getBoundingClientRect();
+    const b = CU?.bastions?.[curBastion];
+    if (!b) return;
+    const cat = (b.categories||[]).find(c => c.id === catId);
+    if (!cat) return;
+    const rooms = (b.channels||[]).filter(ch => ch.categoryId === catId);
+    const panel = document.createElement('div');
+    panel.className = 'mention-preview';
+    panel.id = 'mention-preview-panel';
+    const left = Math.min(rect.left, window.innerWidth - 280);
+    const top = rect.bottom + 6;
+    panel.style.left = left + 'px';
+    panel.style.top = (top + 200 > window.innerHeight ? rect.top - 180 : top) + 'px';
+    panel.innerHTML = `
+      <div class="mp-header">
+        <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">📁</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:13px;color:#fff;">${escapeHTML(cat.name)}</div>
+          <div style="font-size:10px;color:var(--muted);">Category · ${rooms.length} room${rooms.length!==1?'s':''}</div>
+        </div>
+      </div>
+      <div class="mp-body">
+        ${rooms.length ? rooms.slice(0,6).map(ch => {
+          const icon = {text:'#',voice:'🎉',forum:'💬',announcement:'📢',poll:'🗳'}[ch.type]||'#';
+          return `<div style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:11.5px;color:rgba(255,255,255,.4);"><span style="opacity:.5;">${icon}</span> ${escapeHTML(ch.name)}</div>`;
+        }).join('') : '<div style="font-size:11px;color:var(--muted);">No rooms in this category</div>'}
+      </div>`;
+    document.body.appendChild(panel);
+  }, 250);
+}
+
+function _hidePreview() {
+  if (_mentionPreviewTimer) { clearTimeout(_mentionPreviewTimer); _mentionPreviewTimer = null; }
+  document.getElementById('mention-preview-panel')?.remove();
+}
+
+function _scrollToUserMsg(username) {
+  // Find the last message from this user in the visible chat
+  const msgs = document.querySelectorAll('.msg-row');
+  let last = null;
+  msgs.forEach(m => { if (m.dataset.from === username) last = m; });
+  if (last) { last.scrollIntoView({behavior:'smooth',block:'center'}); last.style.background = 'rgba(96,165,250,.08)'; setTimeout(() => last.style.background = '', 1500); }
 }
 
 // ════════════════════════════════════════════
@@ -13197,8 +13541,24 @@ function setupEmojiAutocomplete(inputId) {
   if (!ta || ta._emojiAcBound) return;
   ta._emojiAcBound = true;
 
-  ta.addEventListener('input', () => handleEmojiAutocomplete(ta));
+  ta.addEventListener('input', () => {
+    // Try smart suggestions first (@, #, /)
+    if (!_handleSmartSuggestion(ta)) {
+      handleEmojiAutocomplete(ta);
+    }
+  });
   ta.addEventListener('keydown', (e) => {
+    // Smart suggestion panel takes priority
+    const sp = document.getElementById('smart-suggest-panel');
+    if (sp && sp.style.display !== 'none') {
+      if (e.key === 'ArrowDown') { e.preventDefault(); _sugSelected = Math.min(_sugSelected+1, _sugResults.length-1); _renderSuggestPanel(ta); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); _sugSelected = Math.max(_sugSelected-1, 0); _renderSuggestPanel(ta); }
+      else if (e.key === 'Enter' || e.key === 'Tab') {
+        if (_sugResults[_sugSelected]) { e.preventDefault(); _applySuggestion(_sugResults[_sugSelected], ta); }
+      }
+      else if (e.key === 'Escape') { _hideSuggestPanel(); }
+      return;
+    }
     const ac = document.getElementById('emoji-ac-panel');
     if (!ac || !ac.classList.contains('show')) return;
     if (e.key === 'ArrowDown') { e.preventDefault(); _acSelected = Math.min(_acSelected+1, _acResults.length-1); renderAcPanel(ta); }
@@ -13208,7 +13568,7 @@ function setupEmojiAutocomplete(inputId) {
     }
     else if (e.key === 'Escape') { hideEmojiAc(); }
   });
-  ta.addEventListener('blur', () => setTimeout(hideEmojiAc, 150));
+  ta.addEventListener('blur', () => setTimeout(() => { hideEmojiAc(); _hideSuggestPanel(); }, 150));
 }
 
 function handleEmojiAutocomplete(ta) {
@@ -13367,6 +13727,189 @@ function wireAllEmojiAutocomplete() {
   ['dm-input','gc-input','ch-input'].forEach(setupEmojiAutocomplete);
 }
 
+
+// ════════════════════════════════════════════
+// SMART SUGGESTION SYSTEM (@, #, /)
+// ════════════════════════════════════════════
+let _sugResults = [];
+let _sugSelected = 0;
+let _sugStartPos = -1;
+let _sugType = ''; // 'mention','room','format'
+
+function _handleSmartSuggestion(ta) {
+  const val = ta.value;
+  const pos = ta.selectionStart;
+  if (pos === 0) { _hideSuggestPanel(); return false; }
+
+  // Find trigger character before cursor
+  let triggerPos = -1;
+  let triggerChar = '';
+  for (let i = pos-1; i >= Math.max(0, pos-40); i--) {
+    const c = val[i];
+    if (c === '@' || c === '#' || c === '/') {
+      // Must be at start of word (start of input or preceded by space/newline)
+      if (i === 0 || /[\s\n]/.test(val[i-1])) {
+        triggerPos = i;
+        triggerChar = c;
+        break;
+      }
+    }
+    if (/\s/.test(c)) break;
+  }
+
+  if (triggerPos === -1) { _hideSuggestPanel(); return false; }
+
+  const query = val.slice(triggerPos + 1, pos).toLowerCase();
+
+  // Build results based on trigger type
+  _sugResults = [];
+  _sugType = triggerChar;
+  _sugStartPos = triggerPos;
+
+  if (triggerChar === '@') {
+    // Context: DMs should not show @everyone, @here, or roles
+    const isDM = ta.id === 'dm-input' || ta.id === 'gc-input';
+    if (!isDM) {
+      // @everyone and @here
+      if ('everyone'.startsWith(query)) _sugResults.push({type:'special',label:'everyone',desc:'Notify all members',icon:'📢',insert:'@everyone'});
+      if ('here'.startsWith(query)) _sugResults.push({type:'special',label:'here',desc:'Notify online members',icon:'📍',insert:'@here'});
+      // Roles
+      if (curBastion !== null) {
+        const b = CU?.bastions?.[curBastion];
+        (b?.roles||[]).forEach(r => {
+          if (r.name.toLowerCase().startsWith(query) || r.name.toLowerCase().includes(query)) {
+            _sugResults.push({type:'role',label:r.name,desc:`${(Object.entries(b.memberRoles||{}).filter(([_,rids])=>rids.includes(r.id)).length)||0} members`,icon:'🎖',color:r.color||'#60a5fa',insert:'@'+r.name});
+          }
+        });
+      }
+    }
+    // Users — from member list or friends
+    const users = _getSuggestableUsers();
+    users.forEach(u => {
+      if (u.toLowerCase().startsWith(query) || u.toLowerCase().includes(query)) {
+        _sugResults.push({type:'user',label:u,desc:'User',icon:null,pfp:_pfpCache[u]||null,insert:'@'+u});
+      }
+    });
+    _sugResults = _sugResults.slice(0, 10);
+  }
+  else if (triggerChar === '#') {
+    if (curBastion !== null) {
+      const b = CU?.bastions?.[curBastion];
+      // Rooms
+      (b?.channels||[]).forEach(ch => {
+        if (ch.name.toLowerCase().startsWith(query) || ch.name.toLowerCase().includes(query)) {
+          const typeLabel = {text:'Text Room',voice:'Party Room',forum:'Forum Room',announcement:'Announcement Room',poll:'Poll Room'}[ch.type]||'Room';
+          _sugResults.push({type:'room',label:ch.name,desc:typeLabel,icon:ch.type==='voice'?'🎉':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':'#',insert:'#'+ch.name});
+        }
+      });
+      // Categories
+      (b?.categories||[]).forEach(cat => {
+        if (cat.name.toLowerCase().startsWith(query) || cat.name.toLowerCase().includes(query)) {
+          const roomCount = (b.channels||[]).filter(ch=>ch.categoryId===cat.id).length;
+          _sugResults.push({type:'category',label:cat.name,desc:`Category · ${roomCount} rooms`,icon:'📁',insert:'#'+cat.name});
+        }
+      });
+    }
+    _sugResults = _sugResults.slice(0, 10);
+  }
+  else if (triggerChar === '/') {
+    // Format suggestions
+    const formats = [
+      {label:'Title1',desc:'Large heading: /Your Title/',icon:'📝',insert:'/'},
+      {label:'Title2',desc:'Medium heading: //Your Title//',icon:'📝',insert:'//'},
+      {label:'Subtitle',desc:'Small uppercase: ///Your Text///',icon:'📝',insert:'///'},
+    ];
+    formats.forEach(f => {
+      if (f.label.toLowerCase().startsWith(query) || f.label.toLowerCase().includes(query)) {
+        _sugResults.push({type:'format',...f});
+      }
+    });
+    _sugResults = _sugResults.slice(0, 6);
+  }
+
+  if (!_sugResults.length) { _hideSuggestPanel(); return false; }
+  _sugSelected = 0;
+  _renderSuggestPanel(ta);
+  return true;
+}
+
+function _getSuggestableUsers() {
+  const users = new Set();
+  // Current bastion members
+  if (curBastion !== null) {
+    const b = CU?.bastions?.[curBastion];
+    if (b?.owner) users.add(b.owner);
+    Object.keys(b?.memberRoles||{}).forEach(u => users.add(u));
+  }
+  // Friends
+  (CU?.friends||[]).forEach(f => users.add(f));
+  // Self
+  if (CU?.username) users.add(CU.username);
+  return [...users];
+}
+
+function _renderSuggestPanel(ta) {
+  let panel = document.getElementById('smart-suggest-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'smart-suggest-panel';
+    panel.className = 'suggest-panel';
+    document.body.appendChild(panel);
+  }
+  const rect = ta.getBoundingClientRect();
+  panel.style.cssText += `;position:fixed;bottom:${window.innerHeight-rect.top+6}px;left:${rect.left}px;display:flex;flex-direction:column;gap:2px;`;
+
+  const typeLabels = {'@':'Mentions','#':'Rooms & Categories','/':'Formatting'};
+  const queryText = ta.value.slice(_sugStartPos+1, ta.selectionStart);
+  panel.innerHTML = `<div class="sp-header">${typeLabels[_sugType]||'Suggestions'} ${queryText?'— <span style="color:rgba(255,249,62,.7);">'+escapeHTML(queryText)+'</span>':''}</div>`;
+  _sugResults.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'sp-item' + (i===_sugSelected?' selected':'');
+    row.onclick = () => { _sugSelected = i; _applySuggestion(r, ta); };
+    row.onmouseenter = () => { _sugSelected = i; _renderSuggestPanel(ta); };
+
+    let iconHTML;
+    if (r.pfp) {
+      iconHTML = `<img src="${escapeHTML(r.pfp)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;">`;
+    } else if (r.icon) {
+      iconHTML = `<div class="sp-icon">${r.icon}</div>`;
+    } else {
+      iconHTML = `<div class="sp-icon">${(r.label||'?')[0].toUpperCase()}</div>`;
+    }
+
+    let badgeHTML = '';
+    if (r.type === 'role' && r.color) badgeHTML = `<span class="sp-badge" style="background:${r.color}18;color:${r.color};border:1px solid ${r.color}44;">Role</span>`;
+    else if (r.type === 'special') badgeHTML = `<span class="sp-badge" style="background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);">Special</span>`;
+
+    row.innerHTML = `${iconHTML}<div style="flex:1;min-width:0;"><div class="sp-label">${escapeHTML(r.label)}</div><div class="sp-sub">${escapeHTML(r.desc||'')}</div></div>${badgeHTML}`;
+    panel.appendChild(row);
+  });
+  panel.style.display = 'flex';
+}
+
+function _applySuggestion(result, ta) {
+  const pos = ta.selectionStart;
+  const before = ta.value.slice(0, _sugStartPos);
+  const after = ta.value.slice(pos);
+  let insert = result.insert + ' ';
+  // For format suggestions, handle differently — replace the / with the format wrapper
+  if (result.type === 'format') {
+    // The user typed / already, and we need the wrapping format
+    insert = result.insert; // just the opening slashes, user types content
+  }
+  ta.value = before + insert + after;
+  ta.selectionStart = ta.selectionEnd = _sugStartPos + insert.length;
+  ta.focus();
+  _hideSuggestPanel();
+  autoResize(ta);
+}
+
+function _hideSuggestPanel() {
+  const panel = document.getElementById('smart-suggest-panel');
+  if (panel) panel.style.display = 'none';
+  _sugResults = [];
+  _sugStartPos = -1;
+}
 
 function toggleEmoticonConversion(el) {
   _globalSettings.disableEmoticonConversion = !_globalSettings.disableEmoticonConversion;

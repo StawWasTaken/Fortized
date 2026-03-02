@@ -103,63 +103,122 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 @keyframes spin{to{transform:rotate(360deg);}}
 .load-spinner{width:32px;height:32px;border:3px solid rgba(255,249,62,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
 .home-wrap{flex:1;display:flex;overflow:hidden;min-width:0;min-height:0;}
-.home-feed{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column;}
-.home-right{width:290px;min-width:290px;border-left:1px solid var(--border);overflow-y:auto;background:var(--channel);}
-.home-hero{width:100%;min-height:200px;background:linear-gradient(135deg,rgba(7,9,14,.96) 0%,rgba(15,18,30,.9) 50%,rgba(7,9,14,.85) 100%),url("Fortized banner.png") center/cover no-repeat;position:relative;overflow:hidden;flex-shrink:0;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 28px;}
-.home-hero::after{content:"";position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none;}
+.home-feed{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column;scroll-behavior:smooth;}
+.home-right{width:300px;min-width:300px;border-left:1px solid var(--border);overflow-y:auto;background:var(--channel);display:flex;flex-direction:column;}
+
+/* ── HERO 2.0 ──────────────────────────────────── */
+.home-hero{width:100%;min-height:240px;background:linear-gradient(145deg,#13161d 0%,#1c1f28 40%,#181b24 100%);position:relative;overflow:hidden;flex-shrink:0;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 36px;}
+.home-hero::before{content:"";position:absolute;inset:0;background:url("Fortized banner.png") center/cover no-repeat;opacity:.06;pointer-events:none;}
+.home-hero::after{content:"";position:absolute;bottom:0;left:0;right:0;height:90px;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none;z-index:1;}
+/* Sparkle particles container */
+.hero-sparkles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+.hero-sparkle{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,249,62,.5);animation:sparkleDrift 6s ease-in-out infinite;opacity:0;}
+@keyframes sparkleDrift{0%{opacity:0;transform:translateY(20px) scale(.5);}20%{opacity:.8;}50%{opacity:.4;transform:translateY(-60px) scale(1);}80%{opacity:.6;}100%{opacity:0;transform:translateY(-120px) scale(.3);}}
+/* Floating items (dice, hashtag, etc.) */
+.hero-float-items{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+.hero-float-item{position:absolute;font-size:18px;opacity:.08;animation:floatItem 12s ease-in-out infinite;}
+@keyframes floatItem{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-20px) rotate(15deg);}}
 @keyframes revealUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
-.hero-left-content{position:relative;z-index:1;animation:revealUp .5s cubic-bezier(.22,1,.36,1) both;}
-.hero-tag-app{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.18);border-radius:100px;padding:5px 14px;margin-bottom:20px;}
-.hero-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 2s ease infinite;}
-@keyframes blink{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.3;transform:scale(.6);}}
-.home-hero h1{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;letter-spacing:-1.5px;line-height:.96;margin-bottom:12px;}
+.hero-left-content{position:relative;z-index:2;animation:revealUp .5s cubic-bezier(.22,1,.36,1) both;padding:28px 0;}
+.hero-greeting{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.home-hero h1{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;letter-spacing:-1.2px;line-height:1.05;margin-bottom:14px;color:#fff;}
 .home-hero h1 em{font-style:normal;color:var(--accent);}
-.home-hero p.hero-sub-app{font-size:14.5px;color:rgba(255,255,255,.6);line-height:1.65;max-width:360px;margin-bottom:26px;}
 .home-hero-actions{display:flex;gap:10px;flex-wrap:wrap;}
-.home-hero-knight{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;height:280px;width:200px;}
-.home-hero-knight img{height:250px;object-fit:contain;filter:drop-shadow(0 20px 40px rgba(255,249,62,.15));animation:float 5.5s ease-in-out infinite;}
-@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
-.home-marquee{background:rgba(11,14,21,.7);border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;position:relative;flex-shrink:0;}
-.home-marquee::before{left:0;background:linear-gradient(to right,var(--bg),transparent);}
-.home-marquee::after{right:0;background:linear-gradient(to left,var(--bg),transparent);}
-.home-marquee::before,.home-marquee::after{content:"";position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none;}
-.marquee-track{display:flex;animation:marquee 20s linear infinite;width:max-content;}
-@keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
-.marquee-item{display:flex;align-items:center;gap:10px;padding:14px 36px;border-right:1px solid var(--border);white-space:nowrap;}
-.mi-label{font-family:'Syne',sans-serif;font-size:11.5px;font-weight:700;color:var(--muted-light);letter-spacing:.04em;}
-.home-main-scroll{padding:28px 32px 48px;}
+.home-hero-actions .hero-btn{padding:10px 20px;border-radius:100px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;border:none;display:flex;align-items:center;gap:6px;}
+.home-hero-actions .hero-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.hero-btn-primary{background:var(--accent);color:#060810;}
+.hero-btn-primary:hover{background:#fffb5e;}
+.hero-btn-secondary{background:transparent;color:var(--accent);border:1.5px solid rgba(255,249,62,.35)!important;}
+.hero-btn-secondary:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.5)!important;}
+.hero-btn-create{background:rgba(167,139,250,.12);color:#a78bfa;border:1.5px solid rgba(167,139,250,.25)!important;}
+.hero-btn-create:hover{background:rgba(167,139,250,.2);border-color:rgba(167,139,250,.4)!important;}
+/* Joyster character */
+.hero-joyster-wrap{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:center;height:220px;width:200px;animation:revealUp .6s cubic-bezier(.22,1,.36,1) .1s both;}
+.hero-joyster-img{height:180px;object-fit:contain;filter:drop-shadow(0 12px 32px rgba(255,249,62,.12));animation:joysterIdle 4s ease-in-out infinite;cursor:pointer;transition:transform .2s;}
+.hero-joyster-img:hover{transform:scale(1.05);}
+@keyframes joysterIdle{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+/* Joyster speech bubble */
+.joyster-bubble{position:absolute;top:12px;right:160px;background:var(--panel);border:1px solid rgba(255,249,62,.15);border-radius:14px 14px 4px 14px;padding:8px 14px;font-size:12px;color:rgba(255,255,255,.7);max-width:180px;white-space:nowrap;opacity:0;transform:scale(.9) translateY(4px);transition:all .2s;pointer-events:none;z-index:3;box-shadow:0 6px 20px rgba(0,0,0,.3);}
+.joyster-bubble.show{opacity:1;transform:scale(1) translateY(0);}
+/* Knight background ghost */
+.hero-knight-bg{position:absolute;right:-30px;bottom:-20px;height:280px;opacity:.04;filter:blur(2px) grayscale(.5);pointer-events:none;z-index:0;}
+
+/* ── STAT STRIP 2.0 ──────────────────────────────── */
+.home-stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 28px;flex-shrink:0;}
+.hss-item{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:3px;transition:all .2s;cursor:default;position:relative;overflow:hidden;}
+.hss-item::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(255,249,62,.04),transparent 70%);opacity:0;transition:opacity .2s;}
+.hss-item:hover{border-color:rgba(255,249,62,.15);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.15);}
+.hss-item:hover::before{opacity:1;}
+.hss-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent);transition:all .3s;}
+.hss-label{font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.04em;}
+.hss-icon{font-size:16px;position:absolute;top:12px;right:14px;opacity:.3;}
+
+/* ── MAIN SCROLL ──────────────────────────────────── */
+.home-main-scroll{padding:24px 28px 48px;}
 .section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .section-hdr h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
 .section-hdr h3::before{content:"";width:14px;height:3px;background:var(--accent);border-radius:2px;}
-.quick-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;}
-.qn-tile{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:24px 18px;cursor:pointer;transition:all .22s;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden;}
-.qn-tile:hover{border-color:rgba(255,249,62,.2);transform:translateY(-4px);}
-.qn-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;}
-.qn-text h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:2px;}
-.qn-text p{font-size:12px;color:var(--muted);}
+
+/* ── QUICK ACCESS TILES 2.0 ──────────────────────── */
+.quick-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.qn-tile{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px 16px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;opacity:0;animation:tileReveal .4s ease forwards;}
+.qn-tile:nth-child(1){animation-delay:.05s;}.qn-tile:nth-child(2){animation-delay:.1s;}.qn-tile:nth-child(3){animation-delay:.15s;}.qn-tile:nth-child(4){animation-delay:.2s;}
+@keyframes tileReveal{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+.qn-tile:hover{border-color:rgba(255,249,62,.2);transform:translateY(-5px);box-shadow:0 12px 28px rgba(0,0,0,.2);}
+.qn-tile.has-unread{border-color:rgba(255,249,62,.25);box-shadow:0 0 16px rgba(255,249,62,.06);}
+.qn-tile.has-unread::after{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);border-radius:0 0 2px 2px;}
+.qn-icon{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:19px;transition:transform .2s;}
+.qn-tile:hover .qn-icon{transform:scale(1.1);}
+.qn-text h4{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:2px;}
+.qn-text p{font-size:11.5px;color:var(--muted);}
 .qn-badge{position:absolute;top:10px;right:10px;background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:100px;}
-.activity-item{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:16px;cursor:pointer;transition:all .2s;margin-bottom:8px;}
-.activity-item:hover{border-color:rgba(255,249,62,.16);transform:translateY(-2px);}
-.act-icon{width:40px;height:40px;border-radius:14px;background:var(--panel2);border:1px solid var(--border);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
-.act-icon img{width:100%;height:100%;object-fit:cover;border-radius:12px;}
-.act-text{flex:1;}
-.act-text p{font-size:14px;color:var(--text);line-height:1.5;}
-.act-time{font-size:11.5px;color:var(--muted);margin-top:2px;}
-.rp-section{padding:16px 14px 8px;border-bottom:1px solid var(--border);}
-.rp-title{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
-.rp-notif{display:flex;gap:9px;padding:8px 10px;border-radius:12px;cursor:pointer;transition:background .1s;margin-bottom:4px;}
-.rp-notif:hover{background:rgba(255,255,255,.04);}
-.rn-icon{width:30px;height:30px;border-radius:50%;background:var(--panel);border:1px solid var(--border);font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.rn-text p{font-size:12.5px;color:var(--text);line-height:1.4;}
-.rn-time{font-size:10.5px;color:var(--muted);}
-.rn-actions{display:flex;gap:5px;margin-top:5px;}
-.rn-accept{background:rgba(62,207,110,.15);border:1px solid rgba(62,207,110,.3);color:var(--green);font-size:11px;font-weight:700;padding:3px 11px;border-radius:7px;cursor:pointer;}
-.rn-decline{background:transparent;border:1px solid var(--border);color:var(--muted-light);font-size:11px;font-weight:700;padding:3px 11px;border-radius:7px;cursor:pointer;}
-.blog-post{padding:10px;border-radius:12px;cursor:pointer;transition:background .1s;margin-bottom:4px;}
-.blog-post:hover{background:rgba(255,255,255,.04);}
-.bp-tag{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;}
-.bp-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;line-height:1.4;}
-.bp-date{font-size:11px;color:var(--muted);}
+
+/* ── ACTIVITY FEED 2.0 ───────────────────────────── */
+.activity-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:all .2s;margin-bottom:6px;}
+.activity-item:hover{border-color:rgba(255,249,62,.14);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12);}
+.act-icon{width:38px;height:38px;border-radius:50%;background:var(--panel2);border:1px solid var(--border);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;}
+.act-icon img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.act-text{flex:1;min-width:0;}
+.act-text p{font-size:13.5px;color:var(--text);line-height:1.45;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.act-time{font-size:11px;color:var(--muted);margin-top:1px;}
+.act-dm-btn{padding:5px 12px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .14s;flex-shrink:0;display:flex;align-items:center;gap:4px;}
+.act-dm-btn:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.2);color:var(--accent);}
+
+/* ── RIGHT PANEL 2.0 ────────────────────────────── */
+.rp-section{padding:16px 14px 10px;border-bottom:1px solid var(--border);}
+.rp-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.rp-bastion-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:all .14s;margin-bottom:2px;position:relative;}
+.rp-bastion-item:hover{background:rgba(255,255,255,.05);}
+.rp-bastion-emblem{width:34px;height:34px;border-radius:10px;background:var(--panel);border:1px solid var(--border);font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.rp-bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
+.rp-bastion-info{flex:1;min-width:0;}
+.rp-bastion-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rp-bastion-meta{font-size:10.5px;color:var(--muted);}
+/* Hover actions overlay */
+.rp-bastion-actions{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;gap:3px;opacity:0;transition:opacity .14s;}
+.rp-bastion-item:hover .rp-bastion-actions{opacity:1;}
+.rp-bastion-actions button{width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.06);border:none;color:var(--muted);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.rp-bastion-actions button:hover{background:rgba(255,249,62,.12);color:var(--accent);}
+/* Online friends */
+.rp-friend-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:10px;cursor:pointer;transition:all .14s;margin-bottom:1px;}
+.rp-friend-item:hover{background:rgba(255,249,62,.04);}
+.rp-friend-av{position:relative;flex-shrink:0;}
+.rp-friend-status{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--channel);}
+.rp-friend-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rp-friend-activity{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
+/* Friends scroll fade */
+.rp-friends-scroll{max-height:240px;overflow-y:auto;position:relative;mask-image:linear-gradient(to bottom,transparent 0%,black 4%,black 92%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 4%,black 92%,transparent 100%);}
+/* News panel */
+.rp-news-item{padding:10px 12px;border-radius:10px;cursor:pointer;transition:all .14s;margin-bottom:3px;position:relative;}
+.rp-news-item:hover{background:rgba(255,255,255,.04);}
+.rp-news-badge{position:absolute;top:10px;right:10px;width:6px;height:6px;border-radius:50%;background:var(--accent);}
+.rp-news-tag{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;}
+.rp-news-title{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:2px;line-height:1.35;}
+.rp-news-date{font-size:10.5px;color:var(--muted);}
+
+/* ── DYK ─────────────────────────────────────────── */
+.did-you-know{display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(255,249,62,.03);border:1px solid rgba(255,249,62,.08);border-radius:12px;font-size:12.5px;margin-bottom:20px;}
+.dyk-tag{font-family:'Syne',sans-serif;font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;}
 .chat-wrap{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;}
 .chat-msgs{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;}
 .chat-welcome{padding:20px 20px 18px;border-bottom:1px solid var(--border);margin-bottom:8px;}
@@ -626,13 +685,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .embed-spotify-card { border-left:3px solid #1DB954; }
 .embed-spotify-card:hover { transform:translateY(-1px);border-color:rgba(29,185,84,.3); }
 
-/* ── ENHANCED HOME HERO ───────────────────────────── */
-.home-hero-redesigned { display:flex;flex-direction:column;min-height:0;background:var(--panel);border-bottom:1px solid var(--border); }
-.home-stat-strip { display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:rgba(0,0,0,.2); }
-.hss-item { flex:1;padding:12px 20px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:2px; }
-.hss-item:last-child { border-right:none; }
-.hss-val { font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent); }
-.hss-label { font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.04em; }
+/* ── (stat strip + hero styles now in main home CSS block above) ── */
 
 /* ── RADIANCE / RADIANCE+ ─────────────────────────── */
 .rad-basic { background:linear-gradient(135deg,rgba(255,200,62,.12),rgba(255,249,62,.08));border-color:rgba(255,220,62,.25);color:#ffd93e; }
@@ -660,10 +713,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 .safety-banner.warn { background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:#fbbf24; }
 .safety-banner.danger { background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:#f87171; }
 .safety-banner.info { background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);color:#93c5fd; }
-
-/* ── DID YOU KNOW STRIP ───────────────────────────── */
-.did-you-know { display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.1);border-radius:12px;font-size:12.5px;margin:10px 0; }
-.dyk-tag { font-family:'Syne',sans-serif;font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap; }
 
 /* ── LOADING STATES ───────────────────────────────── */
 .page-loader { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px;flex:1; }
@@ -914,27 +963,62 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <div class="view" id="view-home">
       <div class="home-wrap">
         <div class="home-feed">
-          <!-- HERO -->
+          <!-- HERO 2.0 -->
           <div class="home-hero" id="home-hero-area">
-            <div class="hero-left-content" style="padding:24px 0;">
-              <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:6px;">Hey, <span id="hero-username" style="color:var(--accent);font-weight:700;"></span> 👋</div>
-              <h1 style="font-family:'Syne',sans-serif;font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:10px;">What's happening<br>in your world?</h1>
-              <div class="home-hero-actions" style="gap:8px;flex-wrap:wrap;">
-                <button class="btn-a" onclick="showView('discover')" style="font-size:13px;padding:9px 16px;">🧭 Explore</button>
-                <button class="btn-g" onclick="openModal('modal-new-dm')" style="font-size:13px;padding:9px 16px;">💬 Message</button>
-                <button class="btn-g" onclick="openModal('modal-create-bastion')" style="font-size:13px;padding:9px 16px;">➕ Create</button>
+            <!-- Background Knight (ghosted) -->
+            <img src="Fortized Knight.png" class="hero-knight-bg" onerror="this.style.display='none'" alt="">
+            <!-- Floating items -->
+            <div class="hero-float-items" id="hero-float-items"></div>
+            <!-- Sparkle particles -->
+            <div class="hero-sparkles" id="hero-sparkles"></div>
+            <!-- Left content -->
+            <div class="hero-left-content">
+              <div class="hero-greeting">Hey, <span id="hero-username" style="color:var(--accent);font-weight:700;margin:0 4px;"></span> <span style="font-size:18px;">👋</span> Welcome back!</div>
+              <h1>What's happening<br>in your <em>world</em>?</h1>
+              <div class="home-hero-actions">
+                <button class="hero-btn hero-btn-primary" onclick="showView('discover')" onmouseenter="_joysterReact('wink')" onmouseleave="_joysterReact('idle')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
+                  Explore
+                </button>
+                <button class="hero-btn hero-btn-secondary" onclick="openModal('modal-new-dm')" onmouseenter="_joysterReact('point')" onmouseleave="_joysterReact('idle')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                  Message
+                </button>
+                <button class="hero-btn hero-btn-create" onclick="openModal('modal-create-bastion')" onmouseenter="_joysterReact('excited')" onmouseleave="_joysterReact('idle')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  Create
+                </button>
               </div>
             </div>
-            <div class="home-hero-knight">
-              <img src="Fortized Knight.png" onerror="this.style.display='none'" alt="Fortized Knight">
+            <!-- Joyster character (right side) -->
+            <div class="hero-joyster-wrap" id="hero-joyster-wrap">
+              <div class="joyster-bubble" id="joyster-bubble"></div>
+              <img src="fortized emojis/joyster_smirk.png" id="joyster-main" class="hero-joyster-img" alt="Joyster" onerror="this.src='Fortized Knight.png'" onclick="_joysterEasterEgg()">
             </div>
           </div>
-          <!-- STAT STRIP -->
+
+          <!-- STAT STRIP 2.0 -->
           <div class="home-stat-strip" id="home-stat-strip">
-            <div class="hss-item"><div class="hss-val" id="stat-bastions">–</div><div class="hss-label">Your Bastions</div></div>
-            <div class="hss-item"><div class="hss-val" id="stat-friends">–</div><div class="hss-label">Friends</div></div>
-            <div class="hss-item"><div class="hss-val" id="stat-onyx">–</div><div class="hss-label">Onyx</div></div>
-            <div class="hss-item"><div class="hss-val" id="stat-online">–</div><div class="hss-label">Online Now</div></div>
+            <div class="hss-item">
+              <div class="hss-icon">🏰</div>
+              <div class="hss-val" id="stat-bastions">–</div>
+              <div class="hss-label">Bastions</div>
+            </div>
+            <div class="hss-item">
+              <div class="hss-icon">👥</div>
+              <div class="hss-val" id="stat-friends">–</div>
+              <div class="hss-label">Friends</div>
+            </div>
+            <div class="hss-item">
+              <div class="hss-icon"><img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;"></div>
+              <div class="hss-val" id="stat-onyx">–</div>
+              <div class="hss-label">Onyx</div>
+            </div>
+            <div class="hss-item">
+              <div class="hss-icon" style="color:#3ecf6e;">●</div>
+              <div class="hss-val" id="stat-online">–</div>
+              <div class="hss-label">Online Now</div>
+            </div>
           </div>
 
           <!-- MAIN FEED -->
@@ -946,33 +1030,29 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
             <div id="activity-feed"></div>
           </div>
         </div>
-        <!-- RIGHT PANEL -->
+
+        <!-- RIGHT PANEL 2.0 -->
         <div class="home-right">
           <div class="rp-section">
-            <div class="rp-title">Your Bastions</div>
+            <div class="rp-title">
+              <span>Your Bastions</span>
+              <span style="font-size:11px;color:var(--muted);font-weight:500;letter-spacing:0;text-transform:none;" id="rp-bastion-count"></span>
+            </div>
             <div id="rp-bastions"></div>
           </div>
-          <div class="rp-section">
-            <div class="rp-title">Online Friends</div>
-            <div id="rp-friends"></div>
+          <div class="rp-section" style="flex:1;">
+            <div class="rp-title">
+              <span>Online Friends</span>
+              <span style="font-size:11px;color:#3ecf6e;font-weight:500;letter-spacing:0;text-transform:none;" id="rp-online-count"></span>
+            </div>
+            <div class="rp-friends-scroll" id="rp-friends"></div>
           </div>
           <div class="rp-section">
-            <div class="rp-title">Latest from Fortized</div>
-            <div class="blog-post" onclick="toast('Opening blog post…','info')">
-              <div class="bp-tag">Update</div>
-              <div class="bp-title">Group Chats, Embeds & Badges now live!</div>
-              <div class="bp-date">Feb 2026</div>
+            <div class="rp-title">
+              <span>Latest from Fortized</span>
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;"></span>
             </div>
-            <div class="blog-post" onclick="toast('Opening blog post…','info')">
-              <div class="bp-tag">Feature</div>
-              <div class="bp-title">Radiance+ tier launched in Atelier</div>
-              <div class="bp-date">Feb 2026</div>
-            </div>
-            <div class="blog-post" onclick="toast('Opening blog post…','info')">
-              <div class="bp-tag">Safety</div>
-              <div class="bp-title">Enhanced age-gating & content scanning</div>
-              <div class="bp-date">Jan 2026</div>
-            </div>
+            <div id="rp-news"></div>
           </div>
         </div>
       </div>
@@ -1874,50 +1954,256 @@ function renderRailBastions() {
 // HOME PANEL
 // ════════════════════════════════════════════
 function renderHomePanel() {
+  // Hero username
+  const heroName = document.getElementById('hero-username');
+  if (heroName) heroName.textContent = CU?.displayName || CU?.username || '';
+
+  // Initialize hero particles & floating items
+  _initHeroEffects();
+
+  // Start Joyster idle speech bubbles
+  _startJoysterBubbles();
+
   // DYK strip
   const dykEl = document.getElementById('home-dyk-strip');
   if (dykEl) dykEl.innerHTML = getDYKHtml();
 
-  // Stats strip
+  // Stats strip (with animated counters)
   const bastions = CU?.bastions||[];
   const friends0 = CU?.friends||[];
-  const statB = document.getElementById('stat-bastions');
-  const statF = document.getElementById('stat-friends');
-  const statO = document.getElementById('stat-onyx');
+  _animateCounter('stat-bastions', bastions.length);
+  _animateCounter('stat-friends', friends0.length);
+  _animateCounter('stat-onyx', CU?.onyx||0);
   const statOn = document.getElementById('stat-online');
-  if (statB) statB.textContent = bastions.length;
-  if (statF) statF.textContent = friends0.length;
-  if (statO) statO.textContent = (CU?.onyx||0);
   if (statOn) {
-    statOn.textContent = '…';
+    statOn.textContent = '...';
     let onlineCt = 0;
-    Promise.all(friends0.slice(0,10).map(f =>
+    Promise.all(friends0.slice(0,20).map(f =>
       FortizedSocial.getStatus(f).then(s=>{ if(s==='online'||s==='away') onlineCt++; }).catch(()=>{})
-    )).then(()=>{ if(statOn) statOn.textContent = onlineCt; });
+    )).then(()=>{ _animateCounter('stat-online', onlineCt); });
   }
 
+  // Quick access tiles
   const qn = document.getElementById('quick-nav');
   if (qn) qn.innerHTML = [
-    {icon:'💬',label:'Messages',sub:'Chat with friends',act:"showView('dms')",col:'rgba(96,165,250,.12)'},
-    {icon:'🧭',label:'Discover',sub:'Find communities',act:"showView('discover')",col:'rgba(52,211,153,.12)'},
-    {icon:'💎',label:'Atelier',sub:'Onyx & Radiance',act:"showView('atelier')",col:'rgba(255,249,62,.12)'},
-    {icon:'⚙️',label:'Settings',sub:'Profile & prefs',act:"showView('profile')",col:'rgba(167,139,250,.12)'},
-  ].map(t=>`<div class="qn-tile" onclick="${t.act}"><div class="qn-icon" style="background:${t.col}">${t.icon}</div><div class="qn-text"><h4>${t.label}</h4><p>${t.sub}</p></div></div>`).join('');
+    {icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',label:'Messages',sub:'Chat with friends',act:"showView('dms')",col:'rgba(96,165,250,.12)',border:'rgba(96,165,250,.15)'},
+    {icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>',label:'Discover',sub:'Find communities',act:"showView('discover')",col:'rgba(52,211,153,.12)',border:'rgba(52,211,153,.15)'},
+    {icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg>',label:'Atelier',sub:'Onyx & Radiance',act:"showView('atelier')",col:'rgba(255,249,62,.1)',border:'rgba(255,249,62,.12)'},
+    {icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>',label:'Settings',sub:'Profile & preferences',act:"showView('profile')",col:'rgba(167,139,250,.12)',border:'rgba(167,139,250,.15)'},
+  ].map(t=>`<div class="qn-tile" onclick="${t.act}"><div class="qn-icon" style="background:${t.col};color:${t.border.replace('.15','.8').replace('.12','.7')}">${t.icon}</div><div class="qn-text"><h4>${t.label}</h4><p>${t.sub}</p></div></div>`).join('');
 
-  // Load friend activity feed asynchronously
+  // Load friend activity feed
   setTimeout(loadFriendActivity, 100);
 
+  // Right panel: Bastions with hover actions
   const rpB = document.getElementById('rp-bastions');
-  if (rpB) rpB.innerHTML = (CU?.bastions||[]).slice(0,6).map((b,i)=>`<div class="rp-notif" style="cursor:pointer;" onclick="openBastion(${i})"><div class="rn-icon">${b.emblem||'🏰'}</div><div class="rn-text"><p>${escapeHTML(b.name)}</p><div class="rn-time">${(b.channels||[]).length} channels</div></div></div>`).join('')||'<div style="padding:8px;font-size:12.5px;color:var(--muted);">No bastions yet</div>';
-  const rpF = document.getElementById('rp-friends');
-  if (rpF) rpF.innerHTML = (CU?.friends||[]).slice(0,6).map(f=>`<div class="rp-notif" style="cursor:pointer;" onclick="openDMView('${escapeHTML(f)}')"><div class="rn-icon" style="width:30px;height:30px;font-size:13px;">${buildAvatarHTML(null,f,30)}</div><div class="rn-text"><p style="font-weight:600;">${escapeHTML(f)}</p></div></div>`).join('')||'<div style="padding:8px;font-size:12.5px;color:var(--muted);">No friends yet</div>';
+  const rpBC = document.getElementById('rp-bastion-count');
+  if (rpBC) rpBC.textContent = bastions.length ? bastions.length : '';
+  if (rpB) rpB.innerHTML = bastions.length ? bastions.slice(0,8).map((b,i)=>`
+    <div class="rp-bastion-item" onclick="openBastion(${i})">
+      <div class="rp-bastion-emblem">${b.icon ? `<img src="${b.icon}">` : (b.emblem||'🏰')}</div>
+      <div class="rp-bastion-info">
+        <div class="rp-bastion-name">${escapeHTML(b.name)}</div>
+        <div class="rp-bastion-meta">${(b.channels||[]).length} channels</div>
+      </div>
+      <div class="rp-bastion-actions">
+        <button onclick="event.stopPropagation();openBastion(${i})" title="Open">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>`).join('') : '<div style="padding:10px;font-size:12px;color:var(--muted);text-align:center;">No bastions yet. <span style="color:var(--accent);cursor:pointer;" onclick="openModal(\'modal-create-bastion\')">Create one!</span></div>';
 
-  const mt = document.getElementById('marquee-track');
-  if (mt && !mt.children.length) {
-    const items=['🏰 Bastions','💬 Real-Time Chat','🎙 Voice Channels','🛡️ Roles','✨ Custom Emojis','💎 Onyx','🌟 Radiance','👥 Friends','🔔 Notifications','🤖 AutoMod'];
-    mt.innerHTML=[...items,...items].map(i=>`<div class="marquee-item"><span class="mi-label">${i}</span></div>`).join('');
+  // Right panel: Online Friends with status dots
+  const rpF = document.getElementById('rp-friends');
+  const rpOC = document.getElementById('rp-online-count');
+  if (rpF) {
+    rpF.innerHTML = '<div style="padding:12px;text-align:center;"><div class="pl-spinner" style="width:20px;height:20px;margin:0 auto;border-width:2px;"></div></div>';
+    _loadRPFriends(friends0, rpF, rpOC);
+  }
+
+  // Right panel: News
+  const rpN = document.getElementById('rp-news');
+  if (rpN) rpN.innerHTML = [
+    {tag:'Update',title:'Group Chats, Embeds & Badges now live!',date:'Feb 2026',isNew:true},
+    {tag:'Feature',title:'Radiance+ tier launched in Atelier',date:'Feb 2026',isNew:true},
+    {tag:'Safety',title:'Enhanced age-gating & content scanning',date:'Jan 2026',isNew:false},
+  ].map(n=>`
+    <div class="rp-news-item" onclick="toast('Opening article...','info')">
+      ${n.isNew?'<div class="rp-news-badge"></div>':''}
+      <div class="rp-news-tag">${n.tag}</div>
+      <div class="rp-news-title">${n.title}</div>
+      <div class="rp-news-date">${n.date}</div>
+    </div>`).join('');
+}
+
+// ── Right panel friends loader (async with status) ──
+async function _loadRPFriends(friends, container, countEl) {
+  if (!friends.length) {
+    container.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--muted);text-align:center;">No friends yet</div>';
+    return;
+  }
+  const results = await Promise.all(friends.slice(0,15).map(async f => {
+    try {
+      const u = await FortizedSocial.getUserByName(f);
+      const st = await FortizedSocial.getStatus(f).catch(()=>'offline');
+      return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, customStatus:u?.customStatus||null, game:u?.currentGame||null};
+    } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
+  }));
+  const online = results.filter(r=>r.status==='online'||r.status==='away'||r.status==='dnd');
+  const offline = results.filter(r=>r.status!=='online'&&r.status!=='away'&&r.status!=='dnd');
+  if (countEl) countEl.textContent = online.length ? online.length + ' online' : '';
+  const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',offline:'#6b7280'};
+  container.innerHTML = [...online,...offline].map(r=>{
+    const sc = SC[r.status]||SC.offline;
+    const activity = r.game ? `Playing ${escapeHTML(r.game.name)}` : r.customStatus?.text ? `${r.customStatus.emoji||''} ${escapeHTML(r.customStatus.text)}` : r.status==='online'?'Online':r.status==='away'?'Away':r.status==='dnd'?'Do Not Disturb':'Offline';
+    return `<div class="rp-friend-item" onclick="openDMView('${escapeHTML(r.username)}')" title="${escapeHTML(activity)}">
+      <div class="rp-friend-av">
+        <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--panel);font-size:12px;">${buildAvatarHTML(r.pfp,r.displayName,28)}</div>
+        <span class="rp-friend-status" style="background:${sc};"></span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="rp-friend-name">${escapeHTML(r.displayName)}</div>
+        <div class="rp-friend-activity">${escapeHTML(activity)}</div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="padding:10px;font-size:12px;color:var(--muted);text-align:center;">All friends offline</div>';
+}
+
+// ── Animated counter ──
+function _animateCounter(elId, target) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const start = parseInt(el.textContent)||0;
+  if (start === target) { el.textContent = target; return; }
+  const duration = 400;
+  const startTime = performance.now();
+  function tick(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(start + (target - start) * eased);
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ── Hero floating items & sparkles ──
+function _initHeroEffects() {
+  // Sparkles
+  const sparkleContainer = document.getElementById('hero-sparkles');
+  if (sparkleContainer && !sparkleContainer.children.length) {
+    for (let i = 0; i < 12; i++) {
+      const s = document.createElement('div');
+      s.className = 'hero-sparkle';
+      s.style.left = Math.random() * 100 + '%';
+      s.style.top = (40 + Math.random() * 50) + '%';
+      s.style.animationDelay = (Math.random() * 6) + 's';
+      s.style.animationDuration = (4 + Math.random() * 4) + 's';
+      sparkleContainer.appendChild(s);
+    }
+  }
+  // Floating items
+  const floatContainer = document.getElementById('hero-float-items');
+  if (floatContainer && !floatContainer.children.length) {
+    const items = ['🎲','#','🎮','🎧','⚔️','🛡️','💎','🏰'];
+    items.forEach((item, i) => {
+      const el = document.createElement('div');
+      el.className = 'hero-float-item';
+      el.textContent = item;
+      el.style.left = (8 + (i / items.length) * 80) + '%';
+      el.style.top = (15 + Math.random() * 55) + '%';
+      el.style.animationDelay = (Math.random() * 8) + 's';
+      el.style.animationDuration = (10 + Math.random() * 8) + 's';
+      el.style.fontSize = (14 + Math.random() * 10) + 'px';
+      floatContainer.appendChild(el);
+    });
   }
 }
+
+// ── Joyster character interactions ──
+let _joysterBubbleTimer = null;
+let _joysterClickCount = 0;
+const JOYSTER_TIPS = [
+  "Don't forget to boost your Bastion!",
+  "Check out Party Rooms today!",
+  "Collect Onyx in the Atelier!",
+  "Try setting a custom status!",
+  "Invite friends to your Bastion!",
+  "Explore new communities!",
+  "Customize your profile theme!",
+  "React to messages with emojis!",
+];
+
+function _startJoysterBubbles() {
+  if (_joysterBubbleTimer) clearInterval(_joysterBubbleTimer);
+  // Show first bubble after 3s, then every 15s
+  setTimeout(() => _showJoysterBubble(), 3000);
+  _joysterBubbleTimer = setInterval(() => _showJoysterBubble(), 15000);
+}
+
+function _showJoysterBubble() {
+  const bubble = document.getElementById('joyster-bubble');
+  if (!bubble) return;
+  bubble.textContent = JOYSTER_TIPS[Math.floor(Math.random() * JOYSTER_TIPS.length)];
+  bubble.classList.add('show');
+  setTimeout(() => bubble.classList.remove('show'), 4000);
+}
+
+function _joysterReact(reaction) {
+  const img = document.getElementById('joyster-main');
+  if (!img) return;
+  if (reaction === 'wink' || reaction === 'excited') {
+    img.src = 'fortized emojis/joyster_laugh.png';
+    img.style.transform = 'scale(1.08)';
+  } else if (reaction === 'point') {
+    img.src = 'fortized emojis/joyster_smirk.png';
+    img.style.transform = 'scale(1.04) rotate(-3deg)';
+  } else {
+    img.src = 'fortized emojis/joyster_smirk.png';
+    img.style.transform = '';
+  }
+}
+
+function _joysterEasterEgg() {
+  _joysterClickCount++;
+  const img = document.getElementById('joyster-main');
+  const bubble = document.getElementById('joyster-bubble');
+  if (_joysterClickCount === 3) {
+    if (bubble) { bubble.textContent = "Stop poking me! 😤"; bubble.classList.add('show'); setTimeout(()=>bubble.classList.remove('show'),2000); }
+    if (img) img.src = 'fortized emojis/knight_angry.png';
+    setTimeout(() => { if(img) img.src = 'fortized emojis/joyster_smirk.png'; }, 2500);
+  } else if (_joysterClickCount === 5) {
+    if (bubble) { bubble.textContent = "Ok ok, here's 1 Onyx! 💎"; bubble.classList.add('show'); setTimeout(()=>bubble.classList.remove('show'),3000); }
+    if (img) img.src = 'fortized emojis/joyster_laugh.png';
+    setTimeout(() => { if(img) img.src = 'fortized emojis/joyster_smirk.png'; _joysterClickCount=0; }, 3000);
+    toast('+1 Onyx from Joyster! 💎','success');
+    if (CU) { CU.onyx = (CU.onyx||0)+1; saveUser(); updateOnyxDisplay(); }
+  } else {
+    if (img) { img.style.transform = 'scale(1.15) rotate(5deg)'; setTimeout(()=>{ img.style.transform=''; },200); }
+  }
+}
+
+// ── Hero parallax on scroll ──
+(function() {
+  let _parallaxBound = false;
+  const _obs = new MutationObserver(() => {
+    const feed = document.querySelector('.home-feed');
+    if (feed && !_parallaxBound) {
+      _parallaxBound = true;
+      feed.addEventListener('scroll', () => {
+        const hero = document.getElementById('home-hero-area');
+        if (!hero) return;
+        const scrollY = feed.scrollTop;
+        const bg = hero.querySelector('.hero-knight-bg');
+        const joyster = document.getElementById('hero-joyster-wrap');
+        const floats = document.getElementById('hero-float-items');
+        if (bg) bg.style.transform = `translateY(${scrollY * 0.15}px)`;
+        if (joyster) joyster.style.transform = `translateY(${scrollY * 0.08}px)`;
+        if (floats) floats.style.transform = `translateY(${scrollY * 0.05}px)`;
+      }, {passive:true});
+    }
+  });
+  _obs.observe(document.body, {childList:true, subtree:true});
+})();
 
 // ════════════════════════════════════════════
 // DM SIDEBAR & CHAT
@@ -10729,15 +11015,15 @@ async function loadFriendActivity() {
   if (!friends.length) {
     feedEl.innerHTML = `
       <div class="activity-item" style="opacity:.6;">
-        <div class="act-icon">👥</div>
+        <div class="act-icon" style="border-radius:50%;">👥</div>
         <div class="act-text"><p>Add friends to see their activity here!</p></div>
         <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:6px 14px;flex-shrink:0;">+ Add Friend</button>
       </div>`;
     return;
   }
-  feedEl.innerHTML = '<div class="page-loader"><div class="pl-spinner"></div></div>';
+  feedEl.innerHTML = '<div style="padding:20px;display:flex;justify-content:center;"><div class="pl-spinner" style="width:24px;height:24px;border-width:2px;"></div></div>';
   try {
-    const statuses = await Promise.all(friends.slice(0,8).map(async f => {
+    const statuses = await Promise.all(friends.slice(0,10).map(async f => {
       try {
         const u = await FortizedSocial.getUserByName(f);
         const st = await FortizedSocial.getStatus(f).catch(()=>'offline');
@@ -10745,26 +11031,36 @@ async function loadFriendActivity() {
       } catch { return { username:f, displayName:f, pfp:null, status:'offline', game:null }; }
     }));
     if (!feedEl) return;
-    const online = statuses.filter(s=>s.status==='online'||s.status==='away');
-    const offline = statuses.filter(s=>s.status!=='online'&&s.status!=='away');
+    const online = statuses.filter(s=>s.status==='online'||s.status==='away'||s.status==='dnd');
+    const offline = statuses.filter(s=>s.status!=='online'&&s.status!=='away'&&s.status!=='dnd');
+    const colMap = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',offline:'#6b7280',invisible:'#6b7280'};
     const render = (s) => {
-      const colMap = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',offline:'#6b7280',invisible:'#6b7280'};
       const col = colMap[s.status]||'#6b7280';
-      return `<div class="activity-item friend-pop" onclick="openDMView('${escapeHTML(s.username)}')">
-        <div class="act-icon" style="position:relative;">
-          ${buildAvatarHTML(s.pfp, s.displayName, 40)}
+      const activity = s.game ? `Playing <strong>${escapeHTML(s.game.name)}</strong>` :
+        s.customStatus?.text ? `<span style="color:var(--muted-light);">${escapeHTML(s.customStatus.emoji||'')} ${escapeHTML(s.customStatus.text)}</span>` :
+        s.status==='online' ? '<span style="color:#3ecf6e;">Online</span>' :
+        s.status==='away' ? '<span style="color:#f59e0b;">Away</span>' :
+        s.status==='dnd' ? '<span style="color:#f87171;">Do Not Disturb</span>' :
+        '<span style="color:var(--muted);">Offline</span>';
+      return `<div class="activity-item" onclick="openDMView('${escapeHTML(s.username)}')">
+        <div class="act-icon" style="position:relative;border-radius:50%;">
+          ${buildAvatarHTML(s.pfp, s.displayName, 38)}
           <span style="position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:${col};border:2px solid var(--panel);"></span>
         </div>
         <div class="act-text">
-          <p><strong>${escapeHTML(s.displayName)}</strong> is ${s.status==='offline'?'<span style="color:var(--muted);">offline</span>':s.game?`playing <strong>${escapeHTML(s.game.name)}</strong>`:s.customStatus?.text?`<span style="color:var(--muted-light);">${escapeHTML(s.customStatus.emoji||'')} ${escapeHTML(s.customStatus.text)}</span>`:'<span style="color:var(--green);">online</span>'}</p>
+          <p><strong>${escapeHTML(s.displayName)}</strong></p>
+          <div class="act-time">${activity}</div>
         </div>
-        <button onclick="event.stopPropagation();openDMView('${escapeHTML(s.username)}')" class="btn-g" style="font-size:11.5px;padding:5px 12px;flex-shrink:0;">💬 DM</button>
+        <button onclick="event.stopPropagation();openDMView('${escapeHTML(s.username)}')" class="act-dm-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          DM
+        </button>
       </div>`;
     };
     feedEl.innerHTML = [...online, ...offline].map(render).join('') ||
-      `<div class="activity-item"><div class="act-icon">😴</div><div class="act-text"><p>All friends are offline right now.</p></div></div>`;
+      `<div class="activity-item" style="justify-content:center;"><div class="act-icon" style="border-radius:50%;">😴</div><div class="act-text"><p>All friends are offline right now.</p></div></div>`;
   } catch(e) {
-    if (feedEl) feedEl.innerHTML = `<div class="activity-item"><div class="act-icon">⚠️</div><div class="act-text"><p>Could not load friend activity.</p></div></div>`;
+    if (feedEl) feedEl.innerHTML = `<div class="activity-item"><div class="act-icon" style="border-radius:50%;">⚠️</div><div class="act-text"><p>Could not load friend activity.</p></div></div>`;
   }
 }
 

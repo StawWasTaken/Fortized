@@ -8522,6 +8522,8 @@ function showCtxMenu(x, y, groups) {
 // ── Main Context Menu Handler ──
 function handleContextMenu(e) {
   const target = e.target;
+  // Bail out for elements that have their own inline context menu handlers
+  if (target.closest('.rail-bastion')) return;
   const msgRow = target.closest('.msg-row');
   const isInput = target.tagName === 'TEXTAREA' || target.tagName === 'INPUT';
   const isAuthor = target.closest('.msg-author');

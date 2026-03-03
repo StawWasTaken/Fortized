@@ -1188,6 +1188,25 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
   <div class="load-spinner"></div>
   <div class="lbl">Loading Fortized...</div>
 </div>
+<script>
+// Independent fail-safe: hide loading screen even if main script errors
+(function(){
+  var t=setTimeout(function(){
+    var el=document.getElementById('app-loading');
+    if(el&&el.style.display!=='none'){
+      el.querySelector('.lbl').textContent='Taking too long — retrying...';
+      setTimeout(function(){
+        el.style.display='none';
+        // If no user session, redirect to login
+        if(!localStorage.getItem('ftz_current')&&!localStorage.getItem('fortized_current_user')){
+          window.location.href='login.html';
+        }
+      },1500);
+    }
+  },10000);
+  window._loadingSafetyTimer=t;
+})();
+</script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -5273,15 +5292,16 @@ function updateDOBField(){
   if (CU.onyx===undefined)CU.onyx=0;
   notifSettings=CU.notifSettings||notifSettings;
 
+  // Hide loading screen immediately once user data is ready
+  const loader=document.getElementById('app-loading');
+  if(loader)loader.style.display='none';
+  if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
+
   updateUserbar();
   renderRailBastions();
   if(typeof startVCListener==='function') startVCListener(CU.username);
   setTimeout(initCrossDeviceSync, 800);
   setTimeout(initNotifToasts, 1200);
-
-  // Hide loading screen immediately
-  const loader=document.getElementById('app-loading');
-  if(loader)loader.style.display='none';
 
   showView('home');
   updateNotifBadge().catch(()=>{});
@@ -5359,7 +5379,13 @@ function updateDOBField(){
   updateUserbar();
   initDragDrop();
   clearTimeout(_st);
-  }catch(e){console.error('[Fortized]',e);if(_sl)_sl.style.display='none';clearTimeout(_st);}
+  if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
+  }catch(e){
+    console.error('[Fortized] Init error:',e);
+    if(_sl)_sl.style.display='none';
+    clearTimeout(_st);
+    if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
+  }
 })();
 
 

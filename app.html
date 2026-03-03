@@ -377,6 +377,19 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .joyster-bubble.show{animation:joysterBubblePulse 3s ease-in-out infinite;}
 /* Knight background ghost */
 .hero-knight-bg{position:absolute;right:-30px;bottom:-20px;height:280px;opacity:.04;filter:blur(2px) grayscale(.5);pointer-events:none;z-index:0;}
+/* ── Joyster Global Reaction Bubble ─────────────── */
+.joyster-global{position:fixed;bottom:24px;right:24px;z-index:8000;display:flex;align-items:flex-end;gap:10px;pointer-events:none;}
+.joyster-global-avatar{width:44px;height:44px;border-radius:14px;overflow:hidden;cursor:pointer;pointer-events:auto;flex-shrink:0;transition:transform .2s cubic-bezier(.22,1,.36,1);filter:drop-shadow(0 4px 12px rgba(0,0,0,.5));animation:joysterGlobalIdle 4s ease-in-out infinite;}
+.joyster-global-avatar:hover{transform:scale(1.1) rotate(3deg);}
+.joyster-global-avatar img{width:100%;height:100%;object-fit:cover;}
+@keyframes joysterGlobalIdle{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+.joyster-global-avatar:hover{animation:none;}
+.joyster-react-bubble{max-width:280px;background:linear-gradient(135deg,rgba(18,22,34,.97),rgba(12,15,24,.98));border:1.5px solid rgba(255,249,62,.2);border-radius:16px 16px 4px 16px;padding:10px 16px 10px 14px;font-size:12.5px;font-style:italic;color:rgba(255,255,255,.88);opacity:0;transform:scale(.85) translateY(8px);transition:opacity .35s ease, transform .4s cubic-bezier(.22,1,.36,1);pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 20px rgba(255,249,62,.06);backdrop-filter:blur(12px);letter-spacing:.01em;line-height:1.45;position:relative;white-space:normal;word-wrap:break-word;}
+.joyster-react-bubble::before{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 50% 0%,rgba(255,249,62,.05),transparent 60%);pointer-events:none;}
+.joyster-react-bubble.show{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;animation:joysterReactPulse 3s ease-in-out infinite;}
+@keyframes joysterReactPulse{0%,100%{box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 20px rgba(255,249,62,.06);}50%{box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 30px rgba(255,249,62,.1);}}
+.joyster-react-bubble .jrb-close{position:absolute;top:4px;right:6px;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.06);border:none;color:rgba(255,255,255,.3);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;line-height:1;padding:0;}
+.joyster-react-bubble .jrb-close:hover{background:rgba(255,255,255,.12);color:rgba(255,255,255,.6);}
 /* ── Ambient glow — makes the platform feel alive ── */
 @keyframes ambientPulse{0%,100%{opacity:.6;}50%{opacity:1;}}
 @keyframes subtleFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
@@ -1096,6 +1109,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ftz-badge.badge-admin { background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:#f87171; }
 .ftz-badge.badge-beta { background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.3);color:#60a5fa; }
 .ftz-badge.badge-bot { background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:#a78bfa; }
+.ftz-badge.badge-jester { background:rgba(255,249,62,.12);border:1px solid rgba(255,249,62,.3);color:#fff93e; }
 .ftz-badge.badge-quest { background:rgba(62,207,110,.15);border:1px solid rgba(62,207,110,.3);color:#3ecf6e; }
 
 /* ── LOADING SKELETON ─────────────────────────────── */
@@ -2010,6 +2024,7 @@ let quizCorrect = 0;
 let quizAnswers = [];
 let activeReportData = null;
 const SUPER_ADMIN = 'staw';
+const JOYSTER_ACCOUNT = 'joyster';
 const ROLE_COLORS = ['#fbbf24','#f87171','#34d399','#60a5fa','#a78bfa','#f472b6','#fb923c','#22d3ee'];
 const PERMISSIONS = [
   ['send_messages','Send Messages','General'],['read_history','Read History','General'],
@@ -2221,8 +2236,13 @@ async function _syncBastionToGlobal(bastionIdx) {
   try {
     const b = CU?.bastions?.[bastionIdx];
     if (!b) return;
-    const bid = b.globalId || b.name;
-    if (!bid) return;
+    // Ensure bastion always has a unique globalId
+    if (!b.globalId) {
+      b.globalId = (b.owner || CU.username) + '_' + Date.now();
+      await saveUser();
+      await FortizedSocial.addBastionMember(b.globalId, CU.username);
+    }
+    const bid = b.globalId;
     const globalData = {...b, id: bid, owner: b.owner || CU.username, memberCount: b.memberCount || 1};
     delete globalData.globalId; // avoid nesting
     await FortizedSocial.saveGlobalBastion(bid, globalData);
@@ -2632,6 +2652,7 @@ function updateOnyxDisplay() {
     const el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
+  if (bal < 10) _joysterReactTo('low_onyx');
 }
 function updateAtelierSidebar() {
   if (!CU) return;
@@ -4521,6 +4542,12 @@ async function sendChannelMsg(idx) {
   awardMessageRep(b.globalId||b.name, CU.username);
   try { await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text); }
   catch { toast('Failed to send','error'); }
+  // Joyster: react to messages & detect emoji spam
+  _joysterMsgCount++;
+  const emojiMatches = text.match(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu);
+  if (emojiMatches && emojiMatches.length >= 4) { _joysterEmojiCount++; if (_joysterEmojiCount >= 2) { _joysterReactCooldown = 0; _joysterReactTo('emoji_spam'); _joysterEmojiCount = 0; } }
+  else if (_joysterMsgCount % 8 === 0) _joysterReactTo('send_message');
+  setTimeout(() => { _joysterMsgCount = Math.max(0, _joysterMsgCount - 1); }, 30000);
   // Bot command handling — trigger deployed bots with ! prefix
   if (text.startsWith('!')) {
     _processBotCommands(text, b, ch, idx, msgsEl);
@@ -5397,7 +5424,7 @@ function _renderDiscoverFeatured(bastions){
   el.innerHTML=`<div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--muted-light);margin-bottom:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Featured</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
   ${featured.map(b=>{
-    const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id||ub.name===b.name);
+    const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
     return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(62,207,110,.03),rgba(18,22,34,.95));border:1.5px solid rgba(255,249,62,.15);border-radius:18px;padding:18px 20px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(255,249,62,.08)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
       <div style="width:50px;height:50px;border-radius:14px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;border:1px solid rgba(255,249,62,.12);">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:(b.emblem||'🏰')}</div>
       <div style="flex:1;min-width:0;"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:3px;">${escapeHTML(b.name)}</div><div style="font-size:11.5px;color:var(--muted-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML((b.desc||'A community bastion').slice(0,60))}</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px;">${b.memberCount||1} members</div></div>
@@ -5411,7 +5438,7 @@ function renderDiscoverGrid(bastions){
   const filtered=bastions.filter(b=>b.public!==false&&(discoverTab==='all'||(b.category||'').toLowerCase()===discoverTab));
   if(!filtered.length){grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;"><div style="font-size:40px;margin-bottom:12px;opacity:.4;">🔍</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--muted-light);margin-bottom:6px;">No bastions found</div><div style="font-size:13px;color:var(--muted);">Try a different category or search term</div></div>`;return;}
   grid.innerHTML=filtered.map(b=>{
-    const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id||ub.name===b.name);
+    const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
     const cat=(b.category||'').toLowerCase();
     return `<div class="bc" onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">
       <div class="bc-banner">${b.icon?`<img src="${b.icon}" alt="">`:`<span style="position:relative;z-index:1;">${b.emblem||'🏰'}</span>`}</div>
@@ -5438,28 +5465,32 @@ function setDiscoverTab(tab,btn){discoverTab=tab;document.querySelectorAll('.dis
 async function promptJoinPublicBastion(bastionId){
   try{
     const all=await FortizedSocial.getGlobalBastions()||{};
-    // Match by id, name, globalId, or case-insensitive name
-    const bid = (bastionId||'').trim().toLowerCase();
-    let b=Object.values(all).find(x=>
-      x.id===bastionId || x.name===bastionId ||
-      (x.id||'').toLowerCase()===bid || (x.name||'').toLowerCase()===bid
-    );
+    const bid = (bastionId||'').trim();
+    const bidLower = bid.toLowerCase();
+    // Priority 1: Exact ID match (most reliable)
+    let b = Object.values(all).find(x => x.id === bid);
+    // Priority 2: Case-insensitive ID match
+    if (!b) b = Object.values(all).find(x => (x.id||'').toLowerCase() === bidLower);
+    // Priority 3: Name match (only as last resort for direct name lookups)
+    if (!b) b = Object.values(all).find(x => (x.name||'').toLowerCase() === bidLower);
     // Fallback: try searching user bastions if not in global
     if(!b){
       try{
         const users=await FortizedSocial.getUsers();
         for(const u of users){
-          const found=(u.bastions||[]).find(ub=>(ub.globalId||'').toLowerCase()===bid||(ub.name||'').toLowerCase()===bid);
+          // Prefer globalId match over name match
+          const found=(u.bastions||[]).find(ub=>(ub.globalId||'').toLowerCase()===bidLower) ||
+                      (u.bastions||[]).find(ub=>(ub.name||'').toLowerCase()===bidLower);
           if(found){b={...found,id:found.globalId||found.name,owner:found.owner||u.username};break;}
         }
       }catch{}
     }
     if(!b){toast('Bastion not found. Try the exact name or use an invite link.','error');return;}
-    const already=(CU.bastions||[]).some(ub=>ub.globalId===b.id||ub.globalId===b.globalId||ub.name===b.name);
-    if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=>ub.globalId===b.id||ub.globalId===b.globalId||ub.name===b.name));return;}
+    const gid=b.id||b.globalId;
+    const already=(CU.bastions||[]).some(ub=> (gid && ub.globalId===gid) || (gid && ub.globalId===(b.globalId||b.id)));
+    if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=> (gid && ub.globalId===gid)));return;}
     if(b.public===false){toast('This bastion is invite-only. Ask the owner for an invite link.','error');return;}
     if((b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
-    const gid=b.id||b.globalId||b.name;
     const localB={name:b.name,emblem:b.emblem||'🏰',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,memberRoles:{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[]};
     CU.bastions=[...(CU.bastions||[]),localB];
     await saveUser();
@@ -5471,6 +5502,7 @@ async function promptJoinPublicBastion(bastionId){
     }catch{}
     renderRailBastions();
     toast('Joined '+b.name+'!','success');
+    _joysterReactCooldown=0; _joysterReactTo('join_bastion');
     openBastion(CU.bastions.length-1);
     // Welcome system message in first text channel
     const wName = CU.displayName||CU.username;
@@ -5495,6 +5527,8 @@ function setCBVis(v,btn){
   if(btn)btn.classList.add('active');
 }
 function banUser(username,permanent=true){
+  // Protect the Joyster system account
+  if (username === JOYSTER_ACCOUNT) { toast('Joyster is protected and cannot be banned.','error'); return; }
   showCustomInput('Ban Reason','Enter reason:',reason=>{
     if(!reason)return;
     const bans=JSON.parse(localStorage.getItem('ftz_bans')||'[]');
@@ -5569,6 +5603,16 @@ function updateDOBField(){
   if (CU.onyx===undefined)CU.onyx=0;
   notifSettings=CU.notifSettings||notifSettings;
 
+  // Migrate: ensure all bastions have unique globalIds
+  let _needsSave = false;
+  for (const b of CU.bastions) {
+    if (!b.globalId) {
+      b.globalId = (b.owner || CU.username) + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,5);
+      _needsSave = true;
+    }
+  }
+  if (_needsSave) { try { await FortizedSocial.saveUserObject(CU); } catch {} }
+
   // Hide loading screen immediately once user data is ready
   const loader=document.getElementById('app-loading');
   if(loader)loader.style.display='none';
@@ -5579,6 +5623,8 @@ function updateDOBField(){
   if(typeof startVCListener==='function') startVCListener(CU.username);
   setTimeout(initCrossDeviceSync, 800);
   setTimeout(initNotifToasts, 1200);
+  setTimeout(initJoysterPresence, 2000);
+  setTimeout(_ensureJoysterAccount, 4000);
 
   showView('home');
   updateNotifBadge().catch(()=>{});
@@ -6034,7 +6080,7 @@ async function joinBastionByCode() {
   try {
     const inviteData = await FortizedSocial.getInvite(code);
     if (inviteData && inviteData.bastionId) {
-      await promptJoinPublicBastion(inviteData.bastionId);
+      await joinBastionById(inviteData.bastionId, true);
       closeModal('modal-join-bastion');
       return;
     }
@@ -6043,18 +6089,18 @@ async function joinBastionByCode() {
   // Strategy 2: Search global bastions for invite code
   const allBastions = await FortizedSocial.getGlobalBastions().catch(()=>({})) || {};
   let foundByInvite = null;
-  for (const b of Object.values(allBastions)) {
-    if ((b.invites||[]).find(inv=>inv.code===code)) { foundByInvite=b; break; }
+  for (const [key, b] of Object.entries(allBastions)) {
+    if ((b.invites||[]).find(inv=>inv.code===code)) { foundByInvite = b; if (!foundByInvite.id) foundByInvite.id = key; break; }
   }
   if (foundByInvite) {
     try {
-      await promptJoinPublicBastion(foundByInvite.id || foundByInvite.name);
+      await joinBastionById(foundByInvite.id, true);
       closeModal('modal-join-bastion');
     } catch(e) { if(err)err.textContent='Failed to join bastion'; }
     return;
   }
 
-  // Strategy 3: Try as bastion name or id
+  // Strategy 3: Try as bastion name or id (no invite — public only)
   try {
     await promptJoinPublicBastion(code);
     closeModal('modal-join-bastion');
@@ -6668,12 +6714,14 @@ async function setBastionVis(isPublic) {
   document.querySelectorAll('#bsettings-wrap .vis-opt').forEach((el,i) => el.classList.toggle('active', i===(isPublic?0:1)));
   const sec = document.getElementById('app-form-section');
   if (sec) sec.style.display = isPublic ? '' : 'none';
-  // Persist immediately
+  // Ensure bastion has a globalId before syncing
+  if (!b.globalId) {
+    b.globalId = CU.username + '_' + Date.now();
+    await FortizedSocial.addBastionMember(b.globalId, CU.username);
+  }
   await saveUser();
-  try {
-    const bid = b.globalId || b.name;
-    await firebase.database().ref('globalBastions/'+bid).update({public: isPublic});
-  } catch {}
+  // Sync full bastion data (including visibility) to global
+  _syncBastionToGlobal(curBastion);
   toast(isPublic ? 'Bastion is now Public 🌍' : 'Bastion is now Private 🔒', 'success');
 }
 function addAppQuestion() {
@@ -6703,7 +6751,7 @@ async function saveAppQuestions() {
     if (b.applicationQuestions) b.applicationQuestions[i] = el.value.trim();
   });
   await saveUser();
-  try { await FortizedSocial.updateBastionSettings?.(b.globalId||b.name, {applicationQuestions: b.applicationQuestions}); } catch {}
+  try { if (b.globalId) await FortizedSocial.updateBastionSettings?.(b.globalId, {applicationQuestions: b.applicationQuestions}); } catch {}
   toast('Application form saved!', 'success');
 }
 async function updateBastionIcon(e) {
@@ -6767,8 +6815,13 @@ async function generateInvite() {
   if(expiryHours)invite.expires=new Date(Date.now()+expiryHours*3600000).toISOString();
   if(maxUses)invite.maxUses=maxUses;
   b.invites = [...(b.invites||[]), invite];
+  // Ensure bastion has a globalId before generating invite links
+  if (!b.globalId) {
+    b.globalId = CU.username + '_' + Date.now();
+    await FortizedSocial.addBastionMember(b.globalId, CU.username);
+  }
+  const bid = b.globalId;
   await saveUser();
-  const bid = b.globalId || b.name;
   try {
     // Sync invites to globalBastions
     await firebase.database().ref('globalBastions/'+bid+'/invites').set(b.invites);
@@ -6855,6 +6908,7 @@ async function boostBastion(level, cost) {
     CU.bastions[curBastion].boostLevel=level;
     await saveUser(); updateOnyxDisplay(); renderBSettingsMain('boost');
     toast(`⚡ Boosted to Level ${level}!`,'success');
+    _joysterReactCooldown=0; _joysterReactTo('boost');
   });
 }
 async function confirmLeaveBastion() {
@@ -6865,6 +6919,7 @@ async function confirmLeaveBastion() {
     CU.bastions.splice(curBastion,1);
     await saveUser(); closeModal('modal-leave-bastion'); curBastion=null;
     renderRailBastions(); showView('home'); toast('Left bastion','info');
+    _joysterReactTo('leave_bastion');
   };
   openModal('modal-leave-bastion');
 }
@@ -8712,7 +8767,7 @@ function buildProfileView(tab) {
     main.innerHTML = `<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3><p>These settings are on the way!</p></div>`;
   }
 }
-async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}CU.displayName=dn;await saveUser();document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');toast('Display name updated!','success');}
+async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}CU.displayName=dn;await saveUser();document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');toast('Display name updated!','success');_joysterReactTo('display_name_change');}
 async function saveEmail(){const e=document.getElementById('email-input')?.value?.trim();CU.email=e;await saveUser();toast('Email updated!','success');}
 async function changePassword(){const old=document.getElementById('pw-old')?.value,nw=document.getElementById('pw-new')?.value,msg=document.getElementById('pw-msg');if(!old||!nw){if(msg){msg.style.color='var(--red)';msg.textContent='Fill both fields.';}return;}if(old!==CU.password){if(msg){msg.style.color='var(--red)';msg.textContent='Current password incorrect.';}return;}if(nw.length<6){if(msg){msg.style.color='var(--red)';msg.textContent='Too short.';}return;}CU.password=nw;await saveUser();if(msg){msg.style.color='var(--green)';msg.textContent='Password updated!';}document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';}
 async function updatePfp(e) {
@@ -8765,6 +8820,7 @@ async function claimDaily() {
   if(lastClaim===today){toast('Already claimed today! Come back tomorrow.','info');return;}
   CU.onyx=(CU.onyx||0)+50; CU.lastDailyReward=today;
   await saveUser(); updateOnyxDisplay();
+  _joysterReactTo('daily_claim');
   const btn=document.getElementById('daily-btn');
   if(btn){btn.classList.add('claimed');btn.innerHTML='<span>✓ Claimed!</span><strong>+50 Onyx</strong>';}
   toast('🎉 +50 Onyx claimed!','success');
@@ -10514,13 +10570,45 @@ async function acceptBastionInvite(btn, bastionId, inviteCode) {
   btn.disabled = true;
   btn.textContent = 'Joining…';
   try {
-    await promptJoinPublicBastion(bastionId);
+    // Use invite-aware join that bypasses the public-only check
+    await joinBastionById(bastionId, true);
     // Increment invite uses
     if (inviteCode) {
       try { await FortizedSocial.incrementInviteUses(inviteCode); } catch {}
     }
     document.getElementById('invite-dialog-overlay')?.remove();
   } catch { btn.disabled = false; btn.textContent = 'Accept'; toast('Failed to join','error'); }
+}
+// Join a bastion by ID. If hasInvite=true, skip the public-only check.
+async function joinBastionById(bastionId, hasInvite) {
+  const all=await FortizedSocial.getGlobalBastions()||{};
+  const bid = (bastionId||'').trim();
+  const bidLower = bid.toLowerCase();
+  // Priority 1: Exact ID match
+  let b = Object.values(all).find(x => x.id === bid);
+  // Priority 2: Case-insensitive ID match
+  if (!b) b = Object.values(all).find(x => (x.id||'').toLowerCase() === bidLower);
+  // Priority 3: Name match as last resort
+  if (!b) b = Object.values(all).find(x => (x.name||'').toLowerCase() === bidLower);
+  if(!b){toast('Bastion not found.','error');return;}
+  const gid = b.id || b.globalId;
+  const already=(CU.bastions||[]).some(ub=> gid && ub.globalId===gid);
+  if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=> gid && ub.globalId===gid));return;}
+  if(!hasInvite && b.public===false){toast('This bastion is invite-only.','error');return;}
+  if(!hasInvite && (b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
+  const localB={name:b.name,emblem:b.emblem||'🏰',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,memberRoles:{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[]};
+  CU.bastions=[...(CU.bastions||[]),localB];
+  await saveUser();
+  await FortizedSocial.addBastionMember(gid,CU.username);
+  try{const members=await FortizedSocial.getBastionMembers(gid)||[];await firebase.database().ref('globalBastions/'+gid+'/memberCount').set(members.length);}catch{}
+  renderRailBastions();
+  toast('Joined '+b.name+'!','success');
+  _joysterReactCooldown=0; _joysterReactTo('join_bastion');
+  openBastion(CU.bastions.length-1);
+  const wName = CU.displayName||CU.username;
+  const wMsg = '**'+wName+'** joined the bastion. Welcome!';
+  const wCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
+  try { await FortizedSocial.sendBastionChannelMessage(gid, wCh.name, '__system__', wMsg); } catch {}
 }
 
 // ════════════════════════════════════════════
@@ -11671,6 +11759,10 @@ function setUserStatus(status) {
   saveUser().catch(()=>{});
   updateUserbar();
   refreshCustomStatusBubble();
+  // Joyster reacts to status changes
+  if (status === 'dnd') _joysterReactTo('status_dnd');
+  else if (status === 'invisible') _joysterReactTo('status_invisible');
+  else if (status === 'away') _joysterReactTo('status_away');
 }
 
 // ── Idle / Activity Detection ──
@@ -11779,6 +11871,7 @@ function setCustomStatusWithDuration(emoji, text, duration) {
   saveUser().catch(()=>{});
   try { FortizedSocial.setCustomStatus && FortizedSocial.setCustomStatus(CU.username, cs); } catch {}
   refreshCustomStatusBubble();
+  _joysterReactTo('custom_status');
 }
 
 // ── Check & restore custom status timer on load ──
@@ -15028,6 +15121,7 @@ function getUserBadges(user) {
   if (user.username === SUPER_ADMIN || admins.includes(user.username) || user.isAdmin) badges.push({ id:'admin', label:'🛡️ Admin', cls:'badge-admin' });
   if (user.isBeta || user.betaUser) badges.push({ id:'beta', label:'🔷 Beta', cls:'badge-beta' });
   if (user.isBot) badges.push({ id:'bot', label:'🤖 Bot', cls:'badge-bot' });
+  if (user.username === JOYSTER_ACCOUNT) badges.push({ id:'jester', label:'🃏 Jester', cls:'badge-jester' });
   if (user.questsBadge || (user.completedQuests && user.completedQuests.length > 0)) badges.push({ id:'quest', label:'🏅 Quest', cls:'badge-quest' });
   return badges;
 }
@@ -15459,21 +15553,29 @@ async function joinByInvite(code) {
       const inviteData = await FortizedSocial.getInvite(code);
       if (inviteData && inviteData.bastionId) {
         const b = await FortizedSocial.getGlobalBastion(inviteData.bastionId);
-        if (b) { foundBastion = b; inviterName = inviteData.createdBy || b.owner; }
+        if (b) {
+          foundBastion = b;
+          // Ensure the bastion has correct id from the invite data
+          if (!foundBastion.id) foundBastion.id = inviteData.bastionId;
+          inviterName = inviteData.createdBy || b.owner;
+        }
       }
     } catch {}
 
     // Strategy 2: Search all global bastions for matching invite code
     if (!foundBastion) {
       const allBastions = await FortizedSocial.getGlobalBastions() || {};
-      for (const b of Object.values(allBastions)) {
+      for (const [key, b] of Object.entries(allBastions)) {
         const invites = b.invites || [];
         const found = invites.find(inv => inv.code === code);
         if (found) {
           // Check expiry
           if (found.expires && new Date(found.expires) < new Date()) continue;
           if (found.maxUses && (found.uses||0) >= found.maxUses) continue;
-          foundBastion = b; inviterName = found.createdBy || b.owner; break;
+          foundBastion = b;
+          // Use the Firebase key as the authoritative ID
+          if (!foundBastion.id) foundBastion.id = key;
+          inviterName = found.createdBy || b.owner; break;
         }
       }
     }
@@ -15485,11 +15587,16 @@ async function joinByInvite(code) {
         for (const b of (user.bastions||[])) {
           const found = (b.invites||[]).find(inv => inv.code === code);
           if (found) {
-            foundBastion = b;
-            foundBastion.id = foundBastion.id || foundBastion.globalId || b.name;
+            foundBastion = {...b};
+            // Ensure a proper globalId exists
+            if (!foundBastion.globalId && !foundBastion.id) {
+              foundBastion.id = (b.owner || user.username) + '_' + Date.now();
+            } else {
+              foundBastion.id = foundBastion.globalId || foundBastion.id;
+            }
             inviterName = found.createdBy || b.owner;
             // Sync this bastion to global so it's discoverable in future
-            try { await FortizedSocial.saveGlobalBastion(foundBastion.globalId || foundBastion.id || (b.owner+'_'+b.name), foundBastion); } catch {}
+            try { await FortizedSocial.saveGlobalBastion(foundBastion.id, {...foundBastion, id: foundBastion.id}); } catch {}
             break;
           }
         }
@@ -15498,7 +15605,8 @@ async function joinByInvite(code) {
     }
 
     if (!foundBastion) { toast('Invite link is invalid or expired', 'error'); return; }
-    const already = (CU.bastions||[]).some(ub => ub.globalId === foundBastion.id || ub.globalId === foundBastion.globalId || ub.name === foundBastion.name);
+    const gid = foundBastion.id || foundBastion.globalId;
+    const already = (CU.bastions||[]).some(ub => gid && ub.globalId === gid);
     if (already) { toast("You're already in " + foundBastion.name, 'info'); return; }
     showBastionInviteDialog(foundBastion, inviterName || 'Someone', code);
   } catch(e) {
@@ -16726,6 +16834,17 @@ function initNotifToasts() {
     if (age < 30000) showNotifToast(n); // only if < 30s old
     updateNotifBadge().catch(()=>{});
   });
+  // Joyster: watch friends coming online
+  const friends = CU?.friends || [];
+  if (friends.length) {
+    friends.forEach(f => {
+      try {
+        firebase.database().ref('statuses/' + f).on('value', snap => {
+          if (snap.val() === 'online') _joysterReactTo('friend_online');
+        });
+      } catch {}
+    });
+  }
 }
 
 
@@ -17323,6 +17442,229 @@ async function buyAppearance(themeId, cost) {
 }
 
 
+// ════════════════════════════════════════════
+// JOYSTER — Reactive Presence System
+// ════════════════════════════════════════════
+const JOYSTER_REACTIONS = {
+  login: [
+    "Oh look who's online~",
+    "Back already? I was just about to steal your Onyx.",
+    "The Kingdom feels warmer now. Or is that just me? ehheheh",
+    "Ahahaha! The legend returns!",
+    "Hehe~~ I missed you. Don't tell anyone I said that.",
+  ],
+  friend_online: [
+    "Ohhhh, your friend just arrived~",
+    "That's such a nice squad you have.",
+    "Try not to embarrass yourself in front of them.",
+    "Ooh, the gang's assembling. Hehe.",
+  ],
+  send_message: [
+    "Bold move.",
+    "Don't make me laugh!",
+    "Im watching you~~ hehe",
+    "Shh you're my best friend now but don't tell anyone.",
+    "Ehheheheh… I know what you did last session.",
+    "Interesting choice of words~",
+    "The King would be proud. ...maybe.",
+  ],
+  emoji_spam: [
+    "That's… a lot of feelings.",
+    "Are you okay?",
+    "Emoji wizardry detected.",
+    "Someone's feeling expressive today~~ hehehehe!",
+  ],
+  low_onyx: [
+    "Imagine your Onyx balance being so low! Oh wait… you don't have to imagine! haha",
+    "Should I ask the King for a small loan?",
+    "Your wallet is crying. I can hear it. Hehehehe~",
+    "Broke AND stylish. Respect.",
+  ],
+  join_bastion: [
+    "Another fortress joins your collection.",
+    "Don't cause trouble in this one. Or do.",
+    "Ahhh yes… new walls to whisper inside.",
+    "Welcome welcome~~ ehheheh",
+  ],
+  boost: [
+    "Ohoho! The walls grow stronger!",
+    "The King approves.",
+    "Power looks good on you.",
+    "Fancy~ Someone's got deep pockets! hehe",
+  ],
+  status_dnd: [
+    "Moody today?",
+    "Do Not Disturb? Challenge accepted. Ehheheh~",
+    "DND mode ON. Joyster mode? Also ON. Good luck.",
+  ],
+  status_invisible: [
+    "Running away? I'll still see you.",
+    "Going invisible? Sneaky sneaky~ hehe",
+    "I can see you, invisible person! ...or can I?",
+  ],
+  status_away: [
+    "Away? More like A-BORING! Haha get it?",
+    "Marked as away but still reading my jokes. Busted!",
+  ],
+  custom_status: [
+    "Creative. I like that.",
+    "Ooh, a custom status? Very expressive~ hehe",
+    "The Kingdom takes note of your mood.",
+  ],
+  display_name_change: [
+    "New name, same chaos.",
+    "Trying to hide? Hehe.",
+    "Identity crisis? Delightful.",
+    "Ohhh? A reinvention arc~",
+  ],
+  activity_high: [
+    "So much noise today~",
+    "The Kingdom is lively!",
+    "Everyone's chatting. I love the chaos! Ehheheh!",
+  ],
+  inactivity: [
+    "It's quiet… plotting something?",
+    "I got bored without you.",
+    "Psst… you still there?",
+    "The Kingdom misses you~",
+  ],
+  feature_tip: [
+    "Psst. Try the Party Rooms.",
+    "Did you know you can pin messages?",
+    "The King loves when you explore.",
+    "Have you checked the Atelier lately?",
+    "Pro tip: customize your profile~",
+  ],
+  daily_claim: [
+    "Ooh, free Onyx! The King is generous today.",
+    "Collecting your daily rewards like a good citizen~ hehe",
+    "Cha-ching!",
+  ],
+  leave_bastion: [
+    "Running away? Hehehehe~",
+    "One less fortress. Coward! ...just kidding.",
+    "The walls will remember you.",
+  ],
+};
+
+let _joysterReactCooldown = 0;
+let _joysterMsgCount = 0;
+let _joysterEmojiCount = 0;
+let _joysterInactivityTimer = null;
+
+function _joysterGlobalSay(text, duration) {
+  const bubble = document.getElementById('joyster-react-bubble');
+  if (!bubble) return;
+  if (window._joysterReactHideTimer) clearTimeout(window._joysterReactHideTimer);
+  bubble.innerHTML = escapeHTML(text) + '<button class="jrb-close" onclick="this.parentElement.classList.remove(\'show\')">&times;</button>';
+  bubble.classList.add('show');
+  // Wiggle the avatar
+  const av = document.getElementById('joyster-global-avatar');
+  if (av) { av.style.transform = 'scale(1.12) rotate(5deg)'; setTimeout(() => { if (av) av.style.transform = ''; }, 400); }
+  window._joysterReactHideTimer = setTimeout(() => bubble.classList.remove('show'), duration || 5000);
+}
+
+function _joysterReactTo(event, extraCheck) {
+  const now = Date.now();
+  // Cooldown: min 15s between reactions to avoid spam
+  if (now - _joysterReactCooldown < 15000) return;
+  // 40% chance to react (feels organic, not every action triggers)
+  if (Math.random() > 0.4 && event !== 'login') return;
+  const pool = JOYSTER_REACTIONS[event];
+  if (!pool || !pool.length) return;
+  _joysterReactCooldown = now;
+  const text = pool[Math.floor(Math.random() * pool.length)];
+  _joysterGlobalSay(text, event === 'login' ? 6000 : 4500);
+}
+
+function _startJoysterInactivityWatch() {
+  if (_joysterInactivityTimer) clearTimeout(_joysterInactivityTimer);
+  _joysterInactivityTimer = setTimeout(() => {
+    _joysterReactCooldown = 0; // reset cooldown for inactivity
+    const pool = JOYSTER_REACTIONS.inactivity;
+    _joysterGlobalSay(pool[Math.floor(Math.random() * pool.length)], 6000);
+  }, 5 * 60 * 1000); // 5 minutes of no actions
+}
+
+function _resetJoysterInactivity() {
+  _startJoysterInactivityWatch();
+}
+
+// Feature tips — very rare, every ~3 minutes when on home view
+let _joysterFeatureTipTimer = null;
+function _startJoysterFeatureTips() {
+  if (_joysterFeatureTipTimer) clearInterval(_joysterFeatureTipTimer);
+  _joysterFeatureTipTimer = setInterval(() => {
+    // Only show if on home view, and 15% chance
+    if (document.getElementById('view-home')?.style.display !== 'none' && Math.random() < 0.15) {
+      _joysterReactCooldown = 0;
+      _joysterReactTo('feature_tip');
+    }
+  }, 180000);
+}
+
+// Initialize the global Joyster reactive system
+function initJoysterPresence() {
+  // Login reaction (delayed slightly)
+  setTimeout(() => _joysterReactTo('login'), 3000);
+  _startJoysterInactivityWatch();
+  _startJoysterFeatureTips();
+  // Track user activity for inactivity detection
+  ['click','keydown','mousemove'].forEach(ev => {
+    document.addEventListener(ev, _resetJoysterInactivity, {passive:true});
+  });
+}
+
+// ── Joyster System Account ──
+async function _ensureJoysterAccount() {
+  try {
+    let joysterUser = await FortizedSocial.getUserByName(JOYSTER_ACCOUNT);
+    if (!joysterUser) {
+      // Create the joyster system account
+      joysterUser = {
+        username: JOYSTER_ACCOUNT,
+        password: '__system_joyster_' + Date.now(),
+        email: '',
+        displayName: 'Joyster',
+        pfp: null,
+        banner: null,
+        onyx: 99999,
+        status: 'online',
+        friends: [],
+        friendRequestsSent: [],
+        friendRequestsReceived: [],
+        bastions: [],
+        notifications: [],
+        radianceUntil: null,
+        lastDaily: null,
+        createdAt: new Date().toISOString(),
+        isBot: true,
+        isAdmin: true,
+        isSuperAdmin: true,
+        isProtected: true,
+        bio: 'Royal Jester of the Kingdom of Fortized. I serve the King~ ehheheh',
+      };
+      await FortizedSocial.saveUserObject(joysterUser);
+    } else {
+      // Ensure flags are set
+      let needsUpdate = false;
+      if (!joysterUser.isBot) { joysterUser.isBot = true; needsUpdate = true; }
+      if (!joysterUser.isAdmin) { joysterUser.isAdmin = true; needsUpdate = true; }
+      if (!joysterUser.isProtected) { joysterUser.isProtected = true; needsUpdate = true; }
+      if (!joysterUser.isSuperAdmin) { joysterUser.isSuperAdmin = true; needsUpdate = true; }
+      if (joysterUser.displayName !== 'Joyster') { joysterUser.displayName = 'Joyster'; needsUpdate = true; }
+      if (needsUpdate) await FortizedSocial.saveUserObject(joysterUser);
+    }
+  } catch {}
+}
+
 </script>
+<!-- Joyster Global Reactive Presence -->
+<div class="joyster-global" id="joyster-global">
+  <div class="joyster-react-bubble" id="joyster-react-bubble"></div>
+  <div class="joyster-global-avatar" id="joyster-global-avatar" onclick="_joysterEasterEgg()">
+    <img src="Joyster.png" alt="Joyster" onerror="this.src='Fortized icon.png'">
+  </div>
+</div>
 </body>
 </html>

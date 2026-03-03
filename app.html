@@ -280,7 +280,45 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .load-spinner{width:32px;height:32px;border:3px solid rgba(255,249,62,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
 .home-wrap{flex:1;display:flex;overflow:hidden;min-width:0;min-height:0;}
 .home-feed{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column;scroll-behavior:smooth;}
-.home-right{width:300px;min-width:300px;border-left:1px solid var(--border);overflow-y:auto;background:var(--channel);display:flex;flex-direction:column;}
+.home-right{display:none;}
+/* ── UNIFIED VIEW HEADER (Atelier, Discover, DMs) ──── */
+.uv-header{position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;border:1.5px solid rgba(254,248,61,.1);background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));min-height:180px;}
+.uv-header-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;filter:brightness(.55) saturate(1.1);}
+.uv-header-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,9,14,0) 0%,rgba(7,9,14,.7) 45%,rgba(7,9,14,.98) 100%);}
+.uv-header-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(254,248,61,.06),transparent 55%);pointer-events:none;}
+.uv-header-content{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;padding:28px 36px 28px;height:100%;min-height:180px;}
+.uv-header-left{display:flex;align-items:center;gap:14px;}
+.uv-header-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid;}
+.uv-header-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.5px;text-shadow:0 2px 12px rgba(0,0,0,.5);}
+.uv-header-sub{font-size:13px;color:rgba(255,255,255,.4);margin-top:5px;}
+.uv-header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+/* ── REALM FEED (replaces stats + quick nav) ──── */
+.realm-section{padding:0 28px;margin-bottom:24px;}
+.realm-section-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:rgba(255,255,255,.65);display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.realm-section-title::before{content:"";width:3px;height:16px;background:var(--accent);border-radius:2px;flex-shrink:0;}
+.realm-section-title .rst-sub{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;color:var(--muted);margin-left:auto;}
+.realm-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;}
+.realm-scroll::-webkit-scrollbar{display:none;}
+.realm-card{min-width:200px;max-width:240px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:18px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;flex-shrink:0;}
+.realm-card:hover{border-color:rgba(255,249,62,.2);transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.25);}
+.realm-card .rc-emblem{width:40px;height:40px;border-radius:12px;background:var(--panel2);border:1px solid var(--border);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;margin-bottom:12px;}
+.realm-card .rc-emblem img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
+.realm-card .rc-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.realm-card .rc-meta{font-size:11px;color:var(--muted);}
+.realm-card .rc-glow{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);opacity:0;transition:opacity .2s;}
+.realm-card:hover .rc-glow{opacity:.6;}
+/* Online friends horizontal scroll */
+.realm-friend{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:64px;cursor:pointer;transition:transform .18s;flex-shrink:0;text-decoration:none;}
+.realm-friend:hover{transform:translateY(-3px);}
+.realm-friend .rf-av{position:relative;width:44px;height:44px;border-radius:50%;overflow:visible;}
+.realm-friend .rf-av img,.realm-friend .rf-av .fa{width:44px;height:44px;border-radius:50%;object-fit:cover;}
+.realm-friend .rf-status{position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;border:2.5px solid var(--panel);z-index:1;}
+.realm-friend .rf-name{font-size:10.5px;color:rgba(255,255,255,.5);max-width:64px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* Scrolled DYK — medieval parchment style */
+.realm-lore{display:flex;align-items:center;gap:12px;padding:14px 18px;background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,200,62,.02));border:1px solid rgba(255,249,62,.08);border-radius:14px;font-size:12.5px;margin-bottom:20px;position:relative;overflow:hidden;}
+.realm-lore::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.015'/%3E%3C/svg%3E");opacity:.5;pointer-events:none;}
+.realm-lore .rl-tag{font-family:'Syne',sans-serif;font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;}
+.realm-lore .rl-text{color:var(--muted-light);line-height:1.5;}
 
 /* ── HERO 2.0 ──────────────────────────────────── */
 .home-hero{width:100%;min-height:240px;background:linear-gradient(145deg,rgba(13,16,24,.6) 0%,rgba(20,23,32,.5) 40%,rgba(16,19,28,.55) 100%);position:relative;overflow:hidden;flex-shrink:0;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 36px;}
@@ -336,14 +374,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .hero-greeting .wave-emoji{display:inline-block;animation:wave 2s ease-in-out 1;}
 
 /* ── STAT STRIP 2.0 ──────────────────────────────── */
-.home-stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 28px;flex-shrink:0;}
-.hss-item{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:3px;transition:all .2s;cursor:default;position:relative;overflow:hidden;}
-.hss-item::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(255,249,62,.04),transparent 70%);opacity:0;transition:opacity .2s;}
-.hss-item:hover{border-color:rgba(255,249,62,.15);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.15);}
-.hss-item:hover::before{opacity:1;}
-.hss-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent);transition:all .3s;}
-.hss-label{font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.04em;}
-.hss-icon{font-size:16px;position:absolute;top:12px;right:14px;opacity:.3;}
+.home-stat-strip{display:none;}
+.hss-item{display:none;}
+.hss-val{display:none;}
+.hss-label{display:none;}
+.hss-icon{display:none;}
 
 /* ── MAIN SCROLL ──────────────────────────────────── */
 .home-main-scroll{padding:24px 28px 48px;}
@@ -351,19 +386,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .section-hdr h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
 .section-hdr h3::before{content:"";width:14px;height:3px;background:var(--accent);border-radius:2px;}
 
-/* ── QUICK ACCESS TILES 2.0 ──────────────────────── */
-.quick-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
-.qn-tile{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px 16px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;opacity:0;animation:tileReveal .4s ease forwards;}
-.qn-tile:nth-child(1){animation-delay:.05s;}.qn-tile:nth-child(2){animation-delay:.1s;}.qn-tile:nth-child(3){animation-delay:.15s;}.qn-tile:nth-child(4){animation-delay:.2s;}
-@keyframes tileReveal{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
-.qn-tile:hover{border-color:rgba(255,249,62,.2);transform:translateY(-5px);box-shadow:0 12px 28px rgba(0,0,0,.2);}
-.qn-tile.has-unread{border-color:rgba(255,249,62,.25);box-shadow:0 0 16px rgba(255,249,62,.06);}
-.qn-tile.has-unread::after{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);border-radius:0 0 2px 2px;}
-.qn-icon{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:19px;transition:transform .2s;}
-.qn-tile:hover .qn-icon{transform:scale(1.1);}
-.qn-text h4{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:2px;}
-.qn-text p{font-size:11.5px;color:var(--muted);}
-.qn-badge{position:absolute;top:10px;right:10px;background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:100px;}
+/* ── QUICK ACCESS TILES (legacy, hidden) ──── */
+.quick-nav{display:none;}
+.qn-tile{display:none;}
 
 /* ── ACTIVITY FEED 2.0 ───────────────────────────── */
 .activity-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:all .2s;margin-bottom:6px;}
@@ -376,30 +401,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .act-dm-btn{padding:5px 12px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .14s;flex-shrink:0;display:flex;align-items:center;gap:4px;}
 .act-dm-btn:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.2);color:var(--accent);}
 
-/* ── RIGHT PANEL 2.0 ────────────────────────────── */
-.rp-section{padding:16px 14px 10px;border-bottom:1px solid var(--border);}
-.rp-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
-.rp-bastion-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:all .14s;margin-bottom:2px;position:relative;}
-.rp-bastion-item:hover{background:rgba(255,255,255,.05);}
-.rp-bastion-emblem{width:34px;height:34px;border-radius:10px;background:var(--panel);border:1px solid var(--border);font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
-.rp-bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
-.rp-bastion-info{flex:1;min-width:0;}
-.rp-bastion-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rp-bastion-meta{font-size:10.5px;color:var(--muted);}
-/* Hover actions overlay */
-.rp-bastion-actions{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;gap:3px;opacity:0;transition:opacity .14s;}
-.rp-bastion-item:hover .rp-bastion-actions{opacity:1;}
-.rp-bastion-actions button{width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.06);border:none;color:var(--muted);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
-.rp-bastion-actions button:hover{background:rgba(255,249,62,.12);color:var(--accent);}
-/* Online friends */
-.rp-friend-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:10px;cursor:pointer;transition:all .14s;margin-bottom:1px;}
-.rp-friend-item:hover{background:rgba(255,249,62,.04);}
-.rp-friend-av{position:relative;flex-shrink:0;}
-.rp-friend-status{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--channel);}
-.rp-friend-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rp-friend-activity{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
-/* Friends scroll fade */
-.rp-friends-scroll{max-height:240px;overflow-y:auto;position:relative;mask-image:linear-gradient(to bottom,transparent 0%,black 4%,black 92%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 4%,black 92%,transparent 100%);}
+/* ── RIGHT PANEL (legacy, hidden) ──── */
+.rp-section{display:none;}
 /* News panel */
 .rp-news-item{padding:10px 12px;border-radius:10px;cursor:pointer;transition:all .14s;margin-bottom:3px;position:relative;}
 .rp-news-item:hover{background:rgba(255,255,255,.04);}
@@ -674,17 +677,19 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ci-preview .ci-mention{color:#60a5fa;font-weight:600;}
 .ci-preview .ci-room-ref{color:#a78bfa;font-weight:600;}
 /* ── Atelier ─────────────────────────────────────── */
-.atelier-wrap{display:flex;flex:1;overflow:hidden;background:#0c0f17;}
-.atelier-nav{width:230px;min-width:230px;background:linear-gradient(180deg,#0a0d14,#0b0e16);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;overflow:hidden;}
-.atelier-nav-scroll{flex:1;overflow-y:auto;padding:16px 10px;}
-.atelier-nav-section{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:16px 12px 6px;}
-.atelier-nav-item{display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:14px;cursor:pointer;font-size:13.5px;color:rgba(255,255,255,.45);transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;margin-bottom:2px;}
-.atelier-nav-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.9);}
-.atelier-nav-item.active{background:rgba(255,249,62,.08);color:var(--accent);font-weight:600;box-shadow:0 0 0 1px rgba(255,249,62,.1) inset;}
-.atelier-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:50%;background:var(--accent);border-radius:0 4px 4px 0;box-shadow:0 0 12px rgba(255,249,62,.4);}
-.atelier-nav-icon{font-size:16px;flex-shrink:0;width:22px;text-align:center;}
-.atelier-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 12px;border-radius:1px;}
+.atelier-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden;background:#0c0f17;}
+.atelier-nav{display:none;}
+.atelier-nav-scroll{display:none;}
+.atelier-nav-section{display:none;}
+.atelier-nav-item{display:none;}
+.atelier-nav-icon{display:none;}
+.atelier-nav-sep{display:none;}
 .atelier-scroll{flex:1;overflow-y:auto;padding:0;scroll-behavior:smooth;}
+/* Atelier inline tabs */
+.atelier-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:0 28px;margin-bottom:20px;}
+.atelier-tabs .disc-tab{padding:8px 18px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid transparent;color:var(--muted-light);transition:all .2s cubic-bezier(.22,1,.36,1);letter-spacing:.02em;background:none;}
+.atelier-tabs .disc-tab:hover{background:rgba(255,255,255,.06);color:#fff;border-color:rgba(255,255,255,.06);transform:translateY(-1px);}
+.atelier-tabs .disc-tab.active{background:rgba(255,249,62,.1);border-color:rgba(255,249,62,.25);color:var(--accent);box-shadow:0 2px 12px rgba(255,249,62,.08);}
 /* Quest tab chips */
 .quest-tab-chip{padding:7px 18px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .2s cubic-bezier(.22,1,.36,1);background:rgba(255,255,255,.03);}
 .quest-tab-chip.active{background:rgba(255,249,62,.1);color:var(--accent);border-color:rgba(255,249,62,.25);box-shadow:0 2px 12px rgba(255,249,62,.1);}
@@ -1464,64 +1469,25 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
             <div class="joyster-bubble" id="joyster-bubble"></div>
           </div>
 
-          <!-- STAT STRIP 2.0 -->
-          <div class="home-stat-strip" id="home-stat-strip">
-            <div class="hss-item">
-              <div class="hss-icon">🏰</div>
-              <div class="hss-val" id="stat-bastions">–</div>
-              <div class="hss-label">Bastions</div>
+          <!-- REALM FEED -->
+          <div class="home-main-scroll" style="padding:24px 0 48px;">
+            <div id="home-dyk-strip" style="padding:0 28px;"></div>
+            <div class="realm-section">
+              <div class="realm-section-title">Comrades Online <span class="rst-sub" id="realm-online-count"></span></div>
+              <div class="realm-scroll" id="realm-friends"></div>
             </div>
-            <div class="hss-item">
-              <div class="hss-icon">👥</div>
-              <div class="hss-val" id="stat-friends">–</div>
-              <div class="hss-label">Friends</div>
+            <div class="realm-section">
+              <div class="realm-section-title">Your Bastions</div>
+              <div class="realm-scroll" id="realm-bastions"></div>
             </div>
-            <div class="hss-item">
-              <div class="hss-icon"><img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;"></div>
-              <div class="hss-val" id="stat-onyx">–</div>
-              <div class="hss-label">Onyx</div>
+            <div class="realm-section">
+              <div class="realm-section-title">Friend Activity</div>
+              <div id="activity-feed"></div>
             </div>
-            <div class="hss-item">
-              <div class="hss-icon" style="color:#3ecf6e;">●</div>
-              <div class="hss-val" id="stat-online">–</div>
-              <div class="hss-label">Online Now</div>
-            </div>
-          </div>
-
-          <!-- MAIN FEED -->
-          <div class="home-main-scroll">
-            <div id="home-dyk-strip"></div>
-            <div class="section-hdr"><h3>Quick Access</h3></div>
-            <div class="quick-nav" id="quick-nav"></div>
-            <div class="section-hdr"><h3>Recent Activity</h3></div>
-            <div id="activity-feed"></div>
           </div>
         </div>
 
-        <!-- RIGHT PANEL 2.0 -->
-        <div class="home-right">
-          <div class="rp-section">
-            <div class="rp-title">
-              <span>Your Bastions</span>
-              <span style="font-size:11px;color:var(--muted);font-weight:500;letter-spacing:0;text-transform:none;" id="rp-bastion-count"></span>
-            </div>
-            <div id="rp-bastions"></div>
-          </div>
-          <div class="rp-section" style="flex:1;">
-            <div class="rp-title">
-              <span>Online Friends</span>
-              <span style="font-size:11px;color:#3ecf6e;font-weight:500;letter-spacing:0;text-transform:none;" id="rp-online-count"></span>
-            </div>
-            <div class="rp-friends-scroll" id="rp-friends"></div>
-          </div>
-          <div class="rp-section">
-            <div class="rp-title" style="cursor:pointer;" onclick="window.open('blog.html','_blank')">
-              <span>Latest from Fortized</span>
-              <span style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;"></span>
-            </div>
-            <div id="rp-news"></div>
-          </div>
-        </div>
+        <!-- Right panel removed — content integrated into main feed -->
       </div>
     </div>
 
@@ -1529,21 +1495,26 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
     <div class="view" id="view-dms">
       <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
         <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
-          <div style="max-width:750px;">
-            <!-- DM Hero Header — Clean & modern -->
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-              <div style="display:flex;align-items:center;gap:14px;">
-                <div style="width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(167,139,250,.1));border:1px solid rgba(96,165,250,.2);display:flex;align-items:center;justify-content:center;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <div style="max-width:800px;">
+            <!-- Unified header -->
+            <div class="uv-header" style="border-color:rgba(96,165,250,.12);">
+              <img src="Fortized banner3.png" class="uv-header-bg" onerror="this.style.display='none'">
+              <div class="uv-header-grad"></div>
+              <div class="uv-header-glow" style="background:radial-gradient(ellipse at 30% 20%,rgba(96,165,250,.08),transparent 55%);"></div>
+              <div class="uv-header-content">
+                <div class="uv-header-left">
+                  <div class="uv-header-icon" style="background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.2);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                  </div>
+                  <div>
+                    <div class="uv-header-title">Messages</div>
+                    <div class="uv-header-sub">Your conversations & friends</div>
+                  </div>
                 </div>
-                <div>
-                  <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;line-height:1.1;">Messages</div>
-                  <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:3px;">Your conversations</div>
+                <div class="uv-header-actions">
+                  <button class="btn-g" onclick="openModal('modal-new-dm')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> New Chat</button>
+                  <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;">+ Add Friend</button>
                 </div>
-              </div>
-              <div style="display:flex;gap:8px;">
-                <button class="btn-g" onclick="openModal('modal-new-dm')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> New Chat</button>
-                <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;">+ Add Friend</button>
               </div>
             </div>
             <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
@@ -1591,26 +1562,26 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
     <!-- DISCOVER VIEW -->
     <div class="view" id="view-discover">
       <div class="discover-scroll">
-        <!-- Hero with banner image -->
-        <div class="disc-hero" style="padding:0;overflow:hidden;position:relative;border-radius:24px;margin-bottom:30px;border:1.5px solid rgba(254,248,61,.1);">
-          <div style="position:relative;height:260px;overflow:hidden;">
-            <img src="Fortized banner2.png" style="width:100%;height:100%;object-fit:cover;filter:brightness(.55) saturate(1.1);" onerror="this.style.display='none'">
-            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,9,14,0) 0%,rgba(7,9,14,.7) 50%,rgba(7,9,14,.95) 100%);"></div>
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(254,248,61,.08),transparent 55%);pointer-events:none;"></div>
-          </div>
-          <div style="position:absolute;bottom:0;left:0;right:0;padding:28px 40px 32px;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-              <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.12);border:1px solid rgba(254,248,61,.2);display:flex;align-items:center;justify-content:center;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
-              </div>
-              <div>
-                <h2 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;margin:0;line-height:1;letter-spacing:-.5px;">Discover Bastions</h2>
+        <!-- Unified header -->
+        <div class="uv-header">
+          <img src="Fortized banner2.png" class="uv-header-bg" onerror="this.style.display='none'">
+          <div class="uv-header-grad"></div>
+          <div class="uv-header-glow"></div>
+          <div class="uv-header-content" style="flex-direction:column;align-items:flex-start;gap:16px;">
+            <div>
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+                <div class="uv-header-icon" style="background:rgba(254,248,61,.12);border-color:rgba(254,248,61,.2);">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
+                </div>
+                <div>
+                  <div class="uv-header-title">Discover Bastions</div>
+                  <div class="uv-header-sub">Explore communities, find your people, join the conversation.</div>
+                </div>
               </div>
             </div>
-            <p style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.6;">Explore vibrant communities, find your people, and join the conversation.</p>
-            <div class="disc-search" style="max-width:460px;">
+            <div class="disc-search" style="max-width:460px;width:100%;">
               <span class="si"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-              <input type="text" placeholder="Search public bastions…" id="disc-search-input" oninput="filterDiscover(this.value)">
+              <input type="text" placeholder="Search public bastions..." id="disc-search-input" oninput="filterDiscover(this.value)">
             </div>
           </div>
         </div>
@@ -1632,36 +1603,44 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
     <!-- ATELIER VIEW -->
     <div class="view" id="view-atelier">
       <div class="atelier-wrap">
-        <!-- Sidebar nav — modern Fortized style -->
-        <div class="atelier-nav">
-          <div style="padding:20px 16px 12px;flex-shrink:0;">
-            <div style="display:flex;align-items:center;gap:10px;padding:0 6px;">
-              <div style="width:32px;height:32px;border-radius:10px;background:rgba(254,248,61,.1);border:1px solid rgba(254,248,61,.15);display:flex;align-items:center;justify-content:center;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg>
+        <div class="atelier-scroll" id="atelier-scroll-outer" style="flex:1;overflow-y:auto;padding:28px;scroll-behavior:smooth;">
+          <!-- Unified header -->
+          <div class="uv-header" style="border-color:rgba(254,248,61,.12);">
+            <img src="Onyx banner.png" class="uv-header-bg" onerror="this.style.display='none'">
+            <div class="uv-header-grad"></div>
+            <div class="uv-header-glow"></div>
+            <div class="uv-header-content">
+              <div class="uv-header-left">
+                <div class="uv-header-icon" style="background:rgba(254,248,61,.1);border-color:rgba(254,248,61,.18);">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg>
+                </div>
+                <div>
+                  <div class="uv-header-title">Atelier</div>
+                  <div class="uv-header-sub">Your Fortized store & rewards</div>
+                </div>
+              </div>
+              <div class="uv-header-actions">
+                <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.4);border:1px solid rgba(254,248,61,.12);border-radius:16px;padding:10px 16px;backdrop-filter:blur(12px);">
+                  <img src="Onyx.png" style="width:16px;height:16px;object-fit:contain;">
+                  <div>
+                    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">0</div>
+                    <div style="font-size:9.5px;color:rgba(255,255,255,.3);margin-top:2px;">Onyx</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div class="atelier-nav-scroll">
-            <div class="atelier-nav-section">Account</div>
-            <div class="atelier-nav-item active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">
-              <span class="atelier-nav-icon">🏠</span>Overview
-            </div>
-            <div class="atelier-nav-item" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">
-              <span class="atelier-nav-icon">✨</span>Radiance Dwelling
-            </div>
-            <div class="atelier-nav-sep"></div>
-            <div class="atelier-nav-section">Store</div>
-            <div class="atelier-nav-item" id="atnav-quests" onclick="switchAtelierTab('quests',this)">
-              <span class="atelier-nav-icon">🎯</span>Quests
-            </div>
-            <div class="atelier-nav-item" id="atnav-shop" onclick="switchAtelierTab('shop',this)">
-              <span class="atelier-nav-icon">🛍️</span>Shop
-            </div>
+          <!-- Tabs (replaces sidebar nav) -->
+          <div class="atelier-tabs" style="padding:0;margin-bottom:24px;">
+            <button class="disc-tab active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">Overview</button>
+            <button class="disc-tab" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">Radiance</button>
+            <button class="disc-tab" id="atnav-quests" onclick="switchAtelierTab('quests',this)">Quests</button>
+            <button class="disc-tab" id="atnav-shop" onclick="switchAtelierTab('shop',this)">Shop</button>
           </div>
-        </div>
-        <!-- Main content -->
-        <div class="atelier-scroll" id="atelier-content">
-          <!-- Loaded dynamically by switchAtelierTab() -->
+          <!-- Dynamic content -->
+          <div id="atelier-content">
+            <!-- Loaded dynamically by switchAtelierTab() -->
+          </div>
         </div>
       </div>
     </div>
@@ -2591,10 +2570,8 @@ function updateOnyxDisplay() {
 }
 function updateAtelierSidebar() {
   if (!CU) return;
-  const av = document.getElementById('atelier-av');
-  const uname = document.getElementById('atelier-uname');
-  if (av) av.innerHTML = buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 34);
-  if (uname) uname.textContent = CU.displayName || CU.username;
+  const balH = document.getElementById('atelier-balance');
+  if (balH) balH.textContent = CU.onyx || 0;
   updateOnyxDisplay();
 }
 function buildAvatarHTML(pfp, name, size) {
@@ -2696,74 +2673,83 @@ function renderHomePanel() {
   const dykEl = document.getElementById('home-dyk-strip');
   if (dykEl) dykEl.innerHTML = getDYKHtml();
 
-  // Stats strip (with animated counters)
+  // Realm data
   const bastions = CU?.bastions||[];
   const friends0 = CU?.friends||[];
-  _animateCounter('stat-bastions', bastions.length);
-  _animateCounter('stat-friends', friends0.length);
-  _animateCounter('stat-onyx', CU?.onyx||0);
-  const statOn = document.getElementById('stat-online');
-  if (statOn) {
-    statOn.textContent = '...';
-    let onlineCt = 0;
-    Promise.all(friends0.slice(0,20).map(f =>
-      FortizedSocial.getStatus(f).then(s=>{ if(s==='online'||s==='away') onlineCt++; }).catch(()=>{})
-    )).then(()=>{ _animateCounter('stat-online', onlineCt); });
+
+  // Realm Bastions — horizontal scroll cards
+  const realmB = document.getElementById('realm-bastions');
+  if (realmB) {
+    if (bastions.length) {
+      realmB.innerHTML = bastions.slice(0,10).map((b,i)=>`
+        <div class="realm-card" onclick="openBastion(${i})">
+          <div class="rc-glow"></div>
+          <div class="rc-emblem">${b.icon ? `<img src="${b.icon}">` : (b.emblem||'🏰')}</div>
+          <div class="rc-name">${escapeHTML(b.name)}</div>
+          <div class="rc-meta">${(b.channels||[]).length} channels</div>
+        </div>`).join('') + `
+        <div class="realm-card" onclick="openModal('modal-create-bastion')" style="border-style:dashed;border-color:rgba(255,249,62,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:120px;">
+          <div style="font-size:24px;margin-bottom:8px;opacity:.4;">+</div>
+          <div class="rc-name" style="color:var(--accent);opacity:.7;">Create Bastion</div>
+        </div>`;
+    } else {
+      realmB.innerHTML = `
+        <div class="realm-card" onclick="openModal('modal-create-bastion')" style="border-style:dashed;border-color:rgba(255,249,62,.12);min-width:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;">
+          <div style="font-size:28px;margin-bottom:10px;">🏰</div>
+          <div class="rc-name" style="color:var(--accent);">Create Your First Bastion</div>
+          <div class="rc-meta">Build your fortress, invite your allies</div>
+        </div>
+        <div class="realm-card" onclick="showView('discover')" style="min-width:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;">
+          <div style="font-size:28px;margin-bottom:10px;">🧭</div>
+          <div class="rc-name">Discover Bastions</div>
+          <div class="rc-meta">Explore and join communities</div>
+        </div>`;
+    }
   }
 
-  // Quick access tiles
-  const qn = document.getElementById('quick-nav');
-  if (qn) qn.innerHTML = [
-    {icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',label:'Messages',sub:'Chat with friends',act:"showView('dms')",col:'rgba(96,165,250,.12)',border:'rgba(96,165,250,.15)'},
-    {icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>',label:'Discover',sub:'Find communities',act:"showView('discover')",col:'rgba(52,211,153,.12)',border:'rgba(52,211,153,.15)'},
-    {icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg>',label:'Atelier',sub:'Onyx & Radiance',act:"showView('atelier')",col:'rgba(255,249,62,.1)',border:'rgba(255,249,62,.12)'},
-    {icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>',label:'Settings',sub:'Profile & preferences',act:"showView('profile')",col:'rgba(167,139,250,.12)',border:'rgba(167,139,250,.15)'},
-  ].map(t=>`<div class="qn-tile" onclick="${t.act}"><div class="qn-icon" style="background:${t.col};color:${t.border.replace('.15','.8').replace('.12','.7')}">${t.icon}</div><div class="qn-text"><h4>${t.label}</h4><p>${t.sub}</p></div></div>`).join('');
+  // Realm Friends — horizontal avatar scroll
+  const realmF = document.getElementById('realm-friends');
+  const realmOC = document.getElementById('realm-online-count');
+  if (realmF) {
+    if (!friends0.length) {
+      realmF.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:8px 4px;">
+        <div style="font-size:13px;color:var(--muted);">No comrades yet.</div>
+        <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:11px;padding:6px 14px;">+ Add Friend</button>
+      </div>`;
+    } else {
+      realmF.innerHTML = '<div style="padding:8px 4px;display:flex;gap:8px;"><div class="pl-spinner" style="width:18px;height:18px;border-width:2px;"></div></div>';
+      _loadRealmFriends(friends0, realmF, realmOC);
+    }
+  }
 
   // Load friend activity feed
   setTimeout(loadFriendActivity, 100);
+}
 
-  // Right panel: Bastions with hover actions
-  const rpB = document.getElementById('rp-bastions');
-  const rpBC = document.getElementById('rp-bastion-count');
-  if (rpBC) rpBC.textContent = bastions.length ? bastions.length : '';
-  if (rpB) rpB.innerHTML = bastions.length ? bastions.slice(0,8).map((b,i)=>`
-    <div class="rp-bastion-item" onclick="openBastion(${i})">
-      <div class="rp-bastion-emblem">${b.icon ? `<img src="${b.icon}">` : (b.emblem||'🏰')}</div>
-      <div class="rp-bastion-info">
-        <div class="rp-bastion-name">${escapeHTML(b.name)}</div>
-        <div class="rp-bastion-meta">${(b.channels||[]).length} channels</div>
+// ── Realm friends loader (horizontal avatars) ──
+async function _loadRealmFriends(friends, container, countEl) {
+  const results = await Promise.all(friends.slice(0,20).map(async f => {
+    try {
+      const u = await FortizedSocial.getUserByName(f);
+      const st = await FortizedSocial.getStatus(f).catch(()=>'offline');
+      return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st};
+    } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
+  }));
+  const online = results.filter(r=>r.status==='online'||r.status==='away'||r.status==='dnd');
+  const offline = results.filter(r=>r.status!=='online'&&r.status!=='away'&&r.status!=='dnd');
+  if (countEl) countEl.textContent = online.length ? online.length + ' online' : '';
+  const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',offline:'#6b7280'};
+  const sorted = [...online,...offline];
+  container.innerHTML = sorted.map(r=>{
+    const sc = SC[r.status]||SC.offline;
+    return `<div class="realm-friend" onclick="openDMView('${escapeHTML(r.username)}')" title="${escapeHTML(r.displayName)}">
+      <div class="rf-av">
+        <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:16px;">${buildAvatarHTML(r.pfp,r.displayName,44)}</div>
+        <span class="rf-status" style="background:${sc};"></span>
       </div>
-      <div class="rp-bastion-actions">
-        <button onclick="event.stopPropagation();openBastion(${i})" title="Open">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
-      </div>
-    </div>`).join('') : '<div style="padding:10px;font-size:12px;color:var(--muted);text-align:center;">No bastions yet. <span style="color:var(--accent);cursor:pointer;" onclick="openModal(\'modal-create-bastion\')">Create one!</span></div>';
-
-  // Right panel: Online Friends with status dots
-  const rpF = document.getElementById('rp-friends');
-  const rpOC = document.getElementById('rp-online-count');
-  if (rpF) {
-    rpF.innerHTML = '<div style="padding:12px;text-align:center;"><div class="pl-spinner" style="width:20px;height:20px;margin:0 auto;border-width:2px;"></div></div>';
-    _loadRPFriends(friends0, rpF, rpOC);
-  }
-
-  // Right panel: News — real articles from the Fortized Blog
-  const rpN = document.getElementById('rp-news');
-  if (rpN) rpN.innerHTML = [
-    {id:'betalive', tag:'Launch', title:'Fortized Beta is LIVE!', date:'Feb 22, 2026', isNew:true},
-    {id:'whatisfortized', tag:'R&D', title:'What is Fortized?', date:'Feb 22, 2026', isNew:true},
-    {id:'atelier', tag:'R&D', title:'Introducing The Atelier', date:'Feb 21, 2026', isNew:true},
-    {id:'gates', tag:'Announcement', title:'The Gates are Unlocking', date:'Feb 21, 2026', isNew:false},
-    {id:'safety', tag:'Safety', title:'How Stawdio Safety Protects Your Bastion', date:'Feb 20, 2026', isNew:false},
-  ].map(n=>`
-    <div class="rp-news-item" onclick="window.open('blog.html?article=${n.id}','_blank','noopener,noreferrer')">
-      ${n.isNew?'<div class="rp-news-badge"></div>':''}
-      <div class="rp-news-tag">${n.tag}</div>
-      <div class="rp-news-title">${n.title}</div>
-      <div class="rp-news-date">${n.date}</div>
-    </div>`).join('');
+      <div class="rf-name">${escapeHTML(r.displayName)}</div>
+    </div>`;
+  }).join('') || '<div style="padding:8px;font-size:13px;color:var(--muted);">All comrades offline</div>';
 }
 
 // ── Right panel friends loader (async with status) ──
@@ -3258,14 +3244,31 @@ function showDMFriendsHome() {
   if (dmPanel) dmPanel.style.display = 'none';
   wrap.innerHTML = `
     <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
-      <div style="max-width:700px;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-          <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;">Friends</h2>
+      <div style="max-width:800px;">
+        <div class="uv-header" style="border-color:rgba(96,165,250,.12);">
+          <img src="Fortized banner3.png" class="uv-header-bg" onerror="this.style.display='none'">
+          <div class="uv-header-grad"></div>
+          <div class="uv-header-glow" style="background:radial-gradient(ellipse at 30% 20%,rgba(96,165,250,.08),transparent 55%);"></div>
+          <div class="uv-header-content">
+            <div class="uv-header-left">
+              <div class="uv-header-icon" style="background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.2);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              </div>
+              <div>
+                <div class="uv-header-title">Messages</div>
+                <div class="uv-header-sub">Your conversations & friends</div>
+              </div>
+            </div>
+            <div class="uv-header-actions">
+              <button class="btn-g" onclick="openModal('modal-new-dm')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> New Chat</button>
+              <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;">+ Add Friend</button>
+            </div>
+          </div>
         </div>
-        <div id="dm-friends-tabs" style="display:flex;gap:5px;margin-bottom:20px;">
+        <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
           <button class="disc-tab" onclick="dmFriendsFilter('online',this)">Online</button>
           <button class="disc-tab active" onclick="dmFriendsFilter('all',this)">All</button>
-          <button class="disc-tab" onclick="openModal('modal-add-friend')" style="background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;">+ Add Friend</button>
+          <button class="disc-tab" onclick="dmFriendsFilter('pending',this)">Pending</button>
         </div>
         <div id="dm-friends-list"></div>
       </div>
@@ -14250,7 +14253,7 @@ let _atelierTab = 'overview';
 
 function switchAtelierTab(tab, el) {
   _atelierTab = tab;
-  document.querySelectorAll('.atelier-nav-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.atelier-tabs .disc-tab').forEach(i => i.classList.remove('active'));
   if (el) el.classList.add('active');
   else {
     const navEl = document.getElementById('atnav-' + tab);
@@ -14291,46 +14294,22 @@ function renderAtelierTab(tab) {
     ];
     const doneQ = allQ.filter(q => doneQuests.includes(q.id) || (q.id==='join_bastion'&&(CU?.bastions||[]).length>0) || (q.id==='add_friend'&&(CU?.friends||[]).length>0) || (q.id==='set_pfp'&&CU?.pfp) || (q.id==='daily_claim'&&dailyDone));
 
-    el.style.padding = '28px 32px 0';
-    el.innerHTML = `
-      <!-- Hero banner — unified card design -->
-      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;border:1.5px solid rgba(254,248,61,.12);background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));">
-        <div style="position:relative;height:260px;overflow:hidden;">
-          <img src="Onyx banner.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;filter:brightness(.6) saturate(1.1);" onerror="this.style.display='none'">
-          <div class="hero-sparkles" id="atelier-sparkles"></div>
-          <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,9,14,0) 0%,rgba(7,9,14,.8) 60%,rgba(7,9,14,.98) 100%);"></div>
-          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(254,248,61,.06),transparent 55%);pointer-events:none;"></div>
-        </div>
-        <!-- Status pill -->
-        ${hasPlus?`<div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:8px;background:rgba(255,157,62,.1);border:1px solid rgba(255,157,62,.25);border-radius:100px;padding:5px 14px;backdrop-filter:blur(12px);">
-          <span style="font-size:13px;">🌟</span><span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:#ff9d3e;">Radiance+ · ${daysPlus}d</span>
-        </div>`:hasRad?`<div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:8px;background:rgba(254,248,61,.06);border:1px solid rgba(254,248,61,.18);border-radius:100px;padding:5px 14px;backdrop-filter:blur(12px);">
-          <span style="font-size:13px;">✨</span><span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:#ffd93e;">Radiance · ${daysRad}d</span>
-        </div>`:''}
-        <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 28px 24px;display:flex;align-items:flex-end;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:44px;height:44px;border-radius:14px;background:rgba(254,248,61,.1);border:1px solid rgba(254,248,61,.18);display:flex;align-items:center;justify-content:center;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg>
-            </div>
-            <div>
-              <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.5);">Atelier</div>
-              <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Your Fortized store & rewards</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.4);border:1px solid rgba(254,248,61,.12);border-radius:16px;padding:10px 16px;backdrop-filter:blur(12px);">
-              <img src="Onyx.png" style="width:16px;height:16px;object-fit:contain;">
-              <div>
-                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">${bal}</div>
-                <div style="font-size:9.5px;color:rgba(255,255,255,.3);margin-top:2px;">Onyx</div>
-              </div>
-            </div>
-            <button onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;padding:10px 20px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 20px rgba(254,248,61,.2);transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 28px rgba(254,248,61,.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(254,248,61,.2)'">+ Earn Onyx</button>
-          </div>
-        </div>
-      </div>
+    // Update the balance in the unified header
+    const balHeader = document.getElementById('atelier-balance');
+    if (balHeader) balHeader.textContent = bal;
 
-      <div style="padding:28px 32px 60px;display:flex;flex-direction:column;gap:32px;">
+    el.style.padding = '0';
+    el.innerHTML = `
+      <!-- Radiance status pill -->
+      ${hasPlus?`<div style="display:flex;align-items:center;gap:8px;background:rgba(255,157,62,.1);border:1px solid rgba(255,157,62,.25);border-radius:14px;padding:10px 16px;margin-bottom:24px;">
+        <span style="font-size:15px;">🌟</span><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ff9d3e;">Radiance+ Active · ${daysPlus} days left</span>
+        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:none;border:1px solid rgba(255,157,62,.25);border-radius:8px;color:#ff9d3e;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">Manage</button>
+      </div>`:hasRad?`<div style="display:flex;align-items:center;gap:8px;background:rgba(254,248,61,.05);border:1px solid rgba(254,248,61,.15);border-radius:14px;padding:10px 16px;margin-bottom:24px;">
+        <span style="font-size:15px;">✨</span><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ffd93e;">Radiance Active · ${daysRad} days left</span>
+        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:none;border:1px solid rgba(254,248,61,.15);border-radius:8px;color:#ffd93e;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">Manage</button>
+      </div>`:''}
+
+      <div style="display:flex;flex-direction:column;gap:32px;padding-bottom:60px;">
 
         <!-- Radiance Perks — horizontal scroll row -->
         <div>
@@ -14797,7 +14776,7 @@ const DYK_FACTS = [
 ];
 function getDYKHtml() {
   const fact = DYK_FACTS[Math.floor(Math.random()*DYK_FACTS.length)];
-  return `<div class="did-you-know"><span class="dyk-tag">💡 Did you know?</span><span style="color:var(--muted-light);line-height:1.5;">${escapeHTML(fact)}</span></div>`;
+  return `<div class="realm-lore"><span class="rl-tag">Realm Lore</span><span class="rl-text">${escapeHTML(fact)}</span></div>`;
 }
 
 // ── Page loading skeleton helper ────────────────────

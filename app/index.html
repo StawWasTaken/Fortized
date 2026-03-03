@@ -523,7 +523,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .cit-btn:hover{background:rgba(255,249,62,.08);color:var(--accent);}
 .cit-btn.active{color:var(--accent);background:rgba(255,249,62,.1);}
 .cit-sep{width:1px;height:18px;background:rgba(255,255,255,.06);margin:0 2px;flex-shrink:0;}
-.cit-gif{background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:7px;color:rgba(255,249,62,.55);font-size:9px;font-weight:800;padding:3px 8px;cursor:pointer;letter-spacing:.06em;transition:all .18s cubic-bezier(.22,1,.36,1);font-family:'Syne',sans-serif;height:26px;display:flex;align-items:center;}
+.cit-gif{background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:6px;color:rgba(255,249,62,.55);font-size:9px;font-weight:800;padding:2px 6px;cursor:pointer;letter-spacing:.06em;transition:all .18s cubic-bezier(.22,1,.36,1);font-family:'Syne',sans-serif;height:20px;display:flex;align-items:center;}
 .cit-gif:hover{border-color:rgba(255,249,62,.3);color:var(--accent);background:rgba(255,249,62,.1);}
 .chat-input-row{display:flex;align-items:flex-end;padding:6px 8px 6px 6px;gap:4px;}
 .chat-input-row textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;resize:none;max-height:140px;min-height:22px;line-height:1.55;padding:5px 4px;position:relative;z-index:2;}
@@ -2475,6 +2475,9 @@ function showView(v) {
   _currentView = v;
   // Stop Joyster bubbles when leaving home — Joyster only lives on the homepage
   if (v !== 'home' && typeof _stopJoysterBubbles === 'function') _stopJoysterBubbles();
+  // Hide Joyster global presence when not on home view
+  const _jg = document.getElementById('joyster-global');
+  if (_jg) _jg.style.display = v === 'home' ? '' : 'none';
   // Clean up GC panel when leaving DMs view
   if (v !== 'dms') document.getElementById('gc-member-panel')?.remove();
 
@@ -8599,7 +8602,7 @@ function buildProfileView(tab) {
   }
 
   else if (tab === 'appearance') {
-    const currentTheme = localStorage.getItem('ftz_appearance') || 'fortized_classic';
+    const currentTheme = localStorage.getItem(_appearanceKey()) || 'fortized_classic';
     const unlocked = CU?.unlockedAppearances || [];
     const allThemes = [
       {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', bg:'#07090e', sidebar:'#0b0e15', channel:'#0d1018', panel:'#101420', accent:'#fef83d', border:'#1c2335', muted:'#4e5a6f', bodyGrad:'', free:true},
@@ -17167,10 +17170,15 @@ async function showMiniProfilePreview(username, anchorEl) {
 }
 
 
+// Per-user appearance key — each account gets its own theme
+function _appearanceKey() {
+  const u = (typeof CU !== 'undefined' && CU?.username) || localStorage.getItem('ftz_current') || localStorage.getItem('fortized_current_user') || '';
+  return u ? 'ftz_appearance_' + u : 'ftz_appearance';
+}
 function applyAppearance(themeId) {
   // Migrate old 'fortized' id to 'fortized_classic'
   if (themeId === 'fortized') themeId = 'fortized_classic';
-  localStorage.setItem('ftz_appearance', themeId);
+  localStorage.setItem(_appearanceKey(), themeId);
   // ALL themes keep Fortized yellow accent
   document.documentElement.style.setProperty('--accent',     '#fff93e');
   document.documentElement.style.setProperty('--accent-dim', 'rgba(255,249,62,.1)');
@@ -17313,7 +17321,7 @@ function _buildPreviewMockup(t, label) {
 }
 
 function selectAppearancePreview(themeId) {
-  const currentTheme = localStorage.getItem('ftz_appearance') || 'fortized_classic';
+  const currentTheme = localStorage.getItem(_appearanceKey()) || 'fortized_classic';
   if (themeId === currentTheme) {
     // Already active, just apply
     applyAppearance(themeId);
@@ -17353,11 +17361,17 @@ function applySelectedAppearance() {
   _appearancePreviewId = null;
 }
 
-// Apply saved appearance on load
+// Apply saved appearance on load (per-user)
 (function() {
-  let saved = localStorage.getItem('ftz_appearance');
+  const key = _appearanceKey();
+  let saved = localStorage.getItem(key);
+  // One-time migration: move old global key to per-user key
+  if (!saved) {
+    const old = localStorage.getItem('ftz_appearance');
+    if (old) { saved = old; localStorage.setItem(key, old); }
+  }
   // Migrate removed themes
-  if (saved === 'dark_fortress') { saved = 'fortized_classic'; localStorage.setItem('ftz_appearance', saved); }
+  if (saved === 'dark_fortress') { saved = 'fortized_classic'; localStorage.setItem(key, saved); }
   if (saved) applyAppearance(saved);
 })();
 

@@ -494,96 +494,48 @@ body::before {
    SHOWCASE
 ════════════════════════════════════════════ */
 .showcase { padding: 130px 72px 0; }
-.showcase-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: auto auto; gap: 12px; }
+.showcase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .sc-card {
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 20px; padding: 32px; position: relative; overflow: hidden;
   transition: border-color .22s, transform .22s, box-shadow .22s;
 }
 .sc-card:hover { border-color: rgba(255,249,62,.16); transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,.5); }
-.sc-card.wide { grid-column: span 2; }
-.sc-card.tall { grid-row: span 2; }
+.sc-card.full { grid-column: 1 / -1; padding: 0; }
 .sc-card-accent-bar { position: absolute; top: 0; left: 0; right: 0; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0; transition: opacity .3s; }
 .sc-card:hover .sc-card-accent-bar { opacity: 1; }
 .sc-label { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(255,249,62,.13); border-radius: 4px; padding: 3px 9px; display: inline-block; margin-bottom: 18px; }
 .sc-card h3 { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -.5px; line-height: 1.12; margin-bottom: 12px; }
 .sc-card p { font-size: 14px; color: var(--muted-light); line-height: 1.72; }
-.chat-preview { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
-.chat-msg { display: flex; align-items: flex-start; gap: 10px; opacity: 0; animation: msgIn .4s ease forwards; }
-.chat-msg:nth-child(1) { animation-delay: .3s; }
-.chat-msg:nth-child(2) { animation-delay: .7s; }
-.chat-msg:nth-child(3) { animation-delay: 1.1s; }
-.chat-msg:nth-child(4) { animation-delay: 1.5s; }
-@keyframes msgIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-.chat-avatar { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; font-family: var(--font-display); }
-.av-a { background: rgba(255,249,62,.14); color: var(--accent); }
-.av-b { background: rgba(100,160,255,.12); color: #6ab0ff; }
-.av-c { background: rgba(100,220,140,.1); color: #5dcc82; }
-.av-d { background: rgba(200,100,255,.1); color: #c87af5; }
-.chat-bubble { flex: 1; }
-.chat-name { font-size: 11px; font-weight: 600; color: var(--muted-light); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
-.rank-tag { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-radius: 3px; padding: 1px 5px; }
-.rank-commander { background: rgba(255,249,62,.1); color: var(--accent); }
-.rank-knight    { background: rgba(100,160,255,.1); color: #6ab0ff; }
-.rank-scout     { background: rgba(100,220,140,.1); color: #5dcc82; }
-.rank-mage      { background: rgba(200,100,255,.1); color: #c87af5; }
-.chat-text { font-size: 13px; color: var(--text); line-height: 1.5; }
 
-/* ── DM preview card ─────────────────────── */
-.dm-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 20px; padding: 0; position: relative; overflow: hidden;
-  transition: border-color .22s, transform .22s, box-shadow .22s;
-}
-.dm-card:hover { border-color: rgba(255,249,62,.16); transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,.5); }
-.dm-topbar {
-  padding: 12px 20px; display: flex; align-items: center; gap: 10px;
-  border-bottom: 1px solid var(--border); background: rgba(255,255,255,.02);
-}
-.dm-topbar-av {
-  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
-  justify-content: center; font-size: 12px; font-weight: 700; font-family: var(--font-display);
-  flex-shrink: 0;
-}
-.dm-topbar-name {
-  font-family: var(--font-display); font-size: 13.5px; font-weight: 700; color: #fff;
-}
-.dm-topbar-status { font-size: 11px; color: #4ade80; margin-left: auto; display: flex; align-items: center; gap: 4px; }
-.dm-topbar-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #4ade80; }
-.dm-messages { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
-.dm-msg { display: flex; align-items: flex-start; gap: 10px; }
-.dm-msg-av {
-  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; font-family: var(--font-display);
-}
+/* ── Realistic App Mockup ────────────────── */
+.app-mock { display: flex; height: 420px; background: #07090e; border-radius: 20px; overflow: hidden; }
+.app-mock-nav { width: 170px; min-width: 170px; background: #0b0e15; display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,.04); position: relative; }
+.app-mock-channels { width: 160px; min-width: 160px; background: #0d1018; border-right: 1px solid rgba(255,255,255,.04); display: flex; flex-direction: column; overflow: hidden; }
+.app-mock-chat { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #0d1018; }
+.app-mock-members { width: 150px; min-width: 150px; background: #0d1018; border-left: 1px solid rgba(255,255,255,.04); padding: 10px 0; overflow: hidden; }
+.app-mock-msg { display: flex; padding: 2px 14px; opacity: 0; animation: msgIn .4s ease forwards; }
+.app-mock-msg.first { padding-top: 10px; margin-top: 4px; }
+.app-mock-msg:nth-child(1) { animation-delay: .3s; }
+.app-mock-msg:nth-child(2) { animation-delay: .6s; }
+.app-mock-msg:nth-child(3) { animation-delay: .9s; }
+.app-mock-msg:nth-child(4) { animation-delay: 1.2s; }
+@keyframes msgIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ── DM Preview Card ─────────────────────── */
+.dm-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 0; overflow: hidden; }
+.dm-topbar { padding: 10px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,.02); }
+.dm-topbar-av { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; font-family: var(--font-display); flex-shrink: 0; }
+.dm-topbar-name { font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: #fff; }
+.dm-topbar-status { font-size: 10px; color: #4ade80; margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.dm-topbar-status::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: #4ade80; }
+.dm-messages { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+.dm-msg { display: flex; align-items: flex-start; gap: 8px; }
+.dm-msg-av { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: var(--font-display); }
 .dm-msg-bubble { flex: 1; }
-.dm-msg-name { font-size: 11px; font-weight: 600; color: var(--muted-light); margin-bottom: 3px; }
-.dm-msg-text { font-size: 13px; color: var(--text); line-height: 1.5; }
-.dm-input-bar {
-  margin: 0 16px 14px; padding: 10px 14px; border-radius: 12px;
-  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06);
-  font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 8px;
-}
-
-/* ── Fake app preview (sidebar mock) ─────── */
-.app-preview-frame {
-  background: #0b0e15; border: 1px solid var(--border); border-radius: 20px;
-  overflow: hidden; position: relative;
-}
-.app-preview-sidebar {
-  width: 54px; position: absolute; top: 0; left: 0; bottom: 0;
-  background: #090c12; border-right: 1px solid rgba(255,255,255,.04);
-  display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 6px;
-}
-.app-preview-sidebar-icon {
-  width: 34px; height: 34px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; background: rgba(255,255,255,.04); cursor: default;
-}
-.app-preview-sidebar-icon.active { background: var(--accent); }
-.app-preview-main { margin-left: 54px; }
+.dm-msg-name { font-size: 10px; font-weight: 600; color: var(--muted-light); margin-bottom: 2px; }
+.dm-msg-text { font-size: 12px; color: var(--text); line-height: 1.5; }
+.dm-input-bar { margin: 0 12px 10px; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 
 /* Twemoji sizing */
 img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
@@ -670,8 +622,8 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   .hero-right { display: none; }
   .hero h1 { font-size: 52px; }
   .showcase-grid { grid-template-columns: 1fr 1fr; }
-  .sc-card.wide { grid-column: span 2; }
-  .sc-card.tall { grid-row: span 1; }
+  .sc-card.full { grid-column: 1 / -1; }
+  .app-mock-members { display: none; }
 }
 @media (max-width: 768px) {
   .nav-root { padding: 0 20px; }
@@ -680,7 +632,10 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   .hero h1 { font-size: 42px; letter-spacing: -2px; }
   .section-heading { font-size: 32px; }
   .features-grid, .showcase-grid { grid-template-columns: 1fr; }
-  .sc-card.wide { grid-column: span 1; }
+  .sc-card.full { grid-column: span 1; }
+  .app-mock-channels { display: none; }
+  .app-mock-nav { width: 140px; min-width: 140px; }
+  .app-mock { height: 360px; }
   .safety-pillars { grid-template-columns: 1fr; }
   .safety-pillar { border-right: none; border-bottom: 1px solid var(--border); }
   .safety-pillar:last-child { border-bottom: none; }
@@ -809,124 +764,244 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   <div class="section-heading">Life inside<br>your Bastion.</div>
   <div class="section-desc">Real-time camaraderie, organized ranks, and a culture you build yourself.</div>
   <div class="showcase-grid">
-    <!-- Bastion Chat Preview (app-like) -->
-    <div class="sc-card wide">
+    <!-- Full-width realistic app mockup -->
+    <div class="sc-card full">
       <div class="sc-card-accent-bar"></div>
-      <div class="app-preview-frame" style="min-height:360px;">
-        <div class="app-preview-sidebar">
-          <div class="app-preview-sidebar-icon active" style="font-size:16px;">&#9889;</div>
-          <div style="width:24px;height:1px;background:rgba(255,255,255,.06);margin:2px 0;"></div>
-          <div class="app-preview-sidebar-icon">&#127984;</div>
-          <div class="app-preview-sidebar-icon">&#128225;</div>
-          <div class="app-preview-sidebar-icon">&#128483;</div>
+      <div class="app-mock">
+        <!-- Left Navigation Sidebar -->
+        <div class="app-mock-nav">
+          <div style="padding:14px 14px 10px;display:flex;align-items:center;gap:10px;">
+            <img src="Fortized icon.png" alt="" style="width:28px;height:28px;border-radius:8px;">
+            <span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;">Fortized</span>
+          </div>
+          <div style="padding:4px 8px;display:flex;flex-direction:column;gap:2px;">
+            <div style="height:34px;border-radius:10px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:12px;font-weight:600;color:rgba(255,255,255,.4);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              Home
+            </div>
+            <div style="height:34px;border-radius:10px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:12px;font-weight:600;color:rgba(255,255,255,.4);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Friends
+            </div>
+            <div style="height:1px;background:rgba(255,255,255,.04);margin:6px 10px;"></div>
+            <div style="height:34px;border-radius:10px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:12px;font-weight:600;color:var(--accent);background:rgba(255,249,62,.08);">
+              <span style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:14px;">&#9889;</span>
+              My Bastion
+            </div>
+          </div>
+          <div style="position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(135deg,rgba(255,255,255,.035),rgba(255,255,255,.02));border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;padding:0 10px;gap:8px;">
+            <div style="position:relative;">
+              <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent);font-weight:700;font-family:var(--font-display);">Y</div>
+              <span style="position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;background:#3ecf6e;border:2px solid #0b0e15;"></span>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:10.5px;font-weight:700;color:#fff;font-family:var(--font-display);">You</div>
+              <div style="font-size:8.5px;color:rgba(255,249,62,.4);">Online</div>
+            </div>
+          </div>
         </div>
-        <div class="app-preview-main">
-          <!-- Channel header -->
-          <div style="padding:10px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.01);">
-            <span style="font-size:14px;color:rgba(255,255,255,.15);font-weight:700;">#</span>
-            <span style="font-family:var(--font-display);font-size:13px;font-weight:700;color:#fff;">war-council</span>
-            <span style="font-size:11px;color:var(--muted);margin-left:4px;">Strategy & coordination</span>
+
+        <!-- Channel List -->
+        <div class="app-mock-channels">
+          <div style="padding:12px 14px 8px;font-family:var(--font-display);font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.04);">
+            <span style="font-size:16px;">&#9889;</span>My Bastion
           </div>
-          <!-- Messages -->
-          <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;" id="bastion-chat-preview">
-            <div class="chat-msg">
-              <div class="chat-avatar av-a">K</div>
-              <div class="chat-bubble">
-                <div class="chat-name">KingArrow <span class="rank-tag rank-commander">Commander</span></div>
-                <div class="chat-text">guys we're doing a full cobblestone castle build tonight on the SMP, everyone in 🏰</div>
-              </div>
+          <div style="flex:1;padding:6px 0;overflow:hidden;">
+            <div style="padding:10px 10px 4px;font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.18);display:flex;align-items:center;gap:4px;">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M6 9l6 6 6-6"/></svg>
+              GENERAL
             </div>
-            <div class="chat-msg">
-              <div class="chat-avatar av-b">Z</div>
-              <div class="chat-bubble">
-                <div class="chat-name">Zephyr_ <span class="rank-tag rank-knight">Knight</span></div>
-                <div class="chat-text">bro I just finished my Roblox obby, come check it out before we do minecraft 😭</div>
-              </div>
+            <div style="display:flex;align-items:center;gap:7px;padding:5px 10px;margin:1px 6px;border-radius:8px;font-size:11.5px;font-weight:500;color:rgba(255,255,255,.35);">
+              <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.12);width:14px;text-align:center;flex-shrink:0;">#</span>
+              general
             </div>
-            <div class="chat-msg">
-              <div class="chat-avatar av-c">S</div>
-              <div class="chat-bubble">
-                <div class="chat-name">ShadowScout <span class="rank-tag rank-scout">Scout</span></div>
-                <div class="chat-text">what's the server IP again? I haven't played in like 2 weeks lol 😅</div>
-              </div>
+            <div style="display:flex;align-items:center;gap:7px;padding:5px 10px;margin:1px 6px;border-radius:8px;font-size:11.5px;font-weight:600;color:var(--accent);background:rgba(255,249,62,.07);">
+              <span style="font-size:13px;font-weight:700;color:rgba(255,249,62,.3);width:14px;text-align:center;flex-shrink:0;">#</span>
+              war-council
             </div>
-            <div class="chat-msg">
-              <div class="chat-avatar av-d">M</div>
-              <div class="chat-bubble">
-                <div class="chat-name">Myrrh <span class="rank-tag rank-mage">Mage</span></div>
-                <div class="chat-text">posted in #pins, also someone needs to fix the redstone farm it keeps breaking 💀</div>
-              </div>
+            <div style="display:flex;align-items:center;gap:7px;padding:5px 10px;margin:1px 6px;border-radius:8px;font-size:11.5px;font-weight:500;color:rgba(255,255,255,.35);">
+              <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.12);width:14px;text-align:center;flex-shrink:0;">#</span>
+              announcements
+            </div>
+            <div style="padding:10px 10px 4px;font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.18);display:flex;align-items:center;gap:4px;">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M6 9l6 6 6-6"/></svg>
+              GAMING
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;padding:5px 10px;margin:1px 6px;border-radius:8px;font-size:11.5px;font-weight:500;color:rgba(255,255,255,.35);">
+              <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.12);width:14px;text-align:center;flex-shrink:0;">#</span>
+              minecraft
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;padding:5px 10px;margin:1px 6px;border-radius:8px;font-size:11.5px;font-weight:500;color:rgba(255,255,255,.35);">
+              <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.12);width:14px;text-align:center;flex-shrink:0;">#</span>
+              roblox
             </div>
           </div>
-          <!-- Fake input bar -->
-          <div style="margin:0 14px 12px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px;">
-            <span style="font-size:14px;opacity:.3;">➕</span>
-            <span style="font-size:12.5px;color:rgba(255,255,255,.2);">Message #war-council</span>
-            <span style="margin-left:auto;font-size:14px;opacity:.3;">😊</span>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="app-mock-chat">
+          <div style="height:38px;min-height:38px;background:#0d1018;display:flex;align-items:center;padding:0 14px;gap:8px;border-bottom:1px solid rgba(255,255,255,.04);">
+            <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,.12);">#</span>
+            <span style="font-family:var(--font-display);font-size:12.5px;font-weight:700;color:#fff;">war-council</span>
+            <span style="font-size:10.5px;color:var(--muted);margin-left:6px;">Strategy &amp; coordination</span>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:14px 0 6px;display:flex;flex-direction:column;">
+            <div class="app-mock-msg first">
+              <div style="width:44px;min-width:44px;display:flex;justify-content:center;padding-top:2px;border-right:1px solid rgba(255,255,255,.025);margin-right:4px;">
+                <div style="width:30px;height:30px;border-radius:50%;background:rgba(255,249,62,.14);font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:var(--accent);">K</div>
+              </div>
+              <div style="flex:1;min-width:0;padding-left:4px;">
+                <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:2px;">
+                  <span style="font-size:12px;font-weight:600;color:#fff;">KingArrow</span>
+                  <span style="font-size:7.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:0 4px;border-radius:3px;background:rgba(255,249,62,.1);color:var(--accent);">Commander</span>
+                  <span style="font-size:9px;color:rgba(255,255,255,.25);">10:41 PM</span>
+                </div>
+                <div style="font-size:12.5px;color:rgba(221,227,237,.85);line-height:1.55;">guys we're doing a full cobblestone castle build tonight on the SMP, everyone in &#127984;</div>
+              </div>
+            </div>
+            <div class="app-mock-msg first">
+              <div style="width:44px;min-width:44px;display:flex;justify-content:center;padding-top:2px;border-right:1px solid rgba(255,255,255,.025);margin-right:4px;">
+                <div style="width:30px;height:30px;border-radius:50%;background:rgba(100,160,255,.12);font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:#6ab0ff;">Z</div>
+              </div>
+              <div style="flex:1;min-width:0;padding-left:4px;">
+                <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:2px;">
+                  <span style="font-size:12px;font-weight:600;color:#fff;">Zephyr_</span>
+                  <span style="font-size:7.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:0 4px;border-radius:3px;background:rgba(100,160,255,.1);color:#6ab0ff;">Knight</span>
+                  <span style="font-size:9px;color:rgba(255,255,255,.25);">10:42 PM</span>
+                </div>
+                <div style="font-size:12.5px;color:rgba(221,227,237,.85);line-height:1.55;">bro I just finished my Roblox obby, come check it out before we do minecraft &#128557;</div>
+              </div>
+            </div>
+            <div class="app-mock-msg first">
+              <div style="width:44px;min-width:44px;display:flex;justify-content:center;padding-top:2px;border-right:1px solid rgba(255,255,255,.025);margin-right:4px;">
+                <div style="width:30px;height:30px;border-radius:50%;background:rgba(100,220,140,.1);font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:#5dcc82;">S</div>
+              </div>
+              <div style="flex:1;min-width:0;padding-left:4px;">
+                <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:2px;">
+                  <span style="font-size:12px;font-weight:600;color:#fff;">ShadowScout</span>
+                  <span style="font-size:7.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:0 4px;border-radius:3px;background:rgba(100,220,140,.1);color:#5dcc82;">Scout</span>
+                  <span style="font-size:9px;color:rgba(255,255,255,.25);">10:43 PM</span>
+                </div>
+                <div style="font-size:12.5px;color:rgba(221,227,237,.85);line-height:1.55;">what's the server IP again? I haven't played in like 2 weeks lol &#128517;</div>
+              </div>
+            </div>
+            <div class="app-mock-msg first">
+              <div style="width:44px;min-width:44px;display:flex;justify-content:center;padding-top:2px;border-right:1px solid rgba(255,255,255,.025);margin-right:4px;">
+                <div style="width:30px;height:30px;border-radius:50%;background:rgba(200,100,255,.1);font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:#c87af5;">M</div>
+              </div>
+              <div style="flex:1;min-width:0;padding-left:4px;">
+                <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:2px;">
+                  <span style="font-size:12px;font-weight:600;color:#fff;">Myrrh</span>
+                  <span style="font-size:7.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:0 4px;border-radius:3px;background:rgba(200,100,255,.1);color:#c87af5;">Mage</span>
+                  <span style="font-size:9px;color:rgba(255,255,255,.25);">10:44 PM</span>
+                </div>
+                <div style="font-size:12.5px;color:rgba(221,227,237,.85);line-height:1.55;">posted in #pins, also someone needs to fix the redstone farm it keeps breaking &#128128;</div>
+              </div>
+            </div>
+          </div>
+          <div style="margin:4px 10px 10px;padding:8px 10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.018));border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span style="flex:1;font-size:11.5px;color:rgba(255,255,255,.18);">Message #war-council</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#e6e034);display:flex;align-items:center;justify-content:center;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="#060810"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Member List -->
+        <div class="app-mock-members">
+          <div style="padding:6px 12px 4px;font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.15);">ONLINE &#8212; 3</div>
+          <div style="display:flex;align-items:center;gap:7px;padding:4px 10px;margin:1px 4px;border-radius:8px;">
+            <div style="position:relative;flex-shrink:0;">
+              <div style="width:24px;height:24px;border-radius:50%;background:rgba(255,249,62,.14);border:1px solid rgba(255,255,255,.06);font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:var(--accent);">K</div>
+              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#3ecf6e;border:1.5px solid #0d1018;"></span>
+            </div>
+            <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">KingArrow</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;padding:4px 10px;margin:1px 4px;border-radius:8px;">
+            <div style="position:relative;flex-shrink:0;">
+              <div style="width:24px;height:24px;border-radius:50%;background:rgba(100,160,255,.12);border:1px solid rgba(255,255,255,.06);font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:#6ab0ff;">Z</div>
+              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#3ecf6e;border:1.5px solid #0d1018;"></span>
+            </div>
+            <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Zephyr_</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;padding:4px 10px;margin:1px 4px;border-radius:8px;">
+            <div style="position:relative;flex-shrink:0;">
+              <div style="width:24px;height:24px;border-radius:50%;background:rgba(100,220,140,.1);border:1px solid rgba(255,255,255,.06);font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:#5dcc82;">S</div>
+              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#3ecf6e;border:1.5px solid #0d1018;"></span>
+            </div>
+            <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ShadowScout</div></div>
+          </div>
+          <div style="padding:12px 12px 4px;font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.15);">AWAY &#8212; 1</div>
+          <div style="display:flex;align-items:center;gap:7px;padding:4px 10px;margin:1px 4px;border-radius:8px;opacity:.5;">
+            <div style="position:relative;flex-shrink:0;">
+              <div style="width:24px;height:24px;border-radius:50%;background:rgba(200,100,255,.1);border:1px solid rgba(255,255,255,.06);font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:#c87af5;">M</div>
+              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#f59e0b;border:1.5px solid #0d1018;"></span>
+            </div>
+            <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Myrrh</div></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Right side: stacked cards -->
-    <div class="sc-card tall">
+    <!-- Ranks & Roles -->
+    <div class="sc-card">
       <div class="sc-card-accent-bar"></div>
-      <div class="sc-label">🛡️ Ranks & Roles</div>
+      <div class="sc-label">&#128737;&#65039; Ranks &amp; Roles</div>
       <h3>Organized hierarchy</h3>
-      <p>Every member has a rank. Commander, Knight, Scout, Mage — your Bastion, your structure.</p>
+      <p>Every member has a rank. Commander, Knight, Scout, Mage &#8212; your Bastion, your structure.</p>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:18px;">
-        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);">⚔️ Commander</span>
-        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(100,160,255,.1);color:#6ab0ff;border:1px solid rgba(100,160,255,.2);">🛡️ Knight</span>
-        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(100,220,140,.1);color:#5dcc82;border:1px solid rgba(100,220,140,.2);">🔍 Scout</span>
-        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(200,100,255,.1);color:#c87af5;border:1px solid rgba(200,100,255,.2);">✨ Mage</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);">&#9876;&#65039; Commander</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(100,160,255,.1);color:#6ab0ff;border:1px solid rgba(100,160,255,.2);">&#128737;&#65039; Knight</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(100,220,140,.1);color:#5dcc82;border:1px solid rgba(100,220,140,.2);">&#128269; Scout</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(200,100,255,.1);color:#c87af5;border:1px solid rgba(200,100,255,.2);">&#10024; Mage</span>
       </div>
     </div>
 
-    <!-- DM Preview Card -->
-    <div class="sc-card wide" style="padding:0;">
-      <div class="dm-card" style="border:none;border-radius:inherit;">
+    <!-- Direct Messages -->
+    <div class="sc-card" style="padding:0;">
+      <div class="sc-card-accent-bar"></div>
+      <div style="padding:24px 24px 14px;">
+        <div class="sc-label">&#128172; Direct Messages</div>
+        <h3>Chat with your friends!</h3>
+        <p>Private conversations, typing indicators, and mutual friend safety checks.</p>
+      </div>
+      <div class="dm-card" style="border:none;border-radius:0;margin:0 12px 12px;border-radius:16px;">
         <div class="dm-topbar">
           <div class="dm-topbar-av" style="background:rgba(100,160,255,.12);color:#6ab0ff;">L</div>
           <div class="dm-topbar-name">Luna_Frost</div>
           <div class="dm-topbar-status">Online</div>
         </div>
-        <div class="dm-messages" id="dm-preview-msgs">
+        <div class="dm-messages">
           <div class="dm-msg">
             <div class="dm-msg-av" style="background:rgba(100,160,255,.12);color:#6ab0ff;">L</div>
             <div class="dm-msg-bubble">
               <div class="dm-msg-name">Luna_Frost</div>
-              <div class="dm-msg-text">hey!! did you see the new Bastion update? 🔥</div>
+              <div class="dm-msg-text">hey!! did you see the new Bastion update? &#128293;</div>
             </div>
           </div>
           <div class="dm-msg">
             <div class="dm-msg-av" style="background:rgba(255,249,62,.12);color:var(--accent);">Y</div>
             <div class="dm-msg-bubble">
               <div class="dm-msg-name">You</div>
-              <div class="dm-msg-text">yeah the new roles system is insane 🛡️ we can finally set up proper ranks</div>
+              <div class="dm-msg-text">yeah the new roles system is insane, we can finally set up proper ranks &#128737;&#65039;</div>
             </div>
           </div>
           <div class="dm-msg">
             <div class="dm-msg-av" style="background:rgba(100,160,255,.12);color:#6ab0ff;">L</div>
             <div class="dm-msg-bubble">
               <div class="dm-msg-name">Luna_Frost</div>
-              <div class="dm-msg-text">right?? also the mood system is so cool, our bastion went 🔥 Chaotic mode during game night 😂</div>
+              <div class="dm-msg-text">right?? our bastion went Chaotic mode during game night &#128514;</div>
             </div>
           </div>
         </div>
         <div class="dm-input-bar">
-          <span style="font-size:14px;">➕</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span>Message @Luna_Frost</span>
-          <span style="margin-left:auto;">😊</span>
+          <span style="margin-left:auto;display:flex;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="opacity:.4;"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></span>
         </div>
       </div>
-    </div>
-
-    <!-- Chat with friends callout -->
-    <div class="sc-card">
-      <div class="sc-card-accent-bar"></div>
-      <div class="sc-label">💬 Direct Messages</div>
-      <h3>Chat with your friends!</h3>
-      <p>Private conversations, typing indicators, and mutual friend safety checks. Your DMs stay between you.</p>
     </div>
   </div>
 </section>

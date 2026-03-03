@@ -1167,6 +1167,36 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .forum-img-post img { width:100%;max-height:320px;object-fit:cover;display:block; }
 .forum-img-post .fip-footer { padding:10px 14px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted); }
 
+/* ── FORUM POST CARDS ────────────────────────────── */
+.forum-post-card { background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:8px;cursor:pointer;transition:border-color .18s,box-shadow .18s;display:flex;flex-direction:column; }
+.forum-post-card:hover { border-color:rgba(255,249,62,.18);box-shadow:0 2px 16px rgba(0,0,0,.18); }
+.forum-post-card .fpc-img { width:100%;max-height:180px;object-fit:cover;display:block;border-bottom:1px solid var(--border); }
+.forum-post-card .fpc-body { padding:14px 16px 12px; }
+.forum-post-card .fpc-title { font-weight:700;font-size:14.5px;margin-bottom:3px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.forum-post-card .fpc-preview { font-size:12.5px;color:var(--muted-light);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.45;margin-bottom:8px; }
+.forum-post-card .fpc-tags { display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px; }
+.forum-post-card .fpc-tag { padding:2px 9px;border-radius:100px;background:var(--accent-dim);color:var(--accent);font-size:10px;font-weight:700;letter-spacing:.02em; }
+.forum-post-card .fpc-footer { display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);padding-top:8px;border-top:1px solid var(--border); }
+.forum-post-card .fpc-footer .fpc-author { display:flex;align-items:center;gap:5px;font-weight:600;color:var(--muted-light); }
+.forum-post-card .fpc-footer .fpc-meta { margin-left:auto;display:flex;align-items:center;gap:10px; }
+.forum-post-card .fpc-footer .fpc-replies { display:flex;align-items:center;gap:3px; }
+
+/* ── FORUM POST DETAIL ───────────────────────────── */
+.forum-detail-header { padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--panel); }
+.forum-detail-back { background:none;border:none;color:var(--muted-light);cursor:pointer;font-size:18px;padding:4px 8px;border-radius:8px;line-height:1;transition:background .12s; }
+.forum-detail-back:hover { background:rgba(255,255,255,.06); }
+.forum-detail-body { flex:1;overflow-y:auto;padding:18px; }
+.forum-detail-content { background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:18px;line-height:1.65;font-size:13.5px; }
+.forum-reply-card { display:flex;gap:10px;margin-bottom:8px;padding:11px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;position:relative;transition:border-color .12s; }
+.forum-reply-card:hover { border-color:rgba(255,255,255,.08); }
+.forum-reply-card .frc-meta { font-weight:700;font-size:12.5px;margin-bottom:2px; }
+.forum-reply-card .frc-meta .frc-time { font-weight:400;color:var(--muted);font-size:11px; }
+.forum-reply-card .frc-body { font-size:13px;color:var(--muted-light);line-height:1.55; }
+.forum-reply-delete { position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;opacity:0;transition:opacity .15s,color .12s; }
+.forum-reply-card:hover .forum-reply-delete { opacity:.5; }
+.forum-reply-delete:hover { opacity:1!important;color:#f87171!important; }
+.forum-reply-compose { padding:10px 16px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;align-items:flex-end; }
+
 /* ── COPY MSG LINK TOOLTIP ────────────────────────── */
 .msg-link-copied { position:fixed;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:11px;color:var(--accent);z-index:9999;pointer-events:none;animation:fadeIn .15s,fadeOut .3s 1.2s forwards; }
 @keyframes fadeOut { to{opacity:0;transform:translateY(-4px)} }
@@ -5901,6 +5931,7 @@ function updateDOBField(){
   if(loader)loader.style.display='none';
   if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
 
+  saveCurrentToAccounts();
   updateUserbar();
   renderRailBastions();
   if(typeof startVCListener==='function') startVCListener(CU.username);
@@ -13316,34 +13347,34 @@ function openForumChannel(chIdx) {
   let postsHTML = posts.length ? posts.slice().reverse().map(function(p,ri){
     const pi = posts.length-1-ri;
     return renderForumPostCard(p, chIdx, pi);
-  }).join('') : '<div style="text-align:center;padding:48px 20px;color:var(--muted);">No posts yet. Be the first!</div>';
+  }).join('') : '<div style="text-align:center;padding:60px 20px;color:var(--muted);"><div style="font-size:32px;margin-bottom:12px;opacity:.5;">💬</div><div style="font-size:14px;font-weight:600;margin-bottom:4px;">No posts yet</div><div style="font-size:12.5px;">Be the first to start a conversation!</div></div>';
   wrap.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">'
     +'<div style="padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--panel);">'
-    +'<div><div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;">💬 '+escapeHTML(ch.name)+'</div><div style="font-size:12px;color:var(--muted);">'+posts.length+' posts</div></div>'
-    +'<button class="btn-a" onclick="openNewForumPost('+chIdx+')" style="font-size:12.5px;padding:8px 16px;">✏ New Post</button>'
+    +'<div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:16px;">💬</div><div><div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;">'+escapeHTML(ch.name)+'</div><div style="font-size:11.5px;color:var(--muted);">'+posts.length+' post'+(posts.length!==1?'s':'')+(ch.description?' · '+escapeHTML(ch.description):'')+'</div></div></div>'
+    +'<button class="btn-a" onclick="openNewForumPost('+chIdx+')" style="font-size:12.5px;padding:8px 18px;display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Post</button>'
     +'</div>'
-    +'<div style="flex:1;overflow-y:auto;padding:16px;" id="forum-posts-list">'+postsHTML+'</div>'
+    +'<div style="flex:1;overflow-y:auto;padding:14px 16px;" id="forum-posts-list">'+postsHTML+'</div>'
     +'</div>';
 }
 
 function renderForumPostCard(p, chIdx, postIdx) {
   const ago = p.createdAt ? ftzTimeAgo(new Date(p.createdAt)) : '';
-  const tags = (p.tags||[]).map(function(t){return '<span style="padding:2px 8px;border-radius:100px;background:var(--accent-dim);color:var(--accent);font-size:10.5px;font-weight:700;">'+escapeHTML(t)+'</span>';}).join('');
-  var imgHTML = p.image ? '<img src="'+p.image+'" style="width:100%;max-height:200px;object-fit:cover;display:block;border-bottom:1px solid var(--border);" loading="lazy">' : '';
-  return '<div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:10px;cursor:pointer;transition:border-color .15s;" onmouseenter="this.style.borderColor=\'rgba(255,249,62,.2)\'" onmouseleave="this.style.borderColor=\'var(--border)\'" onclick="openForumPost('+chIdx+','+postIdx+')">'
+  const replyCount = (p.replies||[]).length;
+  const tags = (p.tags||[]).map(function(t){return '<span class="fpc-tag">'+escapeHTML(t)+'</span>';}).join('');
+  var imgHTML = p.image ? '<img class="fpc-img" src="'+p.image+'" loading="lazy">' : '';
+  return '<div class="forum-post-card" onclick="openForumPost('+chIdx+','+postIdx+')">'
     +imgHTML
-    +'<div style="padding:13px 15px;">'
-    +'<div style="display:flex;justify-content:space-between;gap:12px;">'
-    +'<div style="flex:1;min-width:0;">'
-    +'<div style="font-weight:700;font-size:14px;margin-bottom:4px;">'+escapeHTML(p.title||'Untitled')+'</div>'
-    +(tags?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px;">'+tags+'</div>':'')
-    +'<div style="font-size:12.5px;color:var(--muted-light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML((p.body||'').slice(0,120))+'</div>'
+    +'<div class="fpc-body">'
+    +'<div class="fpc-title">'+escapeHTML(p.title||'Untitled')+'</div>'
+    +(tags?'<div class="fpc-tags">'+tags+'</div>':'')
+    +'<div class="fpc-preview">'+escapeHTML((p.body||'').slice(0,180))+'</div>'
+    +'<div class="fpc-footer">'
+    +'<div class="fpc-author">'+buildAvatarHTML(null,p.author,18)+' '+escapeHTML(p.author||'unknown')+'</div>'
+    +'<div class="fpc-meta">'
+    +'<span>'+ago+'</span>'
+    +'<span class="fpc-replies"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> '+replyCount+'</span>'
+    +(p.image?'<span>🖼️</span>':'')
     +'</div>'
-    +'<div style="text-align:right;flex-shrink:0;font-size:11.5px;color:var(--muted);"><div>'+ago+'</div><div style="margin-top:3px;">💬 '+((p.replies||[]).length)+' replies</div></div>'
-    +'</div>'
-    +'<div style="display:flex;align-items:center;gap:6px;margin-top:9px;font-size:11.5px;color:var(--muted);">'
-    +buildAvatarHTML(null,p.author,16)+' '+escapeHTML(p.author||'unknown')
-    +(p.image ? '<span style="margin-left:auto;">🖼️</span>' : '')
     +'</div>'
     +'</div>'
     +'</div>';
@@ -13360,35 +13391,38 @@ function openForumPost(chIdx, postIdx) {
   const canManage = isAuthor || isOwner;
   const repliesHTML = replies.map(function(r, ri){
     const canDeleteReply = r.author === CU?.username || isOwner;
-    return '<div style="display:flex;gap:10px;margin-bottom:10px;padding:10px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;position:relative;" class="forum-reply-row">'
+    return '<div class="forum-reply-card">'
       +'<div style="flex-shrink:0;">'+buildAvatarHTML(null,r.author,30)+'</div>'
-      +'<div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:12.5px;margin-bottom:3px;">'+escapeHTML(r.author)+' <span style="font-weight:400;color:var(--muted);font-size:11px;">'+ftzTimeAgo(new Date(r.createdAt))+'</span></div>'
-      +'<div style="font-size:13px;color:var(--muted-light);line-height:1.55;">'+parseMD(escapeHTML(r.body||''))+'</div>'
+      +'<div style="flex:1;min-width:0;"><div class="frc-meta">'+escapeHTML(r.author)+' <span class="frc-time">'+ftzTimeAgo(new Date(r.createdAt))+'</span></div>'
+      +'<div class="frc-body">'+parseMD(escapeHTML(r.body||''))+'</div>'
       +'</div>'
-      +(canDeleteReply ? '<button onclick="deleteForumReply('+chIdx+','+postIdx+','+ri+')" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;opacity:.5;transition:opacity .15s;" onmouseenter="this.style.opacity=1;this.style.color=\'#f87171\'" onmouseleave="this.style.opacity=.5;this.style.color=\'var(--muted)\'">×</button>' : '')
+      +(canDeleteReply ? '<button class="forum-reply-delete" onclick="event.stopPropagation();deleteForumReply('+chIdx+','+postIdx+','+ri+')">×</button>' : '')
       +'</div>';
   }).join('');
+  const tagsHTML = (p.tags||[]).length ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">'+(p.tags||[]).map(function(t){return '<span class="fpc-tag">'+escapeHTML(t)+'</span>';}).join('')+'</div>' : '';
+  const editedLabel = p.editedAt ? ' <span style="font-size:10.5px;color:var(--muted);font-style:italic;">(edited)</span>' : '';
   const manageHTML = canManage ? `
     <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0;">
-      ${isAuthor ? `<button onclick="editForumPost(${chIdx},${postIdx})" style="background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:var(--accent);border-radius:8px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(255,249,62,.14)'" onmouseleave="this.style.background='rgba(255,249,62,.08)'">✏ Edit</button>` : ''}
-      <button onclick="showCustomConfirm('Delete this post permanently?',function(){deleteForumPost(${chIdx},${postIdx})})" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);color:#f87171;border-radius:8px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(248,113,113,.14)'" onmouseleave="this.style.background='rgba(248,113,113,.08)'">🗑 Delete</button>
+      ${isAuthor ? `<button onclick="editForumPost(${chIdx},${postIdx})" style="background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:var(--accent);border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(255,249,62,.14)'" onmouseleave="this.style.background='rgba(255,249,62,.08)'">✏ Edit</button>` : ''}
+      <button onclick="showCustomConfirm('Delete this post permanently?',function(){deleteForumPost(${chIdx},${postIdx})})" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);color:#f87171;border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(248,113,113,.14)'" onmouseleave="this.style.background='rgba(248,113,113,.08)'">🗑 Delete</button>
     </div>` : '';
   wrap.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">'
-    +'<div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--panel);">'
-    +'<button onclick="openForumChannel('+chIdx+')" style="background:none;border:none;color:var(--muted-light);cursor:pointer;font-size:22px;padding:2px 6px;line-height:1;">←</button>'
-    +'<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(p.title)+'</div>'
-    +'<div style="font-size:11.5px;color:var(--muted);">'+escapeHTML(p.author)+' · '+ftzTimeAgo(new Date(p.createdAt))+'</div></div>'
+    +'<div class="forum-detail-header">'
+    +'<button class="forum-detail-back" onclick="openForumChannel('+chIdx+')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>'
+    +'<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(p.title)+editedLabel+'</div>'
+    +'<div style="font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:5px;">'+buildAvatarHTML(null,p.author,14)+' '+escapeHTML(p.author)+' · '+ftzTimeAgo(new Date(p.createdAt))+'</div></div>'
     +manageHTML
     +'</div>'
-    +'<div style="flex:1;overflow-y:auto;padding:16px;">'
-    +(p.image?'<img src="'+p.image+'" style="width:100%;max-height:380px;object-fit:cover;border-radius:14px;margin-bottom:12px;display:block;" loading="lazy">':'')
-    +'<div style="background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;line-height:1.6;">'+parseMD(escapeHTML(p.body||''))+'</div>'
-    +(replies.length?'<div style="font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">'+replies.length+' REPLIES</div>':'')
+    +'<div class="forum-detail-body">'
+    +(p.image?'<img src="'+p.image+'" style="width:100%;max-height:380px;object-fit:cover;border-radius:14px;margin-bottom:14px;display:block;" loading="lazy">':'')
+    +'<div class="forum-detail-content">'+parseMD(escapeHTML(p.body||''))+'</div>'
+    +tagsHTML
+    +(replies.length?'<div style="font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:16px 0 10px;display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> '+replies.length+' REPL'+(replies.length===1?'Y':'IES')+'</div>':'')
     +repliesHTML
     +'</div>'
-    +'<div style="padding:10px 14px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;">'
+    +'<div class="forum-reply-compose">'
     +'<textarea id="forum-reply-ta" class="field-input" placeholder="Write a reply…" rows="1" style="flex:1;resize:none;" oninput="autoResize(this)"></textarea>'
-    +'<button class="btn-a" style="padding:8px 16px;" onclick="submitForumReply('+chIdx+','+postIdx+')">Reply</button>'
+    +'<button class="btn-a" style="padding:8px 18px;" onclick="submitForumReply('+chIdx+','+postIdx+')">Reply</button>'
     +'</div></div>';
 }
 
@@ -15329,14 +15363,37 @@ async function switchToAccount(username) {
   if (username === CU?.username) { toggleAccountSwitcher(); return; }
   const cached = localStorage.getItem('ftz_user_'+username);
   if (cached) {
+    // Save current user's full data and account entry before switching
     saveCurrentToAccounts();
+    if (CU?.username) {
+      localStorage.setItem('ftz_user_'+CU.username, JSON.stringify(CU));
+    }
+    // Set old account away, new account online
+    try { if (CU?.username) await FortizedSocial.setStatus(CU.username, 'away'); } catch {}
+    try { await FortizedSocial.setStatus(username, 'online'); } catch {}
+    // Set both localStorage keys for consistency
     localStorage.setItem('ftz_current', username);
+    localStorage.setItem('fortized_current_user', username);
     window.location.reload();
   } else {
-    toast('Account not found — please log in', 'error');
-    setTimeout(()=>{window.location.href='/login';}, 1200);
+    // No cached data — try fetching from server before giving up
+    try {
+      const user = await FortizedSocial.getUserByName(username);
+      if (user?.username) {
+        saveCurrentToAccounts();
+        if (CU?.username) localStorage.setItem('ftz_user_'+CU.username, JSON.stringify(CU));
+        localStorage.setItem('ftz_user_'+user.username, JSON.stringify(user));
+        localStorage.setItem('ftz_current', user.username);
+        localStorage.setItem('fortized_current_user', user.username);
+        try { await FortizedSocial.setStatus(user.username, 'online'); } catch {}
+        window.location.reload();
+        return;
+      }
+    } catch {}
+    toast('Account not found — please sign in again', 'error');
+    toggleAccountSwitcher();
+    showAddAccountModal();
   }
-  toggleAccountSwitcher();
 }
 function addAnotherAccount() {
   toggleAccountSwitcher();
@@ -15417,14 +15474,23 @@ async function submitAddAccount() {
       result = u;
     }
     if (!result?.username) throw new Error('Could not authenticate — check credentials');
+    // Save current user's full data before switching
     saveCurrentToAccounts();
+    if (CU?.username) {
+      localStorage.setItem('ftz_user_'+CU.username, JSON.stringify(CU));
+    }
     localStorage.setItem('ftz_user_'+result.username, JSON.stringify(result));
     const accounts = getSavedAccounts();
     const idx = accounts.findIndex(a=>a.username===result.username);
     const entry = {username:result.username,displayName:result.displayName||result.username,pfp:result.pfp||null};
     if(idx>=0) accounts[idx]=entry; else accounts.push(entry);
     localStorage.setItem('ftz_saved_accounts', JSON.stringify(accounts));
+    // Set both localStorage keys for consistency
     localStorage.setItem('ftz_current', result.username);
+    localStorage.setItem('fortized_current_user', result.username);
+    // Update statuses
+    try { if (CU?.username) await FortizedSocial.setStatus(CU.username, 'away'); } catch {}
+    try { await FortizedSocial.setStatus(result.username, 'online'); } catch {}
     document.getElementById('add-acct-modal')?.remove();
     toast('Switching to @'+result.username+'…', 'success');
     setTimeout(()=>window.location.reload(), 700);
@@ -15437,8 +15503,9 @@ async function submitAddAccount() {
 document.addEventListener('click', e => {
   if (_acctSwitcherOpen) {
     const panel = document.getElementById('account-switcher-panel');
-    const btn = document.getElementById('rb-switch-acct');
-    if (panel && !panel.contains(e.target) && !btn?.contains(e.target)) {
+    // Check if click target is inside the panel or is a button that toggles the switcher
+    const isToggleBtn = e.target.closest && e.target.closest('[onclick*="toggleAccountSwitcher"]');
+    if (panel && !panel.contains(e.target) && !isToggleBtn) {
       _acctSwitcherOpen = false;
       panel.style.display = 'none';
     }

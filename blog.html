@@ -111,11 +111,70 @@ a { text-decoration: none; color: inherit; }
 .hero-stat-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-light); margin-top: 2px; }
 .hero-stat-divider { width: 1px; height: 44px; background: rgba(255,255,255,.07); }
 
+/* ── SEARCH BAR ──────────────────────────── */
+.blog-search-wrap {
+  max-width: 520px; position: relative; margin-bottom: 0;
+}
+.blog-search-input {
+  width: 100%; padding: 12px 18px 12px 44px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px; color: #fff; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.blog-search-input::placeholder { color: var(--muted); }
+.blog-search-input:focus { border-color: rgba(255,249,62,.3); box-shadow: 0 0 0 3px rgba(255,249,62,.06); }
+.blog-search-icon {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--muted); pointer-events: none;
+}
+.blog-no-results {
+  text-align: center; padding: 60px 24px; color: var(--muted);
+  font-size: 15px; display: none;
+}
+.blog-no-results span { display: block; font-size: 36px; margin-bottom: 12px; opacity: .4; }
+
 /* ── MAIN GRID ────────────────────────────── */
 .blog-wrap { max-width: 1240px; margin: 0 auto; padding: 64px 72px 100px; }
 
+/* ── PINNED CARD ─────────────────────────── */
+.pinned-card {
+  background: var(--panel); border: 1.5px solid rgba(255,249,62,.14);
+  border-radius: 22px; overflow: hidden; cursor: pointer; position: relative;
+  transition: transform .22s, box-shadow .22s, border-color .22s;
+  display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 28px;
+}
+.pinned-card::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent); z-index: 2;
+}
+.pinned-card:hover { transform: translateY(-4px); box-shadow: 0 24px 64px rgba(0,0,0,.55); border-color: rgba(255,249,62,.28); }
+.pinned-card-img {
+  height: 100%; min-height: 240px;
+  background: linear-gradient(145deg, rgba(255,249,62,.1) 0%, rgba(255,249,62,.02) 40%, transparent 70%),
+              linear-gradient(to bottom, rgba(8,10,15,.05), rgba(8,10,15,.75)),
+              url("Fortized banner.png") center / cover no-repeat;
+  position: relative;
+}
+.pinned-card-img::after {
+  content: ""; position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,249,62,.018) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,249,62,.018) 1px, transparent 1px);
+  background-size: 44px 44px; pointer-events: none;
+}
+.pinned-card-body { padding: 32px 34px; display: flex; flex-direction: column; justify-content: center; }
+.pinned-badge {
+  display: inline-flex; align-items: center; gap: 6px; width: fit-content;
+  font-size: 9.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+  color: #080a0f; background: var(--accent); padding: 4px 12px; border-radius: 6px; margin-bottom: 14px;
+}
+.pinned-card-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -.7px; line-height: 1.1; color: #fff; margin-bottom: 12px; }
+.pinned-card-excerpt { font-size: 14.5px; color: var(--muted-light); line-height: 1.72; margin-bottom: 20px; }
+
 /* ── FEATURED ROW (hero card + 2 stack) ─── */
 .featured-row { display: grid; grid-template-columns: 1fr 380px; gap: 16px; margin-bottom: 16px; }
+
+/* ── POST GRID ───────────────────────────── */
+.post-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 28px; }
 
 .hero-card {
   background: var(--panel);
@@ -440,6 +499,9 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   .featured-row { grid-template-columns: 1fr; }
   .side-stack { flex-direction: row; }
   .secondary-row { grid-template-columns: 1fr 1fr; }
+  .post-grid { grid-template-columns: 1fr 1fr; }
+  .pinned-card { grid-template-columns: 1fr; }
+  .pinned-card-img { min-height: 200px; }
 }
 @media (max-width: 768px) {
   .nav-root { padding: 0 20px; }
@@ -447,10 +509,11 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   .blog-hero h1 { font-size: 40px; }
   .hero-stats { display: none; }
   .blog-wrap { padding: 40px 24px 80px; }
-  .featured-row, .secondary-row, .stubs-row { grid-template-columns: 1fr; }
+  .featured-row, .secondary-row, .stubs-row, .post-grid { grid-template-columns: 1fr; }
   .side-stack { flex-direction: column; }
+  .pinned-card { grid-template-columns: 1fr; }
   footer { padding: 20px 24px; grid-template-columns: 1fr; text-align: center; }
-  .footer-links { justify-content: center; }
+  .footer-links { justify-content: center; flex-wrap: wrap; }
   #article-view { padding: 36px 24px 80px; }
 }
 </style>
@@ -507,139 +570,36 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   </div>
 
   <div class="blog-wrap">
-    <!-- FEATURED: hero + 2 side cards -->
-    <div class="featured-row">
-      <!-- Hero card: pinned article -->
-      <div class="hero-card fade-up d1" onclick="openArticle('betalive')">
-        <div class="hero-card-img">
-          <span class="card-tag tag-launch">🔥 Pinned · Launch</span>
-        </div>
-        <div class="hero-card-body">
-          <div class="card-meta">
-            <span class="card-date">February 22, 2026</span>
-            <span class="card-readtime">⏱ 2 min</span>
-            <div class="author-chip"><div class="author-chip-av">S</div>Staw · CAO</div>
-          </div>
-          <div class="hero-card-title">Fortized Beta is LIVE!</div>
-          <div class="hero-card-excerpt">Today is the day. As of February 22, 2026, the Fortized Beta is officially open. The Atelier is live, the walls are up, and your Bastion is ready to be claimed.</div>
-          <div class="hero-card-footer">
-            <span class="read-link">Read Article →</span>
-          </div>
-        </div>
-      </div>
+    <!-- Search bar -->
+    <div class="blog-search-wrap fade-up d1" style="margin-bottom:32px;">
+      <svg class="blog-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="blog-search-input" id="blog-search" placeholder="Search blog posts..." oninput="filterBlogPosts(this.value)">
+    </div>
 
-      <!-- 2 stacked side cards -->
-      <div class="side-stack">
-        <div class="side-card fade-up d2" onclick="openArticle('whatisfortized')">
-          <div class="side-card-img"></div>
-          <div class="side-card-body">
-            <div class="card-meta">
-              <span class="card-tag tag-rd">R&amp;D</span>
-              <span class="card-date">Feb 22, 2026</span>
-            </div>
-            <div class="side-card-title">What is Fortized?</div>
-            <div class="side-card-excerpt">Why does building a community feel harder than it should? Here's the structure and identity that makes it different.</div>
-            <span class="read-link">Read →</span>
-          </div>
+    <!-- Pinned: What is Fortized? -->
+    <div class="pinned-card fade-up d2" id="pinned-card" onclick="openArticle('whatisfortized')">
+      <div class="pinned-card-img"></div>
+      <div class="pinned-card-body">
+        <div class="pinned-badge">📌 Pinned</div>
+        <div class="card-meta">
+          <span class="card-tag tag-rd">R&amp;D</span>
+          <span class="card-date">February 22, 2026</span>
+          <span class="card-readtime">⏱ 2 min</span>
         </div>
-
-        <div class="side-card fade-up d3" onclick="openArticle('atelier')">
-          <div class="side-card-img"></div>
-          <div class="side-card-body">
-            <div class="card-meta">
-              <span class="card-tag tag-rd">R&amp;D</span>
-              <span class="card-date">Feb 21, 2026</span>
-            </div>
-            <div class="side-card-title">Introducing The Atelier</div>
-            <div class="side-card-excerpt">Your hub for progression — where loyalty translates into premium status. No credit card required.</div>
-            <span class="read-link">Read →</span>
-          </div>
+        <div class="pinned-card-title">What is Fortized?</div>
+        <div class="pinned-card-excerpt">Fortized started with a simple question: why does building a community feel harder than it should? Here's the structure and identity that makes it different.</div>
+        <div class="card-meta" style="margin-bottom:0;">
+          <div class="author-chip"><div class="author-chip-av">T</div>Tyrianum · R&amp;D</div>
+          <span class="read-link" style="margin-left:auto;">Read Article →</span>
         </div>
       </div>
     </div>
 
-    <!-- SECONDARY ROW: 3 equal cards -->
-    <div class="secondary-row">
-      <div class="reg-card fade-up d2" onclick="openArticle('gates')">
-        <div class="reg-card-img"></div>
-        <div class="reg-card-body">
-          <div class="card-meta">
-            <span class="card-tag tag-announce">Announcement</span>
-            <span class="card-date">Feb 21, 2026</span>
-          </div>
-          <div class="reg-card-title">The Gates are Unlocking</div>
-          <div class="reg-card-excerpt">After months of development and security testing, the Fortized Beta is live. Here's what's waiting inside.</div>
-          <div class="card-meta" style="margin-bottom:0;margin-top:auto;">
-            <div class="author-chip"><div class="author-chip-av">M</div>Maus · CCO</div>
-            <span class="read-link" style="margin-left:auto;">Read →</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="reg-card fade-up d3" onclick="openArticle('safety')">
-        <div class="reg-card-img"></div>
-        <div class="reg-card-body">
-          <div class="card-meta">
-            <span class="card-tag tag-safety">Safety</span>
-            <span class="card-date">Feb 20, 2026</span>
-          </div>
-          <div class="reg-card-title">How Stawdio Safety Protects Your Bastion</div>
-          <div class="reg-card-excerpt">The layered infrastructure that keeps the Fortress standing strong — from AutoMod to full Bastion sovereignty.</div>
-          <div class="card-meta" style="margin-bottom:0;margin-top:auto;">
-            <div class="author-chip"><div class="author-chip-av">W</div>Weaverdant · CSO</div>
-            <span class="read-link" style="margin-left:auto;">Read →</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="reg-card fade-up d4" onclick="openArticle('bastions2')">
-        <div class="reg-card-img"></div>
-        <div class="reg-card-body">
-          <div class="card-meta">
-            <span class="card-tag tag-rd">R&amp;D</span>
-            <span class="card-date">Mar 2, 2026</span>
-          </div>
-          <div class="reg-card-title">Bastions 2.0 — Channels, Roles &amp; Beyond</div>
-          <div class="reg-card-excerpt">The biggest update since launch. New room types, Roles 2.0, Bastion Shell, Boosts 2.0, AutoMod 2.0, and more.</div>
-          <div class="card-meta" style="margin-bottom:0;margin-top:auto;">
-            <div class="author-chip"><div class="author-chip-av">T</div>Tyrianum · R&amp;D</div>
-            <span class="read-link" style="margin-left:auto;">Read →</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="reg-card fade-up d4" onclick="openArticle('livingbastions')">
-        <div class="reg-card-img"></div>
-        <div class="reg-card-body">
-          <div class="card-meta">
-            <span class="card-tag tag-rd">R&amp;D</span>
-            <span class="card-date">Mar 2, 2026</span>
-          </div>
-          <div class="reg-card-title">Living Bastions — Mood, Reputation &amp; Focus</div>
-          <div class="reg-card-excerpt">Bastions evolve. Introducing Bastion Mood, Joyster Interventions, Reputation, and Focus Mode — features that make communities feel alive.</div>
-          <div class="card-meta" style="margin-bottom:0;margin-top:auto;">
-            <div class="author-chip"><div class="author-chip-av">T</div>Tyrianum · R&amp;D</div>
-            <span class="read-link" style="margin-left:auto;">Read →</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Coming soon stub -->
-      <div class="coming-section fade-up d4" style="grid-column:span 1;">
-        <div class="section-divider" style="margin-bottom:14px;">
-          <div class="section-divider-label">Coming Soon</div>
-          <div class="section-divider-line"></div>
-        </div>
-        <div class="stubs-row" style="grid-template-columns:1fr;gap:10px;">
-          <div class="stub-card">
-            <div class="stub-icon">⚔️</div>
-            <div>
-              <div class="stub-cat">Community</div>
-              <div class="stub-title">The State of the Fortress: February Report</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- Dynamic post grid (sorted by date, excluding pinned) -->
+    <div class="post-grid" id="post-grid"></div>
+    <div class="blog-no-results" id="blog-no-results">
+      <span>🔍</span>
+      No posts found matching your search.
     </div>
   </div>
 </div>
@@ -659,6 +619,9 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   <div class="footer-links">
     <a href="privacy.html">Privacy</a>
     <a href="terms.html">Terms</a>
+    <a href="https://x.com/Fortized" target="_blank" rel="noopener">𝕏 Fortized</a>
+    <a href="https://x.com/StawdioGroup" target="_blank" rel="noopener">𝕏 Stawdio</a>
+    <a href="https://www.youtube.com/@stawdio-group" target="_blank" rel="noopener">▶ YouTube</a>
   </div>
 </footer>
 
@@ -780,6 +743,61 @@ window.addEventListener('popstate', function(e) {
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+
+// ── Dynamic blog grid (sorted by date, pinned excluded) ──
+const PINNED_ID = 'whatisfortized';
+function getExcerpt(content) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = content;
+  const lead = tmp.querySelector('.lead');
+  return lead ? lead.textContent.slice(0, 160) + (lead.textContent.length > 160 ? '...' : '') : tmp.textContent.slice(0, 160) + '...';
+}
+function parseDate(str) {
+  return new Date(str.replace(/(\w+)\s(\d+),\s(\d+)/, '$1 $2, $3'));
+}
+function renderPostGrid(filter) {
+  const grid = document.getElementById('post-grid');
+  const noResults = document.getElementById('blog-no-results');
+  const pinned = document.getElementById('pinned-card');
+  const q = (filter || '').toLowerCase().trim();
+  // Sort by date descending (most recent first), exclude pinned
+  const sorted = Object.entries(ARTICLES)
+    .filter(([id]) => id !== PINNED_ID)
+    .sort((a, b) => parseDate(b[1].date) - parseDate(a[1].date));
+  const filtered = q
+    ? sorted.filter(([id, a]) => a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q) || a.bylineName.toLowerCase().includes(q))
+    : sorted;
+  // Check pinned match
+  const pinnedA = ARTICLES[PINNED_ID];
+  const pinnedMatch = !q || pinnedA.title.toLowerCase().includes(q) || pinnedA.category.toLowerCase().includes(q);
+  if (pinned) pinned.style.display = pinnedMatch ? '' : 'none';
+  if (filtered.length === 0 && !pinnedMatch) {
+    grid.innerHTML = '';
+    noResults.style.display = 'block';
+    return;
+  }
+  noResults.style.display = 'none';
+  grid.innerHTML = filtered.map(([id, a], i) => `
+    <div class="reg-card fade-up" style="animation-delay:${(i * 0.06) + 0.1}s" onclick="openArticle('${id}')">
+      <div class="reg-card-img"></div>
+      <div class="reg-card-body">
+        <div class="card-meta">
+          <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
+          <span class="card-date">${a.date}</span>
+          <span class="card-readtime">⏱ ${a.readTime}</span>
+        </div>
+        <div class="reg-card-title">${a.title}</div>
+        <div class="reg-card-excerpt">${getExcerpt(a.content)}</div>
+        <div class="card-meta" style="margin-bottom:0;margin-top:auto;">
+          <div class="author-chip"><div class="author-chip-av">${a.authorInitial}</div>${a.bylineName}</div>
+          <span class="read-link" style="margin-left:auto;">Read →</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+function filterBlogPosts(val) { renderPostGrid(val); }
+renderPostGrid();
 
 (function() {
   const params = new URLSearchParams(window.location.search);

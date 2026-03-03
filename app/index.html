@@ -2027,6 +2027,206 @@ let quizAnswers = [];
 let activeReportData = null;
 const SUPER_ADMIN = 'staw';
 const JOYSTER_ACCOUNT = 'joyster';
+
+// ════════════════════════════════════════════════════════════
+// STATUS MODULE — Single Source of Truth
+// ════════════════════════════════════════════════════════════
+// Every status color, label, and helper lives here.
+// Nothing else in the codebase should define status constants.
+// ════════════════════════════════════════════════════════════
+const FtzStatus = (() => {
+  const MODES = Object.freeze({
+    online:    { color: '#3ecf6e', label: 'Online',          order: 0 },
+    away:      { color: '#f59e0b', label: 'Away',            order: 1 },
+    dnd:       { color: '#f87171', label: 'Do Not Disturb',  order: 2 },
+    invisible: { color: '#6b7280', label: 'Invisible',       order: 3 },
+    offline:   { color: '#6b7280', label: 'Offline',         order: 4 },
+  });
+
+  const VALID = new Set(Object.keys(MODES));
+  const IDLE_TIMEOUT_ACTIVE  = 7 * 60 * 1000; // 7 min when tab visible
+  const IDLE_TIMEOUT_HIDDEN  = 60 * 1000;      // 1 min when tab hidden
+
+  const CUSTOM_DURATIONS = Object.freeze([
+    { id: '30m',     label: '30 min',     ms: 30 * 60000 },
+    { id: '1h',      label: '1 hour',     ms: 60 * 60000 },
+    { id: '4h',      label: '4 hours',    ms: 4 * 60 * 60000 },
+    { id: 'today',   label: 'Today',      ms: null },      // computed at set-time
+    { id: 'forever', label: "Don't Clear", ms: Infinity },
+  ]);
+
+  // ── Helpers ──────────────────────────────────────────────
+  function isValid(s) { return VALID.has(s); }
+  function sanitize(s) { return VALID.has(s) ? s : 'offline'; }
+  function color(s) { return (MODES[s] || MODES.offline).color; }
+  function label(s) { return (MODES[s] || MODES.offline).label; }
+  // What others see (invisible → offline)
+  function visible(s) { return s === 'invisible' ? 'offline' : sanitize(s); }
+  // Label for public display (invisible → Offline)
+  function publicLabel(s) { return s === 'invisible' ? 'Offline' : label(s); }
+  // Is this user "present" (not offline/invisible)?
+  function isPresent(s) { return s === 'online' || s === 'away' || s === 'dnd'; }
+  // Sort comparator for friend lists (online first)
+  function sortOrder(s) { return (MODES[s] || MODES.offline).order; }
+
+  // ── Duration helpers for custom status ──────────────────
+  function durationMs(id) {
+    if (id === 'today') {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) - now;
+    }
+    const d = CUSTOM_DURATIONS.find(d => d.id === id);
+    return d ? d.ms : Infinity;
+  }
+
+  // ── Status state management ─────────────────────────────
+  let _idleTimer = null;
+  let _prevStatus = null;
+  let _manualStatus = null;
+  let _customStatusTimer = null;
+
+  function _broadcast(status) {
+    if (!CU?.username) return;
+    const vis = visible(status);
+    FortizedSocial.setStatus(CU.username, vis).catch(e => {
+      console.warn('[FtzStatus] broadcast failed:', e);
+    });
+  }
+
+  function set(status) {
+    if (!CU?.username) return;
+    status = sanitize(status);
+    _manualStatus = status;
+    _prevStatus = null;
+    CU.status = status;
+    _broadcast(status);
+    saveUser().catch(() => {});
+    updateUserbar();
+    refreshCustomStatusBubble();
+    if (status === 'dnd') _joysterReactTo('status_dnd');
+    else if (status === 'invisible') _joysterReactTo('status_invisible');
+    else if (status === 'away') _joysterReactTo('status_away');
+  }
+
+  // ── Idle / Activity Detection ───────────────────────────
+  function _resetIdle() {
+    if (_idleTimer) clearTimeout(_idleTimer);
+    // Restore from auto-away on user activity
+    if (CU?.status === 'away' && _prevStatus && _prevStatus !== 'away') {
+      CU.status = _prevStatus;
+      _prevStatus = null;
+      _broadcast(CU.status);
+      updateUserbar();
+    }
+    _idleTimer = setTimeout(() => {
+      if (!CU) return;
+      if (CU.status === 'dnd' || CU.status === 'invisible') return;
+      _prevStatus = CU.status || 'online';
+      CU.status = 'away';
+      _broadcast('away');
+      updateUserbar();
+    }, IDLE_TIMEOUT_ACTIVE);
+  }
+
+  function initIdle() {
+    ['mousemove','keydown','click','touchstart','scroll','mousedown'].forEach(ev => {
+      document.addEventListener(ev, _resetIdle, { passive: true });
+    });
+    _resetIdle();
+
+    document.addEventListener('visibilitychange', () => {
+      if (!CU?.username) return;
+      if (document.hidden) {
+        if (_idleTimer) clearTimeout(_idleTimer);
+        if (CU.status !== 'dnd' && CU.status !== 'invisible') {
+          _idleTimer = setTimeout(() => {
+            if (!CU || CU.status === 'dnd' || CU.status === 'invisible') return;
+            _prevStatus = CU.status || 'online';
+            CU.status = 'away';
+            _broadcast('away');
+            updateUserbar();
+          }, IDLE_TIMEOUT_HIDDEN);
+        }
+      } else {
+        _resetIdle();
+        if (CU.status === 'away' && _prevStatus) {
+          CU.status = _prevStatus;
+          _prevStatus = null;
+        }
+        _broadcast(CU.status);
+        updateUserbar();
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (!CU?.username) return;
+      _broadcast('offline');
+      try {
+        navigator.sendBeacon?.(
+          'https://fortized-5ffcf-default-rtdb.europe-west1.firebasedatabase.app/statuses/' + CU.username + '.json',
+          JSON.stringify('offline')
+        );
+      } catch {}
+    });
+  }
+
+  // ── Custom Status ───────────────────────────────────────
+  function _clearCustomTimer() {
+    if (_customStatusTimer) { clearTimeout(_customStatusTimer); _customStatusTimer = null; }
+  }
+
+  function _onCustomExpiry() {
+    delete CU.customStatus;
+    saveUser().catch(() => {});
+    refreshCustomStatusBubble();
+    toast('Custom status cleared', 'info');
+  }
+
+  function setCustom(emoji, text, durationId) {
+    if (!text) return;
+    _clearCustomTimer();
+    const cs = { emoji: emoji || '😊', text, set: new Date().toISOString() };
+    const ms = durationMs(durationId || 'forever');
+    if (ms !== Infinity && ms > 0) {
+      cs.clearAt = new Date(Date.now() + ms).toISOString();
+      _customStatusTimer = setTimeout(_onCustomExpiry, ms);
+    }
+    CU.customStatus = cs;
+    saveUser().catch(() => {});
+    refreshCustomStatusBubble();
+    _joysterReactTo('custom_status');
+  }
+
+  function clearCustom() {
+    _clearCustomTimer();
+    delete CU.customStatus;
+    saveUser().catch(() => {});
+    refreshCustomStatusBubble();
+  }
+
+  function restoreCustomTimer() {
+    const cs = CU?.customStatus;
+    if (!cs?.clearAt) return;
+    const remaining = new Date(cs.clearAt) - Date.now();
+    if (remaining <= 0) {
+      delete CU.customStatus;
+      saveUser().catch(() => {});
+      return;
+    }
+    _clearCustomTimer();
+    _customStatusTimer = setTimeout(_onCustomExpiry, remaining);
+  }
+
+  return Object.freeze({
+    MODES, VALID, CUSTOM_DURATIONS,
+    IDLE_TIMEOUT_ACTIVE, IDLE_TIMEOUT_HIDDEN,
+    isValid, sanitize, color, label, visible, publicLabel, isPresent, sortOrder,
+    durationMs,
+    set, initIdle, broadcast: _broadcast,
+    setCustom, clearCustom, restoreCustomTimer,
+  });
+})();
+
 const ROLE_COLORS = ['#fbbf24','#f87171','#34d399','#60a5fa','#a78bfa','#f472b6','#fb923c','#22d3ee'];
 const PERMISSIONS = [
   ['send_messages','Send Messages','General'],['read_history','Read History','General'],
@@ -2634,16 +2834,12 @@ function updateUserbar() {
   const uaName = document.getElementById('ua-name');
   const uaStatusText = document.getElementById('ua-status-text');
   const uaDot = document.getElementById('ua-status-dot');
-  const STATUS_COLORS = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
-  const STATUS_LABELS = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible',offline:'Offline'};
-  const st = CU.status || 'online';
+  const st = FtzStatus.sanitize(CU.status || 'online');
   // Avatar — 32px to match chatbar compact style
   if (ua) {
     const inner = CU.pfp
       ? `<img src="${CU.pfp}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">`
       : `<div style="width:32px;height:32px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:13px;font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</div>`;
-    // Keep status dot
-    const dot = ua.querySelector('#ua-status-dot');
     ua.innerHTML = inner;
     if (!ua.querySelector('#ua-status-dot')) {
       const d = document.createElement('span');
@@ -2652,24 +2848,24 @@ function updateUserbar() {
     }
   }
   if (document.getElementById('ua-status-dot')) {
-    document.getElementById('ua-status-dot').style.background = STATUS_COLORS[st]||'#6b7280';
+    document.getElementById('ua-status-dot').style.background = FtzStatus.color(st);
   }
   if (uaName) {
     uaName.textContent = CU.displayName || CU.username;
-    // Apply display font
     const font = getDisplayFont(CU);
     uaName.style.fontFamily = font;
   }
   if (uaStatusText) {
-    // Show custom status if set, otherwise status label
     if (CU.customStatus?.text) {
       uaStatusText.textContent = (CU.customStatus.emoji||'') + ' ' + CU.customStatus.text;
     } else {
-      uaStatusText.textContent = STATUS_LABELS[st] || 'Online';
+      uaStatusText.textContent = FtzStatus.label(st);
     }
   }
-  // Sync status to Firebase for everyone to see
-  try { if (CU.username && st !== 'offline') FortizedSocial.setStatus(CU.username, st).catch(()=>{}); } catch {}
+  // Sync status to Firebase
+  if (CU.username && st !== 'offline') {
+    FortizedSocial.setStatus(CU.username, FtzStatus.visible(st)).catch(e => console.warn('[updateUserbar] sync failed:', e));
+  }
   updateOnyxDisplay();
 }
 function updateUserbarWidth() {
@@ -2862,17 +3058,15 @@ async function _loadRealmFriends(friends, container, countEl) {
       return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st};
     } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
   }));
-  const online = results.filter(r=>r.status==='online'||r.status==='away'||r.status==='dnd');
-  const offline = results.filter(r=>r.status!=='online'&&r.status!=='away'&&r.status!=='dnd');
+  const online = results.filter(r => FtzStatus.isPresent(r.status));
+  const offline = results.filter(r => !FtzStatus.isPresent(r.status));
   if (countEl) countEl.textContent = online.length ? online.length + ' online' : '';
-  const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',offline:'#6b7280'};
   const sorted = [...online,...offline];
   container.innerHTML = sorted.map(r=>{
-    const sc = SC[r.status]||SC.offline;
     return `<div class="realm-friend" onclick="openDMView('${escapeHTML(r.username)}')" title="${escapeHTML(r.displayName)}">
       <div class="rf-av">
         <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:16px;">${buildAvatarHTML(r.pfp,r.displayName,44)}</div>
-        <span class="rf-status" style="background:${sc};"></span>
+        <span class="rf-status" style="background:${FtzStatus.color(r.status)};"></span>
       </div>
       <div class="rf-name">${escapeHTML(r.displayName)}</div>
     </div>`;
@@ -2892,17 +3086,15 @@ async function _loadRPFriends(friends, container, countEl) {
       return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, customStatus:u?.customStatus||null, game:u?.currentGame||null};
     } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
   }));
-  const online = results.filter(r=>r.status==='online'||r.status==='away'||r.status==='dnd');
-  const offline = results.filter(r=>r.status!=='online'&&r.status!=='away'&&r.status!=='dnd');
+  const online = results.filter(r => FtzStatus.isPresent(r.status));
+  const offline = results.filter(r => !FtzStatus.isPresent(r.status));
   if (countEl) countEl.textContent = online.length ? online.length + ' online' : '';
-  const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',offline:'#6b7280'};
   container.innerHTML = [...online,...offline].map(r=>{
-    const sc = SC[r.status]||SC.offline;
-    const activity = r.game ? `Playing ${escapeHTML(r.game.name)}` : r.customStatus?.text ? `${r.customStatus.emoji||''} ${escapeHTML(r.customStatus.text)}` : r.status==='online'?'Online':r.status==='away'?'Away':r.status==='dnd'?'Do Not Disturb':'Offline';
+    const activity = r.game ? `Playing ${escapeHTML(r.game.name)}` : r.customStatus?.text ? `${r.customStatus.emoji||''} ${escapeHTML(r.customStatus.text)}` : FtzStatus.publicLabel(r.status);
     return `<div class="rp-friend-item" onclick="openDMView('${escapeHTML(r.username)}')" title="${escapeHTML(activity)}">
       <div class="rp-friend-av">
         <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--panel);font-size:12px;">${buildAvatarHTML(r.pfp,r.displayName,28)}</div>
-        <span class="rp-friend-status" style="background:${sc};"></span>
+        <span class="rp-friend-status" style="background:${FtzStatus.color(r.status)};"></span>
       </div>
       <div style="flex:1;min-width:0;">
         <div class="rp-friend-name">${escapeHTML(r.displayName)}</div>
@@ -3289,9 +3481,8 @@ function renderDMSidebar(scroll) {
         if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
         const dnEl = document.getElementById('dm-dn-'+f);
         if (dnEl) dnEl.textContent = u.displayName || f;
-        const st = u.status || 'offline';
-        const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
-        document.querySelectorAll(`.profile-status-dot[data-for="${f}"]`).forEach(d=>d.style.background=SC[st]||SC.offline);
+        const st = FtzStatus.sanitize(u.status || 'offline');
+        document.querySelectorAll(`.profile-status-dot[data-for="${f}"]`).forEach(d=>d.style.background=FtzStatus.color(st));
       }
     } catch {}
     try {
@@ -3396,15 +3587,13 @@ function renderDMFriendsHome() {
       if (pdnEl) pdnEl.textContent = u.displayName || f;
 
       // Status dot + text
-      const st = u.status || 'offline';
-      const STATUS_COLORS = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
-      const STATUS_LABELS = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Offline',offline:'Offline'};
+      const st = FtzStatus.sanitize(u.status || 'offline');
       const dot = document.querySelector(`.dm-home-status[data-for="${CSS.escape(f)}"]`);
-      if (dot) dot.style.background = STATUS_COLORS[st] || '#6b7280';
+      if (dot) dot.style.background = FtzStatus.color(st);
       const text = document.querySelector(`.dm-home-status-text[data-for="${CSS.escape(f)}"]`);
-      if (text) text.textContent = u.customStatus || STATUS_LABELS[st] || 'Offline';
+      if (text) text.textContent = u.customStatus || FtzStatus.publicLabel(st);
       // If filtering online and user is offline, hide row
-      if (filter === 'online' && (st === 'offline' || st === 'invisible')) {
+      if (filter === 'online' && !FtzStatus.isPresent(st)) {
         const row = document.querySelector(`.dm-friend-row[data-user="${CSS.escape(f)}"]`);
         if (row) row.style.display = 'none';
       }
@@ -3452,9 +3641,7 @@ async function renderActiveNowSidebar(containerId) {
     } catch { return {username:f, displayName:f, pfp:null, status:'offline', customStatus:''}; }
   }));
 
-  const online = results.filter(r => r.status==='online' || r.status==='away' || r.status==='dnd');
-  const STATUS_COLORS = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171'};
-  const STATUS_LABELS = {online:'Online',away:'Away',dnd:'Do Not Disturb'};
+  const online = results.filter(r => FtzStatus.isPresent(r.status));
 
   if (!online.length) {
     container.innerHTML = `<div class="active-now-empty">
@@ -3468,11 +3655,11 @@ async function renderActiveNowSidebar(containerId) {
     <div class="active-now-item" onclick="openDMView('${escapeHTML(u.username)}')">
       <div class="an-avatar">
         <div class="fa" style="width:34px;height:34px;border-radius:50%;overflow:hidden;font-size:13px;">${buildAvatarHTML(u.pfp, u.displayName, 34)}</div>
-        <span class="an-status-dot" style="background:${STATUS_COLORS[u.status]||'#6b7280'};"></span>
+        <span class="an-status-dot" style="background:${FtzStatus.color(u.status)};"></span>
       </div>
       <div class="an-info">
         <div class="an-name">${escapeHTML(u.displayName)}</div>
-        <div class="an-activity">${u.customStatus ? escapeHTML(u.customStatus) : STATUS_LABELS[u.status]||'Online'}</div>
+        <div class="an-activity">${u.customStatus ? escapeHTML(u.customStatus) : FtzStatus.label(u.status)}</div>
       </div>
     </div>`).join('');
 }
@@ -5216,8 +5403,7 @@ function buildMemberEntry(u, roles, memberRoles) {
     setTimeout(() => {
       subscribeProfileStatus(u);
       FortizedSocial.getStatus(u).then(st => {
-        const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
-        document.querySelectorAll('.profile-status-dot[data-for="'+u+'"]').forEach(el=>{el.style.background=SC[st]||SC.offline;});
+        document.querySelectorAll('.profile-status-dot[data-for="'+u+'"]').forEach(el=>{el.style.background=FtzStatus.color(st);});
       }).catch(()=>{});
       FortizedSocial.getUserByName(u).then(ud => {
         if (!ud) return;
@@ -5237,7 +5423,7 @@ function buildMemberEntry(u, roles, memberRoles) {
   return `<div class="ml-entry" data-member="${escapeHTML(u)}" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)">
     <div style="position:relative;display:inline-flex;flex-shrink:0;">
       ${buildAvatarHTML(pfpSrc, displayN, 30)}
-      <span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:${({online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171'}[status]||'#6b7280')};border:2px solid var(--channel);"></span>
+      <span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:${FtzStatus.color(status)};border:2px solid var(--channel);"></span>
     </div>
     <div class="ml-info" style="min-width:0;flex:1;">
       <div class="ml-name" style="color:${primaryRole?.color||'var(--muted-light)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
@@ -8256,9 +8442,7 @@ function buildProfileView(tab) {
 
   if (tab === 'myprofile') {
     const cs = CU.customStatus;
-    const statusColors = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
-    const statusLabels = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible'};
-    const sc = statusColors[CU.status||'online'];
+    const sc = FtzStatus.color(CU.status||'online');
 
     main.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 300px;height:100%;min-height:0;">
@@ -8436,7 +8620,7 @@ function buildProfileView(tab) {
               <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:8px;">@${escapeHTML(CU.username)}</div>
               <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
                 <span style="width:10px;height:10px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
-                <span style="font-size:13px;color:rgba(255,255,255,.55);">${statusLabels[CU.status||'online']||'Online'}</span>
+                <span style="font-size:13px;color:rgba(255,255,255,.55);">${FtzStatus.label(CU.status||'online')}</span>
               </div>
               ${cs?.text ? `<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(254,248,61,.04);border:1px solid rgba(254,248,61,.08);border-radius:12px;font-size:12px;color:rgba(255,255,255,.55);margin-bottom:8px;">${cs.emoji ? `<img src="${emojiToTwemojiUrl(cs.emoji)}" style="width:16px;height:16px;object-fit:contain;" onerror="this.outerHTML='${escapeHTML(cs.emoji)}'">` : ''} ${escapeHTML(cs.text)}</div>` : ''}
               ${CU.bio ? `<div style="font-size:12.5px;color:rgba(255,255,255,.45);line-height:1.55;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:8px;border-left:2px solid rgba(255,249,62,.2);margin-bottom:8px;">${escapeHTML(CU.bio.slice(0,120))}${CU.bio.length>120?'…':''}</div>` : ''}
@@ -9051,9 +9235,7 @@ async function viewUserProfile(username) {
   const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
   const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
 
-  const STATUS_COLOR = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
-  const STATUS_LABEL = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible',offline:'Offline'};
-  const sc = STATUS_COLOR[status]||'#6b7280';
+  const sc = FtzStatus.color(status);
   const socials = u.socials || {};
   const customStatus = u.customStatus;
   const games = u.gameCollection || [];
@@ -9093,7 +9275,7 @@ async function viewUserProfile(username) {
       <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:5px;">
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:10px;height:10px;border-radius:50%;background:${sc};"></span>
-          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:13px;color:rgba(255,255,255,.55);">${STATUS_LABEL[status]||'Offline'}</span>
+          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:13px;color:rgba(255,255,255,.55);">${FtzStatus.publicLabel(status)}</span>
         </div>
         ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;background:rgba(255,255,255,.06);border-radius:100px;font-size:12px;color:rgba(255,255,255,.5);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></span>`}
       </div>
@@ -11669,7 +11851,6 @@ function _showUserMentionPreview(e, el, username) {
     const isMe = username === CU?.username;
     const displayName = isMe ? (CU?.displayName || username) : username;
     const status = isMe ? (CU?.status || 'online') : 'online';
-    const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
     // Role tag in bastion
     let roleHTML = '';
     if (curBastion !== null) {
@@ -11682,7 +11863,7 @@ function _showUserMentionPreview(e, el, username) {
       <div class="mp-header">
         <div style="position:relative;flex-shrink:0;">
           ${buildAvatarHTML(pfp, displayName, 36)}
-          <span style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${SC[status]||SC.offline};border:2px solid var(--panel);"></span>
+          <span style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(status)};border:2px solid var(--panel);"></span>
         </div>
         <div style="min-width:0;flex:1;">
           <div style="font-weight:700;font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(displayName)}</div>
@@ -11704,7 +11885,7 @@ function _showUserMentionPreview(e, el, username) {
       }).catch(()=>{});
       FortizedSocial.getStatus(username).then(st => {
         const dotEl = panel.querySelector('.mp-header span[style*="border-radius:50%"]');
-        if (dotEl) dotEl.style.background = SC[st]||SC.offline;
+        if (dotEl) dotEl.style.background = FtzStatus.color(st);
         const statusEl = panel.querySelector('.mp-body span, .mp-header span[style*="font-size:10px"]');
       }).catch(()=>{});
     }
@@ -11834,180 +12015,18 @@ function getStatusDot(status, size=10) {
 // Patch buildAvatarHTML to show status dot overlay
 function buildAvatarWithStatus(pfp, name, size, status) {
   const av = buildAvatarHTML(pfp, name, size);
-  const dot = status ? `<span style="position:absolute;bottom:0;right:0;width:${Math.max(8,Math.floor(size*0.28))}px;height:${Math.max(8,Math.floor(size*0.28))}px;border-radius:50%;background:${({online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171'}[status]||'#6b7280')};border:2px solid var(--bg);"></span>` : '';
+  const dot = status ? `<span style="position:absolute;bottom:0;right:0;width:${Math.max(8,Math.floor(size*0.28))}px;height:${Math.max(8,Math.floor(size*0.28))}px;border-radius:50%;background:${FtzStatus.color(status)};border:2px solid var(--bg);"></span>` : '';
   return `<div style="position:relative;display:inline-flex;flex-shrink:0;">${av}${dot}</div>`;
 }
 
 // ════════════════════════════════════════════════════════════
-// STATUS SYSTEM — Full Implementation
+// STATUS SYSTEM — Thin wrappers (logic lives in FtzStatus)
 // ════════════════════════════════════════════════════════════
-// Layer 1: Core Status — Online / Away / DND / Offline (+ Invisible = appear offline)
-// Layer 2: Custom Status — emoji + text with duration
-// Layer 3: Activity Status — desktop app only (placeholder)
-// ════════════════════════════════════════════════════════════
-
-let _idleTimer = null;
-const IDLE_TIMEOUT = 7 * 60 * 1000; // 7 minutes of inactivity → Away
-let _prevStatus = null; // Stores pre-idle status to restore on activity
-let _manualStatus = null; // The status the user explicitly chose (persists through auto-away)
-let _customStatusTimer = null; // Timer for auto-clearing custom status
-
-// ── Broadcast status to Firebase (visible to all users) ──
-function broadcastStatus(status) {
-  if (!CU?.username) return;
-  // If invisible, broadcast as offline but keep internal state
-  const visible = status === 'invisible' ? 'offline' : status;
-  try { firebase.database().ref('statuses/' + CU.username).set(visible).catch(()=>{}); } catch {}
-  try { FortizedSocial.setStatus(CU.username, visible); } catch {}
-}
-
-// ── Set status (called by user action) ──
-function setUserStatus(status) {
-  if (!CU?.username) return;
-  _manualStatus = status;
-  CU.status = status;
-  _prevStatus = null; // Clear any auto-away restore
-  broadcastStatus(status);
-  saveUser().catch(()=>{});
-  updateUserbar();
-  refreshCustomStatusBubble();
-  // Joyster reacts to status changes
-  if (status === 'dnd') _joysterReactTo('status_dnd');
-  else if (status === 'invisible') _joysterReactTo('status_invisible');
-  else if (status === 'away') _joysterReactTo('status_away');
-}
-
-// ── Idle / Activity Detection ──
-function resetIdleTimer() {
-  if (_idleTimer) clearTimeout(_idleTimer);
-
-  // If user was auto-set to Away, restore previous status on activity
-  if (CU?.status === 'away' && _prevStatus && _prevStatus !== 'away') {
-    CU.status = _prevStatus;
-    _prevStatus = null;
-    broadcastStatus(CU.status);
-    updateUserbar();
-  }
-
-  // DND and Invisible override auto-away entirely
-  _idleTimer = setTimeout(() => {
-    if (!CU) return;
-    if (CU.status === 'dnd' || CU.status === 'invisible') return;
-    // Save current status and switch to away
-    _prevStatus = CU.status || 'online';
-    CU.status = 'away';
-    broadcastStatus('away');
-    updateUserbar();
-  }, IDLE_TIMEOUT);
-}
-
-function initIdleDetection() {
-  // Track user interactions: typing, scrolling, clicking, mouse movement
-  ['mousemove','keydown','click','touchstart','scroll','mousedown'].forEach(ev => {
-    document.addEventListener(ev, resetIdleTimer, { passive: true });
-  });
-  resetIdleTimer();
-
-  // Tab visibility → handle session presence
-  document.addEventListener('visibilitychange', () => {
-    if (!CU?.username) return;
-    if (document.hidden) {
-      // Tab hidden: if not DND/invisible, don't immediately go offline
-      // Just let the idle timer handle it (user might have multiple tabs)
-      // But start a shorter timer for tab-hidden
-      if (_idleTimer) clearTimeout(_idleTimer);
-      if (CU.status !== 'dnd' && CU.status !== 'invisible') {
-        _idleTimer = setTimeout(() => {
-          if (!CU || CU.status === 'dnd' || CU.status === 'invisible') return;
-          _prevStatus = CU.status || 'online';
-          CU.status = 'away';
-          broadcastStatus('away');
-          updateUserbar();
-        }, 60000); // 1 minute when tab hidden
-      }
-    } else {
-      // Tab visible again: restore
-      resetIdleTimer();
-      if (CU.status === 'away' && _prevStatus) {
-        CU.status = _prevStatus;
-        _prevStatus = null;
-      }
-      broadcastStatus(CU.status);
-      updateUserbar();
-    }
-  });
-
-  // Page close → go offline
-  window.addEventListener('beforeunload', () => {
-    if (CU?.username) {
-      broadcastStatus('offline');
-      try {
-        navigator.sendBeacon && navigator.sendBeacon(
-          'https://fortized-5ffcf-default-rtdb.europe-west1.firebasedatabase.app/statuses/'+CU.username+'.json',
-          JSON.stringify(CU.status === 'invisible' ? '"offline"' : '"offline"')
-        );
-      } catch {}
-    }
-  });
-}
-
-// ── Custom Status with auto-clear duration ──
-function setCustomStatusWithDuration(emoji, text, duration) {
-  // duration: 'forever' | '30m' | '1h' | '4h' | 'today'
-  if (!text) return;
-  const cs = { emoji: emoji || '😊', text, set: new Date().toISOString() };
-  if (duration && duration !== 'forever') {
-    let ms;
-    if (duration === '30m') ms = 30 * 60000;
-    else if (duration === '1h') ms = 60 * 60000;
-    else if (duration === '4h') ms = 4 * 60 * 60000;
-    else if (duration === 'today') {
-      const now = new Date();
-      const eod = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-      ms = eod - now;
-    }
-    if (ms) {
-      cs.clearAt = new Date(Date.now() + ms).toISOString();
-      // Set auto-clear timer
-      if (_customStatusTimer) clearTimeout(_customStatusTimer);
-      _customStatusTimer = setTimeout(() => {
-        delete CU.customStatus;
-        saveUser().catch(()=>{});
-        refreshCustomStatusBubble();
-        try { FortizedSocial.setCustomStatus && FortizedSocial.setCustomStatus(CU.username, null); } catch {}
-        toast('Custom status cleared', 'info');
-      }, ms);
-    }
-  }
-  CU.customStatus = cs;
-  saveUser().catch(()=>{});
-  try { FortizedSocial.setCustomStatus && FortizedSocial.setCustomStatus(CU.username, cs); } catch {}
-  refreshCustomStatusBubble();
-  _joysterReactTo('custom_status');
-}
-
-// ── Check & restore custom status timer on load ──
-function restoreCustomStatusTimer() {
-  const cs = CU?.customStatus;
-  if (!cs?.clearAt) return;
-  const remaining = new Date(cs.clearAt) - Date.now();
-  if (remaining <= 0) {
-    // Already expired
-    delete CU.customStatus;
-    saveUser().catch(()=>{});
-    return;
-  }
-  if (_customStatusTimer) clearTimeout(_customStatusTimer);
-  _customStatusTimer = setTimeout(() => {
-    delete CU.customStatus;
-    saveUser().catch(()=>{});
-    refreshCustomStatusBubble();
-    try { FortizedSocial.setCustomStatus && FortizedSocial.setCustomStatus(CU.username, null); } catch {}
-    toast('Custom status cleared', 'info');
-  }, remaining);
-}
-
-// subscribeProfileStatus — see main implementation below (line ~9348)
+function broadcastStatus(s)          { FtzStatus.broadcast(s); }
+function setUserStatus(s)            { FtzStatus.set(s); }
+function initIdleDetection()         { FtzStatus.initIdle(); }
+function setCustomStatusWithDuration(emoji, text, dur) { FtzStatus.setCustom(emoji, text, dur); }
+function restoreCustomStatusTimer()  { FtzStatus.restoreCustomTimer(); }
 
 // ════════════════════════════════════════════
 // RADIANCE FONT SELECTOR
@@ -12522,9 +12541,7 @@ async function showDMUserPanel(username) {
   if (!u) u = { username, displayName: username };
   let status = 'offline';
   try { status = await FortizedSocial.getStatus(username); } catch {}
-  const SC = { online:'#3ecf6e', away:'#f59e0b', dnd:'#f87171', invisible:'#6b7280', offline:'#6b7280' };
-  const SL = { online:'Online', away:'Away', dnd:'Do Not Disturb', invisible:'Invisible', offline:'Offline' };
-  const sc = SC[status]||SC.offline;
+  const sc = FtzStatus.color(status);
   const hasR = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const games = u.gameCollection || u.registeredGames || [];
   const socials = u.socials || {};
@@ -12569,7 +12586,7 @@ async function showDMUserPanel(username) {
     + '<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">Status</div>'
     + '<div style="display:flex;align-items:center;gap:6px;font-size:12px;">'
     + '<span style="width:8px;height:8px;border-radius:50%;background:' + sc + ';flex-shrink:0;"></span>'
-    + escapeHTML(SL[status]||status)
+    + escapeHTML(FtzStatus.publicLabel(status))
     + '</div></div>'
     + (socialHtml ? '<div style="padding:12px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Connected</div>' + socialHtml + '</div>' : '')
     + gamesHtml
@@ -13151,12 +13168,9 @@ function openStatusPicker() {
   const cur = CU?.customStatus || {};
   const status = CU?.status || 'online';
 
-  const STATUS_MODES = [
-    { id:'online', label:'Online', color:'#3ecf6e' },
-    { id:'away',   label:'Away',   color:'#f59e0b' },
-    { id:'dnd',    label:'Do Not Disturb', color:'#f87171' },
-    { id:'invisible', label:'Invisible', color:'#6b7280' },
-  ];
+  const STATUS_MODES = ['online','away','dnd','invisible'].map(id => ({
+    id, label: FtzStatus.label(id), color: FtzStatus.color(id),
+  }));
 
   const overlay = document.createElement('div');
   overlay.className = 'status-picker-modal';
@@ -13195,7 +13209,7 @@ function openStatusPicker() {
 
       <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Clear After</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
-        ${[{id:'30m',label:'30 min'},{id:'1h',label:'1 hour'},{id:'4h',label:'4 hours'},{id:'today',label:'Today'},{id:'forever',label:"Don't Clear"}].map(d=>
+        ${FtzStatus.CUSTOM_DURATIONS.map(d=>
           `<button class="status-dur-btn" data-dur="${d.id}" onclick="document.querySelectorAll('.status-dur-btn').forEach(b=>{b.style.background='transparent';b.style.borderColor='var(--border)';b.style.color='rgba(255,255,255,.5)'});this.style.background='rgba(254,248,61,.08)';this.style.borderColor='rgba(254,248,61,.25)';this.style.color='var(--accent)'" style="padding:7px 14px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;">${d.label}</button>`
         ).join('')}
       </div>
@@ -13220,8 +13234,7 @@ function pickStatusMode(mode, el) {
     if (span) span.style.color = isSel ? '#fff' : 'rgba(255,255,255,.6)';
   });
   setUserStatus(mode);
-  const labels = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible'};
-  toast(`Status: ${labels[mode]||mode}`, 'info');
+  toast(`Status: ${FtzStatus.label(mode)}`, 'info');
 }
 
 
@@ -13280,11 +13293,8 @@ async function saveCustomStatus() {
 }
 
 async function clearCustomStatus() {
-  delete CU.customStatus;
-  await saveUser();
-  try { await FortizedSocial.setCustomStatus&&FortizedSocial.setCustomStatus(CU.username, null); } catch {}
-  document.getElementById('ftz-status-picker')&&document.getElementById('ftz-status-picker').remove();
-  refreshCustomStatusBubble();
+  FtzStatus.clearCustom();
+  document.getElementById('ftz-status-picker')?.remove();
   buildProfileView('myprofile');
   toast('Status cleared','info');
 }
@@ -14160,13 +14170,10 @@ function subscribeProfileStatus(username) {
   const ref = firebase.database().ref('statuses/'+username);
   const ref2 = firebase.database().ref('users/'+username+'/customStatus');
   const ref3 = firebase.database().ref('users/'+username+'/status');
-  const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
-  const SL = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible',offline:'Offline'};
   const handler = ref.on('value', snap => {
-    const st = snap.val()||'offline';
-    // Update dots in profile card
-    document.querySelectorAll('.profile-status-dot[data-for="'+username+'"]').forEach(el=>{el.style.background=SC[st]||SC.offline;});
-    document.querySelectorAll('.profile-status-label[data-for="'+username+'"]').forEach(el=>{el.textContent=SL[st]||'Offline';});
+    const st = FtzStatus.sanitize(snap.val()||'offline');
+    document.querySelectorAll('.profile-status-dot[data-for="'+username+'"]').forEach(el=>{el.style.background=FtzStatus.color(st);});
+    document.querySelectorAll('.profile-status-label[data-for="'+username+'"]').forEach(el=>{el.textContent=FtzStatus.publicLabel(st);});
   });
   const handler2 = ref2.on('value', snap => {
     const cs = snap.val();
@@ -15538,17 +15545,13 @@ async function loadFriendActivity() {
       } catch { return { username:f, displayName:f, pfp:null, status:'offline', game:null }; }
     }));
     if (!feedEl) return;
-    const online = statuses.filter(s=>s.status==='online'||s.status==='away'||s.status==='dnd');
-    const offline = statuses.filter(s=>s.status!=='online'&&s.status!=='away'&&s.status!=='dnd');
-    const colMap = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',offline:'#6b7280',invisible:'#6b7280'};
+    const online = statuses.filter(s => FtzStatus.isPresent(s.status));
+    const offline = statuses.filter(s => !FtzStatus.isPresent(s.status));
     const render = (s) => {
-      const col = colMap[s.status]||'#6b7280';
+      const col = FtzStatus.color(s.status);
       const activity = s.game ? `Playing <strong>${escapeHTML(s.game.name)}</strong>` :
         s.customStatus?.text ? `<span style="color:var(--muted-light);">${escapeHTML(s.customStatus.emoji||'')} ${escapeHTML(s.customStatus.text)}</span>` :
-        s.status==='online' ? '<span style="color:#3ecf6e;">Online</span>' :
-        s.status==='away' ? '<span style="color:#f59e0b;">Away</span>' :
-        s.status==='dnd' ? '<span style="color:#f87171;">Do Not Disturb</span>' :
-        '<span style="color:var(--muted);">Offline</span>';
+        `<span style="color:${col};">${FtzStatus.publicLabel(s.status)}</span>`;
       return `<div class="activity-item" onclick="openDMView('${escapeHTML(s.username)}')">
         <div class="act-icon" style="position:relative;border-radius:50%;">
           ${buildAvatarHTML(s.pfp, s.displayName, 38)}
@@ -17097,9 +17100,7 @@ async function showMiniProfilePreview(username, anchorEl) {
   if (username === CU?.username) { u = { ...u, ...CU }; status = CU.status || 'online'; }
   subscribeProfileStatus(username);
 
-  const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
-  const SL = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible',offline:'Offline'};
-  const sc = SC[status]||'#6b7280';
+  const sc = FtzStatus.color(status);
   const isOwn = username === CU?.username;
   const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
   const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
@@ -17132,7 +17133,7 @@ async function showMiniProfilePreview(username, anchorEl) {
       <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">@${escapeHTML(u.username)}</div>
       <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
         <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="width:8px;height:8px;border-radius:50%;background:${sc};"></span>
-        <span class="profile-status-label" data-for="${escapeHTML(username)}" style="font-size:12px;color:rgba(255,255,255,.5);">${SL[status]||'Offline'}</span>
+        <span class="profile-status-label" data-for="${escapeHTML(username)}" style="font-size:12px;color:rgba(255,255,255,.5);">${FtzStatus.publicLabel(status)}</span>
         ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:inline-flex;align-items:center;gap:3px;padding:1px 7px;background:rgba(255,255,255,.06);border-radius:100px;font-size:11px;color:rgba(255,255,255,.45);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:none;"></span>`}
       </div>
     </div>

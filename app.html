@@ -2221,8 +2221,13 @@ async function _syncBastionToGlobal(bastionIdx) {
   try {
     const b = CU?.bastions?.[bastionIdx];
     if (!b) return;
-    const bid = b.globalId || b.name;
-    if (!bid) return;
+    // Ensure bastion always has a unique globalId
+    if (!b.globalId) {
+      b.globalId = (b.owner || CU.username) + '_' + Date.now();
+      await saveUser();
+      await FortizedSocial.addBastionMember(b.globalId, CU.username);
+    }
+    const bid = b.globalId;
     const globalData = {...b, id: bid, owner: b.owner || CU.username, memberCount: b.memberCount || 1};
     delete globalData.globalId; // avoid nesting
     await FortizedSocial.saveGlobalBastion(bid, globalData);
@@ -5397,7 +5402,7 @@ function _renderDiscoverFeatured(bastions){
   el.innerHTML=`<div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--muted-light);margin-bottom:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Featured</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
   ${featured.map(b=>{
-    const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id||ub.name===b.name);
+    const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
     return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(62,207,110,.03),rgba(18,22,34,.95));border:1.5px solid rgba(255,249,62,.15);border-radius:18px;padding:18px 20px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(255,249,62,.08)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
       <div style="width:50px;height:50px;border-radius:14px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;border:1px solid rgba(255,249,62,.12);">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:(b.emblem||'🏰')}</div>
       <div style="flex:1;min-width:0;"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:3px;">${escapeHTML(b.name)}</div><div style="font-size:11.5px;color:var(--muted-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML((b.desc||'A community bastion').slice(0,60))}</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px;">${b.memberCount||1} members</div></div>
@@ -5411,7 +5416,7 @@ function renderDiscoverGrid(bastions){
   const filtered=bastions.filter(b=>b.public!==false&&(discoverTab==='all'||(b.category||'').toLowerCase()===discoverTab));
   if(!filtered.length){grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;"><div style="font-size:40px;margin-bottom:12px;opacity:.4;">🔍</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--muted-light);margin-bottom:6px;">No bastions found</div><div style="font-size:13px;color:var(--muted);">Try a different category or search term</div></div>`;return;}
   grid.innerHTML=filtered.map(b=>{
-    const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id||ub.name===b.name);
+    const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
     const cat=(b.category||'').toLowerCase();
     return `<div class="bc" onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">
       <div class="bc-banner">${b.icon?`<img src="${b.icon}" alt="">`:`<span style="position:relative;z-index:1;">${b.emblem||'🏰'}</span>`}</div>
@@ -5438,28 +5443,32 @@ function setDiscoverTab(tab,btn){discoverTab=tab;document.querySelectorAll('.dis
 async function promptJoinPublicBastion(bastionId){
   try{
     const all=await FortizedSocial.getGlobalBastions()||{};
-    // Match by id, name, globalId, or case-insensitive name
-    const bid = (bastionId||'').trim().toLowerCase();
-    let b=Object.values(all).find(x=>
-      x.id===bastionId || x.name===bastionId ||
-      (x.id||'').toLowerCase()===bid || (x.name||'').toLowerCase()===bid
-    );
+    const bid = (bastionId||'').trim();
+    const bidLower = bid.toLowerCase();
+    // Priority 1: Exact ID match (most reliable)
+    let b = Object.values(all).find(x => x.id === bid);
+    // Priority 2: Case-insensitive ID match
+    if (!b) b = Object.values(all).find(x => (x.id||'').toLowerCase() === bidLower);
+    // Priority 3: Name match (only as last resort for direct name lookups)
+    if (!b) b = Object.values(all).find(x => (x.name||'').toLowerCase() === bidLower);
     // Fallback: try searching user bastions if not in global
     if(!b){
       try{
         const users=await FortizedSocial.getUsers();
         for(const u of users){
-          const found=(u.bastions||[]).find(ub=>(ub.globalId||'').toLowerCase()===bid||(ub.name||'').toLowerCase()===bid);
+          // Prefer globalId match over name match
+          const found=(u.bastions||[]).find(ub=>(ub.globalId||'').toLowerCase()===bidLower) ||
+                      (u.bastions||[]).find(ub=>(ub.name||'').toLowerCase()===bidLower);
           if(found){b={...found,id:found.globalId||found.name,owner:found.owner||u.username};break;}
         }
       }catch{}
     }
     if(!b){toast('Bastion not found. Try the exact name or use an invite link.','error');return;}
-    const already=(CU.bastions||[]).some(ub=>ub.globalId===b.id||ub.globalId===b.globalId||ub.name===b.name);
-    if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=>ub.globalId===b.id||ub.globalId===b.globalId||ub.name===b.name));return;}
+    const gid=b.id||b.globalId;
+    const already=(CU.bastions||[]).some(ub=> (gid && ub.globalId===gid) || (gid && ub.globalId===(b.globalId||b.id)));
+    if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=> (gid && ub.globalId===gid)));return;}
     if(b.public===false){toast('This bastion is invite-only. Ask the owner for an invite link.','error');return;}
     if((b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
-    const gid=b.id||b.globalId||b.name;
     const localB={name:b.name,emblem:b.emblem||'🏰',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,memberRoles:{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[]};
     CU.bastions=[...(CU.bastions||[]),localB];
     await saveUser();
@@ -5568,6 +5577,16 @@ function updateDOBField(){
   if (!CU.friends)CU.friends=[];
   if (CU.onyx===undefined)CU.onyx=0;
   notifSettings=CU.notifSettings||notifSettings;
+
+  // Migrate: ensure all bastions have unique globalIds
+  let _needsSave = false;
+  for (const b of CU.bastions) {
+    if (!b.globalId) {
+      b.globalId = (b.owner || CU.username) + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,5);
+      _needsSave = true;
+    }
+  }
+  if (_needsSave) { try { await FortizedSocial.saveUserObject(CU); } catch {} }
 
   // Hide loading screen immediately once user data is ready
   const loader=document.getElementById('app-loading');
@@ -6034,7 +6053,7 @@ async function joinBastionByCode() {
   try {
     const inviteData = await FortizedSocial.getInvite(code);
     if (inviteData && inviteData.bastionId) {
-      await promptJoinPublicBastion(inviteData.bastionId);
+      await joinBastionById(inviteData.bastionId, true);
       closeModal('modal-join-bastion');
       return;
     }
@@ -6043,18 +6062,18 @@ async function joinBastionByCode() {
   // Strategy 2: Search global bastions for invite code
   const allBastions = await FortizedSocial.getGlobalBastions().catch(()=>({})) || {};
   let foundByInvite = null;
-  for (const b of Object.values(allBastions)) {
-    if ((b.invites||[]).find(inv=>inv.code===code)) { foundByInvite=b; break; }
+  for (const [key, b] of Object.entries(allBastions)) {
+    if ((b.invites||[]).find(inv=>inv.code===code)) { foundByInvite = b; if (!foundByInvite.id) foundByInvite.id = key; break; }
   }
   if (foundByInvite) {
     try {
-      await promptJoinPublicBastion(foundByInvite.id || foundByInvite.name);
+      await joinBastionById(foundByInvite.id, true);
       closeModal('modal-join-bastion');
     } catch(e) { if(err)err.textContent='Failed to join bastion'; }
     return;
   }
 
-  // Strategy 3: Try as bastion name or id
+  // Strategy 3: Try as bastion name or id (no invite — public only)
   try {
     await promptJoinPublicBastion(code);
     closeModal('modal-join-bastion');
@@ -6668,12 +6687,14 @@ async function setBastionVis(isPublic) {
   document.querySelectorAll('#bsettings-wrap .vis-opt').forEach((el,i) => el.classList.toggle('active', i===(isPublic?0:1)));
   const sec = document.getElementById('app-form-section');
   if (sec) sec.style.display = isPublic ? '' : 'none';
-  // Persist immediately
+  // Ensure bastion has a globalId before syncing
+  if (!b.globalId) {
+    b.globalId = CU.username + '_' + Date.now();
+    await FortizedSocial.addBastionMember(b.globalId, CU.username);
+  }
   await saveUser();
-  try {
-    const bid = b.globalId || b.name;
-    await firebase.database().ref('globalBastions/'+bid).update({public: isPublic});
-  } catch {}
+  // Sync full bastion data (including visibility) to global
+  _syncBastionToGlobal(curBastion);
   toast(isPublic ? 'Bastion is now Public 🌍' : 'Bastion is now Private 🔒', 'success');
 }
 function addAppQuestion() {
@@ -6703,7 +6724,7 @@ async function saveAppQuestions() {
     if (b.applicationQuestions) b.applicationQuestions[i] = el.value.trim();
   });
   await saveUser();
-  try { await FortizedSocial.updateBastionSettings?.(b.globalId||b.name, {applicationQuestions: b.applicationQuestions}); } catch {}
+  try { if (b.globalId) await FortizedSocial.updateBastionSettings?.(b.globalId, {applicationQuestions: b.applicationQuestions}); } catch {}
   toast('Application form saved!', 'success');
 }
 async function updateBastionIcon(e) {
@@ -6767,8 +6788,13 @@ async function generateInvite() {
   if(expiryHours)invite.expires=new Date(Date.now()+expiryHours*3600000).toISOString();
   if(maxUses)invite.maxUses=maxUses;
   b.invites = [...(b.invites||[]), invite];
+  // Ensure bastion has a globalId before generating invite links
+  if (!b.globalId) {
+    b.globalId = CU.username + '_' + Date.now();
+    await FortizedSocial.addBastionMember(b.globalId, CU.username);
+  }
+  const bid = b.globalId;
   await saveUser();
-  const bid = b.globalId || b.name;
   try {
     // Sync invites to globalBastions
     await firebase.database().ref('globalBastions/'+bid+'/invites').set(b.invites);
@@ -10514,13 +10540,44 @@ async function acceptBastionInvite(btn, bastionId, inviteCode) {
   btn.disabled = true;
   btn.textContent = 'Joining…';
   try {
-    await promptJoinPublicBastion(bastionId);
+    // Use invite-aware join that bypasses the public-only check
+    await joinBastionById(bastionId, true);
     // Increment invite uses
     if (inviteCode) {
       try { await FortizedSocial.incrementInviteUses(inviteCode); } catch {}
     }
     document.getElementById('invite-dialog-overlay')?.remove();
   } catch { btn.disabled = false; btn.textContent = 'Accept'; toast('Failed to join','error'); }
+}
+// Join a bastion by ID. If hasInvite=true, skip the public-only check.
+async function joinBastionById(bastionId, hasInvite) {
+  const all=await FortizedSocial.getGlobalBastions()||{};
+  const bid = (bastionId||'').trim();
+  const bidLower = bid.toLowerCase();
+  // Priority 1: Exact ID match
+  let b = Object.values(all).find(x => x.id === bid);
+  // Priority 2: Case-insensitive ID match
+  if (!b) b = Object.values(all).find(x => (x.id||'').toLowerCase() === bidLower);
+  // Priority 3: Name match as last resort
+  if (!b) b = Object.values(all).find(x => (x.name||'').toLowerCase() === bidLower);
+  if(!b){toast('Bastion not found.','error');return;}
+  const gid = b.id || b.globalId;
+  const already=(CU.bastions||[]).some(ub=> gid && ub.globalId===gid);
+  if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=> gid && ub.globalId===gid));return;}
+  if(!hasInvite && b.public===false){toast('This bastion is invite-only.','error');return;}
+  if(!hasInvite && (b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
+  const localB={name:b.name,emblem:b.emblem||'🏰',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,memberRoles:{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[]};
+  CU.bastions=[...(CU.bastions||[]),localB];
+  await saveUser();
+  await FortizedSocial.addBastionMember(gid,CU.username);
+  try{const members=await FortizedSocial.getBastionMembers(gid)||[];await firebase.database().ref('globalBastions/'+gid+'/memberCount').set(members.length);}catch{}
+  renderRailBastions();
+  toast('Joined '+b.name+'!','success');
+  openBastion(CU.bastions.length-1);
+  const wName = CU.displayName||CU.username;
+  const wMsg = '**'+wName+'** joined the bastion. Welcome!';
+  const wCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
+  try { await FortizedSocial.sendBastionChannelMessage(gid, wCh.name, '__system__', wMsg); } catch {}
 }
 
 // ════════════════════════════════════════════
@@ -15459,21 +15516,29 @@ async function joinByInvite(code) {
       const inviteData = await FortizedSocial.getInvite(code);
       if (inviteData && inviteData.bastionId) {
         const b = await FortizedSocial.getGlobalBastion(inviteData.bastionId);
-        if (b) { foundBastion = b; inviterName = inviteData.createdBy || b.owner; }
+        if (b) {
+          foundBastion = b;
+          // Ensure the bastion has correct id from the invite data
+          if (!foundBastion.id) foundBastion.id = inviteData.bastionId;
+          inviterName = inviteData.createdBy || b.owner;
+        }
       }
     } catch {}
 
     // Strategy 2: Search all global bastions for matching invite code
     if (!foundBastion) {
       const allBastions = await FortizedSocial.getGlobalBastions() || {};
-      for (const b of Object.values(allBastions)) {
+      for (const [key, b] of Object.entries(allBastions)) {
         const invites = b.invites || [];
         const found = invites.find(inv => inv.code === code);
         if (found) {
           // Check expiry
           if (found.expires && new Date(found.expires) < new Date()) continue;
           if (found.maxUses && (found.uses||0) >= found.maxUses) continue;
-          foundBastion = b; inviterName = found.createdBy || b.owner; break;
+          foundBastion = b;
+          // Use the Firebase key as the authoritative ID
+          if (!foundBastion.id) foundBastion.id = key;
+          inviterName = found.createdBy || b.owner; break;
         }
       }
     }
@@ -15485,11 +15550,16 @@ async function joinByInvite(code) {
         for (const b of (user.bastions||[])) {
           const found = (b.invites||[]).find(inv => inv.code === code);
           if (found) {
-            foundBastion = b;
-            foundBastion.id = foundBastion.id || foundBastion.globalId || b.name;
+            foundBastion = {...b};
+            // Ensure a proper globalId exists
+            if (!foundBastion.globalId && !foundBastion.id) {
+              foundBastion.id = (b.owner || user.username) + '_' + Date.now();
+            } else {
+              foundBastion.id = foundBastion.globalId || foundBastion.id;
+            }
             inviterName = found.createdBy || b.owner;
             // Sync this bastion to global so it's discoverable in future
-            try { await FortizedSocial.saveGlobalBastion(foundBastion.globalId || foundBastion.id || (b.owner+'_'+b.name), foundBastion); } catch {}
+            try { await FortizedSocial.saveGlobalBastion(foundBastion.id, {...foundBastion, id: foundBastion.id}); } catch {}
             break;
           }
         }
@@ -15498,7 +15568,8 @@ async function joinByInvite(code) {
     }
 
     if (!foundBastion) { toast('Invite link is invalid or expired', 'error'); return; }
-    const already = (CU.bastions||[]).some(ub => ub.globalId === foundBastion.id || ub.globalId === foundBastion.globalId || ub.name === foundBastion.name);
+    const gid = foundBastion.id || foundBastion.globalId;
+    const already = (CU.bastions||[]).some(ub => gid && ub.globalId === gid);
     if (already) { toast("You're already in " + foundBastion.name, 'info'); return; }
     showBastionInviteDialog(foundBastion, inviterName || 'Someone', code);
   } catch(e) {

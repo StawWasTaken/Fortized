@@ -147,8 +147,8 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
   <!-- Brand -->
   <div class="auth-brand">
-    <a href="index.html" class="auth-brand-logo">
-      <img src="Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
+    <a href="/" class="auth-brand-logo">
+      <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
       <span>Fortized</span>
     </a>
     <div class="auth-tagline">The fortress awaits your return.</div>
@@ -199,7 +199,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
       <div class="auth-divider">or</div>
 
-      <div class="auth-footer">Don't have an account? <a href="signup.html">Create one free</a></div>
+      <div class="auth-footer">Don't have an account? <a href="/signup">Create one free</a></div>
     </div>
   </div>
 
@@ -216,7 +216,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="FortizedSocial-firebase.js"></script>
+<script src="/FortizedSocial-firebase.js"></script>
 <script>
 const loginBtn        = document.getElementById('loginBtn');
 const identifierInput = document.getElementById('identifier');
@@ -226,7 +226,7 @@ const authCard        = document.getElementById('authCard');
 
 // Already logged in → go straight to app
 const existing = localStorage.getItem('ftz_current') || localStorage.getItem('fortized_current_user');
-if (existing) window.location.href = 'app.html';
+if (existing) window.location.href = '/app';
 
 // Password visibility toggle
 const togglePw = document.getElementById('togglePw');
@@ -269,7 +269,7 @@ async function doLogin() {
       localStorage.setItem('ftz_user_' + user.username, JSON.stringify(user));
     }
 
-    window.location.href = 'app.html';
+    window.location.href = '/app';
 
   } catch (err) {
     console.error('Login error:', err);

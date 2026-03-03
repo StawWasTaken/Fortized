@@ -178,8 +178,8 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
   <!-- Brand -->
   <div class="auth-brand">
-    <a href="index.html" class="auth-brand-logo">
-      <img src="Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
+    <a href="/" class="auth-brand-logo">
+      <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
       <span>Fortized</span>
     </a>
     <div class="auth-tagline">Build your fortress. Start your legacy.</div>
@@ -272,7 +272,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
           </svg>
         </div>
         <div class="agree-text">
-          By creating an account you agree to our <a href="terms.html" target="_blank" onclick="event.stopPropagation()">Terms of Service</a> and <a href="privacy.html" target="_blank" onclick="event.stopPropagation()">Privacy Policy</a>.
+          By creating an account you agree to our <a href="/terms" target="_blank" onclick="event.stopPropagation()">Terms of Service</a> and <a href="/privacy" target="_blank" onclick="event.stopPropagation()">Privacy Policy</a>.
         </div>
       </label>
 
@@ -283,7 +283,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         <span class="btn-label">Create Account</span>
       </button>
 
-      <div class="auth-footer">Already have an account? <a href="login.html">Sign in</a></div>
+      <div class="auth-footer">Already have an account? <a href="/login">Sign in</a></div>
     </div>
   </div>
 
@@ -298,7 +298,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="FortizedSocial-firebase.js"></script>
+<script src="/FortizedSocial-firebase.js"></script>
 <script>
 const signupBtn     = document.getElementById('signupBtn');
 const emailInput    = document.getElementById('email');
@@ -404,7 +404,7 @@ async function doSignup() {
       localStorage.setItem('ftz_current', u.username);
       localStorage.setItem('fortized_current_user', u.username);
       localStorage.setItem('ftz_user_' + u.username, JSON.stringify(u));
-      window.location.href = 'app.html';
+      window.location.href = '/app';
     }
 
     const file = pfpInput.files[0];

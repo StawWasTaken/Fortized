@@ -522,7 +522,9 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   .footer-links { justify-content: center; flex-wrap: wrap; }
   #article-view { padding: 36px 24px 80px; }
 }
+img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
 </style>
+<script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -893,5 +895,6 @@ renderPostGrid();
   if (id && ARTICLES[id]) { renderArticle(id); history.replaceState({ articleId: id }, '', window.location.href); }
 })();
 </script>
+<script>if (typeof twemoji !== 'undefined') { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); }</script>
 </body>
 </html>

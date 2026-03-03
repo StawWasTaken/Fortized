@@ -1285,8 +1285,10 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 
 .msg-text.emoji-only img{width:1.4em!important;height:1.4em!important;}
 .msg-text.emoji-only{font-size:20px!important;line-height:1.4;}
+img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
 </style>
 <style id="radiance-font-style"></style>
+<script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 <body>
 <!-- APP LOADING -->
 <div class="app-loading" id="app-loading">
@@ -17808,5 +17810,16 @@ async function _ensureJoysterAccount() {
     <img src="Joyster.png" alt="Joyster" onerror="this.src='Fortized icon.png'">
   </div>
 </div>
+<script>
+if (typeof twemoji !== 'undefined') {
+  twemoji.parse(document.body, { folder: 'svg', ext: '.svg' });
+  const _twemojiObs = new MutationObserver(muts => {
+    muts.forEach(m => m.addedNodes.forEach(n => {
+      if (n.nodeType === 1) twemoji.parse(n, { folder: 'svg', ext: '.svg' });
+    }));
+  });
+  _twemojiObs.observe(document.body, { childList: true, subtree: true });
+}
+</script>
 </body>
 </html>

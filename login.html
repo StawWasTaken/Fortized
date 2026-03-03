@@ -125,7 +125,9 @@ body{background:var(--bg);font-family:var(--font-body);color:white;overflow-x:hi
   .auth-status{flex-direction:column;gap:8px;}
   .status-sep{display:none;}
 }
+img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
 </style>
+<script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -281,5 +283,6 @@ function setLoading(on) {
   loginBtn.classList.toggle('loading', on);
 }
 </script>
+<script>if (typeof twemoji !== 'undefined') { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); }</script>
 </body>
 </html>

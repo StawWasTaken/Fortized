@@ -22,11 +22,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* ── Sidebar (vertical, left) ─────────────────────── */
 .sidebar{width:210px;min-width:210px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:68px;}
 .sidebar-logo{width:100%;padding:18px 16px 12px;display:flex;align-items:center;gap:12px;cursor:pointer;flex-shrink:0;}
-.sidebar-logo-icon{width:42px;height:42px;border-radius:16px;background:var(--accent);display:flex;align-items:center;justify-content:center;transition:border-radius .25s cubic-bezier(.22,1,.36,1),transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s;flex-shrink:0;}
-.sidebar-logo:hover .sidebar-logo-icon{border-radius:18px;transform:scale(1.08);box-shadow:0 4px 20px rgba(255,249,62,.2);}
-.sidebar-logo-icon img{width:24px;height:24px;object-fit:contain;}
+.sidebar-logo-icon{width:36px;height:36px;border-radius:10px;background:transparent;display:flex;align-items:center;justify-content:center;transition:transform .2s cubic-bezier(.22,1,.36,1),filter .2s;flex-shrink:0;}
+.sidebar-logo:hover .sidebar-logo-icon{transform:scale(1.08);filter:drop-shadow(0 4px 12px rgba(255,249,62,.25));}
+.sidebar-logo-icon img{width:36px;height:36px;object-fit:contain;border-radius:10px;}
 .sidebar-logo-text{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;letter-spacing:.02em;color:#fff;}
-.sidebar-logo.active .sidebar-logo-icon{box-shadow:0 0 0 2px var(--accent),0 4px 20px rgba(255,249,62,.15);}
+.sidebar-logo.active .sidebar-logo-icon{filter:drop-shadow(0 0 8px rgba(255,249,62,.3));}
 .sidebar-nav{padding:8px 10px;display:flex;flex-direction:column;gap:2px;flex-shrink:0;}
 .rail-sep{height:1px;background:rgba(255,255,255,.06);margin:8px 12px;flex-shrink:0;border-radius:1px;}
 .rail-btn{height:42px;border-radius:14px;background:transparent;display:flex;align-items:center;gap:12px;padding:0 14px;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);position:relative;flex-shrink:0;font-size:13.5px;font-weight:600;color:rgba(255,255,255,.45);}
@@ -315,6 +315,18 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .joyster-bubble.show{animation:joysterBubblePulse 3s ease-in-out infinite;}
 /* Knight background ghost */
 .hero-knight-bg{position:absolute;right:-30px;bottom:-20px;height:280px;opacity:.04;filter:blur(2px) grayscale(.5);pointer-events:none;z-index:0;}
+/* ── Ambient glow — makes the platform feel alive ── */
+@keyframes ambientPulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+@keyframes subtleFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+.rail-btn.active .rb-icon{animation:subtleFloat 3s ease-in-out infinite;}
+.btn-a{position:relative;overflow:hidden;}
+.btn-a::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);transform:translateX(-100%);transition:none;}
+.btn-a:hover::after{animation:btnShimmer .6s ease forwards;}
+@keyframes btnShimmer{to{transform:translateX(100%);}}
+.empty-state .ei{animation:subtleFloat 4s ease-in-out infinite;}
+/* Warm greeting wave animation */
+@keyframes wave{0%,100%{transform:rotate(0);}25%{transform:rotate(20deg);}75%{transform:rotate(-10deg);}}
+.hero-greeting .wave-emoji{display:inline-block;animation:wave 2s ease-in-out 1;}
 
 /* ── STAT STRIP 2.0 ──────────────────────────────── */
 .home-stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 28px;flex-shrink:0;}
@@ -1339,8 +1351,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
             <div class="hero-sparkles" id="hero-sparkles"></div>
             <!-- Left content -->
             <div class="hero-left-content">
-              <div class="hero-greeting">Hey, <span id="hero-username" style="color:var(--accent);font-weight:700;margin:0 4px;"></span> <span style="font-size:18px;">👋</span> Welcome back!</div>
-              <h1>What's happening<br>in your <em>world</em>?</h1>
+              <div class="hero-greeting">Hey, <span id="hero-username" style="color:var(--accent);font-weight:700;margin:0 4px;"></span> <span class="wave-emoji" style="font-size:18px;">👋</span> Welcome back!</div>
+              <h1>Build Your<br><em>Fortress</em></h1>
               <div class="home-hero-actions">
                 <button class="hero-btn hero-btn-primary" onclick="showView('discover')" onmouseenter="_joysterReact('wink')" onmouseleave="_joysterReact('idle')">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
@@ -1429,24 +1441,20 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
       <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
         <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
           <div style="max-width:750px;">
-            <!-- DM Hero Header -->
-            <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:24px;border:1.5px solid rgba(96,165,250,.1);background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));">
-              <div style="position:relative;height:140px;overflow:hidden;">
-                <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(167,139,250,.06),rgba(18,22,40,.9));"></div>
-                <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 30%,rgba(96,165,250,.12),transparent 60%);pointer-events:none;"></div>
-                <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(7,9,14,.95) 100%);"></div>
-              </div>
-              <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 28px 22px;display:flex;align-items:flex-end;justify-content:space-between;">
-                <div style="display:flex;align-items:center;gap:14px;">
-                  <div style="width:44px;height:44px;border-radius:14px;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.2);display:flex;align-items:center;justify-content:center;">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                  </div>
-                  <div>
-                    <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;line-height:1;">Direct Messages</div>
-                    <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Chat with your friends privately</div>
-                  </div>
+            <!-- DM Hero Header — Clean & modern -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+              <div style="display:flex;align-items:center;gap:14px;">
+                <div style="width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(167,139,250,.1));border:1px solid rgba(96,165,250,.2);display:flex;align-items:center;justify-content:center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                 </div>
-                <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 18px;border-radius:12px;">+ Add Friend</button>
+                <div>
+                  <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;line-height:1.1;">Messages</div>
+                  <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:3px;">Your conversations</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn-g" onclick="openModal('modal-new-dm')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> New Chat</button>
+                <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;">+ Add Friend</button>
               </div>
             </div>
             <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
@@ -1496,7 +1504,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
       <div class="discover-scroll">
         <!-- Hero with banner image -->
         <div class="disc-hero" style="padding:0;overflow:hidden;position:relative;border-radius:24px;margin-bottom:30px;border:1.5px solid rgba(254,248,61,.1);">
-          <div style="position:relative;height:200px;overflow:hidden;">
+          <div style="position:relative;height:260px;overflow:hidden;">
             <img src="Fortized banner2.png" style="width:100%;height:100%;object-fit:cover;filter:brightness(.55) saturate(1.1);" onerror="this.style.display='none'">
             <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,9,14,0) 0%,rgba(7,9,14,.7) 50%,rgba(7,9,14,.95) 100%);"></div>
             <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(254,248,61,.08),transparent 55%);pointer-events:none;"></div>
@@ -1542,7 +1550,6 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
               <div style="width:32px;height:32px;border-radius:10px;background:rgba(254,248,61,.1);border:1px solid rgba(254,248,61,.15);display:flex;align-items:center;justify-content:center;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg>
               </div>
-              <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">Atelier</div>
             </div>
           </div>
           <div class="atelier-nav-scroll">
@@ -2334,7 +2341,7 @@ function updateTopbar(v) {
   if (!title) return;
   if (sep) sep.style.display = 'none';
   if (desc) desc.textContent = '';
-  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'Settings',bsettings:'Bastion Settings',bastion:'Bastions'};
+  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'',profile:'',bsettings:'Bastion Settings',bastion:'Bastions'};
   if (labels[v]) title.textContent = labels[v];
   updateOnyxDisplay();
 }
@@ -2367,13 +2374,11 @@ function updateSidebar(v) {
     renderDMSidebar(scroll);
     if (v==='friends') { setTimeout(() => renderFriendsList('all'), 0); }
   } else if (v==='discover') {
-    if (hdr) hdr.style.display = '';
-    if (hdrTitle) hdrTitle.textContent = 'Discover';
-    scroll.innerHTML = `<div class="ch-item active">🌍 Public Bastions</div><div class="ch-item" onclick="openModal('modal-join-bastion')">🔗 Join by Code</div><div class="ch-item" onclick="openModal('modal-create-bastion')">✨ Create Bastion</div>`;
+    if (hdr) hdr.style.display = 'none';
+    scroll.innerHTML = `<div class="ch-item active" style="margin-top:10px;">🌍 Public Bastions</div><div class="ch-item" onclick="openModal('modal-join-bastion')">🔗 Join by Code</div><div class="ch-item" onclick="openModal('modal-create-bastion')">✨ Create Bastion</div>`;
     loadDiscover();
   } else if (v==='atelier') {
-    if (hdr) hdr.style.display = '';
-    if (hdrTitle) hdrTitle.textContent = 'Atelier';
+    if (hdr) hdr.style.display = 'none';
     const ab = document.getElementById('atelier-balance');
     if (ab) ab.textContent = CU?.onyx||0;
     const db = document.getElementById('daily-btn');
@@ -2729,37 +2734,38 @@ function _incJoysterDailyCount() {
   localStorage.setItem('joyster_daily', JSON.stringify({date:today, count}));
 }
 
-// Joyster is a playful jester — cheeky, laughing, smirking
+// Joyster is a playful, arrogant jester — cheeky, laughing at everything, makes terrible jokes
 const JOYSTER_QUIPS = [
   "Ahahaha! Don't just stand there!",
   "Psst... boost your Bastion already!",
-  "Don't make me laugh! ...too late!",
+  "Don't make me laugh! ...too late! BAHAHAHA!",
   "Hehehehe~ try the Party Rooms!",
-  "You look confused. I love it.",
+  "You look confused. I LOVE it. Ahahaha!",
   "Collect Onyx or I'll collect yours!",
   "Invite friends! More chaos = more fun!",
-  "Explore stuff! I dare you!",
-  "Customize your profile... or don't. I'll judge you either way.",
-  "Ahahaha! You're still reading these?",
+  "Explore stuff! I dare you. DO IT!",
+  "Customize your profile... or don't. I'll judge you either way. Hehe.",
+  "Ahahaha! You're STILL reading these? Get a life! ...just kidding, I AM your life.",
   "I'm watching you~ hehehehe!",
-  "Click me. I dare you. Do it.",
-  "Come on... boost your Bastion already! Oh yeah, you broke. Haha!",
-  "You've been staring at the home page for a while... everything okay?",
-  "Fun fact: I can see your screen. Just kidding. ...or am I?",
-  "Go touch some grass! ...kidding, stay here forever.",
-  "Your Bastion could use some love. And channels. And members. And—",
+  "Click me. I dare you. Click. Me.",
+  "Come on... boost your Bastion already! Oh wait, you broke. AHAHAHA!",
+  "You've been staring at the home page for a while... HELLO?!",
+  "I can see your screen. Just kidding. ...or am I? HEHEHEHE!",
+  "Go touch some grass! ...kidding, stay here with me forever.",
+  "Your Bastion could use some love. And channels. And members. And— oh forget it!",
   "I bet you haven't changed your status in weeks. Prove me wrong!",
-  "Did you know you can react with emojis? Try it! React to EVERYTHING!",
-  "You should DM someone. Anyone. Even yourself. Wait, can you do that?",
-  "Ahahaha! I just told the BEST joke and you missed it!",
-  "Pro tip: the Atelier has shiny things. Shiny. Things.",
-  "If you're reading this, you're officially my best friend. Don't tell the others.",
-  "I've been standing here for hours. My legs hurt. Do I even have legs?",
-  "Your profile pic is... interesting. That's all I'll say.",
-  "Imagine having 0 Onyx. Oh wait, you don't have to imagine!",
+  "You should DM someone. Anyone. Even your cat. Wait, does your cat have Fortized?",
+  "Ahahaha! I just told the BEST joke and you missed it! Your loss!",
+  "Pro tip: the Atelier has shiny things. SHINY. THINGS. Go look!",
+  "If you're reading this, you're officially my best friend. Don't tell the others. HAHA!",
+  "I've been standing here for hours. My legs hurt. Do I even HAVE legs?!",
+  "Your profile pic is... interesting. That's all I'll say. AHAHAHA!",
+  "Imagine having 0 Onyx. Oh wait, you don't have to imagine! BAHAHA!",
   "Hehehehe~ I know what you did last session...",
   "Roses are red, Onyx is dark, stop reading my bubbles, go chat in the park!",
-  "Go touch grass!",
+  "Go touch grass! ...nah come back I was kidding!",
+  "Why did the Bastion cross the road? Because I TOLD it to! Ahahaha! ...okay that was bad.",
+  "Knock knock! Who's there? NOT your Onyx balance! HEHEHE!",
 ];
 function _getJoysterStatusJoke() {
   const status = CU?.status || 'online';
@@ -2971,18 +2977,16 @@ function renderDMSidebar(scroll) {
 
   scroll.innerHTML = html;
 
-  // ── Async: fetch real PFPs, display names, status dots + DM previews ─────────
-  friends.forEach(async f => {
+  // ── Async: fetch real PFPs, display names, status dots + DM previews (staggered) ─────────
+  friends.forEach((f, i) => {
+    setTimeout(async () => {
     try {
       const u = await FortizedSocial.getUserByName(f);
       if (u) {
-        // Update avatar with real PFP
         const avEl = document.getElementById('dm-av-'+f);
         if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
-        // Update display name
         const dnEl = document.getElementById('dm-dn-'+f);
         if (dnEl) dnEl.textContent = u.displayName || f;
-        // Update status dot
         const st = u.status || 'offline';
         const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
         document.querySelectorAll(`.profile-status-dot[data-for="${f}"]`).forEach(d=>d.style.background=SC[st]||SC.offline);
@@ -2997,6 +3001,7 @@ function renderDMSidebar(scroll) {
         el.textContent = preview;
       }
     } catch {}
+    }, i * 80); // Stagger to avoid simultaneous Firebase calls
   });
 
   // GC last-message previews
@@ -3231,24 +3236,39 @@ async function sendDM() {
   if (!text && !window._pendingAttachment) return;
   // Safety pre-check
   if (text) { const sw = contentSafetyCheck(text); if (sw) showContentWarning(sw); }
-  // Friend check
-  const friends = CU?.friends||[];
-  if (!friends.includes(curDM) && curDM !== CU?.username) {
+  // Mutual friend check — both users must have each other friended
+  const myFriends = CU?.friends||[];
+  const iHaveThem = myFriends.includes(curDM);
+  let theyHaveMe = false;
+  if (iHaveThem && curDM !== CU?.username) {
+    try {
+      const theirData = await firebase.database().ref('users/' + curDM + '/friends').get().then(s=>s.val());
+      const theirFriends = theirData ? (Array.isArray(theirData) ? theirData : Object.values(theirData)) : [];
+      theyHaveMe = theirFriends.includes(CU.username);
+    } catch { theyHaveMe = false; }
+  }
+  const mutualFriends = iHaveThem && theyHaveMe;
+  if (!mutualFriends && curDM !== CU?.username) {
     // Show inline friend request prompt
     const existing = document.getElementById('dm-not-friends-bar');
     if (!existing) {
       const bar = document.createElement('div');
       bar.id = 'dm-not-friends-bar';
       bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:rgba(248,113,113,.08);border-top:1px solid rgba(248,113,113,.2);font-size:12.5px;flex-shrink:0;';
-      bar.innerHTML = '<span style="color:var(--muted-light);">🔒 You can only message friends. Send a friend request?</span>'
-        +'<button class="btn-a" style="font-size:12px;padding:6px 14px;flex-shrink:0;" id="dm-send-fr-btn">+ Add Friend</button>';
+      const msg = !iHaveThem
+        ? '🔒 You need to be mutual friends to message. Send a friend request?'
+        : '🔒 This person hasn\'t added you back yet. Wait for them to accept.';
+      bar.innerHTML = '<span style="color:var(--muted-light);">'+msg+'</span>'
+        +(!iHaveThem ? '<button class="btn-a" style="font-size:12px;padding:6px 14px;flex-shrink:0;" id="dm-send-fr-btn">+ Add Friend</button>' : '');
       const inputWrap = inp.closest('.chat-input-wrap');
       if (inputWrap) inputWrap.parentNode.insertBefore(bar, inputWrap);
-      document.getElementById('dm-send-fr-btn')?.addEventListener('click', async () => {
-        bar.remove();
-        const r = await FortizedSocial.sendFriendRequest(CU.username, curDM).catch(()=>({ok:false,msg:'Error'}));
-        toast(r.msg, r.ok?'success':'error');
-      });
+      if (!iHaveThem) {
+        document.getElementById('dm-send-fr-btn')?.addEventListener('click', async () => {
+          bar.remove();
+          const r = await FortizedSocial.sendFriendRequest(CU.username, curDM).catch(()=>({ok:false,msg:'Error'}));
+          toast(r.msg, r.ok?'success':'error');
+        });
+      }
     }
     return;
   }
@@ -3765,30 +3785,31 @@ async function startNewDM() {
 // ════════════════════════════════════════════
 function openBastion(idx) {
   if (idx<0||!CU.bastions?.[idx]) return;
-  const prevBastion = curBastion;
   curBastion = idx; curChannel = null;
-  // Quietly sync bastion data to global so it stays fresh
-  if (CU.bastions[idx]?.owner === CU.username) _syncBastionToGlobal(idx);
+  // Quietly sync bastion data to global — fire & forget
+  if (CU.bastions[idx]?.owner === CU.username) setTimeout(() => _syncBastionToGlobal(idx), 100);
   document.querySelectorAll('.rail-btn').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.rail-bastion').forEach(el=>el.classList.remove('active'));
   const rb = document.getElementById('rl-b-'+idx);
   if (rb) rb.classList.add('active');
   showView('bastion');
-  // Auto-select last used channel for this bastion
-  const b = CU.bastions[idx];
-  const lastChKey = 'ftz_last_ch_' + (b.globalId||b.name||idx);
-  const lastChIdx = parseInt(localStorage.getItem(lastChKey)||'-1');
-  const chs = b.channels||[];
-  // Find first text channel as fallback
-  const fallbackCh = chs.findIndex(ch => ch.type !== 'voice' && ch.type !== 'forum');
-  const autoChIdx = (lastChIdx >= 0 && lastChIdx < chs.length) ? lastChIdx : fallbackCh;
-  if (autoChIdx >= 0) {
-    selectChannel(autoChIdx);
-  } else {
-    const wrap = document.getElementById('bastion-chat-wrap');
-    if (wrap) wrap.innerHTML=`<div class="empty-state"><div class="ei">🏰</div><h3>Pick a channel</h3><p>Select a text or voice channel from the sidebar.</p></div>`;
-  }
-  document.getElementById('member-list').innerHTML='';
+  // Auto-select last used channel — defer to allow DOM to paint first
+  requestAnimationFrame(() => {
+    const b = CU.bastions[idx];
+    if (!b) return;
+    const lastChKey = 'ftz_last_ch_' + (b.globalId||b.name||idx);
+    const lastChIdx = parseInt(localStorage.getItem(lastChKey)||'-1');
+    const chs = b.channels||[];
+    const fallbackCh = chs.findIndex(ch => ch.type !== 'voice' && ch.type !== 'forum');
+    const autoChIdx = (lastChIdx >= 0 && lastChIdx < chs.length) ? lastChIdx : fallbackCh;
+    if (autoChIdx >= 0) {
+      selectChannel(autoChIdx);
+    } else {
+      const wrap = document.getElementById('bastion-chat-wrap');
+      if (wrap) wrap.innerHTML=`<div class="empty-state"><div class="ei">🏰</div><h3>Pick a channel</h3><p>Select a text or voice channel from the sidebar.</p></div>`;
+    }
+    document.getElementById('member-list').innerHTML='';
+  });
 }
 
 function renderBastionSidebar(scroll) {
@@ -4738,25 +4759,26 @@ async function renderMemberList() {
   const ownerList = members.filter(u => u === b.owner);
   const onlineList = members.filter(u => u !== b.owner);
 
-  ml.innerHTML = '';
+  let html = '';
   // Owner section
   if (ownerList.length) {
-    ml.innerHTML += '<div class="ml-role-header">Owner</div>';
-    ownerList.forEach(u => ml.innerHTML += buildMemberEntry(u, roles, memberRoles));
+    html += '<div class="ml-role-header">Owner</div>';
+    ownerList.forEach(u => html += buildMemberEntry(u, roles, memberRoles));
   }
   // Members section
   if (onlineList.length) {
-    ml.innerHTML += `<div class="ml-role-header">Members — ${onlineList.length}</div>`;
-    onlineList.forEach(u => ml.innerHTML += buildMemberEntry(u, roles, memberRoles));
+    html += `<div class="ml-role-header">Members — ${onlineList.length}</div>`;
+    onlineList.forEach(u => html += buildMemberEntry(u, roles, memberRoles));
   }
   // Bots section — show deployed bots
   const deployedBots = b.deployedBots || [];
   if (deployedBots.length) {
-    ml.innerHTML += `<div class="ml-role-header">Bots — ${deployedBots.length}</div>`;
+    html += `<div class="ml-role-header">Bots — ${deployedBots.length}</div>`;
     deployedBots.forEach(bot => {
-      ml.innerHTML += buildBotMemberEntry(bot);
+      html += buildBotMemberEntry(bot);
     });
   }
+  ml.innerHTML = html;
 }
 
 function buildMemberEntry(u, roles, memberRoles) {
@@ -4769,28 +4791,28 @@ function buildMemberEntry(u, roles, memberRoles) {
   const displayN = isMe ? (CU.displayName||CU.username) : u;
   const pfpSrc = isMe ? CU.pfp : (_pfpCache[u] || null);
   const status = isMe ? (CU.status||'online') : 'online';
-  // Subscribe to live status for this member
-  subscribeProfileStatus(u);
-  // Fetch live status async and update the dot
+  // Defer status/profile fetches to avoid UI freeze
   if (!isMe) {
-    FortizedSocial.getStatus(u).then(st => {
-      const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
-      document.querySelectorAll('.profile-status-dot[data-for="'+u+'"]').forEach(el=>{el.style.background=SC[st]||SC.offline;});
-    }).catch(()=>{});
-    // Also fetch display name + pfp
-    FortizedSocial.getUserByName(u).then(ud => {
-      if (!ud) return;
-      if (ud.pfp) _pfpCache[u] = ud.pfp;
-      const entry = document.querySelector('.ml-entry[data-member="'+CSS.escape(u)+'"]');
-      if (!entry) return;
-      const nameEl = entry.querySelector('.ml-name');
-      if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
-      const avImg = entry.querySelector('img');
-      if (ud.pfp && !avImg) {
-        const avWrap = entry.querySelector('div[style*="position:relative"]');
-        if (avWrap) { const imgEl = avWrap.querySelector('span'); if(imgEl) imgEl.outerHTML = `<img src="${ud.pfp}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">`; }
-      }
-    }).catch(()=>{});
+    setTimeout(() => {
+      subscribeProfileStatus(u);
+      FortizedSocial.getStatus(u).then(st => {
+        const SC = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
+        document.querySelectorAll('.profile-status-dot[data-for="'+u+'"]').forEach(el=>{el.style.background=SC[st]||SC.offline;});
+      }).catch(()=>{});
+      FortizedSocial.getUserByName(u).then(ud => {
+        if (!ud) return;
+        if (ud.pfp) _pfpCache[u] = ud.pfp;
+        const entry = document.querySelector('.ml-entry[data-member="'+CSS.escape(u)+'"]');
+        if (!entry) return;
+        const nameEl = entry.querySelector('.ml-name');
+        if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
+        const avImg = entry.querySelector('img');
+        if (ud.pfp && !avImg) {
+          const avWrap = entry.querySelector('div[style*="position:relative"]');
+          if (avWrap) { const imgEl = avWrap.querySelector('span'); if(imgEl) imgEl.outerHTML = `<img src="${ud.pfp}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">`; }
+        }
+      }).catch(()=>{});
+    }, 50);
   }
   return `<div class="ml-entry" data-member="${escapeHTML(u)}" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)">
     <div style="position:relative;display:inline-flex;flex-shrink:0;">
@@ -5055,11 +5077,17 @@ async function loadDiscover(){
   if(!grid)return;
   grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted);"><div style="font-size:24px;margin-bottom:8px;animation:spin 1s linear infinite;">⏳</div>Loading bastions…</div>';
   try{discoverData=Object.values(await FortizedSocial.getGlobalBastions()||{});}catch{discoverData=[];}
+  // Strictly filter: only show bastions that are explicitly public
+  discoverData = discoverData.filter(b => b.public === true || (b.public !== false && b.public !== undefined));
+  // Also filter out bastions with no name or clearly invalid data
+  discoverData = discoverData.filter(b => b.name && b.name.trim().length > 0);
+  // Fix member counts — ensure at least 1 if they have an owner
+  discoverData.forEach(b => { if (!b.memberCount && b.owner) b.memberCount = 1; });
   // Update stats
   const statsEl=document.getElementById('disc-stats');
   if(statsEl){
-    const publicCount=discoverData.filter(b=>b.public!==false).length;
-    const totalMembers=discoverData.reduce((s,b)=>s+(b.memberCount||0),0);
+    const publicCount=discoverData.length;
+    const totalMembers=discoverData.reduce((s,b)=>s+(b.memberCount||1),0);
     statsEl.innerHTML=`<div class="disc-stat"><strong>${publicCount}</strong> communities</div><div class="disc-stat"><strong>${totalMembers}</strong> total members</div>`;
   }
   _renderDiscoverFeatured(discoverData);
@@ -5076,7 +5104,7 @@ function _renderDiscoverFeatured(bastions){
     const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id||ub.name===b.name);
     return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(62,207,110,.03),rgba(18,22,34,.95));border:1.5px solid rgba(255,249,62,.15);border-radius:18px;padding:18px 20px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(255,249,62,.08)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
       <div style="width:50px;height:50px;border-radius:14px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;border:1px solid rgba(255,249,62,.12);">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:(b.emblem||'🏰')}</div>
-      <div style="flex:1;min-width:0;"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:3px;">${escapeHTML(b.name)}</div><div style="font-size:11.5px;color:var(--muted-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML((b.desc||'A Fortized bastion').slice(0,60))}</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px;">${b.memberCount||0} members</div></div>
+      <div style="flex:1;min-width:0;"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:3px;">${escapeHTML(b.name)}</div><div style="font-size:11.5px;color:var(--muted-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML((b.desc||'A community bastion').slice(0,60))}</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px;">${b.memberCount||1} members</div></div>
       ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.1);padding:4px 10px;border-radius:8px;">Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);padding:4px 10px;border-radius:8px;">Join</span>`}
     </div>`;
   }).join('')}</div>`;
@@ -5098,7 +5126,7 @@ function renderDiscoverGrid(bastions){
         <div class="bc-name">${escapeHTML(b.name)}</div>
         <div class="bc-desc">${escapeHTML((b.desc||'').slice(0,120))}</div>
         <div class="bc-footer">
-          <div class="bc-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> ${b.memberCount||0}</div>
+          <div class="bc-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> ${b.memberCount||1}</div>
           ${cat?`<div class="bc-category">${escapeHTML(cat)}</div>`:''}
         </div>
       </div>
@@ -7780,36 +7808,62 @@ function buildProfileView(tab) {
   else if (tab === 'help_center') {
     main.innerHTML = `<div class="settings-panel">
       <!-- Page Hero -->
-      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
+      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:32px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%,rgba(254,248,61,.06),transparent 60%);pointer-events:none;"></div>
         <div style="position:relative;display:flex;align-items:center;gap:14px;">
-          <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div style="width:48px;height:48px;border-radius:16px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </div>
           <div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Help Center</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Resources, support, and information</div>
+            <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;">Help Center</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.4);margin-top:4px;">Resources, guides, and support</div>
           </div>
         </div>
       </div>
-      <div class="settings-section-title">HELP CENTER</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
+
+      <!-- Quick actions -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;">
+        <a href="support.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;padding:20px;background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(96,165,250,.02));border:1.5px solid rgba(96,165,250,.12);border-radius:18px;transition:all .2s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(96,165,250,.3)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(96,165,250,.08)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)';this.style.transform='';this.style.boxShadow=''">
+          <div style="font-size:28px;margin-bottom:10px;">🆘</div>
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Get Help</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;">Account issues, bastions, Radiance, and more</div>
+        </a>
+        <a href="blog.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;padding:20px;background:linear-gradient(135deg,rgba(254,248,61,.04),rgba(254,248,61,.01));border:1.5px solid rgba(254,248,61,.1);border-radius:18px;transition:all .2s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(254,248,61,.25)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(254,248,61,.06)'" onmouseout="this.style.borderColor='rgba(254,248,61,.1)';this.style.transform='';this.style.boxShadow=''">
+          <div style="font-size:28px;margin-bottom:10px;">📰</div>
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Blog & Updates</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;">News, features, and announcements</div>
+        </a>
+      </div>
+
+      <div class="settings-section-title">RESOURCES</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px;">
         ${[
-          {label:'Fortized Support', url:'https://fortized.com/support.html', icon:'🆘', desc:'Get help with your account, bastions, and more'},
-          {label:'Privacy Policy',   url:'https://fortized.com/privacy.html',  icon:'🔒', desc:'How we handle your data and privacy'},
-          {label:'Terms of Service', url:'https://fortized.com/terms.html',    icon:'📜', desc:'Our terms and community guidelines'},
-          {label:'Fortized Blog',    url:'https://fortized.com/blog.html',     icon:'📰', desc:'News, updates, and announcements'},
+          {label:'Fortized Support', url:'support.html', icon:'🆘', desc:'Get help with your account, bastions, and more', color:'96,165,250'},
+          {label:'Privacy Policy',   url:'privacy.html',  icon:'🔒', desc:'How we handle your data and privacy', color:'62,207,110'},
+          {label:'Terms of Service', url:'terms.html',    icon:'📜', desc:'Our terms and community guidelines', color:'167,139,250'},
+          {label:'Fortized Blog',    url:'blog.html',     icon:'📰', desc:'News, updates, and announcements', color:'254,248,61'},
+          {label:'Download Fortized', url:'download.html', icon:'⬇️', desc:'Get the app on your device', color:'248,113,113'},
         ].map(link => `
-          <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:14px;padding:16px 18px;background:rgba(255,255,255,.02);border:1.5px solid rgba(254,248,61,.06);border-radius:16px;text-decoration:none;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(254,248,61,.2)';this.style.background='rgba(254,248,61,.02)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(254,248,61,.06)';this.style.background='rgba(255,255,255,.02)';this.style.transform=''">
-            <div style="font-size:22px;flex-shrink:0;">${link.icon}</div>
+          <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:16px;padding:18px 20px;background:rgba(${link.color},.02);border:1.5px solid rgba(${link.color},.08);border-radius:16px;text-decoration:none;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(${link.color},.22)';this.style.background='rgba(${link.color},.04)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(${link.color},.08)';this.style.background='rgba(${link.color},.02)';this.style.transform=''">
+            <div style="width:42px;height:42px;border-radius:14px;background:rgba(${link.color},.08);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${link.icon}</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;">${link.label}</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.4);">${link.desc}</div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;">${link.label}</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.4;">${link.desc}</div>
             </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
           </a>`).join('')}
       </div>
 
+      <!-- Keyboard shortcuts tip -->
+      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:18px 20px;">
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:10px;">QUICK TIPS</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:rgba(255,255,255,.4);">
+          <div>💡 You can react to messages by hovering and clicking the emoji icon</div>
+          <div>💡 Use @everyone to ping all members in a channel</div>
+          <div>💡 Right-click messages for more options like edit, pin, and delete</div>
+          <div>💡 Earn Onyx daily by visiting the Atelier and claiming your reward</div>
+        </div>
+      </div>
     </div>`;
   }
 
@@ -7819,7 +7873,7 @@ function buildProfileView(tab) {
     const themes = [
       {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', preview:['#07090e','#fef83d','#0b0e15'], free:true},
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   preview:['#030407','#fef83d','#060810'], free:true},
-      {id:'dark_fortress',    name:'Dark Fortress',    desc:'Ultra-dark immersive fortress',   preview:['#030407','#fef83d','#040508'], free:true},
+      {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', preview:['#050812','#60a5fa','#080e1a'], free:true},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', preview:['#010103','#fef83d','#020206'], locked:!unlocked.includes('onyx_pure')},
     ];
     main.innerHTML = `<div class="settings-panel">
@@ -13580,7 +13634,7 @@ function renderAtelierTab(tab) {
     el.innerHTML = `
       <!-- Hero banner — unified card design -->
       <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;border:1.5px solid rgba(254,248,61,.12);background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));">
-        <div style="position:relative;height:200px;overflow:hidden;">
+        <div style="position:relative;height:260px;overflow:hidden;">
           <img src="Onyx banner.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;filter:brightness(.6) saturate(1.1);" onerror="this.style.display='none'">
           <div class="hero-sparkles" id="atelier-sparkles"></div>
           <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,9,14,0) 0%,rgba(7,9,14,.8) 60%,rgba(7,9,14,.98) 100%);"></div>
@@ -13944,11 +13998,30 @@ function renderAtelierTab(tab) {
             <div style="padding:20px 22px;display:flex;align-items:center;gap:16px;">
               <div style="flex:1;">
                 <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:5px;">Onyx Pure</div>
-                <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.55;">The darkest appearance. Deeper than Dark Fortress with a subtle gradient towards dark purple. Pure immersion.</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.55;">The darkest appearance. A subtle gradient towards dark purple. Pure immersion.</div>
               </div>
               ${(CU?.unlockedAppearances||[]).includes('onyx_pure')
                 ? '<div style="padding:10px 22px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:14px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'
                 : `<button onclick="event.stopPropagation();buyAppearance('onyx_pure',150)" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(255,249,62,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(255,249,62,.15)'"><img src='Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 150 Onyx</button>`}
+            </div>
+          </div>
+
+          <!-- Midnight Citadel Appearance -->
+          <div style="background:linear-gradient(135deg,#050812,#0a1220,#101a38);border:1.5px solid rgba(96,165,250,.18);border-radius:22px;overflow:hidden;margin-bottom:28px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(96,165,250,.35)';this.style.boxShadow='0 8px 40px rgba(96,165,250,.12)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(96,165,250,.18)';this.style.boxShadow='none';this.style.transform=''">
+            <div style="height:130px;background:linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%);display:flex;gap:4px;padding:16px;position:relative;border-radius:22px 22px 0 0;">
+              <div style="width:26px;background:#080e1a;border-radius:8px;"></div>
+              <div style="flex:1;background:rgba(255,255,255,.025);border-radius:8px;padding:12px;">
+                <div style="height:7px;background:#60a5fa;border-radius:100px;width:45%;margin-bottom:6px;"></div>
+                <div style="height:5px;background:rgba(255,255,255,.07);border-radius:100px;width:75%;"></div>
+              </div>
+              <div style="position:absolute;bottom:12px;right:16px;font-size:11px;color:rgba(96,165,250,.55);font-weight:700;letter-spacing:.05em;">MIDNIGHT CITADEL</div>
+            </div>
+            <div style="padding:20px 22px;display:flex;align-items:center;gap:16px;">
+              <div style="flex:1;">
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:5px;">Midnight Citadel</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.55;">A deep blue fortress under a twilight sky. Blue accents replace the classic yellow for a completely different feel.</div>
+              </div>
+              <div style="padding:10px 22px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:14px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Free</div>
             </div>
           </div>
 
@@ -14044,15 +14117,20 @@ function spawnHeartAnimation(x, y) {
   setTimeout(() => h.remove(), 1400);
 }
 
-// ── Did You Know strip ──────────────────────────────
+// ── Did You Know strip — clear facts only, separate from Joyster's personality ──
 const DYK_FACTS = [
-  'Fortized was almost called Celestial before we picked our name.',
-  'The Bastion system was inspired by medieval fortress communities.',
-  'Onyx is named after the black gemstone — rare and valuable.',
-  'Radiance users send on average 3× more messages per day.',
-  'The Fortized knight mascot was designed in under 2 hours.',
-  'Fortized supports over 40 custom emoji per Bastion.',
-  'Voice calls on Fortized use WebRTC for ultra-low latency.',
+  'Fortized was almost called Celestial before the team settled on the final name.',
+  'The Bastion system was inspired by medieval fortress communities and their hierarchies.',
+  'Onyx is named after the black gemstone — a symbol of rarity and value.',
+  'Radiance subscribers send on average 3× more messages per day than free users.',
+  'The Fortized knight mascot was designed in under 2 hours during a brainstorm session.',
+  'Each Bastion can have up to 40+ custom emoji, depending on boost level.',
+  'Voice calls on Fortized use WebRTC technology for ultra-low latency communication.',
+  'The Fortized app is over 20,000 lines of code — all in a single file.',
+  'Bastions can have five different room types: Text, Voice, Forum, Announcement, and Poll.',
+  'Fortized is built and operated by the Stawdio Group, incorporated under French law.',
+  'The Atelier economy runs entirely on Onyx — no real money is required.',
+  'You can earn Onyx every day by claiming your Daily Reward in the Atelier.',
 ];
 function getDYKHtml() {
   const fact = DYK_FACTS[Math.floor(Math.random()*DYK_FACTS.length)];
@@ -15465,7 +15543,7 @@ async function purchaseRadiance(isPlus, days, cost) {
     ov.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:380px;width:90%;text-align:center;">
       <div style="font-size:40px;margin-bottom:14px;">😕</div>
       <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Not Enough Onyx</div>
-      <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></strong> but only have <strong>${balance} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'"></strong>.<br>Complete quests to earn more Onyx!</div>
+      <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong> but only have <strong>${balance} <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong>.<br>Complete quests to earn more Onyx!</div>
       <div style="display:flex;gap:8px;">
         <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:#060810;font-family:'Syne',sans-serif;font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
         <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.06);color:var(--muted-light);border:1px solid var(--border);border-radius:10px;cursor:pointer;">Not Now</button>
@@ -15518,7 +15596,7 @@ function buildGiftRadianceUI() {
       ${hasGifted
         ? `<span style="font-size:11.5px;color:rgba(255,255,255,.4);">${daysLeft}d left</span>
            <button onclick="cancelGiftRadiance('${escapeHTML(f)}')" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.18);color:var(--red);font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Cancel</button>`
-        : `<button onclick="giftRadianceTo('${escapeHTML(f)}')" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:var(--accent);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer;">🎁 Gift (600 <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">'">'">)</button>`}
+        : `<button onclick="giftRadianceTo('${escapeHTML(f)}')" style="background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:var(--accent);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer;">🎁 Gift (600 Onyx)</button>`}
     </div>`;
   }).join('');
 }
@@ -15922,17 +16000,20 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--border',     '#141a2a');
     document.documentElement.style.setProperty('--muted',      '#3a4458');
     document.documentElement.style.setProperty('--muted-light','#5a6a7e');
-  } else if (themeId === 'dark_fortress') {
-    document.documentElement.style.setProperty('--bg',         '#020305');
-    document.documentElement.style.setProperty('--rail',       '#010203');
-    document.documentElement.style.setProperty('--sidebar',    '#030406');
-    document.documentElement.style.setProperty('--channel',    '#040508');
-    document.documentElement.style.setProperty('--panel',      '#05070b');
-    document.documentElement.style.setProperty('--panel2',     '#070a0f');
-    document.documentElement.style.setProperty('--panel3',     '#090d13');
-    document.documentElement.style.setProperty('--border',     '#0d1220');
-    document.documentElement.style.setProperty('--muted',      '#3a4458');
-    document.documentElement.style.setProperty('--muted-light','#5a6a7e');
+  } else if (themeId === 'midnight_citadel') {
+    document.documentElement.style.setProperty('--bg',         '#050812');
+    document.documentElement.style.setProperty('--rail',       '#030610');
+    document.documentElement.style.setProperty('--sidebar',    '#080e1a');
+    document.documentElement.style.setProperty('--channel',    '#0a1120');
+    document.documentElement.style.setProperty('--panel',      '#0d1528');
+    document.documentElement.style.setProperty('--panel2',     '#101a30');
+    document.documentElement.style.setProperty('--panel3',     '#141e38');
+    document.documentElement.style.setProperty('--border',     '#1a2848');
+    document.documentElement.style.setProperty('--muted',      '#3a5080');
+    document.documentElement.style.setProperty('--muted-light','#6088b8');
+    document.documentElement.style.setProperty('--accent',     '#60a5fa');
+    document.documentElement.style.setProperty('--accent-dim', 'rgba(96,165,250,.1)');
+    document.documentElement.style.setProperty('--accent-mid', 'rgba(96,165,250,.22)');
   } else if (themeId === 'onyx_pure') {
     document.documentElement.style.setProperty('--bg',         '#010103');
     document.documentElement.style.setProperty('--rail',       '#010102');
@@ -15961,6 +16042,12 @@ function applyAppearance(themeId) {
   }
   // Reset body gradient if not onyx_pure
   if (themeId !== 'onyx_pure') document.body.style.background = '';
+  // Reset accent colors to default yellow if not midnight_citadel
+  if (themeId !== 'midnight_citadel') {
+    document.documentElement.style.setProperty('--accent',     '#fff93e');
+    document.documentElement.style.setProperty('--accent-dim', 'rgba(255,249,62,.1)');
+    document.documentElement.style.setProperty('--accent-mid', 'rgba(255,249,62,.22)');
+  }
   // Re-render appearance settings if it's currently open
   const activeNav = document.querySelector('.profile-nav-item.active');
   if (activeNav && activeNav.id === 'pnav-appearance') buildProfileView('appearance');
@@ -15969,13 +16056,15 @@ function applyAppearance(themeId) {
   const chatInputOuter = document.querySelector('.chat-input-outer');
   if (userbarEl) userbarEl.style.background = '';
   if (chatInputOuter) chatInputOuter.style.background = '';
-  const toastMsgs = {dark_fortress:'🏰 Dark Fortress', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic'};
+  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic'};
   toast((toastMsgs[themeId]||'⚡ Theme')+' activated!', 'success');
 }
 
 // Apply saved appearance on load
 (function() {
-  const saved = localStorage.getItem('ftz_appearance');
+  let saved = localStorage.getItem('ftz_appearance');
+  // Migrate removed themes
+  if (saved === 'dark_fortress') { saved = 'fortized_classic'; localStorage.setItem('ftz_appearance', saved); }
   if (saved) applyAppearance(saved);
 })();
 

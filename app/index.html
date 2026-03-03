@@ -523,7 +523,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .cit-btn:hover{background:rgba(255,249,62,.08);color:var(--accent);}
 .cit-btn.active{color:var(--accent);background:rgba(255,249,62,.1);}
 .cit-sep{width:1px;height:18px;background:rgba(255,255,255,.06);margin:0 2px;flex-shrink:0;}
-.cit-gif{background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:7px;color:rgba(255,249,62,.55);font-size:9px;font-weight:800;padding:3px 8px;cursor:pointer;letter-spacing:.06em;transition:all .18s cubic-bezier(.22,1,.36,1);font-family:'Syne',sans-serif;height:26px;display:flex;align-items:center;}
+.cit-gif{background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:6px;color:rgba(255,249,62,.55);font-size:9px;font-weight:800;padding:2px 6px;cursor:pointer;letter-spacing:.06em;transition:all .18s cubic-bezier(.22,1,.36,1);font-family:'Syne',sans-serif;height:20px;display:flex;align-items:center;}
 .cit-gif:hover{border-color:rgba(255,249,62,.3);color:var(--accent);background:rgba(255,249,62,.1);}
 .chat-input-row{display:flex;align-items:flex-end;padding:6px 8px 6px 6px;gap:4px;}
 .chat-input-row textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;resize:none;max-height:140px;min-height:22px;line-height:1.55;padding:5px 4px;position:relative;z-index:2;}
@@ -2475,6 +2475,9 @@ function showView(v) {
   _currentView = v;
   // Stop Joyster bubbles when leaving home — Joyster only lives on the homepage
   if (v !== 'home' && typeof _stopJoysterBubbles === 'function') _stopJoysterBubbles();
+  // Hide Joyster global presence when not on home view
+  const _jg = document.getElementById('joyster-global');
+  if (_jg) _jg.style.display = v === 'home' ? '' : 'none';
   // Clean up GC panel when leaving DMs view
   if (v !== 'dms') document.getElementById('gc-member-panel')?.remove();
 

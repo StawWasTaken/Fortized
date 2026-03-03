@@ -7258,7 +7258,7 @@ const BLOCK_TRIGGERS = [
   {id:'on_join', label:'User Joins', icon:'👋', desc:'When a new member joins the bastion'},
   {id:'on_leave', label:'User Leaves', icon:'🚪', desc:'When a member leaves'},
   {id:'on_role_assign', label:'Role Assigned', icon:'🛡️', desc:'When a role is given to a user'},
-  {id:'on_command', label:'Slash Command', icon:'⌨️', desc:'When a /command is used'},
+  {id:'on_command', label:'Bot Command', icon:'⌨️', desc:'When a !command is used'},
   {id:'on_reaction', label:'Reaction Added', icon:'😊', desc:'When a user reacts to a message'},
 ];
 
@@ -7282,12 +7282,12 @@ const BLOCK_CONDITIONS = [
 
 // ─── Arsenal: sample community bots ───
 const ARSENAL_BOTS = [
-  {id:'raidshield', name:'RaidShield', emblem:'🛡️', bio:'Auto-moderation: anti-raid, anti-spam, and link filtering.', owner:'Fortized', rating:4.8, reviews:142, commands:['/raidshield config','/raidshield status','/raidshield logs'], version:'2.1', category:'Moderation', scripts:[{trigger:'on_join',condition:'if_cooldown',action:'timeout_user',config:{cooldownSec:3,timeoutMin:5,msg:'Raid protection triggered.'}}]},
-  {id:'warannouncer', name:'War Announcer', emblem:'📯', bio:'Schedule event pings and war announcements with countdowns.', owner:'Tyrianum', rating:4.5, reviews:87, commands:['/announce','/schedule','/countdown'], version:'1.4', category:'Events', scripts:[{trigger:'on_command',action:'send_message',config:{cmd:'/announce',template:'📢 **Announcement:** {text}'}}]},
-  {id:'onyx_booster', name:'Onyx Booster', emblem:'💎', bio:'Custom quest integration: reward Onyx for activity, messages, and milestones.', owner:'Fortized', rating:4.9, reviews:231, commands:['/daily','/leaderboard','/reward'], version:'3.0', category:'Economy', scripts:[{trigger:'on_message',condition:'if_cooldown',action:'add_onyx',config:{amount:1,cooldownSec:60}}]},
-  {id:'rankmaster', name:'RankMaster', emblem:'📊', bio:'XP system with level roles, leaderboards, and rank cards.', owner:'Fortified', rating:4.6, reviews:164, commands:['/rank','/level','/xp','/top'], version:'2.3', category:'Leveling', scripts:[{trigger:'on_message',action:'add_onyx',config:{amount:1}}]},
-  {id:'reaction_roles', name:'Reaction Roles', emblem:'🎭', bio:'Let members pick roles by reacting to a message. Clean and simple.', owner:'Fortized', rating:4.7, reviews:198, commands:['/reactionrole create','/reactionrole edit','/reactionrole remove'], version:'1.8', category:'Utility', scripts:[{trigger:'on_reaction',action:'assign_role',config:{}}]},
-  {id:'bastion_logger', name:'Bastion Logger', emblem:'📋', bio:'Full audit trail: track joins, leaves, bans, role changes, and channel edits.', owner:'Fortized', rating:4.4, reviews:76, commands:['/logs','/audit','/history'], version:'1.2', category:'Moderation', scripts:[{trigger:'on_join',action:'send_message',config:{template:'📥 **{user}** joined the bastion.'}}]},
+  {id:'raidshield', name:'RaidShield', emblem:'🛡️', bio:'Auto-moderation: anti-raid, anti-spam, and link filtering.', owner:'Fortized', rating:4.8, reviews:142, commands:[{name:'raidshield_config',desc:'Configure RaidShield settings'},{name:'raidshield_status',desc:'View current protection status'},{name:'raidshield_logs',desc:'View moderation logs'}], version:'2.1', category:'Moderation', scripts:[{trigger:'on_join',condition:'if_cooldown',action:'timeout_user',config:{cooldownSec:3,timeoutMin:5,msg:'Raid protection triggered.'}}]},
+  {id:'warannouncer', name:'War Announcer', emblem:'📯', bio:'Schedule event pings and war announcements with countdowns.', owner:'Tyrianum', rating:4.5, reviews:87, commands:[{name:'announce',desc:'Send an announcement'},{name:'schedule',desc:'Schedule a future event'},{name:'countdown',desc:'Start a countdown timer'}], version:'1.4', category:'Events', scripts:[{trigger:'on_command',action:'send_message',config:{cmd:'announce',template:'📢 **Announcement:** {text}'}}]},
+  {id:'onyx_booster', name:'Onyx Booster', emblem:'💎', bio:'Custom quest integration: reward Onyx for activity, messages, and milestones.', owner:'Fortized', rating:4.9, reviews:231, commands:[{name:'daily',desc:'Claim your daily Onyx reward'},{name:'leaderboard',desc:'View the Onyx leaderboard'},{name:'reward',desc:'Reward Onyx to a user'}], version:'3.0', category:'Economy', scripts:[{trigger:'on_message',condition:'if_cooldown',action:'add_onyx',config:{amount:1,cooldownSec:60}}]},
+  {id:'rankmaster', name:'RankMaster', emblem:'📊', bio:'XP system with level roles, leaderboards, and rank cards.', owner:'Fortified', rating:4.6, reviews:164, commands:[{name:'rank',desc:'View your rank card'},{name:'level',desc:'Check your current level'},{name:'xp',desc:'See your XP progress'},{name:'top',desc:'View the top players'}], version:'2.3', category:'Leveling', scripts:[{trigger:'on_message',action:'add_onyx',config:{amount:1}}]},
+  {id:'reaction_roles', name:'Reaction Roles', emblem:'🎭', bio:'Let members pick roles by reacting to a message. Clean and simple.', owner:'Fortized', rating:4.7, reviews:198, commands:[{name:'reactionrole_create',desc:'Create a reaction role message'},{name:'reactionrole_edit',desc:'Edit an existing reaction role'},{name:'reactionrole_remove',desc:'Remove a reaction role setup'}], version:'1.8', category:'Utility', scripts:[{trigger:'on_reaction',action:'assign_role',config:{}}]},
+  {id:'bastion_logger', name:'Bastion Logger', emblem:'📋', bio:'Full audit trail: track joins, leaves, bans, role changes, and channel edits.', owner:'Fortized', rating:4.4, reviews:76, commands:[{name:'logs',desc:'View recent logs'},{name:'audit',desc:'Run a full audit'},{name:'history',desc:'View channel history'}], version:'1.2', category:'Moderation', scripts:[{trigger:'on_join',action:'send_message',config:{template:'📥 **{user}** joined the bastion.'}}]},
 ];
 
 // ─── My Bots view in user settings ───
@@ -7522,7 +7522,7 @@ function openBotEditor(idx) {
             <span style="flex:1;font-size:12px;color:var(--muted);">${escapeHTML(cmd.desc||'No description')}</span>
             <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;" onclick="removeBotCommand(${idx},${ci})">×</button>
           </div>
-        `).join('') : '<div style="font-size:12.5px;color:var(--muted);padding:12px;">No commands yet. Add slash commands for your bot.</div>'}
+        `).join('') : '<div style="font-size:12.5px;color:var(--muted);padding:12px;">No commands yet. Add commands for your bot.</div>'}
       </div>
 
       <!-- Block Scripting -->
@@ -7578,7 +7578,7 @@ function toggleBotPerm(idx, perm, el) {
 }
 
 function addBotCommand(idx) {
-  const name = prompt('Command name (without /):');
+  const name = prompt('Command name (without !):');
   if (!name || !name.trim()) return;
   const desc = prompt('Command description (optional):') || '';
   const bot = CU.bots?.[idx]; if (!bot) return;

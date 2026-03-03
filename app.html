@@ -264,6 +264,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .tb-actions{margin-left:auto;display:flex;align-items:center;gap:6px;}
 .tb-actions button{background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .tb-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
+.tb-act-btn{background:transparent;border:none;color:var(--muted);cursor:pointer;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.tb-act-btn:hover{background:rgba(255,255,255,.07);color:#fff;}
 .onyx-pill{display:flex;align-items:center;gap:5px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:100px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;}
 .onyx-pill img{width:14px;height:14px;object-fit:contain;}
 .tb-onyx-pill{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(254,248,61,.06),rgba(254,248,61,.02));border:1px solid rgba(254,248,61,.15);border-radius:12px;padding:5px 14px 5px 10px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);white-space:nowrap;}
@@ -1343,7 +1345,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
   <!-- Navigation -->
   <div class="sidebar-nav" id="rail">
     <div class="rail-btn" id="rb-dms" onclick="showView('dms')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       <span>Direct Messages</span>
       <span id="notif-badge" class="nav-badge" style="display:none;">0</span>
     </div>
@@ -1352,7 +1354,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
       <span>Discover</span>
     </div>
     <div class="rail-btn" id="rb-atelier" onclick="showView('atelier')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       <span>Atelier</span>
     </div>
     <div class="rail-sep" style="margin:10px 12px;"></div>
@@ -1488,7 +1490,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
           <div class="home-main-scroll" style="padding:24px 0 48px;">
             <div id="home-dyk-strip" style="padding:0 28px;"></div>
             <div class="realm-section">
-              <div class="realm-section-title">Comrades Online <span class="rst-sub" id="realm-online-count"></span></div>
+              <div class="realm-section-title">Friends Online <span class="rst-sub" id="realm-online-count"></span></div>
               <div class="realm-scroll" id="realm-friends"></div>
             </div>
             <div class="realm-section">
@@ -1516,14 +1518,14 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
         <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
           <div style="max-width:900px;">
             <!-- Unified header -->
-            <div class="uv-header" style="border-color:rgba(96,165,250,.12);">
+            <div class="uv-header" style="border-color:rgba(254,248,61,.1);">
               <img src="Fortized banner4.png" class="uv-header-bg" onerror="this.style.display='none'">
               <div class="uv-header-grad"></div>
-              <div class="uv-header-glow" style="background:radial-gradient(ellipse at 30% 20%,rgba(96,165,250,.08),transparent 55%);"></div>
+              <div class="uv-header-glow"></div>
               <div class="uv-header-content">
                 <div class="uv-header-left">
-                  <div class="uv-header-icon" style="background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.2);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                  <div class="uv-header-icon" style="background:rgba(254,248,61,.1);border-color:rgba(254,248,61,.18);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                   </div>
                   <div>
                     <div class="uv-header-title">Friends</div>
@@ -1540,7 +1542,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
               <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               </span>
-              <input type="text" id="dm-friends-search" placeholder="Search friends..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;" onfocus="this.style.borderColor='rgba(96,165,250,.3)';this.style.background='rgba(255,255,255,.05)'" onblur="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'">
+              <input type="text" id="dm-friends-search" placeholder="Search friends..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;" onfocus="this.style.borderColor='rgba(254,248,61,.3)';this.style.background='rgba(255,255,255,.05)'" onblur="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'">
             </div>
             <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
               <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">Online</button>
@@ -1632,18 +1634,17 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 
     <!-- ATELIER VIEW -->
     <div class="view" id="view-atelier">
-      <div class="atelier-wrap" style="flex-direction:row;">
-        <!-- Main content area -->
+      <div class="atelier-wrap">
         <div class="atelier-scroll" id="atelier-scroll-outer" style="flex:1;overflow-y:auto;padding:28px;scroll-behavior:smooth;">
           <!-- Unified header -->
-          <div class="uv-header" style="border-color:rgba(254,248,61,.12);">
+          <div class="uv-header" style="border-color:rgba(254,248,61,.1);">
             <img src="Onyx banner.png" class="uv-header-bg" onerror="this.style.display='none'">
             <div class="uv-header-grad"></div>
             <div class="uv-header-glow"></div>
             <div class="uv-header-content">
               <div class="uv-header-left">
                 <div class="uv-header-icon" style="background:rgba(254,248,61,.1);border-color:rgba(254,248,61,.18);">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 </div>
                 <div>
                   <div class="uv-header-title">Atelier</div>
@@ -1671,37 +1672,6 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
           <!-- Dynamic content -->
           <div id="atelier-content">
             <!-- Loaded dynamically by switchAtelierTab() -->
-          </div>
-        </div>
-        <!-- Right sidebar: Atelier quick info -->
-        <div style="width:260px;min-width:260px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;padding:20px 16px;">
-          <!-- Onyx balance card -->
-          <div style="background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));border:1px solid rgba(255,249,62,.1);border-radius:18px;padding:20px;margin-bottom:16px;text-align:center;">
-            <img src="Onyx.png" style="width:36px;height:36px;object-fit:contain;margin-bottom:8px;">
-            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance-side">0</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;">Onyx Balance</div>
-          </div>
-          <!-- Quick nav -->
-          <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:10px;padding:0 4px;">Quick Navigation</div>
-          <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:20px;">
-            <div class="ch-item" onclick="switchAtelierTab('overview',document.getElementById('atnav-overview'))" style="border-radius:10px;padding:8px 12px;font-size:12.5px;cursor:pointer;">
-              <span style="margin-right:8px;">✨</span>Overview
-            </div>
-            <div class="ch-item" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="border-radius:10px;padding:8px 12px;font-size:12.5px;cursor:pointer;">
-              <span style="margin-right:8px;">💎</span>Radiance
-            </div>
-            <div class="ch-item" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="border-radius:10px;padding:8px 12px;font-size:12.5px;cursor:pointer;">
-              <span style="margin-right:8px;">📋</span>Quests
-            </div>
-            <div class="ch-item" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" style="border-radius:10px;padding:8px 12px;font-size:12.5px;cursor:pointer;">
-              <span style="margin-right:8px;">🛒</span>Shop
-            </div>
-          </div>
-          <!-- Daily reward reminder -->
-          <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:14px;text-align:center;">
-            <div style="font-size:20px;margin-bottom:6px;">🎁</div>
-            <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.6);margin-bottom:4px;">Daily Reward</div>
-            <div style="font-size:10.5px;color:var(--muted);">Claim your daily Onyx in Overview!</div>
           </div>
         </div>
       </div>
@@ -2502,12 +2472,29 @@ function updateTopbar(v) {
   const title = document.getElementById('topbar-title');
   const desc = document.getElementById('tb-desc');
   const sep = document.getElementById('tb-sep');
+  const acts = document.getElementById('tb-actions');
   if (!title) return;
   if (sep) sep.style.display = 'none';
   if (desc) desc.textContent = '';
-  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'',profile:'',bsettings:'Bastion Settings',bhub:'Bastion Hub',bastion:'Bastions'};
+  if (acts) acts.innerHTML = '';
+  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'',bsettings:'Bastion Settings',bhub:'Bastion Hub',bastion:'Bastions'};
   if (labels[v]) title.textContent = labels[v];
   updateOnyxDisplay();
+}
+function setTopbarDMActions() {
+  const acts = document.getElementById('tb-actions');
+  if (!acts) return;
+  acts.innerHTML = `
+    <button class="tb-act-btn" title="Start Call" onclick="toast('Voice calls coming soon','info')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+    <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg></button>
+    <button class="tb-act-btn" title="Notifications" onclick="toast('Notification settings coming soon','info')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>`;
+}
+function setTopbarChannelActions() {
+  const acts = document.getElementById('tb-actions');
+  if (!acts) return;
+  acts.innerHTML = `
+    <button class="tb-act-btn" title="Notifications" onclick="toast('Notification settings coming soon','info')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+    <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg></button>`;
 }
 
 function updateSidebar(v) {
@@ -2641,7 +2628,7 @@ function updateUserbarWidth() {
 }
 function updateOnyxDisplay() {
   const bal = CU?.onyx || 0;
-  ['onyx-val','atelier-balance','atelier-balance-side'].forEach(id => {
+  ['onyx-val','atelier-balance'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
@@ -2791,7 +2778,7 @@ function renderHomePanel() {
   if (realmF) {
     if (!friends0.length) {
       realmF.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:8px 4px;">
-        <div style="font-size:13px;color:var(--muted);">No comrades yet.</div>
+        <div style="font-size:13px;color:var(--muted);">No friends yet.</div>
         <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:11px;padding:6px 14px;">+ Add Friend</button>
       </div>`;
     } else {
@@ -2830,7 +2817,7 @@ async function _loadRealmFriends(friends, container, countEl) {
       </div>
       <div class="rf-name">${escapeHTML(r.displayName)}</div>
     </div>`;
-  }).join('') || '<div style="padding:8px;font-size:13px;color:var(--muted);">All comrades offline</div>';
+  }).join('') || '<div style="padding:8px;font-size:13px;color:var(--muted);">All friends offline</div>';
 }
 
 // ── Right panel friends loader (async with status) ──
@@ -3387,14 +3374,14 @@ function showDMFriendsHome() {
   wrap.innerHTML = `
     <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
       <div style="max-width:900px;">
-        <div class="uv-header" style="border-color:rgba(96,165,250,.12);">
+        <div class="uv-header" style="border-color:rgba(254,248,61,.1);">
           <img src="Fortized banner4.png" class="uv-header-bg" onerror="this.style.display='none'">
           <div class="uv-header-grad"></div>
-          <div class="uv-header-glow" style="background:radial-gradient(ellipse at 30% 20%,rgba(96,165,250,.08),transparent 55%);"></div>
+          <div class="uv-header-glow"></div>
           <div class="uv-header-content">
             <div class="uv-header-left">
-              <div class="uv-header-icon" style="background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.2);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              <div class="uv-header-icon" style="background:rgba(254,248,61,.1);border-color:rgba(254,248,61,.18);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </div>
               <div>
                 <div class="uv-header-title">Friends</div>
@@ -3411,7 +3398,7 @@ function showDMFriendsHome() {
           <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           </span>
-          <input type="text" id="dm-friends-search" placeholder="Search friends..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;" onfocus="this.style.borderColor='rgba(96,165,250,.3)';this.style.background='rgba(255,255,255,.05)'" onblur="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'">
+          <input type="text" id="dm-friends-search" placeholder="Search friends..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;" onfocus="this.style.borderColor='rgba(254,248,61,.3)';this.style.background='rgba(255,255,255,.05)'" onblur="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'">
         </div>
         <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
           <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">Online</button>
@@ -3438,7 +3425,8 @@ function openDMView(username) {
   const anSidebar = document.getElementById('dm-active-now');
   if (anSidebar) anSidebar.style.display = 'none';
   const topTitle = document.getElementById('topbar-title');
-  if (topTitle) topTitle.textContent = username;
+  if (topTitle) topTitle.textContent = 'Direct Messages';
+  setTopbarDMActions();
   document.querySelectorAll('.friend-item').forEach(fi=>fi.classList.remove('active'));
   const fi = document.getElementById('dm-fi-'+username);
   if (fi) fi.classList.add('active');
@@ -3450,10 +3438,6 @@ function openDMView(username) {
       <div class="room-topbar">
         <span class="rt-hash"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
         <span class="rt-name">${escapeHTML(username)}</span>
-        <div class="rt-actions">
-          <button class="rt-action-btn" title="Start Call" onclick="toast('Voice calls coming soon','info')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
-          <button class="rt-action-btn" title="Pinned Messages" onclick="toast('Pinned messages coming soon','info')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg></button>
-        </div>
       </div>
       <div class="chat-msgs" id="dm-msgs">
         <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')">Return to Present</button></div>
@@ -3723,7 +3707,8 @@ async function openGroupChatView(gcId) {
   if (!meta) { toast('Group not found','error'); return; }
 
   const topTitle = document.getElementById('topbar-title');
-  if (topTitle) topTitle.textContent = meta.emoji+' '+meta.name;
+  if (topTitle) topTitle.textContent = 'Direct Messages';
+  setTopbarDMActions();
 
   // Hide DM user panel, show GC member panel
   const dmPanel = document.getElementById('dm-user-panel');
@@ -3740,11 +3725,6 @@ async function openGroupChatView(gcId) {
         <span class="rt-name">${escapeHTML(meta.name)}</span>
         <span class="rt-sep"></span>
         <span class="rt-desc">${(meta.members||[]).length} members</span>
-        <div class="rt-actions">
-          <button class="rt-action-btn" title="Start Call" onclick="toast('Group calls coming soon','info')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
-          <button class="rt-action-btn" title="Pinned Messages" onclick="toast('Pinned messages coming soon','info')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg></button>
-          <button class="rt-action-btn" title="Add Member" onclick="toast('Adding members to GC coming soon','info')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>
-        </div>
       </div>
       <div class="chat-msgs" id="gc-msgs">
         <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('gc-msgs')">Return to Present</button></div>
@@ -4416,6 +4396,7 @@ function loadChatChannel(idx) {
   const desc=document.getElementById('tb-desc');
   if (sep) sep.style.display='none';
   if (desc) desc.textContent='';
+  setTopbarChannelActions();
   const bastionBanner = b?.banner || '';
   const bannerSafe = bastionBanner ? escapeHTML(bastionBanner) : '';
   const chTypeIcon = ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':'#';
@@ -4426,10 +4407,6 @@ function loadChatChannel(idx) {
         <span class="rt-name">${escapeHTML(ch.name)}</span>
         ${ch.desc?`<span class="rt-sep"></span><span class="rt-desc">${escapeHTML(ch.desc)}</span>`:''}
         ${nsfwBadge}
-        <div class="rt-actions">
-          <button class="rt-action-btn" title="Notifications" onclick="toast('Notification settings coming soon','info')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
-          <button class="rt-action-btn" title="Pinned Messages" onclick="toast('Pinned messages coming soon','info')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg></button>
-        </div>
       </div>
       <div class="chat-msgs" id="ch-msgs-${idx}">
         <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Return to Present</button></div>

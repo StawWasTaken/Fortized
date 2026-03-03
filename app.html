@@ -259,6 +259,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .tb-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
 .onyx-pill{display:flex;align-items:center;gap:5px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:100px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;}
 .onyx-pill img{width:14px;height:14px;object-fit:contain;}
+.tb-onyx-pill{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(254,248,61,.06),rgba(254,248,61,.02));border:1px solid rgba(254,248,61,.15);border-radius:12px;padding:5px 14px 5px 10px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);white-space:nowrap;}
+.tb-onyx-pill:hover{background:linear-gradient(135deg,rgba(254,248,61,.1),rgba(254,248,61,.04));border-color:rgba(254,248,61,.3);transform:translateY(-1px);box-shadow:0 4px 16px rgba(254,248,61,.08);}
 .tb-search{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:5px 10px;width:170px;transition:all .2s;}
 .tb-search:focus-within{border-color:rgba(255,249,62,.2);width:210px;}
 .tb-search input{background:transparent;border:none;outline:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;flex:1;}
@@ -672,10 +674,10 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rad-feats{font-size:12px;color:var(--muted-light);line-height:1.5;}
 .atelier-card{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:22px;margin-bottom:14px;transition:border-color .2s;}
 .atelier-card:hover{border-color:rgba(255,255,255,.1);}
-.profile-wrap{flex:1;display:flex;overflow:hidden;background:#0c0f18;}
+.profile-wrap{flex:1;display:flex;overflow:hidden;background:linear-gradient(165deg,#0c0f18,#090c14);}
 /* Settings sidebar — Guilded/Fortized style */
-.profile-nav{width:230px;min-width:230px;background:linear-gradient(180deg,#0e1119,#0c0f18);display:flex;flex-direction:column;padding:24px 0 16px;overflow-y:auto;border-right:1px solid rgba(255,249,62,.04);}
-.profile-nav-section{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,249,62,.3);padding:16px 22px 6px;}
+.profile-nav{width:240px;min-width:240px;background:linear-gradient(180deg,#0a0d14,#0b0e16);display:flex;flex-direction:column;padding:16px 0 16px;overflow-y:auto;border-right:1px solid rgba(254,248,61,.04);}
+.profile-nav-section{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(254,248,61,.35);padding:18px 22px 6px;}
 .profile-nav-item{display:flex;align-items:center;gap:11px;padding:9px 18px 9px 22px;cursor:pointer;font-size:13.5px;color:rgba(255,255,255,.45);transition:all .18s cubic-bezier(.22,1,.36,1);position:relative;border-radius:0;margin:1px 8px;border-radius:10px;}
 .profile-nav-item:hover{background:rgba(255,249,62,.04);color:rgba(255,255,255,.85);}
 .profile-nav-item.active{color:#fff;background:rgba(255,249,62,.06);}
@@ -685,24 +687,23 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .profile-nav-item:hover .pni-icon{opacity:.8;}
 .profile-nav-sep{height:1px;background:rgba(255,249,62,.04);margin:10px 22px;}
 /* Main settings area */
-.profile-main{flex:1;overflow-y:auto;background:linear-gradient(180deg,#11141d,#0e1119);scroll-behavior:smooth;}
-.settings-panel{max-width:720px;padding:36px 44px 60px;margin:0 auto;}
-.settings-section-title{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.35);margin-bottom:18px;padding-bottom:9px;border-bottom:1px solid rgba(255,249,62,.06);}
-.settings-row{display:flex;align-items:flex-start;gap:18px;padding:20px 16px;border-bottom:1px solid rgba(255,255,255,.03);border-radius:12px;margin-bottom:2px;transition:background .15s;}
-.settings-row:hover{background:rgba(255,255,255,.015);}
-.settings-row:last-child{border-bottom:none;}
+.profile-main{flex:1;overflow-y:auto;background:linear-gradient(165deg,#11141d,#0d1018);scroll-behavior:smooth;}
+.settings-panel{max-width:750px;padding:0 44px 60px;margin:0 auto;}
+.settings-section-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(254,248,61,.4);margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid rgba(254,248,61,.06);}
+.settings-row{display:flex;align-items:flex-start;gap:18px;padding:18px 18px;border:1px solid transparent;border-radius:16px;margin-bottom:4px;transition:all .18s cubic-bezier(.22,1,.36,1);}
+.settings-row:hover{background:rgba(254,248,61,.015);border-color:rgba(254,248,61,.04);}
 .settings-row-label{width:165px;flex-shrink:0;}
 .settings-row-label .srl-name{font-size:13.5px;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:3px;}
 .settings-row-label .srl-desc{font-size:11.5px;color:rgba(255,255,255,.3);line-height:1.45;}
 .settings-row-content{flex:1;min-width:0;}
 /* Refined input */
-.settings-input{width:100%;padding:10px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:all .2s cubic-bezier(.22,1,.36,1);box-sizing:border-box;}
-.settings-input:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.06);background:rgba(255,255,255,.04);}
+.settings-input{width:100%;padding:11px 16px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:14px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:all .2s cubic-bezier(.22,1,.36,1);box-sizing:border-box;}
+.settings-input:focus{border-color:rgba(254,248,61,.3);box-shadow:0 0 0 3px rgba(254,248,61,.05);background:rgba(255,255,255,.04);}
 .settings-input::placeholder{color:rgba(255,255,255,.18);}
 .settings-input:disabled{opacity:.35;cursor:not-allowed;}
 /* Pill save button */
-.settings-save-btn{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--accent),#e6e034);color:#060810;border:none;border-radius:100px;padding:8px 20px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 10px rgba(255,249,62,.2);}
-.settings-save-btn:hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,249,62,.3);}
+.settings-save-btn{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#fef83d,#e6e034);color:#060810;border:none;border-radius:14px;padding:10px 22px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 12px rgba(254,248,61,.2);}
+.settings-save-btn:hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 6px 24px rgba(254,248,61,.3);}
 .settings-save-btn:active{transform:translateY(0);}
 .settings-save-btn-ghost{display:inline-flex;align-items:center;gap:5px;background:transparent;color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:5px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
 .settings-save-btn-ghost:hover{border-color:rgba(255,255,255,.25);color:#fff;}
@@ -720,9 +721,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .connected-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
 .connected-label{width:80px;font-size:13px;font-weight:600;color:rgba(255,255,255,.6);flex-shrink:0;}
 /* Danger zone */
-.danger-section-title{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(248,113,113,.5);margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid rgba(248,113,113,.1);}
-.danger-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(248,113,113,.04);color:rgba(248,113,113,.75);border:1.5px solid rgba(248,113,113,.15);border-radius:12px;padding:10px 20px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);}
-.danger-btn:hover{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.4);color:var(--red);transform:translateY(-1px);box-shadow:0 4px 14px rgba(248,113,113,.1);}
+.danger-section-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(248,113,113,.45);margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid rgba(248,113,113,.08);}
+.danger-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(248,113,113,.03);color:rgba(248,113,113,.7);border:1.5px solid rgba(248,113,113,.12);border-radius:14px;padding:11px 22px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);}
+.danger-btn:hover{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.35);color:var(--red);transform:translateY(-1px);box-shadow:0 4px 14px rgba(248,113,113,.08);}
 .profile-banner-area{width:100%;height:240px;background:linear-gradient(135deg,#0f1830,#1a0f30,#0f2030);position:relative;overflow:hidden;}
 .profile-banner-area img{width:100%;height:100%;object-fit:cover;}
 .profile-av-row{display:flex;align-items:flex-end;gap:14px;padding:0 24px;margin-top:-28px;margin-bottom:14px;}
@@ -1004,22 +1005,30 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .heart-float { position:fixed;font-size:24px;pointer-events:none;animation:heartFloat 1.2s ease-out forwards;z-index:9999; }
 
 /* ── EMBED LINK CARDS (from template doc) ─────────── */
-.embed-link-card { border-radius:14px;background:linear-gradient(135deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.06);border-left:3px solid var(--accent);overflow:hidden;max-width:480px;margin:8px 0;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;backdrop-filter:blur(4px); }
-.embed-link-card:hover { transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3),0 0 0 1px rgba(255,249,62,.08);border-color:rgba(255,249,62,.12); }
-.embed-link-card .elc-body { padding:12px 14px;flex:1;min-width:0;display:flex;flex-direction:column;gap:5px; }
-.embed-link-card .elc-site { display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,249,62,.4); }
-.embed-link-card .elc-title { font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:var(--text);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-.embed-link-card .elc-desc { font-size:11.5px;color:var(--muted-light);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
-.embed-link-card .elc-url { font-size:9.5px;color:var(--muted);font-family:monospace;opacity:.6; }
-.embed-link-card .elc-thumb { width:80px;min-width:80px;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,255,255,.02));display:flex;align-items:center;justify-content:center;font-size:20px;opacity:.4;border-left:1px solid rgba(255,255,255,.04); }
-.embed-invite-card { border-radius:16px;overflow:hidden;max-width:380px;background:linear-gradient(160deg,rgba(255,255,255,.025),rgba(255,249,62,.015));border:1px solid rgba(255,249,62,.08);margin:8px 0;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);box-shadow:0 4px 16px rgba(0,0,0,.2); }
-.embed-invite-card:hover { transform:translateY(-2px);border-color:rgba(255,249,62,.25);box-shadow:0 8px 32px rgba(0,0,0,.3),0 0 20px rgba(255,249,62,.04); }
+.embed-link-card { border-radius:18px;background:linear-gradient(145deg,rgba(254,248,61,.015),rgba(255,255,255,.01));border:1.5px solid rgba(254,248,61,.08);border-left:3px solid #fef83d;overflow:hidden;max-width:500px;margin:8px 0;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);display:flex;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;backdrop-filter:blur(6px);position:relative; }
+.embed-link-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 0% 50%,rgba(254,248,61,.04),transparent 50%);pointer-events:none;opacity:0;transition:opacity .2s;}
+.embed-link-card:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(0,0,0,.35),0 0 0 1px rgba(254,248,61,.1);border-color:rgba(254,248,61,.18);}
+.embed-link-card:hover::before{opacity:1;}
+.embed-link-card .elc-body { padding:14px 16px;flex:1;min-width:0;display:flex;flex-direction:column;gap:6px; }
+.embed-link-card .elc-site { display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(254,248,61,.45); }
+.embed-link-card .elc-title { font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.embed-link-card .elc-desc { font-size:12px;color:var(--muted-light);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+.embed-link-card .elc-url { font-size:9px;color:var(--muted);font-family:monospace;opacity:.5;letter-spacing:.02em; }
+.embed-link-card .elc-thumb { width:85px;min-width:85px;background:linear-gradient(135deg,rgba(254,248,61,.03),rgba(255,255,255,.01));display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.35;border-left:1px solid rgba(254,248,61,.04); }
+.embed-invite-card { border-radius:20px;overflow:hidden;max-width:400px;background:linear-gradient(160deg,rgba(254,248,61,.02),rgba(255,255,255,.01));border:1.5px solid rgba(254,248,61,.1);margin:8px 0;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);box-shadow:0 4px 20px rgba(0,0,0,.25);position:relative; }
+.embed-invite-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(254,248,61,.05),transparent 50%);pointer-events:none;opacity:0;transition:opacity .2s;z-index:0;}
+.embed-invite-card:hover{transform:translateY(-2px);border-color:rgba(254,248,61,.28);box-shadow:0 10px 40px rgba(0,0,0,.35),0 0 24px rgba(254,248,61,.04);}
+.embed-invite-card:hover::before{opacity:1;}
 @keyframes embedIn { from{opacity:0;transform:translateY(6px) scale(.98)} to{opacity:1;transform:none} }
-.embed-x-card,.embed-spotify-card { border-radius:14px;background:linear-gradient(135deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.06);max-width:480px;margin:8px 0;overflow:hidden;cursor:pointer;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;transition:all .2s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(4px); }
+.embed-x-card,.embed-spotify-card { border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.015),rgba(255,255,255,.005));border:1.5px solid rgba(255,255,255,.06);max-width:500px;margin:8px 0;overflow:hidden;cursor:pointer;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;transition:all .22s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(6px);position:relative; }
 .embed-x-card { border-left:3px solid #1d9bf0; }
-.embed-x-card:hover { transform:translateY(-2px);border-color:rgba(29,155,240,.2);box-shadow:0 8px 32px rgba(0,0,0,.3),0 0 12px rgba(29,155,240,.04); }
+.embed-x-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 0% 50%,rgba(29,155,240,.04),transparent 50%);pointer-events:none;opacity:0;transition:opacity .2s;}
+.embed-x-card:hover{transform:translateY(-2px);border-color:rgba(29,155,240,.2);box-shadow:0 10px 36px rgba(0,0,0,.35),0 0 16px rgba(29,155,240,.04);}
+.embed-x-card:hover::before{opacity:1;}
 .embed-spotify-card { border-left:3px solid #1DB954; }
-.embed-spotify-card:hover { transform:translateY(-1px);border-color:rgba(29,185,84,.3); }
+.embed-spotify-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 0% 50%,rgba(29,185,84,.04),transparent 50%);pointer-events:none;opacity:0;transition:opacity .2s;}
+.embed-spotify-card:hover{transform:translateY(-2px);border-color:rgba(29,185,84,.25);box-shadow:0 10px 36px rgba(0,0,0,.3),0 0 16px rgba(29,185,84,.04);}
+.embed-spotify-card:hover::before{opacity:1;}
 
 /* ── (stat strip + hero styles now in main home CSS block above) ── */
 
@@ -1235,13 +1244,6 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
     </div>
   </div>
   <div style="flex:1;"></div>
-  <!-- Onyx pill in sidebar -->
-  <div style="padding:6px 10px;flex-shrink:0;">
-    <div class="onyx-pill" onclick="showView('atelier')" id="onyx-display" style="width:100%;justify-content:center;">
-      <img src="Onyx.png" style="width:14px;height:14px;object-fit:contain;">
-      <span id="onyx-val">0</span>
-    </div>
-  </div>
   <!-- Userbar -->
   <div class="userbar">
     <div class="ua-clickable" id="ua-clickable" onclick="toggleOwnProfilePanel()">
@@ -1291,6 +1293,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
     <div class="tb-desc" id="tb-desc"></div>
     <div style="flex:1;"></div>
     <div class="tb-actions" id="tb-actions"></div>
+    <div class="tb-onyx-pill" id="onyx-display" onclick="showView('atelier')" title="Your Onyx Balance">
+      <img src="Onyx.png" style="width:15px;height:15px;object-fit:contain;">
+      <span id="onyx-val" style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--accent);">0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;">Onyx</span>
+    </div>
     <div class="tb-search">
       <span>🔍</span>
       <input type="text" placeholder="Search…" id="search-input" oninput="handleSearch(this.value)">
@@ -1421,14 +1428,31 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
     <div class="view" id="view-dms">
       <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
         <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
-          <div style="max-width:700px;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-              <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;">Friends</h2>
+          <div style="max-width:750px;">
+            <!-- DM Hero Header -->
+            <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:24px;border:1.5px solid rgba(96,165,250,.1);background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));">
+              <div style="position:relative;height:140px;overflow:hidden;">
+                <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(167,139,250,.06),rgba(18,22,40,.9));"></div>
+                <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 30%,rgba(96,165,250,.12),transparent 60%);pointer-events:none;"></div>
+                <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(7,9,14,.95) 100%);"></div>
+              </div>
+              <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 28px 22px;display:flex;align-items:flex-end;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <div style="width:44px;height:44px;border-radius:14px;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.2);display:flex;align-items:center;justify-content:center;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                  </div>
+                  <div>
+                    <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;line-height:1;">Direct Messages</div>
+                    <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Chat with your friends privately</div>
+                  </div>
+                </div>
+                <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 18px;border-radius:12px;">+ Add Friend</button>
+              </div>
             </div>
-            <div id="dm-friends-tabs" style="display:flex;gap:5px;margin-bottom:20px;">
+            <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
               <button class="disc-tab" onclick="dmFriendsFilter('online',this)">Online</button>
               <button class="disc-tab active" onclick="dmFriendsFilter('all',this)">All</button>
-              <button class="disc-tab" onclick="openModal('modal-add-friend')" style="background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;">+ Add Friend</button>
+              <button class="disc-tab" onclick="dmFriendsFilter('pending',this)">Pending</button>
             </div>
             <div id="dm-friends-list"></div>
           </div>
@@ -1470,24 +1494,39 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
     <!-- DISCOVER VIEW -->
     <div class="view" id="view-discover">
       <div class="discover-scroll">
-        <div class="disc-hero">
-          <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg> Discover Bastions</h2>
-          <p>Explore vibrant communities, find your people, and join the conversation.</p>
-          <div class="disc-search">
-            <span class="si"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-            <input type="text" placeholder="Search public bastions…" id="disc-search-input" oninput="filterDiscover(this.value)">
+        <!-- Hero with banner image -->
+        <div class="disc-hero" style="padding:0;overflow:hidden;position:relative;border-radius:24px;margin-bottom:30px;border:1.5px solid rgba(254,248,61,.1);">
+          <div style="position:relative;height:200px;overflow:hidden;">
+            <img src="Fortized banner2.png" style="width:100%;height:100%;object-fit:cover;filter:brightness(.55) saturate(1.1);" onerror="this.style.display='none'">
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,9,14,0) 0%,rgba(7,9,14,.7) 50%,rgba(7,9,14,.95) 100%);"></div>
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(254,248,61,.08),transparent 55%);pointer-events:none;"></div>
           </div>
-          <div class="disc-tabs">
-            <button class="disc-tab active" onclick="setDiscoverTab('all',this)">All</button>
-            <button class="disc-tab" onclick="setDiscoverTab('gaming',this)">Gaming</button>
-            <button class="disc-tab" onclick="setDiscoverTab('art',this)">Art</button>
-            <button class="disc-tab" onclick="setDiscoverTab('tech',this)">Tech</button>
-            <button class="disc-tab" onclick="setDiscoverTab('social',this)">Social</button>
-            <button class="disc-tab" onclick="setDiscoverTab('music',this)">Music</button>
-            <button class="disc-tab" onclick="setDiscoverTab('education',this)">Education</button>
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:28px 40px 32px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+              <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.12);border:1px solid rgba(254,248,61,.2);display:flex;align-items:center;justify-content:center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
+              </div>
+              <div>
+                <h2 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;margin:0;line-height:1;letter-spacing:-.5px;">Discover Bastions</h2>
+              </div>
+            </div>
+            <p style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.6;">Explore vibrant communities, find your people, and join the conversation.</p>
+            <div class="disc-search" style="max-width:460px;">
+              <span class="si"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+              <input type="text" placeholder="Search public bastions…" id="disc-search-input" oninput="filterDiscover(this.value)">
+            </div>
           </div>
-          <div class="disc-stats" id="disc-stats"></div>
         </div>
+        <div class="disc-tabs" style="margin-bottom:20px;display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="disc-tab active" onclick="setDiscoverTab('all',this)">All</button>
+          <button class="disc-tab" onclick="setDiscoverTab('gaming',this)">Gaming</button>
+          <button class="disc-tab" onclick="setDiscoverTab('art',this)">Art</button>
+          <button class="disc-tab" onclick="setDiscoverTab('tech',this)">Tech</button>
+          <button class="disc-tab" onclick="setDiscoverTab('social',this)">Social</button>
+          <button class="disc-tab" onclick="setDiscoverTab('music',this)">Music</button>
+          <button class="disc-tab" onclick="setDiscoverTab('education',this)">Education</button>
+        </div>
+        <div class="disc-stats" id="disc-stats" style="margin-bottom:20px;"></div>
         <div id="disc-featured" style="margin-bottom:24px;"></div>
         <div class="bastion-grid" id="discover-grid"></div>
       </div>
@@ -1498,7 +1537,14 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
       <div class="atelier-wrap">
         <!-- Sidebar nav — modern Fortized style -->
         <div class="atelier-nav">
-          <div style="padding:20px 16px 12px;flex-shrink:0;"></div>
+          <div style="padding:20px 16px 12px;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:10px;padding:0 6px;">
+              <div style="width:32px;height:32px;border-radius:10px;background:rgba(254,248,61,.1);border:1px solid rgba(254,248,61,.15);display:flex;align-items:center;justify-content:center;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg>
+              </div>
+              <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">Atelier</div>
+            </div>
+          </div>
           <div class="atelier-nav-scroll">
             <div class="atelier-nav-section">Account</div>
             <div class="atelier-nav-item active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">
@@ -1516,7 +1562,6 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
               <span class="atelier-nav-icon">🛍️</span>Shop
             </div>
           </div>
-          <!-- Onyx balance removed from nav bottom -->
         </div>
         <!-- Main content -->
         <div class="atelier-scroll" id="atelier-content">
@@ -2895,7 +2940,7 @@ function renderDMSidebar(scroll) {
   html += '<div class="sec-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;">Direct Messages</div>';
   if (friends.length) {
     html += friends.map(f=>`
-      <div class="friend-item" id="dm-fi-${f}" onclick="openDMView('${escapeHTML(f)}')">
+      <div class="friend-item" id="dm-fi-${f}" onclick="openDMView('${escapeHTML(f)}')" oncontextmenu="event.preventDefault();showDMCtxMenu(event,'${escapeHTML(f)}')">
         <div style="position:relative;flex-shrink:0;">
           <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(null,f,34)}</div>
           <span class="profile-status-dot" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:#6b7280;border:2px solid var(--channel);"></span>
@@ -7414,7 +7459,12 @@ function buildProfileNav(scroll) {
     {type:'sep'},
   ];
   scroll.innerHTML = `
-    <div style="padding:0 20px 14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:rgba(255,255,255,.6);letter-spacing:.02em;">Settings</div>
+    <div style="padding:12px 20px 16px;display:flex;align-items:center;gap:10px;">
+      <div style="width:32px;height:32px;border-radius:10px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">Settings</div>
+    </div>
     ${sections.map(s => {
       if (s.type === 'section') return `<div class="profile-nav-section">${s.label}</div>`;
       if (s.type === 'sep') return '<div class="profile-nav-sep"></div>';
@@ -7450,7 +7500,21 @@ function buildProfileView(tab) {
     main.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 300px;height:100%;min-height:0;">
         <!-- LEFT: settings form -->
-        <div style="overflow-y:auto;padding:32px 36px 60px;border-right:1px solid rgba(255,255,255,.05);">
+        <div style="overflow-y:auto;padding:0 36px 60px;border-right:1px solid rgba(255,255,255,.05);">
+
+          <!-- Page Hero -->
+          <div style="position:relative;border-radius:0 0 22px 22px;overflow:hidden;margin:0 -36px 28px;padding:36px 36px 28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border-bottom:1.5px solid rgba(254,248,61,.08);">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 30%,rgba(254,248,61,.05),transparent 60%);pointer-events:none;"></div>
+            <div style="position:relative;display:flex;align-items:center;gap:14px;">
+              <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;line-height:1;">My Profile</div>
+                <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Customize how others see you on Fortized</div>
+              </div>
+            </div>
+          </div>
 
           <!-- SECTION: Profile -->
           <div class="settings-section-title">PROFILE</div>
@@ -7571,7 +7635,7 @@ function buildProfileView(tab) {
 
           <!-- SECTION: Connections -->
           <div class="settings-section-title" style="margin-top:32px;">CONNECTIONS</div>
-          <div style="background:#1c202b;border-radius:10px;padding:4px 14px;">
+          <div style="background:rgba(255,255,255,.02);border:1px solid rgba(254,248,61,.04);border-radius:16px;padding:4px 14px;">
             ${[
               {key:'youtube', icon:'▶', label:'YouTube', pattern:'youtube.com', color:'#FF4444', placeholder:'https://youtube.com/@channel'},
               {key:'roblox',  icon:'🎮', label:'Roblox',  pattern:'roblox.com',  color:'#00B2FF', placeholder:'https://roblox.com/users/...'},
@@ -7611,7 +7675,7 @@ function buildProfileView(tab) {
                 <span style="width:10px;height:10px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
                 <span style="font-size:13px;color:rgba(255,255,255,.55);">${statusLabels[CU.status||'online']||'Online'}</span>
               </div>
-              ${cs?.text ? `<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.06);border-radius:100px;font-size:12px;color:rgba(255,255,255,.5);margin-bottom:8px;">${cs.emoji||''} ${escapeHTML(cs.text)}</div>` : ''}
+              ${cs?.text ? `<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(254,248,61,.04);border:1px solid rgba(254,248,61,.08);border-radius:12px;font-size:12px;color:rgba(255,255,255,.55);margin-bottom:8px;">${cs.emoji ? `<img src="${emojiToTwemojiUrl(cs.emoji)}" style="width:16px;height:16px;object-fit:contain;" onerror="this.outerHTML='${escapeHTML(cs.emoji)}'">` : ''} ${escapeHTML(cs.text)}</div>` : ''}
               ${CU.bio ? `<div style="font-size:12.5px;color:rgba(255,255,255,.45);line-height:1.55;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:8px;border-left:2px solid rgba(255,249,62,.2);margin-bottom:8px;">${escapeHTML(CU.bio.slice(0,120))}${CU.bio.length>120?'…':''}</div>` : ''}
               <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">${renderBadgesHTML(CU)}</div>
             </div>
@@ -7624,6 +7688,19 @@ function buildProfileView(tab) {
   else if (tab === 'account') {
     main.innerHTML = `
       <div class="settings-panel">
+        <!-- Page Hero -->
+        <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 30%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
+          <div style="position:relative;display:flex;align-items:center;gap:14px;">
+            <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <div>
+              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Account</div>
+              <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Manage your login credentials and security</div>
+            </div>
+          </div>
+        </div>
         <div class="settings-section-title">ACCOUNT</div>
         <div class="settings-row">
           <div class="settings-row-label"><div class="srl-name">Username</div><div class="srl-desc">Cannot be changed</div></div>
@@ -7655,6 +7732,19 @@ function buildProfileView(tab) {
   else if (tab === 'notifs_settings') {
     main.innerHTML = `
       <div class="settings-panel">
+        <!-- Page Hero -->
+        <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 60%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
+          <div style="position:relative;display:flex;align-items:center;gap:14px;">
+            <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            </div>
+            <div>
+              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Notifications</div>
+              <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Control what alerts you receive</div>
+            </div>
+          </div>
+        </div>
         <div class="settings-section-title">NOTIFICATIONS</div>
         ${[
           ['messages','💬','Direct Messages','New DM notifications'],
@@ -7689,6 +7779,19 @@ function buildProfileView(tab) {
 
   else if (tab === 'help_center') {
     main.innerHTML = `<div class="settings-panel">
+      <!-- Page Hero -->
+      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
+        <div style="position:relative;display:flex;align-items:center;gap:14px;">
+          <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Help Center</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Resources, support, and information</div>
+          </div>
+        </div>
+      </div>
       <div class="settings-section-title">HELP CENTER</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         ${[
@@ -7697,7 +7800,7 @@ function buildProfileView(tab) {
           {label:'Terms of Service', url:'https://fortized.com/terms.html',    icon:'📜', desc:'Our terms and community guidelines'},
           {label:'Fortized Blog',    url:'https://fortized.com/blog.html',     icon:'📰', desc:'News, updates, and announcements'},
         ].map(link => `
-          <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#1c202b;border:1px solid #2a2f3a;border-radius:10px;text-decoration:none;transition:.14s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)'" onmouseout="this.style.borderColor='#2a2f3a'">
+          <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:14px;padding:16px 18px;background:rgba(255,255,255,.02);border:1.5px solid rgba(254,248,61,.06);border-radius:16px;text-decoration:none;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(254,248,61,.2)';this.style.background='rgba(254,248,61,.02)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(254,248,61,.06)';this.style.background='rgba(255,255,255,.02)';this.style.transform=''">
             <div style="font-size:22px;flex-shrink:0;">${link.icon}</div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;">${link.label}</div>
@@ -7714,38 +7817,49 @@ function buildProfileView(tab) {
     const currentTheme = localStorage.getItem('ftz_appearance') || 'fortized_classic';
     const unlocked = CU?.unlockedAppearances || [];
     const themes = [
-      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', preview:['#07090e','#fff93e','#0b0e15'], free:true},
-      {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   preview:['#030407','#fff93e','#060810'], free:true},
-      {id:'dark_fortress',    name:'Dark Fortress',    desc:'Ultra-dark immersive fortress',   preview:['#030407','#fff93e','#040508'], free:true},
-      {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', preview:['#010103','#fff93e','#020206'], locked:!unlocked.includes('onyx_pure')},
+      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', preview:['#07090e','#fef83d','#0b0e15'], free:true},
+      {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   preview:['#030407','#fef83d','#060810'], free:true},
+      {id:'dark_fortress',    name:'Dark Fortress',    desc:'Ultra-dark immersive fortress',   preview:['#030407','#fef83d','#040508'], free:true},
+      {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', preview:['#010103','#fef83d','#020206'], locked:!unlocked.includes('onyx_pure')},
     ];
     main.innerHTML = `<div class="settings-panel">
+      <!-- Page Hero -->
+      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(254,248,61,.05),transparent 60%);pointer-events:none;"></div>
+        <div style="position:relative;display:flex;align-items:center;gap:14px;">
+          <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+          </div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Appearance</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Your client, your look — choose how Fortized feels</div>
+          </div>
+        </div>
+      </div>
       <div class="settings-section-title">APPEARANCE</div>
-      <div style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:4px;">Your client, your look.</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.3);margin-bottom:18px;">Choose how Fortized looks for you.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
         ${themes.map(t => {
           const isActive = currentTheme===t.id;
           const isLocked = t.locked;
-          const borderCol = isActive ? 'var(--accent)' : 'rgba(255,255,255,.08)';
-          const bgCol = isActive ? 'rgba(255,249,62,.06)' : 'rgba(255,255,255,.02)';
-          const txtCol = isActive ? 'var(--accent)' : '#fff';
+          const borderCol = isActive ? 'rgba(254,248,61,.35)' : 'rgba(255,255,255,.06)';
+          const bgCol = isActive ? 'rgba(254,248,61,.04)' : 'rgba(255,255,255,.015)';
+          const txtCol = isActive ? '#fef83d' : '#fff';
           const clickAction = isLocked ? "toast('Purchase Onyx Pure from the Shop first!','info')" : "applyAppearance('" + t.id + "')";
-          const opac = isLocked ? 'opacity:.6;' : '';
+          const opac = isLocked ? 'opacity:.55;' : '';
           return `
-          <div onclick="${clickAction}" style="border:2px solid ${borderCol};border-radius:14px;overflow:hidden;cursor:pointer;transition:.14s;background:${bgCol};${opac}position:relative;" onmouseover="if(!${isActive})this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="if(!${isActive})this.style.borderColor='${borderCol}'">
-            <div style="height:80px;background:${t.preview[0]};display:flex;gap:4px;padding:8px;">
-              <div style="width:20px;background:${t.preview[2]};border-radius:4px;"></div>
-              <div style="flex:1;background:rgba(255,255,255,.04);border-radius:4px;padding:6px;">
-                <div style="height:6px;background:${t.preview[1]};border-radius:3px;width:50%;margin-bottom:4px;"></div>
-                <div style="height:4px;background:rgba(255,255,255,.12);border-radius:2px;width:80%;"></div>
+          <div onclick="${clickAction}" style="border:1.5px solid ${borderCol};border-radius:18px;overflow:hidden;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);background:${bgCol};${opac}position:relative;" onmouseover="if(!${isActive})this.style.borderColor='rgba(254,248,61,.15)';this.style.transform='translateY(-2px)'" onmouseout="if(!${isActive})this.style.borderColor='${borderCol}';this.style.transform=''">
+            <div style="height:85px;background:${t.preview[0]};display:flex;gap:4px;padding:10px;">
+              <div style="width:22px;background:${t.preview[2]};border-radius:6px;"></div>
+              <div style="flex:1;background:rgba(255,255,255,.04);border-radius:6px;padding:8px;">
+                <div style="height:6px;background:${t.preview[1]};border-radius:4px;width:50%;margin-bottom:5px;"></div>
+                <div style="height:4px;background:rgba(255,255,255,.1);border-radius:3px;width:80%;"></div>
               </div>
             </div>
-            <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;">
-              ${isActive ? '<div style="width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>' : '<div style="width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,.2);flex-shrink:0;"></div>'}
+            <div style="padding:12px 14px;display:flex;align-items:center;gap:10px;">
+              ${isActive ? '<div style="width:12px;height:12px;border-radius:50%;background:#fef83d;flex-shrink:0;box-shadow:0 0 8px rgba(254,248,61,.4);"></div>' : '<div style="width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.15);flex-shrink:0;"></div>'}
               <div>
-                <div style="font-size:13px;font-weight:700;color:${txtCol};">${t.name}${isLocked ? ' 🔒' : ''}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.35);">${t.desc}${t.free ? ' · Free' : isLocked ? ' · 150 Onyx' : ''}</div>
+                <div style="font-size:13.5px;font-weight:700;color:${txtCol};">${t.name}${isLocked ? ' 🔒' : ''}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.3);">${t.desc}${t.free ? ' · Free' : isLocked ? ' · 150 Onyx' : ''}</div>
               </div>
             </div>
           </div>`;
@@ -7757,18 +7871,32 @@ function buildProfileView(tab) {
   else if (tab === 'profile_theme') {
     const hasPlus = CU?.radiancePlus && new Date(CU.radiancePlus) > new Date();
     const pt = CU?.profileTheme || { color1: '#a855f7', color2: '#3b82f6' };
+    const ptHero = `
+      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 40% 40%,rgba(167,139,250,.06),transparent 60%);pointer-events:none;"></div>
+        <div style="position:relative;display:flex;align-items:center;gap:14px;">
+          <div style="width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(59,130,246,.12));border:1px solid rgba(168,85,247,.2);display:flex;align-items:center;justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+          </div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Profile Theme</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Customize your profile card gradient</div>
+          </div>
+        </div>
+      </div>`;
     if (!hasPlus) {
       main.innerHTML = `<div class="settings-panel">
-        <div class="settings-section-title">PROFILE THEME</div>
-        <div style="background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.1);border-radius:14px;padding:36px;text-align:center;">
-          <div style="font-size:40px;margin-bottom:12px;">🔒</div>
-          <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:8px;">Radiance+ Required</div>
-          <div style="font-size:13.5px;color:rgba(255,255,255,.45);max-width:320px;margin:0 auto 20px;line-height:1.6;">Profile themes let you add a gradient stroke and custom colors around your profile card and avatar.</div>
-          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" class="btn-a" style="font-size:13px;">Get Radiance+</button>
+        ${ptHero}
+        <div style="background:rgba(255,255,255,.02);border:1.5px dashed rgba(254,248,61,.08);border-radius:18px;padding:40px;text-align:center;">
+          <div style="font-size:44px;margin-bottom:14px;">🔒</div>
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Radiance+ Required</div>
+          <div style="font-size:13.5px;color:rgba(255,255,255,.4);max-width:320px;margin:0 auto 22px;line-height:1.6;">Profile themes let you add a gradient stroke and custom colors around your profile card and avatar.</div>
+          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" style="background:#fef83d;color:#060810;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:11px 24px;cursor:pointer;">Get Radiance+</button>
         </div>
       </div>`;
     } else {
       main.innerHTML = `<div class="settings-panel">
+        ${ptHero}
         <div class="settings-section-title">PROFILE THEME</div>
         <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:20px;">Your profile card and avatar will have a gradient stroke matching these colors. <span style="color:rgba(255,200,62,.8);">Radiance+</span></div>
         <!-- Color pickers -->
@@ -8151,6 +8279,34 @@ function _ctxSvg(name) {
   return _ctxIcons[name] || '';
 }
 
+// ── Translate message using browser built-in or fallback ──
+async function _translateMessage(msgRow, text) {
+  if (!text || !text.trim()) { toast('Nothing to translate', 'info'); return; }
+  const cleanText = text.replace(/<[^>]+>/g, '').replace(/\[FTZ[A-Z]+:[^\]]+\]/g, '').trim();
+  if (!cleanText) { toast('Nothing to translate', 'info'); return; }
+  // Detect user's browser language
+  const targetLang = (navigator.language || 'en').split('-')[0];
+  try {
+    // Try using the free MyMemory Translation API
+    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText.slice(0,500))}&langpair=autodetect|${targetLang}`);
+    const data = await res.json();
+    if (data?.responseData?.translatedText) {
+      const translated = data.responseData.translatedText;
+      // Show translation inline below message
+      let existingTr = msgRow.querySelector('.msg-translation');
+      if (existingTr) existingTr.remove();
+      const trDiv = document.createElement('div');
+      trDiv.className = 'msg-translation';
+      trDiv.style.cssText = 'margin-top:6px;padding:8px 12px;background:rgba(254,248,61,.04);border:1px solid rgba(254,248,61,.1);border-radius:10px;font-size:12.5px;color:rgba(255,255,255,.65);line-height:1.55;';
+      trDiv.innerHTML = '<span style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(254,248,61,.4);display:block;margin-bottom:4px;">🌐 Translation</span>' + escapeHTML(translated);
+      const textEl = msgRow.querySelector('.msg-text') || msgRow.querySelector('.msg-body');
+      if (textEl) textEl.appendChild(trDiv);
+      else msgRow.appendChild(trDiv);
+      toast('Translated!', 'success');
+    } else { toast('Translation unavailable', 'error'); }
+  } catch { toast('Translation failed — check your connection', 'error'); }
+}
+
 // Close context menu
 function _closeCtxMenu() {
   const menu = document.getElementById('ctx-menu');
@@ -8302,16 +8458,8 @@ function handleContextMenu(e) {
       label: 'Interaction',
       items: [
         { icon: isPinned ? _ctxSvg('unpin') : _ctxSvg('pin'), label: isPinned ? 'Unpin Message' : 'Pin Message', action: () => pinMessage(msgId, text) },
-        { icon: _ctxSvg('bookmark'), label: 'Save to Vault', action: () => { try { let vault = JSON.parse(localStorage.getItem('ftz_vault') || '[]'); vault.push({ msgId, text, from: msgRow.dataset.from, savedAt: Date.now() }); localStorage.setItem('ftz_vault', JSON.stringify(vault)); toast('Saved to Vault', 'success'); } catch { toast('Could not save', 'error'); } } },
         ...(inBastion ? [{ icon: _ctxSvg('thread'), label: 'Create Thread', action: () => toast('Threads coming soon', 'info') }] : []),
-      ]
-    };
-
-    const orgGroup = {
-      label: 'Organization',
-      items: [
-        { icon: _ctxSvg('star'), label: 'Mark as Important', action: () => { msgRow.style.boxShadow = '0 0 0 1px rgba(255,249,62,.15) inset'; toast('Marked as important', 'success'); } },
-        { icon: _ctxSvg('globe'), label: 'Translate', disabled: true },
+        { icon: _ctxSvg('globe'), label: 'Translate', action: () => { _translateMessage(msgRow, text); } },
       ]
     };
 
@@ -8329,7 +8477,7 @@ function handleContextMenu(e) {
       moderationGroup.items.push({ icon: _ctxSvg('trash'), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
     }
 
-    const groups = [primaryGroup, interactionGroup, orgGroup, moderationGroup];
+    const groups = [primaryGroup, interactionGroup, moderationGroup];
     showCtxMenu(e.clientX, e.clientY, groups);
     return;
   }
@@ -9449,6 +9597,26 @@ function animateOnyxGain(amount) {
 // ════════════════════════════════════════════
 // RIGHT-CLICK RAIL BASTION CONTEXT MENU
 // ════════════════════════════════════════════
+// ── DM Right-Click Context Menu ──
+function showDMCtxMenu(e, username) {
+  e.preventDefault();
+  const groups = [
+    { label: username, items: [
+      { icon: _ctxSvg('message'), label: 'Open Chat', action: () => openDMView(username) },
+      { icon: _ctxSvg('profile'), label: 'View Profile', action: () => viewUserProfile(username) },
+      { icon: _ctxSvg('markRead'), label: 'Mark as Read', action: () => toast('Marked as read!', 'success') },
+    ]},
+    { items: [
+      { icon: _ctxSvg('mute'), label: 'Mute Conversation', action: () => toast('Conversation muted', 'info') },
+      { icon: _ctxSvg('copy'), label: 'Copy Username', action: () => navigator.clipboard.writeText(username), copyFeedback: true },
+    ]},
+    { items: [
+      { icon: _ctxSvg('kick'), label: 'Remove Friend', danger: true, action: () => showCustomConfirm('Remove ' + username + ' from friends?', () => { removeFriend(username); }) },
+    ]},
+  ];
+  showCtxMenu(e.clientX, e.clientY, groups);
+}
+
 function showRailBastionCtx(e, idx) {
   e.preventDefault();
   const b = CU.bastions?.[idx];
@@ -9467,6 +9635,8 @@ function showRailBastionCtx(e, idx) {
       ...(inviteCode ? [{ icon: _ctxSvg('globe'), label: 'Copy Invite Link', action: () => { navigator.clipboard.writeText(location.origin+location.pathname+'?invite='+inviteCode); toast('Invite link copied!','success'); }, copyFeedback: true }] : []),
       { icon: _ctxSvg('search'), label: 'Search in Bastion', action: () => { openBastion(idx); document.getElementById('search-input')?.focus(); } },
       { icon: _ctxSvg('create'), label: 'Create Channel', action: () => { openBastion(idx); setTimeout(()=>addChannel(idx,'text'),100); }, disabled: !isOwner },
+      { icon: _ctxSvg('pin'), label: 'View Pinned Messages', action: () => { openBastion(idx); toast('Pinned messages','info'); } },
+      { icon: _ctxSvg('profile'), label: 'View Members', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings('members'),100); } },
     ]},
     ...(isOwner ? [{
       label: 'Manage',
@@ -10237,53 +10407,54 @@ function parseMD(s) {
   // 2. YouTube embed (videos, shorts, and channel links)
   // YouTube Shorts — portrait 9:16
   s = s.replace(/https?:\/\/(?:www\.|m\.)?youtube\.com\/shorts\/([\w-]{11})[^\s]*/gi, (url, vid) => {
-    return `<div style="margin:8px 0;display:inline-block;vertical-align:top;"><div style="position:relative;width:180px;height:320px;border-radius:12px;overflow:hidden;"><iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;inset:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe></div></div>`;
+    return `<div style="margin:8px 0;display:inline-block;vertical-align:top;border-radius:18px;overflow:hidden;border:1.5px solid rgba(255,0,0,.12);background:rgba(255,0,0,.02);"><div style="position:relative;width:180px;height:320px;"><iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;inset:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe></div><div style="padding:6px 12px;display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;color:rgba(255,0,0,.5);text-transform:uppercase;letter-spacing:.08em;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7s-.3-2-1.2-2.8c-1.1-1.2-2.4-1.2-3-1.3C16.2 2.8 12 2.8 12 2.8s-4.2 0-6.8.1c-.6.1-1.9.1-3 1.3C1.3 5 1 7 1 7S.7 9.1.7 11.3v2c0 2.2.3 4.3.3 4.3s.3 2 1.2 2.8c1.1 1.2 2.6 1.1 3.2 1.2C7.2 21.9 12 22 12 22s4.2 0 6.8-.2c.6-.1 1.9-.1 3-1.3.9-.8 1.2-2.8 1.2-2.8s.3-2.1.3-4.3v-2C23.3 9.1 23 7 23 7z"/></svg> YouTube Short</div></div>`;
   });
   // YouTube regular — 16:9
   s = s.replace(/https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/watch\?v=([\w-]{11})|youtu\.be\/([\w-]{11}))[^\s]*/gi, (url, watch, lite) => {
     const vid = watch || lite;
-    return `<div style="margin:8px 0;border-radius:12px;overflow:hidden;max-width:480px;"><div style="position:relative;padding-bottom:56.25%;height:0;"><iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:12px;" allowfullscreen loading="lazy"></iframe></div></div>`;
+    return `<div style="margin:8px 0;border-radius:18px;overflow:hidden;max-width:500px;border:1.5px solid rgba(255,0,0,.1);background:rgba(255,0,0,.015);"><div style="position:relative;padding-bottom:56.25%;height:0;"><iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;inset:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe></div><div style="padding:6px 14px;display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;color:rgba(255,0,0,.5);text-transform:uppercase;letter-spacing:.08em;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7s-.3-2-1.2-2.8c-1.1-1.2-2.4-1.2-3-1.3C16.2 2.8 12 2.8 12 2.8s-4.2 0-6.8.1c-.6.1-1.9.1-3 1.3C1.3 5 1 7 1 7S.7 9.1.7 11.3v2c0 2.2.3 4.3.3 4.3s.3 2 1.2 2.8c1.1 1.2 2.6 1.1 3.2 1.2C7.2 21.9 12 22 12 22s4.2 0 6.8-.2c.6-.1 1.9-.1 3-1.3.9-.8 1.2-2.8 1.2-2.8s.3-2.1.3-4.3v-2C23.3 9.1 23 7 23 7z"/></svg> YouTube Video</div></div>`;
   });
   // YouTube channel links — show as a clickable card
   s = s.replace(/https?:\/\/(?:www\.)?youtube\.com\/@([\w.-]+)[^\s]*/gi, (url, handle) => {
     const safe = escapeHTML(url);
-    return `<a href="#" onclick="openExternalLink(event,'${safe}')" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.25);border-radius:12px;color:#ff4444;text-decoration:none;font-size:13px;margin:4px 0;font-weight:600;">` +
+    return `<a href="#" onclick="openExternalLink(event,'${safe}')" style="display:inline-flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(255,0,0,.04);border:1.5px solid rgba(255,0,0,.12);border-radius:16px;color:#ff4444;text-decoration:none;font-size:13px;margin:4px 0;font-weight:600;transition:all .18s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,0,0,.3)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(255,0,0,.12)';this.style.transform=''">` +
       `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7s-.3-2-1.2-2.8c-1.1-1.2-2.4-1.2-3-1.3C16.2 2.8 12 2.8 12 2.8s-4.2 0-6.8.1c-.6.1-1.9.1-3 1.3C1.3 5 1 7 1 7S.7 9.1.7 11.3v2c0 2.2.3 4.3.3 4.3s.3 2 1.2 2.8c1.1 1.2 2.6 1.1 3.2 1.2C7.2 21.9 12 22 12 22s4.2 0 6.8-.2c.6-.1 1.9-.1 3-1.3.9-.8 1.2-2.8 1.2-2.8s.3-2.1.3-4.3v-2C23.3 9.1 23 7 23 7zM9.7 15.5V8.4l8.1 3.6-8.1 3.5z"/></svg>` +
-      `@${escapeHTML(handle)}</a>`;
+      `<span style="font-family:'Syne',sans-serif;font-weight:700;">@${escapeHTML(handle)}</span></a>`;
   });
   // 3. TikTok — show a card (can't embed directly)
   s = s.replace(/https?:\/\/(?:www\.)?tiktok\.com\/[^\s]+/gi, url => {
     const safe = escapeHTML(url);
-    return `<a href="#" onclick="openExternalLink(event,'${safe}')" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;text-decoration:none;font-size:13px;margin:4px 0;">` +
+    return `<a href="#" onclick="openExternalLink(event,'${safe}')" style="display:inline-flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.08);border-radius:16px;color:#fff;text-decoration:none;font-size:13px;margin:4px 0;transition:all .18s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,255,255,.2)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.transform=''">` +
       `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.09a8.16 8.16 0 004.77 1.52V7.17a4.85 4.85 0 01-1-.48z"/></svg>` +
-      `TikTok Video → ${safe.replace('https://','').slice(0,40)}...</a>`;
+      `<span style="font-family:'Syne',sans-serif;font-weight:700;">TikTok</span><span style="font-size:11px;color:var(--muted);">${safe.replace('https://','').slice(0,40)}...</span></a>`;
   });
   // 4. Spotify embed
   s = s.replace(/https?:\/\/open\.spotify\.com\/(track|album|playlist|artist)\/([\w]+)[^\s]*/gi, (url, type, id) => {
-    return `<div style="margin:8px 0;border-radius:12px;overflow:hidden;max-width:360px;">` +
-      `<iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="${type==='track'?80:160}" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius:12px;"></iframe></div>`;
+    return `<div class="embed-spotify-card" style="margin:8px 0;border-radius:18px;overflow:hidden;max-width:400px;padding:0;border-left:3px solid #1DB954;">` +
+      `<div style="padding:6px 14px;display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;color:rgba(29,185,84,.6);text-transform:uppercase;letter-spacing:.1em;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Spotify</div>` +
+      `<iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="${type==='track'?80:160}" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius:0;"></iframe></div>`;
   });
   // 5. Fortized invite/bastion link — styled embed card
   s = s.replace(/https?:\/\/[^\s]*[?&]invite=([\w]+)[^\s]*/gi, (url, code) => {
     const alreadyMember = (CU?.bastions||[]).some(b=>(b.invites||[]).some(inv=>inv.code===code));
-    return `<div class="embed-invite-card" onclick="joinByInvite('${escapeHTML(code)}')" style="max-width:360px;">
-      <div style="height:80px;background:linear-gradient(135deg,#0d1a12,#0a1020,#1a0d28);position:relative;overflow:hidden;">
-        <div style="position:absolute;inset:0;opacity:.05;background-image:radial-gradient(circle,rgba(255,249,62,.9) 1px,transparent 1px);background-size:18px 18px;"></div>
-        <div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:160px;height:100px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,249,62,.18) 0%,transparent 70%);filter:blur(12px);"></div>
+    return `<div class="embed-invite-card" onclick="joinByInvite('${escapeHTML(code)}')" style="max-width:400px;">
+      <div style="height:90px;background:linear-gradient(135deg,#0d1a12,#0a1020,#1a0d28);position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;opacity:.04;background-image:radial-gradient(circle,rgba(254,248,61,.9) 1px,transparent 1px);background-size:20px 20px;"></div>
+        <div style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:200px;height:120px;border-radius:50%;background:radial-gradient(ellipse,rgba(254,248,61,.15) 0%,transparent 70%);filter:blur(16px);"></div>
+        <div style="position:absolute;bottom:12px;left:16px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(254,248,61,.35);">Bastion Invite</div>
       </div>
-      <div style="padding:0 16px 4px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-top:10px;">You've been invited to a Bastion</div>
-      <div style="display:flex;align-items:center;gap:12px;padding:8px 16px;">
-        <div style="width:48px;height:48px;border-radius:12px;background:var(--panel2);border:2px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🏰</div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;">
+        <div style="width:50px;height:50px;border-radius:14px;background:rgba(254,248,61,.06);border:1.5px solid rgba(254,248,61,.1);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">🏰</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Fortized Bastion</div>
-          <div style="font-size:10.5px;color:var(--muted-light);margin-top:2px;">Invite code: <code style="background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;font-size:10px;">${escapeHTML(code)}</code></div>
+          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Fortized Bastion</div>
+          <div style="font-size:10.5px;color:var(--muted-light);margin-top:3px;">Invite code: <code style="background:rgba(254,248,61,.04);padding:2px 8px;border-radius:6px;font-size:10px;border:1px solid rgba(254,248,61,.06);">${escapeHTML(code)}</code></div>
         </div>
       </div>
-      <div style="padding:4px 16px 12px;">
-        <button style="width:100%;padding:9px;border-radius:8px;background:${alreadyMember?'var(--panel2)':'var(--accent)'};color:${alreadyMember?'var(--muted-light)':'#060810'};font-family:'Syne',sans-serif;font-size:13px;font-weight:700;border:none;cursor:${alreadyMember?'default':'pointer'};">${alreadyMember?'✓ Already a Member':'🏰 Join Bastion'}</button>
+      <div style="padding:4px 18px 14px;">
+        <button style="width:100%;padding:11px;border-radius:14px;background:${alreadyMember?'rgba(255,255,255,.04)':'#fef83d'};color:${alreadyMember?'var(--muted-light)':'#060810'};font-family:'Syne',sans-serif;font-size:13px;font-weight:800;border:${alreadyMember?'1.5px solid var(--border)':'none'};cursor:${alreadyMember?'default':'pointer'};transition:all .15s;"${!alreadyMember?' onmouseover="this.style.filter=\'brightness(1.08)\'" onmouseout="this.style.filter=\'\'"':''}>${alreadyMember?'✓ Already a Member':'🏰 Join Bastion'}</button>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-top:1px solid var(--border);background:rgba(0,0,0,.12);font-size:10px;color:var(--muted);">
-        <span>Fortized Platform</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 18px;border-top:1px solid rgba(254,248,61,.04);background:rgba(0,0,0,.08);font-size:10px;color:var(--muted);">
+        <span style="display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg> Fortized</span>
         <span style="font-family:monospace;font-size:9px;">${escapeHTML(code)}</span>
       </div>
     </div>`;
@@ -10292,17 +10463,17 @@ function parseMD(s) {
   // 5b. X / Twitter post links — styled card
   s = s.replace(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/([\w]+)\/status\/([\d]+)[^\s]*/gi, (url, user, id) => {
     const safe = escapeHTML(url);
-    return `<div class="embed-x-card" onclick="openExternalLink(event,'${safe}')" style="padding:12px 14px 10px 17px;">
-      <div style="display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#1d9bf0;margin-bottom:8px;">
-        <span style="font-family:'Syne',sans-serif;font-weight:900;font-size:12px;">𝕏</span> Post
+    return `<div class="embed-x-card" onclick="openExternalLink(event,'${safe}')" style="padding:14px 16px 12px 19px;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#1d9bf0;margin-bottom:10px;">
+        <span style="font-family:'Syne',sans-serif;font-weight:900;font-size:13px;">𝕏</span> Post
       </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1d9bf0,#0a6bbf);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#fff;flex-shrink:0;">${user[0].toUpperCase()}</div>
-        <div><div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;">@${escapeHTML(user)}</div></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1d9bf0,#0a6bbf);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#fff;flex-shrink:0;">${user[0].toUpperCase()}</div>
+        <div><div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#fff;">@${escapeHTML(user)}</div></div>
       </div>
-      <div style="font-size:12px;color:var(--muted-light);">View post #${escapeHTML(id)} on 𝕏</div>
-      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;">
-        <span>♥ Likes</span><span>🔁 Retweets</span><span>💬 Replies</span>
+      <div style="font-size:12.5px;color:var(--muted-light);line-height:1.55;">View post on 𝕏</div>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:10px;font-size:10.5px;color:var(--muted);border-top:1px solid rgba(29,155,240,.08);padding-top:10px;">
+        <span style="display:flex;align-items:center;gap:4px;">❤️ Likes</span><span style="display:flex;align-items:center;gap:4px;">🔁 Reposts</span><span style="display:flex;align-items:center;gap:4px;">💬 Replies</span>
       </div>
     </div>`;
   });
@@ -10310,14 +10481,14 @@ function parseMD(s) {
   // 5c. X / Twitter profile links
   s = s.replace(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/([\w]+)(?:\s|$)/gi, (url, user) => {
     const safe = escapeHTML(url.trim());
-    return `<a href="#" onclick="openExternalLink(event,'${safe}')" class="embed-x-card" style="display:block;padding:10px 14px;text-decoration:none;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1d9bf0,#0a6bbf);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px;flex-shrink:0;">${user[0].toUpperCase()}</div>
-        <div>
-          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);">@${escapeHTML(user)}</div>
-          <div style="font-size:10px;color:#1d9bf0;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-top:2px;">𝕏 Profile</div>
+    return `<a href="#" onclick="openExternalLink(event,'${safe}')" class="embed-x-card" style="display:block;padding:12px 16px;text-decoration:none;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#1d9bf0,#0a6bbf);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:15px;flex-shrink:0;font-family:'Syne',sans-serif;">${user[0].toUpperCase()}</div>
+        <div style="flex:1;">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;">@${escapeHTML(user)}</div>
+          <div style="font-size:10px;color:#1d9bf0;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-top:3px;">𝕏 Profile</div>
         </div>
-        <div style="margin-left:auto;font-size:10px;font-weight:700;color:#1d9bf0;background:rgba(29,155,240,.12);border:1px solid rgba(29,155,240,.28);border-radius:100px;padding:3px 10px;">Follow</div>
+        <div style="font-size:11px;font-weight:700;color:#1d9bf0;background:rgba(29,155,240,.1);border:1.5px solid rgba(29,155,240,.25);border-radius:100px;padding:5px 14px;transition:all .15s;" onmouseover="this.style.background='rgba(29,155,240,.18)'" onmouseout="this.style.background='rgba(29,155,240,.1)'">Follow</div>
       </div>
     </a> `;
   });
@@ -10332,9 +10503,10 @@ function parseMD(s) {
     else if (domain.includes('steam') || domain.includes('steampowered')) siteName = 'Steam';
     else if (domain.includes('itch.io')) siteName = 'itch.io';
     const pathLabel = url.replace(/^https?:\/\//,'').slice(0,55) + (url.length>60?'…':'');
+    const siteIcon = domain.includes('github') ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>' : domain.includes('twitch') ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="#9146ff"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>' : domain.includes('reddit') ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="#ff4500"><circle cx="12" cy="12" r="12"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>';
     return `<div class="embed-link-card" onclick="openExternalLink(event,'${safe}')">
       <div class="elc-body">
-        <div class="elc-site">${siteName||domain}</div>
+        <div class="elc-site">${siteIcon} ${siteName||domain}</div>
         <div class="elc-title">${escapeHTML(pathLabel)}</div>
         <div class="elc-url">${escapeHTML(domain)}</div>
       </div>
@@ -11730,11 +11902,22 @@ function refreshCustomStatusBubble() {
   if (!el) return;
   const cs = CU && CU.customStatus;
   if (cs && cs.text) {
-    el.innerHTML = '<span style="font-size:12px;">'+cs.emoji+'</span><span style="font-size:10.5px;font-weight:600;">'+escapeHTML(cs.text)+'</span>';
+    const emojiUrl = cs.emoji ? emojiToTwemojiUrl(cs.emoji) : '';
+    const emojiHTML = emojiUrl ? `<img src="${emojiUrl}" style="width:14px;height:14px;object-fit:contain;" onerror="this.outerHTML='${cs.emoji}'">` : '';
+    el.innerHTML = emojiHTML + '<span style="font-size:10.5px;font-weight:600;">'+escapeHTML(cs.text)+'</span>';
     el.style.display = 'inline-flex';
   } else {
     el.style.display = 'none';
   }
+}
+
+// Also update all custom status displays with twemoji rendering
+function _renderStatusEmoji(emoji) {
+  if (!emoji) return '';
+  try {
+    const url = emojiToTwemojiUrl(emoji);
+    return `<img src="${url}" style="width:14px;height:14px;object-fit:contain;vertical-align:-2px;" onerror="this.outerHTML='${escapeHTML(emoji)}'">`;
+  } catch { return escapeHTML(emoji); }
 }
 
 const STATUS_PRESETS = [
@@ -11759,10 +11942,10 @@ function openStatusPicker() {
   const status = CU?.status || 'online';
 
   const STATUS_MODES = [
-    { id:'online', label:'Online', color:'#3ecf6e', icon:'🟢' },
-    { id:'away',   label:'Away',   color:'#f59e0b', icon:'🟡' },
-    { id:'dnd',    label:'Do Not Disturb', color:'#f87171', icon:'🔴' },
-    { id:'invisible', label:'Invisible', color:'#6b7280', icon:'⚫' },
+    { id:'online', label:'Online', color:'#3ecf6e' },
+    { id:'away',   label:'Away',   color:'#f59e0b' },
+    { id:'dnd',    label:'Do Not Disturb', color:'#f87171' },
+    { id:'invisible', label:'Invisible', color:'#6b7280' },
   ];
 
   const overlay = document.createElement('div');
@@ -11770,32 +11953,47 @@ function openStatusPicker() {
   overlay.id = 'ftz-status-picker';
   overlay.onclick = e => { if(e.target===overlay) _closeStatusPicker(); };
 
+  // Render the emoji button with twemoji
+  const curEmoji = cur.emoji||'😊';
+  const twemojiUrl = emojiToTwemojiUrl(curEmoji);
+
   overlay.innerHTML = `
-    <div class="sp-card">
-      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:14px;">Set Status</div>
-      <div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Status Mode</div>
-      <div class="sp-mode-row">
+    <div class="sp-card" style="max-width:420px;width:100%;border-radius:24px;border:1.5px solid rgba(254,248,61,.1);background:linear-gradient(165deg,var(--panel),#0c0f18);box-shadow:0 24px 80px rgba(0,0,0,.7);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+        <div style="width:36px;height:36px;border-radius:12px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">Set Status</div>
+      </div>
+
+      <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Status Mode</div>
+      <div class="sp-mode-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;">
         ${STATUS_MODES.map(m=>`
-          <div class="sp-mode-opt ${status===m.id?'sel':''}" onclick="pickStatusMode('${m.id}',this)" data-mode="${m.id}">
-            <div class="sp-mode-dot" style="background:${m.color};box-shadow:0 0 6px ${m.color}88;"></div>
-            <span style="font-size:11px;">${m.label}</span>
+          <div class="sp-mode-opt ${status===m.id?'sel':''}" onclick="pickStatusMode('${m.id}',this)" data-mode="${m.id}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid ${status===m.id?'rgba(254,248,61,.2)':'var(--border)'};border-radius:14px;cursor:pointer;transition:all .15s;background:${status===m.id?'rgba(254,248,61,.04)':'transparent'};" onmouseover="this.style.borderColor='rgba(254,248,61,.15)';this.style.background='rgba(254,248,61,.03)'" onmouseout="if(!this.classList.contains('sel')){this.style.borderColor='var(--border)';this.style.background='transparent'}">
+            <div style="width:12px;height:12px;border-radius:50%;background:${m.color};box-shadow:0 0 8px ${m.color}66;flex-shrink:0;"></div>
+            <span style="font-size:13px;font-weight:600;color:${status===m.id?'#fff':'rgba(255,255,255,.6)'};">${m.label}</span>
           </div>`).join('')}
       </div>
-      <div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:14px;">Custom Status Text</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
-        <button onclick="pickStatusEmoji()" id="status-emoji-btn" style="width:34px;height:34px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);cursor:pointer;font-size:16px;flex-shrink:0;">${cur.emoji||'😊'}</button>
-        <input id="status-text-input" class="field-input" placeholder="What's on your mind?" value="${escapeHTML(cur.text||'')}" style="flex:1;" maxlength="100">
+
+      <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Custom Status</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;">
+        <button onclick="pickStatusEmoji()" id="status-emoji-btn" data-emoji="${escapeHTML(curEmoji)}" style="width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;" onmouseover="this.style.borderColor='rgba(254,248,61,.2)';this.style.background='rgba(254,248,61,.04)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='rgba(255,255,255,.04)'">
+          <img src="${twemojiUrl}" style="width:24px;height:24px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;\\'>${curEmoji}</span>'">
+        </button>
+        <input id="status-text-input" class="field-input" placeholder="What's on your mind?" value="${escapeHTML(cur.text||'')}" style="flex:1;background:rgba(255,255,255,.04);border:1.5px solid var(--border);border-radius:14px;padding:10px 16px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(254,248,61,.25)'" onblur="this.style.borderColor='var(--border)'" maxlength="100">
       </div>
-      <div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Clear After</div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;">
+
+      <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Clear After</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
         ${[{id:'30m',label:'30 min'},{id:'1h',label:'1 hour'},{id:'4h',label:'4 hours'},{id:'today',label:'Today'},{id:'forever',label:"Don't Clear"}].map(d=>
-          `<button class="status-dur-btn" data-dur="${d.id}" onclick="document.querySelectorAll('.status-dur-btn').forEach(b=>b.style.background='transparent');this.style.background='rgba(255,249,62,.12)';this.style.borderColor='rgba(255,249,62,.3)'" style="padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;transition:.12s;">${d.label}</button>`
+          `<button class="status-dur-btn" data-dur="${d.id}" onclick="document.querySelectorAll('.status-dur-btn').forEach(b=>{b.style.background='transparent';b.style.borderColor='var(--border)';b.style.color='rgba(255,255,255,.5)'});this.style.background='rgba(254,248,61,.08)';this.style.borderColor='rgba(254,248,61,.25)';this.style.color='var(--accent)'" style="padding:7px 14px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;">${d.label}</button>`
         ).join('')}
       </div>
+
       <div style="display:flex;gap:8px;">
-        <button class="btn-a" style="flex:1;" onclick="saveCustomStatus()">Save</button>
-        <button class="btn-g" style="padding:9px 14px;" onclick="clearCustomStatus()">Clear</button>
-        <button class="btn-g" style="padding:9px 14px;" onclick="_closeStatusPicker()">Cancel</button>
+        <button onclick="saveCustomStatus()" style="flex:1;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:11px;cursor:pointer;transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''">Save Status</button>
+        <button onclick="clearCustomStatus()" style="background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);border:1.5px solid var(--border);border-radius:14px;font-size:13px;font-weight:600;padding:11px 16px;cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='rgba(248,113,113,.25)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='rgba(255,255,255,.5)'">Clear</button>
+        <button onclick="_closeStatusPicker()" style="background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);border:1.5px solid var(--border);border-radius:14px;font-size:13px;font-weight:600;padding:11px 16px;cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="this.style.borderColor='var(--border)'">Cancel</button>
       </div>
     </div>`;
 
@@ -11803,7 +12001,14 @@ function openStatusPicker() {
 }
 
 function pickStatusMode(mode, el) {
-  document.querySelectorAll('.sp-mode-opt').forEach(o => o.classList.toggle('sel', o.dataset.mode===mode));
+  document.querySelectorAll('.sp-mode-opt').forEach(o => {
+    const isSel = o.dataset.mode===mode;
+    o.classList.toggle('sel', isSel);
+    o.style.borderColor = isSel ? 'rgba(254,248,61,.2)' : 'var(--border)';
+    o.style.background = isSel ? 'rgba(254,248,61,.04)' : 'transparent';
+    const span = o.querySelector('span');
+    if (span) span.style.color = isSel ? '#fff' : 'rgba(255,255,255,.6)';
+  });
   setUserStatus(mode);
   const labels = {online:'Online',away:'Away',dnd:'Do Not Disturb',invisible:'Invisible'};
   toast(`Status: ${labels[mode]||mode}`, 'info');
@@ -11811,15 +12016,48 @@ function pickStatusMode(mode, el) {
 
 
 function pickStatusEmoji() {
-  const emojis = ['😊','🎮','🎵','💻','📚','😴','🍕','✈️','🏋️','🎨','🤔','🔥','😎','🥳','😤','💪','🌙','☀️','⚡','🐉','🧁','🎯','🌈','🦋','🐉','🎲','🏆','💎','🌺','🍜'];
+  const emojis = ['😊','🎮','🎵','💻','📚','😴','🍕','✈️','🏋️','🎨','🤔','🔥','😎','🥳','😤','💪','🌙','☀️','⚡','🐉','🧁','🎯','🌈','🦋','🎲','🏆','💎','🌺','🍜','❤️','🎶','🍿','🔮','🪐','🌸','🐾','🍂','🎧','🌍','☕'];
   const btn = document.getElementById('status-emoji-btn');
   if (!btn) return;
   const rect = btn.getBoundingClientRect();
-  showCtxMenu(rect.right+4, rect.top, [{items:emojis.map(function(em){ return {icon:em,label:em,action:function(){btn.textContent=em;}}; })}]);
+  // Build a twemoji grid picker
+  const picker = document.createElement('div');
+  picker.id = 'status-emoji-picker';
+  picker.style.cssText = 'position:fixed;z-index:5000;background:var(--panel);border:1.5px solid rgba(254,248,61,.12);border-radius:18px;padding:12px;box-shadow:0 12px 44px rgba(0,0,0,.6);display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-width:340px;animation:ctxIn .12s cubic-bezier(.22,1,.36,1);';
+  picker.style.left = (rect.right + 8) + 'px';
+  picker.style.top = Math.max(8, rect.top - 80) + 'px';
+  emojis.forEach(em => {
+    const url = emojiToTwemojiUrl(em);
+    const cell = document.createElement('div');
+    cell.style.cssText = 'width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;';
+    cell.innerHTML = `<img src="${url}" style="width:24px;height:24px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;\\'>${em}</span>'">`;
+    cell.onmouseover = () => { cell.style.background='rgba(254,248,61,.1)'; cell.style.transform='scale(1.15)'; };
+    cell.onmouseout = () => { cell.style.background=''; cell.style.transform=''; };
+    cell.onclick = () => {
+      btn.dataset.emoji = em;
+      const newUrl = emojiToTwemojiUrl(em);
+      btn.innerHTML = `<img src="${newUrl}" style="width:24px;height:24px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;\\'>${em}</span>'">`;
+      picker.remove();
+    };
+    picker.appendChild(cell);
+  });
+  // Close when clicking outside
+  const closeHandler = (e) => {
+    if (!picker.contains(e.target) && e.target !== btn) { picker.remove(); document.removeEventListener('click', closeHandler); }
+  };
+  setTimeout(() => document.addEventListener('click', closeHandler), 10);
+  document.body.appendChild(picker);
+  // Reposition if off-screen
+  requestAnimationFrame(() => {
+    const r = picker.getBoundingClientRect();
+    if (r.right > window.innerWidth - 8) picker.style.left = Math.max(8, rect.left - r.width - 8) + 'px';
+    if (r.bottom > window.innerHeight - 8) picker.style.top = Math.max(8, window.innerHeight - r.height - 8) + 'px';
+  });
 }
 
 async function saveCustomStatus() {
-  const emoji = (document.getElementById('status-emoji-btn')||{}).textContent||'😊';
+  const emojiBtn = document.getElementById('status-emoji-btn');
+  const emoji = emojiBtn?.dataset?.emoji || emojiBtn?.textContent?.trim() || '😊';
   const text = ((document.getElementById('status-text-input')||{}).value||'').trim();
   if (!text) { toast('Add some text!','error'); return; }
   // Get selected duration
@@ -13338,34 +13576,41 @@ function renderAtelierTab(tab) {
     ];
     const doneQ = allQ.filter(q => doneQuests.includes(q.id) || (q.id==='join_bastion'&&(CU?.bastions||[]).length>0) || (q.id==='add_friend'&&(CU?.friends||[]).length>0) || (q.id==='set_pfp'&&CU?.pfp) || (q.id==='daily_claim'&&dailyDone));
 
-    el.style.padding = '0';
+    el.style.padding = '28px 32px 0';
     el.innerHTML = `
-      <!-- Hero banner -->
-      <div style="position:relative;height:260px;background:linear-gradient(135deg,#070a12,#141830,#0d1220);overflow:hidden;flex-shrink:0;">
-        <img src="Onyx banner.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;" onerror="this.style.display='none'">
-        <div class="hero-sparkles" id="atelier-sparkles"></div>
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,10,18,.05) 0%,rgba(7,10,18,.9) 100%);"></div>
-        <!-- Status pill top-left -->
-        ${hasPlus?`<div style="position:absolute;top:18px;left:22px;display:flex;align-items:center;gap:8px;background:rgba(255,157,62,.12);border:1px solid rgba(255,157,62,.3);border-radius:100px;padding:6px 14px;backdrop-filter:blur(12px);">
-          <span style="font-size:14px;">🌟</span><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ff9d3e;">Radiance+ · ${daysPlus}d</span>
-        </div>`:hasRad?`<div style="position:absolute;top:18px;left:22px;display:flex;align-items:center;gap:8px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.2);border-radius:100px;padding:6px 14px;backdrop-filter:blur(12px);">
-          <span style="font-size:14px;">✨</span><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ffd93e;">Radiance · ${daysRad}d</span>
+      <!-- Hero banner — unified card design -->
+      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;border:1.5px solid rgba(254,248,61,.12);background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));">
+        <div style="position:relative;height:200px;overflow:hidden;">
+          <img src="Onyx banner.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;filter:brightness(.6) saturate(1.1);" onerror="this.style.display='none'">
+          <div class="hero-sparkles" id="atelier-sparkles"></div>
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,9,14,0) 0%,rgba(7,9,14,.8) 60%,rgba(7,9,14,.98) 100%);"></div>
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(254,248,61,.06),transparent 55%);pointer-events:none;"></div>
+        </div>
+        <!-- Status pill -->
+        ${hasPlus?`<div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:8px;background:rgba(255,157,62,.1);border:1px solid rgba(255,157,62,.25);border-radius:100px;padding:5px 14px;backdrop-filter:blur(12px);">
+          <span style="font-size:13px;">🌟</span><span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:#ff9d3e;">Radiance+ · ${daysPlus}d</span>
+        </div>`:hasRad?`<div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:8px;background:rgba(254,248,61,.06);border:1px solid rgba(254,248,61,.18);border-radius:100px;padding:5px 14px;backdrop-filter:blur(12px);">
+          <span style="font-size:13px;">✨</span><span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:#ffd93e;">Radiance · ${daysRad}d</span>
         </div>`:''}
-        <!-- Hero text bottom-left -->
-        <div style="position:absolute;bottom:24px;left:28px;right:28px;display:flex;align-items:flex-end;justify-content:space-between;">
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:#fff;line-height:1;margin-bottom:6px;text-shadow:0 2px 16px rgba(0,0,0,.6);">Atelier</div>
-            <div style="font-size:13.5px;color:rgba(255,255,255,.45);">Your Fortized store & rewards</div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 28px 24px;display:flex;align-items:flex-end;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(254,248,61,.1);border:1px solid rgba(254,248,61,.18);display:flex;align-items:center;justify-content:center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg>
+            </div>
+            <div>
+              <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.5);">Atelier</div>
+              <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Your Fortized store & rewards</div>
+            </div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.45);border:1px solid rgba(255,249,62,.15);border-radius:18px;padding:12px 18px;backdrop-filter:blur(16px);">
-              <img src="Onyx.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.4);border:1px solid rgba(254,248,61,.12);border-radius:16px;padding:10px 16px;backdrop-filter:blur(12px);">
+              <img src="Onyx.png" style="width:16px;height:16px;object-fit:contain;">
               <div>
-                <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">${bal}</div>
-                <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;">Onyx</div>
+                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">${bal}</div>
+                <div style="font-size:9.5px;color:rgba(255,255,255,.3);margin-top:2px;">Onyx</div>
               </div>
             </div>
-            <button onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="background:var(--accent);color:#060810;border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;padding:10px 20px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 20px rgba(255,249,62,.2);transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 28px rgba(255,249,62,.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(255,249,62,.2)'">+ Earn Onyx</button>
+            <button onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;padding:10px 20px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 20px rgba(254,248,61,.2);transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 28px rgba(254,248,61,.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(254,248,61,.2)'">+ Earn Onyx</button>
           </div>
         </div>
       </div>

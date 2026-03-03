@@ -9,8 +9,34 @@
 <style>
 :root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.2);--accent-glow:rgba(255,249,62,.4);--bg:#080a0f;--panel:rgba(12,15,22,.9);--border:#1a2030;--input-bg:#07090e;--radius:14px;--muted:#5a6478;--muted-light:#8b95a8;}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{min-height:100vh;background:linear-gradient(105deg,rgba(8,10,15,.98) 0%,rgba(8,10,15,.75) 100%),url("Fortized banner.png") center/cover no-repeat fixed;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;color:white;padding:32px 24px;position:relative;}
-body::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,249,62,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.012) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;}
+body{min-height:100vh;background:var(--bg);display:flex;font-family:'DM Sans',sans-serif;color:white;position:relative;overflow-x:hidden;}
+body::before{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(255,249,62,.008) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.008) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0;}
+
+/* Left decorative panel */
+.signup-side{display:flex;flex-direction:column;justify-content:center;width:440px;min-height:100vh;padding:60px 52px;position:relative;overflow:hidden;flex-shrink:0;z-index:1;}
+.signup-side::before{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(8,10,15,.92) 0%,rgba(8,10,15,.7) 100%),url("Fortized banner.png") center/cover no-repeat;z-index:-1;}
+.signup-side::after{content:"";position:absolute;inset:0;background:linear-gradient(to right,transparent 80%,var(--bg));z-index:0;pointer-events:none;}
+.side-content{position:relative;z-index:1;}
+.side-logo{display:flex;align-items:center;gap:12px;margin-bottom:52px;text-decoration:none;}
+.side-logo img{height:36px;width:36px;object-fit:contain;}
+.side-logo-text{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;}
+.side-heading{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;letter-spacing:-1.5px;line-height:1.04;color:#fff;margin-bottom:16px;}
+.side-heading em{font-style:normal;color:var(--accent);}
+.side-sub{font-size:15px;color:var(--muted-light);line-height:1.7;margin-bottom:40px;max-width:320px;}
+.side-perks{display:flex;flex-direction:column;gap:16px;}
+.side-perk{display:flex;align-items:center;gap:12px;}
+.sp-icon{width:38px;height:38px;border-radius:11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.sp-text{font-size:13.5px;color:var(--muted-light);font-weight:500;line-height:1.4;}
+.sp-text strong{color:#fff;font-weight:600;}
+.side-trust{margin-top:36px;display:flex;gap:16px;flex-wrap:wrap;}
+.side-trust-chip{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-weight:600;}
+.side-trust-chip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+
+/* Right form panel */
+.signup-main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px;z-index:1;position:relative;}
+.signup-glow{position:absolute;top:-200px;right:-100px;width:500px;height:500px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,249,62,.04),transparent 65%);pointer-events:none;animation:glowDrift 10s ease-in-out infinite;}
+@keyframes glowDrift{0%,100%{transform:translate(0,0);}50%{transform:translate(-40px,30px);}}
+
 .card{position:relative;z-index:1;background:var(--panel);width:100%;max-width:480px;border-radius:22px;border:1px solid var(--border);backdrop-filter:blur(24px);box-shadow:0 40px 100px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.03) inset;overflow:hidden;animation:revealUp .5s cubic-bezier(.22,1,.36,1) both;}
 @keyframes revealUp{from{opacity:0;transform:translateY(32px);}to{opacity:1;transform:translateY(0);}}
 .card-bar{height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
@@ -55,67 +81,115 @@ body::before{content:"";position:absolute;inset:0;background-image:linear-gradie
 .card-footer{text-align:center;margin-top:22px;font-size:13px;color:var(--muted);}
 .card-footer a{color:var(--accent);text-decoration:none;font-weight:600;}
 .card-footer a:hover{text-decoration:underline;}
+
+/* Onyx welcome badge */
+.onyx-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:10px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);font-size:12px;font-weight:700;color:var(--accent);margin-top:12px;}
+.onyx-badge img{width:14px;height:14px;object-fit:contain;}
+
+@media (max-width: 900px){
+  .signup-side{display:none;}
+  body{justify-content:center;}
+  .signup-main{padding:24px;}
+}
 </style>
 </head>
 <body>
-<div class="card">
-  <div class="card-bar"></div>
-  <div class="card-body">
-    <div class="card-header">
-      <h2>Create your account</h2>
-      <p>Join the fortress. Your journey starts here.</p>
-    </div>
 
-    <div class="field">
-      <label>Email address</label>
-      <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
-    </div>
-
-    <div class="field">
-      <label>Username</label>
-      <input type="text" id="username" placeholder="Choose a unique handle" autocomplete="username">
-      <div id="userError" class="field-error"></div>
-    </div>
-
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="password" placeholder="••••••••••" autocomplete="new-password">
-      <div class="hint">At least 6 characters.</div>
-    </div>
-
-    <div class="field">
-      <label>Profile picture <span style="color:#252c3d;font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
-      <div class="upload-box">
-        <input type="file" id="pfp" accept="image/*">
-        <div class="upload-icon">🖼</div>
-        <span><strong>Click to upload</strong> or drag &amp; drop</span>
-        <span>PNG, JPG, GIF up to 5MB</span>
+<div class="signup-side">
+  <div class="side-content">
+    <a href="index.html" class="side-logo">
+      <img src="Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
+      <span class="side-logo-text">Fortized</span>
+    </a>
+    <div class="side-heading">Claim your<br>place in the <em>Fortress.</em></div>
+    <p class="side-sub">Create your account and start building your community. It's free, forever.</p>
+    <div class="side-perks">
+      <div class="side-perk">
+        <div class="sp-icon">🏰</div>
+        <div class="sp-text"><strong>Create Bastions</strong> — your own community servers with full control.</div>
       </div>
-      <div id="pfpName"></div>
+      <div class="side-perk">
+        <div class="sp-icon">💎</div>
+        <div class="sp-text"><strong>25 Onyx</strong> welcome bonus to get you started in the Atelier.</div>
+      </div>
+      <div class="side-perk">
+        <div class="sp-icon">🎭</div>
+        <div class="sp-text"><strong>Earn Radiance</strong> through quests and daily rewards — no credit card.</div>
+      </div>
+      <div class="side-perk">
+        <div class="sp-icon">🛡️</div>
+        <div class="sp-text"><strong>Iron Security</strong> — your data, your privacy, your rules.</div>
+      </div>
     </div>
+    <div class="side-trust">
+      <div class="side-trust-chip">Free forever</div>
+      <div class="side-trust-chip">No credit card</div>
+      <div class="side-trust-chip">No tracking</div>
+    </div>
+  </div>
+</div>
 
-    <div class="divider"></div>
-
-    <label class="agree-notice">
-      <input type="checkbox" id="terms">
-      <div class="checkbox-box">
-        <svg class="checkmark" viewBox="0 0 12 12" fill="none">
-          <path d="M2 6l3 3 5-5" stroke="#080a0f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+<div class="signup-main">
+  <div class="signup-glow"></div>
+  <div class="card">
+    <div class="card-bar"></div>
+    <div class="card-body">
+      <div class="card-header">
+        <h2>Create your account</h2>
+        <p>Join the fortress. Your journey starts here.</p>
       </div>
-      <div class="agree-text">
-        By creating an account you agree to our <a href="terms.html" target="_blank" onclick="event.stopPropagation()">Terms of Service and Terms of Use</a>. Learn how we handle your data in our <a href="privacy.html" target="_blank" onclick="event.stopPropagation()">Privacy Policy</a>.
+
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
       </div>
-    </label>
 
-    <div id="error" class="error"></div>
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="username" placeholder="Choose a unique handle" autocomplete="username">
+        <div id="userError" class="field-error"></div>
+      </div>
 
-    <button class="btn-primary" id="signupBtn">
-      <div class="spinner"></div>
-      <span class="btn-label">Create Account →</span>
-    </button>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••••" autocomplete="new-password">
+        <div class="hint">At least 6 characters.</div>
+      </div>
 
-    <div class="card-footer">Already have an account? <a href="login.html">Sign in</a></div>
+      <div class="field">
+        <label>Profile picture <span style="color:#252c3d;font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+        <div class="upload-box">
+          <input type="file" id="pfp" accept="image/*">
+          <div class="upload-icon">🖼</div>
+          <span><strong>Click to upload</strong> or drag &amp; drop</span>
+          <span>PNG, JPG, GIF up to 5MB</span>
+        </div>
+        <div id="pfpName"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <label class="agree-notice">
+        <input type="checkbox" id="terms">
+        <div class="checkbox-box">
+          <svg class="checkmark" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6l3 3 5-5" stroke="#080a0f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="agree-text">
+          By creating an account you agree to our <a href="terms.html" target="_blank" onclick="event.stopPropagation()">Terms of Service and Terms of Use</a>. Learn how we handle your data in our <a href="privacy.html" target="_blank" onclick="event.stopPropagation()">Privacy Policy</a>.
+        </div>
+      </label>
+
+      <div id="error" class="error"></div>
+
+      <button class="btn-primary" id="signupBtn">
+        <div class="spinner"></div>
+        <span class="btn-label">Create Account →</span>
+      </button>
+
+      <div class="card-footer">Already have an account? <a href="login.html">Sign in</a></div>
+    </div>
   </div>
 </div>
 
@@ -173,10 +247,6 @@ async function doSignup() {
       return;
     }
 
-    // ─────────────────────────────────────────────────────────
-    // THE FIX: cache the user object before redirecting so
-    // app.html loads instantly without a Firebase fetch.
-    // ─────────────────────────────────────────────────────────
     function cacheAndRedirect(userObj) {
       const u = userObj || result.user;
       localStorage.setItem('ftz_current', u.username);

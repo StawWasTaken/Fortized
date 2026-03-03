@@ -6,6 +6,7 @@
 <title>Fortized – Build Your Fortress</title>
 <link rel="icon" type="image/png" href="Fortized icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 <style>
 /* ════════════════════════════════════════════
    TOKENS & RESET
@@ -534,6 +535,65 @@ body::before {
 .rank-mage      { background: rgba(200,100,255,.1); color: #c87af5; }
 .chat-text { font-size: 13px; color: var(--text); line-height: 1.5; }
 
+/* ── DM preview card ─────────────────────── */
+.dm-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px; padding: 0; position: relative; overflow: hidden;
+  transition: border-color .22s, transform .22s, box-shadow .22s;
+}
+.dm-card:hover { border-color: rgba(255,249,62,.16); transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,.5); }
+.dm-topbar {
+  padding: 12px 20px; display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border); background: rgba(255,255,255,.02);
+}
+.dm-topbar-av {
+  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 12px; font-weight: 700; font-family: var(--font-display);
+  flex-shrink: 0;
+}
+.dm-topbar-name {
+  font-family: var(--font-display); font-size: 13.5px; font-weight: 700; color: #fff;
+}
+.dm-topbar-status { font-size: 11px; color: #4ade80; margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.dm-topbar-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #4ade80; }
+.dm-messages { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.dm-msg { display: flex; align-items: flex-start; gap: 10px; }
+.dm-msg-av {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; font-family: var(--font-display);
+}
+.dm-msg-bubble { flex: 1; }
+.dm-msg-name { font-size: 11px; font-weight: 600; color: var(--muted-light); margin-bottom: 3px; }
+.dm-msg-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+.dm-input-bar {
+  margin: 0 16px 14px; padding: 10px 14px; border-radius: 12px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06);
+  font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 8px;
+}
+
+/* ── Fake app preview (sidebar mock) ─────── */
+.app-preview-frame {
+  background: #0b0e15; border: 1px solid var(--border); border-radius: 20px;
+  overflow: hidden; position: relative;
+}
+.app-preview-sidebar {
+  width: 54px; position: absolute; top: 0; left: 0; bottom: 0;
+  background: #090c12; border-right: 1px solid rgba(255,255,255,.04);
+  display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 6px;
+}
+.app-preview-sidebar-icon {
+  width: 34px; height: 34px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; background: rgba(255,255,255,.04); cursor: default;
+}
+.app-preview-sidebar-icon.active { background: var(--accent); }
+.app-preview-main { margin-left: 54px; }
+
+/* Twemoji sizing */
+img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
+
 /* ════════════════════════════════════════════
    SAFETY
 ════════════════════════════════════════════ */
@@ -649,6 +709,7 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
     <a href="#safety" class="nav-pill">Safety</a>
     <a href="blog.html" class="nav-pill">Blog</a>
     <a href="download.html" class="nav-pill">Download</a>
+    <a href="support.html" class="nav-pill">Support</a>
   </div>
 
   <div class="nav-sep"></div>
@@ -752,41 +813,124 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
   <div class="section-heading">Life inside<br>your Bastion.</div>
   <div class="section-desc">Real-time camaraderie, organized ranks, and a culture you build yourself.</div>
   <div class="showcase-grid">
+    <!-- Bastion Chat Preview (app-like) -->
     <div class="sc-card wide">
       <div class="sc-card-accent-bar"></div>
-      <div class="sc-label">⚔️ #war-council</div>
-      <h3>Real-time squad chat</h3>
-      <p>Rank-tagged, organized, and alive with strategy.</p>
-      <div class="chat-preview">
-        <div class="chat-msg">
-          <div class="chat-avatar av-a">K</div>
-          <div class="chat-bubble">
-            <div class="chat-name">KingArrow <span class="rank-tag rank-commander">Commander</span></div>
-            <div class="chat-text">guys we're doing a full cobblestone castle build tonight on the SMP, everyone in 🏰</div>
-          </div>
+      <div class="app-preview-frame" style="min-height:360px;">
+        <div class="app-preview-sidebar">
+          <div class="app-preview-sidebar-icon active" style="font-size:16px;">&#9889;</div>
+          <div style="width:24px;height:1px;background:rgba(255,255,255,.06);margin:2px 0;"></div>
+          <div class="app-preview-sidebar-icon">&#127984;</div>
+          <div class="app-preview-sidebar-icon">&#128225;</div>
+          <div class="app-preview-sidebar-icon">&#128483;</div>
         </div>
-        <div class="chat-msg">
-          <div class="chat-avatar av-b">Z</div>
-          <div class="chat-bubble">
-            <div class="chat-name">Zephyr_ <span class="rank-tag rank-knight">Knight</span></div>
-            <div class="chat-text">bro I just finished my Roblox obby, come check it out before we do minecraft 😭</div>
+        <div class="app-preview-main">
+          <!-- Channel header -->
+          <div style="padding:10px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.01);">
+            <span style="font-size:14px;color:rgba(255,255,255,.15);font-weight:700;">#</span>
+            <span style="font-family:var(--font-display);font-size:13px;font-weight:700;color:#fff;">war-council</span>
+            <span style="font-size:11px;color:var(--muted);margin-left:4px;">Strategy & coordination</span>
           </div>
-        </div>
-        <div class="chat-msg">
-          <div class="chat-avatar av-c">S</div>
-          <div class="chat-bubble">
-            <div class="chat-name">ShadowScout <span class="rank-tag rank-scout">Scout</span></div>
-            <div class="chat-text">what's the server IP again? I haven't played in like 2 weeks lol</div>
+          <!-- Messages -->
+          <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;" id="bastion-chat-preview">
+            <div class="chat-msg">
+              <div class="chat-avatar av-a">K</div>
+              <div class="chat-bubble">
+                <div class="chat-name">KingArrow <span class="rank-tag rank-commander">Commander</span></div>
+                <div class="chat-text">guys we're doing a full cobblestone castle build tonight on the SMP, everyone in 🏰</div>
+              </div>
+            </div>
+            <div class="chat-msg">
+              <div class="chat-avatar av-b">Z</div>
+              <div class="chat-bubble">
+                <div class="chat-name">Zephyr_ <span class="rank-tag rank-knight">Knight</span></div>
+                <div class="chat-text">bro I just finished my Roblox obby, come check it out before we do minecraft 😭</div>
+              </div>
+            </div>
+            <div class="chat-msg">
+              <div class="chat-avatar av-c">S</div>
+              <div class="chat-bubble">
+                <div class="chat-name">ShadowScout <span class="rank-tag rank-scout">Scout</span></div>
+                <div class="chat-text">what's the server IP again? I haven't played in like 2 weeks lol 😅</div>
+              </div>
+            </div>
+            <div class="chat-msg">
+              <div class="chat-avatar av-d">M</div>
+              <div class="chat-bubble">
+                <div class="chat-name">Myrrh <span class="rank-tag rank-mage">Mage</span></div>
+                <div class="chat-text">posted in #pins, also someone needs to fix the redstone farm it keeps breaking 💀</div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="chat-msg">
-          <div class="chat-avatar av-d">M</div>
-          <div class="chat-bubble">
-            <div class="chat-name">Myrrh <span class="rank-tag rank-mage">Mage</span></div>
-            <div class="chat-text">posted in #pins, also someone needs to fix the redstone farm it keeps breaking 💀</div>
+          <!-- Fake input bar -->
+          <div style="margin:0 14px 12px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;opacity:.3;">➕</span>
+            <span style="font-size:12.5px;color:rgba(255,255,255,.2);">Message #war-council</span>
+            <span style="margin-left:auto;font-size:14px;opacity:.3;">😊</span>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Right side: stacked cards -->
+    <div class="sc-card tall">
+      <div class="sc-card-accent-bar"></div>
+      <div class="sc-label">🛡️ Ranks & Roles</div>
+      <h3>Organized hierarchy</h3>
+      <p>Every member has a rank. Commander, Knight, Scout, Mage — your Bastion, your structure.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:18px;">
+        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);">⚔️ Commander</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(100,160,255,.1);color:#6ab0ff;border:1px solid rgba(100,160,255,.2);">🛡️ Knight</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(100,220,140,.1);color:#5dcc82;border:1px solid rgba(100,220,140,.2);">🔍 Scout</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(200,100,255,.1);color:#c87af5;border:1px solid rgba(200,100,255,.2);">✨ Mage</span>
+      </div>
+    </div>
+
+    <!-- DM Preview Card -->
+    <div class="sc-card wide" style="padding:0;">
+      <div class="dm-card" style="border:none;border-radius:inherit;">
+        <div class="dm-topbar">
+          <div class="dm-topbar-av" style="background:rgba(100,160,255,.12);color:#6ab0ff;">L</div>
+          <div class="dm-topbar-name">Luna_Frost</div>
+          <div class="dm-topbar-status">Online</div>
+        </div>
+        <div class="dm-messages" id="dm-preview-msgs">
+          <div class="dm-msg">
+            <div class="dm-msg-av" style="background:rgba(100,160,255,.12);color:#6ab0ff;">L</div>
+            <div class="dm-msg-bubble">
+              <div class="dm-msg-name">Luna_Frost</div>
+              <div class="dm-msg-text">hey!! did you see the new Bastion update? 🔥</div>
+            </div>
+          </div>
+          <div class="dm-msg">
+            <div class="dm-msg-av" style="background:rgba(255,249,62,.12);color:var(--accent);">Y</div>
+            <div class="dm-msg-bubble">
+              <div class="dm-msg-name">You</div>
+              <div class="dm-msg-text">yeah the new roles system is insane 🛡️ we can finally set up proper ranks</div>
+            </div>
+          </div>
+          <div class="dm-msg">
+            <div class="dm-msg-av" style="background:rgba(100,160,255,.12);color:#6ab0ff;">L</div>
+            <div class="dm-msg-bubble">
+              <div class="dm-msg-name">Luna_Frost</div>
+              <div class="dm-msg-text">right?? also the mood system is so cool, our bastion went 🔥 Chaotic mode during game night 😂</div>
+            </div>
+          </div>
+        </div>
+        <div class="dm-input-bar">
+          <span style="font-size:14px;">➕</span>
+          <span>Message @Luna_Frost</span>
+          <span style="margin-left:auto;">😊</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat with friends callout -->
+    <div class="sc-card">
+      <div class="sc-card-accent-bar"></div>
+      <div class="sc-label">💬 Direct Messages</div>
+      <h3>Chat with your friends!</h3>
+      <p>Private conversations, typing indicators, and mutual friend safety checks. Your DMs stay between you.</p>
     </div>
   </div>
 </section>
@@ -862,6 +1006,10 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
     <a href="blog.html">Blog</a>
     <a href="privacy.html">Privacy</a>
     <a href="terms.html">Terms</a>
+    <a href="support.html">Support</a>
+    <a href="https://x.com/Fortized" target="_blank" rel="noopener">𝕏 Fortized</a>
+    <a href="https://x.com/StawdioGroup" target="_blank" rel="noopener">𝕏 Stawdio</a>
+    <a href="https://www.youtube.com/@stawdio-group" target="_blank" rel="noopener">▶ YouTube</a>
   </div>
 </footer>
 
@@ -889,6 +1037,11 @@ document.querySelectorAll('.sc-card').forEach((c, i) => {
   }, { threshold: 0.1 });
   o.observe(c);
 });
+
+// Parse all emojis to Twemoji
+if (typeof twemoji !== 'undefined') {
+  twemoji.parse(document.body, { folder: 'svg', ext: '.svg' });
+}
 </script>
 </body>
 </html>

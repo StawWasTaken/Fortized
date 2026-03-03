@@ -282,11 +282,26 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .home-feed{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column;scroll-behavior:smooth;}
 .home-right{display:none;}
 /* ── UNIFIED VIEW HEADER (Atelier, Discover, DMs) ──── */
-.uv-header{position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;border:1.5px solid rgba(254,248,61,.1);background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));min-height:180px;}
+.uv-header{position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;border:1.5px solid rgba(254,248,61,.1);background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));min-height:240px;}
 .uv-header-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;filter:brightness(.55) saturate(1.1);}
 .uv-header-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,9,14,0) 0%,rgba(7,9,14,.7) 45%,rgba(7,9,14,.98) 100%);}
 .uv-header-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(254,248,61,.06),transparent 55%);pointer-events:none;}
-.uv-header-content{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;padding:28px 36px 28px;height:100%;min-height:180px;}
+.uv-header-content{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;padding:28px 36px 28px;height:100%;min-height:240px;}
+/* ── Active Now Right Sidebar ──── */
+.active-now-sidebar{width:240px;min-width:240px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
+.active-now-header{padding:16px 16px 12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.35);flex-shrink:0;}
+.active-now-list{flex:1;overflow-y:auto;padding:0 8px 16px;}
+.active-now-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;cursor:pointer;transition:background .12s;}
+.active-now-item:hover{background:rgba(255,255,255,.04);}
+.active-now-item .an-avatar{position:relative;flex-shrink:0;}
+.active-now-item .an-avatar .fa{width:34px;height:34px;border-radius:50%;overflow:hidden;font-size:13px;}
+.active-now-item .an-status-dot{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--channel);}
+.active-now-item .an-info{flex:1;min-width:0;}
+.active-now-item .an-name{font-size:13px;font-weight:600;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.active-now-item .an-activity{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;}
+.active-now-empty{padding:20px 16px;text-align:center;}
+.active-now-empty .an-empty-icon{font-size:28px;margin-bottom:8px;opacity:.4;}
+.active-now-empty .an-empty-text{font-size:12px;color:var(--muted);line-height:1.5;}
 .uv-header-left{display:flex;align-items:center;gap:14px;}
 .uv-header-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid;}
 .uv-header-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.5px;text-shadow:0 2px 12px rgba(0,0,0,.5);}
@@ -1487,7 +1502,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
           </div>
         </div>
 
-        <!-- Right panel removed — content integrated into main feed -->
+        <!-- Active Now right sidebar -->
+        <div class="active-now-sidebar" id="home-active-now">
+          <div class="active-now-header">Active Now</div>
+          <div class="active-now-list" id="home-active-now-list"></div>
+        </div>
       </div>
     </div>
 
@@ -1495,10 +1514,10 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
     <div class="view" id="view-dms">
       <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
         <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
-          <div style="max-width:800px;">
+          <div style="max-width:900px;">
             <!-- Unified header -->
             <div class="uv-header" style="border-color:rgba(96,165,250,.12);">
-              <img src="Fortized banner3.png" class="uv-header-bg" onerror="this.style.display='none'">
+              <img src="Fortized banner4.png" class="uv-header-bg" onerror="this.style.display='none'">
               <div class="uv-header-grad"></div>
               <div class="uv-header-glow" style="background:radial-gradient(ellipse at 30% 20%,rgba(96,165,250,.08),transparent 55%);"></div>
               <div class="uv-header-content">
@@ -1507,24 +1526,35 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                   </div>
                   <div>
-                    <div class="uv-header-title">Messages</div>
+                    <div class="uv-header-title">Friends</div>
                     <div class="uv-header-sub">Your conversations & friends</div>
                   </div>
                 </div>
                 <div class="uv-header-actions">
-                  <button class="btn-g" onclick="openModal('modal-new-dm')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> New Chat</button>
-                  <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;">+ Add Friend</button>
+                  <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
                 </div>
               </div>
             </div>
+            <!-- Search bar -->
+            <div style="margin-bottom:20px;position:relative;">
+              <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              </span>
+              <input type="text" id="dm-friends-search" placeholder="Search friends..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;" onfocus="this.style.borderColor='rgba(96,165,250,.3)';this.style.background='rgba(255,255,255,.05)'" onblur="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'">
+            </div>
             <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
-              <button class="disc-tab" onclick="dmFriendsFilter('online',this)">Online</button>
-              <button class="disc-tab active" onclick="dmFriendsFilter('all',this)">All</button>
+              <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">Online</button>
+              <button class="disc-tab" onclick="dmFriendsFilter('all',this)">All</button>
               <button class="disc-tab" onclick="dmFriendsFilter('pending',this)">Pending</button>
             </div>
             <div id="dm-friends-list"></div>
           </div>
         </div>
+      </div>
+      <!-- Active Now sidebar for DMs -->
+      <div class="active-now-sidebar" id="dm-active-now">
+        <div class="active-now-header">Active Now</div>
+        <div class="active-now-list" id="dm-active-now-list"></div>
       </div>
       <div id="dm-user-panel" style="display:none;width:280px;min-width:280px;max-width:280px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;"></div>
     </div>
@@ -1602,7 +1632,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 
     <!-- ATELIER VIEW -->
     <div class="view" id="view-atelier">
-      <div class="atelier-wrap">
+      <div class="atelier-wrap" style="flex-direction:row;">
+        <!-- Main content area -->
         <div class="atelier-scroll" id="atelier-scroll-outer" style="flex:1;overflow-y:auto;padding:28px;scroll-behavior:smooth;">
           <!-- Unified header -->
           <div class="uv-header" style="border-color:rgba(254,248,61,.12);">
@@ -1630,7 +1661,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
               </div>
             </div>
           </div>
-          <!-- Tabs (replaces sidebar nav) -->
+          <!-- Tabs -->
           <div class="atelier-tabs" style="padding:0;margin-bottom:24px;">
             <button class="disc-tab active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">Overview</button>
             <button class="disc-tab" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">Radiance</button>
@@ -1640,6 +1671,37 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
           <!-- Dynamic content -->
           <div id="atelier-content">
             <!-- Loaded dynamically by switchAtelierTab() -->
+          </div>
+        </div>
+        <!-- Right sidebar: Atelier quick info -->
+        <div style="width:260px;min-width:260px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;padding:20px 16px;">
+          <!-- Onyx balance card -->
+          <div style="background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));border:1px solid rgba(255,249,62,.1);border-radius:18px;padding:20px;margin-bottom:16px;text-align:center;">
+            <img src="Onyx.png" style="width:36px;height:36px;object-fit:contain;margin-bottom:8px;">
+            <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance-side">0</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;">Onyx Balance</div>
+          </div>
+          <!-- Quick nav -->
+          <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:10px;padding:0 4px;">Quick Navigation</div>
+          <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:20px;">
+            <div class="ch-item" onclick="switchAtelierTab('overview',document.getElementById('atnav-overview'))" style="border-radius:10px;padding:8px 12px;font-size:12.5px;cursor:pointer;">
+              <span style="margin-right:8px;">✨</span>Overview
+            </div>
+            <div class="ch-item" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="border-radius:10px;padding:8px 12px;font-size:12.5px;cursor:pointer;">
+              <span style="margin-right:8px;">💎</span>Radiance
+            </div>
+            <div class="ch-item" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="border-radius:10px;padding:8px 12px;font-size:12.5px;cursor:pointer;">
+              <span style="margin-right:8px;">📋</span>Quests
+            </div>
+            <div class="ch-item" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" style="border-radius:10px;padding:8px 12px;font-size:12.5px;cursor:pointer;">
+              <span style="margin-right:8px;">🛒</span>Shop
+            </div>
+          </div>
+          <!-- Daily reward reminder -->
+          <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:20px;margin-bottom:6px;">🎁</div>
+            <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.6);margin-bottom:4px;">Daily Reward</div>
+            <div style="font-size:10.5px;color:var(--muted);">Claim your daily Onyx in Overview!</div>
           </div>
         </div>
       </div>
@@ -2430,7 +2492,7 @@ function showView(v) {
   if (v === 'atelier') setTimeout(() => { updateAtelierSidebar(); renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }, 0);
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
-  if (v === 'dms') setTimeout(() => { if (document.getElementById('dm-friends-home')) renderDMFriendsHome(); }, 50);
+  if (v === 'dms') setTimeout(() => { if (document.getElementById('dm-friends-home')) { renderDMFriendsHome(); renderActiveNowSidebar('dm-active-now-list'); } }, 50);
 
   updateTopbar(v);
   updateSidebar(v);
@@ -2459,13 +2521,18 @@ function updateSidebar(v) {
   scroll.innerHTML = '';
 
   // Views that use the secondary sidebar
-  const ctxViews = ['dms','friends','discover','bastion'];
+  const ctxViews = ['home','dms','friends','discover','atelier','bastion'];
   const ctxVisible = ctxViews.includes(v);
   if (ctx) ctx.style.display = ctxVisible ? 'flex' : 'none';
   updateUserbarWidth();
 
   if (v==='home') {
-    if (hdr) hdr.style.display = 'none';
+    if (hdr) hdr.style.display = '';
+    if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
+    if (hdrActs) hdrActs.innerHTML = `
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New DM">✏️</button>
+      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="Add Friend">➕</button>`;
+    renderDMSidebar(scroll);
   } else if (v==='dms' || v==='friends') {
     if (hdr) hdr.style.display = '';
     if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
@@ -2476,11 +2543,20 @@ function updateSidebar(v) {
     renderDMSidebar(scroll);
     if (v==='friends') { setTimeout(() => renderFriendsList('all'), 0); }
   } else if (v==='discover') {
-    if (hdr) hdr.style.display = 'none';
-    scroll.innerHTML = `<div class="ch-item active" style="margin-top:10px;">🌍 Public Bastions</div><div class="ch-item" onclick="openModal('modal-join-bastion')">🔗 Join by Code</div><div class="ch-item" onclick="openModal('modal-create-bastion')">✨ Create Bastion</div>`;
+    if (hdr) hdr.style.display = '';
+    if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
+    if (hdrActs) hdrActs.innerHTML = `
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New DM">✏️</button>
+      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="Add Friend">➕</button>`;
+    renderDMSidebar(scroll);
     loadDiscover();
   } else if (v==='atelier') {
-    if (hdr) hdr.style.display = 'none';
+    if (hdr) hdr.style.display = '';
+    if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
+    if (hdrActs) hdrActs.innerHTML = `
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New DM">✏️</button>
+      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="Add Friend">➕</button>`;
+    renderDMSidebar(scroll);
     const ab = document.getElementById('atelier-balance');
     if (ab) ab.textContent = CU?.onyx||0;
     const db = document.getElementById('daily-btn');
@@ -2555,15 +2631,17 @@ function updateUserbar() {
 function updateUserbarWidth() {
   const ub = document.querySelector('.userbar');
   if (!ub) return;
-  if (_currentView === 'home') {
-    ub.style.width = 'calc(210px - 12px)';
-  } else {
+  const ctx = document.getElementById('sidebar-ctx');
+  const ctxVisible = ctx && ctx.style.display !== 'none';
+  if (ctxVisible) {
     ub.style.width = 'calc(210px + 240px - 12px)';
+  } else {
+    ub.style.width = 'calc(210px - 12px)';
   }
 }
 function updateOnyxDisplay() {
   const bal = CU?.onyx || 0;
-  ['onyx-val','atelier-balance'].forEach(id => {
+  ['onyx-val','atelier-balance','atelier-balance-side'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
@@ -2724,6 +2802,9 @@ function renderHomePanel() {
 
   // Load friend activity feed
   setTimeout(loadFriendActivity, 100);
+
+  // Render Active Now sidebar for Home
+  setTimeout(() => renderActiveNowSidebar('home-active-now-list'), 150);
 }
 
 // ── Realm friends loader (horizontal avatars) ──
@@ -3138,7 +3219,7 @@ function renderDMSidebar(scroll) {
 }
 
 // ── DM Friends Home (shown when no DM selected) ──
-let _dmFriendsFilter = 'all';
+let _dmFriendsFilter = 'online';
 function renderDMFriendsHome() {
   const list = document.getElementById('dm-friends-list');
   if (!list) return;
@@ -3236,17 +3317,78 @@ function dmFriendsFilter(filter, btn) {
   renderDMFriendsHome();
 }
 
+function filterDMFriendsList(query) {
+  const q = (query||'').toLowerCase().trim();
+  document.querySelectorAll('.dm-friend-row').forEach(row => {
+    const user = (row.getAttribute('data-user')||'').toLowerCase();
+    const nameEl = row.querySelector('[id^="dm-home-dn-"]');
+    const name = nameEl ? nameEl.textContent.toLowerCase() : '';
+    row.style.display = (user.includes(q) || name.includes(q)) ? '' : 'none';
+  });
+}
+
+// ── Active Now Sidebar ──────────────────────────────
+async function renderActiveNowSidebar(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const friends = CU?.friends || [];
+  if (!friends.length) {
+    container.innerHTML = `<div class="active-now-empty">
+      <div class="an-empty-icon">😴</div>
+      <div class="an-empty-text">It's quiet for now...<br>When friends are active, they'll show up here.</div>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = '<div style="padding:12px;text-align:center;"><div class="pl-spinner" style="width:16px;height:16px;border-width:2px;margin:0 auto;"></div></div>';
+
+  const results = await Promise.all(friends.slice(0,30).map(async f => {
+    try {
+      const u = await FortizedSocial.getUserByName(f);
+      const st = u?.status || 'offline';
+      return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, customStatus:u?.customStatus||''};
+    } catch { return {username:f, displayName:f, pfp:null, status:'offline', customStatus:''}; }
+  }));
+
+  const online = results.filter(r => r.status==='online' || r.status==='away' || r.status==='dnd');
+  const STATUS_COLORS = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171'};
+  const STATUS_LABELS = {online:'Online',away:'Away',dnd:'Do Not Disturb'};
+
+  if (!online.length) {
+    container.innerHTML = `<div class="active-now-empty">
+      <div class="an-empty-icon">😴</div>
+      <div class="an-empty-text">It's quiet for now...<br>When friends are active, they'll show up here.</div>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = online.map(u => `
+    <div class="active-now-item" onclick="openDMView('${escapeHTML(u.username)}')">
+      <div class="an-avatar">
+        <div class="fa" style="width:34px;height:34px;border-radius:50%;overflow:hidden;font-size:13px;">${buildAvatarHTML(u.pfp, u.displayName, 34)}</div>
+        <span class="an-status-dot" style="background:${STATUS_COLORS[u.status]||'#6b7280'};"></span>
+      </div>
+      <div class="an-info">
+        <div class="an-name">${escapeHTML(u.displayName)}</div>
+        <div class="an-activity">${u.customStatus ? escapeHTML(u.customStatus) : STATUS_LABELS[u.status]||'Online'}</div>
+      </div>
+    </div>`).join('');
+}
+
 function showDMFriendsHome() {
   const wrap = document.getElementById('dm-chat-wrap');
   if (!wrap) return;
   // Hide user panel when returning to friends home
   const dmPanel = document.getElementById('dm-user-panel');
   if (dmPanel) dmPanel.style.display = 'none';
+  // Show Active Now sidebar
+  const anSidebar = document.getElementById('dm-active-now');
+  if (anSidebar) anSidebar.style.display = '';
   wrap.innerHTML = `
     <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
-      <div style="max-width:800px;">
+      <div style="max-width:900px;">
         <div class="uv-header" style="border-color:rgba(96,165,250,.12);">
-          <img src="Fortized banner3.png" class="uv-header-bg" onerror="this.style.display='none'">
+          <img src="Fortized banner4.png" class="uv-header-bg" onerror="this.style.display='none'">
           <div class="uv-header-grad"></div>
           <div class="uv-header-glow" style="background:radial-gradient(ellipse at 30% 20%,rgba(96,165,250,.08),transparent 55%);"></div>
           <div class="uv-header-content">
@@ -3255,25 +3397,32 @@ function showDMFriendsHome() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
               </div>
               <div>
-                <div class="uv-header-title">Messages</div>
+                <div class="uv-header-title">Friends</div>
                 <div class="uv-header-sub">Your conversations & friends</div>
               </div>
             </div>
             <div class="uv-header-actions">
-              <button class="btn-g" onclick="openModal('modal-new-dm')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> New Chat</button>
-              <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;">+ Add Friend</button>
+              <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
             </div>
           </div>
         </div>
+        <!-- Search bar -->
+        <div style="margin-bottom:20px;position:relative;">
+          <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </span>
+          <input type="text" id="dm-friends-search" placeholder="Search friends..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;" onfocus="this.style.borderColor='rgba(96,165,250,.3)';this.style.background='rgba(255,255,255,.05)'" onblur="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'">
+        </div>
         <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
-          <button class="disc-tab" onclick="dmFriendsFilter('online',this)">Online</button>
-          <button class="disc-tab active" onclick="dmFriendsFilter('all',this)">All</button>
+          <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">Online</button>
+          <button class="disc-tab" onclick="dmFriendsFilter('all',this)">All</button>
           <button class="disc-tab" onclick="dmFriendsFilter('pending',this)">Pending</button>
         </div>
         <div id="dm-friends-list"></div>
       </div>
     </div>`;
   renderDMFriendsHome();
+  renderActiveNowSidebar('dm-active-now-list');
 }
 
 let _dmListener = null;
@@ -3285,6 +3434,9 @@ function openDMView(username) {
   document.getElementById('gc-member-panel')?.remove();
   closeModal('modal-new-dm');
   showView('dms');
+  // Hide Active Now sidebar when in a DM chat
+  const anSidebar = document.getElementById('dm-active-now');
+  if (anSidebar) anSidebar.style.display = 'none';
   const topTitle = document.getElementById('topbar-title');
   if (topTitle) topTitle.textContent = username;
   document.querySelectorAll('.friend-item').forEach(fi=>fi.classList.remove('active'));
@@ -3556,6 +3708,9 @@ async function openGroupChatView(gcId) {
   curGC = gcId;
   curDM = null;  // clear 1-on-1 DM
   showView('dms');
+  // Hide Active Now sidebar when in a group chat
+  const anSidebar = document.getElementById('dm-active-now');
+  if (anSidebar) anSidebar.style.display = 'none';
 
   // Highlight in sidebar
   document.querySelectorAll('.friend-item').forEach(fi=>fi.classList.remove('active'));

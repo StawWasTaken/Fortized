@@ -6367,10 +6367,62 @@ async function confirmLeaveBastion() {
   openModal('modal-leave-bastion');
 }
 async function deleteBastion() {
-  showCustomConfirm('DELETE this bastion permanently? This cannot be undone.', async ()=>{
-    CU.bastions.splice(curBastion,1);
-    await saveUser(); curBastion=null; renderRailBastions(); showView('home'); toast('Bastion deleted','info');
+  confirmDeleteBastion(curBastion);
+}
+
+function confirmDeleteBastion(idx) {
+  const b = CU.bastions?.[idx];
+  if (!b) return;
+  const confirmWord = b.name.split(/\s+/)[0].toUpperCase();
+  const overlay = document.createElement('div');
+  overlay.className = 'input-dialog-overlay';
+  overlay.innerHTML = `<div class="input-dialog" style="max-width:420px;">
+    <h3 style="color:var(--red);margin-bottom:10px;">🛑 Delete "${escapeHTML(b.name)}"?</h3>
+    <p style="margin-bottom:8px;">This action is <strong style="color:#f87171;">permanent</strong> and cannot be undone. All channels, messages, and members will be lost forever.</p>
+    <p style="margin-bottom:14px;font-size:12.5px;color:var(--muted-light);">Consider transferring ownership instead — your bastion lives on with someone else in charge.</p>
+    <div class="input-dialog-actions" style="margin-bottom:16px;">
+      <button class="btn-g" style="flex:1;justify-content:center;" id="cdb-transfer">Transfer Ownership Instead</button>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px;">
+      <p style="font-size:12px;color:var(--muted-light);margin-bottom:10px;">To confirm deletion, type <strong style="color:#fff;font-family:'SF Mono','Cascadia Code',monospace;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;">${escapeHTML(confirmWord)}</strong> below:</p>
+      <input type="text" id="cdb-confirm-input" placeholder="Type here to confirm…" autocomplete="off">
+      <div class="input-dialog-actions">
+        <button class="btn-g" style="flex:1;justify-content:center;" id="cdb-cancel">Cancel</button>
+        <button class="btn-d" style="flex:1;justify-content:center;opacity:.4;pointer-events:none;" id="cdb-delete">Delete Bastion</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+
+  const inp = document.getElementById('cdb-confirm-input');
+  const delBtn = document.getElementById('cdb-delete');
+  inp.addEventListener('input', () => {
+    const match = inp.value.trim().toUpperCase() === confirmWord;
+    delBtn.style.opacity = match ? '1' : '.4';
+    delBtn.style.pointerEvents = match ? 'auto' : 'none';
   });
+
+  document.getElementById('cdb-cancel').onclick = () => overlay.remove();
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+
+  document.getElementById('cdb-transfer').onclick = () => {
+    overlay.remove();
+    openBastion(idx);
+    setTimeout(() => openBastionSettings('danger'), 100);
+  };
+
+  delBtn.onclick = async () => {
+    if (inp.value.trim().toUpperCase() !== confirmWord) return;
+    overlay.remove();
+    try { await firebase.database().ref('globalBastions/' + (b.globalId || b.name)).remove(); } catch {}
+    CU.bastions.splice(idx, 1);
+    await saveUser();
+    curBastion = null;
+    curChannel = null;
+    renderRailBastions();
+    showView('home');
+    toast('Bastion "' + b.name + '" has been deleted permanently.', 'info');
+  };
 }
 async function transferBastionOwnership() {
   const newOwner=document.getElementById('transfer-owner-input')?.value?.trim();
@@ -9675,21 +9727,12 @@ function showRailBastionCtx(e, idx) {
   const b = CU.bastions?.[idx];
   if (!b) return;
   const isOwner = b.owner === CU.username;
-  const inviteCode = (b.invites||[])[0]?.code;
   const groups = [
-    { label: b.name, items: [
+    { items: [
       { icon: _ctxSvg('home'), label: 'Open Bastion', action: () => openBastion(idx) },
       { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => toast('All read!', 'success') },
-      { icon: _ctxSvg('mute'), label: 'Mute Notifications', action: () => { b._muted = !b._muted; toast(b._muted ? 'Bastion muted' : 'Bastion unmuted', 'info'); } },
-      { icon: _ctxSvg('copy'), label: 'Copy Bastion ID', action: () => navigator.clipboard.writeText(b.globalId||b.name), copyFeedback: true },
-    ]},
-    { label: 'Quick Actions', items: [
+      { icon: _ctxSvg('mute'), label: b._muted ? 'Unmute Notifications' : 'Mute Notifications', action: () => { b._muted = !b._muted; toast(b._muted ? 'Bastion muted' : 'Bastion unmuted', 'info'); } },
       { icon: _ctxSvg('addFriend'), label: 'Invite People', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings('invites'),100); } },
-      ...(inviteCode ? [{ icon: _ctxSvg('globe'), label: 'Copy Invite Link', action: () => { navigator.clipboard.writeText(location.origin+location.pathname+'?invite='+inviteCode); toast('Invite link copied!','success'); }, copyFeedback: true }] : []),
-      { icon: _ctxSvg('search'), label: 'Search in Bastion', action: () => { openBastion(idx); document.getElementById('search-input')?.focus(); } },
-      { icon: _ctxSvg('create'), label: 'Create Channel', action: () => { openBastion(idx); setTimeout(()=>addChannel(idx,'text'),100); }, disabled: !isOwner },
-      { icon: _ctxSvg('pin'), label: 'View Pinned Messages', action: () => { openBastion(idx); toast('Pinned messages','info'); } },
-      { icon: _ctxSvg('profile'), label: 'View Members', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings('members'),100); } },
     ]},
     ...(isOwner ? [{
       label: 'Manage',
@@ -9697,11 +9740,13 @@ function showRailBastionCtx(e, idx) {
         { icon: _ctxSvg('settings'), label: 'Bastion Settings', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings(),100); } },
         { icon: _ctxSvg('edit'), label: 'Edit Bastion', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings('overview'),100); } },
         { icon: _ctxSvg('profile'), label: 'Manage Members', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings('members'),100); } },
-        { icon: _ctxSvg('roles'), label: 'Manage Roles', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings('roles'),100); } },
       ]
     }] : []),
     { items: [
-      { icon: _ctxSvg('leave'), label: 'Leave Bastion', action: () => leaveBastion(idx), danger: true },
+      ...(isOwner
+        ? [{ icon: _ctxSvg('leave'), label: 'Delete Bastion', action: () => confirmDeleteBastion(idx), danger: true }]
+        : [{ icon: _ctxSvg('leave'), label: 'Leave Bastion', action: () => leaveBastion(idx), danger: true }]
+      ),
     ]},
   ];
   showCtxMenu(e.clientX, e.clientY, groups);

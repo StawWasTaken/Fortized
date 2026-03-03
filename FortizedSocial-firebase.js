@@ -122,15 +122,22 @@ const FortizedSocial = (() => {
   }
 
   // ── Status ─────────────────────────────────────────────────
+  const VALID_STATUSES = new Set(['online','away','dnd','invisible','offline']);
+
   async function getStatus(username) {
     const val = await dbGet(P.status(norm(username)));
-    return val || 'offline';
+    return (val && VALID_STATUSES.has(val)) ? val : 'offline';
   }
 
   async function setStatus(username, status) {
     username = norm(username);
-    await dbSet(P.status(username), status);
-    await dbUpdate(P.user(username), { status });
+    if (!VALID_STATUSES.has(status)) status = 'offline';
+    // Single authoritative write to statuses/{username}
+    // users/{username}/status kept in sync for profile reads
+    await Promise.all([
+      dbSet(P.status(username), status),
+      dbUpdate(P.user(username), { status }),
+    ]);
   }
 
   // ── Notifications ──────────────────────────────────────────

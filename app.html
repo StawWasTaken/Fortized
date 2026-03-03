@@ -8436,12 +8436,147 @@ function buildProfileView(tab) {
   else if (tab === 'appearance') {
     const currentTheme = localStorage.getItem('ftz_appearance') || 'fortized_classic';
     const unlocked = CU?.unlockedAppearances || [];
-    const themes = [
-      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', preview:['#07090e','#fef83d','#0b0e15'], free:true},
-      {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   preview:['#030407','#fef83d','#060810'], free:true},
-      {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', preview:['#050812','#fef83d','#080e1a'], locked:!unlocked.includes('midnight_citadel')},
-      {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', preview:['#010103','#fef83d','#020206'], locked:!unlocked.includes('onyx_pure')},
+    const allThemes = [
+      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', bg:'#07090e', sidebar:'#0b0e15', channel:'#0d1018', panel:'#101420', accent:'#fef83d', border:'#1c2335', muted:'#4e5a6f', bodyGrad:'', free:true},
+      {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
+      {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
+      {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
     ];
+    const defaultThemes = allThemes.filter(t => t.free);
+    const ownedThemes = allThemes.filter(t => !t.free && !t.locked);
+    const lockedThemes = allThemes.filter(t => t.locked);
+    const hasOwnedThemes = ownedThemes.length > 0;
+
+    // Selected theme for preview (start with current)
+    const selTheme = allThemes.find(t => t.id === currentTheme) || allThemes[0];
+
+    // Build a rich chat-preview mockup for a given theme
+    function buildChatPreview(t, label) {
+      const uName = CU?.displayName || CU?.username || 'You';
+      const uInitial = uName[0].toUpperCase();
+      const pfpHtml = CU?.pfp
+        ? '<img src="'+CU.pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
+        : '<div style="width:100%;height:100%;border-radius:50%;background:'+t.panel+';display:flex;align-items:center;justify-content:center;font-size:11px;font-family:Syne,sans-serif;font-weight:800;color:'+t.accent+';">'+uInitial+'</div>';
+      return `
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:10px;">${label}</div>
+        <div style="border-radius:16px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};">
+          <!-- Titlebar -->
+          <div style="height:32px;background:${t.sidebar};display:flex;align-items:center;padding:0 12px;gap:6px;border-bottom:1px solid ${t.border};">
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);"># general</div>
+            <div style="flex:1;"></div>
+            <div style="width:6px;height:6px;border-radius:50%;background:${t.muted};opacity:.4;"></div>
+            <div style="width:6px;height:6px;border-radius:50%;background:${t.muted};opacity:.4;"></div>
+          </div>
+          <div style="display:flex;height:155px;">
+            <!-- Sidebar mock -->
+            <div style="width:44px;background:${t.sidebar};border-right:1px solid ${t.border};padding:8px 6px;display:flex;flex-direction:column;gap:4px;">
+              <div style="height:5px;background:${t.accent};border-radius:3px;width:80%;opacity:.6;"></div>
+              <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;width:65%;"></div>
+              <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;width:90%;"></div>
+              <div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;width:50%;"></div>
+            </div>
+            <!-- Chat area -->
+            <div style="flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:${t.channel};overflow:hidden;">
+              <!-- Message 1 -->
+              <div style="display:flex;gap:8px;align-items:flex-start;">
+                <div style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:9px;color:${t.muted};">F</div>
+                <div style="min-width:0;">
+                  <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
+                    <span style="font-size:10px;font-weight:700;color:${t.accent};">Fortized</span>
+                    <span style="font-size:8px;color:${t.muted};">Today 14:32</span>
+                  </div>
+                  <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">Welcome to the bastion! 🏰</div>
+                </div>
+              </div>
+              <!-- Message 2: user's own message -->
+              <div style="display:flex;gap:8px;align-items:flex-start;">
+                <div style="width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;">${pfpHtml}</div>
+                <div style="min-width:0;">
+                  <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
+                    <span style="font-size:10px;font-weight:700;color:#fff;">${uName}</span>
+                    <span style="font-size:8px;color:${t.muted};">Today 14:33</span>
+                  </div>
+                  <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">This looks amazing!</div>
+                </div>
+              </div>
+              <!-- Message 3 -->
+              <div style="display:flex;gap:8px;align-items:flex-start;">
+                <div style="width:26px;height:26px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#a78bfa;">K</div>
+                <div style="min-width:0;">
+                  <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
+                    <span style="font-size:10px;font-weight:700;color:#a78bfa;">Knight</span>
+                    <span style="font-size:8px;color:${t.muted};">Today 14:34</span>
+                  </div>
+                  <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">Hey, welcome aboard!</div>
+                </div>
+              </div>
+              <div style="flex:1;"></div>
+              <!-- Chat input mock -->
+              <div style="height:24px;background:${t.panel};border-radius:8px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 8px;">
+                <div style="font-size:8.5px;color:${t.muted};opacity:.5;">Message #general</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // Build an appearance card
+    function buildAppearanceCard(t) {
+      const isActive = currentTheme===t.id;
+      const isLocked = t.locked;
+      const borderCol = isActive ? 'rgba(254,248,61,.35)' : 'rgba(255,255,255,.06)';
+      const bgCol = isActive ? 'rgba(254,248,61,.04)' : 'rgba(255,255,255,.015)';
+      const txtCol = isActive ? '#fef83d' : '#fff';
+      const clickAction = isLocked ? "buyAppearance('" + t.id + "'," + t.cost + ")" : "selectAppearancePreview('" + t.id + "')";
+      const opac = isLocked ? 'opacity:.55;' : '';
+      return `
+      <div onclick="${clickAction}" style="border:1.5px solid ${borderCol};border-radius:18px;overflow:hidden;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);background:${bgCol};${opac}position:relative;" onmouseover="if(!${isActive})this.style.borderColor='rgba(254,248,61,.15)';this.style.transform='translateY(-2px)'" onmouseout="if(!${isActive})this.style.borderColor='${borderCol}';this.style.transform=''">
+        <!-- Rich mini preview -->
+        <div style="height:105px;${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};display:flex;overflow:hidden;position:relative;border-radius:16px 16px 0 0;">
+          <!-- Mini sidebar -->
+          <div style="width:28px;background:${t.sidebar};border-right:1px solid ${t.border};padding:8px 5px;display:flex;flex-direction:column;gap:4px;">
+            <div style="height:4px;background:${t.accent};border-radius:3px;width:70%;opacity:.5;"></div>
+            <div style="height:4px;background:rgba(255,255,255,.06);border-radius:3px;width:85%;"></div>
+            <div style="height:4px;background:rgba(255,255,255,.04);border-radius:3px;width:55%;"></div>
+          </div>
+          <!-- Mini chat area -->
+          <div style="flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:5px;background:${t.channel};">
+            <div style="display:flex;gap:5px;align-items:center;">
+              <div style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.06);flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <div style="height:3px;background:${t.accent};border-radius:3px;width:35%;margin-bottom:3px;opacity:.6;"></div>
+                <div style="height:3px;background:rgba(255,255,255,.08);border-radius:2px;width:65%;"></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:5px;align-items:center;">
+              <div style="width:14px;height:14px;border-radius:50%;background:rgba(140,100,220,.12);flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <div style="height:3px;background:rgba(255,255,255,.12);border-radius:3px;width:28%;margin-bottom:3px;"></div>
+                <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;width:55%;"></div>
+              </div>
+            </div>
+            <div style="flex:1;"></div>
+            <div style="height:14px;background:${t.panel};border-radius:5px;border:1px solid ${t.border};"></div>
+          </div>
+          ${isActive ? '<div style="position:absolute;top:8px;right:8px;background:rgba(254,248,61,.15);border:1px solid rgba(254,248,61,.25);border-radius:8px;padding:2px 8px;font-size:9px;font-weight:700;color:#fef83d;backdrop-filter:blur(8px);">Active</div>' : ''}
+          ${isLocked ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(1px);"><div style="font-size:20px;">🔒</div></div>' : ''}
+        </div>
+        <!-- Card footer -->
+        <div style="padding:12px 14px;display:flex;align-items:center;gap:10px;">
+          ${isActive ? '<div style="width:14px;height:14px;border-radius:50%;background:#fef83d;flex-shrink:0;box-shadow:0 0 8px rgba(254,248,61,.4);display:flex;align-items:center;justify-content:center;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#060810" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' : '<div style="width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.15);flex-shrink:0;"></div>'}
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:700;color:${txtCol};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.name}</div>
+            <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:1px;">${t.desc}</div>
+          </div>
+          ${t.free ? '<div style="font-size:9px;font-weight:700;color:rgba(62,207,110,.7);background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.12);border-radius:8px;padding:3px 8px;white-space:nowrap;">FREE</div>' : ''}
+          ${(!t.free && !isLocked) ? '<div style="font-size:9px;font-weight:700;color:rgba(62,207,110,.7);background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.12);border-radius:8px;padding:3px 8px;white-space:nowrap;">OWNED</div>' : ''}
+          ${isLocked ? '<div style="font-size:9px;font-weight:700;color:rgba(254,248,61,.6);background:rgba(254,248,61,.06);border:1px solid rgba(254,248,61,.1);border-radius:8px;padding:3px 8px;display:flex;align-items:center;gap:3px;white-space:nowrap;"><img src="Onyx.png" style="width:10px;height:10px;object-fit:contain;">'+t.cost+'</div>' : ''}
+        </div>
+      </div>`;
+    }
+
     main.innerHTML = `<div class="settings-panel">
       <!-- Page Hero -->
       <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
@@ -8456,35 +8591,54 @@ function buildProfileView(tab) {
           </div>
         </div>
       </div>
-      <div class="settings-section-title">APPEARANCE</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
-        ${themes.map(t => {
-          const isActive = currentTheme===t.id;
-          const isLocked = t.locked;
-          const borderCol = isActive ? 'rgba(254,248,61,.35)' : 'rgba(255,255,255,.06)';
-          const bgCol = isActive ? 'rgba(254,248,61,.04)' : 'rgba(255,255,255,.015)';
-          const txtCol = isActive ? '#fef83d' : '#fff';
-          const clickAction = isLocked ? "buyAppearance('" + t.id + "'," + (t.id==='midnight_citadel'?185:150) + ")" : "applyAppearance('" + t.id + "')";
-          const opac = isLocked ? 'opacity:.55;' : '';
-          return `
-          <div onclick="${clickAction}" style="border:1.5px solid ${borderCol};border-radius:18px;overflow:hidden;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);background:${bgCol};${opac}position:relative;" onmouseover="if(!${isActive})this.style.borderColor='rgba(254,248,61,.15)';this.style.transform='translateY(-2px)'" onmouseout="if(!${isActive})this.style.borderColor='${borderCol}';this.style.transform=''">
-            <div style="height:85px;background:${t.preview[0]};display:flex;gap:4px;padding:10px;">
-              <div style="width:22px;background:${t.preview[2]};border-radius:6px;"></div>
-              <div style="flex:1;background:rgba(255,255,255,.04);border-radius:6px;padding:8px;">
-                <div style="height:6px;background:${t.preview[1]};border-radius:4px;width:50%;margin-bottom:5px;"></div>
-                <div style="height:4px;background:rgba(255,255,255,.1);border-radius:3px;width:80%;"></div>
-              </div>
-            </div>
-            <div style="padding:12px 14px;display:flex;align-items:center;gap:10px;">
-              ${isActive ? '<div style="width:12px;height:12px;border-radius:50%;background:#fef83d;flex-shrink:0;box-shadow:0 0 8px rgba(254,248,61,.4);"></div>' : '<div style="width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.15);flex-shrink:0;"></div>'}
-              <div>
-                <div style="font-size:13.5px;font-weight:700;color:${txtCol};">${t.name}${isLocked ? ' 🔒' : ''}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.3);">${t.desc}${t.free ? ' · Free' : isLocked ? (t.id==='midnight_citadel'?' · 185 Onyx':' · 150 Onyx') : ''}</div>
-              </div>
-            </div>
-          </div>`;
-        }).join('')}
+
+      <!-- Live Preview: Current vs Selected -->
+      <div class="settings-section-title">PREVIEW</div>
+      <div id="appearance-preview-area" style="display:flex;gap:16px;margin-bottom:32px;">
+        ${buildChatPreview(selTheme, 'CURRENT APPEARANCE')}
+        <div id="appearance-preview-selected" style="flex:1;min-width:0;display:none;">
+        </div>
       </div>
+      <div id="appearance-apply-bar" style="display:none;margin-bottom:28px;padding:14px 18px;background:rgba(254,248,61,.04);border:1.5px solid rgba(254,248,61,.12);border-radius:14px;display:none;align-items:center;gap:12px;">
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;color:#fff;">Apply <span id="appearance-apply-name"></span>?</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;">Click apply to switch to this appearance</div>
+        </div>
+        <button onclick="applySelectedAppearance()" class="settings-save-btn" style="margin:0;padding:8px 20px;font-size:12px;">Apply</button>
+        <button onclick="cancelAppearancePreview()" class="settings-save-btn-ghost" style="margin:0;padding:6px 14px;font-size:11px;">Cancel</button>
+      </div>
+
+      <!-- Default Appearances -->
+      <div class="settings-section-title">DEFAULT APPEARANCES</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:-12px;margin-bottom:16px;">Free appearances included with every account</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;">
+        ${defaultThemes.map(t => buildAppearanceCard(t)).join('')}
+      </div>
+
+      <!-- User-Owned Appearances -->
+      <div class="settings-section-title">YOUR COLLECTION</div>
+      ${hasOwnedThemes ? `
+        <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:-12px;margin-bottom:16px;">Appearances you've unlocked from the Atelier</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;">
+          ${ownedThemes.map(t => buildAppearanceCard(t)).join('')}
+        </div>
+      ` : `
+        <div style="background:rgba(255,255,255,.015);border:1.5px dashed rgba(254,248,61,.1);border-radius:18px;padding:36px 24px;text-align:center;margin-bottom:32px;">
+          <div style="font-size:32px;margin-bottom:12px;opacity:.4;">🎨</div>
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:rgba(255,255,255,.6);margin-bottom:6px;">No owned appearances yet</div>
+          <div style="font-size:12.5px;color:rgba(255,255,255,.3);max-width:300px;margin:0 auto 18px;line-height:1.55;">Visit the Atelier Shop to browse and purchase exclusive appearances with Onyx.</div>
+          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="background:#fef83d;color:#060810;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;padding:10px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 12px rgba(254,248,61,.15);" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(254,248,61,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 12px rgba(254,248,61,.15)'">Browse the Atelier Shop</button>
+        </div>
+      `}
+
+      <!-- Available in Shop -->
+      ${lockedThemes.length > 0 ? `
+        <div class="settings-section-title">AVAILABLE IN SHOP</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:-12px;margin-bottom:16px;">Purchase these appearances in the Atelier</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+          ${lockedThemes.map(t => buildAppearanceCard(t)).join('')}
+        </div>
+      ` : ''}
     </div>`;
   }
 
@@ -16827,6 +16981,118 @@ function applyAppearance(themeId) {
   if (chatInputOuter) chatInputOuter.style.background = '';
   const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic'};
   toast((toastMsgs[themeId]||'⚡ Theme')+' activated!', 'success');
+}
+
+// Appearance preview helpers
+let _appearancePreviewId = null;
+const _appearanceThemeData = {
+  fortized_classic: {id:'fortized_classic', name:'Fortized Classic', bg:'#07090e', sidebar:'#0b0e15', channel:'#0d1018', panel:'#101420', accent:'#fef83d', border:'#1c2335', muted:'#4e5a6f', bodyGrad:''},
+  dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:''},
+  midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
+  onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
+};
+
+function _buildPreviewMockup(t, label) {
+  const uName = CU?.displayName || CU?.username || 'You';
+  const uInitial = uName[0].toUpperCase();
+  const pfpHtml = CU?.pfp
+    ? '<img src="'+CU.pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
+    : '<div style="width:100%;height:100%;border-radius:50%;background:'+t.panel+';display:flex;align-items:center;justify-content:center;font-size:11px;font-family:Syne,sans-serif;font-weight:800;color:'+t.accent+';">'+uInitial+'</div>';
+  return `
+  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:10px;">${label}</div>
+  <div style="border-radius:16px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};">
+    <div style="height:32px;background:${t.sidebar};display:flex;align-items:center;padding:0 12px;gap:6px;border-bottom:1px solid ${t.border};">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);"># general</div>
+      <div style="flex:1;"></div>
+      <div style="width:6px;height:6px;border-radius:50%;background:${t.muted};opacity:.4;"></div>
+      <div style="width:6px;height:6px;border-radius:50%;background:${t.muted};opacity:.4;"></div>
+    </div>
+    <div style="display:flex;height:155px;">
+      <div style="width:44px;background:${t.sidebar};border-right:1px solid ${t.border};padding:8px 6px;display:flex;flex-direction:column;gap:4px;">
+        <div style="height:5px;background:${t.accent};border-radius:3px;width:80%;opacity:.6;"></div>
+        <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;width:65%;"></div>
+        <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;width:90%;"></div>
+        <div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;width:50%;"></div>
+      </div>
+      <div style="flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:${t.channel};overflow:hidden;">
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:${t.muted};">F</div>
+          <div style="min-width:0;">
+            <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
+              <span style="font-size:10px;font-weight:700;color:${t.accent};">Fortized</span>
+              <span style="font-size:8px;color:${t.muted};">Today 14:32</span>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">Welcome to the bastion! 🏰</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;">${pfpHtml}</div>
+          <div style="min-width:0;">
+            <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
+              <span style="font-size:10px;font-weight:700;color:#fff;">${uName}</span>
+              <span style="font-size:8px;color:${t.muted};">Today 14:33</span>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">This looks amazing!</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="width:26px;height:26px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#a78bfa;">K</div>
+          <div style="min-width:0;">
+            <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
+              <span style="font-size:10px;font-weight:700;color:#a78bfa;">Knight</span>
+              <span style="font-size:8px;color:${t.muted};">Today 14:34</span>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">Hey, welcome aboard!</div>
+          </div>
+        </div>
+        <div style="flex:1;"></div>
+        <div style="height:24px;background:${t.panel};border-radius:8px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 8px;">
+          <div style="font-size:8.5px;color:${t.muted};opacity:.5;">Message #general</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function selectAppearancePreview(themeId) {
+  const currentTheme = localStorage.getItem('ftz_appearance') || 'fortized_classic';
+  if (themeId === currentTheme) {
+    // Already active, just apply
+    applyAppearance(themeId);
+    return;
+  }
+  _appearancePreviewId = themeId;
+  const t = _appearanceThemeData[themeId];
+  if (!t) return;
+
+  // Show the selected preview
+  const selArea = document.getElementById('appearance-preview-selected');
+  if (selArea) {
+    selArea.style.display = '';
+    selArea.innerHTML = _buildPreviewMockup(t, 'SELECTED — ' + t.name.toUpperCase());
+  }
+
+  // Show the apply bar
+  const applyBar = document.getElementById('appearance-apply-bar');
+  if (applyBar) {
+    applyBar.style.display = 'flex';
+    const nameEl = document.getElementById('appearance-apply-name');
+    if (nameEl) nameEl.textContent = t.name;
+  }
+}
+
+function cancelAppearancePreview() {
+  _appearancePreviewId = null;
+  const selArea = document.getElementById('appearance-preview-selected');
+  if (selArea) { selArea.style.display = 'none'; selArea.innerHTML = ''; }
+  const applyBar = document.getElementById('appearance-apply-bar');
+  if (applyBar) applyBar.style.display = 'none';
+}
+
+function applySelectedAppearance() {
+  if (!_appearancePreviewId) return;
+  applyAppearance(_appearancePreviewId);
+  _appearancePreviewId = null;
 }
 
 // Apply saved appearance on load

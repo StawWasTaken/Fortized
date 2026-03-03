@@ -2703,6 +2703,9 @@ function toast(msg, type='info') {
 let _currentView = 'home';
 function showView(v) {
   _currentView = v;
+  // Clear the unsaved-settings bar when leaving the profile view so it
+  // doesn't float over other views and block button clicks
+  if (v !== 'profile') clearSettingsDirty();
   // Stop Joyster bubbles when leaving home — Joyster only lives on the homepage
   if (v !== 'home' && typeof _stopJoysterBubbles === 'function') _stopJoysterBubbles();
   // Hide Joyster global presence when not on home view
@@ -8744,7 +8747,7 @@ function buildProfileView(tab) {
             <div class="srl-desc">Converts :) → 😊, &lt;3 → ❤️ automatically</div>
           </div>
           <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
-            <div class="toggle ${!_globalSettings?.disableEmoticonConversion?'on':''}" onclick="toggleEmoticonConversion(this);markSettingsDirty()"></div>
+            <div class="toggle ${!_globalSettings?.disableEmoticonConversion?'on':''}" onclick="toggleEmoticonConversion(this)"></div>
           </div>
         </div>
         <button class="settings-save-btn" onclick="saveNotifSettings();clearSettingsDirty()" style="margin-top:20px;">Save Settings</button>
@@ -16893,8 +16896,7 @@ let _settingsDirty = false;
 function markSettingsDirty() {
   // Compare current input values against original snapshot to detect real changes
   if (!_settingsOriginal || !CU) {
-    // No snapshot — show bar as fallback
-    if (!_settingsDirty) { _settingsDirty = true; document.getElementById('unsaved-bar')?.classList.add('show'); }
+    // No snapshot — can't compare, skip (don't blindly show the bar)
     return;
   }
   let hasChanges = false;
@@ -16932,23 +16934,31 @@ function clearSettingsDirty() {
 }
 
 function resetSettingsChanges() {
-  if (_settingsOriginal && CU) {
+  // Only revert CU data if we're actually on the profile view with settings inputs visible
+  if (_settingsOriginal && CU && document.getElementById('dn-input')) {
     CU.displayName = _settingsOriginal.displayName;
     CU.bio = _settingsOriginal.bio;
     CU.email = _settingsOriginal.email;
     CU.pfp = _settingsOriginal.pfp;
     CU.banner = _settingsOriginal.banner;
     CU.socials = _settingsOriginal.socials ? JSON.parse(JSON.stringify(_settingsOriginal.socials)) : {};
+    CU.password = _settingsOriginal.password;
+    CU.notifSettings = _settingsOriginal.notifSettings ? JSON.parse(JSON.stringify(_settingsOriginal.notifSettings)) : {};
+    notifSettings = CU.notifSettings;
     saveLocal();
     updateUserbar();
+    buildProfileView('myprofile');
   }
   clearSettingsDirty();
-  // Refresh current settings tab
-  const main = document.getElementById('profile-main');
-  if (main && main.innerHTML.includes('dn-input')) buildProfileView('myprofile');
 }
 
 async function saveAllSettings() {
+  // If the settings inputs aren't on screen, go back to profile to save
+  if (!document.getElementById('dn-input')) {
+    showView('profile');
+    toast('Redirected to settings — make your changes and save', 'info');
+    return;
+  }
   // Collect all open input values
   const dnInp = document.getElementById('dn-input');
   const bioInp = document.getElementById('bio-input');
@@ -16956,6 +16966,16 @@ async function saveAllSettings() {
   if (dnInp && dnInp.value.trim()) CU.displayName = dnInp.value.trim();
   if (bioInp) CU.bio = bioInp.value.trim().slice(0,300);
   if (emailInp && emailInp.value.trim()) CU.email = emailInp.value.trim();
+  // Save password if changed
+  const pwOld = document.getElementById('pw-old');
+  const pwNew = document.getElementById('pw-new');
+  if (pwOld && pwNew && pwOld.value && pwNew.value) {
+    if (pwOld.value !== CU.password) { toast('Current password is wrong', 'error'); return; }
+    if (pwNew.value.length < 6) { toast('New password must be 6+ chars', 'error'); return; }
+    CU.password = pwNew.value;
+  }
+  // Save notification settings
+  CU.notifSettings = notifSettings;
   // Save socials if present
   ['youtube','roblox','spotify','twitter'].forEach(key => {
     const inp = document.getElementById('social-' + key);

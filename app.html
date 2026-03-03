@@ -2248,6 +2248,33 @@ async function _syncBastionToGlobal(bastionIdx) {
     await FortizedSocial.saveGlobalBastion(bid, globalData);
   } catch {}
 }
+// Pull fresh bastion data from global for non-owners so banner/emblem/roles/moods stay current
+async function _syncBastionFromGlobal(bastionIdx) {
+  try {
+    const b = CU?.bastions?.[bastionIdx];
+    if (!b || !b.globalId) return;
+    const global = await FortizedSocial.getGlobalBastion(b.globalId);
+    if (!global) return;
+    // Merge global fields into local copy (owner-managed data)
+    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner'];
+    let changed = false;
+    for (const key of syncFields) {
+      if (global[key] !== undefined && JSON.stringify(b[key]) !== JSON.stringify(global[key])) {
+        b[key] = global[key];
+        changed = true;
+      }
+    }
+    if (changed) {
+      await saveUser();
+      // Re-render sidebar if this bastion is currently open
+      if (curBastion === bastionIdx) {
+        const scroll = document.getElementById('sidebar-scroll');
+        if (scroll) renderBastionSidebar(scroll);
+        renderRailBastions();
+      }
+    }
+  } catch {}
+}
 async function refreshCU() {
   if (!CU?.username) return;
   try {
@@ -4161,8 +4188,11 @@ async function startNewDM() {
 function openBastion(idx) {
   if (idx<0||!CU.bastions?.[idx]) return;
   curBastion = idx; curChannel = null;
-  // Quietly sync bastion data to global — fire & forget
-  if (CU.bastions[idx]?.owner === CU.username) setTimeout(() => _syncBastionToGlobal(idx), 100);
+  const isOwner = CU.bastions[idx]?.owner === CU.username;
+  // Owner: sync local data up to global
+  if (isOwner) setTimeout(() => _syncBastionToGlobal(idx), 100);
+  // Non-owner: pull fresh data from global so banner/emblem/roles/moods stay current
+  if (!isOwner) setTimeout(() => _syncBastionFromGlobal(idx), 100);
   document.querySelectorAll('.rail-btn').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.rail-bastion').forEach(el=>el.classList.remove('active'));
   const rb = document.getElementById('rl-b-'+idx);
@@ -5553,7 +5583,7 @@ async function promptJoinPublicBastion(bastionId){
     if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=> (gid && ub.globalId===gid)));return;}
     if(b.public===false){toast('This bastion is invite-only. Ask the owner for an invite link.','error');return;}
     if((b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
-    const localB={name:b.name,emblem:b.emblem||'🏰',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,memberRoles:{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[]};
+    const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[],moodDisabled:b.moodDisabled||false,moodLocked:b.moodLocked||false,lockedMood:b.lockedMood||'',customMood:b.customMood||null,memberCount:b.memberCount||1};
     CU.bastions=[...(CU.bastions||[]),localB];
     await saveUser();
     await FortizedSocial.addBastionMember(gid,CU.username);
@@ -6824,6 +6854,7 @@ async function updateBastionIcon(e) {
     showCropModal(ev.target.result, 1, async (cropped) => {
       CU.bastions[curBastion].icon = cropped;
       await saveUser();
+      _syncBastionToGlobal(curBastion);
       renderRailBastions();
       renderBastionSidebar(document.getElementById('sidebar-scroll'));
       renderBSettingsMain('overview');
@@ -6836,6 +6867,7 @@ async function toggleNSFW(chIdx) {
   const ch = CU.bastions[curBastion].channels[chIdx];
   ch.nsfw = !ch.nsfw;
   await saveUser();
+  _syncBastionToGlobal(curBastion);
   renderBSettingsMain('channels');
   toast(`${ch.name} is now ${ch.nsfw?'NSFW':'SFW'}`, 'info');
 }
@@ -6843,6 +6875,7 @@ async function deleteChannel(chIdx) {
   showCustomConfirm('Delete this channel? All messages will be lost.', async () => {
     CU.bastions[curBastion].channels.splice(chIdx, 1);
     await saveUser();
+    _syncBastionToGlobal(curBastion);
     renderBSettingsMain('channels');
     toast('Channel deleted', 'info');
   });
@@ -6857,16 +6890,16 @@ async function addKeyword() {
   const inp = document.getElementById('new-kw'); if(!inp||!inp.value.trim()) return;
   const b = CU.bastions[curBastion]; b.automod=b.automod||{}; b.automod.keywords=b.automod.keywords||[];
   b.automod.keywords.push(inp.value.trim()); inp.value='';
-  await saveUser(); renderBSettingsMain('automod');
+  await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('automod');
 }
 async function removeKeyword(i) {
   CU.bastions[curBastion].automod.keywords.splice(i,1);
-  await saveUser(); renderBSettingsMain('automod');
+  await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('automod');
 }
 async function saveAutoMod() {
   const ml = parseInt(document.getElementById('mention-limit')?.value)||10;
   CU.bastions[curBastion].automod.mentionLimit = ml;
-  await saveUser(); toast('AutoMod saved!', 'success');
+  await saveUser(); _syncBastionToGlobal(curBastion); toast('AutoMod saved!', 'success');
 }
 async function generateInvite() {
   const b = CU.bastions[curBastion];
@@ -7125,13 +7158,13 @@ async function saveRole() {
     delete currentRoleEditing._idx;
     b.roles[idx]=currentRoleEditing;
   } else { b.roles=[...(b.roles||[]),currentRoleEditing]; }
-  await saveUser(); closeModal('modal-role-editor'); renderBSettingsMain('roles'); toast('Role saved!','success');
+  await saveUser(); _syncBastionToGlobal(curBastion); closeModal('modal-role-editor'); renderBSettingsMain('roles'); toast('Role saved!','success');
 }
 async function deleteCurrentRole() {
   if(!('_idx' in currentRoleEditing)) return;
   showCustomConfirm('Delete this role?', async ()=>{
     CU.bastions[curBastion].roles.splice(currentRoleEditing._idx,1);
-    await saveUser(); closeModal('modal-role-editor'); renderBSettingsMain('roles'); toast('Role deleted','info');
+    await saveUser(); _syncBastionToGlobal(curBastion); closeModal('modal-role-editor'); renderBSettingsMain('roles'); toast('Role deleted','info');
   });
 }
 
@@ -7143,6 +7176,7 @@ function applyRoleTemplate(templateId) {
     const b = CU.bastions[curBastion];
     b.roles = tmpl.roles.map(r=>({...r, id: r.id || ('r'+Date.now()+Math.random().toString(36).slice(2,6))}));
     await saveUser();
+    _syncBastionToGlobal(curBastion);
     renderBSettingsMain('roles');
     toast(`"${tmpl.name}" roles applied!`, 'success');
   });
@@ -7172,7 +7206,7 @@ function toggleMemberRole(roleId, el) {
   else b.memberRoles[assignRoleMember]=[...roles,roleId];
   el.classList.toggle('on',b.memberRoles[assignRoleMember].includes(roleId));
 }
-async function saveAssignedRoles() { await saveUser(); closeModal('modal-assign-role'); toast('Roles updated!','success'); }
+async function saveAssignedRoles() { await saveUser(); _syncBastionToGlobal(assignRoleBastionIdx!=null?assignRoleBastionIdx:curBastion); closeModal('modal-assign-role'); toast('Roles updated!','success'); }
 
 // ════════════════════════════════════════════
 // CUSTOM EMOJIS
@@ -7192,7 +7226,7 @@ async function processEmojiUpload(e) {
     r.onload=async ev=>{
       const b=CU.bastions[curBastion];
       b.customEmojis=[...(b.customEmojis||[]),{name:cleanName,data:ev.target.result,type:'img',animated:file.type==='image/gif'}];
-      await saveUser(); renderBSettingsMain('emojis'); toast(`:${cleanName}: added!`,'success');
+      await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('emojis'); toast(`:${cleanName}: added!`,'success');
     };
     r.readAsDataURL(file);
   });
@@ -7200,7 +7234,7 @@ async function processEmojiUpload(e) {
 async function deleteCustomEmoji(i) {
   showCustomConfirm('Delete this custom emoji?',async()=>{
     CU.bastions[curBastion].customEmojis.splice(i,1);
-    await saveUser(); renderBSettingsMain('emojis'); toast('Emoji removed','info');
+    await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('emojis'); toast('Emoji removed','info');
   });
 }
 
@@ -10670,7 +10704,7 @@ async function joinBastionById(bastionId, hasInvite) {
   if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=> gid && ub.globalId===gid));return;}
   if(!hasInvite && b.public===false){toast('This bastion is invite-only.','error');return;}
   if(!hasInvite && (b.applicationQuestions||[]).length){showBastionApplicationForm(b);return;}
-  const localB={name:b.name,emblem:b.emblem||'🏰',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,memberRoles:{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[]};
+  const localB={name:b.name,emblem:b.emblem||'🏰',icon:b.icon||null,banner:b.banner||null,tagline:b.tagline||'',desc:b.desc||'',channels:b.channels||[{name:'general',type:'text',desc:'General chat'}],roles:b.roles||[],owner:b.owner,globalId:gid,public:b.public,memberRoles:b.memberRoles||{},automod:b.automod||{},boostLevel:b.boostLevel||0,customEmojis:b.customEmojis||[],invites:b.invites||[],moodDisabled:b.moodDisabled||false,moodLocked:b.moodLocked||false,lockedMood:b.lockedMood||'',customMood:b.customMood||null,memberCount:b.memberCount||1};
   CU.bastions=[...(CU.bastions||[]),localB];
   await saveUser();
   await FortizedSocial.addBastionMember(gid,CU.username);
@@ -12556,6 +12590,7 @@ async function updateBastionBanner(e) {
     showCropModal(ev.target.result, 16/5, async (cropped) => {
       CU.bastions[curBastion].banner = cropped;
       await saveUser();
+      _syncBastionToGlobal(curBastion);
       renderBSettingsMain('overview');
       renderBastionSidebar(document.getElementById('sidebar-scroll'));
       toast('Bastion banner updated! ✓', 'success');
@@ -17498,6 +17533,7 @@ function toggleMoodDisabled(val) {
   const b = CU?.bastions?.[curBastion]; if (!b) return;
   b.moodDisabled = val;
   saveUser();
+  _syncBastionToGlobal(curBastion);
   renderBastionSidebar(document.getElementById('sidebar-scroll'));
   toast(val ? 'Mood disabled' : 'Mood re-enabled', 'success');
 }
@@ -17506,6 +17542,7 @@ function toggleMoodLocked(val) {
   b.moodLocked = val;
   if (val && !b.lockedMood) b.lockedMood = 'strategic';
   saveUser();
+  _syncBastionToGlobal(curBastion);
   const opts = document.getElementById('mood-lock-options');
   if (opts) opts.style.display = val ? '' : 'none';
   renderBastionSidebar(document.getElementById('sidebar-scroll'));
@@ -17516,6 +17553,7 @@ function setLockedMood(key) {
   b.lockedMood = key;
   b.moodLocked = true;
   saveUser();
+  _syncBastionToGlobal(curBastion);
   renderBSettingsMain('mood');
   renderBastionSidebar(document.getElementById('sidebar-scroll'));
 }
@@ -17526,6 +17564,7 @@ function saveCustomMood() {
   if (!emoji || !label) { toast('Enter both emoji and name', 'error'); return; }
   b.customMood = {emoji, label};
   saveUser();
+  _syncBastionToGlobal(curBastion);
   renderBastionSidebar(document.getElementById('sidebar-scroll'));
   toast('Custom mood saved!', 'success');
 }

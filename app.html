@@ -241,21 +241,23 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Userbar — spans both sidebars */
-.userbar{min-height:56px;max-height:56px;background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,255,255,.025));border:1px solid rgba(255,249,62,.08);border-radius:16px;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-shrink:0;box-sizing:border-box;backdrop-filter:blur(12px);transition:all .25s cubic-bezier(.22,1,.36,1);position:fixed;bottom:0;left:0;z-index:15;width:calc(210px - 12px);margin:6px 6px 8px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
-.userbar:hover{background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,255,255,.04));border-color:rgba(255,249,62,.15);box-shadow:0 4px 20px rgba(0,0,0,.3),0 0 0 1px rgba(255,249,62,.06);}
-.ua-clickable{display:flex;align-items:center;gap:9px;flex:1;min-width:0;padding:5px 8px;border-radius:12px;background:transparent;border:none;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);}
-.ua-clickable:hover{background:rgba(255,249,62,.06);}
-.ua{width:34px;height:34px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+.userbar{min-height:52px;max-height:52px;background:linear-gradient(135deg,rgba(255,255,255,.035),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:14px;display:flex;align-items:center;padding:6px 8px;gap:6px;flex-shrink:0;box-sizing:border-box;backdrop-filter:blur(16px);transition:all .25s cubic-bezier(.22,1,.36,1);position:fixed;bottom:0;left:0;z-index:15;width:calc(210px - 12px);margin:6px 6px 8px;box-shadow:0 2px 16px rgba(0,0,0,.25);}
+.userbar:hover{background:linear-gradient(135deg,rgba(255,249,62,.05),rgba(255,255,255,.04));border-color:rgba(255,249,62,.12);box-shadow:0 4px 24px rgba(0,0,0,.35),0 0 0 1px rgba(255,249,62,.05);}
+.ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:4px 6px;border-radius:10px;background:transparent;border:none;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);}
+.ua-clickable:hover{background:rgba(255,249,62,.05);}
+.ua{width:32px;height:32px;border-radius:50%;background:var(--panel);font-size:13px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.3);border:1.5px solid rgba(255,255,255,.06);}
 .ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
-.ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;border-radius:50%;border:2.5px solid var(--sidebar);flex-shrink:0;box-shadow:0 0 4px rgba(0,0,0,.4);}
+.ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--sidebar);flex-shrink:0;box-shadow:0 0 6px rgba(0,0,0,.5);}
 .ua-info{flex:1;min-width:0;}
-.ua-name{font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;}
-.ua-status-text{font-size:10px;color:rgba(255,249,62,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;font-weight:500;}
-.ua-btns{display:flex;gap:3px;flex-shrink:0;}
-.ua-btns button{width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s cubic-bezier(.22,1,.36,1);}
-.ua-btns button:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.15);color:var(--accent);transform:scale(1.05);}
+.ua-name{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.015em;font-family:'Syne',sans-serif;}
+.ua-status-text{font-size:9.5px;color:rgba(255,249,62,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;font-weight:500;letter-spacing:.02em;}
+.ua-btns{display:flex;gap:2px;flex-shrink:0;}
+.ua-btns button{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.04);color:var(--muted);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s cubic-bezier(.22,1,.36,1);}
+.ua-btns button:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.14);color:var(--accent);transform:scale(1.06);}
+.ua-btns button.active{color:var(--red);background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.15);}
+.ua-btns button.active:hover{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.25);}
 /* Own profile mini panel */
-.own-profile-panel{position:fixed;bottom:72px;left:4px;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
+.own-profile-panel{position:fixed;bottom:68px;left:4px;width:300px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;z-index:3000;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .14s cubic-bezier(.22,1,.36,1);}
 .main{flex:1;min-width:0;display:flex;flex-direction:row;background:var(--bg);border-top-left-radius:16px;overflow:hidden;border-top:1px solid rgba(255,255,255,.06);border-left:1px solid rgba(255,255,255,.06);}
 .tb-sep{width:1px;height:18px;background:var(--border);margin:0 2px;}
 .tb-desc{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
@@ -472,7 +474,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .reply-bar-text strong{color:var(--accent);}
 .reply-bar button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}
 /* Chat input */
-.chat-input-wrap{padding:6px 16px 14px;flex-shrink:0;}
+.chat-input-wrap{padding:6px 14px 12px;flex-shrink:0;}
 /* Typing indicator — minimal redesign */
 .typing-indicator{display:flex;align-items:center;gap:8px;padding:4px 20px 6px;min-height:20px;font-size:11px;color:rgba(255,255,255,.3);transition:opacity .25s;letter-spacing:.01em;}
 .typing-dots{display:flex;gap:3px;align-items:center;}
@@ -480,23 +482,63 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .typing-dots span:nth-child(2){animation-delay:.2s;}
 .typing-dots span:nth-child(3){animation-delay:.4s;}
 @keyframes typingBounce{0%,70%,100%{transform:translateY(0);opacity:.4;}35%{transform:translateY(-4px);opacity:1;}}
-/* Chat input redesign */
-.chat-input-outer{background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.06);border-radius:16px;overflow:hidden;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(0,0,0,.15);}
-.chat-input-outer:focus-within{border-color:rgba(255,249,62,.25);box-shadow:0 0 0 3px rgba(255,249,62,.05),0 4px 20px rgba(0,0,0,.2);}
-.chat-input-toolbar{display:flex;align-items:center;gap:3px;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.03);background:rgba(255,255,255,.01);}
-.cit-btn{background:transparent;border:1px solid transparent;color:rgba(255,255,255,.3);cursor:pointer;width:30px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.22,1,.36,1);flex-shrink:0;}
-.cit-btn:hover{background:rgba(255,249,62,.06);border-color:rgba(255,249,62,.12);color:var(--accent);}
-.cit-btn.active{color:var(--accent);background:rgba(255,249,62,.1);border-color:rgba(255,249,62,.2);}
-.cit-sep{width:1px;height:16px;background:rgba(255,249,62,.06);margin:0 4px;flex-shrink:0;}
-.cit-gif{background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.1);border-radius:6px;color:rgba(255,249,62,.5);font-size:9.5px;font-weight:800;padding:2px 8px;cursor:pointer;letter-spacing:.06em;transition:all .18s cubic-bezier(.22,1,.36,1);font-family:'Syne',sans-serif;}
-.cit-gif:hover{border-color:rgba(255,249,62,.3);color:var(--accent);background:rgba(255,249,62,.08);}
-.chat-input-row{display:flex;align-items:flex-end;padding:6px 12px 8px;gap:8px;}
-.chat-input-row textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;resize:none;max-height:140px;min-height:22px;line-height:1.55;padding:2px 0;position:relative;z-index:2;}
+/* Chat input redesign — inline layout */
+.chat-input-outer{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.018));border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;box-shadow:0 2px 16px rgba(0,0,0,.18);}
+.chat-input-outer:focus-within{border-color:rgba(255,249,62,.22);box-shadow:0 0 0 3px rgba(255,249,62,.04),0 4px 24px rgba(0,0,0,.22);}
+.chat-input-toolbar{display:none;}
+.cit-btn{background:transparent;border:none;color:rgba(255,255,255,.28);cursor:pointer;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.22,1,.36,1);flex-shrink:0;}
+.cit-btn:hover{background:rgba(255,249,62,.08);color:var(--accent);}
+.cit-btn.active{color:var(--accent);background:rgba(255,249,62,.1);}
+.cit-sep{width:1px;height:18px;background:rgba(255,255,255,.06);margin:0 2px;flex-shrink:0;}
+.cit-gif{background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:7px;color:rgba(255,249,62,.55);font-size:9px;font-weight:800;padding:3px 8px;cursor:pointer;letter-spacing:.06em;transition:all .18s cubic-bezier(.22,1,.36,1);font-family:'Syne',sans-serif;height:26px;display:flex;align-items:center;}
+.cit-gif:hover{border-color:rgba(255,249,62,.3);color:var(--accent);background:rgba(255,249,62,.1);}
+.chat-input-row{display:flex;align-items:flex-end;padding:6px 8px 6px 6px;gap:4px;}
+.chat-input-row textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;resize:none;max-height:140px;min-height:22px;line-height:1.55;padding:5px 4px;position:relative;z-index:2;}
 .ci-preview-wrap textarea{width:100%;}
-.chat-input-row textarea::placeholder{color:rgba(255,255,255,.18);}
-.chat-send-btn{width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#e6e034);border:none;color:#060810;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 10px rgba(255,249,62,.2);}
-.chat-send-btn:hover{filter:brightness(1.08);transform:scale(1.08) translateY(-1px);box-shadow:0 6px 20px rgba(255,249,62,.3);}
+.chat-input-row textarea::placeholder{color:rgba(255,255,255,.2);}
+.chat-input-actions{display:flex;align-items:center;gap:2px;flex-shrink:0;}
+.chat-send-btn{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,var(--accent),#e6e034);border:none;color:#060810;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 10px rgba(255,249,62,.2);}
+.chat-send-btn:hover{filter:brightness(1.08);transform:scale(1.06) translateY(-1px);box-shadow:0 6px 20px rgba(255,249,62,.3);}
 .chat-send-btn:active{transform:scale(.92);}
+/* Attach button (left side of input) */
+.cit-attach{width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);font-size:18px;font-weight:300;}
+.cit-attach:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.15);color:var(--accent);}
+/* Sticker picker button */
+.cit-sticker{background:transparent;border:none;color:rgba(255,255,255,.28);cursor:pointer;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.22,1,.36,1);flex-shrink:0;}
+.cit-sticker:hover{background:rgba(255,249,62,.08);color:var(--accent);}
+/* Bot commands shortcut button */
+.cit-botcmd{background:transparent;border:none;color:rgba(255,255,255,.28);cursor:pointer;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.22,1,.36,1);flex-shrink:0;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
+.cit-botcmd:hover{background:rgba(255,249,62,.08);color:var(--accent);}
+/* Sticker picker panel */
+.sticker-picker-panel{position:fixed;width:400px;max-height:480px;background:linear-gradient(160deg,rgba(16,20,32,.98),rgba(12,15,24,.99));border:1px solid rgba(255,249,62,.08);border-radius:18px;z-index:8500;box-shadow:0 24px 64px rgba(0,0,0,.65),0 0 0 1px rgba(255,249,62,.04),inset 0 1px 0 rgba(255,255,255,.04);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(20px);animation:emojiPanelIn .2s cubic-bezier(.22,1,.36,1);}
+.sticker-picker-panel .spp-header{padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;}
+.sticker-picker-panel .spp-title{font-size:13px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.01em;}
+.sticker-picker-panel .spp-bastion-label{font-size:9px;color:rgba(255,249,62,.4);letter-spacing:.05em;font-weight:700;text-transform:uppercase;margin-left:auto;}
+.sticker-picker-panel .spp-search{padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);}
+.sticker-picker-panel .spp-search input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:8px 12px 8px 32px;outline:none;box-sizing:border-box;transition:border-color .15s;}
+.sticker-picker-panel .spp-search input:focus{border-color:rgba(255,249,62,.2);}
+.spp-tabs{display:flex;gap:2px;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.04);overflow-x:auto;}
+.spp-tabs::-webkit-scrollbar{height:0;}
+.spp-tab{padding:5px 12px;border-radius:8px;border:1px solid transparent;background:transparent;color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;}
+.spp-tab:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);}
+.spp-tab.active{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.15);color:var(--accent);}
+.spp-grid{flex:1;overflow-y:auto;padding:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.spp-sticker{border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;padding:8px;aspect-ratio:1;}
+.spp-sticker:hover{background:rgba(255,249,62,.07);border-color:rgba(255,249,62,.12);transform:scale(1.05);}
+.spp-sticker img{width:100%;height:100%;object-fit:contain;}
+.spp-empty{grid-column:1/-1;text-align:center;padding:30px 20px;color:rgba(255,255,255,.3);font-size:13px;}
+/* Bot command shortcut panel */
+.botcmd-panel{position:fixed;width:340px;max-height:360px;background:linear-gradient(160deg,rgba(16,20,32,.98),rgba(12,15,24,.99));border:1px solid rgba(255,249,62,.08);border-radius:16px;z-index:8500;box-shadow:0 24px 64px rgba(0,0,0,.65),0 0 0 1px rgba(255,249,62,.04),inset 0 1px 0 rgba(255,255,255,.04);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(20px);animation:emojiPanelIn .2s cubic-bezier(.22,1,.36,1);}
+.botcmd-panel .bcp-header{padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;font-weight:700;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:8px;}
+.botcmd-panel .bcp-header svg{color:rgba(255,249,62,.5);}
+.botcmd-list{flex:1;overflow-y:auto;padding:6px;}
+.botcmd-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;transition:background .12s;}
+.botcmd-item:hover{background:rgba(255,249,62,.06);}
+.botcmd-item .bci-prefix{color:var(--accent);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;flex-shrink:0;min-width:20px;}
+.botcmd-item .bci-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;}
+.botcmd-item .bci-desc{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
+.botcmd-item .bci-bot{font-size:9px;color:rgba(255,249,62,.35);font-weight:600;margin-left:auto;text-transform:uppercase;letter-spacing:.04em;}
+.botcmd-empty{padding:24px 16px;text-align:center;color:rgba(255,255,255,.3);font-size:12.5px;}
 /* Role accent stripe */
 .msg-role-stripe{position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:1px;opacity:.35;}
 /* Viewing older messages bar */
@@ -1316,13 +1358,13 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
     </div>
     <div class="ua-btns">
       <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
       </button>
       <button onclick="toggleDeafen()" id="deafen-btn" title="Deafen/Undeafen">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
       </button>
       <button onclick="showView('profile')" title="Settings">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
     </div>
   </div>
@@ -10661,24 +10703,13 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
     : context==='gc' ? "if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();if(event.altKey){_outlineMode=true;}sendGCMessage();}"
     : `if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();if(event.altKey){_outlineMode=true;}handleChatSend('ch',${chIdx??'curChannel'});}`;
 
+  const emojiCtx = inputId==='dm-input'?'dm':inputId==='gc-input'?'gc':'ch';
   return `
     <div class="chat-input-wrap">
       <div class="chat-input-outer" id="${inputId}-outer"
         ondragover="event.preventDefault();document.querySelector('.drop-overlay').classList.add('active')"
         ondragleave="document.querySelector('.drop-overlay').classList.remove('active')"
         ondrop="handleDropOnInput(event,'${inputId}')">
-        <div class="chat-input-toolbar">
-          <span id="${inputId}-charcount" style="font-size:10.5px;color:rgba(255,255,255,.2);"></span>
-          <div style="flex:1;"></div>
-          <button class="cit-btn" onclick="openFileUpload('${inputId}')" title="Upload File">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-          </button>
-          <div class="cit-sep"></div>
-          <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${inputId==='dm-input'?'dm':inputId==='gc-input'?'gc':'ch'}" title="Emoji">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-          </button>
-          <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF">GIF</button>
-        </div>
         <div class="chat-input-row" id="${inputId}-reply-bar" style="display:none;padding:5px 12px 0;border-bottom:1px solid rgba(255,255,255,.05);">
           <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;font-size:12px;color:rgba(255,255,255,.5);">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
@@ -10687,10 +10718,26 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           <button onclick="cancelReply('${context}')" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</button>
         </div>
         <div class="chat-input-row">
+          <button class="cit-attach" onclick="openFileUpload('${inputId}')" title="Attach File">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
           <textarea id="${inputId}" placeholder="${placeholder}" rows="1"
             onkeydown="${keydown}"
             oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':''}updateCharCount('${inputId}')"
             onpaste="handlePaste(event,'${inputId}')"></textarea>
+          <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
+          <div class="chat-input-actions">
+            <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF">GIF</button>
+            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" title="Stickers">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M8.5 14.5c0 0 1.5 2 3.5 2s3.5-2 3.5-2"/></svg>
+            </button>
+            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" title="Emoji">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </button>
+            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" title="Bot Commands" id="botcmd-btn-${emojiCtx}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            </button>
+          </div>
           <div style="position:relative;flex-shrink:0;">
             <button class="chat-send-btn" onclick="${sendCall}" onmousedown="_silentSendStart(this)" onmouseup="_silentSendEnd(this)" onmouseleave="_silentSendEnd(this)" title="Send (hold for silent)">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
@@ -10707,8 +10754,14 @@ function updateCharCount(inputId) {
   const counter = document.getElementById(inputId+'-charcount');
   if (!ta || !counter) return;
   const len = ta.value.length;
-  counter.textContent = len > 1800 ? (2000-len)+' remaining' : '';
-  counter.style.color = len > 1900 ? 'var(--red)' : 'rgba(255,255,255,.2)';
+  if (len > 1800) {
+    counter.textContent = (2000-len)+' left';
+    counter.style.display = 'inline';
+    counter.style.color = len > 1900 ? 'var(--red)' : 'rgba(255,255,255,.22)';
+  } else {
+    counter.style.display = 'none';
+    counter.textContent = '';
+  }
 }
 
 // Pre-process text before sending: replace :shortcodes: with real emojis
@@ -10763,6 +10816,11 @@ function parseMD(s) {
   s = s.replace(/\[FTZGIF:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);
     return `<div style="margin:6px 0;max-width:320px;border-radius:12px;overflow:hidden;display:inline-block;cursor:pointer;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:260px;object-fit:contain;border-radius:12px;display:block;" loading="lazy"></div>`;
+  });
+  // 0a. Sticker token from sticker picker
+  s = s.replace(/\[FTZSTICKER:([^\]]+)\]/g, (_, url) => {
+    const safe = escapeHTML(url);
+    return `<div style="margin:6px 0;max-width:180px;display:inline-block;cursor:pointer;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:180px;object-fit:contain;display:block;" loading="lazy" draggable="false"></div>`;
   });
   // 0aa. :emoji_name: shortcodes → actual emoji / Fortized emoji
   s = s.replace(/:([a-zA-Z0-9_]+):/g, (match, name) => {
@@ -12248,6 +12306,224 @@ function sendGifDirectly(id, inputId, url) {
 function insertGifById(id, inputId, url) {
   sendGifDirectly(id, inputId, url);
 }
+
+// ════════════════════════════════════════════
+// STICKER PICKER — bastion-uploaded stickers
+// ════════════════════════════════════════════
+let _stickerInput = 'ch-input';
+function openStickerPicker(inputId) {
+  _stickerInput = inputId || 'ch-input';
+  document.getElementById('sticker-picker')?.remove();
+  document.getElementById('giphy-picker')?.remove();
+  document.getElementById('emoji-picker')?.classList.remove('show');
+  document.getElementById('botcmd-picker')?.remove();
+
+  const refEl = document.getElementById(_stickerInput);
+  const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
+  const rect = outerEl ? outerEl.getBoundingClientRect() : {right:400, top:300};
+  const rightOffset = Math.max(8, window.innerWidth - rect.right);
+
+  const picker = document.createElement('div');
+  picker.id = 'sticker-picker';
+  picker.className = 'sticker-picker-panel';
+  picker.style.cssText = `position:fixed;right:${rightOffset}px;bottom:${window.innerHeight-rect.top+6}px;`;
+
+  // Gather stickers from all bastions the user is in
+  const allStickers = [];
+  const bastionNames = {};
+  if (CU?.bastions) {
+    Object.entries(CU.bastions).forEach(([idx, b]) => {
+      const stickers = b.stickers || b.customStickers || [];
+      stickers.forEach(s => {
+        allStickers.push({...s, bastionName: b.name || 'Unknown', bastionIdx: idx});
+      });
+      if (stickers.length) bastionNames[idx] = b.name || 'Unknown';
+    });
+  }
+
+  // Also gather from global bastion data
+  if (typeof bastions !== 'undefined' && bastions) {
+    bastions.forEach((b, idx) => {
+      const stickers = b.stickers || b.customStickers || [];
+      stickers.forEach(s => {
+        if (!allStickers.find(ex => ex.url === s.url)) {
+          allStickers.push({...s, bastionName: b.name || 'Unknown', bastionIdx: idx});
+          bastionNames[idx] = b.name || 'Unknown';
+        }
+      });
+    });
+  }
+
+  const bastionTabsHTML = Object.entries(bastionNames).map(([idx, name]) =>
+    `<button class="spp-tab" onclick="_filterStickerBastion('${idx}')">${escapeHTML(name)}</button>`
+  ).join('');
+
+  picker.innerHTML = `
+    <div class="spp-header">
+      <div class="spp-title">Stickers</div>
+      <div class="spp-bastion-label">Bastion Stickers</div>
+    </div>
+    <div class="spp-search" style="position:relative;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2" style="position:absolute;left:24px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="sticker-search-input" placeholder="Search stickers…" oninput="_searchStickers(this.value)">
+    </div>
+    ${bastionTabsHTML ? `<div class="spp-tabs"><button class="spp-tab active" onclick="_filterStickerBastion('all')">All</button>${bastionTabsHTML}</div>` : ''}
+    <div class="spp-grid" id="sticker-grid"></div>
+  `;
+
+  document.body.appendChild(picker);
+  _renderStickers(allStickers);
+  document.addEventListener('mousedown', _stickerOutsideClose, {once:true, capture:true});
+}
+
+window._allStickersCache = [];
+function _renderStickers(stickers) {
+  window._allStickersCache = stickers;
+  const grid = document.getElementById('sticker-grid');
+  if (!grid) return;
+  if (!stickers.length) {
+    grid.innerHTML = `<div class="spp-empty">
+      <div style="font-size:28px;margin-bottom:8px;opacity:.4;">🎨</div>
+      No stickers available yet.<br>
+      <span style="font-size:11px;color:rgba(255,255,255,.2);">Bastion owners can upload stickers in Bastion Settings.</span>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = stickers.map(s => `
+    <div class="spp-sticker" onclick="_sendSticker('${escapeHTML(s.url||'')}','${escapeHTML(s.name||'sticker')}')" title="${escapeHTML(s.name||'Sticker')}${s.bastionName?' — '+escapeHTML(s.bastionName):''}">
+      <img src="${escapeHTML(s.url||'')}" alt="${escapeHTML(s.name||'')}" loading="lazy" draggable="false">
+    </div>
+  `).join('');
+}
+
+function _searchStickers(q) {
+  const filtered = q.trim()
+    ? window._allStickersCache.filter(s => (s.name||'').toLowerCase().includes(q.toLowerCase()))
+    : window._allStickersCache;
+  _renderStickers(filtered);
+}
+
+function _filterStickerBastion(bastionIdx) {
+  document.querySelectorAll('.spp-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  if (bastionIdx === 'all') {
+    _renderStickers(window._allStickersCache);
+  } else {
+    const filtered = window._allStickersCache.filter(s => String(s.bastionIdx) === String(bastionIdx));
+    const grid = document.getElementById('sticker-grid');
+    if (!grid) return;
+    if (!filtered.length) {
+      grid.innerHTML = '<div class="spp-empty">No stickers from this bastion.</div>';
+      return;
+    }
+    grid.innerHTML = filtered.map(s => `
+      <div class="spp-sticker" onclick="_sendSticker('${escapeHTML(s.url||'')}','${escapeHTML(s.name||'sticker')}')" title="${escapeHTML(s.name||'Sticker')}">
+        <img src="${escapeHTML(s.url||'')}" alt="${escapeHTML(s.name||'')}" loading="lazy" draggable="false">
+      </div>
+    `).join('');
+  }
+}
+
+function _sendSticker(url, name) {
+  document.getElementById('sticker-picker')?.remove();
+  const inp = document.getElementById(_stickerInput);
+  if (inp) {
+    const token = `[FTZSTICKER:${url}]`;
+    const prev = inp.value.trim();
+    inp.value = prev ? prev + ' ' + token : token;
+    inp.focus();
+    // Auto-send sticker
+    if (_stickerInput === 'dm-input') handleChatSend('dm');
+    else if (_stickerInput === 'gc-input') sendGCMessage();
+    else if (_stickerInput === 'ch-input') handleChatSend('ch', curChannel);
+  }
+}
+
+function _stickerOutsideClose(e) {
+  const picker = document.getElementById('sticker-picker');
+  if (picker && !picker.contains(e.target)) { picker.remove(); return; }
+  document.addEventListener('mousedown', _stickerOutsideClose, {once:true, capture:true});
+}
+
+
+// ════════════════════════════════════════════
+// BOT COMMAND SHORTCUT PANEL
+// ════════════════════════════════════════════
+function openBotCommandPanel(inputId, context) {
+  document.getElementById('botcmd-picker')?.remove();
+  document.getElementById('sticker-picker')?.remove();
+  document.getElementById('giphy-picker')?.remove();
+  document.getElementById('emoji-picker')?.classList.remove('show');
+
+  const refEl = document.getElementById(inputId);
+  const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
+  const rect = outerEl ? outerEl.getBoundingClientRect() : {right:400, top:300};
+  const rightOffset = Math.max(8, window.innerWidth - rect.right);
+
+  const picker = document.createElement('div');
+  picker.id = 'botcmd-picker';
+  picker.className = 'botcmd-panel';
+  picker.style.cssText = `position:fixed;right:${rightOffset}px;bottom:${window.innerHeight-rect.top+6}px;`;
+
+  // Gather bot commands from current bastion
+  let commands = [];
+  if (context === 'ch' && curBastion !== null) {
+    const b = CU?.bastions?.[curBastion];
+    const deployedBots = b?.deployedBots || [];
+    deployedBots.forEach(bot => {
+      if (bot.enabled === false) return;
+      const cmds = bot.commands || [];
+      cmds.forEach(cmd => {
+        commands.push({name: cmd.name, desc: cmd.desc || cmd.description || 'No description', botName: bot.name || 'Bot'});
+      });
+    });
+  }
+
+  picker.innerHTML = `
+    <div class="bcp-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      Bot Commands
+    </div>
+    <div class="botcmd-list" id="botcmd-list"></div>
+  `;
+
+  document.body.appendChild(picker);
+
+  const list = document.getElementById('botcmd-list');
+  if (!commands.length) {
+    list.innerHTML = `<div class="botcmd-empty">
+      <div style="font-size:22px;margin-bottom:6px;opacity:.3;">🤖</div>
+      No bot commands available${context !== 'ch' ? '<br><span style="font-size:11px;color:rgba(255,255,255,.2);">Bot commands are only available in bastion channels.</span>' : ' in this bastion.'}
+    </div>`;
+  } else {
+    list.innerHTML = commands.map(cmd => `
+      <div class="botcmd-item" onclick="_insertBotCmd('${escapeHTML(cmd.name)}','${escapeHTML(inputId)}')">
+        <span class="bci-prefix">!</span>
+        <span class="bci-name">${escapeHTML(cmd.name)}</span>
+        <span class="bci-desc">${escapeHTML(cmd.desc)}</span>
+        <span class="bci-bot">${escapeHTML(cmd.botName)}</span>
+      </div>
+    `).join('');
+  }
+
+  document.addEventListener('mousedown', _botcmdOutsideClose, {once:true, capture:true});
+}
+
+function _insertBotCmd(cmdName, inputId) {
+  document.getElementById('botcmd-picker')?.remove();
+  const inp = document.getElementById(inputId);
+  if (inp) {
+    inp.value = '!' + cmdName + ' ';
+    inp.focus();
+  }
+}
+
+function _botcmdOutsideClose(e) {
+  const picker = document.getElementById('botcmd-picker');
+  if (picker && !picker.contains(e.target)) { picker.remove(); return; }
+  document.addEventListener('mousedown', _botcmdOutsideClose, {once:true, capture:true});
+}
+
 
 // ════════════════════════════════════════════
 // FILE UPLOAD (30MB / 45MB for Radiance)

@@ -75,6 +75,20 @@ const FortizedSocial = (() => {
   }
 
   // ── Auth ───────────────────────────────────────────────────
+  // Protected names — usernames containing these bases (with optional
+  // repeated trailing characters) are blocked to prevent impersonation.
+  const PROTECTED_NAMES = ['staw'];
+
+  function isProtectedUsername(name) {
+    const clean = name.replace(/[^a-z]/g, '');
+    for (const base of PROTECTED_NAMES) {
+      if (clean === base) return true;
+      // Block patterns like "staww", "stawr", "stawrer", "stawrerr", etc.
+      if (clean.length > base.length && clean.startsWith(base)) return true;
+    }
+    return false;
+  }
+
   async function register(username, password, email = '') {
     username = norm(username).replace(/[^a-z0-9_]/g, '');
     if (!username || username.length < 3)
@@ -82,8 +96,23 @@ const FortizedSocial = (() => {
     if (!password || password.length < 6)
       return { ok: false, msg: 'Password must be 6+ characters.' };
 
+    // Block usernames that impersonate protected names
+    if (isProtectedUsername(username))
+      return { ok: false, msg: 'This username is not available.' };
+
     const existing = await getUserByName(username);
     if (existing) return { ok: false, msg: 'Username already taken.' };
+
+    // Limit: same email can be used by max 3 accounts
+    if (email) {
+      const emailLower = email.trim().toLowerCase();
+      const allUsers = await getUsers();
+      const emailCount = allUsers.filter(u =>
+        u.email && u.email.trim().toLowerCase() === emailLower
+      ).length;
+      if (emailCount >= 3)
+        return { ok: false, msg: 'This email has already been used for the maximum number of accounts (3).' };
+    }
 
     const user = {
       username, password, email,

@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sign Up - Fortized</title>
+<meta name="description" content="Create your Fortized account and start building your fortress. Get 25 free Onyx when you sign up.">
+<meta name="theme-color" content="#fff93e">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Fortized">
+<meta property="og:title" content="Sign Up – Fortized">
+<meta property="og:description" content="Create your Fortized account and start building your fortress. Get 25 free Onyx when you sign up.">
+<meta property="og:image" content="https://fortized.com/Fortized banner.png">
+<meta property="og:url" content="https://fortized.com/signup">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sign Up – Fortized">
+<meta name="twitter:description" content="Create your Fortized account and start building your fortress. Get 25 free Onyx when you sign up.">
+<meta name="twitter:image" content="https://fortized.com/Fortized banner.png">
 <link rel="icon" type="image/png" href="/Fortized icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
@@ -368,6 +380,26 @@ togglePw.addEventListener('click', () => {
     : '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8s-2.5 4.5-6.5 4.5S1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>';
 });
 
+// Client-side protected username check
+const PROTECTED_BASES = ['staw'];
+function isProtectedUsername(name) {
+  const clean = name.toLowerCase().replace(/[^a-z]/g, '');
+  for (const base of PROTECTED_BASES) {
+    if (clean === base) return true;
+    if (clean.length > base.length && clean.startsWith(base)) return true;
+  }
+  return false;
+}
+
+usernameInput.addEventListener('input', () => {
+  const val = usernameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (val && isProtectedUsername(val)) {
+    userErrorDiv.textContent = 'This username is not available.';
+  } else {
+    userErrorDiv.textContent = '';
+  }
+});
+
 // Enter key submission
 signupBtn.addEventListener('click', doSignup);
 [emailInput, usernameInput, passwordInput].forEach(el =>
@@ -385,6 +417,12 @@ async function doSignup() {
 
   if (!email || !username || !password) { errorDiv.textContent = 'All fields are required.'; return; }
   if (!terms) { errorDiv.textContent = 'You must agree to the Terms to continue.'; return; }
+
+  // Client-side block before hitting the server
+  if (isProtectedUsername(username.toLowerCase().replace(/[^a-z0-9_]/g, ''))) {
+    userErrorDiv.textContent = 'This username is not available.';
+    return;
+  }
 
   setLoading(true);
 

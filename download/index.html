@@ -20,7 +20,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 <style>
-:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.2);--accent-glow:rgba(255,249,62,.4);--bg:#060810;--panel:rgba(10,13,20,.82);--border:#151b2a;--border-hover:#1e2840;--radius:14px;--muted:#4a5568;--muted-light:#7d8a9e;--green:#3ecf6e;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
+:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.2);--accent-glow:rgba(255,249,62,.4);--bg:#72b5f0;--panel:rgba(10,13,20,.82);--border:#151b2a;--border-hover:#1e2840;--radius:14px;--muted:#4a5568;--muted-light:#7d8a9e;--green:#3ecf6e;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box;}
 html{height:100%;}
 body{min-height:100vh;background:var(--bg);font-family:var(--font-body);color:white;overflow-x:hidden;}
@@ -37,7 +37,7 @@ body{min-height:100vh;background:var(--bg);font-family:var(--font-body);color:wh
 /* ── Right side: banner image ── */
 .dl-right{position:relative;overflow:hidden;}
 .dl-right-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;}
-.dl-right::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--bg) 0%,rgba(6,8,16,.92) 10%,rgba(6,8,16,.7) 25%,rgba(6,8,16,.4) 40%,rgba(6,8,16,.15) 60%,transparent 80%),linear-gradient(180deg,rgba(6,8,16,.4) 0%,rgba(6,8,16,.1) 30%,rgba(6,8,16,.1) 70%,rgba(6,8,16,.4) 100%),linear-gradient(90deg,rgba(6,8,16,.15),rgba(6,8,16,.15));}
+.dl-right::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--bg) 0%,rgba(114,181,240,.92) 10%,rgba(114,181,240,.7) 25%,rgba(114,181,240,.4) 40%,rgba(114,181,240,.15) 60%,transparent 80%),linear-gradient(180deg,rgba(114,181,240,.4) 0%,rgba(114,181,240,.1) 30%,rgba(114,181,240,.1) 70%,rgba(114,181,240,.4) 100%),linear-gradient(90deg,rgba(114,181,240,.15),rgba(114,181,240,.15));}
 
 /* Ambient glow on left */
 .glow-orb{position:fixed;border-radius:50%;pointer-events:none;filter:blur(80px);z-index:0;}
@@ -122,7 +122,7 @@ body{min-height:100vh;background:var(--bg);font-family:var(--font-body);color:wh
 @media(max-width:900px){
   .dl-page{grid-template-columns:1fr;min-height:auto;}
   .dl-right{height:40vh;min-height:280px;}
-  .dl-right::after{background:linear-gradient(180deg,var(--bg) 0%,rgba(6,8,16,.5) 25%,rgba(6,8,16,.15) 50%,rgba(6,8,16,.15) 70%,rgba(6,8,16,.85) 100%),linear-gradient(90deg,rgba(6,8,16,.1),rgba(6,8,16,.1));}
+  .dl-right::after{background:linear-gradient(180deg,var(--bg) 0%,rgba(114,181,240,.5) 25%,rgba(114,181,240,.15) 50%,rgba(114,181,240,.15) 70%,rgba(114,181,240,.85) 100%),linear-gradient(90deg,rgba(114,181,240,.1),rgba(114,181,240,.1));}
   .dl-left{padding:40px 24px 60px;order:2;}
   .dl-right{order:1;}
 }

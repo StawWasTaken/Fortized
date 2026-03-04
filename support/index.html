@@ -55,9 +55,14 @@ a{text-decoration:none;}
 .nav-right{display:flex;align-items:center;gap:8px;}
 .nav-btn-login{font-size:13.5px;font-weight:600;color:var(--muted-light);padding:8px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);transition:color .15s,border-color .15s,background .15s;}
 .nav-btn-login:hover{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06);}
-.nav-btn-cta{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#080a0f;background:var(--accent);padding:9px 20px;border-radius:10px;transition:box-shadow .2s,filter .15s,transform .14s;}
+.nav-btn-cta{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#080a0f;background:var(--accent);padding:9px 20px;border-radius:10px;transition:box-shadow .2s,filter .15s,transform .14s;position:relative;overflow:hidden;}
+.nav-btn-cta::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);opacity:0;transition:opacity .2s;}
 .nav-btn-cta:hover{box-shadow:0 0 28px var(--accent-glow);filter:brightness(1.06);transform:translateY(-1px);}
-@media(max-width:900px){.nav-pill-group,.nav-community-tag,.nav-sep{display:none;}}
+.nav-btn-cta:hover::before{opacity:1;}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);}
+.nav-hamburger span{display:block;width:20px;height:1.5px;background:var(--muted-light);border-radius:2px;transition:transform .2s,opacity .2s;}
+@media(max-width:900px){.nav-pill-group,.nav-community-tag,.nav-sep{display:none;}.nav-hamburger{display:flex;}}
+@media(max-width:600px){.nav-btn-login{display:none;}}
 
 .page-hero{padding:72px 72px 56px;position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
 .page-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,rgba(8,10,15,1) 42%,rgba(8,10,15,.78) 100%),url("/Fortized banner2.png") center/cover no-repeat;z-index:0;}
@@ -256,7 +261,10 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   <div class="nav-spacer"></div>
   <div class="nav-right">
     <a href="/login" class="nav-btn-login">Login</a>
-    <a href="/signup" class="nav-btn-cta">Join the Fortress</a>
+    <a href="/signup" class="nav-btn-cta">Join the Fortress →</a>
+    <div class="nav-hamburger" id="navHamburger">
+      <span></span><span></span><span></span>
+    </div>
   </div>
 </nav>
 

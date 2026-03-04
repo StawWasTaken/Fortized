@@ -4747,6 +4747,7 @@ function renderBastionSidebar(scroll) {
   const boostLv=b.boostLevel||0;
   const bannerSrc=b.banner||b.icon||'';
   const isOwner=b.owner===CU.username;
+  const canManageChannels=isOwner||((b.memberRoles||{})[CU.username]||[]).some(rid=>(b.roles||[]).find(r=>r.id===rid)?.permissions?.includes('manage_channels'));
   const chs=b.channels||[];
 
   // ── Banner Hero with centered icon ──
@@ -4789,11 +4790,11 @@ function renderBastionSidebar(scroll) {
 
   // Helper: collapsible category wrapper
   function catWrap(catId, icon, label, type, contentHTML) {
-    if (!contentHTML && !isOwner) return '';
+    if (!contentHTML && !canManageChannels) return '';
     const isCollapsed=!!collapsedCats[catId];
     return `<div class="ch-cat-wrap${isCollapsed?' collapsed':''}" data-cat="${catId}">
       <div class="ch-category" onclick="toggleChCat(this,'${catId}')">
-        <span class="cat-chevron">▼</span><span class="cat-icon">${icon}</span> ${label}${isOwner?`<button class="cat-add" onclick="event.stopPropagation();addChannel(${curBastion},'${type}')">+</button>`:''}
+        <span class="cat-chevron">▼</span><span class="cat-icon">${icon}</span> ${label}${canManageChannels?`<button class="cat-add" onclick="event.stopPropagation();addChannel(${curBastion},'${type}')">+</button>`:''}
       </div>
       <div class="ch-cat-items">${contentHTML||''}</div>
     </div>`;
@@ -4811,7 +4812,7 @@ function renderBastionSidebar(scroll) {
       <span class="ch-hash">#</span><span class="ch-name">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${blocked?'<span title="Age blocked" style="margin-left:auto;opacity:.4;">🔒</span>':''}
     </div>`;
   });
-  if (textHTML||isOwner) html+=catWrap('text','📝','TEXT ROOMS','text',textHTML);
+  if (textHTML||canManageChannels) html+=catWrap('text','📝','TEXT ROOMS','text',textHTML);
 
   // Forums
   let forumHTML='';
@@ -4821,7 +4822,7 @@ function renderBastionSidebar(scroll) {
       <span class="ch-hash">💬</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
-  if (forumHTML||isOwner) html+=catWrap('forum','💬','FORUM ROOMS','forum',forumHTML);
+  if (forumHTML||canManageChannels) html+=catWrap('forum','💬','FORUM ROOMS','forum',forumHTML);
 
   // Voice
   let voiceHTML='';
@@ -4833,7 +4834,7 @@ function renderBastionSidebar(scroll) {
       ${live?'<span class="vc-live">LIVE</span>':''}
     </div>`;
   });
-  if (voiceHTML||isOwner) html+=catWrap('voice','🎉','PARTY ROOMS','voice',voiceHTML);
+  if (voiceHTML||canManageChannels) html+=catWrap('voice','🎉','PARTY ROOMS','voice',voiceHTML);
 
   // Announcements
   let announceHTML='';
@@ -4843,7 +4844,7 @@ function renderBastionSidebar(scroll) {
       <span class="ch-hash">📢</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
-  if (announceHTML||isOwner) html+=catWrap('announcement','📢','ANNOUNCEMENT ROOMS','announcement',announceHTML);
+  if (announceHTML||canManageChannels) html+=catWrap('announcement','📢','ANNOUNCEMENT ROOMS','announcement',announceHTML);
 
   // Polls
   let pollHTML='';
@@ -4853,7 +4854,7 @@ function renderBastionSidebar(scroll) {
       <span class="ch-hash">🗳</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
-  if (pollHTML||isOwner) html+=catWrap('poll','🗳','POLL ROOMS','poll',pollHTML);
+  if (pollHTML||canManageChannels) html+=catWrap('poll','🗳','POLL ROOMS','poll',pollHTML);
 
 
 
@@ -4910,6 +4911,7 @@ function toggleBastionNameDropdown(e) {
       <div class="bnd-action" onclick="closeBastionNameDD();openBastionHub()"><span class="bnd-icon">🏰</span> Bastion Hub</div>
       <div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('invites')"><span class="bnd-icon">🔗</span> Invite Friends</div>
       <div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('boost')"><span class="bnd-icon">⚡</span> Boost</div>
+      ${(isOwner||hasPerm('manage_channels'))?`<div class="bnd-action" onclick="closeBastionNameDD();showCreateRoomModal(curBastion)"><span class="bnd-icon">➕</span> Create Room</div>`:''}
       ${isOwner?`<div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings()"><span class="bnd-icon">⚙️</span> Settings</div>`:''}
       <div class="bnd-action danger" onclick="closeBastionNameDD();openModal('modal-leave-bastion')"><span class="bnd-icon">🚪</span> Leave Bastion</div>
     </div>`;
@@ -6923,21 +6925,105 @@ async function createBastion() {
 // ════════════════════════════════════════════
 // CHANNEL MANAGEMENT
 // ════════════════════════════════════════════
-async function addChannel(bastionIdx, type) {
-  const typeLabel = type==='voice'?'party':type;
-  showCustomInput('Add Room', `Name for new ${typeLabel} room:`, async (name) => {
-    if (!name?.trim()) return;
-    const b = CU.bastions[bastionIdx];
-    if (!b) return;
-    const ch = {name:name.trim().toLowerCase().replace(/\s+/g,'-'), type, desc:''};
-    if (type==='announcement') ch.restricted = true;
-    if (type==='poll') ch.polls = [];
+async function addChannel(bastionIdx, preselectedType) {
+  showCreateRoomModal(bastionIdx, preselectedType || null);
+}
+
+function showCreateRoomModal(bastionIdx, preselectedType) {
+  const b = CU.bastions?.[bastionIdx];
+  if (!b) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'input-dialog-overlay';
+  overlay.style.zIndex = '9600';
+  const types = [
+    { id:'text', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`, label:'Text', desc:'Send messages, images, GIFs, and more' },
+    { id:'voice', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`, label:'Party', desc:'Voice chat and hang out together' },
+    { id:'forum', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`, label:'Forum', desc:'Organized threaded discussions' },
+    { id:'announcement', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`, label:'Announcement', desc:'Important updates — only admins can post' },
+    { id:'poll', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h2v5H7z"/><path d="M11 8h2v9h-2z"/><path d="M15 10h2v7h-2z"/></svg>`, label:'Poll', desc:'Create polls and gather opinions' },
+  ];
+  const selType = preselectedType || 'text';
+  overlay.innerHTML = `<div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.08);border-radius:20px;max-width:460px;width:92%;box-shadow:0 24px 80px rgba(0,0,0,.7);animation:embedIn .18s cubic-bezier(.22,1,.36,1) both;">
+    <div style="padding:26px 28px 0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;">Create Room</div>
+        <button id="crm-close" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:20px;padding:4px;line-height:1;transition:color .15s;" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.3)'">&times;</button>
+      </div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:20px;">in ${escapeHTML(b.name)}</div>
+      <div style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:10px;">Room Type</div>
+      <div id="crm-types" style="display:flex;flex-direction:column;gap:6px;margin-bottom:22px;">
+        ${types.map(t => `<label data-type="${t.id}" class="crm-type-opt${t.id===selType?' selected':''}" onclick="_crmSelectType(this,'${t.id}')" style="display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:12px;cursor:pointer;border:1.5px solid ${t.id===selType?'rgba(255,249,62,.35)':'rgba(255,255,255,.06)'};background:${t.id===selType?'rgba(255,249,62,.05)':'rgba(255,255,255,.015)'};transition:all .15s;">
+          <div style="width:40px;height:40px;border-radius:12px;background:${t.id===selType?'rgba(255,249,62,.1)':'rgba(255,255,255,.04)'};display:flex;align-items:center;justify-content:center;color:${t.id===selType?'#fff93e':'rgba(255,255,255,.35)'};flex-shrink:0;transition:all .15s;">${t.icon}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13.5px;font-weight:700;color:${t.id===selType?'#fff':'rgba(255,255,255,.7)'};">${t.label}</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,.3);margin-top:1px;">${t.desc}</div>
+          </div>
+          <div class="crm-radio" style="width:20px;height:20px;border-radius:50%;border:2px solid ${t.id===selType?'#fff93e':'rgba(255,255,255,.15)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;">
+            <div style="width:10px;height:10px;border-radius:50%;background:${t.id===selType?'#fff93e':'transparent'};transition:all .15s;"></div>
+          </div>
+        </label>`).join('')}
+      </div>
+    </div>
+    <div style="padding:0 28px 24px;">
+      <div style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;">Room Name</div>
+      <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;padding:0 14px;transition:border-color .15s;" id="crm-input-wrap">
+        <span id="crm-prefix" style="color:rgba(255,255,255,.2);font-size:15px;font-weight:600;">#</span>
+        <input id="crm-name" type="text" placeholder="new-room" maxlength="50" style="flex:1;background:transparent;border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;padding:12px 0;outline:none;" autocomplete="off" spellcheck="false">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button id="crm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Cancel</button>
+        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:#060810;font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">Create Room</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay._selectedType = selType;
+  const nameInput = overlay.querySelector('#crm-name');
+  nameInput.focus();
+  nameInput.addEventListener('input', () => {
+    nameInput.value = nameInput.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '');
+  });
+  overlay.querySelector('#crm-input-wrap').addEventListener('focusin', function(){ this.style.borderColor='rgba(255,249,62,.35)'; });
+  overlay.querySelector('#crm-input-wrap').addEventListener('focusout', function(){ this.style.borderColor='rgba(255,255,255,.08)'; });
+  overlay.querySelector('#crm-close').onclick = () => overlay.remove();
+  overlay.querySelector('#crm-cancel').onclick = () => overlay.remove();
+  overlay.addEventListener('keydown', e => { if (e.key==='Escape') overlay.remove(); });
+  nameInput.addEventListener('keydown', e => { if (e.key==='Enter') overlay.querySelector('#crm-create').click(); });
+  overlay.querySelector('#crm-create').onclick = async () => {
+    const name = nameInput.value.trim();
+    if (!name) { toast('Room name is required','error'); nameInput.focus(); return; }
+    const type = overlay._selectedType;
+    const ch = { name, type, desc:'' };
+    if (type === 'announcement') ch.restricted = true;
+    if (type === 'poll') ch.polls = [];
     b.channels = [...(b.channels||[]), ch];
     await saveUser();
     _syncBastionToGlobal(bastionIdx);
     renderBastionSidebar(document.getElementById('sidebar-scroll'));
-    toast(`#${name} created`, 'success');
-  }, 'new-channel');
+    toast('#' + name + ' created', 'success');
+    overlay.remove();
+  };
+}
+
+function _crmSelectType(el, type) {
+  const overlay = el.closest('.input-dialog-overlay');
+  if (!overlay) return;
+  overlay._selectedType = type;
+  const prefixes = { text:'#', voice:'🎙', forum:'💬', announcement:'📢', poll:'🗳' };
+  const prefix = overlay.querySelector('#crm-prefix');
+  if (prefix) prefix.textContent = prefixes[type] || '#';
+  overlay.querySelectorAll('.crm-type-opt').forEach(opt => {
+    const isThis = opt.dataset.type === type;
+    opt.style.borderColor = isThis ? 'rgba(255,249,62,.35)' : 'rgba(255,255,255,.06)';
+    opt.style.background = isThis ? 'rgba(255,249,62,.05)' : 'rgba(255,255,255,.015)';
+    opt.classList.toggle('selected', isThis);
+    const iconBox = opt.querySelector('div');
+    if (iconBox) { iconBox.style.background = isThis ? 'rgba(255,249,62,.1)' : 'rgba(255,255,255,.04)'; iconBox.style.color = isThis ? '#fff93e' : 'rgba(255,255,255,.35)'; }
+    const nameDiv = opt.querySelector('div:nth-child(2) > div:first-child');
+    if (nameDiv) nameDiv.style.color = isThis ? '#fff' : 'rgba(255,255,255,.7)';
+    const radio = opt.querySelector('.crm-radio');
+    if (radio) { radio.style.borderColor = isThis ? '#fff93e' : 'rgba(255,255,255,.15)'; radio.children[0].style.background = isThis ? '#fff93e' : 'transparent'; }
+  });
 }
 
 async function joinBastionByCode() {
@@ -10299,8 +10385,11 @@ function handleContextMenu(e) {
 
     if (inBastion) {
       const bastionItems = [];
+      const canManageCh = isOwner || hasPerm('manage_channels');
+      if (canManageCh) {
+        bastionItems.push({ icon: _ctxSvg('create'), label: 'Create Room', action: () => showCreateRoomModal(curBastion) });
+      }
       if (isOwner) {
-        bastionItems.push({ icon: _ctxSvg('create'), label: 'Create Room', action: () => openBastionSettings('rooms') });
         bastionItems.push({ icon: _ctxSvg('settings'), label: 'Bastion Settings', action: () => openBastionSettings() });
       }
       if (bastionItems.length) groups.push({ label: 'Bastion', items: bastionItems });
@@ -12777,13 +12866,14 @@ function showChannelCtxMenu(e, chIdx) {
   const b = CU.bastions?.[curBastion]; if (!b) return;
   const ch = b.channels?.[chIdx]; if (!ch) return;
   const isOwner = b.owner === CU?.username;
+  const canManageCh = isOwner || hasPerm('manage_channels');
   const groups = [
     { label: '#'+ch.name, items: [
       { icon: _ctxSvg('markRead'), label: 'Mark as Read', action: () => toast('Marked read','info') },
       { icon: _ctxSvg('mute'), label: 'Mute Channel', action: () => { ch._muted=!ch._muted; toast(ch._muted?'Channel muted':'Channel unmuted','info'); } },
       { icon: _ctxSvg('copy'), label: 'Copy Channel Name', action: () => navigator.clipboard.writeText('#'+ch.name), copyFeedback: true },
     ]},
-    ...(isOwner ? [{
+    ...(canManageCh ? [{
       label: 'Manage',
       items: [
         { icon: _ctxSvg('edit'), label: 'Edit Channel', action: () => { openBastionSettings('channels'); } },

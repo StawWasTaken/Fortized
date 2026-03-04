@@ -9885,7 +9885,7 @@ function handleContextMenu(e) {
     if (isOwn) {
       moderationGroup.items.push({ icon: _ctxSvg('edit'), label: 'Edit', action: () => editMsg(msgId, context) });
     }
-    moderationGroup.items.push({ icon: _ctxSvg('report'), label: 'Report Message', action: () => reportMessage(msgId, text) });
+    moderationGroup.items.push({ icon: _ctxSvg('report'), label: 'Report Message', action: () => reportMessage(msgId, text, msgRow.dataset.from) });
     const isBastionAdminCtx = inBastion && hasPerm('manage_messages');
     if (isOwn || isBastionAdminCtx) {
       moderationGroup.items.push({ icon: _ctxSvg('trash'), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
@@ -10111,8 +10111,8 @@ function confirmNSFWView() {
 
 
 
-function reportMessage(msgId, msgText) {
-  activeReportData = { type: 'message', msgId, msgText, reportedAt: new Date().toISOString() };
+function reportMessage(msgId, msgText, msgFrom) {
+  activeReportData = { type: 'message', msgId, msgText, msgFrom: msgFrom || null, reportedAt: new Date().toISOString() };
   showReportModal();
 }
 
@@ -10472,11 +10472,15 @@ async function _loadAdminPage(tab) {
         <div>
           <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:10px;">Recent Reports</div>
           <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
-            ${reps.slice(0,5).map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,.04);">
-              <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:${r.status==='resolved'?'rgba(62,207,110,.1)':'rgba(248,113,113,.1)'};color:${r.status==='resolved'?'#3ecf6e':'#f87171'};flex-shrink:0;">${r.status||'pending'}</span>
-              <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;">${escapeHTML(r.reason||'–')}</div><div style="font-size:11px;color:rgba(255,255,255,.35);">by ${escapeHTML(r.reporter||'?')} ${r.username?'→ '+escapeHTML(r.username):''}</div></div>
-              ${r.status!=='resolved'?`<button onclick="resolveReport(${reps.indexOf(r)},'resolved');_loadAdminPage('dashboard')" style="background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);color:#3ecf6e;font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Resolve</button>`:''}
-            </div>`).join('')||'<div style="padding:18px;text-align:center;color:rgba(255,255,255,.3);font-size:13px;">No reports</div>'}
+            ${reps.slice(0,5).map(r=>{const _t=r.username||r.msgFrom||null;return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,.04);">
+              <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:${r.status==='resolved'||r.status==='dismissed'||r.status==='warned'?'rgba(62,207,110,.1)':'rgba(248,113,113,.1)'};color:${r.status==='resolved'||r.status==='dismissed'||r.status==='warned'?'#3ecf6e':'#f87171'};flex-shrink:0;">${r.status||'pending'}</span>
+              <span style="font-size:10px;padding:2px 6px;border-radius:100px;background:${r.type==='message'?'rgba(96,165,250,.1)':'rgba(168,85,247,.1)'};color:${r.type==='message'?'#60a5fa':'#a855f7'};flex-shrink:0;">${r.type==='message'?'msg':'user'}</span>
+              <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;">${escapeHTML(r.reason||'–')}</div><div style="font-size:11px;color:rgba(255,255,255,.35);">by ${escapeHTML(r.reporter||'?')} ${_t?' → <strong style="color:rgba(255,255,255,.5);">'+escapeHTML(_t)+'</strong>':''}</div></div>
+              <div style="display:flex;gap:4px;">
+                ${_t?`<button onclick="document.getElementById('admin-user-search').value='${escapeHTML(_t)}';_loadAdminPage('users');setTimeout(adminSearchUser,100);" style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.15);color:#60a5fa;font-size:11px;padding:4px 8px;border-radius:7px;cursor:pointer;" title="Inspect ${escapeHTML(_t)}">🔍</button>`:''}
+                ${r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned'?`<button onclick="resolveReport(${reps.indexOf(r)},'resolved');_loadAdminPage('dashboard')" style="background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);color:#3ecf6e;font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Resolve</button>`:''}
+              </div>
+            </div>`;}).join('')||'<div style="padding:18px;text-align:center;color:rgba(255,255,255,.3);font-size:13px;">No reports</div>'}
           </div>
         </div>
         <div>
@@ -10495,35 +10499,156 @@ async function _loadAdminPage(tab) {
     const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
     const pendingReps = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned');
     const resolvedReps = reps.filter(r=>r.status==='resolved'||r.status==='dismissed'||r.status==='warned');
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-        <div><div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Reports</div><div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">${reps.length} total · ${pendingReps.length} pending · ${resolvedReps.length} resolved</div></div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="loadAllReportsFromFirebase()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12.5px;padding:6px 14px;cursor:pointer;">🔄 Sync Firebase</button>
+    // Helper: extract media URLs from message text
+    const _extractMedia = (text) => {
+      if (!text) return [];
+      const media = [];
+      // Image URLs (png, jpg, jpeg, gif, webp, svg)
+      const imgRx = /https?:\/\/[^\s"'<>]+\.(?:png|jpe?g|gif|webp|svg|bmp)(?:\?[^\s"'<>]*)?/gi;
+      let m; while ((m = imgRx.exec(text)) !== null) media.push({ type: 'image', url: m[0] });
+      // Video URLs (mp4, webm, mov)
+      const vidRx = /https?:\/\/[^\s"'<>]+\.(?:mp4|webm|mov|ogg)(?:\?[^\s"'<>]*)?/gi;
+      while ((m = vidRx.exec(text)) !== null) media.push({ type: 'video', url: m[0] });
+      // Giphy links
+      const giphyRx = /https?:\/\/(?:media\.)?giphy\.com\/(?:media\/|gifs\/)?([a-zA-Z0-9_-]+)(?:\/giphy\.gif)?/gi;
+      while ((m = giphyRx.exec(text)) !== null) {
+        const id = m[1].split('-').pop();
+        media.push({ type: 'image', url: 'https://media.giphy.com/media/' + id + '/giphy.gif' });
+      }
+      // Tenor links
+      const tenorRx = /https?:\/\/(?:media\.)?tenor\.com\/[^\s"'<>]+\.(?:gif|mp4)/gi;
+      while ((m = tenorRx.exec(text)) !== null) media.push({ type: m[0].endsWith('.mp4') ? 'video' : 'image', url: m[0] });
+      // FTZGIF tokens
+      const ftzRx = /\[FTZGIF:(https?:\/\/[^\]]+)\]/gi;
+      while ((m = ftzRx.exec(text)) !== null) media.push({ type: 'image', url: m[1] });
+      return media;
+    };
+    const _isPending = (r) => r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned';
+    const _statusColor = (r) => _isPending(r) ? '#f87171' : r.status==='dismissed' ? '#9ca3af' : r.status==='warned' ? '#f59e0b' : '#3ecf6e';
+    const _statusBg = (r) => _isPending(r) ? 'rgba(248,113,113,.1)' : r.status==='dismissed' ? 'rgba(255,255,255,.06)' : r.status==='warned' ? 'rgba(245,158,11,.1)' : 'rgba(62,207,110,.1)';
+    const _targetUser = (r) => r.username || r.msgFrom || null;
+    const _renderReportCard = (r, i) => {
+      const media = _extractMedia(r.msgText);
+      const target = _targetUser(r);
+      const isPend = _isPending(r);
+      const timeFull = r.createdAt ? new Date(r.createdAt).toLocaleString() : '–';
+      const timeAgo = r.createdAt ? _relTime(r.createdAt) : '';
+      const reportedAtFull = r.reportedAt ? new Date(r.reportedAt).toLocaleString() : '';
+      return `<div style="background:var(--panel,#101420);border:1px solid ${isPend?'rgba(248,113,113,.15)':'rgba(255,255,255,.06)'};border-radius:14px;overflow:hidden;${isPend?'box-shadow:0 0 0 1px rgba(248,113,113,.06),0 2px 12px rgba(248,113,113,.04);':''}">
+        <!-- Report header bar -->
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;background:${isPend?'rgba(248,113,113,.04)':'rgba(255,255,255,.02)'};border-bottom:1px solid rgba(255,255,255,.04);">
+          <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${_statusBg(r)};color:${_statusColor(r)};text-transform:uppercase;letter-spacing:.5px;">${r.status||'pending'}</span>
+          <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;background:${r.type==='message'?'rgba(96,165,250,.1)':'rgba(168,85,247,.1)'};color:${r.type==='message'?'#60a5fa':'#a855f7'};">${r.type==='message'?'💬 Message':'👤 User'}</span>
+          <div style="flex:1;"></div>
+          <span style="font-size:10.5px;color:rgba(255,255,255,.25);font-family:monospace;" title="${escapeHTML(timeFull)}">${escapeHTML(timeAgo)}</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.15);font-family:monospace;">${escapeHTML(r.id||'')}</span>
         </div>
-      </div>
-      ${pendingReps.length>0?`<div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#f87171;margin-bottom:10px;">Pending (${pendingReps.length})</div>`:''}
-      ${reps.length===0?'<div style="text-align:center;padding:60px;color:rgba(255,255,255,.3);">No reports</div>':
-      `<div style="display:flex;flex-direction:column;gap:10px;">
-        ${reps.map((r,i)=>`<div style="background:var(--panel,#101420);border:1px solid ${r.status==='resolved'||r.status==='dismissed'||r.status==='warned'?'rgba(62,207,110,.1)':'rgba(248,113,113,.12)'};border-radius:12px;padding:16px 18px;">
-          <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;">
-            <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${r.status==='resolved'||r.status==='dismissed'||r.status==='warned'?'rgba(62,207,110,.1)':'rgba(248,113,113,.1)'};color:${r.status==='resolved'||r.status==='dismissed'||r.status==='warned'?'#3ecf6e':'#f87171'};flex-shrink:0;">${r.status||'pending'}</span>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:13.5px;font-weight:700;margin-bottom:4px;">${escapeHTML(r.reason||'No reason')}</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.4);">Reporter: <strong>${escapeHTML(r.reporter||'?')}</strong>${r.username?' · Reported: <strong>'+escapeHTML(r.username)+'</strong>':''} · ${r.createdAt?new Date(r.createdAt).toLocaleDateString():''}</div>
-              ${r.context?`<div style="margin-top:7px;padding:7px 10px;background:rgba(255,255,255,.04);border-left:2px solid rgba(255,255,255,.1);border-radius:4px;font-size:12px;color:rgba(255,255,255,.5);">${escapeHTML((r.context||'').slice(0,200))}</div>`:''}
-              ${r.msgText?`<div style="margin-top:5px;padding:7px 10px;background:rgba(255,255,255,.04);border-left:2px solid rgba(248,113,113,.2);border-radius:4px;font-size:12px;color:rgba(255,255,255,.5);">"${escapeHTML((r.msgText||'').slice(0,150))}"</div>`:''}
-              ${r.bastionId?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;">Bastion: ${escapeHTML(r.bastionId)}</div>`:''}
+        <div style="padding:16px 18px;">
+          <!-- Reason -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <span style="font-size:18px;">🚩</span>
+            <div>
+              <div style="font-size:15px;font-weight:800;font-family:'Syne',sans-serif;">${escapeHTML(r.reason||'No reason')}</div>
             </div>
           </div>
-          ${r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned'?`<div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;">
-            <button onclick="resolveReport(${i},'dismissed')" style="padding:5px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;">Dismiss</button>
-            <button onclick="resolveReport(${i},'warned')" style="padding:5px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:7px;color:#f59e0b;font-size:12px;cursor:pointer;">Warn User</button>
-            ${r.username?`<button onclick="adminActionUser('${escapeHTML(r.username)}','ban')" style="padding:5px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:7px;color:#f87171;font-size:12px;cursor:pointer;">Ban User</button>`:''}
-            <button onclick="resolveReport(${i},'resolved')" style="padding:5px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Resolve</button>
-            ${r.username?`<button onclick="document.getElementById('admin-user-search').value='${escapeHTML(r.username)}';_loadAdminPage('users');setTimeout(adminSearchUser,100);" style="padding:5px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:7px;color:#60a5fa;font-size:12px;cursor:pointer;">Inspect User</button>`:''}
-          </div>`:`<div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:8px;">Resolved: ${r.resolution||'–'} by ${escapeHTML(r.resolvedBy||'admin')} ${r.resolvedAt?' · '+new Date(r.resolvedAt).toLocaleDateString():''}</div>`}
-        </div>`).join('')}
+          <!-- People involved -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;">
+              <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Reporter</div>
+              <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.8);">${escapeHTML(r.reporter||'Anonymous')}</div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;">
+              <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">${r.type==='message'?'Message Author':'Reported User'}</div>
+              <div style="font-size:13px;font-weight:600;color:${target?'#f87171':'rgba(255,255,255,.3)'};">${target?escapeHTML(target):'Unknown'}</div>
+            </div>
+          </div>
+          <!-- Timestamps & metadata -->
+          <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px;font-size:11px;color:rgba(255,255,255,.3);">
+            <span title="When the report was submitted">📅 Created: <strong style="color:rgba(255,255,255,.5);">${escapeHTML(timeFull)}</strong></span>
+            ${reportedAtFull?`<span title="When the reported action occurred">⏱️ Occurred: <strong style="color:rgba(255,255,255,.5);">${escapeHTML(reportedAtFull)}</strong></span>`:''}
+            ${r.bastionId?`<span>🏰 Bastion: <strong style="color:rgba(255,255,255,.5);">${escapeHTML(r.bastionId)}</strong></span>`:''}
+            ${r.msgId?`<span>🔗 Msg ID: <strong style="color:rgba(255,255,255,.4);font-family:monospace;font-size:10px;">${escapeHTML(r.msgId)}</strong></span>`:''}
+          </div>
+          <!-- Reported message content (full) -->
+          ${r.msgText?`<div style="margin-bottom:14px;">
+            <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Reported Message</div>
+            <div style="padding:12px 14px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);border-left:3px solid #f87171;border-radius:8px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;word-break:break-word;white-space:pre-wrap;">${escapeHTML(r.msgText)}</div>
+          </div>`:''}
+          <!-- Media preview -->
+          ${media.length>0?`<div style="margin-bottom:14px;">
+            <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">📎 Media Attachments (${media.length})</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              ${media.map(m => m.type==='video'?
+                `<video src="${escapeHTML(m.url)}" controls style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#000;" preload="metadata"></video>`:
+                `<img src="${escapeHTML(m.url)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="window.open('${escapeHTML(m.url)}','_blank')" loading="lazy" onerror="this.style.display='none'">`
+              ).join('')}
+            </div>
+          </div>`:''}
+          <!-- Additional context -->
+          ${r.context?`<div style="margin-bottom:14px;">
+            <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Additional Context</div>
+            <div style="padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-left:2px solid rgba(255,255,255,.15);border-radius:8px;font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.5;white-space:pre-wrap;">${escapeHTML(r.context)}</div>
+          </div>`:''}
+          <!-- Resolution info (if resolved) -->
+          ${!isPend?`<div style="padding:10px 14px;background:rgba(62,207,110,.03);border:1px solid rgba(62,207,110,.08);border-radius:8px;margin-bottom:12px;">
+            <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Resolution</div>
+            <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;">
+              <span>Action: <strong style="color:${_statusColor(r)};">${escapeHTML(r.resolution||r.status||'–')}</strong></span>
+              <span>By: <strong style="color:rgba(255,255,255,.6);">${escapeHTML(r.resolvedBy||'admin')}</strong></span>
+              ${r.resolvedAt?`<span>On: <strong style="color:rgba(255,255,255,.5);">${new Date(r.resolvedAt).toLocaleString()}</strong></span>`:''}
+            </div>
+            ${r.resolutionNote?`<div style="margin-top:6px;font-size:12px;color:rgba(255,255,255,.4);font-style:italic;">Note: "${escapeHTML(r.resolutionNote)}"</div>`:''}
+          </div>`:''}
+          <!-- Actions -->
+          ${isPend?`<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
+            <button onclick="resolveReport(${i},'dismissed')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Dismiss</button>
+            <button onclick="resolveReport(${i},'warned')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(245,158,11,.15)'" onmouseout="this.style.background='rgba(245,158,11,.08)'">⚠️ Warn User</button>
+            ${target?`<button onclick="adminActionUser('${escapeHTML(target)}','ban')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">🔨 Ban User</button>`:''}
+            <button onclick="resolveReport(${i},'resolved')" style="padding:7px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:8px;color:#3ecf6e;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(62,207,110,.15)'" onmouseout="this.style.background='rgba(62,207,110,.08)'">✅ Resolve</button>
+            <div style="flex:1;"></div>
+            ${target?`<button onclick="document.getElementById('admin-user-search').value='${escapeHTML(target)}';_loadAdminPage('users');setTimeout(adminSearchUser,100);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;" onmouseover="this.style.background='rgba(96,165,250,.15)'" onmouseout="this.style.background='rgba(96,165,250,.08)'">🔍 Inspect ${escapeHTML(target)}</button>`:''}
+          </div>`:''}
+        </div>
+      </div>`;
+    };
+    // Relative time helper
+    const _relTime = (iso) => {
+      const d = new Date(iso); const now = new Date(); const s = Math.floor((now-d)/1000);
+      if (s < 60) return s + 's ago'; if (s < 3600) return Math.floor(s/60) + 'm ago';
+      if (s < 86400) return Math.floor(s/3600) + 'h ago'; if (s < 604800) return Math.floor(s/86400) + 'd ago';
+      return d.toLocaleDateString();
+    };
+    // Sort: pending first, then by date descending
+    const sortedReps = [...reps].sort((a,b) => {
+      const aPend = _isPending(a) ? 0 : 1;
+      const bPend = _isPending(b) ? 0 : 1;
+      if (aPend !== bPend) return aPend - bPend;
+      return new Date(b.createdAt||0) - new Date(a.createdAt||0);
+    });
+    main.innerHTML = `<div style="padding:28px 32px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Reports</div>
+          <div style="display:flex;gap:12px;margin-top:6px;">
+            <span style="font-size:12px;padding:3px 10px;border-radius:100px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);">${reps.length} total</span>
+            <span style="font-size:12px;padding:3px 10px;border-radius:100px;background:${pendingReps.length>0?'rgba(248,113,113,.1)':'rgba(62,207,110,.1)'};color:${pendingReps.length>0?'#f87171':'#3ecf6e'};font-weight:600;">${pendingReps.length} pending</span>
+            <span style="font-size:12px;padding:3px 10px;border-radius:100px;background:rgba(62,207,110,.06);color:rgba(62,207,110,.6);">${resolvedReps.length} resolved</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="loadAllReportsFromFirebase()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12.5px;padding:8px 16px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">🔄 Sync Firebase</button>
+        </div>
+      </div>
+      ${reps.length===0?'<div style="text-align:center;padding:80px 20px;color:rgba(255,255,255,.3);"><div style="font-size:40px;margin-bottom:12px;">✅</div><div style="font-size:14px;">No reports — all clear!</div></div>':
+      `${pendingReps.length>0?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 16px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.08);border-radius:10px;">
+        <span style="font-size:16px;">⚠️</span>
+        <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#f87171;">${pendingReps.length} report${pendingReps.length>1?'s':''} pending review</span>
+      </div>`:''}
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        ${sortedReps.map((r)=>{
+          const origIdx = reps.indexOf(r);
+          return _renderReportCard(r, origIdx);
+        }).join('')}
       </div>`}
     </div>`;
   }

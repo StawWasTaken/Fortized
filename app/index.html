@@ -496,6 +496,26 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-row:hover .msg-acts{opacity:1;pointer-events:auto;transform:translateY(0);}
 .msg-acts button{background:none;border:none;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
 .msg-acts button:hover{background:rgba(255,255,255,.08);color:#fff;}
+/* Blocked / Ignored message blur */
+.msg-row.msg-blurred .msg-content-col{filter:blur(6px);user-select:none;pointer-events:none;transition:filter .2s;}
+.msg-row.msg-blurred .msg-acts{display:none!important;}
+.msg-blur-reveal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;cursor:pointer;}
+.msg-blur-reveal span{font-size:12px;font-weight:600;color:rgba(255,255,255,.45);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);padding:4px 14px;border-radius:8px;transition:all .15s;}
+.msg-blur-reveal:hover span{background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);}
+.msg-row.msg-blurred.msg-revealed .msg-content-col{filter:none;user-select:auto;pointer-events:auto;}
+.msg-row.msg-blurred.msg-revealed .msg-blur-reveal{display:none;}
+/* Blocked profile blur overlay */
+.profile-blocked-overlay{position:absolute;inset:0;background:rgba(7,9,14,.7);backdrop-filter:blur(12px);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:16px;gap:10px;}
+.profile-blocked-overlay .pbo-icon{font-size:36px;opacity:.5;}
+.profile-blocked-overlay .pbo-text{font-size:14px;font-weight:700;color:rgba(255,255,255,.5);}
+.profile-blocked-overlay .pbo-sub{font-size:12px;color:rgba(255,255,255,.3);margin-bottom:6px;}
+.profile-blocked-overlay .pbo-reveal{padding:7px 18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.profile-blocked-overlay .pbo-reveal:hover{background:rgba(255,255,255,.14);color:rgba(255,255,255,.7);}
+/* Ignore duration picker modal */
+.ignore-picker{display:flex;flex-direction:column;gap:4px;}
+.ignore-picker .ig-opt{display:flex;align-items:center;gap:10px;padding:9px 14px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;transition:all .12s;font-size:13px;color:rgba(255,255,255,.7);}
+.ignore-picker .ig-opt:hover{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04);}
+.ignore-picker .ig-opt .ig-dur{margin-left:auto;font-size:11px;color:rgba(255,255,255,.3);}
 /* Own messages */
 .msg-row.own .msg-text{color:rgba(255,255,255,.85);}
 /* Reply / quote — soft left border, lighter bg, clickable */
@@ -4057,7 +4077,7 @@ async function loadDMMessages(username) {
           _sentEcho.delete(dmEchoKey);
         } else {
           appendMessage(el,msg,'dm',null); _notifyNewMsg('dm-msgs');
-          if(msg.from!==CU.username) playNotifSound('message');
+          if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
         }
       }
     });
@@ -4371,7 +4391,7 @@ async function loadGCMessages(gcId) {
       if (msg.from===CU.username && _sentEcho.has(echoKey)) { _sentEcho.delete(echoKey); return; }
       appendMessage(el, msg, 'gc', null);
       _notifyNewMsg('gc-msgs');
-      if (msg.from!==CU.username) playNotifSound('message');
+      if (msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
     });
     _gcListener = () => ref.off('child_added', handler);
     // Attach live edit/remove listeners for GC
@@ -5016,7 +5036,7 @@ async function loadChannelMessages(idx) {
         } else {
           appendMessage(el,msg,'ch',null);
           _notifyNewMsg('ch-msgs-'+idx);
-          if(msg.from!==CU.username){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
+          if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
         }
       }
     });
@@ -5197,7 +5217,8 @@ function getMsgRoleColor(fromUser, context) {
 }
 function appendMessage(container, msg, context, prevAuthor) {
   if (!msg || !container) return;
-  if (msg.from && msg.from !== '__system__' && typeof isUserBlocked === 'function' && isUserBlocked(msg.from)) return;
+  const _msgBlocked = msg.from && msg.from !== '__system__' && typeof isUserBlocked === 'function' && isUserBlocked(msg.from);
+  const _msgIgnored = msg.from && msg.from !== '__system__' && typeof isUserIgnored === 'function' && isUserIgnored(msg.from);
   const id=msg.id||(msg.from+msg.timestamp);
   if (document.querySelector(`[data-msgid="${CSS.escape(id)}"]`)) return;
   // System messages (join, bot deploy, etc.)
@@ -5285,6 +5306,15 @@ function appendMessage(container, msg, context, prevAuthor) {
       ${buildMsgActions(msg,context,id)}`;
   }
   container.appendChild(row);
+  // Blur messages from blocked or ignored users
+  if (_msgBlocked || _msgIgnored) {
+    row.classList.add('msg-blurred');
+    const rv = document.createElement('div');
+    rv.className = 'msg-blur-reveal';
+    rv.innerHTML = `<span>${_msgBlocked ? 'Blocked' : 'Ignored'} message — click to reveal</span>`;
+    rv.onclick = (e) => { e.stopPropagation(); row.classList.add('msg-revealed'); };
+    row.appendChild(rv);
+  }
   // Detect emoji-only messages and apply bigger size
   const textEl = row.querySelector('.msg-text');
   if (textEl) {
@@ -5894,6 +5924,7 @@ async function sendFriendRequest(){
   const username=inp.value.trim().toLowerCase();
   if(!username){if(err)err.textContent='Enter a username';return;}
   if(username===CU.username){if(err)err.textContent="Can't add yourself";return;}
+  if(isUserBlocked(username)){if(err)err.textContent="Can't send friend requests to blocked users";return;}
   if(err)err.textContent='';if(succ)succ.textContent='';
   try{
     const r=await FortizedSocial.sendFriendRequest(CU.username, username);
@@ -6173,6 +6204,8 @@ function updateDOBField(){
   if(typeof startVCListener==='function') startVCListener(CU.username);
   setTimeout(initCrossDeviceSync, 800);
   setTimeout(initNotifToasts, 1200);
+  // Sync blocked list from Firebase
+  setTimeout(async()=>{try{const snap=await firebase.database().ref('users/'+CU.username+'/blockedUsers').get();if(snap.exists())localStorage.setItem('ftz_blocked',JSON.stringify(snap.val()));}catch{}},500);
 
   setTimeout(_ensureJoysterAccount, 4000);
   // Preload NSFW AI model in background so first scan is fast
@@ -9549,8 +9582,8 @@ async function viewUserProfile(username) {
   const isOwn = username === CU.username;
   const isFriend = (CU.friends||[]).includes(username);
   const hasPending = (CU.friendRequestsSent||[]).includes(username);
-  const blocked = JSON.parse(localStorage.getItem('ftz_blocked')||'[]');
-  const isBlocked = blocked.includes(username);
+  const isBlocked = isUserBlocked(username);
+  const ignored = isUserIgnored(username);
   const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
   const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
 
@@ -9572,7 +9605,13 @@ async function viewUserProfile(username) {
 
   modalEl.innerHTML = `
     <div style="${themeBorder}">
-    <div style="background:var(--panel);border-radius:${profileTheme?'18px':'0'};">
+    <div style="background:var(--panel);border-radius:${profileTheme?'18px':'0'};position:relative;">
+    ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
+      <div class="pbo-icon">🚫</div>
+      <div class="pbo-text">You blocked ${escapeHTML(username)}</div>
+      <div class="pbo-sub">Their profile is hidden</div>
+      <button class="pbo-reveal" onclick="document.getElementById('profile-blocked-overlay').style.display='none'">Show Profile</button>
+    </div>` : ''}
     <!-- Banner — tall -->
     <div style="height:150px;background:${bannerBg};position:relative;overflow:hidden;border-radius:16px 16px 0 0;">
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.05) 40%,rgba(14,16,28,.8));"></div>
@@ -9628,16 +9667,21 @@ async function viewUserProfile(username) {
     <div style="padding:16px 24px;">
       ${isOwn ? `<button onclick="closeModal('modal-user');showView('profile')" style="width:100%;padding:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">✏️ Edit Profile</button>` :
        `<div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')" style="flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;min-width:120px;">Message</button>
-          ${isFriend ? `<button onclick="closeModal('modal-user');removeFriend('${escapeHTML(username)}')" style="padding:10px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:9px;color:var(--red);font-size:13px;cursor:pointer;">Unfriend</button>` :
+          ${isBlocked ? '' : `<button onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')" style="flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;min-width:120px;">Message</button>`}
+          ${isBlocked ? '' :
+            isFriend ? `<button onclick="closeModal('modal-user');removeFriend('${escapeHTML(username)}')" style="padding:10px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:9px;color:var(--red);font-size:13px;cursor:pointer;">Unfriend</button>` :
             hasPending ? `<button disabled style="padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.3);font-size:12.5px;">Pending…</button>` :
             `<button onclick="quickAddFriend('${escapeHTML(username)}')" style="padding:10px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">Add Friend</button>`}
-          <button onclick="startVoiceCall('${escapeHTML(username)}');closeModal('modal-user')" style="width:42px;height:42px;border-radius:9px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          ${isBlocked ? '' : `<button onclick="startVoiceCall('${escapeHTML(username)}');closeModal('modal-user')" style="width:42px;height:42px;border-radius:9px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
-          </button>
+          </button>`}
         </div>
         <div style="display:flex;gap:6px;margin-top:8px;">
-          <button onclick="toggleBlockUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${isBlocked?'rgba(248,113,113,.3)':'rgba(255,255,255,.08)'};background:transparent;color:${isBlocked?'var(--red)':'rgba(255,255,255,.4)'};font-size:12px;cursor:pointer;">${isBlocked?'Unblock':'Block'}</button>
+          <button onclick="toggleBlockUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${isBlocked?'rgba(248,113,113,.3)':'rgba(255,255,255,.08)'};background:${isBlocked?'rgba(248,113,113,.06)':'transparent'};color:${isBlocked?'var(--red)':'rgba(255,255,255,.4)'};font-size:12px;cursor:pointer;">${isBlocked?'🚫 Unblock':'Block'}</button>
+          ${!isBlocked ? (ignored
+            ? `<button onclick="unignoreUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(245,158,11,.3);background:rgba(245,158,11,.06);color:#f59e0b;font-size:12px;cursor:pointer;">🔇 Unignore</button>`
+            : `<button onclick="showIgnorePicker('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;">Ignore</button>`)
+          : ''}
           <button onclick="reportUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;">Report</button>
           <button onclick="closeModal('modal-user')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;">Close</button>
         </div>`}
@@ -9650,6 +9694,7 @@ async function viewUserProfile(username) {
 
 async function quickAddFriend(username) {
   username = (username||"").trim().toLowerCase();
+  if (isUserBlocked(username)) { toast("Can't send friend requests to blocked users", 'error'); return; }
   try{
     const r=await FortizedSocial.sendFriendRequest(CU.username,username);
     toast(r.msg,r.ok?'success':'error');
@@ -9855,17 +9900,28 @@ function handleContextMenu(e) {
     const b = inBastion ? CU.bastions?.[curBastion] : null;
     const isOwner = b?.owner === CU?.username;
 
+    const _ctxBlocked = !isMe && isUserBlocked(username);
+    const _ctxIgnored = !isMe && isUserIgnored(username);
     const profileGroup = {
       label: 'Profile',
       items: [
         { icon: _ctxSvg('profile'), label: 'View Profile', action: () => viewUserProfile(username) },
-        { icon: _ctxSvg('message'), label: 'Message', action: () => openDMView(username), disabled: isMe },
+        { icon: _ctxSvg('message'), label: 'Message', action: () => openDMView(username), disabled: isMe || _ctxBlocked },
         { icon: _ctxSvg('mention'), label: 'Mention', action: () => { const ta = document.querySelector('.chat-input-row textarea'); if (ta) { ta.value += `@${username} `; ta.focus(); } } },
-        ...(!isMe ? [{ icon: _ctxSvg('addFriend'), label: 'Add Friend', action: () => quickAddFriend(username) }] : []),
+        ...(!isMe && !_ctxBlocked ? [{ icon: _ctxSvg('addFriend'), label: 'Add Friend', action: () => quickAddFriend(username) }] : []),
       ]
     };
 
     const groups = [profileGroup];
+
+    if (!isMe) {
+      const safetyItems = [];
+      safetyItems.push({ icon: '🚫', label: _ctxBlocked ? 'Unblock' : 'Block', danger: !_ctxBlocked, action: () => toggleBlockUser(username) });
+      if (!_ctxBlocked) {
+        safetyItems.push({ icon: '🔇', label: _ctxIgnored ? 'Unignore' : 'Ignore', action: () => _ctxIgnored ? unignoreUser(username) : showIgnorePicker(username) });
+      }
+      groups.push({ label: 'Safety', items: safetyItems });
+    }
 
     if (inBastion && !isMe) {
       const bastionItems = [];
@@ -13660,26 +13716,186 @@ function addCustomGameManually() {
 
 
 // ════════════════════════════════════════════
-// BLOCK / UNBLOCK USER
+// BLOCK / UNBLOCK USER  (Discord-style)
 // ════════════════════════════════════════════
+function _getBlockedList() { return JSON.parse(localStorage.getItem('ftz_blocked') || '[]'); }
+function _saveBlockedList(list) { localStorage.setItem('ftz_blocked', JSON.stringify(list)); }
+
 function toggleBlockUser(username) {
-  const blocked = JSON.parse(localStorage.getItem('ftz_blocked') || '[]');
-  const isBlocked = blocked.includes(username);
-  if (isBlocked) {
-    const updated = blocked.filter(u => u !== username);
-    localStorage.setItem('ftz_blocked', JSON.stringify(updated));
-    toast(`Unblocked ${username}`, 'success');
+  if (isUserBlocked(username)) {
+    _unblockUser(username);
   } else {
-    blocked.push(username);
-    localStorage.setItem('ftz_blocked', JSON.stringify(blocked));
-    toast(`Blocked ${username}. You won't see their messages.`, 'info');
+    _blockUserConfirm(username);
   }
+}
+
+function _blockUserConfirm(username) {
+  const isFriend = (CU.friends || []).includes(username);
+  showCustomConfirm(
+    `Block ${username}?${isFriend ? ' This will also remove them from your friends.' : ''} They won't be able to send you friend requests, and their messages will be hidden.`,
+    async () => {
+      const blocked = _getBlockedList();
+      if (!blocked.includes(username)) blocked.push(username);
+      _saveBlockedList(blocked);
+      // Auto-unfriend
+      if (isFriend) {
+        try {
+          await FortizedSocial.removeFriend(CU.username, username);
+          await refreshCU();
+          renderFriendsList();
+          renderDMSidebar(document.getElementById('sidebar-scroll'));
+        } catch (e) { console.error('Unfriend on block:', e); }
+      }
+      // Cancel any pending friend requests
+      const sentPending = (CU.friendRequestsSent || []).includes(username);
+      const recvPending = (CU.friendRequestsReceived || []).includes(username);
+      if (sentPending || recvPending) {
+        try {
+          await FortizedSocial.declineFriendRequest(CU.username, username);
+          await refreshCU();
+        } catch {}
+      }
+      // Persist to Firebase
+      try { await firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked); } catch {}
+      toast(`Blocked ${username}`, 'info');
+      closeModal('modal-user');
+      // Re-render messages to blur them
+      _applyBlockBlurToExistingMessages(username, true);
+    }
+  );
+}
+
+function _unblockUser(username) {
+  const blocked = _getBlockedList().filter(u => u !== username);
+  _saveBlockedList(blocked);
+  try { firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked.length ? blocked : null); } catch {}
+  toast(`Unblocked ${username}`, 'success');
   closeModal('modal-user');
+  _applyBlockBlurToExistingMessages(username, false);
 }
 
 function isUserBlocked(username) {
-  const blocked = JSON.parse(localStorage.getItem('ftz_blocked') || '[]');
-  return blocked.includes(username);
+  return _getBlockedList().includes(username);
+}
+
+// Apply/remove blur to all visible messages from a user
+function _applyBlockBlurToExistingMessages(username, shouldBlur) {
+  document.querySelectorAll('.msg-row').forEach(row => {
+    if (row.dataset.from !== username) return;
+    if (shouldBlur) {
+      row.classList.add('msg-blurred');
+      row.classList.remove('msg-revealed');
+      if (!row.querySelector('.msg-blur-reveal')) {
+        const rv = document.createElement('div');
+        rv.className = 'msg-blur-reveal';
+        rv.innerHTML = '<span>Blocked message — click to reveal</span>';
+        rv.onclick = (e) => { e.stopPropagation(); row.classList.add('msg-revealed'); };
+        row.appendChild(rv);
+      }
+    } else {
+      row.classList.remove('msg-blurred', 'msg-revealed');
+      row.querySelector('.msg-blur-reveal')?.remove();
+    }
+  });
+}
+
+// ════════════════════════════════════════════
+// IGNORE USER (timed mute, keeps friend)
+// ════════════════════════════════════════════
+const IGNORE_DURATIONS = [
+  { label: '15 minutes', ms: 15 * 60 * 1000 },
+  { label: '1 hour', ms: 60 * 60 * 1000 },
+  { label: '5 hours', ms: 5 * 60 * 60 * 1000 },
+  { label: '1 day', ms: 24 * 60 * 60 * 1000 },
+  { label: '1 week', ms: 7 * 24 * 60 * 60 * 1000 },
+  { label: '2 weeks', ms: 14 * 24 * 60 * 60 * 1000 },
+];
+
+function _getIgnoreList() {
+  const raw = JSON.parse(localStorage.getItem('ftz_ignored') || '{}');
+  // Prune expired entries
+  const now = Date.now();
+  let changed = false;
+  for (const u in raw) { if (raw[u] <= now) { delete raw[u]; changed = true; } }
+  if (changed) localStorage.setItem('ftz_ignored', JSON.stringify(raw));
+  return raw;
+}
+function _saveIgnoreList(obj) { localStorage.setItem('ftz_ignored', JSON.stringify(obj)); }
+
+function isUserIgnored(username) {
+  const list = _getIgnoreList();
+  return list[username] && list[username] > Date.now();
+}
+
+function getIgnoreExpiry(username) {
+  const list = _getIgnoreList();
+  return list[username] || 0;
+}
+
+function unignoreUser(username) {
+  const list = _getIgnoreList();
+  delete list[username];
+  _saveIgnoreList(list);
+  toast(`Unignored ${username}`, 'success');
+  closeModal('modal-user');
+  _applyIgnoreBlurToExistingMessages(username, false);
+}
+
+function showIgnorePicker(username) {
+  closeModal('modal-user');
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-ignore-picker';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:360px;">
+      <div class="modal-bar"></div>
+      <div class="modal-body">
+        <div class="modal-title">🔇 Ignore ${escapeHTML(username)}</div>
+        <div class="modal-sub" style="margin-bottom:14px;">Their messages will be blurred and you won't receive notifications. They will stay on your friends list.</div>
+        <div class="ignore-picker">
+          ${IGNORE_DURATIONS.map((d, i) => `
+            <div class="ig-opt" onclick="_applyIgnore('${escapeHTML(username)}', ${d.ms})">
+              <span>🔇 ${d.label}</span>
+              <span class="ig-dur">${d.label}</span>
+            </div>`).join('')}
+        </div>
+        <button onclick="document.getElementById('modal-ignore-picker')?.remove()" style="width:100%;margin-top:12px;padding:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:9px;color:rgba(255,255,255,.4);font-size:12.5px;cursor:pointer;">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function _applyIgnore(username, durationMs) {
+  const list = _getIgnoreList();
+  list[username] = Date.now() + durationMs;
+  _saveIgnoreList(list);
+  document.getElementById('modal-ignore-picker')?.remove();
+  const dur = IGNORE_DURATIONS.find(d => d.ms === durationMs);
+  toast(`Ignoring ${username} for ${dur ? dur.label : 'a while'}`, 'info');
+  _applyIgnoreBlurToExistingMessages(username, true);
+}
+
+function _applyIgnoreBlurToExistingMessages(username, shouldBlur) {
+  document.querySelectorAll('.msg-row').forEach(row => {
+    if (row.dataset.from !== username) return;
+    if (shouldBlur) {
+      if (!row.classList.contains('msg-blurred')) {
+        row.classList.add('msg-blurred');
+        row.classList.remove('msg-revealed');
+        if (!row.querySelector('.msg-blur-reveal')) {
+          const rv = document.createElement('div');
+          rv.className = 'msg-blur-reveal';
+          rv.innerHTML = '<span>Ignored message — click to reveal</span>';
+          rv.onclick = (e) => { e.stopPropagation(); row.classList.add('msg-revealed'); };
+          row.appendChild(rv);
+        }
+      }
+    } else {
+      row.classList.remove('msg-blurred', 'msg-revealed');
+      row.querySelector('.msg-blur-reveal')?.remove();
+    }
+  });
 }
 
 // ════════════════════════════════════════════
@@ -18474,6 +18690,8 @@ let _notifToastQueue = [];
 let _notifToastActive = null;
 
 function showNotifToast(notif) {
+  // Suppress notifications from blocked or ignored users
+  if (notif.from && (isUserBlocked(notif.from) || isUserIgnored(notif.from))) return;
   // Each toast stacks above the previous
   const existing = document.querySelectorAll('.ftz-notif-toast');
   const offset = existing.length * 82; // stack offset

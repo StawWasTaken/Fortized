@@ -6166,6 +6166,16 @@ function updateDOBField(){
   showView('home');
   updateNotifBadge().catch(()=>{});
 
+  // Sync staff data from Firebase BEFORE checking staff access for sidebar button
+  try {
+    const _staffSnap = await firebase.database().ref('admin/staff').get();
+    if (_staffSnap.exists()) {
+      localStorage.setItem('ftz_staff', JSON.stringify(_staffSnap.val()));
+    } else if (!localStorage.getItem('ftz_staff')) {
+      localStorage.setItem('ftz_staff', JSON.stringify({ admins: [], moderators: [] }));
+    }
+  } catch(e) { console.warn('Staff sync at init failed:', e); }
+
   // Staff console button (visible to superadmin, admin, moderator)
   if (hasStaffAccess()){
     const rail=document.getElementById('rail');
@@ -10833,18 +10843,39 @@ async function _loadAdminPage(tab) {
             <input type="checkbox" id="gs-registration" ${gs.disableRegistration?'checked':''} onchange="_updateGlobalSetting('disableRegistration',this.checked)">
             <div>
               <span style="font-size:13px;">Disable New Registrations</span>
-              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Block new account creation</div>
+              <div style="font-size:10.5px;color:${gs.disableRegistration?'#f87171':'rgba(255,255,255,.25)'};">${gs.disableRegistration?'⛔ ACTIVE — Signup page is blocked':'Signups are open'}</div>
             </div>
           </label>
           <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
             <input type="checkbox" id="gs-emoticons" ${gs.disableEmoticonConversion?'checked':''} onchange="_updateGlobalSetting('disableEmoticonConversion',this.checked)">
             <span style="font-size:13px;">Disable Emoticon Conversion (Global)</span>
           </label>
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;">
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
             <input type="checkbox" id="gs-nsfw-scan" ${gs.enableNSFWScan!==false?'checked':''} onchange="_updateGlobalSetting('enableNSFWScan',this.checked)">
             <div>
               <span style="font-size:13px;">Enable NSFW AI Scanner</span>
               <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Scans uploaded images, GIFs & videos for NSFW content</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
+            <input type="checkbox" ${gs.disableProfileBanners?'checked':''} onchange="_updateGlobalSetting('disableProfileBanners',this.checked)">
+            <div>
+              <span style="font-size:13px;">Disable Profile Banners</span>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Prevent users from uploading profile banners</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
+            <input type="checkbox" ${gs.disableCustomStatus?'checked':''} onchange="_updateGlobalSetting('disableCustomStatus',this.checked)">
+            <div>
+              <span style="font-size:13px;">Disable Custom Status</span>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Prevent users from setting custom status text</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;">
+            <input type="checkbox" ${gs.disableBastionCreation?'checked':''} onchange="_updateGlobalSetting('disableBastionCreation',this.checked)">
+            <div>
+              <span style="font-size:13px;">Disable Bastion Creation</span>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Prevent non-staff from creating new bastions</div>
             </div>
           </label>
         </div>
@@ -10858,14 +10889,67 @@ async function _loadAdminPage(tab) {
             <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Min Account Age (years)</div>
             <input class="settings-input" type="number" value="${gs.minAge||13}" min="13" max="18" style="max-width:100px;" onchange="_updateGlobalSetting('minAge',parseInt(this.value))">
           </div>
-          <div>
+          <div style="margin-bottom:10px;">
             <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Daily Onyx Claim Amount</div>
             <input class="settings-input" type="number" value="${gs.dailyOnyxAmount||25}" min="1" max="1000" style="max-width:100px;" onchange="_updateGlobalSetting('dailyOnyxAmount',parseInt(this.value))">
           </div>
-          <div style="margin-top:12px;">
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Max Message Length</div>
+            <input class="settings-input" type="number" value="${gs.maxMessageLength||2000}" min="100" max="10000" style="max-width:100px;" onchange="_updateGlobalSetting('maxMessageLength',parseInt(this.value))">
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Max Upload Size (MB)</div>
+            <input class="settings-input" type="number" value="${gs.maxUploadSizeMB||10}" min="1" max="100" style="max-width:100px;" onchange="_updateGlobalSetting('maxUploadSizeMB',parseInt(this.value))">
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Max Friends Per User</div>
+            <input class="settings-input" type="number" value="${gs.maxFriends||200}" min="10" max="1000" style="max-width:100px;" onchange="_updateGlobalSetting('maxFriends',parseInt(this.value))">
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Max Bastions Per User</div>
+            <input class="settings-input" type="number" value="${gs.maxBastionsPerUser||20}" min="1" max="100" style="max-width:100px;" onchange="_updateGlobalSetting('maxBastionsPerUser',parseInt(this.value))">
+          </div>
+          <div>
             <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">NSFW Banned Content Hashes</div>
             <div style="font-size:12px;color:rgba(255,255,255,.35);">${_nsfwBannedHashes.length} banned content signatures</div>
           </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:700px;">
+        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
+          <div style="font-weight:700;font-size:13.5px;margin-bottom:14px;">Appearance & Branding</div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Platform Name</div>
+            <input class="settings-input" type="text" value="${escapeHTML(gs.platformName||'Fortized')}" style="max-width:200px;" onchange="_updateGlobalSetting('platformName',this.value)">
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Welcome Message (shown to new users)</div>
+            <input class="settings-input" type="text" value="${escapeHTML(gs.welcomeMessage||'')}" placeholder="Welcome to Fortized!" style="max-width:300px;" onchange="_updateGlobalSetting('welcomeMessage',this.value)">
+          </div>
+          <div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Login Page Notice</div>
+            <input class="settings-input" type="text" value="${escapeHTML(gs.loginNotice||'')}" placeholder="Optional notice on login page" style="max-width:300px;" onchange="_updateGlobalSetting('loginNotice',this.value)">
+          </div>
+        </div>
+        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
+          <div style="font-weight:700;font-size:13.5px;margin-bottom:14px;">Rate Limiting</div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Message Cooldown (seconds)</div>
+            <input class="settings-input" type="number" value="${gs.messageCooldown||0}" min="0" max="60" style="max-width:100px;" onchange="_updateGlobalSetting('messageCooldown',parseInt(this.value))">
+            <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:2px;">0 = no cooldown</div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Friend Request Cooldown (seconds)</div>
+            <input class="settings-input" type="number" value="${gs.friendRequestCooldown||0}" min="0" max="300" style="max-width:100px;" onchange="_updateGlobalSetting('friendRequestCooldown',parseInt(this.value))">
+            <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:2px;">0 = no cooldown</div>
+          </div>
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;">
+            <input type="checkbox" ${gs.requireEmailVerification?'checked':''} onchange="_updateGlobalSetting('requireEmailVerification',this.checked)">
+            <div>
+              <span style="font-size:13px;">Require Email for Signup</span>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Force email field to be filled on registration</div>
+            </div>
+          </label>
         </div>
       </div>
       <div style="margin-top:16px;background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;max-width:700px;">
@@ -11038,6 +11122,20 @@ function _updateGlobalSetting(key, value) {
       logAudit('maintenance_off', 'system', 'Maintenance mode disabled by ' + CU.username);
       toast('Maintenance mode DISABLED — platform is live.', 'success');
     }
+  } else if (key === 'disableRegistration') {
+    if (value) {
+      logAudit('registration_disabled', 'system', 'New registrations disabled by ' + CU.username);
+      toast('New registrations DISABLED — signup page is blocked.', 'info');
+    } else {
+      logAudit('registration_enabled', 'system', 'New registrations enabled by ' + CU.username);
+      toast('New registrations ENABLED — signups are open.', 'success');
+    }
+  } else if (key === 'disableBastionCreation') {
+    logAudit('setting_changed', 'system', key + ' set to ' + value + ' by ' + CU.username);
+    toast('Bastion creation ' + (value ? 'DISABLED' : 'ENABLED'), value ? 'info' : 'success');
+  } else {
+    // Generic audit for other settings
+    logAudit('setting_changed', 'system', key + ' set to ' + value + ' by ' + CU.username);
   }
 }
 

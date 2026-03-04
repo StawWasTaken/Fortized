@@ -418,6 +418,15 @@ async function doSignup() {
   if (!email || !username || !password) { errorDiv.textContent = 'All fields are required.'; return; }
   if (!terms) { errorDiv.textContent = 'You must agree to the Terms to continue.'; return; }
 
+  // Check if registrations are disabled globally
+  try {
+    const gsSnap = await firebase.database().ref('admin/global_settings/disableRegistration').get();
+    if (gsSnap.exists() && gsSnap.val() === true) {
+      errorDiv.textContent = 'New registrations are currently disabled. Please try again later.';
+      return;
+    }
+  } catch(e) { /* continue if check fails — don't block on network error */ }
+
   // Client-side block before hitting the server
   if (isProtectedUsername(username.toLowerCase().replace(/[^a-z0-9_]/g, ''))) {
     userErrorDiv.textContent = 'This username is not available.';

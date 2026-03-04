@@ -17,46 +17,37 @@
 <meta name="twitter:description" content="Download the Fortized desktop app for Windows, macOS, and Linux. Build your fortress from your desktop.">
 <meta name="twitter:image" content="https://fortized.com/Fortized banner5.png">
 <link rel="icon" type="image/png" href="/Fortized icon.png">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 <style>
 :root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.2);--accent-glow:rgba(255,249,62,.4);--bg:#060810;--panel:rgba(10,13,20,.82);--border:#151b2a;--border-hover:#1e2840;--radius:14px;--muted:#4a5568;--muted-light:#7d8a9e;--green:#3ecf6e;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box;}
 html{height:100%;}
-body{min-height:100%;background:var(--bg);font-family:var(--font-body);color:white;overflow-x:hidden;display:flex;align-items:center;justify-content:center;padding:40px 0;}
+body{min-height:100vh;background:var(--bg);font-family:var(--font-body);color:white;overflow-x:hidden;}
 
-/* ── Immersive background ── */
-.bg-layer{position:fixed;inset:0;z-index:0;overflow:hidden;}
-.bg-layer::before{content:"";position:absolute;inset:0;background:url("/Fortized banner5.png") center/cover no-repeat;opacity:.12;filter:saturate(0.6);}
-.bg-layer::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 35%,rgba(255,249,62,.05),transparent 70%),radial-gradient(ellipse 60% 50% at 80% 20%,rgba(96,165,250,.02),transparent 60%),linear-gradient(180deg,rgba(6,8,16,0) 0%,rgba(6,8,16,.4) 50%,var(--bg) 100%);}
+/* ── Two-column hero layout ── */
+.dl-page{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;}
 
-/* Grid overlay */
-.bg-grid{position:fixed;inset:0;z-index:1;background-image:linear-gradient(rgba(255,249,62,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.012) 1px,transparent 1px);background-size:64px 64px;pointer-events:none;mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,black 0%,transparent 100%);}
+/* ── Left side: download UI ── */
+.dl-left{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 48px;position:relative;z-index:10;}
 
-/* Floating particles */
-.particles{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
-.particle{position:absolute;border-radius:50%;opacity:0;animation:particleFloat linear infinite;}
-.particle:nth-child(1){width:3px;height:3px;background:var(--accent);left:15%;top:80%;animation-duration:12s;animation-delay:0s;}
-.particle:nth-child(2){width:2px;height:2px;background:rgba(255,249,62,.6);left:35%;top:90%;animation-duration:15s;animation-delay:2s;}
-.particle:nth-child(3){width:4px;height:4px;background:rgba(255,249,62,.3);left:65%;top:85%;animation-duration:18s;animation-delay:4s;}
-.particle:nth-child(4){width:2px;height:2px;background:rgba(96,165,250,.5);left:80%;top:95%;animation-duration:14s;animation-delay:1s;}
-.particle:nth-child(5){width:3px;height:3px;background:rgba(255,249,62,.4);left:50%;top:88%;animation-duration:16s;animation-delay:3s;}
-.particle:nth-child(6){width:2px;height:2px;background:rgba(62,207,110,.4);left:25%;top:92%;animation-duration:20s;animation-delay:5s;}
-.particle:nth-child(7){width:3px;height:3px;background:rgba(255,249,62,.25);left:72%;top:78%;animation-duration:13s;animation-delay:6s;}
-.particle:nth-child(8){width:2px;height:2px;background:rgba(255,249,62,.5);left:90%;top:86%;animation-duration:17s;animation-delay:2.5s;}
-@keyframes particleFloat{0%{transform:translateY(0) translateX(0);opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{transform:translateY(-100vh) translateX(20px);opacity:0;}}
+/* Subtle grid on left side */
+.dl-left::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,249,62,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.012) 1px,transparent 1px);background-size:64px 64px;pointer-events:none;mask-image:radial-gradient(ellipse 80% 70% at 50% 50%,black 0%,transparent 100%);}
 
-/* Ambient glow orbs */
+/* ── Right side: banner image ── */
+.dl-right{position:relative;overflow:hidden;}
+.dl-right-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;}
+.dl-right::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--bg) 0%,rgba(6,8,16,.4) 20%,transparent 50%),linear-gradient(180deg,rgba(6,8,16,.3) 0%,transparent 30%,transparent 70%,rgba(6,8,16,.3) 100%);}
+
+/* Ambient glow on left */
 .glow-orb{position:fixed;border-radius:50%;pointer-events:none;filter:blur(80px);z-index:0;}
 .glow-orb-1{width:400px;height:400px;background:rgba(255,249,62,.03);top:-10%;left:-5%;animation:orbFloat1 20s ease-in-out infinite;}
-.glow-orb-2{width:350px;height:350px;background:rgba(96,165,250,.02);bottom:-10%;right:-5%;animation:orbFloat2 25s ease-in-out infinite;}
-.glow-orb-3{width:300px;height:300px;background:rgba(255,249,62,.02);top:30%;right:10%;animation:orbFloat3 18s ease-in-out infinite;}
+.glow-orb-2{width:300px;height:300px;background:rgba(255,249,62,.02);top:40%;left:15%;animation:orbFloat2 25s ease-in-out infinite;}
 @keyframes orbFloat1{0%,100%{transform:translate(0,0);}50%{transform:translate(60px,40px);}}
-@keyframes orbFloat2{0%,100%{transform:translate(0,0);}50%{transform:translate(-50px,-30px);}}
-@keyframes orbFloat3{0%,100%{transform:translate(0,0);}50%{transform:translate(-30px,50px);}}
+@keyframes orbFloat2{0%,100%{transform:translate(0,0);}50%{transform:translate(-30px,50px);}}
 
-/* ── Main layout ── */
-.dl-container{position:relative;z-index:10;width:100%;max-width:520px;padding:24px;display:flex;flex-direction:column;align-items:center;}
+/* ── Container for download content ── */
+.dl-container{width:100%;max-width:480px;display:flex;flex-direction:column;align-items:center;}
 
 /* Branding */
 .dl-brand{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:36px;animation:fadeDown .6s cubic-bezier(.22,1,.36,1) both;}
@@ -112,7 +103,7 @@ body{min-height:100%;background:var(--bg);font-family:var(--font-body);color:whi
 .dl-footer a{color:var(--accent);text-decoration:none;font-weight:600;transition:color .15s;}
 .dl-footer a:hover{text-decoration:underline;}
 
-/* Status bar at bottom */
+/* Status bar */
 .dl-status{display:flex;align-items:center;justify-content:center;gap:20px;margin-top:28px;animation:fadeDown .6s cubic-bezier(.22,1,.36,1) .3s both;}
 .status-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);font-weight:500;}
 .status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
@@ -120,168 +111,119 @@ body{min-height:100%;background:var(--bg);font-family:var(--font-body);color:whi
 .status-dot.yellow{background:var(--accent);box-shadow:0 0 8px rgba(255,249,62,.4);}
 .status-sep{width:1px;height:12px;background:#1a2030;}
 
-/* ── Blog Article Section ── */
-.dl-blog-section{position:relative;z-index:10;width:100%;max-width:520px;padding:0 24px;margin-top:48px;animation:revealUp .5s cubic-bezier(.22,1,.36,1) .4s both;}
-.dl-blog-label{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
-.dl-blog-label::before{content:"";width:16px;height:1.5px;background:var(--accent);}
-.dl-blog-heading{font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:20px;color:#fff;}
-
-.dl-blog-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden;backdrop-filter:blur(40px) saturate(1.3);box-shadow:0 20px 60px rgba(0,0,0,.5);}
-.dl-blog-banner{width:100%;height:140px;background:linear-gradient(145deg,rgba(255,249,62,.08) 0%,transparent 45%),linear-gradient(to bottom,rgba(6,8,16,.05),rgba(6,8,16,.8)),url("/Fortized banner5.png") center/cover no-repeat;position:relative;}
-.dl-blog-banner::after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,249,62,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.015) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
-
-.dl-blog-body{padding:24px 28px;}
-.dl-blog-meta{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
-.dl-blog-tag{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#080a0f;background:var(--accent);border-radius:5px;padding:3px 9px;}
-.dl-blog-date{font-size:11.5px;color:var(--muted);font-weight:500;}
-.dl-blog-readtime{font-size:11.5px;color:var(--muted);font-weight:500;}
-
-.dl-blog-byline{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;margin-bottom:20px;}
-.dl-blog-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(255,249,62,.25),rgba(255,249,62,.06));border:2px solid rgba(255,249,62,.28);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--accent);flex-shrink:0;}
-.dl-blog-author-name{font-family:var(--font-display);font-size:13px;font-weight:700;color:#fff;margin-bottom:1px;}
-.dl-blog-author-role{font-size:11px;color:var(--muted-light);}
-.dl-blog-author-org{margin-left:auto;font-size:11px;color:var(--muted);}
-
-.dl-blog-title{font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1.15;color:#fff;margin-bottom:20px;}
-
-.dl-blog-prose{font-family:'Lora',serif;}
-.dl-blog-prose .lead{font-size:15px;color:#c8d0dc;line-height:1.8;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.06);font-style:italic;}
-.dl-blog-prose p{font-size:14px;color:var(--muted-light);line-height:1.85;margin-bottom:14px;}
-.dl-blog-prose h2{font-family:var(--font-display);font-size:16px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:24px 0 10px;display:flex;align-items:center;gap:10px;}
-.dl-blog-prose h2::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px;flex-shrink:0;}
-.dl-blog-prose .highlight-box{background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.12);border-left:3px solid var(--accent);border-radius:12px;padding:16px 18px;margin:18px 0;font-size:13px;color:#c8d0dc;line-height:1.72;font-family:var(--font-body);}
-.dl-blog-prose .highlight-box strong{color:var(--accent);}
-.dl-blog-prose .sign-off{color:var(--muted);font-size:12.5px;font-style:italic;border-top:1px solid rgba(255,255,255,.06);padding-top:18px;margin-top:8px;font-family:var(--font-body);}
+/* Blog link */
+.dl-blog-link{margin-top:20px;text-align:center;animation:revealUp .5s cubic-bezier(.22,1,.36,1) .3s both;}
+.dl-blog-link a{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--muted-light);padding:10px 20px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);transition:color .15s,border-color .15s,background .15s;text-decoration:none;}
+.dl-blog-link a:hover{color:var(--accent);border-color:rgba(255,249,62,.2);background:rgba(255,249,62,.04);}
+.dl-blog-link a svg{flex-shrink:0;transition:transform .15s;}
+.dl-blog-link a:hover svg{transform:translateX(3px);}
 
 /* ── Responsive ── */
+@media(max-width:900px){
+  .dl-page{grid-template-columns:1fr;min-height:auto;}
+  .dl-right{height:40vh;min-height:280px;}
+  .dl-right::after{background:linear-gradient(180deg,var(--bg) 0%,rgba(6,8,16,.3) 25%,transparent 50%,transparent 70%,rgba(6,8,16,.8) 100%);}
+  .dl-left{padding:40px 24px 60px;order:2;}
+  .dl-right{order:1;}
+}
 @media(max-width:540px){
-  body{padding:24px 0;}
   .dl-card-body{padding:28px 24px 32px;}
   .dl-brand{margin-bottom:28px;}
   .dl-status{flex-direction:column;gap:8px;}
   .status-sep{display:none;}
   .dl-platforms{flex-wrap:wrap;}
-  .dl-blog-section{padding:0 16px;margin-top:36px;}
-  .dl-blog-body{padding:20px 20px;}
 }
 img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
 </style>
 </head>
 <body>
 
-<!-- Background layers -->
-<div class="bg-layer"></div>
-<div class="bg-grid"></div>
-<div class="particles">
-  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
-  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
-  <div class="particle"></div><div class="particle"></div>
-</div>
+<!-- Ambient glows -->
 <div class="glow-orb glow-orb-1"></div>
 <div class="glow-orb glow-orb-2"></div>
-<div class="glow-orb glow-orb-3"></div>
 
-<div class="dl-container">
+<div class="dl-page">
 
-  <!-- Brand -->
-  <div class="dl-brand">
-    <a href="/" class="dl-brand-logo">
-      <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
-      <span>Fortized</span>
-    </a>
-    <div class="dl-tagline">The Fortress, on your desktop.</div>
-  </div>
+  <!-- Left: Download UI -->
+  <div class="dl-left">
+    <div class="dl-container">
 
-  <!-- Download Card -->
-  <div class="dl-card">
-    <div class="dl-card-body">
-      <div class="dl-header">
-        <h1>Download <em>Fortized</em></h1>
-        <p>One installer. Every platform. Always connected.</p>
+      <!-- Brand -->
+      <div class="dl-brand">
+        <a href="/" class="dl-brand-logo">
+          <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
+          <span>Fortized</span>
+        </a>
+        <div class="dl-tagline">The Fortress, on your desktop.</div>
       </div>
 
-      <div style="text-align:center;">
-        <span class="dl-badge">Available Now</span>
-      </div>
-
-      <div class="dl-platforms">
-        <span class="dl-platform"><span class="p-icon">🪟</span> Windows</span>
-        <span class="dl-platform"><span class="p-icon">🍎</span> macOS</span>
-        <span class="dl-platform"><span class="p-icon">🐧</span> Linux</span>
-      </div>
-
-      <div class="dl-details">
-        <div class="dl-detail">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 7.775V2.75a.25.25 0 0 1 .25-.25h5.025a.25.25 0 0 1 .177.073l6.25 6.25a.25.25 0 0 1 0 .354l-5.025 5.025a.25.25 0 0 1-.354 0l-6.25-6.25a.25.25 0 0 1-.073-.177Zm-1.5 0V2.75C1 1.784 1.784 1 2.75 1h5.025c.464 0 .91.184 1.238.513l6.25 6.25a1.75 1.75 0 0 1 0 2.474l-5.026 5.026a1.75 1.75 0 0 1-2.474 0l-6.25-6.25A1.752 1.752 0 0 1 1 7.775ZM6 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/></svg>
-          <span>Version <strong>1.0.0</strong></span>
-        </div>
-        <div class="dl-detail">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3.5 3.75a.25.25 0 0 1 .25-.25h8.5a.25.25 0 0 1 .25.25v8.5a.25.25 0 0 1-.25.25h-8.5a.25.25 0 0 1-.25-.25v-8.5Zm.25-1.75A1.75 1.75 0 0 0 2 3.75v8.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0 0 14 12.25v-8.5A1.75 1.75 0 0 0 12.25 2h-8.5Zm5.47 4.22a.749.749 0 1 1 1.06 1.06L8.56 9l1.72 1.72a.749.749 0 1 1-1.06 1.06l-2.25-2.25a.749.749 0 0 1 0-1.06l2.25-2.25Z"/></svg>
-          <span>64-bit &middot; <strong>78.3 MB</strong></span>
-        </div>
-        <div class="dl-detail">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm4.879-2.773 4.264 2.559a.25.25 0 0 1 0 .428l-4.264 2.559A.25.25 0 0 1 6 10.559V5.442a.25.25 0 0 1 .379-.215Z"/></svg>
-          <span>Windows 10+, macOS 11+, Ubuntu 20.04+</span>
-        </div>
-      </div>
-
-      <a href="https://github.com/StawWasTaken/Fortized/releases/download/FortizedDesktopApp/Fortized.Setup.1.0.0.exe" class="dl-btn">
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14ZM7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.969a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z"/></svg>
-        Download Fortized Setup
-      </a>
-
-      <div class="dl-divider">or</div>
-
-      <div class="dl-footer">Prefer the web? <a href="/signup">Create a free account</a></div>
-    </div>
-  </div>
-
-  <!-- Status chips -->
-  <div class="dl-status">
-    <div class="status-item"><span class="status-dot green"></span>v1.0.0 stable</div>
-    <div class="status-sep"></div>
-    <div class="status-item"><span class="status-dot yellow"></span>Cross-platform</div>
-    <div class="status-sep"></div>
-    <div class="status-item">Free forever</div>
-  </div>
-
-  <!-- Blog Article -->
-  <div class="dl-blog-section">
-    <div class="dl-blog-label">From the Blog</div>
-    <h2 class="dl-blog-heading">Latest on Desktop</h2>
-
-    <div class="dl-blog-card">
-      <div class="dl-blog-banner"></div>
-      <div class="dl-blog-body">
-        <div class="dl-blog-meta">
-          <span class="dl-blog-tag">Announcement</span>
-          <span class="dl-blog-date">March 3, 2026</span>
-          <span class="dl-blog-readtime">⏱ 1 min read</span>
-        </div>
-
-        <div class="dl-blog-byline">
-          <div class="dl-blog-avatar">S</div>
-          <div>
-            <div class="dl-blog-author-name">Staw</div>
-            <div class="dl-blog-author-role">Founder, Stawdio Group</div>
+      <!-- Download Card -->
+      <div class="dl-card">
+        <div class="dl-card-body">
+          <div class="dl-header">
+            <h1>Download <em>Fortized</em></h1>
+            <p>One installer. Every platform. Always connected.</p>
           </div>
-          <div class="dl-blog-author-org">Stawdio Group</div>
-        </div>
 
-        <div class="dl-blog-title">The Fortress Comes to Your Desktop</div>
+          <div style="text-align:center;">
+            <span class="dl-badge">Available Now</span>
+          </div>
 
-        <div class="dl-blog-prose">
-          <p class="lead">Today we're making Fortized available as a desktop application — and it's been one of the most requested features since day one.</p>
-          <p>The desktop app isn't just a browser wrapper. It's a dedicated experience built around the way people actually use Fortized — always open, always connected, always ready. System tray integration, native notifications, and startup launch mean the Fortress is there the moment you need it.</p>
-          <h2>One Installer, Every Platform</h2>
-          <p>We didn't want anyone left out. The Fortized Setup works on Windows, macOS, and Linux — one download covers all three. No hunting for the right version. No platform-specific pages. Just download and go.</p>
-          <h2>What's Next</h2>
-          <p>This is version 1.0.0 — the foundation. We're already working on push-to-talk, custom keybinds, and hardware-accelerated Party Rooms for the desktop client. The Fortress just got a lot closer to home.</p>
-          <div class="highlight-box"><strong>Download it now.</strong> The desktop app is free and available immediately. One setup file, every platform.</div>
-          <p class="sign-off">— Staw, Founder · Stawdio Group</p>
+          <div class="dl-platforms">
+            <span class="dl-platform"><span class="p-icon">🪟</span> Windows</span>
+            <span class="dl-platform"><span class="p-icon">🍎</span> macOS</span>
+            <span class="dl-platform"><span class="p-icon">🐧</span> Linux</span>
+          </div>
+
+          <div class="dl-details">
+            <div class="dl-detail">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 7.775V2.75a.25.25 0 0 1 .25-.25h5.025a.25.25 0 0 1 .177.073l6.25 6.25a.25.25 0 0 1 0 .354l-5.025 5.025a.25.25 0 0 1-.354 0l-6.25-6.25a.25.25 0 0 1-.073-.177Zm-1.5 0V2.75C1 1.784 1.784 1 2.75 1h5.025c.464 0 .91.184 1.238.513l6.25 6.25a1.75 1.75 0 0 1 0 2.474l-5.026 5.026a1.75 1.75 0 0 1-2.474 0l-6.25-6.25A1.752 1.752 0 0 1 1 7.775ZM6 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/></svg>
+              <span>Version <strong>1.0.0</strong></span>
+            </div>
+            <div class="dl-detail">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3.5 3.75a.25.25 0 0 1 .25-.25h8.5a.25.25 0 0 1 .25.25v8.5a.25.25 0 0 1-.25.25h-8.5a.25.25 0 0 1-.25-.25v-8.5Zm.25-1.75A1.75 1.75 0 0 0 2 3.75v8.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0 0 14 12.25v-8.5A1.75 1.75 0 0 0 12.25 2h-8.5Zm5.47 4.22a.749.749 0 1 1 1.06 1.06L8.56 9l1.72 1.72a.749.749 0 1 1-1.06 1.06l-2.25-2.25a.749.749 0 0 1 0-1.06l2.25-2.25Z"/></svg>
+              <span>64-bit &middot; <strong>78.3 MB</strong></span>
+            </div>
+            <div class="dl-detail">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm4.879-2.773 4.264 2.559a.25.25 0 0 1 0 .428l-4.264 2.559A.25.25 0 0 1 6 10.559V5.442a.25.25 0 0 1 .379-.215Z"/></svg>
+              <span>Windows 10+, macOS 11+, Ubuntu 20.04+</span>
+            </div>
+          </div>
+
+          <a href="https://github.com/StawWasTaken/Fortized/releases/download/FortizedDesktopApp/Fortized.Setup.1.0.0.exe" class="dl-btn">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14ZM7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.969a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z"/></svg>
+            Download Fortized Setup
+          </a>
+
+          <div class="dl-divider">or</div>
+
+          <div class="dl-footer">Prefer the web? <a href="/signup">Create a free account</a></div>
         </div>
       </div>
+
+      <!-- Status chips -->
+      <div class="dl-status">
+        <div class="status-item"><span class="status-dot green"></span>v1.0.0 stable</div>
+        <div class="status-sep"></div>
+        <div class="status-item"><span class="status-dot yellow"></span>Cross-platform</div>
+        <div class="status-sep"></div>
+        <div class="status-item">Free forever</div>
+      </div>
+
+      <!-- Blog link -->
+      <div class="dl-blog-link">
+        <a href="/blog">
+          Want to know more? Read the full announcement
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3l5 5-5 5"/></svg>
+        </a>
+      </div>
+
     </div>
+  </div>
+
+  <!-- Right: Banner image -->
+  <div class="dl-right">
+    <img class="dl-right-img" src="/Fortized banner5.png" alt="Fortized Banner">
   </div>
 
 </div>

@@ -502,7 +502,8 @@ const FortizedSocial = (() => {
   // ── Public API ─────────────────────────────────────────────
   return {
     register, login, logout, getCurrentUsername,
-    getUsers, getUserByName, saveUserObject,
+    getUsers, getAllUsers: async () => (await db.ref('users').get()).val() || {},
+    getUserByName, saveUserObject,
     getStatus, setStatus,
     getNotifications, addNotification, markNotificationsRead, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,

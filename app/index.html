@@ -6183,6 +6183,28 @@ function updateDOBField(){
   if (CU.onyx===undefined)CU.onyx=0;
   notifSettings=CU.notifSettings||notifSettings;
 
+  // ── Enforce bans & suspensions ──
+  try {
+    const banSnap = await firebase.database().ref('admin/bans/' + username).get();
+    if (banSnap.exists()) {
+      const ban = banSnap.val();
+      document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0d1018;color:#fff;font-family:system-ui,sans-serif;"><div style="text-align:center;max-width:420px;padding:32px;"><div style="font-size:48px;margin-bottom:16px;">🚫</div><div style="font-size:22px;font-weight:700;margin-bottom:8px;">Account Banned</div><div style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:16px;">Your account has been banned${ban.reason?' for: '+ban.reason:''}.</div><div style="font-size:12px;color:rgba(255,255,255,.3);">Banned by ${ban.bannedBy||'admin'}${ban.bannedAt?' on '+new Date(ban.bannedAt).toLocaleDateString():''}</div><button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="margin-top:24px;padding:10px 28px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);border-radius:8px;color:#f87171;font-size:13px;cursor:pointer;font-weight:600;">Log Out</button></div></div>`;
+      return;
+    }
+    // Check suspension
+    const suspSnap = await firebase.database().ref('users/' + username + '/suspendedUntil').get();
+    if (suspSnap.exists()) {
+      const until = new Date(suspSnap.val());
+      if (until > new Date()) {
+        document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0d1018;color:#fff;font-family:system-ui,sans-serif;"><div style="text-align:center;max-width:420px;padding:32px;"><div style="font-size:48px;margin-bottom:16px;">⏳</div><div style="font-size:22px;font-weight:700;margin-bottom:8px;">Account Suspended</div><div style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:16px;">Your account is suspended until ${until.toLocaleString()}.</div><button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="margin-top:24px;padding:10px 28px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;color:#f59e0b;font-size:13px;cursor:pointer;font-weight:600;">Log Out</button></div></div>`;
+        return;
+      } else {
+        // Suspension expired — clear it
+        try { await firebase.database().ref('users/' + username + '/suspendedUntil').remove(); } catch {}
+      }
+    }
+  } catch(e) { console.warn('Ban/suspension check failed:', e); }
+
   // Migrate: ensure all bastions have unique globalIds
   let _needsSave = false;
   for (const b of CU.bastions) {
@@ -6266,6 +6288,22 @@ function updateDOBField(){
   // Listen for force-refresh and session-clear signals from admin
   _listenForceRefresh();
   _listenClearSessions();
+  // Listen for real-time ban enforcement — kick user immediately if banned while online
+  firebase.database().ref('admin/bans/' + CU.username).on('value', snap => {
+    if (snap.exists()) {
+      const ban = snap.val();
+      document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0d1018;color:#fff;font-family:system-ui,sans-serif;"><div style="text-align:center;max-width:420px;padding:32px;"><div style="font-size:48px;margin-bottom:16px;">🚫</div><div style="font-size:22px;font-weight:700;margin-bottom:8px;">Account Banned</div><div style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:16px;">Your account has been banned${ban.reason?' for: '+ban.reason:''}.</div><div style="font-size:12px;color:rgba(255,255,255,.3);">Banned by ${ban.bannedBy||'admin'}${ban.bannedAt?' on '+new Date(ban.bannedAt).toLocaleDateString():''}</div><button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="margin-top:24px;padding:10px 28px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);border-radius:8px;color:#f87171;font-size:13px;cursor:pointer;font-weight:600;">Log Out</button></div></div>`;
+    }
+  });
+  // Listen for real-time suspension enforcement
+  firebase.database().ref('users/' + CU.username + '/suspendedUntil').on('value', snap => {
+    if (snap.exists()) {
+      const until = new Date(snap.val());
+      if (until > new Date()) {
+        document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0d1018;color:#fff;font-family:system-ui,sans-serif;"><div style="text-align:center;max-width:420px;padding:32px;"><div style="font-size:48px;margin-bottom:16px;">⏳</div><div style="font-size:22px;font-weight:700;margin-bottom:8px;">Account Suspended</div><div style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:16px;">Your account is suspended until ${until.toLocaleString()}.</div><button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="margin-top:24px;padding:10px 28px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;color:#f59e0b;font-size:13px;cursor:pointer;font-weight:600;">Log Out</button></div></div>`;
+      }
+    }
+  });
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling for all staff
   if(hasStaffAccess())setTimeout(startReportPolling,2000);
@@ -10721,7 +10759,10 @@ async function _loadAdminPage(tab) {
             <button onclick="resolveReport(${i},'resolved')" style="padding:7px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:8px;color:#3ecf6e;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(62,207,110,.15)'" onmouseout="this.style.background='rgba(62,207,110,.08)'">✅ Resolve</button>
             <div style="flex:1;"></div>
             ${target?`<button onclick="document.getElementById('admin-user-search').value='${escapeHTML(target)}';_loadAdminPage('users');setTimeout(adminSearchUser,100);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;" onmouseover="this.style.background='rgba(96,165,250,.15)'" onmouseout="this.style.background='rgba(96,165,250,.08)'">🔍 Inspect ${escapeHTML(target)}</button>`:''}
-          </div>`:''}
+            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}
+          </div>`:`<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
+            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}
+          </div>`}
         </div>
       </div>`;
     };
@@ -10951,28 +10992,10 @@ async function _loadAdminPage(tab) {
             </div>
           </label>
           <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
-            <input type="checkbox" id="gs-emoticons" ${gs.disableEmoticonConversion?'checked':''} onchange="_updateGlobalSetting('disableEmoticonConversion',this.checked)">
-            <span style="font-size:13px;">Disable Emoticon Conversion (Global)</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
             <input type="checkbox" id="gs-nsfw-scan" ${gs.enableNSFWScan!==false?'checked':''} onchange="_updateGlobalSetting('enableNSFWScan',this.checked)">
             <div>
               <span style="font-size:13px;">Enable NSFW AI Scanner</span>
               <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Scans uploaded images, GIFs & videos for NSFW content</div>
-            </div>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
-            <input type="checkbox" ${gs.disableProfileBanners?'checked':''} onchange="_updateGlobalSetting('disableProfileBanners',this.checked)">
-            <div>
-              <span style="font-size:13px;">Disable Profile Banners</span>
-              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Prevent users from uploading profile banners</div>
-            </div>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
-            <input type="checkbox" ${gs.disableCustomStatus?'checked':''} onchange="_updateGlobalSetting('disableCustomStatus',this.checked)">
-            <div>
-              <span style="font-size:13px;">Disable Custom Status</span>
-              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Prevent users from setting custom status text</div>
             </div>
           </label>
           <label style="display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;">
@@ -11163,6 +11186,24 @@ function resolveReport(idx, action) {
     toast('Report '+action, 'success');
     _loadAdminPage(adminTab);
   });
+}
+
+async function deleteReportForever(idx) {
+  if (!isSuperAdmin()) { toast('Only super admins can delete reports', 'error'); return; }
+  const reports = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+  if (!reports[idx]) return;
+  const reportId = reports[idx].id;
+  if (!confirm('Permanently delete this report? This cannot be undone.')) return;
+  // Remove from localStorage
+  reports.splice(idx, 1);
+  localStorage.setItem('ftz_reports', JSON.stringify(reports));
+  // Remove from Firebase
+  if (reportId) {
+    try { await firebase.database().ref('reports/' + reportId).remove(); } catch(e) { console.warn('Report delete from Firebase failed:', e); }
+  }
+  logAudit('report_deleted', reportId||'unknown', 'Permanently deleted by super admin');
+  toast('Report permanently deleted', 'success');
+  _loadAdminPage(adminTab);
 }
 
 async function loadAllReportsFromFirebase() {

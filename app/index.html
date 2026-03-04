@@ -6142,6 +6142,28 @@ function setCBVis(v,btn){
 function _fmtDateEU(d) { if (!d) return 'Unknown'; const dt = new Date(d); const dd = String(dt.getDate()).padStart(2,'0'); const mm = String(dt.getMonth()+1).padStart(2,'0'); const yy = dt.getFullYear(); const hh = String(dt.getHours()).padStart(2,'0'); const mi = String(dt.getMinutes()).padStart(2,'0'); return dd+'/'+mm+'/'+yy+' — '+hh+':'+mi; }
 function _fmtDateEUShort(d) { if (!d) return 'Unknown'; const dt = new Date(d); const dd = String(dt.getDate()).padStart(2,'0'); const mm = String(dt.getMonth()+1).padStart(2,'0'); const yy = dt.getFullYear(); return dd+'/'+mm+'/'+yy; }
 
+function _renderOffendingContent(data) {
+  if (!data) return '';
+  let html = '';
+  const text = data.offendingText || data.msgText || '';
+  const media = data.offendingMedia || [];
+  if (text) {
+    const cleanText = text.replace(/\[FTZ(?:IMG|VID|AUD|GIF|STICKER):[^\]]*\]/gi, '').trim();
+    if (cleanText) html += `<div style="display:flex;justify-content:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);flex-direction:column;gap:6px;">
+      <span style="color:#5a6478;font-size:13px;">Offending Content</span>
+      <div style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.12);border-left:3px solid #f87171;border-radius:8px;padding:10px 14px;font-size:13px;color:#c8d0dc;line-height:1.6;word-break:break-word;">${escapeHTML(cleanText.slice(0,300))}${cleanText.length>300?'...':''}</div>
+    </div>`;
+  }
+  if (media.length) html += `<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:6px;">
+    <span style="color:#5a6478;font-size:13px;">Flagged Media</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">${media.map(m => {
+      if (m.type === 'video') return `<video src="${m.url}" style="max-width:200px;max-height:140px;border-radius:8px;border:1px solid rgba(255,255,255,.06);" controls muted></video>`;
+      return `<img src="${m.url}" style="max-width:200px;max-height:140px;border-radius:8px;border:1px solid rgba(255,255,255,.06);object-fit:cover;" onerror="this.style.display='none'">`;
+    }).join('')}</div>
+  </div>`;
+  return html;
+}
+
 function _showBanScreen(ban) {
   document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:99999;background:#080a0f;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
     <div style="background:rgba(12,15,22,.95);border:1px solid #1a2030;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
@@ -6164,8 +6186,9 @@ function _showBanScreen(ban) {
         </div>
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="color:#5a6478;font-size:13px;">Category</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">Account behavior</span>
+          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${ban.category || 'Account behavior'}</span>
         </div>
+        ${_renderOffendingContent(ban)}
         <div style="display:flex;justify-content:space-between;padding:10px 0;">
           <span style="color:#5a6478;font-size:13px;">Actioned by</span>
           <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${ban.bannedBy || 'Fortized Moderation'}</span>
@@ -6214,6 +6237,7 @@ function _showSuspendScreen(data) {
           <span style="color:#5a6478;font-size:13px;">Moderator Message</span>
           <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(modMessage)}</span>
         </div>` : ''}
+        ${_renderOffendingContent(data)}
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="color:#5a6478;font-size:13px;">Reactivation</span>
           <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${durationText}</span>
@@ -6229,7 +6253,7 @@ function _showSuspendScreen(data) {
   </div>`;
 }
 
-function _showWarningOverlay(reason, issuedBy) {
+function _showWarningOverlay(reason, issuedBy, contentData) {
   if (document.getElementById('ftz-warning-overlay')) return;
   const overlay = document.createElement('div');
   overlay.id = 'ftz-warning-overlay';
@@ -6253,6 +6277,7 @@ function _showWarningOverlay(reason, issuedBy) {
         <span style="color:#5a6478;font-size:13px;">Reason</span>
         <span style="color:#c8d0dc;font-size:13px;font-weight:600;max-width:260px;text-align:right;">${escapeHTML(reason)}</span>
       </div>
+      ${contentData ? _renderOffendingContent(contentData) : ''}
       <div style="display:flex;justify-content:space-between;padding:10px 0;">
         <span style="color:#5a6478;font-size:13px;">Actioned by</span>
         <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(issuedBy || 'Fortized Moderation')}</span>
@@ -6477,7 +6502,7 @@ function updateDOBField(){
   firebase.database().ref('users/' + CU.username + '/activeWarning').on('value', snap => {
     if (snap.exists()) {
       const w = snap.val();
-      _showWarningOverlay(w.reason || 'Violation of Terms of Use', w.issuedBy);
+      _showWarningOverlay(w.reason || 'Violation of Terms of Use', w.issuedBy, w.contentData || null);
       firebase.database().ref('users/' + CU.username + '/activeWarning').remove();
     }
   });
@@ -10679,7 +10704,7 @@ function _renderAdminNav(active) {
     {label:'OVERVIEW', items:[{id:'dashboard',icon:'📊',label:'Dashboard'}]},
     {label:'MODERATION', items:[
       {id:'reports',icon:'🚩',label:'Reports',badge:pending},
-      ...(role!=='moderator'?[{id:'bans',icon:'🔨',label:'Bans'}]:[]),
+      ...(role!=='moderator'?[{id:'bans',icon:'🔨',label:'Bans'},{id:'suspensions',icon:'⏳',label:'Suspensions'}]:[]),
       {id:'nsfw_queue',icon:'🔞',label:'NSFW Queue',badge:nsfwQueue.length},
     ]},
     ...(role!=='moderator'?[{label:'USERS', items:[
@@ -10694,6 +10719,7 @@ function _renderAdminNav(active) {
       ...(isAdmin()?[{id:'audit',icon:'📋',label:'Audit Log'}]:[]),
       ...(isSuperAdmin()?[{id:'settings',icon:'⚙️',label:'Global Settings'}]:[]),
       ...(isSuperAdmin()?[{id:'staff',icon:'👑',label:'Staff Management'}]:[]),
+      {id:'support_tickets',icon:'📩',label:'Support Tickets'},
     ]}]:[]),
   ];
   nav.innerHTML = secs.map(s=>`
@@ -10925,9 +10951,9 @@ async function _loadAdminPage(tab) {
           <!-- Actions -->
           ${isPend?`<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
             <button onclick="resolveReport(${i},'dismissed')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Dismiss</button>
-            <button onclick="resolveReport(${i},'warned')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(245,158,11,.15)'" onmouseout="this.style.background='rgba(245,158,11,.08)'">⚠️ Warn User</button>
-            ${target?`<button onclick="adminActionUser('${escapeHTML(target)}','ban')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">🔨 Ban User</button>`:''}
-            <button onclick="resolveReport(${i},'resolved')" style="padding:7px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:8px;color:#3ecf6e;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(62,207,110,.15)'" onmouseout="this.style.background='rgba(62,207,110,.08)'">✅ Resolve</button>
+            <button onclick="resolveReport(${i},'warned')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(245,158,11,.15)'" onmouseout="this.style.background='rgba(245,158,11,.08)'">⚠️ Warn</button>
+            ${target?`<button onclick="resolveReport(${i},'suspended')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(168,85,247,.15)'" onmouseout="this.style.background='rgba(168,85,247,.08)'">⏳ Suspend</button>`:''}
+            ${target?`<button onclick="resolveReport(${i},'banned')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">🔨 Ban</button>`:''}
             <div style="flex:1;"></div>
             ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;" onmouseover="this.style.background='rgba(96,165,250,.15)'" onmouseout="this.style.background='rgba(96,165,250,.08)'">🔍 Inspect ${escapeHTML(target)}</button>`:''}
             ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}
@@ -10995,6 +11021,16 @@ async function _loadAdminPage(tab) {
         <button onclick="unbanUser('${escapeHTML(b.username)}')" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Unban</button>
       </div>`).join('')}</div>`:'<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">No bans</div>'}
     </div>`;
+  }
+  else if (tab === 'suspensions') {
+    main.innerHTML = `<div style="padding:28px 32px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Suspensions</div>
+        <button onclick="adminActionUser(prompt('Username to suspend:'),'suspend')" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#a855f7;font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;">+ Suspend User</button>
+      </div>
+      <div id="admin-suspensions-list" style="color:rgba(255,255,255,.3);text-align:center;padding:20px;">Loading suspensions...</div>
+    </div>`;
+    _loadAdminSuspensions();
   }
   else if (tab === 'users') {
     main.innerHTML = `<div style="padding:28px 32px;">
@@ -11264,32 +11300,239 @@ async function _loadAdminPage(tab) {
       </div>
     </div>`;
   }
+  else if (tab === 'support_tickets') {
+    const isSA = isSuperAdmin();
+    main.innerHTML = `<div style="padding:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <div style="font-size:20px;font-weight:800;">Support Tickets</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:3px;">${isSA ? 'All tickets' : 'Non-sensitive tickets only'}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <select id="_ticket-filter" onchange="_filterTickets()" style="background:var(--channel,#0d1018);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;">
+            <option value="all">All</option>
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+      </div>
+      <div id="admin-tickets-list"><div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">Loading tickets…</div></div>
+    </div>`;
+    _loadAdminSupportTickets();
+  }
   else main.innerHTML = '<div style="padding:32px;text-align:center;color:rgba(255,255,255,.3);">Unknown tab</div>';
 }
 
 function resolveReport(idx, action) {
   const reports = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
   if (!reports[idx]) return;
+  const report = reports[idx];
+  const target = report.msgFrom || report.username || '';
+  // Build content data from the report for showing on enforcement screens
+  const _extractMedia = (text) => {
+    if (!text) return [];
+    const media = [];
+    const imgRx = /https?:\/\/[^\s"'<>]+\.(?:png|jpe?g|gif|webp|svg|bmp)(?:\?[^\s"'<>]*)?/gi;
+    let m; while ((m = imgRx.exec(text)) !== null) media.push({ type: 'image', url: m[0] });
+    const vidRx = /https?:\/\/[^\s"'<>]+\.(?:mp4|webm|mov|ogg)(?:\?[^\s"'<>]*)?/gi;
+    while ((m = vidRx.exec(text)) !== null) media.push({ type: 'video', url: m[0] });
+    const ftzImgRx = /\[FTZIMG:([^\|]+)\|([^\]]+)\]/gi;
+    while ((m = ftzImgRx.exec(text)) !== null) media.push({ type: 'image', url: m[2] });
+    const ftzVidRx = /\[FTZVID:([^\|]+)\|([^\]]+)\]/gi;
+    while ((m = ftzVidRx.exec(text)) !== null) media.push({ type: 'video', url: m[2] });
+    const ftzGifRx = /\[FTZGIF:(https?:\/\/[^\]]+)\]/gi;
+    while ((m = ftzGifRx.exec(text)) !== null) media.push({ type: 'image', url: m[1] });
+    return media;
+  };
+  const contentData = { offendingText: report.msgText || '', offendingMedia: _extractMedia(report.msgText || '') };
+
   showCustomInput('Resolution Note', 'Add a note (optional):', async (reason) => {
-    reports[idx].status = action;
-    reports[idx].resolution = action;
-    reports[idx].resolvedBy = CU.username;
-    reports[idx].resolvedAt = new Date().toISOString();
-    if (reason) reports[idx].resolutionNote = reason;
+    report.status = action;
+    report.resolution = action;
+    report.resolvedBy = CU.username;
+    report.resolvedAt = new Date().toISOString();
+    if (reason) report.resolutionNote = reason;
     localStorage.setItem('ftz_reports', JSON.stringify(reports));
-    // Sync to Firebase — ensure the update persists
-    const reportId = reports[idx].id;
+    const reportId = report.id;
     if (reportId) {
-      try { await firebase.database().ref('reports/' + reportId).set(reports[idx]); } catch(e) { console.warn('Report sync failed:', e); }
+      try { await firebase.database().ref('reports/' + reportId).set(report); } catch(e) { console.warn('Report sync failed:', e); }
     }
-    logAudit('report_'+action, reports[idx].username||reports[idx].reporter||'?', reason||action);
-    if (action === 'banned' || action === 'suspended') {
-      const target = reports[idx].username || reports[idx].reporter;
-      if (target) adminActionUser(target, action === 'banned' ? 'ban' : 'suspend');
+    logAudit('report_'+action, target||report.reporter||'?', reason||action);
+
+    // Delete the reported message and replace with moderation notice
+    if (report.type === 'message' && report.msgId && report.bastionId && action !== 'dismissed') {
+      try { await _deleteAndReplaceReportedMessage(report); } catch(e) { console.warn('Message replacement failed:', e); }
     }
-    toast('Report '+action, 'success');
+
+    // Execute the action on the reported user
+    if (action === 'warned' && target) {
+      await firebase.database().ref('users/'+target+'/activeWarning').set({
+        reason: reason || report.reason || 'Violation of Terms of Use',
+        issuedBy: CU.username,
+        issuedAt: new Date().toISOString(),
+        contentData
+      }).catch(()=>{});
+      logAudit('warn', target, reason || report.reason);
+      toast(`Warning issued to ${target}`, 'success');
+    } else if (action === 'suspended' && target) {
+      _reportSuspendTarget = target;
+      _reportContentData = contentData;
+      adminActionUser(target, 'suspend');
+    } else if (action === 'banned' && target) {
+      const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+      const banObj = { username: target, reason: reason || report.reason, bannedBy: CU.username, bannedAt: new Date().toISOString(), category: report.reason, offendingText: contentData.offendingText, offendingMedia: contentData.offendingMedia };
+      bans.push(banObj);
+      localStorage.setItem('ftz_bans', JSON.stringify(bans));
+      _saveBanToFirebase(banObj);
+      logAudit('ban', target, reason || report.reason);
+      toast(`${target} has been banned`, 'success');
+    } else if (action === 'dismissed') {
+      toast('Report dismissed — no action taken', 'info');
+    } else {
+      toast('Report ' + action, 'success');
+    }
     _loadAdminPage(adminTab);
   });
+}
+
+async function _deleteAndReplaceReportedMessage(report) {
+  // Replace the message in Firebase with a moderation notice
+  if (!report.bastionId || !report.msgId) return;
+  // Try to find and update the message in the bastion's channel messages
+  try {
+    const bastionRef = firebase.database().ref('bastions');
+    const snap = await bastionRef.once('value');
+    const bastions = snap.val() || {};
+    for (const [bid, bastion] of Object.entries(bastions)) {
+      if ((bastion.name || '') !== report.bastionId && bid !== report.bastionId) continue;
+      const channels = bastion.channels || [];
+      for (let ci = 0; ci < channels.length; ci++) {
+        const msgs = channels[ci].messages || [];
+        for (let mi = 0; mi < msgs.length; mi++) {
+          if (msgs[mi].id === report.msgId) {
+            await firebase.database().ref(`bastions/${bid}/channels/${ci}/messages/${mi}/text`).set('[This message was deleted by Fortized moderation for being inappropriate.]');
+            await firebase.database().ref(`bastions/${bid}/channels/${ci}/messages/${mi}/deletedByMod`).set(true);
+            await firebase.database().ref(`bastions/${bid}/channels/${ci}/messages/${mi}/deletedAt`).set(new Date().toISOString());
+            return;
+          }
+        }
+      }
+    }
+  } catch(e) { console.warn('Message deletion scan failed:', e); }
+}
+let _reportSuspendTarget = null;
+let _reportContentData = null;
+
+async function _loadAdminSuspensions() {
+  const el = document.getElementById('admin-suspensions-list');
+  if (!el) return;
+  try {
+    const snap = await firebase.database().ref('users').orderByChild('suspension').once('value');
+    const users = snap.val() || {};
+    const suspensions = [];
+    for (const [uname, udata] of Object.entries(users)) {
+      if (udata.suspension) {
+        const s = udata.suspension;
+        const isActive = new Date(s.until) > new Date();
+        suspensions.push({ username: uname, ...s, active: isActive });
+      }
+    }
+    suspensions.sort((a,b) => (b.active?1:0) - (a.active?1:0) || new Date(b.suspendedAt||0) - new Date(a.suspendedAt||0));
+    if (!suspensions.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">No suspensions found</div>'; return; }
+    el.innerHTML = suspensions.map(s => `
+      <div style="background:var(--panel,#101420);border:1px solid ${s.active?'rgba(168,85,247,.15)':'rgba(255,255,255,.06)'};border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:${s.active?'#a855f7':'rgba(255,255,255,.15)'};${s.active?'box-shadow:0 0 6px rgba(168,85,247,.5);':''}flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:13.5px;">${escapeHTML(s.username)} <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:100px;${s.active?'background:rgba(168,85,247,.1);color:#a855f7;':'background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);'}">${s.active?'ACTIVE':'EXPIRED'}</span></div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.4);">Reason: ${escapeHTML(s.reason||'–')} · Duration: ${escapeHTML(s.duration||'–')}</div>
+          <div style="font-size:10.5px;color:rgba(255,255,255,.25);">By ${escapeHTML(s.suspendedBy||'admin')} · Until ${_fmtDateEU(s.until)}</div>
+        </div>
+        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(s.username)}';adminSearchUser();}},150);" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:#60a5fa;font-size:12px;cursor:pointer;">Inspect</button>
+        ${s.active?`<button onclick="firebase.database().ref('users/${escapeHTML(s.username)}/suspension').remove();firebase.database().ref('users/${escapeHTML(s.username)}/suspendedUntil').remove();logAudit('unsuspend','${escapeHTML(s.username)}','Lifted by admin');toast('${escapeHTML(s.username)} unsuspended','success');_loadAdminPage('suspensions');" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Unsuspend</button>`:''}
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">Failed to load suspensions</div>';
+  }
+}
+
+let _allTickets = [];
+const _sensitiveCategories = ['ban-appeal','suspend-appeal','report'];
+
+async function _loadAdminSupportTickets() {
+  const el = document.getElementById('admin-tickets-list');
+  if (!el) return;
+  try {
+    const snap = await firebase.database().ref('support/tickets').once('value');
+    const raw = snap.val() || {};
+    _allTickets = Object.entries(raw).map(([id, t]) => ({ id, ...t }));
+    // Filter: admins only see non-sensitive categories
+    if (!isSuperAdmin()) {
+      _allTickets = _allTickets.filter(t => !_sensitiveCategories.includes(t.category));
+    }
+    _allTickets.sort((a,b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
+    _renderTickets();
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">Failed to load tickets</div>';
+  }
+}
+
+function _filterTickets() {
+  _renderTickets();
+}
+
+function _renderTickets() {
+  const el = document.getElementById('admin-tickets-list');
+  if (!el) return;
+  const filter = document.getElementById('_ticket-filter')?.value || 'all';
+  let tickets = _allTickets;
+  if (filter === 'open') tickets = tickets.filter(t => t.status !== 'closed');
+  if (filter === 'closed') tickets = tickets.filter(t => t.status === 'closed');
+  if (!tickets.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">No tickets found</div>'; return; }
+  const catColors = {'ban-appeal':'#f87171','suspend-appeal':'#a855f7','report':'#fb923c','general':'#60a5fa','bug':'#3ecf6e','feedback':'#fbbf24','account-recovery':'#38bdf8'};
+  el.innerHTML = tickets.map(t => {
+    const catCol = catColors[t.category] || '#60a5fa';
+    const isClosed = t.status === 'closed';
+    const isSensitive = _sensitiveCategories.includes(t.category);
+    return `<div style="background:var(--panel,#101420);border:1px solid ${isSensitive?'rgba(248,113,113,.12)':'rgba(255,255,255,.06)'};border-radius:10px;padding:14px 18px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:${isClosed?'rgba(255,255,255,.15)':'#3ecf6e'};${isClosed?'':'box-shadow:0 0 6px rgba(62,207,110,.5);'}flex-shrink:0;"></div>
+        <div style="flex:1;font-weight:700;font-size:14px;">${escapeHTML(t.subject||'No Subject')}</div>
+        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:${catCol}15;color:${catCol};border:1px solid ${catCol}25;">${escapeHTML((t.category||'general').replace(/-/g,' ').toUpperCase())}</span>
+        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;${isClosed?'background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);':'background:rgba(62,207,110,.1);color:#3ecf6e;'}">${isClosed?'CLOSED':'OPEN'}</span>
+      </div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.55);margin-bottom:6px;line-height:1.5;white-space:pre-wrap;max-height:120px;overflow-y:auto;">${escapeHTML((t.message||'').slice(0,500))}</div>
+      <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:rgba(255,255,255,.3);">
+        <span>From: <strong style="color:rgba(255,255,255,.5);">${escapeHTML(t.username||'Unknown')}</strong></span>
+        <span>Email: ${escapeHTML(t.email||'–')}</span>
+        <span>${_fmtDateEU(t.submittedAt)}</span>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          ${!isClosed?`<button onclick="_closeTicket('${t.id}')" style="padding:4px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;">Close</button>`:`<button onclick="_reopenTicket('${t.id}')" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:#60a5fa;font-size:11px;cursor:pointer;">Reopen</button>`}
+          ${isSuperAdmin()?`<button onclick="_deleteTicket('${t.id}')" style="padding:4px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:7px;color:#f87171;font-size:11px;cursor:pointer;">Delete</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function _closeTicket(id) {
+  await firebase.database().ref('support/tickets/'+id+'/status').set('closed').catch(()=>{});
+  await firebase.database().ref('support/tickets/'+id+'/closedBy').set(CU.username).catch(()=>{});
+  await firebase.database().ref('support/tickets/'+id+'/closedAt').set(new Date().toISOString()).catch(()=>{});
+  toast('Ticket closed','success');
+  _loadAdminSupportTickets();
+}
+
+async function _reopenTicket(id) {
+  await firebase.database().ref('support/tickets/'+id+'/status').set('open').catch(()=>{});
+  toast('Ticket reopened','success');
+  _loadAdminSupportTickets();
+}
+
+async function _deleteTicket(id) {
+  if (!isSuperAdmin()) { toast('Only superadmins can delete tickets','error'); return; }
+  await firebase.database().ref('support/tickets/'+id).remove().catch(()=>{});
+  toast('Ticket deleted','success');
+  _loadAdminSupportTickets();
 }
 
 async function deleteReportForever(idx) {
@@ -11767,6 +12010,13 @@ function adminActionUser(username, action) {
       const multipliers={minutes:60000,hours:3600000,days:86400000,weeks:604800000,months:2592000000,years:31536000000};
       const until=new Date(Date.now()+amount*(multipliers[unit]||3600000)).toISOString();
       const suspObj={until,reason,suspendedBy:CU.username,suspendedAt:new Date().toISOString(),moderatorMessage:modMsg,duration:amount+' '+unit};
+      // Attach offending content data if this suspension came from a report
+      if (_reportSuspendTarget === username && _reportContentData) {
+        suspObj.offendingText = _reportContentData.offendingText || '';
+        suspObj.offendingMedia = _reportContentData.offendingMedia || [];
+        _reportSuspendTarget = null;
+        _reportContentData = null;
+      }
       await firebase.database().ref('users/'+username+'/suspension').set(suspObj).catch(()=>{});
       await firebase.database().ref('users/'+username+'/suspendedUntil').set(until).catch(()=>{});
       logAudit('suspend',username,`${amount} ${unit} — ${reason}`);
@@ -12976,6 +13226,19 @@ async function loadAdminBastions(silent = false) {
   }
 }
 
+async function _deleteBastion(globalId, name) {
+  if (!isSuperAdmin()) { toast('Only super admins can delete bastions', 'error'); return; }
+  if (!globalId) { toast('No bastion ID', 'error'); return; }
+  try {
+    await firebase.database().ref('globalBastions/' + globalId).remove();
+    await firebase.database().ref('bastions/' + globalId).remove();
+    logAudit('bastion_deleted', name, 'Deleted by super admin ' + CU.username);
+    toast(`Bastion "${name}" deleted`, 'success');
+    _adminBastionsCache = _adminBastionsCache.filter(b => b._globalId !== globalId);
+    renderAdminBastionsList(_adminBastionsCache);
+  } catch(e) { toast('Failed to delete bastion: ' + e.message, 'error'); }
+}
+
 function filterAdminBastions(q) {
   const filtered = q
     ? _adminBastionsCache.filter(b => (b.name||'').toLowerCase().includes(q.toLowerCase()) || (b.owner||'').toLowerCase().includes(q.toLowerCase()))
@@ -13011,6 +13274,7 @@ function renderAdminBastionsList(bastions) {
       <div style="display:flex;gap:6px;flex-shrink:0;">
         <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.owner||'')}';adminSearchUser();}},150);" style="padding:5px 10px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:#60a5fa;font-size:11px;cursor:pointer;">Owner</button>
         <button onclick="logAudit('bastion_review','${escapeHTML(b.name||'')}','Manual inspection');toast('Flagged for review','info')" style="padding:5px 10px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:7px;color:#f87171;font-size:11px;cursor:pointer;">Flag</button>
+        ${isSuperAdmin()?`<button onclick="_deleteBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}')" style="padding:5px 10px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);border-radius:7px;color:#f87171;font-size:11px;cursor:pointer;font-weight:700;">Delete</button>`:''}
       </div>
     </div>`}).join('');
 }
@@ -18346,23 +18610,18 @@ function processUploadedFile(file, inputId) {
   const reader = new FileReader();
   reader.onload = async ev => {
     const fileData = ev.target.result;
-    // Run NSFW AI scan on media uploads
+    // Queue media for NSFW review without blocking upload
     const isMedia = file.type.startsWith('image/') || file.type.startsWith('video/') || /\.(gif|webp)$/i.test(file.name);
     if (isMedia) {
       try {
-        const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
-        if (scanResult.flagged) {
-          if (scanResult.label === 'BANNED_CONTENT') {
-            toast('This content has been banned and cannot be uploaded.', 'error');
-            return;
-          }
-          if (scanResult.label === 'EXPLICIT') {
-            toast('This content has been blocked. NSFW content is not allowed.', 'error');
-            return;
-          }
-          toast('⚠️ This content has been flagged for review by moderators.', 'warning');
+        const hash = typeof _simpleImageHash === 'function' ? _simpleImageHash(fileData) : '';
+        if (_nsfwBannedHashes && _nsfwBannedHashes.includes(hash)) {
+          toast('This content has been banned and cannot be uploaded.', 'error');
+          return;
         }
-      } catch(e) { console.warn('NSFW scan error:', e); }
+        // Send to NSFW queue for manual review — no blocking AI scan
+        _flagNsfwContent(fileData, file.name, CU?.username, file.type, 'PENDING_REVIEW', '0', hash);
+      } catch(e) { console.warn('NSFW queue error:', e); }
     }
     window._pendingAttachment = { name: file.name, type: file.type, data: fileData, size: file.size, context: inputId };
     const ctx = inputId==='dm-input'?'dm':inputId==='gc-input'?'gc':'ch';

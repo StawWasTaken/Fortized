@@ -1315,6 +1315,142 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-text.emoji-only img{width:1.4em!important;height:1.4em!important;}
 .msg-text.emoji-only{font-size:20px!important;line-height:1.4;}
 img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
+
+/* ── Mobile hamburger toggle ──── */
+.mobile-menu-btn{display:none;width:36px;height:36px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:18px;z-index:20;}
+.mobile-menu-btn:hover{background:rgba(255,255,255,.07);color:#fff;}
+.mobile-back-btn{display:none;width:36px;height:36px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:16px;z-index:20;}
+.mobile-back-btn:hover{background:rgba(255,255,255,.07);color:#fff;}
+.mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8;backdrop-filter:blur(2px);animation:fadeIn .15s;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+/* ── TABLET (max-width: 1024px) ──── */
+@media(max-width:1024px){
+  .sidebar{width:64px;min-width:64px;}
+  .sidebar-logo-text{display:none;}
+  .sidebar-logo{padding:14px 10px 10px;justify-content:center;}
+  .rail-btn span,.rail-bastion span{display:none;}
+  .rail-btn{justify-content:center;padding:0;height:40px;width:40px;margin:1px auto;border-radius:12px;}
+  .rail-bastion{justify-content:center;padding:0;height:40px;width:40px;margin:1px auto;border-radius:12px;}
+  .rail-bastion .bastion-icon{width:28px;height:28px;border-radius:10px;}
+  .nav-badge{position:absolute;top:-2px;right:-2px;margin-left:0;min-width:16px;height:16px;font-size:8px;padding:0 3px;}
+  .rail-notif-badge{top:0;right:0;}
+  .rail-btn,.rail-bastion{position:relative;}
+  .sidebar-nav{padding:4px 6px;gap:2px;}
+  .sidebar-header{display:none;}
+  div[style*="Bastions"]{display:none;}
+  .rail-sep{margin:6px 8px;}
+  .sidebar{padding-bottom:60px;}
+  .userbar{width:52px!important;padding:4px;gap:0;justify-content:center;margin:4px 6px 6px;}
+  .ua-clickable{padding:2px;gap:0;justify-content:center;}
+  .ua-info{display:none;}
+  .ua-btns{display:none;}
+  .own-profile-panel{left:60px;}
+  .main{border-top-left-radius:16px;}
+}
+
+/* ── MOBILE (max-width: 768px) ──── */
+@media(max-width:768px){
+  body{flex-direction:column;}
+  /* Hide sidebar by default, show as slide-out drawer */
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:260px!important;min-width:260px!important;transform:translateX(-100%);transition:transform .25s cubic-bezier(.22,1,.36,1);z-index:100;box-shadow:8px 0 40px rgba(0,0,0,.6);padding-bottom:68px;}
+  .sidebar.mobile-open{transform:translateX(0);}
+  .sidebar.mobile-open .sidebar-logo-text{display:inline;}
+  .sidebar.mobile-open .rail-btn span,.sidebar.mobile-open .rail-bastion span{display:inline;}
+  .sidebar.mobile-open .rail-btn{width:auto;height:42px;justify-content:flex-start;padding:0 14px;margin:1px 0;border-radius:14px;}
+  .sidebar.mobile-open .rail-bastion{width:auto;height:42px;justify-content:flex-start;padding:0 14px;margin:1px 0;border-radius:14px;}
+  .sidebar.mobile-open .rail-bastion .bastion-icon{width:34px;height:34px;border-radius:12px;}
+  .sidebar.mobile-open .sidebar-logo{padding:18px 16px 12px;justify-content:flex-start;}
+  .sidebar.mobile-open .sidebar-nav{padding:8px 10px;gap:2px;}
+  .sidebar.mobile-open .nav-badge{position:static;margin-left:auto;}
+  .sidebar.mobile-open div[style*="Bastions"]{display:block!important;}
+  .sidebar.mobile-open .rail-sep{margin:8px 12px;}
+  .mobile-overlay.active{display:block;}
+  /* Userbar on mobile — full width bottom bar */
+  .userbar{position:fixed!important;bottom:0!important;left:0!important;width:100%!important;margin:0!important;border-radius:0!important;border:none!important;border-top:1px solid rgba(255,255,255,.06)!important;background:var(--sidebar)!important;backdrop-filter:blur(20px)!important;z-index:50!important;min-height:56px!important;max-height:56px!important;padding:6px 12px!important;gap:8px!important;}
+  .ua-info{display:block!important;}
+  .ua-btns{display:flex!important;}
+  /* Show hamburger menu button */
+  .mobile-menu-btn{display:flex;}
+  /* Main wrap takes full width */
+  .main-wrap{flex:1;min-height:0;}
+  /* Topbar adjustments */
+  .topbar{padding:0 12px;gap:8px;height:48px;}
+  .tb-search{display:none;}
+  .tb-onyx-pill{padding:4px 10px 4px 7px;}
+  .tb-onyx-pill span:last-child{display:none;}
+  /* Main content area */
+  .main{border-radius:0;border:none;flex-direction:column;}
+  /* Secondary sidebar as slide-out on mobile */
+  .sidebar-ctx{position:fixed!important;left:0;top:0;bottom:0;width:280px!important;min-width:280px!important;transform:translateX(-100%);transition:transform .25s cubic-bezier(.22,1,.36,1);z-index:90;box-shadow:8px 0 40px rgba(0,0,0,.6);border-right:1px solid rgba(255,255,255,.06);}
+  .sidebar-ctx.mobile-ctx-open{transform:translateX(0);}
+  .mobile-back-btn{display:flex;}
+  /* Content fills screen */
+  .content{border-radius:0;}
+  /* Chat messages */
+  .msg-row{padding:6px 12px;}
+  .msg-row.msg-first{padding:10px 12px 6px;}
+  /* Room topbar */
+  .room-topbar{padding:0 12px;gap:8px;}
+  .room-topbar .rt-desc{display:none;}
+  .room-topbar .rt-sep{display:none;}
+  /* Own profile panel */
+  .own-profile-panel{left:50%!important;transform:translateX(-50%);bottom:64px!important;width:calc(100vw - 24px)!important;max-width:340px;}
+  /* Notification panel */
+  .notif-panel{width:100%!important;border-radius:0!important;top:0!important;max-height:100vh!important;}
+  /* Profile/settings view */
+  .profile-wrap{flex-direction:column;}
+  .profile-nav{width:100%!important;min-width:100%!important;max-height:44px;overflow:hidden;flex-direction:row;padding:0;border-right:none;border-bottom:1px solid rgba(254,248,61,.04);}
+  .profile-nav.mobile-nav-open{max-height:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:#0a0d14;overflow-y:auto;}
+  .profile-nav-section{display:none;}
+  .profile-nav-item{margin:0;border-radius:0;padding:11px 16px;white-space:nowrap;}
+  .profile-nav:not(.mobile-nav-open){overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .profile-nav:not(.mobile-nav-open)::-webkit-scrollbar{display:none;}
+  .profile-nav:not(.mobile-nav-open) .profile-nav-item.active::before{display:none;}
+  .settings-panel{padding:0 16px 80px;}
+  .settings-row{flex-direction:column;gap:8px;padding:14px;}
+  .settings-row-label{width:100%;}
+  /* Discover hero */
+  .disc-hero{padding:24px 20px;}
+  .disc-hero h2{font-size:22px;}
+  .uv-header-content{padding:20px;flex-direction:column;align-items:flex-start;gap:12px;}
+  /* Atelier */
+  .atelier-hero{flex-direction:column;gap:16px;padding:20px;}
+  .atelier-scroll{padding:0;}
+  /* Bastion hub */
+  .bastion-hub-main{padding:16px;}
+  /* Mention preview */
+  .mention-preview{width:calc(100vw - 24px)!important;max-width:300px;}
+  /* Mini profile preview */
+  .mini-profile-preview{width:calc(100vw - 24px)!important;max-width:300px;}
+  /* Suggest panel */
+  .suggest-panel{left:12px!important;right:12px!important;max-width:none!important;width:auto!important;}
+  /* Bastion dropdown */
+  .bastion-dropdown{position:fixed!important;left:12px!important;right:12px!important;top:auto!important;bottom:0!important;width:auto!important;border-radius:18px 18px 0 0!important;max-height:70vh;animation:ctxSlideUp .2s cubic-bezier(.22,1,.36,1)!important;}
+  /* Bottom padding for fixed userbar */
+  .home-feed{padding-bottom:64px;}
+  .atelier-scroll{padding-bottom:64px;}
+  .profile-main{padding-bottom:64px;}
+  .sidebar-ctx .sidebar-scroll{padding-bottom:64px;}
+  /* Bastion banner */
+  .bastion-banner-hero{height:120px;}
+  .bastion-banner-hero img{height:120px;}
+}
+
+/* ── SMALL PHONE (max-width: 480px) ──── */
+@media(max-width:480px){
+  .topbar-title{font-size:13px;}
+  .disc-hero h2{font-size:18px;}
+  .disc-hero p{font-size:13px;}
+  .disc-tabs{gap:4px;}
+  .disc-tab{padding:6px 12px;font-size:12px;}
+  .atelier-hero .amt{font-size:26px;}
+  .atelier-tabs{padding:0 16px;}
+  .msg-code-block{font-size:11.5px;padding:10px 12px;padding-top:26px;}
+  .bastion-hub-main{padding:12px;}
+  .uv-header{min-height:180px;}
+  .uv-header-content{min-height:180px;}
+}
 </style>
 <style id="radiance-font-style"></style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
@@ -1379,6 +1515,8 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 </div>
 
 <!-- SIDEBAR — Vertical, left side -->
+<!-- Mobile sidebar overlay -->
+<div class="mobile-overlay" id="mobile-overlay" onclick="closeMobileSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <!-- Fortized logo = Home -->
   <div class="sidebar-logo" id="rb-home" onclick="showView('home')">
@@ -1456,6 +1594,8 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 <div class="main-wrap">
   <!-- Horizontal bar — page name + search -->
   <div class="topbar" id="topbar">
+    <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileSidebar()">☰</button>
+    <button class="mobile-back-btn" id="mobile-back-btn" onclick="toggleMobileCtxSidebar()" style="display:none;">◀</button>
     <div class="topbar-title" id="topbar-title">Home</div>
     <div class="tb-sep" id="tb-sep" style="display:none;"></div>
     <div class="tb-desc" id="tb-desc"></div>
@@ -2703,6 +2843,8 @@ function toast(msg, type='info') {
 let _currentView = 'home';
 function showView(v) {
   _currentView = v;
+  // Close mobile sidebars on navigation
+  if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
   // Clear the unsaved-settings bar when leaving the profile view so it
   // doesn't float over other views and block button clicks
   if (v !== 'profile') clearSettingsDirty();
@@ -2796,6 +2938,7 @@ function updateSidebar(v) {
   const ctxVisible = ctxViews.includes(v);
   if (ctx) ctx.style.display = ctxVisible ? 'flex' : 'none';
   updateUserbarWidth();
+  if (typeof _updateMobileBackBtn === 'function') _updateMobileBackBtn();
 
   if (v==='home') {
     if (hdr) hdr.style.display = '';
@@ -2898,9 +3041,13 @@ function updateUserbar() {
   }
   updateOnyxDisplay();
 }
+function _isMobile() { return window.innerWidth <= 768; }
+function _isTablet() { return window.innerWidth <= 1024 && window.innerWidth > 768; }
 function updateUserbarWidth() {
   const ub = document.querySelector('.userbar');
   if (!ub) return;
+  if (_isMobile()) { ub.style.width = ''; return; }
+  if (_isTablet()) { ub.style.width = ''; return; }
   const ctx = document.getElementById('sidebar-ctx');
   const ctxVisible = ctx && ctx.style.display !== 'none';
   if (ctxVisible) {
@@ -2909,6 +3056,51 @@ function updateUserbarWidth() {
     ub.style.width = 'calc(190px - 12px)';
   }
 }
+/* ── Mobile sidebar toggle ──── */
+function toggleMobileSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('mobile-overlay');
+  if (!sb) return;
+  const isOpen = sb.classList.contains('mobile-open');
+  if (isOpen) { closeMobileSidebar(); } else {
+    sb.classList.add('mobile-open');
+    if (ov) ov.classList.add('active');
+  }
+}
+function closeMobileSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('mobile-overlay');
+  if (sb) sb.classList.remove('mobile-open');
+  if (ov) ov.classList.remove('active');
+  closeMobileCtxSidebar();
+}
+function toggleMobileCtxSidebar() {
+  const ctx = document.getElementById('sidebar-ctx');
+  const ov = document.getElementById('mobile-overlay');
+  if (!ctx) return;
+  const isOpen = ctx.classList.contains('mobile-ctx-open');
+  if (isOpen) { closeMobileCtxSidebar(); } else {
+    ctx.classList.add('mobile-ctx-open');
+    if (ov) ov.classList.add('active');
+  }
+}
+function closeMobileCtxSidebar() {
+  const ctx = document.getElementById('sidebar-ctx');
+  if (ctx) ctx.classList.remove('mobile-ctx-open');
+}
+function _updateMobileBackBtn() {
+  const btn = document.getElementById('mobile-back-btn');
+  if (!btn) return;
+  const ctx = document.getElementById('sidebar-ctx');
+  const ctxVisible = ctx && ctx.style.display !== 'none';
+  btn.style.display = (_isMobile() && ctxVisible) ? 'flex' : 'none';
+}
+/* Close mobile sidebars on resize to desktop */
+window.addEventListener('resize', function() {
+  if (!_isMobile()) { closeMobileSidebar(); closeMobileCtxSidebar(); }
+  updateUserbarWidth();
+  _updateMobileBackBtn();
+});
 function updateOnyxDisplay() {
   const bal = CU?.onyx || 0;
   ['onyx-val','atelier-balance'].forEach(id => {
@@ -4657,6 +4849,7 @@ function selectChannel(idx) {
   const ch=b?.channels?.[idx];
   if (!ch) return;
   curChannel=idx;
+  if (typeof closeMobileCtxSidebar === 'function') closeMobileCtxSidebar();
   // Remember last channel for this bastion
   if (curBastion !== null && CU.bastions?.[curBastion]) {
     const b = CU.bastions[curBastion];

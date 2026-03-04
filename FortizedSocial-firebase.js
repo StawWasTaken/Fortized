@@ -96,6 +96,13 @@ const FortizedSocial = (() => {
     if (!password || password.length < 6)
       return { ok: false, msg: 'Password must be 6+ characters.' };
 
+    // Check if registrations are disabled globally
+    try {
+      const gsSnap = await db.ref('admin/global_settings/disableRegistration').get();
+      if (gsSnap.exists() && gsSnap.val() === true)
+        return { ok: false, msg: 'New registrations are currently disabled. Please try again later.' };
+    } catch(e) { /* allow registration if settings check fails */ }
+
     // Block usernames that impersonate protected names
     if (isProtectedUsername(username))
       return { ok: false, msg: 'This username is not available.' };

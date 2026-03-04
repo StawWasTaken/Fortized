@@ -6104,6 +6104,116 @@ function setCBVis(v,btn){
   document.querySelectorAll('.vis-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
 }
+// ── Roblox-style Ban / Suspend / Warning Screens ──
+function _showBanScreen(ban) {
+  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:99999;background:#393b3d;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
+    <div style="background:#393b3d;width:100%;max-width:580px;padding:48px 40px;text-align:center;">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" style="margin-bottom:18px;">
+        <circle cx="12" cy="12" r="11" stroke="#ff4444" stroke-width="2" fill="none"/>
+        <path d="M8 8l8 8M16 8l-8 8" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px;">Account Banned</div>
+      <div style="font-size:14px;color:#bbb;margin-bottom:28px;">Our content monitors have determined that your behavior at Fortized has been in violation of our Terms of Use.</div>
+      <div style="background:#2a2c2e;border-radius:10px;padding:20px 24px;text-align:left;margin-bottom:24px;">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+          <span style="color:#999;font-size:13px;">Reviewed</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;">${ban.bannedAt ? new Date(ban.bannedAt).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'Unknown'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+          <span style="color:#999;font-size:13px;">Moderator Note</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;">${ban.reason ? escapeHTML(ban.reason) : 'No reason provided'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+          <span style="color:#999;font-size:13px;">Offensive Item</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;">Account behavior</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;">
+          <span style="color:#999;font-size:13px;">Actioned by</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;">${ban.bannedBy || 'Fortized Moderation'}</span>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#888;margin-bottom:24px;">If you wish to appeal, please contact <span style="color:#60a5fa;">support@fortized.com</span></div>
+      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#ff4444;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Log Out</button>
+    </div>
+  </div>`;
+}
+
+function _showSuspendScreen(data) {
+  const until = data.until ? new Date(data.until) : null;
+  const reason = data.reason || 'No reason provided';
+  const moderator = data.suspendedBy || 'Fortized Moderation';
+  const modMessage = data.moderatorMessage || '';
+  let durationText = until ? until.toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : 'Unknown';
+  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:99999;background:#393b3d;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
+    <div style="background:#393b3d;width:100%;max-width:580px;padding:48px 40px;text-align:center;">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" style="margin-bottom:18px;">
+        <circle cx="12" cy="12" r="11" stroke="#f59e0b" stroke-width="2" fill="none"/>
+        <rect x="11" y="6" width="2" height="7" rx="1" fill="#f59e0b"/>
+        <circle cx="12" cy="16.5" r="1.2" fill="#f59e0b"/>
+      </svg>
+      <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px;">Account Suspended</div>
+      <div style="font-size:14px;color:#bbb;margin-bottom:28px;">Our content monitors have determined that your behavior at Fortized has been in violation of our Terms of Use. As a result, your account has been temporarily suspended.</div>
+      <div style="background:#2a2c2e;border-radius:10px;padding:20px 24px;text-align:left;margin-bottom:24px;">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+          <span style="color:#999;font-size:13px;">Reviewed</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;">${data.suspendedAt ? new Date(data.suspendedAt).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'Today'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+          <span style="color:#999;font-size:13px;">Reason</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;">${escapeHTML(reason)}</span>
+        </div>
+        ${modMessage ? `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+          <span style="color:#999;font-size:13px;">Moderator Message</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;">${escapeHTML(modMessage)}</span>
+        </div>` : ''}
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+          <span style="color:#999;font-size:13px;">Reactivation</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;">${durationText}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;">
+          <span style="color:#999;font-size:13px;">Actioned by</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;">${escapeHTML(moderator)}</span>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#888;margin-bottom:24px;">Your account will be reactivated on <span style="color:#f59e0b;font-weight:600;">${durationText}</span></div>
+      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f59e0b;border:none;border-radius:8px;color:#000;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Log Out</button>
+    </div>
+  </div>`;
+}
+
+function _showWarningOverlay(reason, issuedBy) {
+  if (document.getElementById('ftz-warning-overlay')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'ftz-warning-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .3s ease;';
+  overlay.innerHTML = `<div style="background:#393b3d;width:100%;max-width:520px;padding:40px 36px;text-align:center;border-radius:14px;">
+    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" style="margin-bottom:16px;">
+      <path d="M12 2L1 21h22L12 2z" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linejoin="round"/>
+      <rect x="11" y="9" width="2" height="5" rx="1" fill="#f59e0b"/>
+      <circle cx="12" cy="17" r="1.2" fill="#f59e0b"/>
+    </svg>
+    <div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.3px;">Warning</div>
+    <div style="font-size:14px;color:#bbb;margin-bottom:24px;">You have been issued a warning by a Fortized moderator.</div>
+    <div style="background:#2a2c2e;border-radius:10px;padding:18px 22px;text-align:left;margin-bottom:24px;">
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+        <span style="color:#999;font-size:13px;">Issued</span>
+        <span style="color:#fff;font-size:13px;font-weight:600;">${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+        <span style="color:#999;font-size:13px;">Reason</span>
+        <span style="color:#fff;font-size:13px;font-weight:600;max-width:260px;text-align:right;">${escapeHTML(reason)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;">
+        <span style="color:#999;font-size:13px;">Actioned by</span>
+        <span style="color:#fff;font-size:13px;font-weight:600;">${escapeHTML(issuedBy || 'Fortized Moderation')}</span>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:20px;">Please review our Terms of Use to avoid further action on your account.</div>
+    <button onclick="document.getElementById('ftz-warning-overlay').remove()" style="padding:12px 48px;background:#f59e0b;border:none;border-radius:8px;color:#000;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Acknowledge</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
 function banUser(username,permanent=true){
   if (username === JOYSTER_ACCOUNT) { toast('Joyster is protected and cannot be banned.','error'); return; }
   showCustomInput('Ban Reason','Enter reason:',reason=>{
@@ -6188,18 +6298,21 @@ function updateDOBField(){
     const banSnap = await firebase.database().ref('admin/bans/' + username).get();
     if (banSnap.exists()) {
       const ban = banSnap.val();
-      document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0d1018;color:#fff;font-family:system-ui,sans-serif;"><div style="text-align:center;max-width:420px;padding:32px;"><div style="font-size:48px;margin-bottom:16px;">🚫</div><div style="font-size:22px;font-weight:700;margin-bottom:8px;">Account Banned</div><div style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:16px;">Your account has been banned${ban.reason?' for: '+ban.reason:''}.</div><div style="font-size:12px;color:rgba(255,255,255,.3);">Banned by ${ban.bannedBy||'admin'}${ban.bannedAt?' on '+new Date(ban.bannedAt).toLocaleDateString():''}</div><button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="margin-top:24px;padding:10px 28px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);border-radius:8px;color:#f87171;font-size:13px;cursor:pointer;font-weight:600;">Log Out</button></div></div>`;
+      _showBanScreen(ban);
       return;
     }
     // Check suspension
-    const suspSnap = await firebase.database().ref('users/' + username + '/suspendedUntil').get();
-    if (suspSnap.exists()) {
-      const until = new Date(suspSnap.val());
+    const suspSnap = await firebase.database().ref('users/' + username + '/suspension').get();
+    const suspLegacy = !suspSnap.exists() ? await firebase.database().ref('users/' + username + '/suspendedUntil').get() : null;
+    const suspData = suspSnap.exists() ? suspSnap.val() : (suspLegacy && suspLegacy.exists() ? { until: suspLegacy.val() } : null);
+    if (suspData) {
+      const until = new Date(suspData.until);
       if (until > new Date()) {
-        document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0d1018;color:#fff;font-family:system-ui,sans-serif;"><div style="text-align:center;max-width:420px;padding:32px;"><div style="font-size:48px;margin-bottom:16px;">⏳</div><div style="font-size:22px;font-weight:700;margin-bottom:8px;">Account Suspended</div><div style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:16px;">Your account is suspended until ${until.toLocaleString()}.</div><button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="margin-top:24px;padding:10px 28px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;color:#f59e0b;font-size:13px;cursor:pointer;font-weight:600;">Log Out</button></div></div>`;
+        _showSuspendScreen(suspData);
         return;
       } else {
         // Suspension expired — clear it
+        try { await firebase.database().ref('users/' + username + '/suspension').remove(); } catch {}
         try { await firebase.database().ref('users/' + username + '/suspendedUntil').remove(); } catch {}
       }
     }
@@ -6290,18 +6403,25 @@ function updateDOBField(){
   _listenClearSessions();
   // Listen for real-time ban enforcement — kick user immediately if banned while online
   firebase.database().ref('admin/bans/' + CU.username).on('value', snap => {
+    if (snap.exists()) _showBanScreen(snap.val());
+  });
+  // Listen for real-time suspension enforcement (new path)
+  firebase.database().ref('users/' + CU.username + '/suspension').on('value', snap => {
     if (snap.exists()) {
-      const ban = snap.val();
-      document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0d1018;color:#fff;font-family:system-ui,sans-serif;"><div style="text-align:center;max-width:420px;padding:32px;"><div style="font-size:48px;margin-bottom:16px;">🚫</div><div style="font-size:22px;font-weight:700;margin-bottom:8px;">Account Banned</div><div style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:16px;">Your account has been banned${ban.reason?' for: '+ban.reason:''}.</div><div style="font-size:12px;color:rgba(255,255,255,.3);">Banned by ${ban.bannedBy||'admin'}${ban.bannedAt?' on '+new Date(ban.bannedAt).toLocaleDateString():''}</div><button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="margin-top:24px;padding:10px 28px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);border-radius:8px;color:#f87171;font-size:13px;cursor:pointer;font-weight:600;">Log Out</button></div></div>`;
+      const data = snap.val();
+      if (new Date(data.until) > new Date()) _showSuspendScreen(data);
     }
   });
-  // Listen for real-time suspension enforcement
+  // Listen for real-time suspension enforcement (legacy path)
   firebase.database().ref('users/' + CU.username + '/suspendedUntil').on('value', snap => {
+    if (snap.exists() && new Date(snap.val()) > new Date()) _showSuspendScreen({ until: snap.val() });
+  });
+  // Listen for real-time warnings
+  firebase.database().ref('users/' + CU.username + '/activeWarning').on('value', snap => {
     if (snap.exists()) {
-      const until = new Date(snap.val());
-      if (until > new Date()) {
-        document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0d1018;color:#fff;font-family:system-ui,sans-serif;"><div style="text-align:center;max-width:420px;padding:32px;"><div style="font-size:48px;margin-bottom:16px;">⏳</div><div style="font-size:22px;font-weight:700;margin-bottom:8px;">Account Suspended</div><div style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:16px;">Your account is suspended until ${until.toLocaleString()}.</div><button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="margin-top:24px;padding:10px 28px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;color:#f59e0b;font-size:13px;cursor:pointer;font-weight:600;">Log Out</button></div></div>`;
-      }
+      const w = snap.val();
+      _showWarningOverlay(w.reason || 'Violation of Terms of Use', w.issuedBy);
+      firebase.database().ref('users/' + CU.username + '/activeWarning').remove();
     }
   });
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
@@ -10972,127 +11092,60 @@ async function _loadAdminPage(tab) {
       }
     } catch {}
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:20px;">Global Settings</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:700px;">
-        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
-          <div style="font-weight:700;font-size:13.5px;margin-bottom:14px;">Platform Controls</div>
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
-            <input type="checkbox" id="gs-maintenance" ${gs.maintenanceMode?'checked':''} onchange="_updateGlobalSetting('maintenanceMode',this.checked)">
-            <div>
-              <span style="font-size:13px;font-weight:600;">Maintenance Mode</span>
-              <div style="font-size:10.5px;color:${gs.maintenanceMode?'#f87171':'rgba(255,255,255,.3)'};">${gs.maintenanceMode?'⚠️ ACTIVE — Non-staff users see maintenance screen':'Disabled — Platform is live'}</div>
-            </div>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
-            <input type="checkbox" id="gs-registration" ${gs.disableRegistration?'checked':''} onchange="_updateGlobalSetting('disableRegistration',this.checked)">
-            <div>
-              <span style="font-size:13px;">Disable New Registrations</span>
-              <div style="font-size:10.5px;color:${gs.disableRegistration?'#f87171':'rgba(255,255,255,.25)'};">${gs.disableRegistration?'⛔ ACTIVE — Signup page is blocked':'Signups are open'}</div>
-            </div>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
-            <input type="checkbox" id="gs-nsfw-scan" ${gs.enableNSFWScan!==false?'checked':''} onchange="_updateGlobalSetting('enableNSFWScan',this.checked)">
-            <div>
-              <span style="font-size:13px;">Enable NSFW AI Scanner</span>
-              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Scans uploaded images, GIFs & videos for NSFW content</div>
-            </div>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;">
-            <input type="checkbox" ${gs.disableBastionCreation?'checked':''} onchange="_updateGlobalSetting('disableBastionCreation',this.checked)">
-            <div>
-              <span style="font-size:13px;">Disable Bastion Creation</span>
-              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Prevent non-staff from creating new bastions</div>
-            </div>
-          </label>
-        </div>
-        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
-          <div style="font-weight:700;font-size:13.5px;margin-bottom:14px;">Safety & Limits</div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Max Accounts Per Email</div>
-            <input class="settings-input" type="number" value="${gs.maxAccountsPerEmail||3}" min="1" max="10" style="max-width:100px;" onchange="_updateGlobalSetting('maxAccountsPerEmail',parseInt(this.value))">
+    main.innerHTML = `<div style="padding:20px 24px;height:100%;overflow:auto;">
+      <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;margin-bottom:14px;">Global Settings</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <!-- Column 1: Controls & Branding -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
+            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);">Platform Controls</div>
+            <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.maintenanceMode?'checked':''} onchange="_updateGlobalSetting('maintenanceMode',this.checked)"><span style="font-size:12px;${gs.maintenanceMode?'color:#f87171;font-weight:600;':''}">Maintenance Mode</span></label>
+            <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.disableRegistration?'checked':''} onchange="_updateGlobalSetting('disableRegistration',this.checked)"><span style="font-size:12px;">Disable Registrations</span></label>
+            <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.enableNSFWScan!==false?'checked':''} onchange="_updateGlobalSetting('enableNSFWScan',this.checked)"><span style="font-size:12px;">NSFW AI Scanner</span></label>
+            <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.disableBastionCreation?'checked':''} onchange="_updateGlobalSetting('disableBastionCreation',this.checked)"><span style="font-size:12px;">Disable Bastion Creation</span></label>
+            <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.requireEmailVerification?'checked':''} onchange="_updateGlobalSetting('requireEmailVerification',this.checked)"><span style="font-size:12px;">Require Email for Signup</span></label>
           </div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Min Account Age (years)</div>
-            <input class="settings-input" type="number" value="${gs.minAge||13}" min="13" max="18" style="max-width:100px;" onchange="_updateGlobalSetting('minAge',parseInt(this.value))">
-          </div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Daily Onyx Claim Amount</div>
-            <input class="settings-input" type="number" value="${gs.dailyOnyxAmount||25}" min="1" max="1000" style="max-width:100px;" onchange="_updateGlobalSetting('dailyOnyxAmount',parseInt(this.value))">
-          </div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Max Message Length</div>
-            <input class="settings-input" type="number" value="${gs.maxMessageLength||2000}" min="100" max="10000" style="max-width:100px;" onchange="_updateGlobalSetting('maxMessageLength',parseInt(this.value))">
-          </div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Max Upload Size (MB)</div>
-            <input class="settings-input" type="number" value="${gs.maxUploadSizeMB||10}" min="1" max="100" style="max-width:100px;" onchange="_updateGlobalSetting('maxUploadSizeMB',parseInt(this.value))">
-          </div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Max Friends Per User</div>
-            <input class="settings-input" type="number" value="${gs.maxFriends||200}" min="10" max="1000" style="max-width:100px;" onchange="_updateGlobalSetting('maxFriends',parseInt(this.value))">
-          </div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Max Bastions Per User</div>
-            <input class="settings-input" type="number" value="${gs.maxBastionsPerUser||20}" min="1" max="100" style="max-width:100px;" onchange="_updateGlobalSetting('maxBastionsPerUser',parseInt(this.value))">
-          </div>
-          <div>
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">NSFW Banned Content Hashes</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.35);">${_nsfwBannedHashes.length} banned content signatures</div>
+          <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
+            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);">Branding</div>
+            <div style="margin-bottom:6px;"><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Platform Name</div><input class="settings-input" type="text" value="${escapeHTML(gs.platformName||'Fortized')}" style="width:100%;font-size:12px;padding:6px 8px;" onchange="_updateGlobalSetting('platformName',this.value)"></div>
+            <div style="margin-bottom:6px;"><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Welcome Message</div><input class="settings-input" type="text" value="${escapeHTML(gs.welcomeMessage||'')}" placeholder="Welcome to Fortized!" style="width:100%;font-size:12px;padding:6px 8px;" onchange="_updateGlobalSetting('welcomeMessage',this.value)"></div>
+            <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Login Page Notice</div><input class="settings-input" type="text" value="${escapeHTML(gs.loginNotice||'')}" placeholder="Optional notice" style="width:100%;font-size:12px;padding:6px 8px;" onchange="_updateGlobalSetting('loginNotice',this.value)"></div>
           </div>
         </div>
-      </div>
-      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:700px;">
-        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
-          <div style="font-weight:700;font-size:13.5px;margin-bottom:14px;">Appearance & Branding</div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Platform Name</div>
-            <input class="settings-input" type="text" value="${escapeHTML(gs.platformName||'Fortized')}" style="max-width:200px;" onchange="_updateGlobalSetting('platformName',this.value)">
-          </div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Welcome Message (shown to new users)</div>
-            <input class="settings-input" type="text" value="${escapeHTML(gs.welcomeMessage||'')}" placeholder="Welcome to Fortized!" style="max-width:300px;" onchange="_updateGlobalSetting('welcomeMessage',this.value)">
-          </div>
-          <div>
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Login Page Notice</div>
-            <input class="settings-input" type="text" value="${escapeHTML(gs.loginNotice||'')}" placeholder="Optional notice on login page" style="max-width:300px;" onchange="_updateGlobalSetting('loginNotice',this.value)">
+        <!-- Column 2: Limits -->
+        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
+          <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);">Limits</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;">
+            <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Accounts/Email</div><input class="settings-input" type="number" value="${gs.maxAccountsPerEmail||3}" min="1" max="10" style="width:100%;font-size:12px;padding:5px 7px;" onchange="_updateGlobalSetting('maxAccountsPerEmail',parseInt(this.value))"></div>
+            <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Min Age</div><input class="settings-input" type="number" value="${gs.minAge||13}" min="13" max="18" style="width:100%;font-size:12px;padding:5px 7px;" onchange="_updateGlobalSetting('minAge',parseInt(this.value))"></div>
+            <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Daily Onyx</div><input class="settings-input" type="number" value="${gs.dailyOnyxAmount||25}" min="1" max="1000" style="width:100%;font-size:12px;padding:5px 7px;" onchange="_updateGlobalSetting('dailyOnyxAmount',parseInt(this.value))"></div>
+            <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Max Msg Length</div><input class="settings-input" type="number" value="${gs.maxMessageLength||2000}" min="100" max="10000" style="width:100%;font-size:12px;padding:5px 7px;" onchange="_updateGlobalSetting('maxMessageLength',parseInt(this.value))"></div>
+            <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Upload MB</div><input class="settings-input" type="number" value="${gs.maxUploadSizeMB||10}" min="1" max="100" style="width:100%;font-size:12px;padding:5px 7px;" onchange="_updateGlobalSetting('maxUploadSizeMB',parseInt(this.value))"></div>
+            <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Max Friends</div><input class="settings-input" type="number" value="${gs.maxFriends||200}" min="10" max="1000" style="width:100%;font-size:12px;padding:5px 7px;" onchange="_updateGlobalSetting('maxFriends',parseInt(this.value))"></div>
+            <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Max Bastions</div><input class="settings-input" type="number" value="${gs.maxBastionsPerUser||20}" min="1" max="100" style="width:100%;font-size:12px;padding:5px 7px;" onchange="_updateGlobalSetting('maxBastionsPerUser',parseInt(this.value))"></div>
+            <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Msg Cooldown (s)</div><input class="settings-input" type="number" value="${gs.messageCooldown||0}" min="0" max="60" style="width:100%;font-size:12px;padding:5px 7px;" onchange="_updateGlobalSetting('messageCooldown',parseInt(this.value))"></div>
+            <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">FR Cooldown (s)</div><input class="settings-input" type="number" value="${gs.friendRequestCooldown||0}" min="0" max="300" style="width:100%;font-size:12px;padding:5px 7px;" onchange="_updateGlobalSetting('friendRequestCooldown',parseInt(this.value))"></div>
+            <div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">NSFW Hashes</div><div style="font-size:11px;color:rgba(255,255,255,.3);padding:5px 0;">${_nsfwBannedHashes.length} banned</div></div>
           </div>
         </div>
-        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
-          <div style="font-weight:700;font-size:13.5px;margin-bottom:14px;">Rate Limiting</div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Message Cooldown (seconds)</div>
-            <input class="settings-input" type="number" value="${gs.messageCooldown||0}" min="0" max="60" style="max-width:100px;" onchange="_updateGlobalSetting('messageCooldown',parseInt(this.value))">
-            <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:2px;">0 = no cooldown</div>
-          </div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Friend Request Cooldown (seconds)</div>
-            <input class="settings-input" type="number" value="${gs.friendRequestCooldown||0}" min="0" max="300" style="max-width:100px;" onchange="_updateGlobalSetting('friendRequestCooldown',parseInt(this.value))">
-            <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:2px;">0 = no cooldown</div>
-          </div>
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;">
-            <input type="checkbox" ${gs.requireEmailVerification?'checked':''} onchange="_updateGlobalSetting('requireEmailVerification',this.checked)">
-            <div>
-              <span style="font-size:13px;">Require Email for Signup</span>
-              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Force email field to be filled on registration</div>
+        <!-- Column 3: Announcement & Danger -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
+            <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);">System Announcement</div>
+            <input class="settings-input" id="gs-announcement" placeholder="Type announcement…" value="${escapeHTML(gs.announcement||'')}" style="width:100%;font-size:12px;padding:6px 8px;margin-bottom:8px;">
+            <div style="display:flex;gap:6px;">
+              <button onclick="_updateGlobalSetting('announcement',document.getElementById('gs-announcement').value);toast('Announcement set','success');" style="padding:6px 14px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:8px;color:var(--accent);cursor:pointer;font-weight:700;font-size:12px;">Set</button>
+              <button onclick="_updateGlobalSetting('announcement','');document.getElementById('gs-announcement').value='';toast('Cleared','success');" style="padding:6px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.5);cursor:pointer;font-size:12px;">Clear</button>
             </div>
-          </label>
-        </div>
-      </div>
-      <div style="margin-top:16px;background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;max-width:700px;">
-        <div style="font-weight:700;font-size:13.5px;margin-bottom:14px;">System Announcement</div>
-        <input class="settings-input" id="gs-announcement" placeholder="Type a system-wide announcement…" value="${escapeHTML(gs.announcement||'')}" style="margin-bottom:10px;">
-        <div style="display:flex;gap:8px;">
-          <button onclick="_updateGlobalSetting('announcement',document.getElementById('gs-announcement').value);toast('Announcement set','success');" style="padding:8px 16px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:9px;color:var(--accent);cursor:pointer;font-weight:700;">Set Announcement</button>
-          <button onclick="_updateGlobalSetting('announcement','');document.getElementById('gs-announcement').value='';toast('Announcement cleared','success');" style="padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;">Clear</button>
-        </div>
-      </div>
-      <div style="margin-top:16px;background:var(--panel,#101420);border:1px solid rgba(248,113,113,.15);border-radius:12px;padding:18px;max-width:700px;">
-        <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;color:#f87171;">Danger Zone</div>
-        <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:14px;">These actions affect all connected users immediately.</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button onclick="_forceRefreshAllUsers()" style="padding:10px 20px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;color:#f87171;cursor:pointer;font-weight:700;font-size:13px;transition:.15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Force Refresh All Users</button>
-          <button onclick="_clearAllSessions()" style="padding:10px 20px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;color:#f87171;cursor:pointer;font-weight:700;font-size:13px;transition:.15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Clear All Sessions</button>
+          </div>
+          <div style="background:var(--panel,#101420);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 14px;">
+            <div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;color:#f87171;">Danger Zone</div>
+            <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;">Affects all connected users immediately.</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <button onclick="_forceRefreshAllUsers()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">Force Refresh All Users</button>
+              <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">Clear All Sessions</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>`;
@@ -11612,21 +11665,63 @@ function adminActionUser(username, action) {
   } else if (action === 'warn') {
     showCustomInput('Warning Message', 'Enter warning reason:', async (reason) => {
       if (!reason?.trim()) return;
-      // Send warning as notification
+      // Push warning directly to user's screen via Firebase
+      await firebase.database().ref('users/'+username+'/activeWarning').set({ reason, issuedBy: CU.username, issuedAt: new Date().toISOString() }).catch(()=>{});
       await FortizedSocial.addNotification(username, { type: 'system', text: 'Admin Warning: ' + reason }).catch(()=>{});
       logAudit('warn', username, reason);
       toast(`Warning issued to ${username}`, 'success');
     });
   } else if (action === 'suspend') {
-    showCustomInput('Suspension Duration', 'Hours to suspend (e.g. 24):', async (hours) => {
-      const h = parseInt(hours);
-      if (!h || h <= 0) { toast('Enter valid hours','error'); return; }
-      const until = new Date(Date.now() + h*3600000).toISOString();
+    // Show suspension dialog with duration unit picker
+    const _suspDialog = document.createElement('div');
+    _suspDialog.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;font-family:inherit;';
+    _suspDialog.innerHTML=`<div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px 32px;max-width:400px;width:90%;">
+      <div style="font-size:18px;font-weight:800;margin-bottom:16px;color:#fff;">Suspend User</div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Duration</div>
+        <div style="display:flex;gap:8px;">
+          <input id="_susp-amount" class="settings-input" type="number" min="1" value="1" style="flex:1;">
+          <select id="_susp-unit" class="settings-input" style="flex:1;background:var(--channel,#0d1018);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px;">
+            <option value="minutes">Minutes</option>
+            <option value="hours" selected>Hours</option>
+            <option value="days">Days</option>
+            <option value="weeks">Weeks</option>
+            <option value="months">Months</option>
+            <option value="years">Years</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Reason</div>
+        <input id="_susp-reason" class="settings-input" placeholder="Enter reason for suspension">
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Moderator Message (optional)</div>
+        <input id="_susp-msg" class="settings-input" placeholder="Message shown to the user">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button id="_susp-cancel" style="padding:9px 20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;">Cancel</button>
+        <button id="_susp-confirm" style="padding:9px 20px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);border-radius:9px;color:#a855f7;cursor:pointer;font-weight:700;font-family:inherit;">Suspend</button>
+      </div>
+    </div>`;
+    document.body.appendChild(_suspDialog);
+    _suspDialog.querySelector('#_susp-cancel').onclick=()=>_suspDialog.remove();
+    _suspDialog.querySelector('#_susp-confirm').onclick=async()=>{
+      const amount=parseInt(document.getElementById('_susp-amount').value);
+      const unit=document.getElementById('_susp-unit').value;
+      const reason=document.getElementById('_susp-reason').value.trim();
+      const modMsg=document.getElementById('_susp-msg').value.trim();
+      if(!amount||amount<=0){toast('Enter a valid duration','error');return;}
+      if(!reason){toast('Reason is required','error');return;}
+      const multipliers={minutes:60000,hours:3600000,days:86400000,weeks:604800000,months:2592000000,years:31536000000};
+      const until=new Date(Date.now()+amount*(multipliers[unit]||3600000)).toISOString();
+      const suspObj={until,reason,suspendedBy:CU.username,suspendedAt:new Date().toISOString(),moderatorMessage:modMsg,duration:amount+' '+unit};
+      await firebase.database().ref('users/'+username+'/suspension').set(suspObj).catch(()=>{});
       await firebase.database().ref('users/'+username+'/suspendedUntil').set(until).catch(()=>{});
-      await FortizedSocial.addNotification(username, { type: 'system', text: `Your account has been suspended for ${h} hours.` }).catch(()=>{});
-      logAudit('suspend', username, `${h}h suspension`);
-      toast(`${username} suspended for ${h}h`, 'success');
-    });
+      logAudit('suspend',username,`${amount} ${unit} — ${reason}`);
+      toast(`${username} suspended for ${amount} ${unit}`,'success');
+      _suspDialog.remove();
+    };
   } else if (action === 'give_onyx') {
     showCustomInput('Give Onyx', 'Amount to give:', async (amt) => {
       const n = parseInt(amt);

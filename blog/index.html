@@ -572,7 +572,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
       </div>
       <div class="hero-stats fade-up d2">
         <div class="hero-stat">
-          <div class="hero-stat-num">7</div>
+          <div class="hero-stat-num">8</div>
           <div class="hero-stat-label">Articles</div>
         </div>
         <div class="hero-stat-divider"></div>
@@ -657,6 +657,15 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
 <script>
 const ARTICLES = {
+  desktop: {
+    category:'Announcement', date:'March 3, 2026', readTime:'1 min read',
+    authorInitial:'S', authorPillLabel:'Stawdio Group',
+    title:'The Fortress Comes to Your Desktop', bylineName:'Staw',
+    bylineRole:'Founder, Stawdio Group',
+    tagClass:'tag-announce', tagLabel:'Announcement',
+    link:'/download',
+    content:`<p class="lead">Today we're making Fortized available as a desktop application — and it's been one of the most requested features since day one.</p><p>Read the full article on the Download page.</p>`
+  },
   betalive: {
     category:'Launch', date:'February 22, 2026', readTime:'2 min read',
     authorInitial:'S', authorPillLabel:'Stawdio Group',
@@ -746,6 +755,7 @@ function renderArticle(id) {
 
 function openArticle(id) {
   if (!ARTICLES[id]) return;
+  if (ARTICLES[id].link) { window.location.href = ARTICLES[id].link; return; }
   const url = new URL(window.location.href);
   url.searchParams.set('article', id);
   history.pushState({ articleId: id }, '', url.toString());

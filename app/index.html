@@ -474,7 +474,6 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-content-col{flex:1;min-width:0;padding-left:4px;}
 .msg-header{display:flex;align-items:center;gap:4px;margin-bottom:3px;flex-wrap:wrap;}
 .msg-author{font-size:14px;font-weight:600;color:#fff;cursor:pointer;line-height:1.3;}
-.msg-badges{display:inline-flex;align-items:center;}
 .msg-author:hover{text-decoration:underline;}
 .msg-timestamp{font-size:10px;color:rgba(255,255,255,.3);margin-left:4px;font-weight:500;}
 .msg-text{font-size:14.5px;color:rgba(221,227,237,.88);line-height:1.65;word-break:break-word;letter-spacing:.01em;}
@@ -948,7 +947,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .bot-av img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
 .bot-meta{flex:1;min-width:0;}
 .bot-name{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;}
-.bot-name .ftz-badge{width:16px;height:16px;}
+.bot-name .ftz-badge{width:22px;height:22px;}
 .bot-desc{font-size:12px;color:var(--muted-light);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .bot-stats{display:flex;gap:10px;margin-top:6px;font-size:10.5px;color:var(--muted);}
 .bot-perm-tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:10.5px;font-weight:600;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.5);}
@@ -1131,12 +1130,13 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .tmpl-desc{font-size:10.5px;color:var(--muted);}
 
 /* ── BADGE SYSTEM ─────────────────────────────────── */
-.ftz-badge { display:inline-flex;align-items:center;justify-content:center;position:relative;width:20px;height:20px;flex-shrink:0;cursor:pointer;vertical-align:middle;margin:0 1px;transition:transform .15s cubic-bezier(.22,1,.36,1),filter .15s; }
-.ftz-badge:hover { transform:scale(1.2);filter:drop-shadow(0 0 4px currentColor); }
+.ftz-badge { display:inline-flex;align-items:center;justify-content:center;position:relative;width:28px;height:28px;flex-shrink:0;cursor:pointer;vertical-align:middle;margin:0 1px;transition:transform .15s cubic-bezier(.22,1,.36,1),filter .15s; }
+.ftz-badge:hover { transform:scale(1.15);filter:drop-shadow(0 0 6px currentColor); }
 .ftz-badge img { width:100%;height:100%;object-fit:contain;pointer-events:none; }
-.ftz-badge .badge-tooltip { position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) scale(.92);opacity:0;pointer-events:none;white-space:nowrap;padding:6px 10px;border-radius:8px;background:#111319;border:1px solid rgba(255,255,255,.1);color:#c8d0dc;font-size:11px;font-weight:600;letter-spacing:.01em;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.6);transition:opacity .12s,transform .12s cubic-bezier(.22,1,.36,1); }
-.ftz-badge .badge-tooltip::after { content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#111319; }
+.ftz-badge .badge-tooltip { position:fixed;z-index:99999;transform:translateX(-50%) scale(.92);opacity:0;pointer-events:none;white-space:nowrap;padding:7px 12px;border-radius:8px;background:#111319;border:1px solid rgba(255,255,255,.1);color:#c8d0dc;font-size:11.5px;font-weight:600;letter-spacing:.01em;box-shadow:0 8px 24px rgba(0,0,0,.6);transition:opacity .12s,transform .12s cubic-bezier(.22,1,.36,1); }
+.ftz-badge .badge-tooltip::after { content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#111319;pointer-events:none; }
 .ftz-badge:hover .badge-tooltip { opacity:1;transform:translateX(-50%) scale(1); }
+.ftz-badge .badge-tooltip::before { content:'';position:absolute;inset:-8px;z-index:-1; }
 /* Badge glow accents per type */
 .ftz-badge.badge-superadmin { color:#fff93e; }
 .ftz-badge.badge-admin { color:#f87171; }
@@ -1148,7 +1148,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ftz-badge.badge-quest { color:#9ca3af; }
 .ftz-badge.badge-onyx { color:#fff93e; }
 /* Badge row container */
-.ftz-badge-row { display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin-left:4px; }
+.ftz-badge-row { display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:4px; }
 
 /* ── LOADING SKELETON ─────────────────────────────── */
 @keyframes shimmer { 0%{background-position:-600px 0} 100%{background-position:600px 0} }
@@ -2241,6 +2241,7 @@ let discoverTab = 'all';
 let adminAuthed = false;
 let _adminPreviousView = 'home';
 let adminTab = 'dashboard';
+let _adminAutoRefresh = null;
 let quizIdx = 0;
 let quizCorrect = 0;
 let quizAnswers = [];
@@ -3005,7 +3006,7 @@ function setTopbarDMActions() {
   const acts = document.getElementById('tb-actions');
   if (!acts) return;
   acts.innerHTML = `
-    <button class="tb-act-btn" title="Start Call" onclick="toast('Voice calls coming soon','info')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+    <button class="tb-act-btn" title="Voice Call" onclick="if(curDM)startVoiceCall(curDM);else toast('No active DM','error')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
     <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg></button>
     <button class="tb-act-btn" title="Notifications" onclick="toast('Notification settings coming soon','info')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>`;
 }
@@ -5319,7 +5320,6 @@ function appendMessage(container, msg, context, prevAuthor) {
         ${fwdHTML}${replyHTML}
         <div class="msg-header">
           <span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>
-          <span class="msg-badges" data-badges-for="${safeFrom}"></span>
           ${getMsgRoleTag(msg.from, context)}
           <span class="msg-timestamp">·  ${time}</span>
         </div>
@@ -5340,9 +5340,7 @@ function appendMessage(container, msg, context, prevAuthor) {
           if (fontDef) authorEl.style.fontFamily = fontDef.css;
         }
       }
-      // Inject badges next to username
-      const badgeEl = row.querySelector('.msg-badges[data-badges-for="'+CSS.escape(msg.from)+'"]');
-      if (badgeEl) badgeEl.innerHTML = renderBadgesHTML(u);
+      // Badges only shown in profile cards/previews, not in chat messages
     }).catch(()=>{});
   } else {
     const textId='mt-c-'+id.replace(/[^a-z0-9]/gi,'-');
@@ -5522,8 +5520,7 @@ function deleteMsg(msgId, context) {
               const existingContent = col ? col.innerHTML : '';
               const avWrap = next.querySelector('.msg-av-wrap');
               if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
-              if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span><span class="msg-badges" data-badges-for="${safeFrom}"></span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
-              FortizedSocial.getUserByName(fromName).then(u=>{ if(!u)return; const be=next.querySelector('.msg-badges[data-badges-for="'+CSS.escape(fromName)+'"]'); if(be) be.innerHTML=renderBadgesHTML(u); }).catch(()=>{});
+              if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
               FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}}).catch(()=>{});
             }
           }
@@ -6970,6 +6967,28 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
         <span id="crm-prefix" style="color:rgba(255,255,255,.2);font-size:15px;font-weight:600;">#</span>
         <input id="crm-name" type="text" placeholder="new-room" maxlength="50" style="flex:1;background:transparent;border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;padding:12px 0;outline:none;" autocomplete="off" spellcheck="false">
       </div>
+      <!-- Room Preview -->
+      <div style="margin-top:18px;">
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;">Preview</div>
+        <div id="crm-preview" style="background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.02);">
+            <span id="crm-pv-icon" style="color:rgba(255,255,255,.35);display:flex;align-items:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+            <span id="crm-pv-name" style="font-size:14px;font-weight:700;color:#fff;">new-room</span>
+            <span id="crm-pv-type" style="font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(255,249,62,.08);color:rgba(255,249,62,.7);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Text</span>
+          </div>
+          <div style="padding:16px 14px;">
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">🤖</div>
+                <div>
+                  <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);">Fortized</div>
+                  <div id="crm-pv-welcome" style="font-size:12px;color:rgba(255,255,255,.3);line-height:1.4;">Welcome to <strong style="color:rgba(255,255,255,.5);">#new-room</strong>! This is the start of the channel.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div style="display:flex;gap:10px;margin-top:20px;">
         <button id="crm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Cancel</button>
         <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:#060810;font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">Create Room</button>
@@ -6980,8 +6999,29 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
   overlay._selectedType = selType;
   const nameInput = overlay.querySelector('#crm-name');
   nameInput.focus();
+  const _crmUpdatePreview = () => {
+    const n = nameInput.value || 'new-room';
+    const t = overlay._selectedType || 'text';
+    const pvName = overlay.querySelector('#crm-pv-name');
+    const pvWelcome = overlay.querySelector('#crm-pv-welcome');
+    const pvType = overlay.querySelector('#crm-pv-type');
+    const pvIcon = overlay.querySelector('#crm-pv-icon');
+    if (pvName) pvName.textContent = n;
+    if (pvWelcome) pvWelcome.innerHTML = 'Welcome to <strong style="color:rgba(255,255,255,.5);">#' + escapeHTML(n) + '</strong>! This is the start of the channel.';
+    const typeLabels = {text:'Text',voice:'Party',forum:'Forum',announcement:'Announcement',poll:'Poll'};
+    const typeIcons = {
+      text:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+      voice:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>',
+      forum:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
+      announcement:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+      poll:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h2v5H7z"/><path d="M11 8h2v9h-2z"/><path d="M15 10h2v7h-2z"/></svg>'
+    };
+    if (pvType) pvType.textContent = typeLabels[t] || t;
+    if (pvIcon) pvIcon.innerHTML = typeIcons[t] || typeIcons.text;
+  };
   nameInput.addEventListener('input', () => {
     nameInput.value = nameInput.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '');
+    _crmUpdatePreview();
   });
   overlay.querySelector('#crm-input-wrap').addEventListener('focusin', function(){ this.style.borderColor='rgba(255,249,62,.35)'; });
   overlay.querySelector('#crm-input-wrap').addEventListener('focusout', function(){ this.style.borderColor='rgba(255,255,255,.08)'; });
@@ -7024,6 +7064,19 @@ function _crmSelectType(el, type) {
     const radio = opt.querySelector('.crm-radio');
     if (radio) { radio.style.borderColor = isThis ? '#fff93e' : 'rgba(255,255,255,.15)'; radio.children[0].style.background = isThis ? '#fff93e' : 'transparent'; }
   });
+  // Update room preview
+  const typeLabels = {text:'Text',voice:'Party',forum:'Forum',announcement:'Announcement',poll:'Poll'};
+  const typeIcons = {
+    text:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    voice:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>',
+    forum:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
+    announcement:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+    poll:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h2v5H7z"/><path d="M11 8h2v9h-2z"/><path d="M15 10h2v7h-2z"/></svg>'
+  };
+  const pvType = overlay.querySelector('#crm-pv-type');
+  const pvIcon = overlay.querySelector('#crm-pv-icon');
+  if (pvType) pvType.textContent = typeLabels[type] || type;
+  if (pvIcon) pvIcon.innerHTML = typeIcons[type] || typeIcons.text;
 }
 
 async function joinBastionByCode() {
@@ -10838,10 +10891,18 @@ function _renderAdminNav(active) {
 function renderAdminPanel() { _renderAdminNav('dashboard'); _loadAdminPage('dashboard'); }
 async function loadAdminTab(tab) { _loadAdminPage(tab); }
 
-async function _loadAdminPage(tab) {
+async function _loadAdminPage(tab, _isAutoRefresh) {
+  if (!_isAutoRefresh && _adminAutoRefresh) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; }
   _renderAdminNav(tab); adminTab = tab;
   const main = document.getElementById('adm-content'); if (!main) return;
-  main.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,.3);">Loading…</div>';
+  if (!_isAutoRefresh) main.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,.3);">Loading…</div>';
+  // Auto-refresh reports and nsfw_queue every 5 seconds
+  if (!_isAutoRefresh && (tab === 'reports' || tab === 'nsfw_queue')) {
+    _adminAutoRefresh = setInterval(() => {
+      if (adminTab !== tab) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; return; }
+      _loadAdminPage(tab, true);
+    }, 5000);
+  }
 
   if (tab === 'dashboard') {
     const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
@@ -11053,8 +11114,21 @@ async function _loadAdminPage(tab) {
             </div>
             ${r.resolutionNote?`<div style="margin-top:6px;font-size:12px;color:rgba(255,255,255,.4);font-style:italic;">Note: "${escapeHTML(r.resolutionNote)}"</div>`:''}
           </div>`:''}
-          <!-- Actions -->
-          ${isPend?`<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
+          <!-- Actions (hierarchical: superadmins untouchable, admins only by superadmins, mods by admins+) -->
+          ${(()=>{
+            const targetRole = target ? getStaffRole(target) : null;
+            const canAct = isPend && (
+              targetRole === 'superadmin' ? false :
+              targetRole === 'admin' ? isSuperAdmin() :
+              targetRole === 'moderator' ? isAdmin() :
+              true
+            );
+            const protectedMsg = targetRole === 'superadmin' ? '<div style="padding:10px 14px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:rgba(255,249,62,.7);font-size:12px;font-weight:600;">🛡️ This user is a Superadmin and cannot be actioned by anyone.</div>'
+              : (targetRole === 'admin' && !isSuperAdmin()) ? '<div style="padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:rgba(248,113,113,.7);font-size:12px;font-weight:600;">🔒 This user is an Admin — only Superadmins can take action.</div>'
+              : (targetRole === 'moderator' && !isAdmin()) ? '<div style="padding:10px 14px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.12);border-radius:8px;color:rgba(96,165,250,.7);font-size:12px;font-weight:600;">🔒 This user is a Moderator — only Admins and Superadmins can take action.</div>'
+              : '';
+            if (isPend && !canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}</div>`;
+            if (isPend && canAct) return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
             <button onclick="resolveReport(${i},'dismissed')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Dismiss</button>
             <button onclick="resolveReport(${i},'warned')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(245,158,11,.15)'" onmouseout="this.style.background='rgba(245,158,11,.08)'">⚠️ Warn</button>
             ${target?`<button onclick="resolveReport(${i},'suspended')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(168,85,247,.15)'" onmouseout="this.style.background='rgba(168,85,247,.08)'">⏳ Suspend</button>`:''}
@@ -11062,9 +11136,11 @@ async function _loadAdminPage(tab) {
             <div style="flex:1;"></div>
             ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;" onmouseover="this.style.background='rgba(96,165,250,.15)'" onmouseout="this.style.background='rgba(96,165,250,.08)'">🔍 Inspect ${escapeHTML(target)}</button>`:''}
             ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}
-          </div>`:`<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
+          </div>`;
+            return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
             ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}
-          </div>`}
+          </div>`;
+          })()}
         </div>
       </div>`;
     };
@@ -11252,7 +11328,10 @@ async function _loadAdminPage(tab) {
           const labelColor = item.aiLabel==='EXPLICIT'||item.aiLabel==='BANNED_CONTENT'?'#f87171':item.aiLabel==='SUGGESTIVE'?'#f59e0b':'#60a5fa';
           return `<div style="background:var(--panel,#101420);border:1px solid rgba(245,158,11,.15);border-radius:12px;padding:16px 18px;">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-            ${item.thumbnail?`<div style="width:64px;height:64px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);filter:blur(8px);cursor:pointer;" onclick="this.style.filter=this.style.filter?'':'blur(8px)'" title="Click to reveal"><img src="${item.thumbnail}" style="width:100%;height:100%;object-fit:cover;"></div>`:`<div style="width:64px;height:64px;border-radius:8px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">${typeIcon}</div>`}
+            ${(item.thumbnail||item.url||item.dataUrl)?`<div style="width:80px;height:80px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);position:relative;cursor:pointer;" onclick="const img=this.querySelector('img,video');if(img){img.style.filter=img.style.filter==='none'?'blur(12px)':'none';}" title="Click to reveal/hide">
+              ${item.type==='video'?`<video src="${escapeHTML(item.thumbnail||item.url||item.dataUrl||'')}" style="width:100%;height:100%;object-fit:cover;filter:blur(12px);" muted preload="metadata"></video>`:`<img src="${escapeHTML(item.thumbnail||item.url||item.dataUrl||'')}" style="width:100%;height:100%;object-fit:cover;filter:blur(12px);" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;\\'>${typeIcon}</div>'">`}
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;"><span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.5);">NSFW</span></div>
+            </div>`:`<div style="width:80px;height:80px;border-radius:8px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">${typeIcon}</div>`}
             <div style="flex:1;">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
                 <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${labelColor}18;color:${labelColor};">${escapeHTML(item.aiLabel||'FLAGGED')}</span>
@@ -11263,12 +11342,19 @@ async function _loadAdminPage(tab) {
               ${item.bastionId?`<div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-top:2px;">Bastion: ${escapeHTML(item.bastionId)}</div>`:''}
             </div>
           </div>
-          <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          ${(()=>{
+            const uRole = item.uploader ? getStaffRole(item.uploader) : null;
+            const canAct = uRole === 'superadmin' ? false : uRole === 'admin' ? isSuperAdmin() : uRole === 'moderator' ? isAdmin() : true;
+            if (!canAct) return uRole === 'superadmin'
+              ? '<div style="padding:8px 12px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:7px;color:rgba(255,249,62,.7);font-size:12px;font-weight:600;">🛡️ Superadmin — no action permitted.</div>'
+              : '<div style="padding:8px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:7px;color:rgba(248,113,113,.7);font-size:12px;font-weight:600;">🔒 Insufficient rank to act on this staff member.</div>';
+            return `<div style="display:flex;gap:7px;flex-wrap:wrap;">
             <button onclick="reviewNSFW(${i},'approve')" style="padding:5px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">✅ Approve</button>
             <button onclick="reviewNSFW(${i},'remove')" style="padding:5px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:7px;color:#f87171;font-size:12px;cursor:pointer;">🚫 Remove & Ban</button>
             <button onclick="reviewNSFW(${i},'warn')" style="padding:5px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:7px;color:#f59e0b;font-size:12px;cursor:pointer;">⚠️ Warn Uploader</button>
             ${item.uploader?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(item.uploader)}';adminSearchUser();}},150);" style="padding:5px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:7px;color:#60a5fa;font-size:12px;cursor:pointer;">👤 Inspect User</button>`:''}
-          </div>
+          </div>`;
+          })()}
         </div>`}).join('')}
       </div>`}
     </div>`;
@@ -12828,6 +12914,7 @@ function showDMCtxMenu(e, username) {
       { icon: _ctxSvg('message'), label: 'Open Chat', action: () => openDMView(username) },
       { icon: _ctxSvg('profile'), label: 'View Profile', action: () => viewUserProfile(username) },
       { icon: _ctxSvg('markRead'), label: 'Mark as Read', action: () => toast('Marked as read!', 'success') },
+      { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => { document.querySelectorAll('.friend-item').forEach(fi => { fi.style.fontWeight=''; fi.classList.remove('dm-unread'); const badge = fi.querySelector('.dm-unread-badge'); if(badge) badge.remove(); }); toast('All conversations marked as read!', 'success'); } },
     ]},
     { items: [
       { icon: _ctxSvg('mute'), label: 'Mute Conversation', action: () => toast('Conversation muted', 'info') },
@@ -14866,10 +14953,6 @@ async function showDMUserPanel(username) {
     + (socialHtml ? '<div style="padding:12px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Connected</div>' + socialHtml + '</div>' : '')
     + gamesHtml
     + '<div style="padding:12px 14px;">'
-    + '<div style="display:flex;gap:6px;margin-bottom:8px;">'  
-    + '<button onclick="startVoiceCall(\'' + escapeHTML(username) + '\')" style="flex:1;padding:8px;border-radius:10px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.25);color:#3ecf6e;font-size:12.5px;cursor:pointer;font-weight:600;">📞 Voice Call</button>'
-    + '<button onclick="showPinnedMessages()" style="flex:1;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);font-size:12.5px;cursor:pointer;font-weight:600;">📌 Pins</button>'
-    + '</div>'
     + '<button onclick="viewUserProfile(\'' + escapeHTML(username) + '\')" style="width:100%;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted-light);font-size:12.5px;cursor:pointer;font-weight:600;">View Full Profile</button>'
     + '</div>';
 }
@@ -17627,6 +17710,26 @@ function renderBadgesHTML(user) {
     `<span class="ftz-badge ${b.cls}"><img src="${b.img}" alt="${b.id}"><span class="badge-tooltip">${escapeHTML(b.tooltip||'')}</span></span>`
   ).join('') + '</span>';
 }
+
+// Position fixed badge tooltips on hover so they never get clipped by overflow
+document.addEventListener('mouseenter', function(e) {
+  const badge = e.target.closest('.ftz-badge');
+  if (!badge) return;
+  const tip = badge.querySelector('.badge-tooltip');
+  if (!tip) return;
+  const r = badge.getBoundingClientRect();
+  tip.style.left = (r.left + r.width / 2) + 'px';
+  tip.style.bottom = 'auto';
+  // Place above badge, fall below if not enough space
+  const above = r.top - 40;
+  if (above > 8) {
+    tip.style.top = (r.top - 8) + 'px';
+    tip.style.transform = 'translate(-50%,-100%) scale(1)';
+  } else {
+    tip.style.top = (r.bottom + 8) + 'px';
+    tip.style.transform = 'translate(-50%,0) scale(1)';
+  }
+}, true);
 
 function spawnHeartAnimation(x, y) {
   const h = document.createElement('div');

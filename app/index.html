@@ -20,6 +20,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="/FortizedSocial-firebase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <style>
 :root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.22);--bg:#07090e;--rail:#04060a;--sidebar:#0b0e15;--channel:#0d1018;--panel:#101420;--panel2:#131822;--panel3:#161c28;--border:#1c2335;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;}
@@ -1068,7 +1070,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .nsr-info{flex:1;}
 .nsr-label{font-size:13.5px;font-weight:600;}
 .nsr-desc{font-size:12px;color:var(--muted-light);margin-top:1px;}
-.input-dialog-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);z-index:3000;display:flex;align-items:center;justify-content:center;}
+.input-dialog-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);z-index:9500;display:flex;align-items:center;justify-content:center;}
 .input-dialog{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:24px;max-width:380px;width:90%;}
 .input-dialog h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:6px;}
 .input-dialog p{font-size:13px;color:var(--muted-light);margin-bottom:16px;}
@@ -2601,7 +2603,14 @@ function saveLocal() {
 }
 async function saveUser() {
   saveLocal();
-  try { await FortizedSocial.saveUserObject(CU); } catch {}
+  try {
+    await FortizedSocial.saveUserObject(CU);
+  } catch(e) {
+    console.warn('saveUser failed, retrying:', e);
+    // Retry once after 1 second on failure
+    try { await new Promise(r => setTimeout(r, 1000)); await FortizedSocial.saveUserObject(CU); }
+    catch(e2) { console.error('saveUser retry failed:', e2); toast('Failed to save data. Check your connection.', 'error'); }
+  }
 }
 // Sync a local bastion's data to the global bastions collection
 async function _syncBastionToGlobal(bastionIdx) {
@@ -2618,7 +2627,11 @@ async function _syncBastionToGlobal(bastionIdx) {
     const globalData = {...b, id: bid, owner: b.owner || CU.username, memberCount: b.memberCount || 1};
     delete globalData.globalId; // avoid nesting
     await FortizedSocial.saveGlobalBastion(bid, globalData);
-  } catch {}
+  } catch(e) {
+    console.warn('Bastion sync to global failed:', e);
+    // Retry once
+    try { await new Promise(r => setTimeout(r, 1000)); const b2 = CU?.bastions?.[bastionIdx]; if (b2?.globalId) await FortizedSocial.saveGlobalBastion(b2.globalId, {...b2, id: b2.globalId, owner: b2.owner || CU.username}); } catch {}
+  }
 }
 // Pull fresh bastion data from global for non-owners so banner/emblem/roles/moods stay current
 async function _syncBastionFromGlobal(bastionIdx) {
@@ -6147,6 +6160,8 @@ function updateDOBField(){
   setTimeout(initNotifToasts, 1200);
 
   setTimeout(_ensureJoysterAccount, 4000);
+  // Preload NSFW AI model in background so first scan is fast
+  setTimeout(() => { try { _loadNSFWModel(); } catch {} }, 3000);
 
   showView('home');
   updateNotifBadge().catch(()=>{});
@@ -7292,8 +7307,16 @@ async function updateBastionIcon(e) {
   const file = e.target.files[0]; if (!file) return;
   if (file.size > 8*1024*1024) { toast('Max 8MB', 'error'); return; }
   const reader = new FileReader();
-  reader.onload = ev => {
-    showCropModal(ev.target.result, 1, async (cropped) => {
+  reader.onload = async ev => {
+    const fileData = ev.target.result;
+    try {
+      const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
+      if (scanResult.flagged && (scanResult.label === 'EXPLICIT' || scanResult.label === 'BANNED_CONTENT')) {
+        toast('This image has been blocked. NSFW content is not allowed.', 'error');
+        return;
+      }
+    } catch(err) { console.warn('NSFW scan error:', err); }
+    showCropModal(fileData, 1, async (cropped) => {
       CU.bastions[curBastion].icon = cropped;
       await saveUser();
       _syncBastionToGlobal(curBastion);
@@ -9321,8 +9344,16 @@ async function updatePfp(e) {
   if (!file) return;
   if (file.size > 8*1024*1024) { toast('Max 8MB', 'error'); return; }
   const reader = new FileReader();
-  reader.onload = ev => {
-    showCropModal(ev.target.result, 1, async (cropped) => {
+  reader.onload = async ev => {
+    const fileData = ev.target.result;
+    try {
+      const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
+      if (scanResult.flagged && (scanResult.label === 'EXPLICIT' || scanResult.label === 'BANNED_CONTENT')) {
+        toast('This image has been blocked. NSFW content is not allowed in profile pictures.', 'error');
+        return;
+      }
+    } catch(err) { console.warn('NSFW scan error:', err); }
+    showCropModal(fileData, 1, async (cropped) => {
       CU.pfp = cropped;
       await saveUser();
       updateUserbar();
@@ -9337,8 +9368,16 @@ async function updateBanner(e) {
   if (!file) return;
   if (file.size > 8*1024*1024) { toast('Max 8MB', 'error'); return; }
   const reader = new FileReader();
-  reader.onload = ev => {
-    showCropModal(ev.target.result, 16/5, async (cropped) => {
+  reader.onload = async ev => {
+    const fileData = ev.target.result;
+    try {
+      const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
+      if (scanResult.flagged && (scanResult.label === 'EXPLICIT' || scanResult.label === 'BANNED_CONTENT')) {
+        toast('This image has been blocked. NSFW content is not allowed in banners.', 'error');
+        return;
+      }
+    } catch(err) { console.warn('NSFW scan error:', err); }
+    showCropModal(fileData, 16/5, async (cropped) => {
       CU.banner = cropped;
       await saveUser();
       buildProfileView('myprofile');
@@ -10161,28 +10200,41 @@ async function submitReport() {
 // ── Admin data sync helpers ──
 async function _syncAdminDataFromFirebase() {
   try {
-    const [reps, bans, staffSnap, auditSnap, gsSnap, nsfwSnap] = await Promise.all([
+    const [reps, bans, staffSnap, auditSnap, gsSnap, nsfwSnap, bannedHashesSnap] = await Promise.all([
       firebase.database().ref('reports').get(),
       firebase.database().ref('admin/bans').get(),
       firebase.database().ref('admin/staff').get(),
       firebase.database().ref('admin/audit_log').limitToLast(500).get(),
       firebase.database().ref('admin/global_settings').get(),
       firebase.database().ref('admin/nsfw_queue').get(),
+      firebase.database().ref('admin/nsfw_banned_hashes').get(),
     ]);
     if (reps.exists()) {
       const fb = Object.values(reps.val());
       const local = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
-      const merged = [...local];
-      fb.forEach(r => { if (!merged.find(lr=>lr.id===r.id)) merged.push(r); });
+      // Firebase is source of truth — merge with Firebase data winning on conflicts
+      const fbMap = new Map();
+      fb.forEach(r => { if (r.id) fbMap.set(r.id, r); });
+      // Start with all Firebase reports
+      const merged = [...fb];
+      // Add any local-only reports that don't exist in Firebase yet
+      local.forEach(lr => { if (lr.id && !fbMap.has(lr.id)) merged.push(lr); });
       localStorage.setItem('ftz_reports', JSON.stringify(merged));
+      // Push any local-only reports to Firebase
+      local.forEach(lr => {
+        if (lr.id && !fbMap.has(lr.id)) {
+          try { firebase.database().ref('reports/' + lr.id).set(lr); } catch {}
+        }
+      });
     }
     if (bans.exists()) {
       localStorage.setItem('ftz_bans', JSON.stringify(Object.values(bans.val())));
+    } else {
+      localStorage.setItem('ftz_bans', '[]');
     }
     if (staffSnap.exists()) {
       localStorage.setItem('ftz_staff', JSON.stringify(staffSnap.val()));
     } else {
-      // Initialize default staff structure
       const defaultStaff = { admins: [], moderators: [] };
       localStorage.setItem('ftz_staff', JSON.stringify(defaultStaff));
     }
@@ -10197,23 +10249,58 @@ async function _syncAdminDataFromFirebase() {
     }
     if (nsfwSnap.exists()) {
       localStorage.setItem('ftz_nsfw_queue', JSON.stringify(Object.values(nsfwSnap.val())));
+    } else {
+      localStorage.setItem('ftz_nsfw_queue', '[]');
+    }
+    // Sync banned content hashes from Firebase
+    if (bannedHashesSnap.exists()) {
+      const fbHashes = bannedHashesSnap.val();
+      const arr = Array.isArray(fbHashes) ? fbHashes : Object.values(fbHashes);
+      // Merge with local hashes
+      const mergedHashes = [...new Set([..._nsfwBannedHashes, ...arr])];
+      _nsfwBannedHashes = mergedHashes;
+      localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(mergedHashes));
     }
   } catch(e) { console.warn('Admin sync partial fail:', e); }
 }
 
 async function _saveBanToFirebase(banObj) {
-  try { await firebase.database().ref('admin/bans/' + banObj.username).set(banObj); } catch {}
+  try {
+    await firebase.database().ref('admin/bans/' + banObj.username).set(banObj);
+  } catch(e) {
+    console.warn('Ban save failed, retrying:', e);
+    try { await new Promise(r => setTimeout(r, 1000)); await firebase.database().ref('admin/bans/' + banObj.username).set(banObj); }
+    catch(e2) { console.error('Ban save retry failed:', e2); toast('Failed to save ban to server. Check connection.', 'error'); }
+  }
 }
 async function _removeBanFromFirebase(username) {
-  try { await firebase.database().ref('admin/bans/' + username).remove(); } catch {}
+  try {
+    await firebase.database().ref('admin/bans/' + username).remove();
+  } catch(e) {
+    console.warn('Ban removal failed, retrying:', e);
+    try { await new Promise(r => setTimeout(r, 1000)); await firebase.database().ref('admin/bans/' + username).remove(); }
+    catch(e2) { console.error('Ban removal retry failed:', e2); toast('Failed to remove ban from server.', 'error'); }
+  }
 }
 async function _saveStaffToFirebase(staff) {
-  try { await firebase.database().ref('admin/staff').set(staff); } catch {}
+  try {
+    await firebase.database().ref('admin/staff').set(staff);
+  } catch(e) {
+    console.warn('Staff save failed, retrying:', e);
+    try { await new Promise(r => setTimeout(r, 1000)); await firebase.database().ref('admin/staff').set(staff); }
+    catch(e2) { console.error('Staff save retry failed:', e2); toast('Failed to save staff to server.', 'error'); }
+  }
 }
 async function _saveNsfwQueueToFirebase(queue) {
   const obj = {};
   queue.forEach(item => { obj[item.id] = item; });
-  try { await firebase.database().ref('admin/nsfw_queue').set(obj); } catch {}
+  try {
+    await firebase.database().ref('admin/nsfw_queue').set(obj);
+  } catch(e) {
+    console.warn('NSFW queue save failed, retrying:', e);
+    try { await new Promise(r => setTimeout(r, 1000)); await firebase.database().ref('admin/nsfw_queue').set(obj); }
+    catch(e2) { console.error('NSFW queue save retry failed:', e2); }
+  }
 }
 
 function tryOpenAdmin() {
@@ -10735,15 +10822,18 @@ async function _loadAdminPage(tab) {
 function resolveReport(idx, action) {
   const reports = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
   if (!reports[idx]) return;
-  showCustomInput('Resolution Note', 'Add a note (optional):', (reason) => {
+  showCustomInput('Resolution Note', 'Add a note (optional):', async (reason) => {
     reports[idx].status = action;
     reports[idx].resolution = action;
     reports[idx].resolvedBy = CU.username;
     reports[idx].resolvedAt = new Date().toISOString();
     if (reason) reports[idx].resolutionNote = reason;
     localStorage.setItem('ftz_reports', JSON.stringify(reports));
-    // Sync to Firebase
-    try { firebase.database().ref('reports/' + reports[idx].id).update(reports[idx]); } catch {}
+    // Sync to Firebase — ensure the update persists
+    const reportId = reports[idx].id;
+    if (reportId) {
+      try { await firebase.database().ref('reports/' + reportId).set(reports[idx]); } catch(e) { console.warn('Report sync failed:', e); }
+    }
     logAudit('report_'+action, reports[idx].username||reports[idx].reporter||'?', reason||action);
     if (action === 'banned' || action === 'suspended') {
       const target = reports[idx].username || reports[idx].reporter;
@@ -10761,9 +10851,18 @@ async function loadAllReportsFromFirebase() {
     if (snap.exists()) {
       const fb = Object.values(snap.val());
       const local = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
-      const merged = [...local];
-      fb.forEach(r => { if (r.id && !merged.find(lr=>lr.id===r.id)) merged.push(r); });
+      // Firebase is source of truth — Firebase data wins on conflicts
+      const fbMap = new Map();
+      fb.forEach(r => { if (r.id) fbMap.set(r.id, r); });
+      const merged = [...fb];
+      local.forEach(lr => { if (lr.id && !fbMap.has(lr.id)) merged.push(lr); });
       localStorage.setItem('ftz_reports', JSON.stringify(merged));
+      // Push any local-only reports to Firebase
+      local.forEach(lr => {
+        if (lr.id && !fbMap.has(lr.id)) {
+          try { firebase.database().ref('reports/' + lr.id).set(lr); } catch {}
+        }
+      });
       toast('Reports synced: '+merged.length+' total', 'success');
     }
   } catch(e) { toast('Sync failed','error'); }
@@ -11138,14 +11237,21 @@ function removeStaff(role, idx) {
 function addAdmin() { addStaff('admin'); }
 function removeAdmin(idx) { removeStaff('admin', idx); }
 
-function adjustOnyx(direction) {
+async function adjustOnyx(direction) {
   const username = document.getElementById('eco-username')?.value?.trim();
   const amount = parseInt(document.getElementById('eco-amount')?.value);
   const reason = document.getElementById('eco-reason')?.value?.trim();
   if (!username || !amount || !reason) { toast('All fields required', 'error'); return; }
   const finalAmount = Math.abs(amount) * direction;
-  logAudit('onyx_adjust', username, `${direction>0?'+':''}${finalAmount} Onyx — ${reason}`);
-  toast(`Logged: ${finalAmount > 0 ? '+' : ''}${finalAmount} Onyx to ${username}`, 'success');
+  try {
+    const u = await FortizedSocial.getUserByName(username);
+    if (!u) { toast('User not found', 'error'); return; }
+    const newOnyx = Math.max(0, (u.onyx || 0) + finalAmount);
+    await firebase.database().ref('users/' + username + '/onyx').set(newOnyx);
+    logAudit('onyx_adjust', username, `${direction>0?'+':''}${finalAmount} Onyx — ${reason}`);
+    toast(`${finalAmount > 0 ? 'Gave' : 'Removed'} ${Math.abs(finalAmount)} Onyx ${direction>0?'to':'from'} ${username} (new balance: ${newOnyx})`, 'success');
+    if (username === CU.username) await refreshCU();
+  } catch(e) { toast('Failed to adjust Onyx: ' + e.message, 'error'); }
 }
 
 
@@ -11372,8 +11478,28 @@ async function scanContentForNSFW(fileData, fileName, uploader, fileType) {
   return { flagged: false, label: 'SAFE', score: result.score };
 }
 
+let _nsfwModel = null;
+let _nsfwModelLoading = false;
+
+async function _loadNSFWModel() {
+  if (_nsfwModel) return _nsfwModel;
+  if (_nsfwModelLoading) {
+    // Wait for model to finish loading
+    while (_nsfwModelLoading) await new Promise(r => setTimeout(r, 100));
+    return _nsfwModel;
+  }
+  _nsfwModelLoading = true;
+  try {
+    _nsfwModel = await nsfwjs.load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/model/', { size: 299 });
+  } catch(e) {
+    console.error('NSFWJS model load failed:', e);
+    _nsfwModel = null;
+  }
+  _nsfwModelLoading = false;
+  return _nsfwModel;
+}
+
 async function _analyzeMediaContent(fileData, fileName, fileType) {
-  // Use canvas for image/gif analysis — skin tone ratio + edge detection
   return new Promise(resolve => {
     if (/^video\//i.test(fileType) || /\.(mp4|webm|mov|avi)$/i.test(fileName)) {
       // For video, extract first frame
@@ -11381,20 +11507,19 @@ async function _analyzeMediaContent(fileData, fileName, fileType) {
       video.muted = true; video.preload = 'metadata';
       video.onloadeddata = () => {
         video.currentTime = 1;
-        video.onseeked = () => {
-          const result = _analyzeFrame(video, video.videoWidth, video.videoHeight);
+        video.onseeked = async () => {
+          const result = await _analyzeFrame(video, video.videoWidth, video.videoHeight);
           URL.revokeObjectURL(video.src);
           resolve(result);
         };
       };
       video.onerror = () => resolve({ label: 'SAFE', score: '0.10' });
       video.src = fileData.startsWith('data:') ? fileData : URL.createObjectURL(new Blob([fileData]));
-      setTimeout(() => resolve({ label: 'SAFE', score: '0.10' }), 5000); // timeout fallback
+      setTimeout(() => resolve({ label: 'SAFE', score: '0.10' }), 15000);
     } else {
-      // Image/GIF analysis
       const img = new Image();
-      img.onload = () => {
-        const result = _analyzeFrame(img, img.width, img.height);
+      img.onload = async () => {
+        const result = await _analyzeFrame(img, img.width, img.height);
         resolve(result);
       };
       img.onerror = () => resolve({ label: 'SAFE', score: '0.10' });
@@ -11403,39 +11528,55 @@ async function _analyzeMediaContent(fileData, fileName, fileType) {
   });
 }
 
-function _analyzeFrame(source, w, h) {
-  // Resize to small canvas for analysis
+async function _analyzeFrame(source, w, h) {
+  // Draw source to canvas for NSFWJS
   const canvas = document.createElement('canvas');
-  const size = 64;
-  canvas.width = size; canvas.height = size;
+  const maxDim = 299;
+  const scale = Math.min(maxDim / (w || 1), maxDim / (h || 1), 1);
+  canvas.width = Math.max(1, Math.round((w || 1) * scale));
+  canvas.height = Math.max(1, Math.round((h || 1) * scale));
   const ctx = canvas.getContext('2d');
-  try { ctx.drawImage(source, 0, 0, size, size); } catch { return { label: 'SAFE', score: '0.10' }; }
-  const data = ctx.getImageData(0, 0, size, size).data;
+  try { ctx.drawImage(source, 0, 0, canvas.width, canvas.height); } catch { return { label: 'SAFE', score: '0.10' }; }
 
-  // Skin tone detection (HSV-based)
-  let skinPixels = 0, totalPixels = size * size;
-  let highSatPixels = 0;
+  // Use NSFWJS for real AI classification
+  try {
+    const model = await _loadNSFWModel();
+    if (!model) return _analyzeFrameFallback(ctx, canvas.width, canvas.height);
+    const predictions = await model.classify(canvas);
+    // predictions = [{className: 'Porn'|'Sexy'|'Hentai'|'Drawing'|'Neutral', probability: 0-1}, ...]
+    const predMap = {};
+    predictions.forEach(p => { predMap[p.className] = p.probability; });
+
+    const pornScore = predMap['Porn'] || 0;
+    const hentaiScore = predMap['Hentai'] || 0;
+    const sexyScore = predMap['Sexy'] || 0;
+    const explicitScore = pornScore + hentaiScore;
+    const combinedScore = explicitScore + (sexyScore * 0.5);
+
+    if (explicitScore > 0.30) return { label: 'EXPLICIT', score: combinedScore.toFixed(2) };
+    if (combinedScore > 0.45) return { label: 'SUGGESTIVE', score: combinedScore.toFixed(2) };
+    if (sexyScore > 0.50) return { label: 'SUGGESTIVE', score: sexyScore.toFixed(2) };
+    return { label: 'SAFE', score: (1 - combinedScore).toFixed(2) };
+  } catch(e) {
+    console.warn('NSFWJS classify error, using fallback:', e);
+    return _analyzeFrameFallback(ctx, canvas.width, canvas.height);
+  }
+}
+
+function _analyzeFrameFallback(ctx, w, h) {
+  // Fallback skin-tone heuristic if NSFWJS fails to load
+  const data = ctx.getImageData(0, 0, w, h).data;
+  let skinPixels = 0, totalPixels = w * h;
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i], g = data[i+1], b = data[i+2];
-    // Skin tone detection in RGB space
     if (r > 95 && g > 40 && b > 20 && r > g && r > b && (r - g) > 15 && Math.abs(r - g) < 100) {
       skinPixels++;
     }
-    // High saturation flesh-tone detection
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    const sat = max > 0 ? (max - min) / max : 0;
-    if (sat > 0.2 && r > 140 && g > 60 && g < 180 && b > 20 && b < 160) {
-      highSatPixels++;
-    }
   }
-
   const skinRatio = skinPixels / totalPixels;
-  const fleshRatio = highSatPixels / totalPixels;
-  const combinedScore = (skinRatio * 0.6 + fleshRatio * 0.4);
-
-  if (combinedScore > 0.55) return { label: 'EXPLICIT', score: combinedScore.toFixed(2) };
-  if (combinedScore > 0.40) return { label: 'SUGGESTIVE', score: combinedScore.toFixed(2) };
-  return { label: 'SAFE', score: combinedScore.toFixed(2) };
+  if (skinRatio > 0.55) return { label: 'EXPLICIT', score: skinRatio.toFixed(2) };
+  if (skinRatio > 0.40) return { label: 'SUGGESTIVE', score: skinRatio.toFixed(2) };
+  return { label: 'SAFE', score: skinRatio.toFixed(2) };
 }
 
 function _flagNsfwContent(fileData, fileName, uploader, fileType, aiLabel, aiScore, hash) {
@@ -12179,9 +12320,12 @@ function generateTrialLink() {
   if (!days||days<1||days>365) { toast('Enter 1-365 days','error'); return; }
   const code = 'TRIAL-' + days + 'd-' + Date.now().toString(36).toUpperCase();
   const link = location.origin + '/app?trial=' + code;
+  const trialData = { code, days, created: new Date().toLocaleDateString(), link, createdBy: CU?.username };
   const existing = JSON.parse(localStorage.getItem('ftz_trial_links')||'[]');
-  existing.push({ code, days, created: new Date().toLocaleDateString(), link });
+  existing.push(trialData);
   localStorage.setItem('ftz_trial_links', JSON.stringify(existing));
+  // Persist to Firebase for cross-device access
+  try { firebase.database().ref('admin/trial_links/' + code).set(trialData); } catch {}
   const el = document.getElementById('trial-link-result');
   if (el) {
     el.innerHTML = `
@@ -13467,8 +13611,16 @@ async function updateBastionBanner(e) {
   const file = e.target.files[0]; if (!file) return;
   if (file.size > 8 * 1024 * 1024) { toast('Max 8MB', 'error'); return; }
   const reader = new FileReader();
-  reader.onload = ev => {
-    showCropModal(ev.target.result, 16/5, async (cropped) => {
+  reader.onload = async ev => {
+    const fileData = ev.target.result;
+    try {
+      const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
+      if (scanResult.flagged && (scanResult.label === 'EXPLICIT' || scanResult.label === 'BANNED_CONTENT')) {
+        toast('This image has been blocked. NSFW content is not allowed.', 'error');
+        return;
+      }
+    } catch(err) { console.warn('NSFW scan error:', err); }
+    showCropModal(fileData, 16/5, async (cropped) => {
       CU.bastions[curBastion].banner = cropped;
       await saveUser();
       _syncBastionToGlobal(curBastion);
@@ -13915,9 +14067,28 @@ function openFileUpload(context) {
       toast('File too large. Max ' + maxMB + 'MB', 'error'); fileInp.remove(); return;
     }
     const reader = new FileReader();
-    reader.onload = ev => {
-      window._pendingAttachment = { name: file.name, type: file.type, data: ev.target.result, size: file.size, context };
-      showAttachmentPreview(file.name, file.type, ev.target.result, file.size, context);
+    reader.onload = async ev => {
+      const fileData = ev.target.result;
+      // Run NSFW AI scan on media uploads
+      const isMedia = file.type.startsWith('image/') || file.type.startsWith('video/') || /\.(gif|webp)$/i.test(file.name);
+      if (isMedia) {
+        try {
+          const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
+          if (scanResult.flagged) {
+            if (scanResult.label === 'BANNED_CONTENT') {
+              toast('This content has been banned and cannot be uploaded.', 'error');
+              return;
+            }
+            if (scanResult.label === 'EXPLICIT') {
+              toast('This content has been blocked. NSFW content is not allowed.', 'error');
+              return;
+            }
+            toast('⚠️ This content has been flagged for review by moderators.', 'warning');
+          }
+        } catch(e) { console.warn('NSFW scan error:', e); }
+      }
+      window._pendingAttachment = { name: file.name, type: file.type, data: fileData, size: file.size, context };
+      showAttachmentPreview(file.name, file.type, fileData, file.size, context);
     };
     reader.readAsDataURL(file);
     fileInp.remove();
@@ -14341,11 +14512,19 @@ function previewForumPostImage(input) {
   if (!file) return;
   if (file.size > 4*1024*1024) { toast('Max 4MB','error'); return; }
   var reader = new FileReader();
-  reader.onload = function(e) {
-    window._fpImgData = e.target.result;
+  reader.onload = async function(e) {
+    var fileData = e.target.result;
+    try {
+      var scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
+      if (scanResult.flagged && (scanResult.label === 'EXPLICIT' || scanResult.label === 'BANNED_CONTENT')) {
+        toast('This image has been blocked. NSFW content is not allowed.', 'error');
+        return;
+      }
+    } catch(err) { console.warn('NSFW scan error:', err); }
+    window._fpImgData = fileData;
     var img = document.getElementById('fp-img-el');
     var preview = document.getElementById('fp-img-preview');
-    if (img && preview) { img.src = e.target.result; preview.style.display='block'; }
+    if (img && preview) { img.src = fileData; preview.style.display='block'; }
   };
   reader.readAsDataURL(file);
 }
@@ -17284,6 +17463,10 @@ function processUploadedFile(file, inputId) {
         if (scanResult.flagged) {
           if (scanResult.label === 'BANNED_CONTENT') {
             toast('This content has been banned and cannot be uploaded.', 'error');
+            return;
+          }
+          if (scanResult.label === 'EXPLICIT') {
+            toast('This content has been blocked. NSFW content is not allowed.', 'error');
             return;
           }
           toast('⚠️ This content has been flagged for review by moderators.', 'warning');

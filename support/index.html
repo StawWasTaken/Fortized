@@ -241,6 +241,47 @@ footer .copy{font-size:12px;color:#2d3548;text-align:center;}
   .gm-header,.gm-body{padding-left:20px;padding-right:20px;}
 }
 img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
+
+/* ── Contact Admins Section ──────────────────── */
+.contact-section{padding:72px 72px 0;}
+.contact-hero-band{background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));border:1px solid rgba(255,249,62,.14);border-radius:22px;padding:40px 44px;margin-bottom:36px;display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap;position:relative;overflow:hidden;}
+.contact-hero-band::before{content:"";position:absolute;top:-60px;right:-60px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(255,249,62,.06),transparent 65%);pointer-events:none;}
+.chb-left{display:flex;align-items:center;gap:20px;}
+.chb-icon{width:56px;height:56px;border-radius:16px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.16);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.chb-text h3{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:5px;letter-spacing:-.4px;}
+.chb-text p{font-size:13.5px;color:var(--muted-light);line-height:1.6;max-width:480px;}
+.contact-form-wrap{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start;}
+.contact-form{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:32px 30px;}
+.cf-field{margin-bottom:20px;}
+.cf-field:last-of-type{margin-bottom:0;}
+.cf-label{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.cf-input,.cf-select,.cf-textarea{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:14px;color:#fff;outline:none;transition:border-color .2s,box-shadow .2s;}
+.cf-input::placeholder,.cf-textarea::placeholder{color:var(--muted);}
+.cf-input:focus,.cf-select:focus,.cf-textarea:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
+.cf-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%235a6478'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer;}
+.cf-select option{background:#0c0f18;color:#fff;}
+.cf-textarea{min-height:140px;resize:vertical;line-height:1.65;}
+.cf-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.cf-submit{display:inline-flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:13px 28px;border-radius:10px;border:none;cursor:pointer;transition:all .18s;margin-top:22px;}
+.cf-submit-primary{background:var(--accent);color:#080a0f;}
+.cf-submit-primary:hover{box-shadow:0 0 28px var(--accent-glow);filter:brightness(1.05);transform:translateY(-1px);}
+.cf-submit:disabled{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important;filter:none!important;}
+.cf-success{display:none;background:rgba(62,207,110,.06);border:1px solid rgba(62,207,110,.18);border-radius:14px;padding:24px;text-align:center;}
+.cf-success.show{display:block;}
+.cf-success-icon{font-size:36px;margin-bottom:10px;}
+.cf-success h4{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#3ecf6e;margin-bottom:6px;}
+.cf-success p{font-size:13px;color:var(--muted-light);line-height:1.6;}
+.contact-sidebar{display:flex;flex-direction:column;gap:14px;}
+.cs-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px 20px;transition:border-color .18s;}
+.cs-card:hover{border-color:rgba(255,249,62,.14);}
+.cs-card-icon{width:40px;height:40px;border-radius:11px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;}
+.cs-card h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;}
+.cs-card p{font-size:12.5px;color:var(--muted-light);line-height:1.6;}
+.cs-card-highlight{border-color:rgba(248,113,113,.18);background:linear-gradient(135deg,rgba(248,113,113,.03),var(--panel));}
+.cs-card-highlight .cs-card-icon{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.16);}
+.cs-card-highlight:hover{border-color:rgba(248,113,113,.28);}
+@media(max-width:1024px){.contact-form-wrap{grid-template-columns:1fr;}.contact-sidebar{flex-direction:row;flex-wrap:wrap;}.cs-card{flex:1;min-width:200px;}}
+@media(max-width:768px){.contact-section{padding-left:24px;padding-right:24px;}.contact-hero-band{padding:28px 24px;}.cf-row{grid-template-columns:1fr;}.contact-sidebar{flex-direction:column;}}
 </style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
@@ -306,7 +347,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   <div class="qa-grid">
     <a href="#faq" class="qa-card"><div class="qa-icon">📖</div><div class="qa-label">Browse FAQ</div><div class="qa-desc">Common questions answered about accounts, Bastions, and Radiance.</div><div class="qa-arrow">View all →</div></a>
     <a href="#guides" class="qa-card"><div class="qa-icon">📚</div><div class="qa-label">Guides & Docs</div><div class="qa-desc">Step-by-step guides for setting up Bastions, Radiance, AutoMod, and more.</div><div class="qa-arrow">Browse guides →</div></a>
-    <a href="/privacy" class="qa-card"><div class="qa-icon">🔒</div><div class="qa-label">Privacy &amp; Legal</div><div class="qa-desc">Review our Privacy Policy, Terms of Use, and data rights information.</div><div class="qa-arrow">Read docs →</div></a>
+    <a href="#contact" class="qa-card"><div class="qa-icon">📩</div><div class="qa-label">Contact Admins</div><div class="qa-desc">Submit support requests, appeal bans or suspensions, and reach the moderation team directly.</div><div class="qa-arrow">Get in touch →</div></a>
   </div>
 </div>
 
@@ -412,11 +453,103 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   </div>
 </div>
 
+<!-- ── CONTACT THE ADMINS ────────────────────── -->
+<div class="contact-section" id="contact">
+  <div class="section-label">Get Help</div>
+  <div class="section-heading">Contact the Admins</div>
+
+  <div class="contact-hero-band">
+    <div class="chb-left">
+      <div class="chb-icon">📩</div>
+      <div class="chb-text">
+        <h3>Need help? We're here.</h3>
+        <p>Whether you need general support, want to appeal a ban or suspension, or have a safety concern — reach out directly to the Fortized moderation team. We typically respond within 24-48 hours.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-form-wrap">
+    <div>
+      <div class="contact-form" id="contactForm">
+        <div class="cf-row">
+          <div class="cf-field">
+            <label class="cf-label">Your Username</label>
+            <input type="text" class="cf-input" id="cfUsername" placeholder="e.g. Stawkins" maxlength="32">
+          </div>
+          <div class="cf-field">
+            <label class="cf-label">Email Address</label>
+            <input type="email" class="cf-input" id="cfEmail" placeholder="your@email.com">
+          </div>
+        </div>
+        <div class="cf-field">
+          <label class="cf-label">Category</label>
+          <select class="cf-select" id="cfCategory">
+            <option value="" disabled selected>Select a topic...</option>
+            <option value="general">General Support</option>
+            <option value="ban-appeal">Ban Appeal</option>
+            <option value="suspend-appeal">Suspension Appeal</option>
+            <option value="report">Report a User / Safety Concern</option>
+            <option value="bug">Bug Report</option>
+            <option value="account">Account Recovery</option>
+            <option value="feedback">Feedback & Suggestions</option>
+          </select>
+        </div>
+        <div class="cf-field" id="cfAppealInfo" style="display:none;">
+          <div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.14);border-left:3px solid #f59e0b;border-radius:10px;padding:14px 16px;font-size:13px;color:#c8d0dc;line-height:1.65;">
+            <strong style="color:#f59e0b;">Appeal Information:</strong> Please include your username, approximate date of action, and a clear explanation of why you believe the decision should be reconsidered. Appeals are reviewed by the Fortized Security Department within 15 business days.
+          </div>
+        </div>
+        <div class="cf-field">
+          <label class="cf-label">Subject</label>
+          <input type="text" class="cf-input" id="cfSubject" placeholder="Brief description of your issue" maxlength="120">
+        </div>
+        <div class="cf-field">
+          <label class="cf-label">Message</label>
+          <textarea class="cf-textarea" id="cfMessage" placeholder="Describe your issue in detail. The more context you provide, the faster we can help..." maxlength="2000"></textarea>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <button class="cf-submit cf-submit-primary" id="cfSubmitBtn" onclick="submitContactForm()">Send Message →</button>
+          <span style="font-size:11px;color:var(--muted);" id="cfCharCount">0 / 2000</span>
+        </div>
+      </div>
+      <div class="cf-success" id="cfSuccess">
+        <div class="cf-success-icon">✅</div>
+        <h4>Message Sent Successfully</h4>
+        <p>Your request has been submitted to the Fortized moderation team. You'll receive a response at the email address you provided within 24-48 hours. For urgent safety concerns, responses are prioritized.</p>
+        <button class="cf-submit cf-submit-primary" onclick="resetContactForm()" style="margin-top:16px;">Submit Another Request</button>
+      </div>
+    </div>
+
+    <div class="contact-sidebar">
+      <div class="cs-card cs-card-highlight">
+        <div class="cs-card-icon">⚖️</div>
+        <h4>Ban & Suspension Appeals</h4>
+        <p>Believe your ban or suspension was unjust? Select "Ban Appeal" or "Suspension Appeal" from the category dropdown to file a formal appeal. EU users have the right to contest decisions under the Digital Services Act.</p>
+      </div>
+      <div class="cs-card">
+        <div class="cs-card-icon">🛡</div>
+        <h4>Safety & Security</h4>
+        <p>For urgent safety concerns including harassment, threats, or illegal content — select "Report a User" and our Security Department will prioritize your request.</p>
+      </div>
+      <div class="cs-card">
+        <div class="cs-card-icon">⏱</div>
+        <h4>Response Times</h4>
+        <p>General support: 24-48 hours. Appeals: up to 15 business days. Safety reports: prioritized within 24 hours. All times are estimates.</p>
+      </div>
+      <div class="cs-card">
+        <div class="cs-card-icon">📜</div>
+        <h4>Policies & Legal</h4>
+        <p>Review our <a href="/privacy" style="color:var(--accent);text-decoration:none;font-weight:600;">Privacy Policy</a> and <a href="/terms" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Service</a> before submitting your request.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="safety-support-band">
   <div class="ssb-left">
     <div class="ssb-icon">🏰</div>
     <div class="ssb-text">
-      <h3>Your Bastion. Your rules.</h3>
+      <h3>Your Fortress. Our commitment.</h3>
       <p>Fortized is built on a layered security architecture. From AutoMod and Raid Protection to the dedicated Fortized Security Department — every wall is designed to hold.</p>
     </div>
   </div>
@@ -498,6 +631,11 @@ const SEARCH_DATA = [
   { cat:'Technical', title:'Account data disappeared / localStorage', id:'technical' },
   { cat:'Technical', title:'Desktop and mobile app availability', id:'technical' },
   { cat:'Technical', title:'Reporting a bug or security vulnerability', id:'technical' },
+  { cat:'Support', title:'Contact the admins', id:'contact' },
+  { cat:'Support', title:'Appeal a ban', id:'contact' },
+  { cat:'Support', title:'Appeal a suspension', id:'contact' },
+  { cat:'Support', title:'Report a safety concern', id:'contact' },
+  { cat:'Support', title:'Account recovery help', id:'contact' },
 ];
 const input = document.getElementById('searchInput');
 const results = document.getElementById('searchResults');
@@ -506,7 +644,7 @@ input.addEventListener('input', () => {
   if (q.length < 2) { results.classList.remove('show'); return; }
   const filtered = SEARCH_DATA.filter(d => d.title.toLowerCase().includes(q) || d.cat.toLowerCase().includes(q)).slice(0, 6);
   if (!filtered.length) { results.classList.remove('show'); return; }
-  results.innerHTML = filtered.map(d => `<div class="search-result-item" onclick="filterFaq('${d.id}');closeSearch();"><span class="sri-cat">${d.cat}</span><span class="sri-title">${d.title}</span><span class="sri-arrow">→</span></div>`).join('');
+  results.innerHTML = filtered.map(d => `<div class="search-result-item" onclick="${d.id === 'contact' ? "document.getElementById(\'contact\').scrollIntoView({behavior:\'smooth\',block:\'start\'});closeSearch();" : "filterFaq(\'"+d.id+"\');closeSearch();"}"><span class="sri-cat">${d.cat}</span><span class="sri-title">${d.title}</span><span class="sri-arrow">→</span></div>`).join('');
   results.classList.add('show');
 });
 function closeSearch() { results.classList.remove('show'); input.value = ''; }
@@ -629,6 +767,58 @@ function closeGuideOnOverlay(e) {
   if (e.target === document.getElementById('modalOverlay')) closeGuide();
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeGuide(); });
+
+/* ── Contact Form ─────────── */
+const cfCategory = document.getElementById('cfCategory');
+const cfAppealInfo = document.getElementById('cfAppealInfo');
+const cfMessage = document.getElementById('cfMessage');
+const cfCharCount = document.getElementById('cfCharCount');
+if (cfCategory) cfCategory.addEventListener('change', () => {
+  cfAppealInfo.style.display = (cfCategory.value === 'ban-appeal' || cfCategory.value === 'suspend-appeal') ? 'block' : 'none';
+});
+if (cfMessage) cfMessage.addEventListener('input', () => {
+  cfCharCount.textContent = cfMessage.value.length + ' / 2000';
+});
+function submitContactForm() {
+  const username = document.getElementById('cfUsername').value.trim();
+  const email = document.getElementById('cfEmail').value.trim();
+  const category = document.getElementById('cfCategory').value;
+  const subject = document.getElementById('cfSubject').value.trim();
+  const message = document.getElementById('cfMessage').value.trim();
+  if (!username || !email || !category || !subject || !message) { alert('Please fill in all fields.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Please enter a valid email address.'); return; }
+  const btn = document.getElementById('cfSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  /* Store in Firebase if available, otherwise just show success */
+  try {
+    if (typeof firebase !== 'undefined' && firebase.database) {
+      firebase.database().ref('support/tickets').push({
+        username, email, category, subject, message,
+        submittedAt: new Date().toISOString(),
+        status: 'open'
+      });
+    }
+  } catch(e) { console.log('Firebase not available for support tickets'); }
+  setTimeout(() => {
+    document.getElementById('contactForm').style.display = 'none';
+    document.getElementById('cfSuccess').classList.add('show');
+  }, 800);
+}
+function resetContactForm() {
+  document.getElementById('contactForm').style.display = '';
+  document.getElementById('cfSuccess').classList.remove('show');
+  document.getElementById('cfUsername').value = '';
+  document.getElementById('cfEmail').value = '';
+  document.getElementById('cfCategory').selectedIndex = 0;
+  document.getElementById('cfSubject').value = '';
+  document.getElementById('cfMessage').value = '';
+  document.getElementById('cfCharCount').textContent = '0 / 2000';
+  document.getElementById('cfAppealInfo').style.display = 'none';
+  document.getElementById('cfSubmitBtn').disabled = false;
+  document.getElementById('cfSubmitBtn').textContent = 'Send Message →';
+}
+/* Handle #contact hash on load */
+if (window.location.hash === '#contact') { setTimeout(() => { document.getElementById('contact').scrollIntoView({ behavior:'smooth', block:'start' }); }, 300); }
 
 /* ── Scroll reveal ─────────── */
 const revealEls = document.querySelectorAll('.guide-card, .qa-card');

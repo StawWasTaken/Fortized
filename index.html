@@ -521,11 +521,11 @@ body::before {
 .sc-card p { font-size: 14px; color: var(--muted-light); line-height: 1.72; }
 
 /* ── Realistic App Mockup ────────────────── */
-.app-mock { display: flex; height: 420px; background: #07090e; border-radius: 20px; overflow: hidden; }
-.app-mock-nav { width: 170px; min-width: 170px; background: #0b0e15; display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,.04); position: relative; }
-.app-mock-channels { width: 160px; min-width: 160px; background: #0d1018; border-right: 1px solid rgba(255,255,255,.04); display: flex; flex-direction: column; overflow: hidden; }
-.app-mock-chat { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #0d1018; }
-.app-mock-members { width: 150px; min-width: 150px; background: #0d1018; border-left: 1px solid rgba(255,255,255,.04); padding: 10px 0; overflow: hidden; }
+.app-mock { display: flex; height: 420px; background: var(--bg); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.app-mock-nav { width: 170px; min-width: 170px; background: var(--bg2); display: flex; flex-direction: column; border-right: 1px solid var(--border-light); position: relative; }
+.app-mock-channels { width: 160px; min-width: 160px; background: var(--panel); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; overflow: hidden; }
+.app-mock-chat { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--panel); }
+.app-mock-members { width: 150px; min-width: 150px; background: var(--panel); border-left: 1px solid var(--border-light); padding: 10px 0; overflow: hidden; }
 .app-mock-msg { display: flex; padding: 2px 14px; opacity: 0; animation: msgIn .4s ease forwards; }
 .app-mock-msg.first { padding-top: 10px; margin-top: 4px; }
 .app-mock-msg:nth-child(1) { animation-delay: .3s; }
@@ -795,16 +795,16 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               Friends
             </div>
-            <div style="height:1px;background:rgba(255,255,255,.04);margin:6px 10px;"></div>
-            <div style="height:34px;border-radius:10px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:12px;font-weight:600;color:var(--accent);background:rgba(255,249,62,.08);">
-              <span style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:14px;">&#9889;</span>
+            <div style="height:1px;background:var(--border-light);margin:6px 10px;"></div>
+            <div style="height:34px;border-radius:10px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-dim);">
+              <span style="width:26px;height:26px;border-radius:8px;background:var(--border-light);display:flex;align-items:center;justify-content:center;font-size:14px;">&#9889;</span>
               My Bastion
             </div>
           </div>
-          <div style="position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(135deg,rgba(255,255,255,.035),rgba(255,255,255,.02));border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;padding:0 10px;gap:8px;">
+          <div style="position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(135deg,rgba(255,255,255,.035),rgba(255,255,255,.02));border-top:1px solid var(--border-light);display:flex;align-items:center;padding:0 10px;gap:8px;">
             <div style="position:relative;">
               <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent);font-weight:700;font-family:var(--font-display);">Y</div>
-              <span style="position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;background:#3ecf6e;border:2px solid #0b0e15;"></span>
+              <span style="position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;background:#3ecf6e;border:2px solid var(--bg2);"></span>
             </div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:10.5px;font-weight:700;color:#fff;font-family:var(--font-display);">You</div>
@@ -815,7 +815,7 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
 
         <!-- Channel List -->
         <div class="app-mock-channels">
-          <div style="padding:12px 14px 8px;font-family:var(--font-display);font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.04);">
+          <div style="padding:12px 14px 8px;font-family:var(--font-display);font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border-light);">
             <span style="font-size:16px;">&#9889;</span>My Bastion
           </div>
           <div style="flex:1;padding:6px 0;overflow:hidden;">
@@ -827,8 +827,8 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
               <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.12);width:14px;text-align:center;flex-shrink:0;">#</span>
               general
             </div>
-            <div style="display:flex;align-items:center;gap:7px;padding:5px 10px;margin:1px 6px;border-radius:8px;font-size:11.5px;font-weight:600;color:var(--accent);background:rgba(255,249,62,.07);">
-              <span style="font-size:13px;font-weight:700;color:rgba(255,249,62,.3);width:14px;text-align:center;flex-shrink:0;">#</span>
+            <div style="display:flex;align-items:center;gap:7px;padding:5px 10px;margin:1px 6px;border-radius:8px;font-size:11.5px;font-weight:600;color:var(--accent);background:var(--accent-dim);">
+              <span style="font-size:13px;font-weight:700;color:var(--accent-glow);width:14px;text-align:center;flex-shrink:0;">#</span>
               war-council
             </div>
             <div style="display:flex;align-items:center;gap:7px;padding:5px 10px;margin:1px 6px;border-radius:8px;font-size:11.5px;font-weight:500;color:rgba(255,255,255,.35);">
@@ -852,7 +852,7 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
 
         <!-- Chat Area -->
         <div class="app-mock-chat">
-          <div style="height:38px;min-height:38px;background:#0d1018;display:flex;align-items:center;padding:0 14px;gap:8px;border-bottom:1px solid rgba(255,255,255,.04);">
+          <div style="height:38px;min-height:38px;background:var(--panel);display:flex;align-items:center;padding:0 14px;gap:8px;border-bottom:1px solid var(--border-light);">
             <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,.12);">#</span>
             <span style="font-family:var(--font-display);font-size:12.5px;font-weight:700;color:#fff;">war-council</span>
             <span style="font-size:10.5px;color:var(--muted);margin-left:6px;">Strategy &amp; coordination</span>
@@ -911,7 +911,7 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
               </div>
             </div>
           </div>
-          <div style="margin:4px 10px 10px;padding:8px 10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.018));border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:6px;">
+          <div style="margin:4px 10px 10px;padding:8px 10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.018));border:1px solid var(--border-light);display:flex;align-items:center;gap:6px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span style="flex:1;font-size:11.5px;color:rgba(255,255,255,.18);">Message #war-council</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
@@ -927,21 +927,21 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
           <div style="display:flex;align-items:center;gap:7px;padding:4px 10px;margin:1px 4px;border-radius:8px;">
             <div style="position:relative;flex-shrink:0;">
               <div style="width:24px;height:24px;border-radius:50%;background:rgba(255,249,62,.14);border:1px solid rgba(255,255,255,.06);font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:var(--accent);">K</div>
-              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#3ecf6e;border:1.5px solid #0d1018;"></span>
+              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#3ecf6e;border:1.5px solid var(--panel);"></span>
             </div>
             <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">KingArrow</div></div>
           </div>
           <div style="display:flex;align-items:center;gap:7px;padding:4px 10px;margin:1px 4px;border-radius:8px;">
             <div style="position:relative;flex-shrink:0;">
               <div style="width:24px;height:24px;border-radius:50%;background:rgba(100,160,255,.12);border:1px solid rgba(255,255,255,.06);font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:#6ab0ff;">Z</div>
-              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#3ecf6e;border:1.5px solid #0d1018;"></span>
+              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#3ecf6e;border:1.5px solid var(--panel);"></span>
             </div>
             <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Zephyr_</div></div>
           </div>
           <div style="display:flex;align-items:center;gap:7px;padding:4px 10px;margin:1px 4px;border-radius:8px;">
             <div style="position:relative;flex-shrink:0;">
               <div style="width:24px;height:24px;border-radius:50%;background:rgba(100,220,140,.1);border:1px solid rgba(255,255,255,.06);font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:#5dcc82;">S</div>
-              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#3ecf6e;border:1.5px solid #0d1018;"></span>
+              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#3ecf6e;border:1.5px solid var(--panel);"></span>
             </div>
             <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ShadowScout</div></div>
           </div>
@@ -949,7 +949,7 @@ footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
           <div style="display:flex;align-items:center;gap:7px;padding:4px 10px;margin:1px 4px;border-radius:8px;opacity:.5;">
             <div style="position:relative;flex-shrink:0;">
               <div style="width:24px;height:24px;border-radius:50%;background:rgba(200,100,255,.1);border:1px solid rgba(255,255,255,.06);font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display);color:#c87af5;">M</div>
-              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#f59e0b;border:1.5px solid #0d1018;"></span>
+              <span style="position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:#f59e0b;border:1.5px solid var(--panel);"></span>
             </div>
             <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Myrrh</div></div>
           </div>

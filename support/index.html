@@ -283,6 +283,19 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 @media(max-width:1024px){.contact-form-wrap{grid-template-columns:1fr;}.contact-sidebar{flex-direction:row;flex-wrap:wrap;}.cs-card{flex:1;min-width:200px;}}
 @media(max-width:768px){.contact-section{padding-left:24px;padding-right:24px;}.contact-hero-band{padding:28px 24px;}.cf-row{grid-template-columns:1fr;}.contact-sidebar{flex-direction:column;}}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+if (!firebase.apps.length) firebase.initializeApp({
+  apiKey: "AIzaSyDeKw90592XdSKSXr1mefodYhca53AVP9M",
+  authDomain: "fortized-5ffcf.firebaseapp.com",
+  databaseURL: "https://fortized-5ffcf-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "fortized-5ffcf",
+  storageBucket: "fortized-5ffcf.firebasestorage.app",
+  messagingSenderId: "232126031951",
+  appId: "1:232126031951:web:c66312d3175f137c25223a"
+});
+</script>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -779,7 +792,7 @@ if (cfCategory) cfCategory.addEventListener('change', () => {
 if (cfMessage) cfMessage.addEventListener('input', () => {
   cfCharCount.textContent = cfMessage.value.length + ' / 2000';
 });
-function submitContactForm() {
+async function submitContactForm() {
   const username = document.getElementById('cfUsername').value.trim();
   const email = document.getElementById('cfEmail').value.trim();
   const category = document.getElementById('cfCategory').value;
@@ -789,20 +802,21 @@ function submitContactForm() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Please enter a valid email address.'); return; }
   const btn = document.getElementById('cfSubmitBtn');
   btn.disabled = true; btn.textContent = 'Sending...';
-  /* Store in Firebase if available, otherwise just show success */
   try {
     if (typeof firebase !== 'undefined' && firebase.database) {
-      firebase.database().ref('support/tickets').push({
+      await firebase.database().ref('support/tickets').push({
         username, email, category, subject, message,
         submittedAt: new Date().toISOString(),
         status: 'open'
       });
     }
-  } catch(e) { console.log('Firebase not available for support tickets'); }
-  setTimeout(() => {
     document.getElementById('contactForm').style.display = 'none';
     document.getElementById('cfSuccess').classList.add('show');
-  }, 800);
+  } catch(e) {
+    console.error('Failed to submit support ticket:', e);
+    alert('Failed to send your request. Please try again.');
+    btn.disabled = false; btn.textContent = 'Send Message →';
+  }
 }
 function resetContactForm() {
   document.getElementById('contactForm').style.display = '';

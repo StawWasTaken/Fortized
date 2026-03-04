@@ -1131,12 +1131,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 
 /* ── BADGE SYSTEM ─────────────────────────────────── */
 .ftz-badge { display:inline-flex;align-items:center;justify-content:center;position:relative;width:28px;height:28px;flex-shrink:0;cursor:pointer;vertical-align:middle;margin:0 1px;transition:transform .15s cubic-bezier(.22,1,.36,1),filter .15s; }
-.ftz-badge:hover { transform:scale(1.15);filter:drop-shadow(0 0 6px currentColor); }
+.ftz-badge:hover { transform:scale(1.15);filter:drop-shadow(0 0 6px currentColor);z-index:99999; }
 .ftz-badge img { width:100%;height:100%;object-fit:contain;pointer-events:none; }
-.ftz-badge .badge-tooltip { position:fixed;z-index:99999;transform:translateX(-50%) scale(.92);opacity:0;pointer-events:none;white-space:nowrap;padding:7px 12px;border-radius:8px;background:#111319;border:1px solid rgba(255,255,255,.1);color:#c8d0dc;font-size:11.5px;font-weight:600;letter-spacing:.01em;box-shadow:0 8px 24px rgba(0,0,0,.6);transition:opacity .12s,transform .12s cubic-bezier(.22,1,.36,1); }
+.ftz-badge .badge-tooltip { position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) scale(.92);opacity:0;pointer-events:none;white-space:nowrap;padding:7px 12px;border-radius:8px;background:#111319;border:1px solid rgba(255,255,255,.1);color:#c8d0dc;font-size:11.5px;font-weight:600;letter-spacing:.01em;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.6);transition:opacity .12s,transform .12s cubic-bezier(.22,1,.36,1); }
 .ftz-badge .badge-tooltip::after { content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#111319;pointer-events:none; }
 .ftz-badge:hover .badge-tooltip { opacity:1;transform:translateX(-50%) scale(1); }
-.ftz-badge .badge-tooltip::before { content:'';position:absolute;inset:-8px;z-index:-1; }
 /* Badge glow accents per type */
 .ftz-badge.badge-superadmin { color:#fff93e; }
 .ftz-badge.badge-admin { color:#f87171; }
@@ -1148,7 +1147,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ftz-badge.badge-quest { color:#9ca3af; }
 .ftz-badge.badge-onyx { color:#fff93e; }
 /* Badge row container */
-.ftz-badge-row { display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:4px; }
+.ftz-badge-row { display:inline-flex;align-items:center;gap:4px;vertical-align:middle;margin-left:4px;overflow:visible; }
 
 /* ── LOADING SKELETON ─────────────────────────────── */
 @keyframes shimmer { 0%{background-position:-600px 0} 100%{background-position:600px 0} }
@@ -10896,8 +10895,8 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   _renderAdminNav(tab); adminTab = tab;
   const main = document.getElementById('adm-content'); if (!main) return;
   if (!_isAutoRefresh) main.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,.3);">Loading…</div>';
-  // Auto-refresh reports and nsfw_queue every 5 seconds
-  if (!_isAutoRefresh && (tab === 'reports' || tab === 'nsfw_queue')) {
+  // Auto-refresh reports, nsfw_queue and support_tickets every 5 seconds
+  if (!_isAutoRefresh && (tab === 'reports' || tab === 'nsfw_queue' || tab === 'support_tickets')) {
     _adminAutoRefresh = setInterval(() => {
       if (adminTab !== tab) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; return; }
       _loadAdminPage(tab, true);
@@ -17755,26 +17754,6 @@ function renderBadgesHTML(user) {
     `<span class="ftz-badge ${b.cls}"><img src="${b.img}" alt="${b.id}"><span class="badge-tooltip">${escapeHTML(b.tooltip||'')}</span></span>`
   ).join('') + '</span>';
 }
-
-// Position fixed badge tooltips on hover so they never get clipped by overflow
-document.addEventListener('mouseenter', function(e) {
-  const badge = e.target.closest('.ftz-badge');
-  if (!badge) return;
-  const tip = badge.querySelector('.badge-tooltip');
-  if (!tip) return;
-  const r = badge.getBoundingClientRect();
-  tip.style.left = (r.left + r.width / 2) + 'px';
-  tip.style.bottom = 'auto';
-  // Place above badge, fall below if not enough space
-  const above = r.top - 40;
-  if (above > 8) {
-    tip.style.top = (r.top - 8) + 'px';
-    tip.style.transform = 'translate(-50%,-100%) scale(1)';
-  } else {
-    tip.style.top = (r.bottom + 8) + 'px';
-    tip.style.transform = 'translate(-50%,0) scale(1)';
-  }
-}, true);
 
 function spawnHeartAnimation(x, y) {
   const h = document.createElement('div');

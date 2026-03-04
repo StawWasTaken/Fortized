@@ -2623,7 +2623,7 @@ const EMOTICON_MAP = {
 // Fortized custom emojis — hosted on GitHub
 // Base URL for the Fortized emojis folder
 // Use jsDelivr CDN for reliable CORS access to GitHub-hosted images
-const FTZ_EMOJI_BASE = 'https://cdn.jsdelivr.net/gh/stawlacasse/fortized-emojis@main/';
+const FTZ_EMOJI_BASE = 'https://cdn.jsdelivr.net/gh/StawWasTaken/Fortized@main/fortized%20emojis/';
 // Exact filenames from the Fortized emojis GitHub folder
 // Format: [name, extension] — .gif for animated, .png for static
 const FORTIZED_EMOJIS_DATA = [
@@ -6163,14 +6163,14 @@ function setCBVis(v,btn){
   if(btn)btn.classList.add('active');
 }
 // ── Roblox-style Ban / Suspend / Warning Screens ──
-function _fmtDateEU(d) { if (!d) return 'Unknown'; const dt = new Date(d); const dd = String(dt.getDate()).padStart(2,'0'); const mm = String(dt.getMonth()+1).padStart(2,'0'); const yy = dt.getFullYear(); const hh = String(dt.getHours()).padStart(2,'0'); const mi = String(dt.getMinutes()).padStart(2,'0'); return dd+'/'+mm+'/'+yy+' — '+hh+':'+mi; }
-function _fmtDateEUShort(d) { if (!d) return 'Unknown'; const dt = new Date(d); const dd = String(dt.getDate()).padStart(2,'0'); const mm = String(dt.getMonth()+1).padStart(2,'0'); const yy = dt.getFullYear(); return dd+'/'+mm+'/'+yy; }
+function _fmtDateEU(d) { if (!d) return 'Unknown'; try { const dt = new Date(d); if (isNaN(dt.getTime())) return 'Unknown'; const dd = String(dt.getDate()).padStart(2,'0'); const mm = String(dt.getMonth()+1).padStart(2,'0'); const yy = dt.getFullYear(); const hh = String(dt.getHours()).padStart(2,'0'); const mi = String(dt.getMinutes()).padStart(2,'0'); return dd+'/'+mm+'/'+yy+' — '+hh+':'+mi; } catch { return 'Unknown'; } }
+function _fmtDateEUShort(d) { if (!d) return 'Unknown'; try { const dt = new Date(d); if (isNaN(dt.getTime())) return 'Unknown'; const dd = String(dt.getDate()).padStart(2,'0'); const mm = String(dt.getMonth()+1).padStart(2,'0'); const yy = dt.getFullYear(); return dd+'/'+mm+'/'+yy; } catch { return 'Unknown'; } }
 
 function _renderOffendingContent(data) {
-  if (!data) return '';
+  if (!data || typeof data !== 'object') return '';
   let html = '';
-  const text = data.offendingText || data.msgText || '';
-  const media = data.offendingMedia || [];
+  const text = data.offendingText || data.msgText || data.content || '';
+  const media = Array.isArray(data.offendingMedia) ? data.offendingMedia : (Array.isArray(data.media) ? data.media : []);
   if (text) {
     const cleanText = text.replace(/\[FTZ(?:IMG|VID|AUD|GIF|STICKER):[^\]]*\]/gi, '').trim();
     if (cleanText) html += `<div style="display:flex;justify-content:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);flex-direction:column;gap:6px;">
@@ -6189,6 +6189,11 @@ function _renderOffendingContent(data) {
 }
 
 function _showBanScreen(ban) {
+  if (!ban || typeof ban !== 'object') ban = {};
+  const bannedAt = ban.bannedAt || ban.at || ban.date || null;
+  const reason = ban.reason || ban.note || '';
+  const category = ban.category || 'Account behavior';
+  const bannedBy = ban.bannedBy || ban.by || 'Fortized Moderation';
   document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:99999;background:#080a0f;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
     <div style="background:rgba(12,15,22,.95);border:1px solid #1a2030;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
       <div style="width:68px;height:68px;border-radius:18px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
@@ -6202,20 +6207,20 @@ function _showBanScreen(ban) {
       <div style="background:#0c0f18;border:1px solid #1a2030;border-radius:14px;padding:20px 24px;text-align:left;margin-bottom:24px;">
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="color:#5a6478;font-size:13px;">Reviewed</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${_fmtDateEU(ban.bannedAt)}</span>
+          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${_fmtDateEU(bannedAt)}</span>
         </div>
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="color:#5a6478;font-size:13px;">Moderator Note</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${ban.reason ? escapeHTML(ban.reason) : 'No reason provided'}</span>
+          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${reason ? escapeHTML(reason) : 'No reason provided'}</span>
         </div>
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="color:#5a6478;font-size:13px;">Category</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${ban.category || 'Account behavior'}</span>
+          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(category)}</span>
         </div>
         ${_renderOffendingContent(ban)}
         <div style="display:flex;justify-content:space-between;padding:10px 0;">
           <span style="color:#5a6478;font-size:13px;">Actioned by</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${ban.bannedBy || 'Fortized Moderation'}</span>
+          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(bannedBy)}</span>
         </div>
       </div>
       <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">If you wish to appeal, please visit <a href="/support#contact" style="color:#fff93e;text-decoration:none;font-weight:600;">Fortized Support</a></div>
@@ -6225,10 +6230,12 @@ function _showBanScreen(ban) {
 }
 
 function _showSuspendScreen(data) {
+  if (!data || typeof data !== 'object') data = {};
   const until = data.until ? new Date(data.until) : null;
-  const reason = data.reason || 'No reason provided';
-  const moderator = data.suspendedBy || 'Fortized Moderation';
-  const modMessage = data.moderatorMessage || '';
+  const reason = data.reason || data.note || 'No reason provided';
+  const moderator = data.suspendedBy || data.by || 'Fortized Moderation';
+  const modMessage = data.moderatorMessage || data.message || '';
+  const suspendedAt = data.suspendedAt || data.at || data.date || null;
   const durationText = _fmtDateEU(data.until);
   // Auto-refresh when suspension expires
   if (until && until > new Date()) {
@@ -6251,7 +6258,7 @@ function _showSuspendScreen(data) {
       <div style="background:#0c0f18;border:1px solid #1a2030;border-radius:14px;padding:20px 24px;text-align:left;margin-bottom:24px;">
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="color:#5a6478;font-size:13px;">Reviewed</span>
-          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${_fmtDateEU(data.suspendedAt)}</span>
+          <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${_fmtDateEU(suspendedAt)}</span>
         </div>
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="color:#5a6478;font-size:13px;">Reason</span>
@@ -6279,6 +6286,8 @@ function _showSuspendScreen(data) {
 
 function _showWarningOverlay(reason, issuedBy, contentData) {
   if (document.getElementById('ftz-warning-overlay')) return;
+  const safeReason = (reason && typeof reason === 'string') ? reason : 'Violation of Terms of Use';
+  const safeMod = (issuedBy && typeof issuedBy === 'string') ? issuedBy : 'Fortized Moderation';
   const overlay = document.createElement('div');
   overlay.id = 'ftz-warning-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(8,10,15,.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .3s ease;';
@@ -6299,12 +6308,12 @@ function _showWarningOverlay(reason, issuedBy, contentData) {
       </div>
       <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
         <span style="color:#5a6478;font-size:13px;">Reason</span>
-        <span style="color:#c8d0dc;font-size:13px;font-weight:600;max-width:260px;text-align:right;">${escapeHTML(reason)}</span>
+        <span style="color:#c8d0dc;font-size:13px;font-weight:600;max-width:260px;text-align:right;">${escapeHTML(safeReason)}</span>
       </div>
-      ${contentData ? _renderOffendingContent(contentData) : ''}
+      ${contentData && typeof contentData === 'object' ? _renderOffendingContent(contentData) : ''}
       <div style="display:flex;justify-content:space-between;padding:10px 0;">
         <span style="color:#5a6478;font-size:13px;">Actioned by</span>
-        <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(issuedBy || 'Fortized Moderation')}</span>
+        <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(safeMod)}</span>
       </div>
     </div>
     <div style="font-size:12px;color:#5a6478;margin-bottom:20px;">Please review our <a href="/terms" style="color:#fff93e;text-decoration:none;font-weight:600;">Terms of Use</a> to avoid further action on your account.</div>
@@ -6513,7 +6522,7 @@ function updateDOBField(){
   firebase.database().ref('users/' + CU.username + '/suspension').on('value', snap => {
     if (snap.exists()) {
       const data = snap.val();
-      if (new Date(data.until) > new Date()) { _wasSuspended = true; _showSuspendScreen(data); }
+      if (data && data.until && new Date(data.until) > new Date()) { _wasSuspended = true; _showSuspendScreen(data); }
       else if (_wasSuspended) { location.reload(); }
     } else if (_wasSuspended) { location.reload(); }
   });
@@ -12108,10 +12117,37 @@ function _listenStaffChanges() {
         else rail.appendChild(btn);
       }
     } else {
+      // Remove sidebar button
       if (existingBtn) existingBtn.remove();
       if (existingSep && existingSep.id === 'admin-rail-sep') existingSep.remove();
+      // If user is currently in the staff console, kick them out immediately
+      if (_currentView === 'admin') {
+        adminAuthed = false;
+        _closeAdminPanel();
+        toast('Your staff access has been revoked.', 'error');
+      }
+      adminAuthed = false;
     }
   });
+  // Listen for staff revocation signal targeting this user specifically
+  if (CU?.username) {
+    firebase.database().ref('admin/staff_revoked/' + CU.username).on('value', snap => {
+      if (!snap.exists()) return;
+      const ts = snap.val();
+      if (Date.now() - ts < 60000) {
+        // Revocation just happened — force close admin if open
+        if (!hasStaffAccess()) {
+          adminAuthed = false;
+          if (_currentView === 'admin') {
+            _closeAdminPanel();
+            toast('Your staff access has been revoked.', 'error');
+          }
+        }
+        // Clean up the signal
+        firebase.database().ref('admin/staff_revoked/' + CU.username).remove().catch(()=>{});
+      }
+    });
+  }
 }
 
 // Listen for force-refresh signal from admin
@@ -12509,6 +12545,8 @@ function removeStaff(role, idx) {
     else staff.moderators = list;
     localStorage.setItem('ftz_staff', JSON.stringify(staff));
     _saveStaffToFirebase(staff);
+    // Revoke their staff console access by clearing their auth flag via Firebase signal
+    firebase.database().ref('admin/staff_revoked/' + username).set(Date.now()).catch(()=>{});
     logAudit('remove_'+role, username, 'Removed by super admin');
     toast(`${username} removed from ${roleLabel}s`, 'success');
     loadAdminTab('staff');
@@ -13832,6 +13870,8 @@ function preprocessMessageText(text) {
     if (unicode) return unicode;
     // Fortized emojis stay as :name: token (rendered by parseMD)
     if (FORTIZED_EMOJI_MAP[name]) return match;
+    // Bastion custom emojis stay as :name: token (rendered by parseMD)
+    if (curBastion !== null && (CU?.bastions?.[curBastion]?.customEmojis||[]).some(e => e.name === name)) return match;
     return match;
   });
 }
@@ -13881,13 +13921,18 @@ function parseMD(s) {
     const safe = escapeHTML(url);
     return `<div style="margin:6px 0;max-width:180px;display:inline-block;cursor:pointer;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:180px;object-fit:contain;display:block;" loading="lazy" draggable="false"></div>`;
   });
-  // 0aa. :emoji_name: shortcodes → actual emoji / Fortized emoji
+  // 0aa. :emoji_name: shortcodes → actual emoji / Fortized emoji / bastion custom emoji
   s = s.replace(/:([a-zA-Z0-9_]+):/g, (match, name) => {
     const unicode = EMOJI_SHORTCODES[name];
     if (unicode) return unicode;
-    // Check Fortized custom emojis (from bastion + global FORTIZED_EMOJIS)
+    // Check global Fortized emojis
     const ftz = FORTIZED_EMOJI_MAP[name];
-    if (ftz) return `<img src="${escapeHTML(ftz)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;">`;
+    if (ftz) return `<img src="${escapeHTML(ftz)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
+    // Check bastion custom emojis
+    if (curBastion !== null) {
+      const ce = (CU?.bastions?.[curBastion]?.customEmojis||[]).find(e => e.name === name);
+      if (ce) return `<img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
+    }
     return match; // keep original if unknown
   });
   // 0ab. Emoticon conversion (if enabled)

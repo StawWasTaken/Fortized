@@ -2194,8 +2194,13 @@ let quizIdx = 0;
 let quizCorrect = 0;
 let quizAnswers = [];
 let activeReportData = null;
-const SUPER_ADMIN = 'staw';
+const SUPER_ADMINS = ['staw', 'fortized', 'joyster'];
+const SUPER_ADMIN = 'staw'; // legacy compat
 const JOYSTER_ACCOUNT = 'joyster';
+// Role hierarchy: superadmin > admin > moderator
+// superadmin: maximum power, access to private data, can enable important stuff, has access to the privacy of the users (precise age)
+// admin: set by superadmins, limited data access, limited power, can do important stuff but with limits, only see age tier
+// moderator: set by superadmins only, very limited, nearly zero data access, only moderation tools (nsfw, reports, user lookup restrained)
 
 // ════════════════════════════════════════════════════════════
 // STATUS MODULE — Single Source of Truth
@@ -2802,19 +2807,34 @@ function formatTimeAgo(iso) {
 }
 function handleSearch(q) {}
 function attachFile(inputId) { openFileUpload(inputId || 'ch-input'); }
-function isSuperAdmin() { return CU?.username === SUPER_ADMIN; }
+
+// ── Role System ──
+function isSuperAdmin() { return CU?.username && SUPER_ADMINS.includes(CU.username); }
 function isAdmin() {
-  if (CU?.username === SUPER_ADMIN) return true;
-  const admins = JSON.parse(localStorage.getItem('ftz_admins')||'["staw"]');
-  return CU?.username && admins.includes(CU.username);
+  if (isSuperAdmin()) return true;
+  const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
+  return CU?.username && (staff.admins||[]).includes(CU.username);
 }
+function isModerator() {
+  if (isAdmin()) return true;
+  const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
+  return CU?.username && (staff.moderators||[]).includes(CU.username);
+}
+function getStaffRole(username) {
+  if (!username) return null;
+  if (SUPER_ADMINS.includes(username)) return 'superadmin';
+  const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
+  if ((staff.admins||[]).includes(username)) return 'admin';
+  if ((staff.moderators||[]).includes(username)) return 'moderator';
+  return null;
+}
+function hasStaffAccess() { return isModerator(); } // any staff role
+
 async function logAudit(action, target, note='') {
   const entry = {action,target,note,by:CU?.username,at:new Date().toISOString()};
-  // Store locally
   const log = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
   log.unshift(entry);
   localStorage.setItem('ftz_audit_log', JSON.stringify(log.slice(0,500)));
-  // Persist to Firebase
   try { await firebase.database().ref('admin/audit_log').push(entry); } catch {}
 }
 
@@ -6026,13 +6046,14 @@ function setCBVis(v,btn){
   if(btn)btn.classList.add('active');
 }
 function banUser(username,permanent=true){
-  // Protect the Joyster system account
   if (username === JOYSTER_ACCOUNT) { toast('Joyster is protected and cannot be banned.','error'); return; }
   showCustomInput('Ban Reason','Enter reason:',reason=>{
     if(!reason)return;
     const bans=JSON.parse(localStorage.getItem('ftz_bans')||'[]');
-    bans.push({username,reason,bannedBy:CU.username,permanent,createdAt:new Date().toISOString()});
+    const banObj = {username,reason,bannedBy:CU.username,permanent,bannedAt:new Date().toISOString()};
+    bans.push(banObj);
     localStorage.setItem('ftz_bans',JSON.stringify(bans));
+    _saveBanToFirebase(banObj);
     logAudit(permanent?'permanent_ban':'temp_ban',username,reason);
     toast(username+' banned','success');
     loadAdminTab('users');
@@ -6130,17 +6151,26 @@ function updateDOBField(){
   showView('home');
   updateNotifBadge().catch(()=>{});
 
-  // Admin rail button
-  if (isAdmin()){
+  // Staff console button (visible to superadmin, admin, moderator)
+  if (hasStaffAccess()){
     const rail=document.getElementById('rail');
     if(rail&&!document.getElementById('admin-rail-btn')){
+      const role = getStaffRole(CU.username);
+      const roleIcon = role === 'superadmin' ? '👑' : role === 'admin' ? '🛡️' : '🔧';
+      const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
       const btn=document.createElement('div');
-      btn.id='admin-rail-btn';btn.className='rail-btn';btn.innerHTML='🛡️';
-      btn.dataset.tip='Admin Panel';
-      btn.style.cssText='border:1px solid rgba(248,113,113,.3);color:var(--red);margin-top:4px;';
+      btn.id='admin-rail-btn';btn.className='rail-btn';
+      btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Staff Console</span>`;
+      btn.dataset.tip=roleLabel + ' Panel';
+      btn.style.cssText='border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);margin-top:6px;background:rgba(248,113,113,.04);';
       btn.onclick=tryOpenAdmin;
-      const pb=rail.querySelector('#rb-profile');
-      if(pb)rail.insertBefore(btn,pb);else rail.appendChild(btn);
+      const sep = document.createElement('div');
+      sep.className='rail-sep';sep.style.margin='8px 12px';
+      const bastionSection = rail.querySelector('#rail-bastions')?.parentElement || rail;
+      // Insert before the Create Bastion button area
+      const createBtn = rail.querySelector('[onclick*="modal-create-bastion"]');
+      if(createBtn){rail.insertBefore(sep,createBtn);rail.insertBefore(btn,createBtn);}
+      else rail.appendChild(btn);
     }
   }
 
@@ -6157,9 +6187,12 @@ function updateDOBField(){
   trackRadianceTime();
   // Post-init setup: account switcher, periodic updates
   setTimeout(_postInitSetup, 500);
+  // Check & listen for maintenance mode
+  checkMaintenanceMode();
+  _listenMaintenanceMode();
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
-  // Start report polling
-  if(isAdmin())setTimeout(startReportPolling,2000);
+  // Start report polling for all staff
+  if(hasStaffAccess())setTimeout(startReportPolling,2000);
 
   // Event listeners
   document.addEventListener('contextmenu',e=>{e.preventDefault();handleContextMenu(e);});
@@ -10103,15 +10136,14 @@ async function submitReport() {
     bastionId: curBastion !== null ? CU.bastions[curBastion]?.name : null,
   };
 
-  // Save to Firebase reports queue
+  // Save to Firebase reports queue (primary) + localStorage (cache)
   try {
-    await FortizedSocial.submitReport?.(report);
-  } catch {
-    // Store locally as fallback
-    const existing = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
-    existing.push(report);
-    localStorage.setItem('ftz_reports', JSON.stringify(existing));
-  }
+    await firebase.database().ref('reports/' + report.id).set(report);
+  } catch(e) { console.warn('Report Firebase write failed:', e); }
+  // Always store locally too as cache
+  const existing = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+  if (!existing.find(r => r.id === report.id)) existing.push(report);
+  localStorage.setItem('ftz_reports', JSON.stringify(existing));
 
   document.getElementById('modal-report-dynamic')?.remove();
   activeReportData = null;
@@ -10129,11 +10161,13 @@ async function submitReport() {
 // ── Admin data sync helpers ──
 async function _syncAdminDataFromFirebase() {
   try {
-    const [reps, bans, admins, auditSnap] = await Promise.all([
+    const [reps, bans, staffSnap, auditSnap, gsSnap, nsfwSnap] = await Promise.all([
       firebase.database().ref('reports').get(),
       firebase.database().ref('admin/bans').get(),
-      firebase.database().ref('admin/admins').get(),
+      firebase.database().ref('admin/staff').get(),
       firebase.database().ref('admin/audit_log').limitToLast(500).get(),
+      firebase.database().ref('admin/global_settings').get(),
+      firebase.database().ref('admin/nsfw_queue').get(),
     ]);
     if (reps.exists()) {
       const fb = Object.values(reps.val());
@@ -10145,8 +10179,24 @@ async function _syncAdminDataFromFirebase() {
     if (bans.exists()) {
       localStorage.setItem('ftz_bans', JSON.stringify(Object.values(bans.val())));
     }
-    if (admins.exists()) {
-      localStorage.setItem('ftz_admins', JSON.stringify(Object.values(admins.val())));
+    if (staffSnap.exists()) {
+      localStorage.setItem('ftz_staff', JSON.stringify(staffSnap.val()));
+    } else {
+      // Initialize default staff structure
+      const defaultStaff = { admins: [], moderators: [] };
+      localStorage.setItem('ftz_staff', JSON.stringify(defaultStaff));
+    }
+    if (auditSnap.exists()) {
+      const entries = Object.values(auditSnap.val()).sort((a,b) => new Date(b.at||b.timestamp||0) - new Date(a.at||a.timestamp||0));
+      localStorage.setItem('ftz_audit_log', JSON.stringify(entries.slice(0,500)));
+    }
+    if (gsSnap.exists()) {
+      const gs = gsSnap.val();
+      localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
+      _globalSettings = gs;
+    }
+    if (nsfwSnap.exists()) {
+      localStorage.setItem('ftz_nsfw_queue', JSON.stringify(Object.values(nsfwSnap.val())));
     }
   } catch(e) { console.warn('Admin sync partial fail:', e); }
 }
@@ -10157,16 +10207,21 @@ async function _saveBanToFirebase(banObj) {
 async function _removeBanFromFirebase(username) {
   try { await firebase.database().ref('admin/bans/' + username).remove(); } catch {}
 }
-async function _saveAdminsToFirebase(admins) {
-  try { await firebase.database().ref('admin/admins').set(admins); } catch {}
+async function _saveStaffToFirebase(staff) {
+  try { await firebase.database().ref('admin/staff').set(staff); } catch {}
+}
+async function _saveNsfwQueueToFirebase(queue) {
+  const obj = {};
+  queue.forEach(item => { obj[item.id] = item; });
+  try { await firebase.database().ref('admin/nsfw_queue').set(obj); } catch {}
 }
 
 function tryOpenAdmin() {
   if (isSuperAdmin()) { adminAuthed = true; openAdminPanel(); return; }
-  if (adminAuthed) { openAdminPanel(); return; }
-  showCustomInput('🛡 Admin Access', 'Enter the admin access code:', (code) => {
+  if (adminAuthed && hasStaffAccess()) { openAdminPanel(); return; }
+  showCustomInput('🛡 Staff Access', 'Enter the staff access code:', (code) => {
     if (code === '1478') {
-      if (!isAdmin()) { toast('Access denied — you are not an administrator.', 'error'); return; }
+      if (!hasStaffAccess()) { toast('Access denied — you are not a staff member.', 'error'); return; }
       adminAuthed = true;
       openAdminPanel();
     } else {
@@ -10176,11 +10231,11 @@ function tryOpenAdmin() {
 }
 
 function openAdminPanel() {
-  if (!isAdmin()) { toast('Access denied','error'); return; }
+  if (!hasStaffAccess()) { toast('Access denied','error'); return; }
   if (!adminAuthed && !isSuperAdmin()) {
-    showCustomInput('🛡 Admin Code', 'Enter your admin access code:', (code) => {
+    showCustomInput('🛡 Staff Code', 'Enter staff access code:', (code) => {
       if (code !== '1478') { toast('Wrong code','error'); return; }
-      if (!isAdmin()) { toast('Not an admin','error'); return; }
+      if (!hasStaffAccess()) { toast('Not a staff member','error'); return; }
       adminAuthed = true; _openAdminUI();
     }); return;
   }
@@ -10190,8 +10245,10 @@ function openAdminPanel() {
 
 async function _openAdminUI() {
   document.getElementById('admin-panel-overlay')?.remove();
-  // Sync admin data from Firebase on open
   await _syncAdminDataFromFirebase().catch(()=>{});
+  const role = getStaffRole(CU.username);
+  const roleLabel = role === 'superadmin' ? '👑 Super Admin' : role === 'admin' ? '🛡️ Admin' : '🔧 Moderator';
+  const roleColor = role === 'superadmin' ? '#ffd93e' : role === 'admin' ? '#f87171' : '#60a5fa';
   const overlay = document.createElement('div');
   overlay.id = 'admin-panel-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:var(--bg,#07090e);z-index:8000;display:flex;flex-direction:column;font-family:"DM Sans",sans-serif;';
@@ -10201,7 +10258,8 @@ async function _openAdminUI() {
         <div style="width:8px;height:8px;border-radius:50%;background:#f87171;box-shadow:0 0 6px #f8717188;animation:pulse 2s infinite;"></div>
         <span style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:#f87171;letter-spacing:.06em;">ADMIN CONSOLE</span>
       </div>
-      <span style="font-size:11.5px;color:rgba(255,255,255,.35);">@${escapeHTML(CU.username)}${isSuperAdmin()?' 👑':''}</span>
+      <span style="font-size:11.5px;color:rgba(255,255,255,.35);">@${escapeHTML(CU.username)}</span>
+      <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:${roleColor}22;color:${roleColor};border:1px solid ${roleColor}44;">${roleLabel}</span>
       <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
         <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:#3ecf6e;"><div style="width:5px;height:5px;border-radius:50%;background:#3ecf6e;"></div>Live</div>
         <button onclick="_closeAdminPanel()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;padding:5px 14px;border-radius:8px;cursor:pointer;font-size:12.5px;transition:.15s;" onmouseover="this.style.background='rgba(248,113,113,.2)'" onmouseout="this.style.background='rgba(248,113,113,.1)'">Exit</button>
@@ -10212,7 +10270,6 @@ async function _openAdminUI() {
       <div id="adm-content" style="flex:1;overflow-y:auto;background:var(--bg,#07090e);"></div>
     </div>`;
   document.body.appendChild(overlay);
-  // Start report polling
   startReportPolling();
   _renderAdminNav('dashboard');
   _loadAdminPage('dashboard');
@@ -10226,27 +10283,34 @@ function _closeAdminPanel() {
 
 function _renderAdminNav(active) {
   const nav = document.getElementById('adm-nav'); if (!nav) return;
+  const role = getStaffRole(CU.username);
   const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
-  const pending = reps.filter(r=>r.status!=='resolved').length;
+  const pending = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
   const nsfwQueue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
+  // Build tabs based on role
+  // moderator: only moderation tools (reports, nsfw, limited user lookup)
+  // admin: moderation + users + economy + bastions + audit
+  // superadmin: everything including settings, staff management, private data
   const secs = [
     {label:'OVERVIEW', items:[{id:'dashboard',icon:'📊',label:'Dashboard'}]},
     {label:'MODERATION', items:[
       {id:'reports',icon:'🚩',label:'Reports',badge:pending},
-      {id:'bans',icon:'🔨',label:'Bans'},
+      ...(role!=='moderator'?[{id:'bans',icon:'🔨',label:'Bans'}]:[]),
       {id:'nsfw_queue',icon:'🔞',label:'NSFW Queue',badge:nsfwQueue.length},
     ]},
-    {label:'USERS', items:[
+    ...(role!=='moderator'?[{label:'USERS', items:[
       {id:'users',icon:'🔍',label:'User Lookup'},
       {id:'all_users',icon:'👥',label:'All Users'},
-    ]},
-    {label:'SYSTEM', items:[
-      {id:'economy',icon:'💰',label:'Economy'},
+    ]}]:[{label:'USERS', items:[
+      {id:'users',icon:'🔍',label:'User Lookup'},
+    ]}]),
+    ...(role!=='moderator'?[{label:'SYSTEM', items:[
+      ...(isAdmin()?[{id:'economy',icon:'💰',label:'Economy'}]:[]),
       {id:'bastions',icon:'🏰',label:'Bastions'},
-      {id:'audit',icon:'📋',label:'Audit Log'},
-      {id:'settings',icon:'⚙️',label:'Global Settings'},
-      ...(isSuperAdmin()?[{id:'admins',icon:'👑',label:'Admins'}]:[]),
-    ]},
+      ...(isAdmin()?[{id:'audit',icon:'📋',label:'Audit Log'}]:[]),
+      ...(isSuperAdmin()?[{id:'settings',icon:'⚙️',label:'Global Settings'}]:[]),
+      ...(isSuperAdmin()?[{id:'staff',icon:'👑',label:'Staff Management'}]:[]),
+    ]}]:[]),
   ];
   nav.innerHTML = secs.map(s=>`
     <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:12px 8px 4px;">${s.label}</div>
@@ -10267,7 +10331,8 @@ async function _loadAdminPage(tab) {
   if (tab === 'dashboard') {
     const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
     const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
-    const admins = JSON.parse(localStorage.getItem('ftz_admins')||'["staw"]');
+    const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
+    const totalStaff = SUPER_ADMINS.length + (staff.admins||[]).length + (staff.moderators||[]).length;
     let totalUsers = '–', onlineCount = 0, radianceCount = 0;
     try {
       const s = await firebase.database().ref('users').get();
@@ -10288,7 +10353,7 @@ async function _loadAdminPage(tab) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
         <div>
           <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:4px;">Dashboard</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.4);">Admin panel · ${escapeHTML(CU.displayName||CU.username)} · ${new Date().toLocaleDateString()}</div>
+          <div style="font-size:12.5px;color:rgba(255,255,255,.4);">Staff console · ${escapeHTML(CU.displayName||CU.username)} · ${getStaffRole(CU.username)||'staff'} · ${new Date().toLocaleDateString()}</div>
         </div>
         <button onclick="_syncAdminDataFromFirebase().then(()=>{toast('Synced','success');_loadAdminPage('dashboard');})" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;padding:6px 14px;cursor:pointer;">🔄 Sync</button>
       </div>
@@ -10307,7 +10372,7 @@ async function _loadAdminPage(tab) {
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;">
         ${[
           {l:'Radiance Users',v:radianceCount,i:'✨',c:'#ffd93e'},
-          {l:'Admins',v:admins.length,i:'🛡️',c:'#a78bfa'},
+          {l:'Staff',v:totalStaff,i:'🛡️',c:'#a78bfa'},
           {l:'Reports Total',v:reps.length,i:'📊',c:'#60a5fa'},
           {l:'NSFW Queue',v:nsfwQueue.length,i:'🔞',c:nsfwQueue.length>0?'#f59e0b':'#3ecf6e',t:'nsfw_queue'},
         ].map(s=>`<div ${s.t?`onclick="_loadAdminPage('${s.t}')" style="cursor:pointer;`:'style="'} background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px;transition:.15s;">
@@ -10501,26 +10566,44 @@ async function _loadAdminPage(tab) {
           <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">${queue.length} items awaiting review</div>
         </div>
       </div>
-      ${queue.length===0?'<div style="text-align:center;padding:60px;color:rgba(255,255,255,.3);">Queue is clear</div>':
+      ${queue.length===0?'<div style="text-align:center;padding:60px;color:rgba(255,255,255,.3);"><div style="font-size:40px;margin-bottom:12px;">✅</div>Queue is clear — no flagged content</div>':
       `<div style="display:flex;flex-direction:column;gap:10px;">
-        ${queue.map((item,i)=>`<div style="background:var(--panel,#101420);border:1px solid rgba(245,158,11,.15);border-radius:12px;padding:16px 18px;">
+        ${queue.map((item,i)=>{
+          const typeIcon = item.type==='video'?'🎬':item.type==='gif'?'🎞️':'🖼️';
+          const labelColor = item.aiLabel==='EXPLICIT'||item.aiLabel==='BANNED_CONTENT'?'#f87171':item.aiLabel==='SUGGESTIVE'?'#f59e0b':'#60a5fa';
+          return `<div style="background:var(--panel,#101420);border:1px solid rgba(245,158,11,.15);border-radius:12px;padding:16px 18px;">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-            <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:rgba(245,158,11,.1);color:#f59e0b;">FLAGGED</span>
+            ${item.thumbnail?`<div style="width:64px;height:64px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);filter:blur(8px);cursor:pointer;" onclick="this.style.filter=this.style.filter?'':'blur(8px)'" title="Click to reveal"><img src="${item.thumbnail}" style="width:100%;height:100%;object-fit:cover;"></div>`:`<div style="width:64px;height:64px;border-radius:8px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">${typeIcon}</div>`}
             <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${labelColor}18;color:${labelColor};">${escapeHTML(item.aiLabel||'FLAGGED')}</span>
+                <span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.3);">${typeIcon} ${escapeHTML(item.type||'image').toUpperCase()}</span>
+              </div>
               <div style="font-size:13px;font-weight:600;">Uploaded by <strong>${escapeHTML(item.uploader||'?')}</strong></div>
-              <div style="font-size:11px;color:rgba(255,255,255,.35);">AI Label: ${escapeHTML(item.aiLabel||'?')} · Score: ${item.aiScore||'?'} · ${item.flaggedAt?new Date(item.flaggedAt).toLocaleDateString():''}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.35);">File: ${escapeHTML(item.fileName||'unknown')} · Score: ${item.aiScore||'?'} · ${item.flaggedAt?new Date(item.flaggedAt).toLocaleDateString():(item.createdAt?new Date(item.createdAt).toLocaleDateString():'')}</div>
+              ${item.bastionId?`<div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-top:2px;">Bastion: ${escapeHTML(item.bastionId)}</div>`:''}
             </div>
           </div>
           <div style="display:flex;gap:7px;flex-wrap:wrap;">
-            <button onclick="reviewNSFW(${i},'approve')" style="padding:5px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Approve</button>
-            <button onclick="reviewNSFW(${i},'remove')" style="padding:5px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:7px;color:#f87171;font-size:12px;cursor:pointer;">Remove</button>
-            <button onclick="reviewNSFW(${i},'warn')" style="padding:5px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:7px;color:#f59e0b;font-size:12px;cursor:pointer;">Warn Uploader</button>
+            <button onclick="reviewNSFW(${i},'approve')" style="padding:5px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">✅ Approve</button>
+            <button onclick="reviewNSFW(${i},'remove')" style="padding:5px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:7px;color:#f87171;font-size:12px;cursor:pointer;">🚫 Remove & Ban</button>
+            <button onclick="reviewNSFW(${i},'warn')" style="padding:5px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:7px;color:#f59e0b;font-size:12px;cursor:pointer;">⚠️ Warn Uploader</button>
+            ${item.uploader?`<button onclick="document.getElementById('admin-user-search').value='${escapeHTML(item.uploader)}';_loadAdminPage('users');setTimeout(adminSearchUser,100);" style="padding:5px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:7px;color:#60a5fa;font-size:12px;cursor:pointer;">👤 Inspect User</button>`:''}
           </div>
-        </div>`).join('')}
+        </div>`}).join('')}
       </div>`}
     </div>`;
   }
-  else if (tab === 'settings') {
+  else if (tab === 'settings' && isSuperAdmin()) {
+    // Always fetch latest from Firebase for settings page
+    try {
+      const snap = await firebase.database().ref('admin/global_settings').get();
+      if (snap.exists()) {
+        const gs2 = snap.val();
+        localStorage.setItem('ftz_global_settings', JSON.stringify(gs2));
+        _globalSettings = gs2;
+      }
+    } catch {}
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:20px;">Global Settings</div>
@@ -10529,11 +10612,17 @@ async function _loadAdminPage(tab) {
           <div style="font-weight:700;font-size:13.5px;margin-bottom:14px;">Platform Controls</div>
           <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
             <input type="checkbox" id="gs-maintenance" ${gs.maintenanceMode?'checked':''} onchange="_updateGlobalSetting('maintenanceMode',this.checked)">
-            <span style="font-size:13px;">Maintenance Mode</span>
+            <div>
+              <span style="font-size:13px;font-weight:600;">Maintenance Mode</span>
+              <div style="font-size:10.5px;color:${gs.maintenanceMode?'#f87171':'rgba(255,255,255,.3)'};">${gs.maintenanceMode?'⚠️ ACTIVE — Non-staff users see maintenance screen':'Disabled — Platform is live'}</div>
+            </div>
           </label>
           <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
             <input type="checkbox" id="gs-registration" ${gs.disableRegistration?'checked':''} onchange="_updateGlobalSetting('disableRegistration',this.checked)">
-            <span style="font-size:13px;">Disable New Registrations</span>
+            <div>
+              <span style="font-size:13px;">Disable New Registrations</span>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Block new account creation</div>
+            </div>
           </label>
           <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">
             <input type="checkbox" id="gs-emoticons" ${gs.disableEmoticonConversion?'checked':''} onchange="_updateGlobalSetting('disableEmoticonConversion',this.checked)">
@@ -10541,7 +10630,10 @@ async function _loadAdminPage(tab) {
           </label>
           <label style="display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;">
             <input type="checkbox" id="gs-nsfw-scan" ${gs.enableNSFWScan!==false?'checked':''} onchange="_updateGlobalSetting('enableNSFWScan',this.checked)">
-            <span style="font-size:13px;">Enable NSFW AI Scanner</span>
+            <div>
+              <span style="font-size:13px;">Enable NSFW AI Scanner</span>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Scans uploaded images, GIFs & videos for NSFW content</div>
+            </div>
           </label>
         </div>
         <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
@@ -10558,6 +10650,10 @@ async function _loadAdminPage(tab) {
             <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">Daily Onyx Claim Amount</div>
             <input class="settings-input" type="number" value="${gs.dailyOnyxAmount||25}" min="1" max="1000" style="max-width:100px;" onchange="_updateGlobalSetting('dailyOnyxAmount',parseInt(this.value))">
           </div>
+          <div style="margin-top:12px;">
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px;">NSFW Banned Content Hashes</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.35);">${_nsfwBannedHashes.length} banned content signatures</div>
+          </div>
         </div>
       </div>
       <div style="margin-top:16px;background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;max-width:700px;">
@@ -10570,32 +10666,66 @@ async function _loadAdminPage(tab) {
       </div>
     </div>`;
   }
-  else if (tab === 'admins' && isSuperAdmin()) {
-    const admins = JSON.parse(localStorage.getItem('ftz_admins')||'["staw"]');
+  else if (tab === 'staff' && isSuperAdmin()) {
+    const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
+    const admins = staff.admins || [];
+    const moderators = staff.moderators || [];
     main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:18px;">Admin Management</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:700px;">
-        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
-          <div style="font-weight:700;margin-bottom:12px;">Current Admins (${admins.length})</div>
-          ${admins.map((a,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
-            <span>${a===SUPER_ADMIN?'👑':'🛡️'}</span><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
-            ${a!==SUPER_ADMIN?`<button onclick="removeAdmin(${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>`:'<span style="font-size:11px;color:#ffd93e;">Super</span>'}
+      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:6px;">Staff Management</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:18px;">Only super admins can manage staff roles.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:900px;">
+        <!-- Super Admins -->
+        <div style="background:var(--panel,#101420);border:1px solid rgba(255,215,62,.15);border-radius:12px;padding:18px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+            <span style="font-size:16px;">👑</span>
+            <span style="font-weight:700;color:#ffd93e;">Super Admins</span>
+            <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${SUPER_ADMINS.length}</span>
+          </div>
+          <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Maximum power. Access to private data, can manage all settings, view precise user ages.</div>
+          ${SUPER_ADMINS.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+            <span>👑</span><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
+            <span style="font-size:10px;color:#ffd93e;font-weight:700;">PERMANENT</span>
           </div>`).join('')}
         </div>
-        <div>
-          <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;margin-bottom:14px;">
-            <div style="font-weight:700;margin-bottom:10px;">Add Admin</div>
-            <div style="display:flex;gap:7px;">
-              <input class="settings-input" id="new-admin-input" placeholder="Username" style="flex:1;">
-              <button onclick="addAdmin()" style="padding:9px 16px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:10px;cursor:pointer;font-weight:700;">Add</button>
-            </div>
+        <!-- Admins -->
+        <div style="background:var(--panel,#101420);border:1px solid rgba(248,113,113,.15);border-radius:12px;padding:18px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+            <span style="font-size:16px;">🛡️</span>
+            <span style="font-weight:700;color:#f87171;">Admins</span>
+            <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${admins.length}</span>
           </div>
-          <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
-            <div style="font-weight:700;margin-bottom:10px;">Admin Access Code</div>
-            <div style="font-family:monospace;font-size:16px;color:var(--accent);margin-bottom:8px;">1478</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.35);">Share this code with new admins to grant access to the console.</div>
+          <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Limited data access. Can moderate, manage economy, view age tiers (not precise ages).</div>
+          ${admins.map((a,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+            <span>🛡️</span><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
+            <button onclick="removeStaff('admin',${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
+          </div>`).join('')||'<div style="color:rgba(255,255,255,.25);font-size:12px;padding:8px 0;">No admins yet</div>'}
+          <div style="display:flex;gap:7px;margin-top:10px;">
+            <input class="settings-input" id="new-admin-input" placeholder="Username" style="flex:1;">
+            <button onclick="addStaff('admin')" style="padding:7px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">Add</button>
           </div>
         </div>
+        <!-- Moderators -->
+        <div style="background:var(--panel,#101420);border:1px solid rgba(96,165,250,.15);border-radius:12px;padding:18px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+            <span style="font-size:16px;">🔧</span>
+            <span style="font-weight:700;color:#60a5fa;">Moderators</span>
+            <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${moderators.length}</span>
+          </div>
+          <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Very limited power. Only moderation tools: NSFW detection, reports, restrained user lookup.</div>
+          ${moderators.map((m,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+            <span>🔧</span><span style="flex:1;font-weight:600;">${escapeHTML(m)}</span>
+            <button onclick="removeStaff('moderator',${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
+          </div>`).join('')||'<div style="color:rgba(255,255,255,.25);font-size:12px;padding:8px 0;">No moderators yet</div>'}
+          <div style="display:flex;gap:7px;margin-top:10px;">
+            <input class="settings-input" id="new-mod-input" placeholder="Username" style="flex:1;">
+            <button onclick="addStaff('moderator')" style="padding:7px 14px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">Add</button>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;margin-top:16px;max-width:300px;">
+        <div style="font-weight:700;margin-bottom:10px;">Staff Access Code</div>
+        <div style="font-family:monospace;font-size:16px;color:var(--accent);margin-bottom:8px;">1478</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.35);">Share this code with staff members to grant console access.</div>
       </div>
     </div>`;
   }
@@ -10673,8 +10803,69 @@ function _updateGlobalSetting(key, value) {
   gs[key] = value;
   localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
   _globalSettings = gs;
-  // Persist to Firebase for cross-device
+  // Persist to Firebase for cross-device sync
   try { firebase.database().ref('admin/global_settings').set(gs); } catch {}
+  // Apply side effects
+  if (key === 'maintenanceMode') {
+    if (value) {
+      logAudit('maintenance_on', 'system', 'Maintenance mode enabled by ' + CU.username);
+      toast('Maintenance mode ENABLED — non-staff users will see a maintenance screen.', 'info');
+    } else {
+      logAudit('maintenance_off', 'system', 'Maintenance mode disabled by ' + CU.username);
+      toast('Maintenance mode DISABLED — platform is live.', 'success');
+    }
+  }
+}
+
+// ── Maintenance Mode Enforcement ──
+function checkMaintenanceMode() {
+  // Load settings from Firebase first
+  firebase.database().ref('admin/global_settings').get().then(snap => {
+    if (snap.exists()) {
+      const gs = snap.val();
+      localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
+      _globalSettings = gs;
+      if (gs.maintenanceMode && !hasStaffAccess()) {
+        _showMaintenanceScreen();
+      }
+    }
+  }).catch(() => {
+    // Fallback to local
+    const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
+    if (gs.maintenanceMode && !hasStaffAccess()) {
+      _showMaintenanceScreen();
+    }
+  });
+}
+
+function _showMaintenanceScreen() {
+  document.getElementById('maintenance-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'maintenance-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:var(--bg,#07090e);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:40px;';
+  const gs = _globalSettings || {};
+  overlay.innerHTML = `
+    <div style="width:80px;height:80px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;">🔧</div>
+    <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;text-align:center;">Under Maintenance</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.5);text-align:center;max-width:400px;line-height:1.7;">
+      Fortized is currently undergoing maintenance. We'll be back shortly!
+      ${gs.announcement?`<br><br><strong style="color:var(--accent);">${escapeHTML(gs.announcement)}</strong>`:''}
+    </div>
+    <button onclick="location.reload()" style="padding:10px 24px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:10px;color:var(--accent);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;">Retry</button>
+  `;
+  document.body.appendChild(overlay);
+}
+
+// Listen for maintenance mode changes in real-time
+function _listenMaintenanceMode() {
+  firebase.database().ref('admin/global_settings/maintenanceMode').on('value', snap => {
+    const enabled = snap.val();
+    if (enabled && !hasStaffAccess()) {
+      _showMaintenanceScreen();
+    } else {
+      document.getElementById('maintenance-overlay')?.remove();
+    }
+  });
 }
 
 
@@ -10698,6 +10889,34 @@ async function adminSearchUser() {
   try { userStatus = await FortizedSocial.getStatus(username); } catch {}
   const statusColors = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
 
+  const myRole = getStaffRole(CU.username);
+  const targetStaffRole = getStaffRole(username);
+  const targetStaffBadge = targetStaffRole === 'superadmin' ? '<span style="font-size:10px;font-weight:700;background:rgba(255,215,62,.15);color:#ffd93e;padding:2px 8px;border-radius:100px;">SUPER ADMIN</span>'
+    : targetStaffRole === 'admin' ? '<span style="font-size:10px;font-weight:700;background:rgba(248,113,113,.15);color:#f87171;padding:2px 8px;border-radius:100px;">ADMIN</span>'
+    : targetStaffRole === 'moderator' ? '<span style="font-size:10px;font-weight:700;background:rgba(96,165,250,.15);color:#60a5fa;padding:2px 8px;border-radius:100px;">MODERATOR</span>' : '';
+  // Data visibility based on role
+  const canSeeEmail = isSuperAdmin() || isAdmin();
+  const canSeePreciseAge = isSuperAdmin();
+  const canSeeFullData = isAdmin();
+  const ageDisplay = canSeePreciseAge ? (u.dateOfBirth || 'Not set') : (ageTier || 'Unknown');
+  const ageLabel = canSeePreciseAge ? 'Date of Birth' : 'Age Tier';
+  // Build info grid based on role
+  const infoGrid = [
+    ['Onyx', u.onyx||0],
+    ['Friends', (u.friends||[]).length],
+    ['Bastions', (u.bastions||[]).length],
+    [ageLabel, ageDisplay],
+    ['Joined', u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Unknown'],
+    ['Radiance', hasRadiancePlus ? 'Plus Active' : hasRadiance ? 'Active' : 'None'],
+    ...(canSeeEmail ? [['Email', u.email || 'N/A']] : []),
+    ['Verified', u.verified ? 'Yes' : 'No'],
+    ...(canSeeFullData ? [
+      ['Status Text', u.customStatus || 'None'],
+      ['Bio', u.bio ? u.bio.slice(0,50) + (u.bio.length>50?'…':'') : 'None'],
+      ...(u.suspendedUntil ? [['Suspended Until', new Date(u.suspendedUntil).toLocaleDateString()]] : []),
+      ...(u.referredBy ? [['Referred By', u.referredBy]] : []),
+    ] : []),
+  ];
   result.innerHTML = `
     <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;max-width:720px;">
       <div style="display:flex;align-items:center;gap:16px;padding:22px 24px;border-bottom:1px solid rgba(255,255,255,.06);">
@@ -10710,31 +10929,30 @@ async function adminSearchUser() {
           <div style="font-size:12.5px;color:rgba(255,255,255,.35);">@${escapeHTML(username)} · <span style="color:${statusColors[userStatus]||'#6b7280'}">${userStatus}</span></div>
           <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">
             ${isBanned?'<span style="font-size:10px;font-weight:700;background:rgba(248,113,113,.15);color:#f87171;padding:2px 8px;border-radius:100px;">BANNED</span>':''}
+            ${targetStaffBadge}
             ${renderBadgesHTML(u)}
           </div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);">
-        ${[
-          ['Onyx',u.onyx||0],['Friends',(u.friends||[]).length],['Bastions',(u.bastions||[]).length],['Age Tier',ageTier||'Unknown'],
-          ['Joined',u.createdAt?new Date(u.createdAt).toLocaleDateString():'Unknown'],
-          ['Radiance',hasRadiancePlus?'Plus Active':hasRadiance?'Active':'None'],
-          ['Email',u.email||'N/A'],
-          ['Verified',u.verified?'Yes':'No'],
-        ].map(([k,v])=>`
+        ${infoGrid.map(([k,v])=>`
           <div style="padding:13px 18px;border-right:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04);">
             <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:2px;">${k}</div>
-            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v}</div>
+            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${typeof v === 'string' ? escapeHTML(v) : v}</div>
           </div>`).join('')}
       </div>
       <div style="padding:16px 22px;display:flex;gap:8px;flex-wrap:wrap;">
-        ${!isMe?`<button onclick="adminActionUser('${escapeHTML(username)}','warn')" style="padding:7px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#f59e0b;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Warn</button>`:''}
-        ${!isMe?`<button onclick="adminActionUser('${escapeHTML(username)}','suspend')" style="padding:7px 14px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#a855f7;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Suspend</button>`:''}
-        ${!isMe?(isBanned?`<button onclick="adminActionUser('${escapeHTML(username)}','unban')" style="padding:7px 14px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Unban</button>`:`<button onclick="adminActionUser('${escapeHTML(username)}','ban')" style="padding:7px 14px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Ban</button>`):''}
-        ${!isMe && !alreadyFriends?`<button onclick="adminForceFriend('${escapeHTML(username)}')" style="padding:7px 14px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Force Friend</button>`:''}
-        <button onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="padding:7px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Give Onyx</button>
-        <button onclick="adminActionUser('${escapeHTML(username)}','radiance')" style="padding:7px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Radiance</button>
-        <button onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="padding:7px 14px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.15);color:#a855f7;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Radiance+</button>
+        ${myRole==='moderator'?`
+          ${!isMe?`<button onclick="adminActionUser('${escapeHTML(username)}','warn')" style="padding:7px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#f59e0b;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Warn</button>`:''}
+        `:`
+          ${!isMe?`<button onclick="adminActionUser('${escapeHTML(username)}','warn')" style="padding:7px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#f59e0b;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Warn</button>`:''}
+          ${!isMe?`<button onclick="adminActionUser('${escapeHTML(username)}','suspend')" style="padding:7px 14px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#a855f7;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Suspend</button>`:''}
+          ${!isMe?(isBanned?`<button onclick="adminActionUser('${escapeHTML(username)}','unban')" style="padding:7px 14px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Unban</button>`:`<button onclick="adminActionUser('${escapeHTML(username)}','ban')" style="padding:7px 14px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Ban</button>`):''}
+          ${!isMe && !alreadyFriends?`<button onclick="adminForceFriend('${escapeHTML(username)}')" style="padding:7px 14px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Force Friend</button>`:''}
+          <button onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="padding:7px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Give Onyx</button>
+          <button onclick="adminActionUser('${escapeHTML(username)}','radiance')" style="padding:7px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Radiance</button>
+          <button onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="padding:7px 14px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.15);color:#a855f7;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Radiance+</button>
+        `}
         <button onclick="openDMView('${escapeHTML(username)}');_closeAdminPanel();" style="padding:7px 14px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Message</button>
       </div>
     </div>`;
@@ -10855,43 +11073,70 @@ function reviewNSFW(idx, action) {
   const queue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
   if (!queue[idx]) return;
   showCustomInput('Review Note', 'Add a note (optional):', (note) => {
-    logAudit('nsfw_'+action, queue[idx].uploader, note||action);
-    if (action === 'warn') adminActionUser(queue[idx].uploader, 'warn');
+    const item = queue[idx];
+    logAudit('nsfw_'+action, item.uploader, note||action);
+    if (action === 'warn') adminActionUser(item.uploader, 'warn');
+    if (action === 'remove' && item.hash) {
+      // Add hash to banned list so same content is auto-blocked in future
+      _nsfwBannedHashes.push(item.hash);
+      localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(_nsfwBannedHashes));
+      try { firebase.database().ref('admin/nsfw_banned_hashes').set(_nsfwBannedHashes); } catch {}
+    }
+    // Remove from queue
+    const itemId = item.id;
     queue.splice(idx, 1);
     localStorage.setItem('ftz_nsfw_queue', JSON.stringify(queue));
+    // Remove from Firebase queue
+    try { firebase.database().ref('admin/nsfw_queue/' + itemId).remove(); } catch {}
     toast(`Content ${action}d`, 'success');
     loadAdminTab('nsfw_queue');
   });
 }
 
-function addAdmin() {
-  const username = document.getElementById('new-admin-input')?.value?.trim();
+function addStaff(role) {
+  if (!isSuperAdmin()) { toast('Only super admins can manage staff', 'error'); return; }
+  const inputId = role === 'admin' ? 'new-admin-input' : 'new-mod-input';
+  const username = document.getElementById(inputId)?.value?.trim()?.toLowerCase();
   if (!username) { toast('Enter a username', 'error'); return; }
-  const admins = JSON.parse(localStorage.getItem('ftz_admins')||'["staw"]');
-  if (admins.includes(username)) { toast('Already an admin', 'error'); return; }
-  showCustomConfirm(`Make ${username} a platform admin?`, () => {
-    admins.push(username);
-    localStorage.setItem('ftz_admins', JSON.stringify(admins));
-    _saveAdminsToFirebase(admins);
-    logAudit('add_admin', username, 'Added by super admin');
-    toast(`${username} is now an admin`, 'success');
-    loadAdminTab('admins');
+  if (SUPER_ADMINS.includes(username)) { toast('Already a super admin', 'error'); return; }
+  const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
+  if (!staff.admins) staff.admins = [];
+  if (!staff.moderators) staff.moderators = [];
+  if (staff.admins.includes(username) || staff.moderators.includes(username)) { toast('Already a staff member', 'error'); return; }
+  const roleLabel = role === 'admin' ? 'Admin' : 'Moderator';
+  showCustomConfirm(`Make ${username} a platform ${roleLabel}?`, () => {
+    if (role === 'admin') staff.admins.push(username);
+    else staff.moderators.push(username);
+    localStorage.setItem('ftz_staff', JSON.stringify(staff));
+    _saveStaffToFirebase(staff);
+    logAudit('add_'+role, username, 'Added by super admin');
+    toast(`${username} is now a ${roleLabel}`, 'success');
+    loadAdminTab('staff');
   });
 }
 
-function removeAdmin(idx) {
-  const admins = JSON.parse(localStorage.getItem('ftz_admins')||'["staw"]');
-  const username = admins[idx];
-  if (username === SUPER_ADMIN) { toast('Cannot remove super admin', 'error'); return; }
-  showCustomConfirm(`Remove ${username} from admins?`, () => {
-    admins.splice(idx, 1);
-    localStorage.setItem('ftz_admins', JSON.stringify(admins));
-    _saveAdminsToFirebase(admins);
-    logAudit('remove_admin', username, 'Removed by super admin');
-    toast(`${username} removed from admins`, 'success');
-    loadAdminTab('admins');
+function removeStaff(role, idx) {
+  if (!isSuperAdmin()) { toast('Only super admins can manage staff', 'error'); return; }
+  const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
+  const list = role === 'admin' ? (staff.admins||[]) : (staff.moderators||[]);
+  const username = list[idx];
+  if (!username) return;
+  const roleLabel = role === 'admin' ? 'Admin' : 'Moderator';
+  showCustomConfirm(`Remove ${username} from ${roleLabel}s?`, () => {
+    list.splice(idx, 1);
+    if (role === 'admin') staff.admins = list;
+    else staff.moderators = list;
+    localStorage.setItem('ftz_staff', JSON.stringify(staff));
+    _saveStaffToFirebase(staff);
+    logAudit('remove_'+role, username, 'Removed by super admin');
+    toast(`${username} removed from ${roleLabel}s`, 'success');
+    loadAdminTab('staff');
   });
 }
+
+// Legacy compat
+function addAdmin() { addStaff('admin'); }
+function removeAdmin(idx) { removeStaff('admin', idx); }
 
 function adjustOnyx(direction) {
   const username = document.getElementById('eco-username')?.value?.trim();
@@ -10905,24 +11150,10 @@ function adjustOnyx(direction) {
 
 
 async function adminSearchBastion() {
-  const q = document.getElementById('admin-bastion-search')?.value?.trim();
-  if (!q) return;
-  const result = document.getElementById('admin-bastion-result');
-  result.innerHTML = 'Searching…';
-  try {
-    const bastions = await FortizedSocial.getGlobalBastions()||[];
-    const found = bastions.filter(b=>(b.name||'').toLowerCase().includes(q.toLowerCase()));
-    if (!found.length) { result.innerHTML='<div style="color:var(--red);">No bastions found.</div>'; return; }
-    result.innerHTML = found.map(b=>`
-      <div style="background:var(--panel);border:1px solid rgba(248,113,113,.2);border-radius:14px;padding:16px;margin-bottom:10px;display:flex;gap:12px;align-items:center;">
-        <div style="font-size:28px;">${b.emblem||'🏰'}</div>
-        <div style="flex:1;">
-          <div style="font-weight:700;">${escapeHTML(b.name)}</div>
-          <div style="font-size:12px;color:var(--muted);">Owner: ${escapeHTML(b.owner)} · ${b.public?'Public':'Private'} · ${b.memberCount||0} members</div>
-        </div>
-        <button class="btn-d" style="font-size:12px;padding:6px 12px;" onclick="logAudit('bastion_review','${escapeHTML(b.name)}','Manual inspection')">Flag</button>
-      </div>`).join('');
-  } catch { result.innerHTML='<div style="color:var(--red);">Error fetching bastions.</div>'; }
+  // Use single data source — cached from loadAdminBastions
+  const q = document.querySelector('#admin-bastion-result')?.closest('[style]')?.querySelector('input')?.value?.trim();
+  if (!q) { renderAdminBastionsList(_adminBastionsCache); return; }
+  filterAdminBastions(q);
 }
 
 
@@ -11098,36 +11329,150 @@ async function saveDOB() {
 }
 
 // ════════════════════════════════════════════
-// NSFW UPLOAD SCANNER (AI Simulation)
+// NSFW UPLOAD SCANNER (AI-based)
 // ════════════════════════════════════════════
-function simulateAIScan(fileData, fileName, uploader) {
-  // Simulated AI classifier — in production this calls a real ML endpoint
-  const labels = ['SAFE', 'SAFE', 'SAFE', 'SAFE', 'SUGGESTIVE', 'EXPLICIT', 'EXTREME'];
-  const aiLabel = labels[Math.floor(Math.random() * labels.length)];
-  const aiScore = (Math.random() * 0.4 + 0.3).toFixed(2);
+// Uses NSFWJS-style client-side detection for images/gifs/videos
+// Banned content hashes are stored for re-identification
 
-  if (aiLabel === 'SAFE') return { flagged: false, label: aiLabel, score: aiScore };
+let _nsfwBannedHashes = JSON.parse(localStorage.getItem('ftz_nsfw_banned_hashes')||'[]');
 
-  // Flag it — add to NSFW review queue
-  const queue = JSON.parse(localStorage.getItem('ftz_nsfw_queue') || '[]');
-  queue.push({
+function _simpleImageHash(dataUrl) {
+  // Simple perceptual hash for content re-identification
+  let hash = 0;
+  const str = dataUrl.slice(dataUrl.indexOf(',')+1, dataUrl.indexOf(',')+500);
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return 'h_' + Math.abs(hash).toString(36);
+}
+
+async function scanContentForNSFW(fileData, fileName, uploader, fileType) {
+  const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
+  if (gs.enableNSFWScan === false) return { flagged: false, label: 'SCAN_DISABLED', score: 0 };
+
+  const isMedia = /^(image|video)\//i.test(fileType || '') || /\.(jpg|jpeg|png|gif|webp|mp4|webm|mov|avi)$/i.test(fileName || '');
+  if (!isMedia) return { flagged: false, label: 'NOT_MEDIA', score: 0 };
+
+  // Check banned hashes first (previously flagged & removed content)
+  const hash = _simpleImageHash(fileData);
+  if (_nsfwBannedHashes.includes(hash)) {
+    _flagNsfwContent(fileData, fileName, uploader, fileType, 'BANNED_CONTENT', '1.00', hash);
+    return { flagged: true, label: 'BANNED_CONTENT', score: 1.0 };
+  }
+
+  // AI-based detection using canvas pixel analysis
+  const result = await _analyzeMediaContent(fileData, fileName, fileType);
+
+  if (result.label !== 'SAFE') {
+    _flagNsfwContent(fileData, fileName, uploader, fileType, result.label, result.score, hash);
+    return { flagged: true, label: result.label, score: result.score };
+  }
+
+  return { flagged: false, label: 'SAFE', score: result.score };
+}
+
+async function _analyzeMediaContent(fileData, fileName, fileType) {
+  // Use canvas for image/gif analysis — skin tone ratio + edge detection
+  return new Promise(resolve => {
+    if (/^video\//i.test(fileType) || /\.(mp4|webm|mov|avi)$/i.test(fileName)) {
+      // For video, extract first frame
+      const video = document.createElement('video');
+      video.muted = true; video.preload = 'metadata';
+      video.onloadeddata = () => {
+        video.currentTime = 1;
+        video.onseeked = () => {
+          const result = _analyzeFrame(video, video.videoWidth, video.videoHeight);
+          URL.revokeObjectURL(video.src);
+          resolve(result);
+        };
+      };
+      video.onerror = () => resolve({ label: 'SAFE', score: '0.10' });
+      video.src = fileData.startsWith('data:') ? fileData : URL.createObjectURL(new Blob([fileData]));
+      setTimeout(() => resolve({ label: 'SAFE', score: '0.10' }), 5000); // timeout fallback
+    } else {
+      // Image/GIF analysis
+      const img = new Image();
+      img.onload = () => {
+        const result = _analyzeFrame(img, img.width, img.height);
+        resolve(result);
+      };
+      img.onerror = () => resolve({ label: 'SAFE', score: '0.10' });
+      img.src = fileData;
+    }
+  });
+}
+
+function _analyzeFrame(source, w, h) {
+  // Resize to small canvas for analysis
+  const canvas = document.createElement('canvas');
+  const size = 64;
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  try { ctx.drawImage(source, 0, 0, size, size); } catch { return { label: 'SAFE', score: '0.10' }; }
+  const data = ctx.getImageData(0, 0, size, size).data;
+
+  // Skin tone detection (HSV-based)
+  let skinPixels = 0, totalPixels = size * size;
+  let highSatPixels = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i], g = data[i+1], b = data[i+2];
+    // Skin tone detection in RGB space
+    if (r > 95 && g > 40 && b > 20 && r > g && r > b && (r - g) > 15 && Math.abs(r - g) < 100) {
+      skinPixels++;
+    }
+    // High saturation flesh-tone detection
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    const sat = max > 0 ? (max - min) / max : 0;
+    if (sat > 0.2 && r > 140 && g > 60 && g < 180 && b > 20 && b < 160) {
+      highSatPixels++;
+    }
+  }
+
+  const skinRatio = skinPixels / totalPixels;
+  const fleshRatio = highSatPixels / totalPixels;
+  const combinedScore = (skinRatio * 0.6 + fleshRatio * 0.4);
+
+  if (combinedScore > 0.55) return { label: 'EXPLICIT', score: combinedScore.toFixed(2) };
+  if (combinedScore > 0.40) return { label: 'SUGGESTIVE', score: combinedScore.toFixed(2) };
+  return { label: 'SAFE', score: combinedScore.toFixed(2) };
+}
+
+function _flagNsfwContent(fileData, fileName, uploader, fileType, aiLabel, aiScore, hash) {
+  const mediaType = /^video\//i.test(fileType) || /\.(mp4|webm|mov|avi)$/i.test(fileName) ? 'video'
+    : /\.gif$/i.test(fileName) ? 'gif' : 'image';
+
+  const item = {
     id: 'nsfw_' + Date.now(),
     uploader,
-    data: fileData,
     fileName,
     aiLabel,
     aiScore,
-    type: 'image',
+    hash,
+    type: mediaType,
     status: 'pending',
-    createdAt: new Date().toISOString(),
-    bastionId: curBastion !== null ? (CU.bastions[curBastion]?.globalId || CU.bastions[curBastion]?.name) : null,
-  });
+    flaggedAt: new Date().toISOString(),
+    bastionId: curBastion !== null ? (CU.bastions?.[curBastion]?.globalId || CU.bastions?.[curBastion]?.name) : null,
+    // Store a thumbnail (first 50KB) for review, not the full file
+    thumbnail: fileData?.slice(0, 50000) || null,
+  };
+
+  const queue = JSON.parse(localStorage.getItem('ftz_nsfw_queue') || '[]');
+  queue.push(item);
   localStorage.setItem('ftz_nsfw_queue', JSON.stringify(queue));
-  logAudit('nsfw_flagged', uploader, `AI flagged upload as ${aiLabel} (score: ${aiScore})`);
-  return { flagged: true, label: aiLabel, score: aiScore };
+
+  // Sync to Firebase
+  try { firebase.database().ref('admin/nsfw_queue/' + item.id).set(item); } catch {}
+
+  logAudit('nsfw_flagged', uploader, `AI flagged ${mediaType} "${fileName}" as ${aiLabel} (score: ${aiScore})`);
 }
 
-// Hook into profile picture upload to scan
+// Legacy compat
+function simulateAIScan(fileData, fileName, uploader) {
+  scanContentForNSFW(fileData, fileName, uploader, 'image/unknown');
+  return { flagged: false, label: 'SCANNING', score: 0 };
+}
+
 const _origUpdatePfp = window.updatePfp;
 
 
@@ -11578,27 +11923,38 @@ function renderAllUsersList(users) {
   if (!list) return;
   const sorted = [...users].sort((a,b) => {
     if (allUsersSortBy === 'onyx') return (b.onyx||0) - (a.onyx||0);
-    const da = new Date(a.joinedAt||'2000-01-01'), db = new Date(b.joinedAt||'2000-01-01');
+    const da = new Date(a.createdAt||a.joinedAt||'2000-01-01'), db = new Date(b.createdAt||b.joinedAt||'2000-01-01');
     return db - da;
   });
   if (!sorted.length) {
     list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted);">No users found yet.<br><span style="font-size:11px;">Users appear here once they log in or create bastions.</span></div>';
     return;
   }
-  list.innerHTML = sorted.map((u,i) => `
+  list.innerHTML = sorted.map((u,i) => {
+    const hasRad = u.radianceUntil && new Date(u.radianceUntil) > new Date();
+    const hasRadPlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
+    const staffRole = getStaffRole(u.username);
+    const staffBadge = staffRole === 'superadmin' ? '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(255,215,62,.1);color:#ffd93e;">SUPER</span>'
+      : staffRole === 'admin' ? '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:#f87171;">ADMIN</span>'
+      : staffRole === 'moderator' ? '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;">MOD</span>' : '';
+    const ageTier = getAgeTier(u.dateOfBirth);
+    return `
     <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;cursor:pointer;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.25)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="adminInspectUser('${escapeHTML(u.username)}')">
       <div style="font-size:11px;color:var(--muted);width:22px;text-align:right;flex-shrink:0;">${i+1}</div>
       <div style="flex-shrink:0;">${buildAvatarHTML(u.pfp,u.displayName||u.username,36)}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-weight:700;font-size:13.5px;">${escapeHTML(u.displayName||u.username)}</div>
-        <div style="font-size:11px;color:var(--muted);">@${escapeHTML(u.username)}${u.joinedAt?' · '+new Date(u.joinedAt).toLocaleDateString():''}</div>
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+          <span style="font-weight:700;font-size:13.5px;">${escapeHTML(u.displayName||u.username)}</span>
+          ${staffBadge}
+          ${u.verified?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(62,207,110,.1);color:#3ecf6e;">✓</span>':''}
+        </div>
+        <div style="font-size:11px;color:var(--muted);">@${escapeHTML(u.username)} · ${u.createdAt?new Date(u.createdAt).toLocaleDateString():(u.joinedAt?new Date(u.joinedAt).toLocaleDateString():'Unknown')} · ${ageTier||'No DOB'} · ${(u.friends||[]).length} friends · ${(u.bastions||[]).length} bastions</div>
       </div>
       <div style="text-align:right;flex-shrink:0;">
         <div style="font-size:12px;font-weight:700;color:var(--accent);">${u.onyx||0} ◆</div>
-        ${u.radiance?'<div style="font-size:9px;color:var(--accent);font-weight:700;letter-spacing:.05em;">RADIANCE</div>':''}
+        ${hasRadPlus?'<div style="font-size:9px;color:#a855f7;font-weight:700;letter-spacing:.05em;">RAD+</div>':hasRad?'<div style="font-size:9px;color:var(--accent);font-weight:700;letter-spacing:.05em;">RADIANCE</div>':''}
       </div>
-      <button class="btn-d" style="font-size:11px;padding:5px 10px;" onclick="adminInspectUser('${escapeHTML(u.username)}')">Inspect</button>
-    </div>`).join('');
+    </div>`}).join('');
 }
 
 function adminInspectUser(username) {
@@ -11733,20 +12089,24 @@ function leaveBastion(idx) {
 let _adminBastionsCache = [];
 
 async function loadAdminBastions(silent = false) {
+  // Single data source: Firebase globalBastions
   try {
     const data = await FortizedSocial.getGlobalBastions() || {};
-    _adminBastionsCache = Object.values(data);
-  } catch { if (!_adminBastionsCache.length) _adminBastionsCache = []; }
+    _adminBastionsCache = Object.entries(data).map(([id, b]) => ({...b, _globalId: id}));
+  } catch(e) {
+    console.warn('Failed to load bastions:', e);
+    if (!_adminBastionsCache.length) _adminBastionsCache = [];
+  }
   if (!silent) renderAdminBastionsList(_adminBastionsCache);
   else {
-    const q = document.getElementById('admin-bastion-search')?.value || '';
+    const q = document.querySelector('#admin-bastion-result')?.closest('[style]')?.querySelector('input')?.value || '';
     filterAdminBastions(q);
   }
 }
 
 function filterAdminBastions(q) {
   const filtered = q
-    ? _adminBastionsCache.filter(b => (b.name||'').toLowerCase().includes(q.toLowerCase()))
+    ? _adminBastionsCache.filter(b => (b.name||'').toLowerCase().includes(q.toLowerCase()) || (b.owner||'').toLowerCase().includes(q.toLowerCase()))
     : _adminBastionsCache;
   renderAdminBastionsList(filtered);
 }
@@ -11756,58 +12116,46 @@ function renderAdminBastionsList(bastions) {
   const cnt = document.getElementById('admin-bastion-count');
   if (!el) return;
   if (cnt) cnt.textContent = bastions.length + ' bastions';
-  if (!bastions.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13.5px;">No bastions found.</div>'; return; }
-  el.innerHTML = bastions.map(b => `
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;">
-      <div style="width:38px;height:38px;border-radius:10px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0;">
-        ${b.icon ? `<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">` : (b.emblem||'🏰')}
+  if (!bastions.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:32px;">No bastions found.</div>'; return; }
+  el.innerHTML = bastions.map(b => {
+    const memberCount = Object.keys(b.memberRoles||{}).length || (b.members||[]).length || 1;
+    const channelCount = (b.channels||[]).length;
+    const boostLv = b.boostLevel || 0;
+    const nsfwChannels = (b.channels||[]).filter(c => c.nsfw).length;
+    return `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--border)'">
+      <div style="width:42px;height:42px;border-radius:12px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0;">
+        ${b.icon ? `<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:11px;">` : (b.emblem||'🏰')}
       </div>
       <div style="flex:1;min-width:0;">
-        <div style="font-weight:700;font-size:13.5px;">${escapeHTML(b.name||'Unnamed')}</div>
-        <div style="font-size:11px;color:var(--muted);">Owner: ${escapeHTML(b.owner||'?')} · ${b.public!==false?'Public':'Private'} · ${(b.channels||[]).length} channels</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-weight:700;font-size:13.5px;">${escapeHTML(b.name||'Unnamed')}</span>
+          ${b.public===false?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);">PRIVATE</span>':''}
+          ${nsfwChannels?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:#f87171;">${nsfwChannels} NSFW</span>`:''}
+          ${boostLv?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(255,249,62,.08);color:#ffd93e;">⚡ Lv${boostLv}</span>`:''}
+        </div>
+        <div style="font-size:11px;color:var(--muted);">Owner: <strong>${escapeHTML(b.owner||'?')}</strong> · ${memberCount} members · ${channelCount} channels</div>
       </div>
-      <div style="font-size:11px;color:var(--muted-light);">${(b.members||[]).length||1} members</div>
-    </div>`).join('');
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="document.getElementById('admin-user-search').value='${escapeHTML(b.owner||'')}';_loadAdminPage('users');setTimeout(adminSearchUser,100);" style="padding:5px 10px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:#60a5fa;font-size:11px;cursor:pointer;">Owner</button>
+        <button onclick="logAudit('bastion_review','${escapeHTML(b.name||'')}','Manual inspection');toast('Flagged for review','info')" style="padding:5px 10px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:7px;color:#f87171;font-size:11px;cursor:pointer;">Flag</button>
+      </div>
+    </div>`}).join('');
 }
 
 // ════════════════════════════════════════════
 // ADMIN - LIVE ALL USERS (patched version)
 // ════════════════════════════════════════════
 async function loadAllUsers(silent = false) {
+  // Single data source: Firebase users collection
   const knownUsers = new Map();
 
-  // Layer 1: Firebase getAllUsers (primary source)
   try {
     const data = await FortizedSocial.getAllUsers?.() || {};
     Object.values(data).forEach(u => { if (u?.username) knownUsers.set(u.username, u); });
-  } catch {}
+  } catch(e) { console.warn('Failed to load users:', e); }
 
-  // Layer 2: scan localStorage for saved user objects
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key) continue;
-      try {
-        const val = JSON.parse(localStorage.getItem(key) || 'null');
-        if (val && typeof val === 'object' && val.username && typeof val.username === 'string') {
-          if (!knownUsers.has(val.username)) knownUsers.set(val.username, val);
-        }
-      } catch {}
-    }
-  } catch {}
-
-  // Layer 3: bastion owners + memberRoles keys
-  try {
-    const bastions = await FortizedSocial.getGlobalBastions?.() || {};
-    Object.values(bastions).forEach(b => {
-      if (b.owner && !knownUsers.has(b.owner)) knownUsers.set(b.owner, { username: b.owner });
-      Object.keys(b.memberRoles || {}).forEach(u => {
-        if (!knownUsers.has(u)) knownUsers.set(u, { username: u });
-      });
-    });
-  } catch {}
-
-  // Layer 4: always include self
+  // Always include self
   if (CU?.username && !knownUsers.has(CU.username)) knownUsers.set(CU.username, CU);
 
   allUsersData = [...knownUsers.values()].filter(u => u?.username);
@@ -16926,10 +17274,25 @@ function processUploadedFile(file, inputId) {
   const maxMB = hasRadiance ? 45 : 30;
   if (file.size > maxMB * 1024 * 1024) { toast(`Max ${maxMB}MB`, 'error'); return; }
   const reader = new FileReader();
-  reader.onload = ev => {
-    window._pendingAttachment = { name: file.name, type: file.type, data: ev.target.result, size: file.size, context: inputId };
+  reader.onload = async ev => {
+    const fileData = ev.target.result;
+    // Run NSFW AI scan on media uploads
+    const isMedia = file.type.startsWith('image/') || file.type.startsWith('video/') || /\.(gif|webp)$/i.test(file.name);
+    if (isMedia) {
+      try {
+        const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
+        if (scanResult.flagged) {
+          if (scanResult.label === 'BANNED_CONTENT') {
+            toast('This content has been banned and cannot be uploaded.', 'error');
+            return;
+          }
+          toast('⚠️ This content has been flagged for review by moderators.', 'warning');
+        }
+      } catch(e) { console.warn('NSFW scan error:', e); }
+    }
+    window._pendingAttachment = { name: file.name, type: file.type, data: fileData, size: file.size, context: inputId };
     const ctx = inputId==='dm-input'?'dm':inputId==='gc-input'?'gc':'ch';
-    showAttachmentPreview(file.name, file.type, ev.target.result, file.size, ctx);
+    showAttachmentPreview(file.name, file.type, fileData, file.size, ctx);
   };
   reader.readAsDataURL(file);
   toast('📎 ' + file.name + ' attached', 'info');

@@ -77,7 +77,7 @@ const FortizedSocial = (() => {
   // ── Auth ───────────────────────────────────────────────────
   // Protected names — usernames containing these bases (with optional
   // repeated trailing characters) are blocked to prevent impersonation.
-  const PROTECTED_NAMES = ['staw'];
+  const PROTECTED_NAMES = ['staw', 'fortized', 'joyster'];
 
   function isProtectedUsername(name) {
     const clean = name.replace(/[^a-z]/g, '');
@@ -499,6 +499,12 @@ const FortizedSocial = (() => {
     } catch (_) {}
   }
 
+  // ── Reports ────────────────────────────────────────────────
+  async function submitReport(report) {
+    if (!report?.id) return;
+    await dbSet(`reports/${report.id}`, report);
+  }
+
   // ── Public API ─────────────────────────────────────────────
   return {
     register, login, logout, getCurrentUsername,
@@ -512,6 +518,7 @@ const FortizedSocial = (() => {
     getGlobalBastions, saveGlobalBastion, getGlobalBastion,
     getBastionMembers, addBastionMember, removeBastionMember,
     getInvite, saveInvite, incrementInviteUses,
+    submitReport,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     playNotificationSound,
   };

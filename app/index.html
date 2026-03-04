@@ -7632,7 +7632,7 @@ function renderBSettingsMain(tab) {
           <div class="bot-card" style="margin-bottom:8px;">
             <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
             <div class="bot-meta">
-              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
               <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
               <div class="bot-stats"><span>Owner: @${escapeHTML(bot.owner||CU.username)}</span><span>•</span><span>${(bot.commands||[]).length} commands</span></div>
             </div>
@@ -8175,7 +8175,7 @@ function renderMyBotsView(main) {
           <div class="bot-card" style="margin-bottom:10px;" onclick="openBotEditor(${i})">
             <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
             <div class="bot-meta">
-              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span>
+              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span>
                 ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">● Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">○ Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">🔒 Private</span>'}
               </div>
               <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
@@ -8347,7 +8347,7 @@ function openBotEditor(idx) {
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
         <div class="bot-av" style="width:56px;height:56px;font-size:26px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
           <div style="font-size:12px;color:var(--muted);">Owner: @${escapeHTML(bot.owner)} · Created ${new Date(bot.createdAt).toLocaleDateString()} · v${bot.version}</div>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px;">
@@ -8563,7 +8563,7 @@ function renderArsenalCard(bot) {
     <div style="display:flex;gap:12px;align-items:center;">
       <div class="bot-av">${bot.emblem||'🤖'}</div>
       <div style="flex:1;min-width:0;">
-        <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+        <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
         <div style="font-size:11px;color:var(--muted);">by @${escapeHTML(bot.owner)} · v${bot.version}</div>
       </div>
       <div style="display:flex;align-items:center;gap:3px;font-size:12px;color:#fbbf24;">⭐ ${bot.rating}</div>
@@ -11452,7 +11452,7 @@ function resolveReport(idx, action) {
   const contentData = { offendingText: report.msgText || '', offendingMedia: _extractMedia(report.msgText || '') };
 
   showCustomInput('Resolution Note', 'Add a note (optional):', async (reason) => {
-    report.status = action;
+    report.status = 'resolved';
     report.resolution = action;
     report.resolvedBy = CU.username;
     report.resolvedAt = new Date().toISOString();
@@ -11501,9 +11501,8 @@ function resolveReport(idx, action) {
 }
 
 async function _deleteAndReplaceReportedMessage(report) {
-  // Replace the message in Firebase with a moderation notice
   if (!report.bastionId || !report.msgId) return;
-  // Try to find and update the message in the bastion's channel messages
+  const mediaRx = /\[FTZ(?:IMG|VID|AUD|GIF|STICKER):[^\]]*\]/i;
   try {
     const bastionRef = firebase.database().ref('bastions');
     const snap = await bastionRef.once('value');
@@ -11515,15 +11514,26 @@ async function _deleteAndReplaceReportedMessage(report) {
         const msgs = channels[ci].messages || [];
         for (let mi = 0; mi < msgs.length; mi++) {
           if (msgs[mi].id === report.msgId) {
-            await firebase.database().ref(`bastions/${bid}/channels/${ci}/messages/${mi}/text`).set('[This message was deleted by Fortized moderation for being inappropriate.]');
-            await firebase.database().ref(`bastions/${bid}/channels/${ci}/messages/${mi}/deletedByMod`).set(true);
-            await firebase.database().ref(`bastions/${bid}/channels/${ci}/messages/${mi}/deletedAt`).set(new Date().toISOString());
+            const msgRef = firebase.database().ref(`bastions/${bid}/channels/${ci}/messages/${mi}`);
+            const msgText = msgs[mi].text || '';
+            const hasMedia = mediaRx.test(msgText);
+            if (hasMedia) {
+              // Message contains images/videos/gifs/files — delete the entire message
+              await msgRef.remove();
+            } else {
+              // Text-only message — replace with moderation notice
+              await msgRef.update({
+                text: '[This message was deleted by Fortized moderation for being inappropriate.]',
+                deletedByMod: true,
+                deletedAt: new Date().toISOString()
+              });
+            }
             return;
           }
         }
       }
     }
-  } catch(e) { console.warn('Message deletion scan failed:', e); }
+  } catch(e) { console.warn('Message deletion failed:', e); }
 }
 let _reportSuspendTarget = null;
 let _reportContentData = null;
@@ -17444,7 +17454,7 @@ function renderAtelierTab(tab) {
               </div>
               ${(CU?.unlockedAppearances||[]).includes('onyx_pure')
                 ? '<div style="padding:10px 22px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:14px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'
-                : `<button onclick="event.stopPropagation();buyAppearance('onyx_pure',150)" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(255,249,62,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(255,249,62,.15)'"><img src='Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 150 Onyx</button>`}
+                : `<button onclick="event.stopPropagation();buyAppearance('onyx_pure',150)" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(255,249,62,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(255,249,62,.15)'"><img src='/Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 150 Onyx</button>`}
             </div>
           </div>
 
@@ -17465,7 +17475,7 @@ function renderAtelierTab(tab) {
               </div>
               ${(CU?.unlockedAppearances||[]).includes('midnight_citadel')
                 ? '<div style="padding:10px 22px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:14px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'
-                : `<button onclick="event.stopPropagation();buyAppearance('midnight_citadel',185)" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(255,249,62,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(255,249,62,.15)'"><img src='Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 185 Onyx</button>`}
+                : `<button onclick="event.stopPropagation();buyAppearance('midnight_citadel',185)" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(255,249,62,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(255,249,62,.15)'"><img src='/Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 185 Onyx</button>`}
             </div>
           </div>
 
@@ -17473,16 +17483,16 @@ function renderAtelierTab(tab) {
           <div class="atel-section-hdr" style="margin-top:24px;">Badges</div>
           <div style="background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.15);border-radius:22px;overflow:hidden;margin-bottom:28px;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,249,62,.15)';this.style.transform=''">
             <div style="padding:20px 22px;display:flex;align-items:center;gap:16px;">
-              <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;"><img src="fortized badges/onyx.png" style="width:36px;height:36px;object-fit:contain;"></div>
+              <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;"><img src="/fortized badges/onyx.png" style="width:36px;height:36px;object-fit:contain;"></div>
               <div style="flex:1;">
                 <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:3px;">Onyx Badge</div>
                 <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.55;">A progression badge that evolves as you invest more Onyx. Tiers: Apprentice → Adept → Artisan → Master.</div>
                 ${CU?.onyxBadge?`<div style="margin-top:6px;font-size:11px;color:#fff93e;font-weight:600;">Current: ${_getOnyxTier(CU.onyxBadgeSpent||0).name} · ${CU.onyxBadgeSpent||0} Onyx invested</div>
                 <div style="display:flex;gap:6px;margin-top:8px;">
-                  ${[{amt:100,label:'100'},{amt:500,label:'500'},{amt:1000,label:'1K'}].map(u=>`<button onclick="upgradeOnyxBadge(${u.amt})" style="padding:6px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);border-radius:10px;color:#fff93e;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.14)'" onmouseout="this.style.background='rgba(255,249,62,.08)'"><img src='Onyx.png' style='width:12px;height:12px;object-fit:contain;'> +${u.label}</button>`).join('')}
+                  ${[{amt:100,label:'100'},{amt:500,label:'500'},{amt:1000,label:'1K'}].map(u=>`<button onclick="upgradeOnyxBadge(${u.amt})" style="padding:6px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);border-radius:10px;color:#fff93e;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.14)'" onmouseout="this.style.background='rgba(255,249,62,.08)'"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> +${u.label}</button>`).join('')}
                 </div>`:''}
               </div>
-              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''"><img src='Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 100 Onyx</button>`:'<div style="padding:10px 22px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:14px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'}
+              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''"><img src='/Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 100 Onyx</button>`:'<div style="padding:10px 22px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:14px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'}
             </div>
           </div>
 
@@ -17551,15 +17561,15 @@ function refreshAtelierBalance() {
 // BADGE SYSTEM
 // ════════════════════════════════════════════════════
 const BADGE_DEFS = {
-  superadmin: { img:'fortized badges/superadmin.png', tooltip:'Superadmin - Highest level of platform authority in Fortized.', cls:'badge-superadmin', order:0 },
-  admin:      { img:'fortized badges/admin.png', tooltip:'Admin - Platform administrator with elevated permissions.', cls:'badge-admin', order:1 },
-  moderator:  { img:'fortized badges/moderator.png', tooltip:'Moderator - Helps maintain safety and order.', cls:'badge-moderator', order:2 },
-  bot:        { img:'fortized badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:3 },
-  'radiance-plus': { img:'fortized badges/radiance+.png', tooltip:'Radiance+ - Active Radiance+ subscriber.', cls:'badge-radiance-plus', order:4 },
-  radiance:   { img:'fortized badges/basic radiance.png', tooltip:'Basic Radiance - Active Basic Radiance subscriber.', cls:'badge-radiance', order:5 },
-  beta:       { img:'fortized badges/beta user.png', tooltip:'Beta User - Early supporter of Fortized.', cls:'badge-beta', order:6 },
-  quest:      { img:'fortized badges/quest.png', tooltip:'Quest Completed - Successfully completed a Fortized quest.', cls:'badge-quest', order:7 },
-  onyx:       { img:'fortized badges/onyx.png', cls:'badge-onyx', order:8 },
+  superadmin: { img:'/fortized badges/superadmin.png', tooltip:'Superadmin - Highest level of platform authority in Fortized.', cls:'badge-superadmin', order:0 },
+  admin:      { img:'/fortized badges/admin.png', tooltip:'Admin - Platform administrator with elevated permissions.', cls:'badge-admin', order:1 },
+  moderator:  { img:'/fortized badges/moderator.png', tooltip:'Moderator - Helps maintain safety and order.', cls:'badge-moderator', order:2 },
+  bot:        { img:'/fortized badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:3 },
+  'radiance-plus': { img:'/fortized badges/radiance+.png', tooltip:'Radiance+ - Active Radiance+ subscriber.', cls:'badge-radiance-plus', order:4 },
+  radiance:   { img:'/fortized badges/basic radiance.png', tooltip:'Basic Radiance - Active Basic Radiance subscriber.', cls:'badge-radiance', order:5 },
+  beta:       { img:'/fortized badges/beta user.png', tooltip:'Beta User - Early supporter of Fortized.', cls:'badge-beta', order:6 },
+  quest:      { img:'/fortized badges/quest.png', tooltip:'Quest Completed - Successfully completed a Fortized quest.', cls:'badge-quest', order:7 },
+  onyx:       { img:'/fortized badges/onyx.png', cls:'badge-onyx', order:8 },
 };
 const ONYX_TIERS = [
   { name:'Onyx Apprentice', min:0 },

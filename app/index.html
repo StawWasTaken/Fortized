@@ -496,6 +496,26 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-row:hover .msg-acts{opacity:1;pointer-events:auto;transform:translateY(0);}
 .msg-acts button{background:none;border:none;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
 .msg-acts button:hover{background:rgba(255,255,255,.08);color:#fff;}
+/* Blocked / Ignored message blur */
+.msg-row.msg-blurred .msg-content-col{filter:blur(6px);user-select:none;pointer-events:none;transition:filter .2s;}
+.msg-row.msg-blurred .msg-acts{display:none!important;}
+.msg-blur-reveal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;cursor:pointer;}
+.msg-blur-reveal span{font-size:12px;font-weight:600;color:rgba(255,255,255,.45);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);padding:4px 14px;border-radius:8px;transition:all .15s;}
+.msg-blur-reveal:hover span{background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);}
+.msg-row.msg-blurred.msg-revealed .msg-content-col{filter:none;user-select:auto;pointer-events:auto;}
+.msg-row.msg-blurred.msg-revealed .msg-blur-reveal{display:none;}
+/* Blocked profile blur overlay */
+.profile-blocked-overlay{position:absolute;inset:0;background:rgba(7,9,14,.7);backdrop-filter:blur(12px);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:16px;gap:10px;}
+.profile-blocked-overlay .pbo-icon{font-size:36px;opacity:.5;}
+.profile-blocked-overlay .pbo-text{font-size:14px;font-weight:700;color:rgba(255,255,255,.5);}
+.profile-blocked-overlay .pbo-sub{font-size:12px;color:rgba(255,255,255,.3);margin-bottom:6px;}
+.profile-blocked-overlay .pbo-reveal{padding:7px 18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.profile-blocked-overlay .pbo-reveal:hover{background:rgba(255,255,255,.14);color:rgba(255,255,255,.7);}
+/* Ignore duration picker modal */
+.ignore-picker{display:flex;flex-direction:column;gap:4px;}
+.ignore-picker .ig-opt{display:flex;align-items:center;gap:10px;padding:9px 14px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;transition:all .12s;font-size:13px;color:rgba(255,255,255,.7);}
+.ignore-picker .ig-opt:hover{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04);}
+.ignore-picker .ig-opt .ig-dur{margin-left:auto;font-size:11px;color:rgba(255,255,255,.3);}
 /* Own messages */
 .msg-row.own .msg-text{color:rgba(255,255,255,.85);}
 /* Reply / quote — soft left border, lighter bg, clickable */
@@ -4057,7 +4077,7 @@ async function loadDMMessages(username) {
           _sentEcho.delete(dmEchoKey);
         } else {
           appendMessage(el,msg,'dm',null); _notifyNewMsg('dm-msgs');
-          if(msg.from!==CU.username) playNotifSound('message');
+          if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
         }
       }
     });
@@ -4371,7 +4391,7 @@ async function loadGCMessages(gcId) {
       if (msg.from===CU.username && _sentEcho.has(echoKey)) { _sentEcho.delete(echoKey); return; }
       appendMessage(el, msg, 'gc', null);
       _notifyNewMsg('gc-msgs');
-      if (msg.from!==CU.username) playNotifSound('message');
+      if (msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
     });
     _gcListener = () => ref.off('child_added', handler);
     // Attach live edit/remove listeners for GC
@@ -5016,7 +5036,7 @@ async function loadChannelMessages(idx) {
         } else {
           appendMessage(el,msg,'ch',null);
           _notifyNewMsg('ch-msgs-'+idx);
-          if(msg.from!==CU.username){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
+          if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
         }
       }
     });
@@ -5197,7 +5217,8 @@ function getMsgRoleColor(fromUser, context) {
 }
 function appendMessage(container, msg, context, prevAuthor) {
   if (!msg || !container) return;
-  if (msg.from && msg.from !== '__system__' && typeof isUserBlocked === 'function' && isUserBlocked(msg.from)) return;
+  const _msgBlocked = msg.from && msg.from !== '__system__' && typeof isUserBlocked === 'function' && isUserBlocked(msg.from);
+  const _msgIgnored = msg.from && msg.from !== '__system__' && typeof isUserIgnored === 'function' && isUserIgnored(msg.from);
   const id=msg.id||(msg.from+msg.timestamp);
   if (document.querySelector(`[data-msgid="${CSS.escape(id)}"]`)) return;
   // System messages (join, bot deploy, etc.)
@@ -5285,6 +5306,15 @@ function appendMessage(container, msg, context, prevAuthor) {
       ${buildMsgActions(msg,context,id)}`;
   }
   container.appendChild(row);
+  // Blur messages from blocked or ignored users
+  if (_msgBlocked || _msgIgnored) {
+    row.classList.add('msg-blurred');
+    const rv = document.createElement('div');
+    rv.className = 'msg-blur-reveal';
+    rv.innerHTML = `<span>${_msgBlocked ? 'Blocked' : 'Ignored'} message — click to reveal</span>`;
+    rv.onclick = (e) => { e.stopPropagation(); row.classList.add('msg-revealed'); };
+    row.appendChild(rv);
+  }
   // Detect emoji-only messages and apply bigger size
   const textEl = row.querySelector('.msg-text');
   if (textEl) {
@@ -5401,45 +5431,60 @@ function deleteMsg(msgId, context) {
   const _curBastion = curBastion;
   const _curChannel = curChannel;
   showCustomConfirm('Delete this message?', async () => {
-    const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-    if (row) {
-      // If this is the first message of a group (has avatar+header), promote next continuation
-      if (row.classList.contains('msg-first')) {
-        let next = row.nextElementSibling;
-        while (next && next.classList.contains('date-div')) next = next.nextElementSibling;
-        if (next && next.classList.contains('msg-cont') && next.dataset.from === row.dataset.from) {
-          next.classList.replace('msg-cont','msg-first');
-          const fromName = next.dataset.from || '';
-          const safeFrom = escapeHTML(fromName);
-          const time = next.querySelector('.msg-time-small')?.textContent || '';
-          const avId = 'av-' + next.dataset.msgid.replace(/[^a-z0-9]/gi,'-');
-          const roleTag = getMsgRoleTag(fromName, 'ch');
-          const col = next.querySelector('.msg-content-col');
-          const existingContent = col ? col.innerHTML : '';
-          const avWrap = next.querySelector('.msg-av-wrap');
-          if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
-          if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
-          FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}}).catch(()=>{});
-        }
-      }
-      row.remove();
+    if (msgId.startsWith('local-')) {
+      const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+      if (row) row.remove();
+      toast('Deleted','success');
+      return;
     }
-    if (msgId.startsWith('local-')) { toast('Deleted','success'); return; }
     const ctx = context || (_curDM ? 'dm' : _curGC ? 'gc' : 'ch');
+    let ref = null;
     try {
       if (ctx==='dm' && _curDM) {
-        await firebase.database().ref(`dms/${[CU.username,_curDM].sort().join('__')}/${msgId}`).remove();
+        ref = firebase.database().ref(`dms/${[CU.username,_curDM].sort().join('__')}/${msgId}`);
       } else if (ctx==='gc' && _curGC) {
-        await firebase.database().ref(`groupChats/${_curGC}/messages/${msgId}`).remove();
+        ref = firebase.database().ref(`groupChats/${_curGC}/messages/${msgId}`);
       } else {
         const b = CU.bastions?.[_curBastion];
         const ch = b?.channels?.[_curChannel];
         const bid = b?.globalId||b?.name;
         const chName = ch?.name||'general';
-        if (bid && chName) await firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`).remove();
+        if (bid && chName) ref = firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`);
       }
-    } catch(e) { console.warn('Delete error:', e); }
-    toast('Message deleted','success');
+      if (ref) {
+        await ref.remove();
+        // Firebase child_removed listener will handle DOM removal for all clients
+        // But also remove locally for immediate feedback
+        const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+        if (row) {
+          if (row.classList.contains('msg-first')) {
+            let next = row.nextElementSibling;
+            while (next && next.classList.contains('date-div')) next = next.nextElementSibling;
+            if (next && next.classList.contains('msg-cont') && next.dataset.from === row.dataset.from) {
+              next.classList.replace('msg-cont','msg-first');
+              const fromName = next.dataset.from || '';
+              const safeFrom = escapeHTML(fromName);
+              const time = next.querySelector('.msg-time-small')?.textContent || '';
+              const avId = 'av-' + next.dataset.msgid.replace(/[^a-z0-9]/gi,'-');
+              const roleTag = getMsgRoleTag(fromName, ctx);
+              const col = next.querySelector('.msg-content-col');
+              const existingContent = col ? col.innerHTML : '';
+              const avWrap = next.querySelector('.msg-av-wrap');
+              if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
+              if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
+              FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}}).catch(()=>{});
+            }
+          }
+          row.remove();
+        }
+        toast('Message deleted','success');
+      } else {
+        toast('Could not determine message location','error');
+      }
+    } catch(e) {
+      console.error('Delete error:', e);
+      toast('Failed to delete message: ' + (e.message||'unknown error'), 'error');
+    }
   });
 }
 function forwardMsg(text) {
@@ -5879,6 +5924,7 @@ async function sendFriendRequest(){
   const username=inp.value.trim().toLowerCase();
   if(!username){if(err)err.textContent='Enter a username';return;}
   if(username===CU.username){if(err)err.textContent="Can't add yourself";return;}
+  if(isUserBlocked(username)){if(err)err.textContent="Can't send friend requests to blocked users";return;}
   if(err)err.textContent='';if(succ)succ.textContent='';
   try{
     const r=await FortizedSocial.sendFriendRequest(CU.username, username);
@@ -6158,6 +6204,8 @@ function updateDOBField(){
   if(typeof startVCListener==='function') startVCListener(CU.username);
   setTimeout(initCrossDeviceSync, 800);
   setTimeout(initNotifToasts, 1200);
+  // Sync blocked list from Firebase
+  setTimeout(async()=>{try{const snap=await firebase.database().ref('users/'+CU.username+'/blockedUsers').get();if(snap.exists())localStorage.setItem('ftz_blocked',JSON.stringify(snap.val()));}catch{}},500);
 
   setTimeout(_ensureJoysterAccount, 4000);
   // Preload NSFW AI model in background so first scan is fast
@@ -6215,9 +6263,16 @@ function updateDOBField(){
   // Check & listen for maintenance mode
   checkMaintenanceMode();
   _listenMaintenanceMode();
+  // Listen for force-refresh and session-clear signals from admin
+  _listenForceRefresh();
+  _listenClearSessions();
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling for all staff
   if(hasStaffAccess())setTimeout(startReportPolling,2000);
+  // Listen for real-time staff changes so sidebar updates dynamically
+  _listenStaffChanges();
+  // Listen for real-time bastion updates from other members
+  setTimeout(_listenBastionUpdates, 1500);
 
   // Event listeners
   document.addEventListener('contextmenu',e=>{e.preventDefault();handleContextMenu(e);});
@@ -9527,8 +9582,8 @@ async function viewUserProfile(username) {
   const isOwn = username === CU.username;
   const isFriend = (CU.friends||[]).includes(username);
   const hasPending = (CU.friendRequestsSent||[]).includes(username);
-  const blocked = JSON.parse(localStorage.getItem('ftz_blocked')||'[]');
-  const isBlocked = blocked.includes(username);
+  const isBlocked = isUserBlocked(username);
+  const ignored = isUserIgnored(username);
   const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
   const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
 
@@ -9550,7 +9605,13 @@ async function viewUserProfile(username) {
 
   modalEl.innerHTML = `
     <div style="${themeBorder}">
-    <div style="background:var(--panel);border-radius:${profileTheme?'18px':'0'};">
+    <div style="background:var(--panel);border-radius:${profileTheme?'18px':'0'};position:relative;">
+    ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
+      <div class="pbo-icon">🚫</div>
+      <div class="pbo-text">You blocked ${escapeHTML(username)}</div>
+      <div class="pbo-sub">Their profile is hidden</div>
+      <button class="pbo-reveal" onclick="document.getElementById('profile-blocked-overlay').style.display='none'">Show Profile</button>
+    </div>` : ''}
     <!-- Banner — tall -->
     <div style="height:150px;background:${bannerBg};position:relative;overflow:hidden;border-radius:16px 16px 0 0;">
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.05) 40%,rgba(14,16,28,.8));"></div>
@@ -9606,16 +9667,21 @@ async function viewUserProfile(username) {
     <div style="padding:16px 24px;">
       ${isOwn ? `<button onclick="closeModal('modal-user');showView('profile')" style="width:100%;padding:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">✏️ Edit Profile</button>` :
        `<div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')" style="flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;min-width:120px;">Message</button>
-          ${isFriend ? `<button onclick="closeModal('modal-user');removeFriend('${escapeHTML(username)}')" style="padding:10px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:9px;color:var(--red);font-size:13px;cursor:pointer;">Unfriend</button>` :
+          ${isBlocked ? '' : `<button onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')" style="flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;min-width:120px;">Message</button>`}
+          ${isBlocked ? '' :
+            isFriend ? `<button onclick="closeModal('modal-user');removeFriend('${escapeHTML(username)}')" style="padding:10px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:9px;color:var(--red);font-size:13px;cursor:pointer;">Unfriend</button>` :
             hasPending ? `<button disabled style="padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.3);font-size:12.5px;">Pending…</button>` :
             `<button onclick="quickAddFriend('${escapeHTML(username)}')" style="padding:10px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">Add Friend</button>`}
-          <button onclick="startVoiceCall('${escapeHTML(username)}');closeModal('modal-user')" style="width:42px;height:42px;border-radius:9px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          ${isBlocked ? '' : `<button onclick="startVoiceCall('${escapeHTML(username)}');closeModal('modal-user')" style="width:42px;height:42px;border-radius:9px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
-          </button>
+          </button>`}
         </div>
         <div style="display:flex;gap:6px;margin-top:8px;">
-          <button onclick="toggleBlockUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${isBlocked?'rgba(248,113,113,.3)':'rgba(255,255,255,.08)'};background:transparent;color:${isBlocked?'var(--red)':'rgba(255,255,255,.4)'};font-size:12px;cursor:pointer;">${isBlocked?'Unblock':'Block'}</button>
+          <button onclick="toggleBlockUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${isBlocked?'rgba(248,113,113,.3)':'rgba(255,255,255,.08)'};background:${isBlocked?'rgba(248,113,113,.06)':'transparent'};color:${isBlocked?'var(--red)':'rgba(255,255,255,.4)'};font-size:12px;cursor:pointer;">${isBlocked?'🚫 Unblock':'Block'}</button>
+          ${!isBlocked ? (ignored
+            ? `<button onclick="unignoreUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(245,158,11,.3);background:rgba(245,158,11,.06);color:#f59e0b;font-size:12px;cursor:pointer;">🔇 Unignore</button>`
+            : `<button onclick="showIgnorePicker('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;">Ignore</button>`)
+          : ''}
           <button onclick="reportUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;">Report</button>
           <button onclick="closeModal('modal-user')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;">Close</button>
         </div>`}
@@ -9628,6 +9694,7 @@ async function viewUserProfile(username) {
 
 async function quickAddFriend(username) {
   username = (username||"").trim().toLowerCase();
+  if (isUserBlocked(username)) { toast("Can't send friend requests to blocked users", 'error'); return; }
   try{
     const r=await FortizedSocial.sendFriendRequest(CU.username,username);
     toast(r.msg,r.ok?'success':'error');
@@ -9833,17 +9900,28 @@ function handleContextMenu(e) {
     const b = inBastion ? CU.bastions?.[curBastion] : null;
     const isOwner = b?.owner === CU?.username;
 
+    const _ctxBlocked = !isMe && isUserBlocked(username);
+    const _ctxIgnored = !isMe && isUserIgnored(username);
     const profileGroup = {
       label: 'Profile',
       items: [
         { icon: _ctxSvg('profile'), label: 'View Profile', action: () => viewUserProfile(username) },
-        { icon: _ctxSvg('message'), label: 'Message', action: () => openDMView(username), disabled: isMe },
+        { icon: _ctxSvg('message'), label: 'Message', action: () => openDMView(username), disabled: isMe || _ctxBlocked },
         { icon: _ctxSvg('mention'), label: 'Mention', action: () => { const ta = document.querySelector('.chat-input-row textarea'); if (ta) { ta.value += `@${username} `; ta.focus(); } } },
-        ...(!isMe ? [{ icon: _ctxSvg('addFriend'), label: 'Add Friend', action: () => quickAddFriend(username) }] : []),
+        ...(!isMe && !_ctxBlocked ? [{ icon: _ctxSvg('addFriend'), label: 'Add Friend', action: () => quickAddFriend(username) }] : []),
       ]
     };
 
     const groups = [profileGroup];
+
+    if (!isMe) {
+      const safetyItems = [];
+      safetyItems.push({ icon: '🚫', label: _ctxBlocked ? 'Unblock' : 'Block', danger: !_ctxBlocked, action: () => toggleBlockUser(username) });
+      if (!_ctxBlocked) {
+        safetyItems.push({ icon: '🔇', label: _ctxIgnored ? 'Unignore' : 'Ignore', action: () => _ctxIgnored ? unignoreUser(username) : showIgnorePicker(username) });
+      }
+      groups.push({ label: 'Safety', items: safetyItems });
+    }
 
     if (inBastion && !isMe) {
       const bastionItems = [];
@@ -10531,7 +10609,31 @@ async function _loadAdminPage(tab) {
       // FTZGIF tokens
       const ftzRx = /\[FTZGIF:(https?:\/\/[^\]]+)\]/gi;
       while ((m = ftzRx.exec(text)) !== null) media.push({ type: 'image', url: m[1] });
+      // FTZIMG tokens (base64 or URL images)
+      const ftzImgRx = /\[FTZIMG:([^\|]+)\|([^\]]+)\]/gi;
+      while ((m = ftzImgRx.exec(text)) !== null) media.push({ type: 'image', url: m[2], name: m[1] });
+      // FTZVID tokens (base64 or URL videos)
+      const ftzVidRx = /\[FTZVID:([^\|]+)\|([^\]]+)\]/gi;
+      while ((m = ftzVidRx.exec(text)) !== null) media.push({ type: 'video', url: m[2], name: m[1] });
+      // FTZAUD tokens (base64 or URL audio)
+      const ftzAudRx = /\[FTZAUD:([^\|]+)\|([^\]]+)\]/gi;
+      while ((m = ftzAudRx.exec(text)) !== null) media.push({ type: 'audio', url: m[2], name: m[1] });
+      // FTZSTICKER tokens
+      const ftzStkRx = /\[FTZSTICKER:([^\]]+)\]/gi;
+      while ((m = ftzStkRx.exec(text)) !== null) media.push({ type: 'image', url: m[1] });
       return media;
+    };
+    // Helper: strip FTZ media tokens from message text for clean display
+    const _stripMediaTokens = (text) => {
+      if (!text) return '';
+      return text
+        .replace(/\[FTZIMG:[^\]]+\]/g, '')
+        .replace(/\[FTZVID:[^\]]+\]/g, '')
+        .replace(/\[FTZAUD:[^\]]+\]/g, '')
+        .replace(/\[FTZFILE:[^\]]+\]/g, '')
+        .replace(/\[FTZGIF:[^\]]+\]/g, '')
+        .replace(/\[FTZSTICKER:[^\]]+\]/g, '')
+        .trim();
     };
     const _isPending = (r) => r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned';
     const _statusColor = (r) => _isPending(r) ? '#f87171' : r.status==='dismissed' ? '#9ca3af' : r.status==='warned' ? '#f59e0b' : '#3ecf6e';
@@ -10582,15 +10684,17 @@ async function _loadAdminPage(tab) {
           <!-- Reported message content (full) -->
           ${r.msgText?`<div style="margin-bottom:14px;">
             <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Reported Message</div>
-            <div style="padding:12px 14px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);border-left:3px solid #f87171;border-radius:8px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;word-break:break-word;white-space:pre-wrap;">${escapeHTML(r.msgText)}</div>
+            ${_stripMediaTokens(r.msgText)?`<div style="padding:12px 14px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);border-left:3px solid #f87171;border-radius:8px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;word-break:break-word;white-space:pre-wrap;">${escapeHTML(_stripMediaTokens(r.msgText))}</div>`:''}
           </div>`:''}
           <!-- Media preview -->
           ${media.length>0?`<div style="margin-bottom:14px;">
             <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">📎 Media Attachments (${media.length})</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;">
               ${media.map(m => m.type==='video'?
-                `<video src="${escapeHTML(m.url)}" controls style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#000;" preload="metadata"></video>`:
-                `<img src="${escapeHTML(m.url)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="window.open('${escapeHTML(m.url)}','_blank')" loading="lazy" onerror="this.style.display='none'">`
+                `<div style="display:inline-block;"><video src="${escapeHTML(m.url)}" controls style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#000;" preload="metadata"></video>${m.name?`<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:3px;">${escapeHTML(m.name)}</div>`:''}</div>`:
+                m.type==='audio'?
+                `<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;display:inline-flex;align-items:center;gap:8px;"><span style="font-size:16px;">🎵</span><audio src="${escapeHTML(m.url)}" controls style="height:32px;" preload="metadata"></audio>${m.name?`<span style="font-size:11px;color:rgba(255,255,255,.35);">${escapeHTML(m.name)}</span>`:''}</div>`:
+                `<img src="${escapeHTML(m.url)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="this.style.display='none'">`
               ).join('')}
             </div>
           </div>`:''}
@@ -10960,6 +11064,14 @@ async function _loadAdminPage(tab) {
           <button onclick="_updateGlobalSetting('announcement','');document.getElementById('gs-announcement').value='';toast('Announcement cleared','success');" style="padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;">Clear</button>
         </div>
       </div>
+      <div style="margin-top:16px;background:var(--panel,#101420);border:1px solid rgba(248,113,113,.15);border-radius:12px;padding:18px;max-width:700px;">
+        <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;color:#f87171;">Danger Zone</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:14px;">These actions affect all connected users immediately.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button onclick="_forceRefreshAllUsers()" style="padding:10px 20px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;color:#f87171;cursor:pointer;font-weight:700;font-size:13px;transition:.15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Force Refresh All Users</button>
+          <button onclick="_clearAllSessions()" style="padding:10px 20px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;color:#f87171;cursor:pointer;font-weight:700;font-size:13px;transition:.15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Clear All Sessions</button>
+        </div>
+      </div>
     </div>`;
   }
   else if (tab === 'staff' && isSuperAdmin()) {
@@ -11139,6 +11251,31 @@ function _updateGlobalSetting(key, value) {
   }
 }
 
+// ── Force Refresh / Danger Zone Actions ──
+function _forceRefreshAllUsers() {
+  showCustomConfirm('Force ALL connected users to refresh their page? This is useful after deploying updates.', async () => {
+    try {
+      await firebase.database().ref('admin/force_refresh').set(Date.now());
+      logAudit('force_refresh', 'system', 'Force refresh triggered by ' + CU.username);
+      toast('Force refresh signal sent — all users will reload within seconds.', 'success');
+    } catch(e) {
+      toast('Failed to send refresh signal: ' + e.message, 'error');
+    }
+  });
+}
+
+function _clearAllSessions() {
+  showCustomConfirm('Clear all active sessions? Users will need to log in again.', async () => {
+    try {
+      await firebase.database().ref('admin/clear_sessions').set(Date.now());
+      logAudit('clear_sessions', 'system', 'All sessions cleared by ' + CU.username);
+      toast('Session clear signal sent.', 'success');
+    } catch(e) {
+      toast('Failed: ' + e.message, 'error');
+    }
+  });
+}
+
 // ── Maintenance Mode Enforcement ──
 function checkMaintenanceMode() {
   // Load settings from Firebase first
@@ -11190,6 +11327,104 @@ function _listenMaintenanceMode() {
   });
 }
 
+// Listen for real-time staff changes so sidebar button appears/disappears dynamically
+function _listenStaffChanges() {
+  firebase.database().ref('admin/staff').on('value', snap => {
+    if (snap.exists()) {
+      localStorage.setItem('ftz_staff', JSON.stringify(snap.val()));
+    } else {
+      localStorage.setItem('ftz_staff', JSON.stringify({ admins: [], moderators: [] }));
+    }
+    // Dynamically add/remove the staff console button
+    const rail = document.getElementById('rail');
+    const existingBtn = document.getElementById('admin-rail-btn');
+    const existingSep = existingBtn?.previousElementSibling;
+    if (hasStaffAccess()) {
+      if (!existingBtn && rail) {
+        const role = getStaffRole(CU.username);
+        const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
+        const btn = document.createElement('div');
+        btn.id = 'admin-rail-btn'; btn.className = 'rail-btn';
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Staff Console</span>`;
+        btn.dataset.tip = roleLabel + ' Panel';
+        btn.style.cssText = 'border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);margin-top:6px;background:rgba(248,113,113,.04);';
+        btn.onclick = tryOpenAdmin;
+        const sep = document.createElement('div');
+        sep.className = 'rail-sep'; sep.style.margin = '8px 12px'; sep.id = 'admin-rail-sep';
+        const createBtn = rail.querySelector('[onclick*="modal-create-bastion"]');
+        if (createBtn) { rail.insertBefore(sep, createBtn); rail.insertBefore(btn, createBtn); }
+        else rail.appendChild(btn);
+      }
+    } else {
+      if (existingBtn) existingBtn.remove();
+      if (existingSep && existingSep.id === 'admin-rail-sep') existingSep.remove();
+    }
+  });
+}
+
+// Listen for force-refresh signal from admin
+function _listenForceRefresh() {
+  firebase.database().ref('admin/force_refresh').on('value', snap => {
+    const ts = snap.val();
+    if (!ts) return;
+    const stored = parseInt(localStorage.getItem('ftz_last_force_refresh') || '0');
+    if (ts > stored) {
+      localStorage.setItem('ftz_last_force_refresh', String(ts));
+      // Only refresh if the signal is recent (within 60 seconds)
+      if (Date.now() - ts < 60000) {
+        toast('Platform update — refreshing…', 'info');
+        setTimeout(() => location.reload(), 2000);
+      }
+    }
+  });
+}
+
+// Listen for session-clear signal from admin
+function _listenClearSessions() {
+  firebase.database().ref('admin/clear_sessions').on('value', snap => {
+    const ts = snap.val();
+    if (!ts) return;
+    const stored = parseInt(localStorage.getItem('ftz_last_clear_sessions') || '0');
+    if (ts > stored && Date.now() - ts < 60000) {
+      localStorage.setItem('ftz_last_clear_sessions', String(ts));
+      if (!hasStaffAccess()) {
+        localStorage.removeItem('ftz_current');
+        localStorage.removeItem('fortized_current_user');
+        toast('Session expired — please log in again.', 'info');
+        setTimeout(() => { window.location.href = '/login'; }, 2000);
+      }
+    }
+  });
+}
+
+// Real-time bastion data sync — listens for changes to bastions the user belongs to
+function _listenBastionUpdates() {
+  if (!CU?.bastions) return;
+  CU.bastions.forEach((b, idx) => {
+    const gid = b.globalId || b.name;
+    if (!gid) return;
+    firebase.database().ref('globalBastions/' + gid).on('value', snap => {
+      if (!snap.exists()) return;
+      const fresh = snap.val();
+      const local = CU.bastions[idx];
+      if (!local || (local.globalId || local.name) !== gid) return;
+      // Sync important fields from global bastion
+      const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner'];
+      let changed = false;
+      syncFields.forEach(f => {
+        if (fresh[f] !== undefined && JSON.stringify(fresh[f]) !== JSON.stringify(local[f])) {
+          local[f] = fresh[f];
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveLocal();
+        // Re-render if viewing this bastion
+        if (curBastion === idx) { renderRailBastions(); }
+      }
+    });
+  });
+}
 
 async function adminSearchUser() {
   const raw = document.getElementById('admin-user-search')?.value?.trim().toLowerCase();
@@ -11703,50 +11938,87 @@ async function scanContentForNSFW(fileData, fileName, uploader, fileType) {
 
 let _nsfwModel = null;
 let _nsfwModelLoading = false;
+let _nsfwModelRetries = 0;
 
 async function _loadNSFWModel() {
   if (_nsfwModel) return _nsfwModel;
   if (_nsfwModelLoading) {
-    // Wait for model to finish loading
-    while (_nsfwModelLoading) await new Promise(r => setTimeout(r, 100));
+    // Wait for model to finish loading (max 30s)
+    let waited = 0;
+    while (_nsfwModelLoading && waited < 30000) { await new Promise(r => setTimeout(r, 200)); waited += 200; }
     return _nsfwModel;
   }
   _nsfwModelLoading = true;
-  try {
-    _nsfwModel = await nsfwjs.load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/model/', { size: 299 });
-  } catch(e) {
-    console.error('NSFWJS model load failed:', e);
-    _nsfwModel = null;
+  // Retry up to 3 times with backoff
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      if (typeof nsfwjs === 'undefined') {
+        console.warn('NSFWJS library not loaded, waiting...');
+        await new Promise(r => setTimeout(r, 2000));
+        if (typeof nsfwjs === 'undefined') { throw new Error('nsfwjs library not available'); }
+      }
+      if (typeof tf !== 'undefined') {
+        try { await tf.ready(); } catch {}
+      }
+      _nsfwModel = await nsfwjs.load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/model/', { size: 299 });
+      if (_nsfwModel) { console.log('NSFWJS model loaded successfully (attempt ' + (attempt+1) + ')'); break; }
+    } catch(e) {
+      console.error('NSFWJS model load attempt ' + (attempt+1) + ' failed:', e);
+      _nsfwModel = null;
+      if (attempt < 2) await new Promise(r => setTimeout(r, (attempt+1) * 2000));
+    }
   }
   _nsfwModelLoading = false;
+  _nsfwModelRetries = 0;
   return _nsfwModel;
 }
 
 async function _analyzeMediaContent(fileData, fileName, fileType) {
   return new Promise(resolve => {
+    let resolved = false;
+    const safeResolve = (val) => { if (!resolved) { resolved = true; resolve(val); } };
     if (/^video\//i.test(fileType) || /\.(mp4|webm|mov|avi)$/i.test(fileName)) {
       // For video, extract first frame
       const video = document.createElement('video');
-      video.muted = true; video.preload = 'metadata';
+      video.muted = true; video.preload = 'auto';
+      video.crossOrigin = 'anonymous';
       video.onloadeddata = () => {
-        video.currentTime = 1;
+        video.currentTime = Math.min(1, video.duration || 1);
         video.onseeked = async () => {
-          const result = await _analyzeFrame(video, video.videoWidth, video.videoHeight);
-          URL.revokeObjectURL(video.src);
-          resolve(result);
+          try {
+            const result = await _analyzeFrame(video, video.videoWidth, video.videoHeight);
+            URL.revokeObjectURL(video.src);
+            safeResolve(result);
+          } catch(e) {
+            console.warn('Video frame analysis failed:', e);
+            safeResolve({ label: 'SUGGESTIVE', score: '0.50' });
+          }
         };
       };
-      video.onerror = () => resolve({ label: 'SAFE', score: '0.10' });
+      video.onerror = () => {
+        console.warn('Video load failed for NSFW scan');
+        safeResolve({ label: 'SUGGESTIVE', score: '0.50' });
+      };
       video.src = fileData.startsWith('data:') ? fileData : URL.createObjectURL(new Blob([fileData]));
-      setTimeout(() => resolve({ label: 'SAFE', score: '0.10' }), 15000);
+      setTimeout(() => safeResolve({ label: 'SUGGESTIVE', score: '0.50' }), 15000);
     } else {
       const img = new Image();
+      img.crossOrigin = 'anonymous';
       img.onload = async () => {
-        const result = await _analyzeFrame(img, img.width, img.height);
-        resolve(result);
+        try {
+          const result = await _analyzeFrame(img, img.width, img.height);
+          safeResolve(result);
+        } catch(e) {
+          console.warn('Image frame analysis failed:', e);
+          safeResolve({ label: 'SUGGESTIVE', score: '0.50' });
+        }
       };
-      img.onerror = () => resolve({ label: 'SAFE', score: '0.10' });
+      img.onerror = () => {
+        console.warn('Image load failed for NSFW scan');
+        safeResolve({ label: 'SUGGESTIVE', score: '0.50' });
+      };
       img.src = fileData;
+      setTimeout(() => safeResolve({ label: 'SUGGESTIVE', score: '0.50' }), 15000);
     }
   });
 }
@@ -11759,12 +12031,18 @@ async function _analyzeFrame(source, w, h) {
   canvas.width = Math.max(1, Math.round((w || 1) * scale));
   canvas.height = Math.max(1, Math.round((h || 1) * scale));
   const ctx = canvas.getContext('2d');
-  try { ctx.drawImage(source, 0, 0, canvas.width, canvas.height); } catch { return { label: 'SAFE', score: '0.10' }; }
+  try { ctx.drawImage(source, 0, 0, canvas.width, canvas.height); } catch(e) {
+    console.warn('Canvas drawImage failed:', e);
+    return { label: 'SUGGESTIVE', score: '0.50' };
+  }
 
   // Use NSFWJS for real AI classification
   try {
     const model = await _loadNSFWModel();
-    if (!model) return _analyzeFrameFallback(ctx, canvas.width, canvas.height);
+    if (!model) {
+      console.warn('NSFWJS model unavailable, using fallback heuristic');
+      return _analyzeFrameFallback(ctx, canvas.width, canvas.height);
+    }
     const predictions = await model.classify(canvas);
     // predictions = [{className: 'Porn'|'Sexy'|'Hentai'|'Drawing'|'Neutral', probability: 0-1}, ...]
     const predMap = {};
@@ -11775,6 +12053,8 @@ async function _analyzeFrame(source, w, h) {
     const sexyScore = predMap['Sexy'] || 0;
     const explicitScore = pornScore + hentaiScore;
     const combinedScore = explicitScore + (sexyScore * 0.5);
+
+    console.log('NSFW scan result:', JSON.stringify(predMap), '→ explicit:', explicitScore.toFixed(2), 'combined:', combinedScore.toFixed(2));
 
     if (explicitScore > 0.30) return { label: 'EXPLICIT', score: combinedScore.toFixed(2) };
     if (combinedScore > 0.45) return { label: 'SUGGESTIVE', score: combinedScore.toFixed(2) };
@@ -13436,26 +13716,186 @@ function addCustomGameManually() {
 
 
 // ════════════════════════════════════════════
-// BLOCK / UNBLOCK USER
+// BLOCK / UNBLOCK USER  (Discord-style)
 // ════════════════════════════════════════════
+function _getBlockedList() { return JSON.parse(localStorage.getItem('ftz_blocked') || '[]'); }
+function _saveBlockedList(list) { localStorage.setItem('ftz_blocked', JSON.stringify(list)); }
+
 function toggleBlockUser(username) {
-  const blocked = JSON.parse(localStorage.getItem('ftz_blocked') || '[]');
-  const isBlocked = blocked.includes(username);
-  if (isBlocked) {
-    const updated = blocked.filter(u => u !== username);
-    localStorage.setItem('ftz_blocked', JSON.stringify(updated));
-    toast(`Unblocked ${username}`, 'success');
+  if (isUserBlocked(username)) {
+    _unblockUser(username);
   } else {
-    blocked.push(username);
-    localStorage.setItem('ftz_blocked', JSON.stringify(blocked));
-    toast(`Blocked ${username}. You won't see their messages.`, 'info');
+    _blockUserConfirm(username);
   }
+}
+
+function _blockUserConfirm(username) {
+  const isFriend = (CU.friends || []).includes(username);
+  showCustomConfirm(
+    `Block ${username}?${isFriend ? ' This will also remove them from your friends.' : ''} They won't be able to send you friend requests, and their messages will be hidden.`,
+    async () => {
+      const blocked = _getBlockedList();
+      if (!blocked.includes(username)) blocked.push(username);
+      _saveBlockedList(blocked);
+      // Auto-unfriend
+      if (isFriend) {
+        try {
+          await FortizedSocial.removeFriend(CU.username, username);
+          await refreshCU();
+          renderFriendsList();
+          renderDMSidebar(document.getElementById('sidebar-scroll'));
+        } catch (e) { console.error('Unfriend on block:', e); }
+      }
+      // Cancel any pending friend requests
+      const sentPending = (CU.friendRequestsSent || []).includes(username);
+      const recvPending = (CU.friendRequestsReceived || []).includes(username);
+      if (sentPending || recvPending) {
+        try {
+          await FortizedSocial.declineFriendRequest(CU.username, username);
+          await refreshCU();
+        } catch {}
+      }
+      // Persist to Firebase
+      try { await firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked); } catch {}
+      toast(`Blocked ${username}`, 'info');
+      closeModal('modal-user');
+      // Re-render messages to blur them
+      _applyBlockBlurToExistingMessages(username, true);
+    }
+  );
+}
+
+function _unblockUser(username) {
+  const blocked = _getBlockedList().filter(u => u !== username);
+  _saveBlockedList(blocked);
+  try { firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked.length ? blocked : null); } catch {}
+  toast(`Unblocked ${username}`, 'success');
   closeModal('modal-user');
+  _applyBlockBlurToExistingMessages(username, false);
 }
 
 function isUserBlocked(username) {
-  const blocked = JSON.parse(localStorage.getItem('ftz_blocked') || '[]');
-  return blocked.includes(username);
+  return _getBlockedList().includes(username);
+}
+
+// Apply/remove blur to all visible messages from a user
+function _applyBlockBlurToExistingMessages(username, shouldBlur) {
+  document.querySelectorAll('.msg-row').forEach(row => {
+    if (row.dataset.from !== username) return;
+    if (shouldBlur) {
+      row.classList.add('msg-blurred');
+      row.classList.remove('msg-revealed');
+      if (!row.querySelector('.msg-blur-reveal')) {
+        const rv = document.createElement('div');
+        rv.className = 'msg-blur-reveal';
+        rv.innerHTML = '<span>Blocked message — click to reveal</span>';
+        rv.onclick = (e) => { e.stopPropagation(); row.classList.add('msg-revealed'); };
+        row.appendChild(rv);
+      }
+    } else {
+      row.classList.remove('msg-blurred', 'msg-revealed');
+      row.querySelector('.msg-blur-reveal')?.remove();
+    }
+  });
+}
+
+// ════════════════════════════════════════════
+// IGNORE USER (timed mute, keeps friend)
+// ════════════════════════════════════════════
+const IGNORE_DURATIONS = [
+  { label: '15 minutes', ms: 15 * 60 * 1000 },
+  { label: '1 hour', ms: 60 * 60 * 1000 },
+  { label: '5 hours', ms: 5 * 60 * 60 * 1000 },
+  { label: '1 day', ms: 24 * 60 * 60 * 1000 },
+  { label: '1 week', ms: 7 * 24 * 60 * 60 * 1000 },
+  { label: '2 weeks', ms: 14 * 24 * 60 * 60 * 1000 },
+];
+
+function _getIgnoreList() {
+  const raw = JSON.parse(localStorage.getItem('ftz_ignored') || '{}');
+  // Prune expired entries
+  const now = Date.now();
+  let changed = false;
+  for (const u in raw) { if (raw[u] <= now) { delete raw[u]; changed = true; } }
+  if (changed) localStorage.setItem('ftz_ignored', JSON.stringify(raw));
+  return raw;
+}
+function _saveIgnoreList(obj) { localStorage.setItem('ftz_ignored', JSON.stringify(obj)); }
+
+function isUserIgnored(username) {
+  const list = _getIgnoreList();
+  return list[username] && list[username] > Date.now();
+}
+
+function getIgnoreExpiry(username) {
+  const list = _getIgnoreList();
+  return list[username] || 0;
+}
+
+function unignoreUser(username) {
+  const list = _getIgnoreList();
+  delete list[username];
+  _saveIgnoreList(list);
+  toast(`Unignored ${username}`, 'success');
+  closeModal('modal-user');
+  _applyIgnoreBlurToExistingMessages(username, false);
+}
+
+function showIgnorePicker(username) {
+  closeModal('modal-user');
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-ignore-picker';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:360px;">
+      <div class="modal-bar"></div>
+      <div class="modal-body">
+        <div class="modal-title">🔇 Ignore ${escapeHTML(username)}</div>
+        <div class="modal-sub" style="margin-bottom:14px;">Their messages will be blurred and you won't receive notifications. They will stay on your friends list.</div>
+        <div class="ignore-picker">
+          ${IGNORE_DURATIONS.map((d, i) => `
+            <div class="ig-opt" onclick="_applyIgnore('${escapeHTML(username)}', ${d.ms})">
+              <span>🔇 ${d.label}</span>
+              <span class="ig-dur">${d.label}</span>
+            </div>`).join('')}
+        </div>
+        <button onclick="document.getElementById('modal-ignore-picker')?.remove()" style="width:100%;margin-top:12px;padding:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:9px;color:rgba(255,255,255,.4);font-size:12.5px;cursor:pointer;">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function _applyIgnore(username, durationMs) {
+  const list = _getIgnoreList();
+  list[username] = Date.now() + durationMs;
+  _saveIgnoreList(list);
+  document.getElementById('modal-ignore-picker')?.remove();
+  const dur = IGNORE_DURATIONS.find(d => d.ms === durationMs);
+  toast(`Ignoring ${username} for ${dur ? dur.label : 'a while'}`, 'info');
+  _applyIgnoreBlurToExistingMessages(username, true);
+}
+
+function _applyIgnoreBlurToExistingMessages(username, shouldBlur) {
+  document.querySelectorAll('.msg-row').forEach(row => {
+    if (row.dataset.from !== username) return;
+    if (shouldBlur) {
+      if (!row.classList.contains('msg-blurred')) {
+        row.classList.add('msg-blurred');
+        row.classList.remove('msg-revealed');
+        if (!row.querySelector('.msg-blur-reveal')) {
+          const rv = document.createElement('div');
+          rv.className = 'msg-blur-reveal';
+          rv.innerHTML = '<span>Ignored message — click to reveal</span>';
+          rv.onclick = (e) => { e.stopPropagation(); row.classList.add('msg-revealed'); };
+          row.appendChild(rv);
+        }
+      }
+    } else {
+      row.classList.remove('msg-blurred', 'msg-revealed');
+      row.querySelector('.msg-blur-reveal')?.remove();
+    }
+  });
 }
 
 // ════════════════════════════════════════════
@@ -18250,6 +18690,8 @@ let _notifToastQueue = [];
 let _notifToastActive = null;
 
 function showNotifToast(notif) {
+  // Suppress notifications from blocked or ignored users
+  if (notif.from && (isUserBlocked(notif.from) || isUserIgnored(notif.from))) return;
   // Each toast stacks above the previous
   const existing = document.querySelectorAll('.ftz-notif-toast');
   const offset = existing.length * 82; // stack offset

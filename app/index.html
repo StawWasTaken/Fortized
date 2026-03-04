@@ -5401,45 +5401,60 @@ function deleteMsg(msgId, context) {
   const _curBastion = curBastion;
   const _curChannel = curChannel;
   showCustomConfirm('Delete this message?', async () => {
-    const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-    if (row) {
-      // If this is the first message of a group (has avatar+header), promote next continuation
-      if (row.classList.contains('msg-first')) {
-        let next = row.nextElementSibling;
-        while (next && next.classList.contains('date-div')) next = next.nextElementSibling;
-        if (next && next.classList.contains('msg-cont') && next.dataset.from === row.dataset.from) {
-          next.classList.replace('msg-cont','msg-first');
-          const fromName = next.dataset.from || '';
-          const safeFrom = escapeHTML(fromName);
-          const time = next.querySelector('.msg-time-small')?.textContent || '';
-          const avId = 'av-' + next.dataset.msgid.replace(/[^a-z0-9]/gi,'-');
-          const roleTag = getMsgRoleTag(fromName, 'ch');
-          const col = next.querySelector('.msg-content-col');
-          const existingContent = col ? col.innerHTML : '';
-          const avWrap = next.querySelector('.msg-av-wrap');
-          if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
-          if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
-          FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}}).catch(()=>{});
-        }
-      }
-      row.remove();
+    if (msgId.startsWith('local-')) {
+      const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+      if (row) row.remove();
+      toast('Deleted','success');
+      return;
     }
-    if (msgId.startsWith('local-')) { toast('Deleted','success'); return; }
     const ctx = context || (_curDM ? 'dm' : _curGC ? 'gc' : 'ch');
+    let ref = null;
     try {
       if (ctx==='dm' && _curDM) {
-        await firebase.database().ref(`dms/${[CU.username,_curDM].sort().join('__')}/${msgId}`).remove();
+        ref = firebase.database().ref(`dms/${[CU.username,_curDM].sort().join('__')}/${msgId}`);
       } else if (ctx==='gc' && _curGC) {
-        await firebase.database().ref(`groupChats/${_curGC}/messages/${msgId}`).remove();
+        ref = firebase.database().ref(`groupChats/${_curGC}/messages/${msgId}`);
       } else {
         const b = CU.bastions?.[_curBastion];
         const ch = b?.channels?.[_curChannel];
         const bid = b?.globalId||b?.name;
         const chName = ch?.name||'general';
-        if (bid && chName) await firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`).remove();
+        if (bid && chName) ref = firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`);
       }
-    } catch(e) { console.warn('Delete error:', e); }
-    toast('Message deleted','success');
+      if (ref) {
+        await ref.remove();
+        // Firebase child_removed listener will handle DOM removal for all clients
+        // But also remove locally for immediate feedback
+        const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+        if (row) {
+          if (row.classList.contains('msg-first')) {
+            let next = row.nextElementSibling;
+            while (next && next.classList.contains('date-div')) next = next.nextElementSibling;
+            if (next && next.classList.contains('msg-cont') && next.dataset.from === row.dataset.from) {
+              next.classList.replace('msg-cont','msg-first');
+              const fromName = next.dataset.from || '';
+              const safeFrom = escapeHTML(fromName);
+              const time = next.querySelector('.msg-time-small')?.textContent || '';
+              const avId = 'av-' + next.dataset.msgid.replace(/[^a-z0-9]/gi,'-');
+              const roleTag = getMsgRoleTag(fromName, ctx);
+              const col = next.querySelector('.msg-content-col');
+              const existingContent = col ? col.innerHTML : '';
+              const avWrap = next.querySelector('.msg-av-wrap');
+              if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
+              if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
+              FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}}).catch(()=>{});
+            }
+          }
+          row.remove();
+        }
+        toast('Message deleted','success');
+      } else {
+        toast('Could not determine message location','error');
+      }
+    } catch(e) {
+      console.error('Delete error:', e);
+      toast('Failed to delete message: ' + (e.message||'unknown error'), 'error');
+    }
   });
 }
 function forwardMsg(text) {
@@ -6215,9 +6230,16 @@ function updateDOBField(){
   // Check & listen for maintenance mode
   checkMaintenanceMode();
   _listenMaintenanceMode();
+  // Listen for force-refresh and session-clear signals from admin
+  _listenForceRefresh();
+  _listenClearSessions();
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling for all staff
   if(hasStaffAccess())setTimeout(startReportPolling,2000);
+  // Listen for real-time staff changes so sidebar updates dynamically
+  _listenStaffChanges();
+  // Listen for real-time bastion updates from other members
+  setTimeout(_listenBastionUpdates, 1500);
 
   // Event listeners
   document.addEventListener('contextmenu',e=>{e.preventDefault();handleContextMenu(e);});
@@ -10960,6 +10982,14 @@ async function _loadAdminPage(tab) {
           <button onclick="_updateGlobalSetting('announcement','');document.getElementById('gs-announcement').value='';toast('Announcement cleared','success');" style="padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;">Clear</button>
         </div>
       </div>
+      <div style="margin-top:16px;background:var(--panel,#101420);border:1px solid rgba(248,113,113,.15);border-radius:12px;padding:18px;max-width:700px;">
+        <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;color:#f87171;">Danger Zone</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:14px;">These actions affect all connected users immediately.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button onclick="_forceRefreshAllUsers()" style="padding:10px 20px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;color:#f87171;cursor:pointer;font-weight:700;font-size:13px;transition:.15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Force Refresh All Users</button>
+          <button onclick="_clearAllSessions()" style="padding:10px 20px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;color:#f87171;cursor:pointer;font-weight:700;font-size:13px;transition:.15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Clear All Sessions</button>
+        </div>
+      </div>
     </div>`;
   }
   else if (tab === 'staff' && isSuperAdmin()) {
@@ -11139,6 +11169,31 @@ function _updateGlobalSetting(key, value) {
   }
 }
 
+// ── Force Refresh / Danger Zone Actions ──
+function _forceRefreshAllUsers() {
+  showCustomConfirm('Force ALL connected users to refresh their page? This is useful after deploying updates.', async () => {
+    try {
+      await firebase.database().ref('admin/force_refresh').set(Date.now());
+      logAudit('force_refresh', 'system', 'Force refresh triggered by ' + CU.username);
+      toast('Force refresh signal sent — all users will reload within seconds.', 'success');
+    } catch(e) {
+      toast('Failed to send refresh signal: ' + e.message, 'error');
+    }
+  });
+}
+
+function _clearAllSessions() {
+  showCustomConfirm('Clear all active sessions? Users will need to log in again.', async () => {
+    try {
+      await firebase.database().ref('admin/clear_sessions').set(Date.now());
+      logAudit('clear_sessions', 'system', 'All sessions cleared by ' + CU.username);
+      toast('Session clear signal sent.', 'success');
+    } catch(e) {
+      toast('Failed: ' + e.message, 'error');
+    }
+  });
+}
+
 // ── Maintenance Mode Enforcement ──
 function checkMaintenanceMode() {
   // Load settings from Firebase first
@@ -11190,6 +11245,104 @@ function _listenMaintenanceMode() {
   });
 }
 
+// Listen for real-time staff changes so sidebar button appears/disappears dynamically
+function _listenStaffChanges() {
+  firebase.database().ref('admin/staff').on('value', snap => {
+    if (snap.exists()) {
+      localStorage.setItem('ftz_staff', JSON.stringify(snap.val()));
+    } else {
+      localStorage.setItem('ftz_staff', JSON.stringify({ admins: [], moderators: [] }));
+    }
+    // Dynamically add/remove the staff console button
+    const rail = document.getElementById('rail');
+    const existingBtn = document.getElementById('admin-rail-btn');
+    const existingSep = existingBtn?.previousElementSibling;
+    if (hasStaffAccess()) {
+      if (!existingBtn && rail) {
+        const role = getStaffRole(CU.username);
+        const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
+        const btn = document.createElement('div');
+        btn.id = 'admin-rail-btn'; btn.className = 'rail-btn';
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Staff Console</span>`;
+        btn.dataset.tip = roleLabel + ' Panel';
+        btn.style.cssText = 'border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);margin-top:6px;background:rgba(248,113,113,.04);';
+        btn.onclick = tryOpenAdmin;
+        const sep = document.createElement('div');
+        sep.className = 'rail-sep'; sep.style.margin = '8px 12px'; sep.id = 'admin-rail-sep';
+        const createBtn = rail.querySelector('[onclick*="modal-create-bastion"]');
+        if (createBtn) { rail.insertBefore(sep, createBtn); rail.insertBefore(btn, createBtn); }
+        else rail.appendChild(btn);
+      }
+    } else {
+      if (existingBtn) existingBtn.remove();
+      if (existingSep && existingSep.id === 'admin-rail-sep') existingSep.remove();
+    }
+  });
+}
+
+// Listen for force-refresh signal from admin
+function _listenForceRefresh() {
+  firebase.database().ref('admin/force_refresh').on('value', snap => {
+    const ts = snap.val();
+    if (!ts) return;
+    const stored = parseInt(localStorage.getItem('ftz_last_force_refresh') || '0');
+    if (ts > stored) {
+      localStorage.setItem('ftz_last_force_refresh', String(ts));
+      // Only refresh if the signal is recent (within 60 seconds)
+      if (Date.now() - ts < 60000) {
+        toast('Platform update — refreshing…', 'info');
+        setTimeout(() => location.reload(), 2000);
+      }
+    }
+  });
+}
+
+// Listen for session-clear signal from admin
+function _listenClearSessions() {
+  firebase.database().ref('admin/clear_sessions').on('value', snap => {
+    const ts = snap.val();
+    if (!ts) return;
+    const stored = parseInt(localStorage.getItem('ftz_last_clear_sessions') || '0');
+    if (ts > stored && Date.now() - ts < 60000) {
+      localStorage.setItem('ftz_last_clear_sessions', String(ts));
+      if (!hasStaffAccess()) {
+        localStorage.removeItem('ftz_current');
+        localStorage.removeItem('fortized_current_user');
+        toast('Session expired — please log in again.', 'info');
+        setTimeout(() => { window.location.href = '/login'; }, 2000);
+      }
+    }
+  });
+}
+
+// Real-time bastion data sync — listens for changes to bastions the user belongs to
+function _listenBastionUpdates() {
+  if (!CU?.bastions) return;
+  CU.bastions.forEach((b, idx) => {
+    const gid = b.globalId || b.name;
+    if (!gid) return;
+    firebase.database().ref('globalBastions/' + gid).on('value', snap => {
+      if (!snap.exists()) return;
+      const fresh = snap.val();
+      const local = CU.bastions[idx];
+      if (!local || (local.globalId || local.name) !== gid) return;
+      // Sync important fields from global bastion
+      const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner'];
+      let changed = false;
+      syncFields.forEach(f => {
+        if (fresh[f] !== undefined && JSON.stringify(fresh[f]) !== JSON.stringify(local[f])) {
+          local[f] = fresh[f];
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveLocal();
+        // Re-render if viewing this bastion
+        if (curBastion === idx) { renderRailBastions(); }
+      }
+    });
+  });
+}
 
 async function adminSearchUser() {
   const raw = document.getElementById('admin-user-search')?.value?.trim().toLowerCase();
@@ -11703,50 +11856,87 @@ async function scanContentForNSFW(fileData, fileName, uploader, fileType) {
 
 let _nsfwModel = null;
 let _nsfwModelLoading = false;
+let _nsfwModelRetries = 0;
 
 async function _loadNSFWModel() {
   if (_nsfwModel) return _nsfwModel;
   if (_nsfwModelLoading) {
-    // Wait for model to finish loading
-    while (_nsfwModelLoading) await new Promise(r => setTimeout(r, 100));
+    // Wait for model to finish loading (max 30s)
+    let waited = 0;
+    while (_nsfwModelLoading && waited < 30000) { await new Promise(r => setTimeout(r, 200)); waited += 200; }
     return _nsfwModel;
   }
   _nsfwModelLoading = true;
-  try {
-    _nsfwModel = await nsfwjs.load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/model/', { size: 299 });
-  } catch(e) {
-    console.error('NSFWJS model load failed:', e);
-    _nsfwModel = null;
+  // Retry up to 3 times with backoff
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      if (typeof nsfwjs === 'undefined') {
+        console.warn('NSFWJS library not loaded, waiting...');
+        await new Promise(r => setTimeout(r, 2000));
+        if (typeof nsfwjs === 'undefined') { throw new Error('nsfwjs library not available'); }
+      }
+      if (typeof tf !== 'undefined') {
+        try { await tf.ready(); } catch {}
+      }
+      _nsfwModel = await nsfwjs.load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/model/', { size: 299 });
+      if (_nsfwModel) { console.log('NSFWJS model loaded successfully (attempt ' + (attempt+1) + ')'); break; }
+    } catch(e) {
+      console.error('NSFWJS model load attempt ' + (attempt+1) + ' failed:', e);
+      _nsfwModel = null;
+      if (attempt < 2) await new Promise(r => setTimeout(r, (attempt+1) * 2000));
+    }
   }
   _nsfwModelLoading = false;
+  _nsfwModelRetries = 0;
   return _nsfwModel;
 }
 
 async function _analyzeMediaContent(fileData, fileName, fileType) {
   return new Promise(resolve => {
+    let resolved = false;
+    const safeResolve = (val) => { if (!resolved) { resolved = true; resolve(val); } };
     if (/^video\//i.test(fileType) || /\.(mp4|webm|mov|avi)$/i.test(fileName)) {
       // For video, extract first frame
       const video = document.createElement('video');
-      video.muted = true; video.preload = 'metadata';
+      video.muted = true; video.preload = 'auto';
+      video.crossOrigin = 'anonymous';
       video.onloadeddata = () => {
-        video.currentTime = 1;
+        video.currentTime = Math.min(1, video.duration || 1);
         video.onseeked = async () => {
-          const result = await _analyzeFrame(video, video.videoWidth, video.videoHeight);
-          URL.revokeObjectURL(video.src);
-          resolve(result);
+          try {
+            const result = await _analyzeFrame(video, video.videoWidth, video.videoHeight);
+            URL.revokeObjectURL(video.src);
+            safeResolve(result);
+          } catch(e) {
+            console.warn('Video frame analysis failed:', e);
+            safeResolve({ label: 'SUGGESTIVE', score: '0.50' });
+          }
         };
       };
-      video.onerror = () => resolve({ label: 'SAFE', score: '0.10' });
+      video.onerror = () => {
+        console.warn('Video load failed for NSFW scan');
+        safeResolve({ label: 'SUGGESTIVE', score: '0.50' });
+      };
       video.src = fileData.startsWith('data:') ? fileData : URL.createObjectURL(new Blob([fileData]));
-      setTimeout(() => resolve({ label: 'SAFE', score: '0.10' }), 15000);
+      setTimeout(() => safeResolve({ label: 'SUGGESTIVE', score: '0.50' }), 15000);
     } else {
       const img = new Image();
+      img.crossOrigin = 'anonymous';
       img.onload = async () => {
-        const result = await _analyzeFrame(img, img.width, img.height);
-        resolve(result);
+        try {
+          const result = await _analyzeFrame(img, img.width, img.height);
+          safeResolve(result);
+        } catch(e) {
+          console.warn('Image frame analysis failed:', e);
+          safeResolve({ label: 'SUGGESTIVE', score: '0.50' });
+        }
       };
-      img.onerror = () => resolve({ label: 'SAFE', score: '0.10' });
+      img.onerror = () => {
+        console.warn('Image load failed for NSFW scan');
+        safeResolve({ label: 'SUGGESTIVE', score: '0.50' });
+      };
       img.src = fileData;
+      setTimeout(() => safeResolve({ label: 'SUGGESTIVE', score: '0.50' }), 15000);
     }
   });
 }
@@ -11759,12 +11949,18 @@ async function _analyzeFrame(source, w, h) {
   canvas.width = Math.max(1, Math.round((w || 1) * scale));
   canvas.height = Math.max(1, Math.round((h || 1) * scale));
   const ctx = canvas.getContext('2d');
-  try { ctx.drawImage(source, 0, 0, canvas.width, canvas.height); } catch { return { label: 'SAFE', score: '0.10' }; }
+  try { ctx.drawImage(source, 0, 0, canvas.width, canvas.height); } catch(e) {
+    console.warn('Canvas drawImage failed:', e);
+    return { label: 'SUGGESTIVE', score: '0.50' };
+  }
 
   // Use NSFWJS for real AI classification
   try {
     const model = await _loadNSFWModel();
-    if (!model) return _analyzeFrameFallback(ctx, canvas.width, canvas.height);
+    if (!model) {
+      console.warn('NSFWJS model unavailable, using fallback heuristic');
+      return _analyzeFrameFallback(ctx, canvas.width, canvas.height);
+    }
     const predictions = await model.classify(canvas);
     // predictions = [{className: 'Porn'|'Sexy'|'Hentai'|'Drawing'|'Neutral', probability: 0-1}, ...]
     const predMap = {};
@@ -11775,6 +11971,8 @@ async function _analyzeFrame(source, w, h) {
     const sexyScore = predMap['Sexy'] || 0;
     const explicitScore = pornScore + hentaiScore;
     const combinedScore = explicitScore + (sexyScore * 0.5);
+
+    console.log('NSFW scan result:', JSON.stringify(predMap), '→ explicit:', explicitScore.toFixed(2), 'combined:', combinedScore.toFixed(2));
 
     if (explicitScore > 0.30) return { label: 'EXPLICIT', score: combinedScore.toFixed(2) };
     if (combinedScore > 0.45) return { label: 'SUGGESTIVE', score: combinedScore.toFixed(2) };

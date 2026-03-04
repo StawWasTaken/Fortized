@@ -10553,7 +10553,31 @@ async function _loadAdminPage(tab) {
       // FTZGIF tokens
       const ftzRx = /\[FTZGIF:(https?:\/\/[^\]]+)\]/gi;
       while ((m = ftzRx.exec(text)) !== null) media.push({ type: 'image', url: m[1] });
+      // FTZIMG tokens (base64 or URL images)
+      const ftzImgRx = /\[FTZIMG:([^\|]+)\|([^\]]+)\]/gi;
+      while ((m = ftzImgRx.exec(text)) !== null) media.push({ type: 'image', url: m[2], name: m[1] });
+      // FTZVID tokens (base64 or URL videos)
+      const ftzVidRx = /\[FTZVID:([^\|]+)\|([^\]]+)\]/gi;
+      while ((m = ftzVidRx.exec(text)) !== null) media.push({ type: 'video', url: m[2], name: m[1] });
+      // FTZAUD tokens (base64 or URL audio)
+      const ftzAudRx = /\[FTZAUD:([^\|]+)\|([^\]]+)\]/gi;
+      while ((m = ftzAudRx.exec(text)) !== null) media.push({ type: 'audio', url: m[2], name: m[1] });
+      // FTZSTICKER tokens
+      const ftzStkRx = /\[FTZSTICKER:([^\]]+)\]/gi;
+      while ((m = ftzStkRx.exec(text)) !== null) media.push({ type: 'image', url: m[1] });
       return media;
+    };
+    // Helper: strip FTZ media tokens from message text for clean display
+    const _stripMediaTokens = (text) => {
+      if (!text) return '';
+      return text
+        .replace(/\[FTZIMG:[^\]]+\]/g, '')
+        .replace(/\[FTZVID:[^\]]+\]/g, '')
+        .replace(/\[FTZAUD:[^\]]+\]/g, '')
+        .replace(/\[FTZFILE:[^\]]+\]/g, '')
+        .replace(/\[FTZGIF:[^\]]+\]/g, '')
+        .replace(/\[FTZSTICKER:[^\]]+\]/g, '')
+        .trim();
     };
     const _isPending = (r) => r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned';
     const _statusColor = (r) => _isPending(r) ? '#f87171' : r.status==='dismissed' ? '#9ca3af' : r.status==='warned' ? '#f59e0b' : '#3ecf6e';
@@ -10604,15 +10628,17 @@ async function _loadAdminPage(tab) {
           <!-- Reported message content (full) -->
           ${r.msgText?`<div style="margin-bottom:14px;">
             <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Reported Message</div>
-            <div style="padding:12px 14px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);border-left:3px solid #f87171;border-radius:8px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;word-break:break-word;white-space:pre-wrap;">${escapeHTML(r.msgText)}</div>
+            ${_stripMediaTokens(r.msgText)?`<div style="padding:12px 14px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);border-left:3px solid #f87171;border-radius:8px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;word-break:break-word;white-space:pre-wrap;">${escapeHTML(_stripMediaTokens(r.msgText))}</div>`:''}
           </div>`:''}
           <!-- Media preview -->
           ${media.length>0?`<div style="margin-bottom:14px;">
             <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">📎 Media Attachments (${media.length})</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;">
               ${media.map(m => m.type==='video'?
-                `<video src="${escapeHTML(m.url)}" controls style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#000;" preload="metadata"></video>`:
-                `<img src="${escapeHTML(m.url)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="window.open('${escapeHTML(m.url)}','_blank')" loading="lazy" onerror="this.style.display='none'">`
+                `<div style="display:inline-block;"><video src="${escapeHTML(m.url)}" controls style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#000;" preload="metadata"></video>${m.name?`<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:3px;">${escapeHTML(m.name)}</div>`:''}</div>`:
+                m.type==='audio'?
+                `<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;display:inline-flex;align-items:center;gap:8px;"><span style="font-size:16px;">🎵</span><audio src="${escapeHTML(m.url)}" controls style="height:32px;" preload="metadata"></audio>${m.name?`<span style="font-size:11px;color:rgba(255,255,255,.35);">${escapeHTML(m.name)}</span>`:''}</div>`:
+                `<img src="${escapeHTML(m.url)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="this.style.display='none'">`
               ).join('')}
             </div>
           </div>`:''}

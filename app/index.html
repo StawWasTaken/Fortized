@@ -472,8 +472,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-row.msg-cont:hover .msg-time-small{visibility:visible;}
 /* Content column */
 .msg-content-col{flex:1;min-width:0;padding-left:4px;}
-.msg-header{display:flex;align-items:baseline;gap:4px;margin-bottom:3px;flex-wrap:wrap;}
+.msg-header{display:flex;align-items:center;gap:4px;margin-bottom:3px;flex-wrap:wrap;}
 .msg-author{font-size:14px;font-weight:600;color:#fff;cursor:pointer;line-height:1.3;}
+.msg-badges{display:inline-flex;align-items:center;}
 .msg-author:hover{text-decoration:underline;}
 .msg-timestamp{font-size:10px;color:rgba(255,255,255,.3);margin-left:4px;font-weight:500;}
 .msg-text{font-size:14.5px;color:rgba(221,227,237,.88);line-height:1.65;word-break:break-word;letter-spacing:.01em;}
@@ -947,7 +948,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .bot-av img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
 .bot-meta{flex:1;min-width:0;}
 .bot-name{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;}
-.bot-name .ftz-badge{font-size:9px;padding:1px 5px;}
+.bot-name .ftz-badge{width:16px;height:16px;}
 .bot-desc{font-size:12px;color:var(--muted-light);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .bot-stats{display:flex;gap:10px;margin-top:6px;font-size:10.5px;color:var(--muted);}
 .bot-perm-tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:10.5px;font-weight:600;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.5);}
@@ -1130,14 +1131,24 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .tmpl-desc{font-size:10.5px;color:var(--muted);}
 
 /* ── BADGE SYSTEM ─────────────────────────────────── */
-.ftz-badge { display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:100px;font-size:9.5px;font-weight:700;letter-spacing:.04em;vertical-align:middle;margin:0 1px; }
-.ftz-badge.badge-radiance { background:linear-gradient(90deg,rgba(255,200,62,.2),rgba(255,249,62,.15));border:1px solid rgba(255,220,62,.35);color:#ffd93e; }
-.ftz-badge.badge-radiance-plus { background:linear-gradient(90deg,rgba(255,120,62,.2),rgba(255,249,62,.15));border:1px solid rgba(255,160,62,.35);color:#ff9d3e; }
-.ftz-badge.badge-admin { background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:#f87171; }
-.ftz-badge.badge-beta { background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.3);color:#60a5fa; }
-.ftz-badge.badge-bot { background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:#a78bfa; }
-.ftz-badge.badge-jester { background:rgba(255,249,62,.12);border:1px solid rgba(255,249,62,.3);color:#fff93e; }
-.ftz-badge.badge-quest { background:rgba(62,207,110,.15);border:1px solid rgba(62,207,110,.3);color:#3ecf6e; }
+.ftz-badge { display:inline-flex;align-items:center;justify-content:center;position:relative;width:20px;height:20px;flex-shrink:0;cursor:pointer;vertical-align:middle;margin:0 1px;transition:transform .15s cubic-bezier(.22,1,.36,1),filter .15s; }
+.ftz-badge:hover { transform:scale(1.2);filter:drop-shadow(0 0 4px currentColor); }
+.ftz-badge img { width:100%;height:100%;object-fit:contain;pointer-events:none; }
+.ftz-badge .badge-tooltip { position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) scale(.92);opacity:0;pointer-events:none;white-space:nowrap;padding:6px 10px;border-radius:8px;background:#111319;border:1px solid rgba(255,255,255,.1);color:#c8d0dc;font-size:11px;font-weight:600;letter-spacing:.01em;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.6);transition:opacity .12s,transform .12s cubic-bezier(.22,1,.36,1); }
+.ftz-badge .badge-tooltip::after { content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#111319; }
+.ftz-badge:hover .badge-tooltip { opacity:1;transform:translateX(-50%) scale(1); }
+/* Badge glow accents per type */
+.ftz-badge.badge-superadmin { color:#fff93e; }
+.ftz-badge.badge-admin { color:#f87171; }
+.ftz-badge.badge-moderator { color:#60a5fa; }
+.ftz-badge.badge-bot { color:#60a5fa; }
+.ftz-badge.badge-radiance { color:#ff9c3c; }
+.ftz-badge.badge-radiance-plus { color:#fff93e; }
+.ftz-badge.badge-beta { color:#f87171; }
+.ftz-badge.badge-quest { color:#9ca3af; }
+.ftz-badge.badge-onyx { color:#fff93e; }
+/* Badge row container */
+.ftz-badge-row { display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin-left:4px; }
 
 /* ── LOADING SKELETON ─────────────────────────────── */
 @keyframes shimmer { 0%{background-position:-600px 0} 100%{background-position:600px 0} }
@@ -5306,6 +5317,7 @@ function appendMessage(container, msg, context, prevAuthor) {
         ${fwdHTML}${replyHTML}
         <div class="msg-header">
           <span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>
+          <span class="msg-badges" data-badges-for="${safeFrom}"></span>
           ${getMsgRoleTag(msg.from, context)}
           <span class="msg-timestamp">·  ${time}</span>
         </div>
@@ -5326,6 +5338,9 @@ function appendMessage(container, msg, context, prevAuthor) {
           if (fontDef) authorEl.style.fontFamily = fontDef.css;
         }
       }
+      // Inject badges next to username
+      const badgeEl = row.querySelector('.msg-badges[data-badges-for="'+CSS.escape(msg.from)+'"]');
+      if (badgeEl) badgeEl.innerHTML = renderBadgesHTML(u);
     }).catch(()=>{});
   } else {
     const textId='mt-c-'+id.replace(/[^a-z0-9]/gi,'-');
@@ -5505,7 +5520,8 @@ function deleteMsg(msgId, context) {
               const existingContent = col ? col.innerHTML : '';
               const avWrap = next.querySelector('.msg-av-wrap');
               if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
-              if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
+              if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span><span class="msg-badges" data-badges-for="${safeFrom}"></span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
+              FortizedSocial.getUserByName(fromName).then(u=>{ if(!u)return; const be=next.querySelector('.msg-badges[data-badges-for="'+CSS.escape(fromName)+'"]'); if(be) be.innerHTML=renderBadgesHTML(u); }).catch(()=>{});
               FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}}).catch(()=>{});
             }
           }
@@ -7530,7 +7546,7 @@ function renderBSettingsMain(tab) {
           <div class="bot-card" style="margin-bottom:8px;">
             <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
             <div class="bot-meta">
-              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot">BOT</span></div>
+              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
               <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
               <div class="bot-stats"><span>Owner: @${escapeHTML(bot.owner||CU.username)}</span><span>•</span><span>${(bot.commands||[]).length} commands</span></div>
             </div>
@@ -8073,7 +8089,7 @@ function renderMyBotsView(main) {
           <div class="bot-card" style="margin-bottom:10px;" onclick="openBotEditor(${i})">
             <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
             <div class="bot-meta">
-              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot">BOT</span>
+              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span>
                 ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">● Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">○ Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">🔒 Private</span>'}
               </div>
               <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
@@ -8245,7 +8261,7 @@ function openBotEditor(idx) {
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
         <div class="bot-av" style="width:56px;height:56px;font-size:26px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot">BOT</span></div>
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
           <div style="font-size:12px;color:var(--muted);">Owner: @${escapeHTML(bot.owner)} · Created ${new Date(bot.createdAt).toLocaleDateString()} · v${bot.version}</div>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px;">
@@ -8461,7 +8477,7 @@ function renderArsenalCard(bot) {
     <div style="display:flex;gap:12px;align-items:center;">
       <div class="bot-av">${bot.emblem||'🤖'}</div>
       <div style="flex:1;min-width:0;">
-        <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot">BOT</span></div>
+        <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
         <div style="font-size:11px;color:var(--muted);">by @${escapeHTML(bot.owner)} · v${bot.version}</div>
       </div>
       <div style="display:flex;align-items:center;gap:3px;font-size:12px;color:#fbbf24;">⭐ ${bot.rating}</div>
@@ -17363,6 +17379,23 @@ function renderAtelierTab(tab) {
             </div>
           </div>
 
+          <!-- Onyx Badge -->
+          <div class="atel-section-hdr" style="margin-top:24px;">Badges</div>
+          <div style="background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.15);border-radius:22px;overflow:hidden;margin-bottom:28px;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,249,62,.15)';this.style.transform=''">
+            <div style="padding:20px 22px;display:flex;align-items:center;gap:16px;">
+              <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;"><img src="fortized badges/onyx.png" style="width:36px;height:36px;object-fit:contain;"></div>
+              <div style="flex:1;">
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:3px;">Onyx Badge</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.55;">A progression badge that evolves as you invest more Onyx. Tiers: Apprentice → Adept → Artisan → Master.</div>
+                ${CU?.onyxBadge?`<div style="margin-top:6px;font-size:11px;color:#fff93e;font-weight:600;">Current: ${_getOnyxTier(CU.onyxBadgeSpent||0).name} · ${CU.onyxBadgeSpent||0} Onyx invested</div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                  ${[{amt:100,label:'100'},{amt:500,label:'500'},{amt:1000,label:'1K'}].map(u=>`<button onclick="upgradeOnyxBadge(${u.amt})" style="padding:6px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);border-radius:10px;color:#fff93e;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.14)'" onmouseout="this.style.background='rgba(255,249,62,.08)'"><img src='Onyx.png' style='width:12px;height:12px;object-fit:contain;'> +${u.label}</button>`).join('')}
+                </div>`:''}
+              </div>
+              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''"><img src='Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 100 Onyx</button>`:'<div style="padding:10px 22px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:14px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'}
+            </div>
+          </div>
+
           <!-- More coming soon -->
           <div class="atel-section-hdr" style="margin-top:24px;">Upcoming Items</div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
@@ -17427,24 +17460,72 @@ function refreshAtelierBalance() {
 // ════════════════════════════════════════════════════
 // BADGE SYSTEM
 // ════════════════════════════════════════════════════
+const BADGE_DEFS = {
+  superadmin: { img:'fortized badges/superadmin.png', tooltip:'Superadmin - Highest level of platform authority in Fortized.', cls:'badge-superadmin', order:0 },
+  admin:      { img:'fortized badges/admin.png', tooltip:'Admin - Platform administrator with elevated permissions.', cls:'badge-admin', order:1 },
+  moderator:  { img:'fortized badges/moderator.png', tooltip:'Moderator - Helps maintain safety and order.', cls:'badge-moderator', order:2 },
+  bot:        { img:'fortized badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:3 },
+  'radiance-plus': { img:'fortized badges/radiance+.png', tooltip:'Radiance+ - Active Radiance+ subscriber.', cls:'badge-radiance-plus', order:4 },
+  radiance:   { img:'fortized badges/basic radiance.png', tooltip:'Basic Radiance - Active Basic Radiance subscriber.', cls:'badge-radiance', order:5 },
+  beta:       { img:'fortized badges/beta user.png', tooltip:'Beta User - Early supporter of Fortized.', cls:'badge-beta', order:6 },
+  quest:      { img:'fortized badges/completed quest.png', tooltip:'Quest Completed - Successfully completed a Fortized quest.', cls:'badge-quest', order:7 },
+  onyx:       { img:'fortized badges/onyx.png', cls:'badge-onyx', order:8 },
+};
+const ONYX_TIERS = [
+  { name:'Onyx Apprentice', min:0 },
+  { name:'Onyx Adept', min:500 },
+  { name:'Onyx Artisan', min:2000 },
+  { name:'Onyx Master', min:10000 },
+];
+function _getOnyxTier(onyxSpent) {
+  let tier = ONYX_TIERS[0];
+  for (const t of ONYX_TIERS) { if (onyxSpent >= t.min) tier = t; }
+  return tier;
+}
+const BETA_START = new Date('2026-02-21T00:00:00Z');
+const BETA_END   = new Date('2026-08-25T23:59:59Z');
+
 function getUserBadges(user) {
   if (!user) return [];
   const badges = [];
+  const uname = user.username || '';
+  // Staff badges — separate superadmin, admin, moderator
+  const staffRole = getStaffRole(uname);
+  if (staffRole === 'superadmin') badges.push({ id:'superadmin', ...BADGE_DEFS.superadmin });
+  else if (staffRole === 'admin') badges.push({ id:'admin', ...BADGE_DEFS.admin });
+  else if (staffRole === 'moderator') badges.push({ id:'moderator', ...BADGE_DEFS.moderator });
+  // Bot badge
+  if (user.isBot) badges.push({ id:'bot', ...BADGE_DEFS.bot });
+  // Subscription badges
   const hasRadiancePlus = user.radiancePlus && new Date(user.radiancePlus) > new Date();
   const hasRadiance = user.radianceUntil && new Date(user.radianceUntil) > new Date();
-  if (hasRadiancePlus) badges.push({ id:'radiance-plus', label:'✨ Radiance+', cls:'badge-radiance-plus' });
-  else if (hasRadiance) badges.push({ id:'radiance', label:'✨ Radiance', cls:'badge-radiance' });
-  const admins = JSON.parse(localStorage.getItem('ftz_admins')||'[]');
-  if (user.username === SUPER_ADMIN || admins.includes(user.username) || user.isAdmin) badges.push({ id:'admin', label:'🛡️ Admin', cls:'badge-admin' });
-  if (user.isBeta || user.betaUser) badges.push({ id:'beta', label:'🔷 Beta', cls:'badge-beta' });
-  if (user.isBot) badges.push({ id:'bot', label:'🤖 Bot', cls:'badge-bot' });
-  if (user.username === JOYSTER_ACCOUNT) badges.push({ id:'jester', label:'🃏 Jester', cls:'badge-jester' });
-  if (user.questsBadge || (user.completedQuests && user.completedQuests.length > 0)) badges.push({ id:'quest', label:'🏅 Quest', cls:'badge-quest' });
+  if (hasRadiancePlus) badges.push({ id:'radiance-plus', ...BADGE_DEFS['radiance-plus'] });
+  else if (hasRadiance) badges.push({ id:'radiance', ...BADGE_DEFS.radiance });
+  // Beta badge — accounts created between 21 Feb 2026 and 25 Aug 2026
+  const created = user.createdAt ? new Date(user.createdAt) : null;
+  if (user.isBeta || user.betaUser || (created && created >= BETA_START && created <= BETA_END)) {
+    badges.push({ id:'beta', ...BADGE_DEFS.beta });
+  }
+  // Quest badge
+  if (user.questsBadge || (user.completedQuests && user.completedQuests.length > 0)) {
+    badges.push({ id:'quest', ...BADGE_DEFS.quest });
+  }
+  // Onyx progression badge — only if user has purchased it
+  if (user.onyxBadge) {
+    const spent = user.onyxBadgeSpent || 0;
+    const tier = _getOnyxTier(spent);
+    badges.push({ id:'onyx', ...BADGE_DEFS.onyx, tooltip: tier.name + ' - Progression badge that evolves with investment.' });
+  }
+  badges.sort((a,b) => (a.order||99) - (b.order||99));
   return badges;
 }
 
 function renderBadgesHTML(user) {
-  return getUserBadges(user).map(b => `<span class="ftz-badge ${b.cls}">${b.label}</span>`).join('');
+  const badges = getUserBadges(user);
+  if (!badges.length) return '';
+  return '<span class="ftz-badge-row">' + badges.map(b =>
+    `<span class="ftz-badge ${b.cls}"><img src="${b.img}" alt="${b.id}"><span class="badge-tooltip">${escapeHTML(b.tooltip||'')}</span></span>`
+  ).join('') + '</span>';
 }
 
 function spawnHeartAnimation(x, y) {
@@ -19861,6 +19942,39 @@ async function buyAppearance(themeId, cost) {
   });
 }
 
+
+// ── Onyx Badge Purchase & Upgrade ──
+async function buyOnyxBadge() {
+  const cost = 100;
+  const bal = CU?.onyx||0;
+  if (bal < cost) { toast('Not enough Onyx! Need '+cost+' Onyx','error'); return; }
+  showCustomConfirm('Buy Onyx Badge for '+cost+' Onyx?', async () => {
+    CU.onyx = bal - cost;
+    CU.onyxBadge = true;
+    CU.onyxBadgeSpent = cost;
+    await saveUser(); updateOnyxDisplay();
+    toast('Onyx Badge unlocked! You are now an Onyx Apprentice.','success');
+    renderAtelierTab('shop');
+  });
+}
+async function upgradeOnyxBadge(amount) {
+  const bal = CU?.onyx||0;
+  if (bal < amount) { toast('Not enough Onyx! Need '+amount+' Onyx','error'); return; }
+  const newSpent = (CU.onyxBadgeSpent||0) + amount;
+  const oldTier = _getOnyxTier(CU.onyxBadgeSpent||0);
+  const newTier = _getOnyxTier(newSpent);
+  showCustomConfirm('Invest '+amount+' Onyx into your badge?', async () => {
+    CU.onyx = bal - amount;
+    CU.onyxBadgeSpent = newSpent;
+    await saveUser(); updateOnyxDisplay();
+    if (newTier.name !== oldTier.name) {
+      toast('Badge evolved! You are now '+newTier.name+'!','success');
+    } else {
+      toast(amount+' Onyx invested into badge. Total: '+newSpent,'success');
+    }
+    renderAtelierTab('shop');
+  });
+}
 
 // ── Joyster System Account ──
 async function _ensureJoysterAccount() {

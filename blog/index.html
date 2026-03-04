@@ -850,9 +850,10 @@ function renderPostGrid(filter) {
 }
 
 function buildHeroCard(id, a) {
+  const imgStyle = a.banner ? `style="background-image:linear-gradient(145deg, rgba(255,249,62,.1) 0%, rgba(255,249,62,.02) 40%, transparent 70%),linear-gradient(to bottom, rgba(8,10,15,.05), rgba(8,10,15,.75)),url('${a.banner}') ;background-position:center;background-size:cover;"` : '';
   return `
     <div class="hero-card" onclick="openArticle('${id}')">
-      <div class="hero-card-img">
+      <div class="hero-card-img" ${imgStyle}>
         <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
       </div>
       <div class="hero-card-body">
@@ -871,9 +872,10 @@ function buildHeroCard(id, a) {
 }
 
 function buildSideCard(id, a, i) {
+  const imgStyle = a.banner ? `style="background-image:linear-gradient(145deg, rgba(255,249,62,.07) 0%, transparent 60%),linear-gradient(to bottom, rgba(8,10,15,.1), rgba(8,10,15,.8)),url('${a.banner}');background-position:center;background-size:cover;"` : '';
   return `
     <div class="side-card" onclick="openArticle('${id}')">
-      <div class="side-card-img"></div>
+      <div class="side-card-img" ${imgStyle}></div>
       <div class="side-card-body">
         <div class="card-meta">
           <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
@@ -891,9 +893,10 @@ function buildSideCard(id, a, i) {
 
 function buildRegCard(id, a, i) {
   const delay = i !== undefined ? `style="animation-delay:${(i * 0.06) + 0.1}s"` : '';
+  const imgStyle = a.banner ? `style="background-image:linear-gradient(145deg, rgba(255,249,62,.06) 0%, transparent 55%),linear-gradient(to bottom, rgba(8,10,15,.1), rgba(8,10,15,.78)),url('${a.banner}');background-position:center;background-size:cover;"` : '';
   return `
     <div class="reg-card fade-up" ${delay} onclick="openArticle('${id}')">
-      <div class="reg-card-img"></div>
+      <div class="reg-card-img" ${imgStyle}></div>
       <div class="reg-card-body">
         <div class="card-meta">
           <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>

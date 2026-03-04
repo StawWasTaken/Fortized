@@ -11326,35 +11326,57 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         ${queue.map((item,i)=>{
           const typeIcon = item.type==='video'?'🎬':item.type==='gif'?'🎞️':'🖼️';
           const labelColor = item.aiLabel==='EXPLICIT'||item.aiLabel==='BANNED_CONTENT'?'#f87171':item.aiLabel==='SUGGESTIVE'?'#f59e0b':'#60a5fa';
-          return `<div style="background:var(--panel,#101420);border:1px solid rgba(245,158,11,.15);border-radius:12px;padding:16px 18px;">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-            ${(item.thumbnail||item.url||item.dataUrl)?`<div style="width:80px;height:80px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);position:relative;cursor:pointer;" onclick="const img=this.querySelector('img,video');if(img){img.style.filter=img.style.filter==='none'?'blur(12px)':'none';}" title="Click to reveal/hide">
-              ${item.type==='video'?`<video src="${escapeHTML(item.thumbnail||item.url||item.dataUrl||'')}" style="width:100%;height:100%;object-fit:cover;filter:blur(12px);" muted preload="metadata"></video>`:`<img src="${escapeHTML(item.thumbnail||item.url||item.dataUrl||'')}" style="width:100%;height:100%;object-fit:cover;filter:blur(12px);" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;\\'>${typeIcon}</div>'">`}
-              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;"><span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.5);">NSFW</span></div>
-            </div>`:`<div style="width:80px;height:80px;border-radius:8px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">${typeIcon}</div>`}
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${labelColor}18;color:${labelColor};">${escapeHTML(item.aiLabel||'FLAGGED')}</span>
-                <span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.3);">${typeIcon} ${escapeHTML(item.type||'image').toUpperCase()}</span>
-              </div>
-              <div style="font-size:13px;font-weight:600;">Uploaded by <strong>${escapeHTML(item.uploader||'?')}</strong></div>
-              <div style="font-size:11px;color:rgba(255,255,255,.35);">File: ${escapeHTML(item.fileName||'unknown')} · Score: ${item.aiScore||'?'} · ${item.flaggedAt?new Date(item.flaggedAt).toLocaleDateString():(item.createdAt?new Date(item.createdAt).toLocaleDateString():'')}</div>
-              ${item.bastionId?`<div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-top:2px;">Bastion: ${escapeHTML(item.bastionId)}</div>`:''}
-            </div>
+          const target = item.uploader || null;
+          const mediaSrc = item.thumbnail||item.url||item.dataUrl||'';
+          return `<div style="background:var(--panel,#101420);border:1px solid rgba(245,158,11,.15);border-radius:14px;overflow:hidden;">
+          <!-- Header bar -->
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;background:rgba(245,158,11,.04);border-bottom:1px solid rgba(255,255,255,.04);">
+            <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${labelColor}18;color:${labelColor};text-transform:uppercase;letter-spacing:.5px;">${escapeHTML(item.aiLabel||'FLAGGED')}</span>
+            <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;background:rgba(245,158,11,.1);color:#f59e0b;">${typeIcon} ${escapeHTML(item.type||'image').toUpperCase()}</span>
+            <div style="flex:1;"></div>
+            <span style="font-size:10.5px;color:rgba(255,255,255,.25);font-family:monospace;">${item.flaggedAt?new Date(item.flaggedAt).toLocaleString():(item.createdAt?new Date(item.createdAt).toLocaleString():'')}</span>
           </div>
-          ${(()=>{
-            const uRole = item.uploader ? getStaffRole(item.uploader) : null;
-            const canAct = uRole === 'superadmin' ? false : uRole === 'admin' ? isSuperAdmin() : uRole === 'moderator' ? isAdmin() : true;
-            if (!canAct) return uRole === 'superadmin'
-              ? '<div style="padding:8px 12px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:7px;color:rgba(255,249,62,.7);font-size:12px;font-weight:600;">🛡️ Superadmin — no action permitted.</div>'
-              : '<div style="padding:8px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:7px;color:rgba(248,113,113,.7);font-size:12px;font-weight:600;">🔒 Insufficient rank to act on this staff member.</div>';
-            return `<div style="display:flex;gap:7px;flex-wrap:wrap;">
-            <button onclick="reviewNSFW(${i},'approve')" style="padding:5px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">✅ Approve</button>
-            <button onclick="reviewNSFW(${i},'remove')" style="padding:5px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:7px;color:#f87171;font-size:12px;cursor:pointer;">🚫 Remove & Ban</button>
-            <button onclick="reviewNSFW(${i},'warn')" style="padding:5px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:7px;color:#f59e0b;font-size:12px;cursor:pointer;">⚠️ Warn Uploader</button>
-            ${item.uploader?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(item.uploader)}';adminSearchUser();}},150);" style="padding:5px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:7px;color:#60a5fa;font-size:12px;cursor:pointer;">👤 Inspect User</button>`:''}
-          </div>`;
-          })()}
+          <div style="padding:16px 18px;">
+            <!-- People involved -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+              <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;">
+                <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Uploader</div>
+                <div style="font-size:13px;font-weight:600;color:${target?'#f87171':'rgba(255,255,255,.3)'};">${target?escapeHTML(target):'Unknown'}</div>
+              </div>
+              <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;">
+                <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Details</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.5);">File: ${escapeHTML(item.fileName||'unknown')} · Score: ${item.aiScore||'?'}</div>
+                ${item.bastionId?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">Bastion: ${escapeHTML(item.bastionId)}</div>`:''}
+              </div>
+            </div>
+            <!-- Media preview (fully visible) -->
+            ${mediaSrc?`<div style="margin-bottom:14px;">
+              <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">📎 Flagged Content</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                ${item.type==='video'?`<video src="${escapeHTML(mediaSrc)}" controls style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#000;" preload="metadata"></video>`
+                :`<img src="${escapeHTML(mediaSrc)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="this.style.display='none'">`}
+              </div>
+            </div>`:''}
+            <!-- Actions (same style as reports) -->
+            ${(()=>{
+              const uRole = target ? getStaffRole(target) : null;
+              const canAct = uRole === 'superadmin' ? false : uRole === 'admin' ? isSuperAdmin() : uRole === 'moderator' ? isAdmin() : true;
+              const protectedMsg = uRole === 'superadmin' ? '<div style="padding:10px 14px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:rgba(255,249,62,.7);font-size:12px;font-weight:600;">🛡️ This user is a Superadmin and cannot be actioned by anyone.</div>'
+                : (uRole === 'admin' && !isSuperAdmin()) ? '<div style="padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:rgba(248,113,113,.7);font-size:12px;font-weight:600;">🔒 This user is an Admin — only Superadmins can take action.</div>'
+                : (uRole === 'moderator' && !isAdmin()) ? '<div style="padding:10px 14px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.12);border-radius:8px;color:rgba(96,165,250,.7);font-size:12px;font-weight:600;">🔒 This user is a Moderator — only Admins and Superadmins can take action.</div>'
+                : '';
+              if (!canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}</div>`;
+              return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
+              <button onclick="reviewNSFW(${i},'approve')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Dismiss</button>
+              <button onclick="reviewNSFW(${i},'warn')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(245,158,11,.15)'" onmouseout="this.style.background='rgba(245,158,11,.08)'">⚠️ Warn</button>
+              ${target?`<button onclick="reviewNSFW(${i},'suspend')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(168,85,247,.15)'" onmouseout="this.style.background='rgba(168,85,247,.08)'">⏳ Suspend</button>`:''}
+              ${target?`<button onclick="reviewNSFW(${i},'ban')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">🔨 Ban</button>`:''}
+              <div style="flex:1;"></div>
+              ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;" onmouseover="this.style.background='rgba(96,165,250,.15)'" onmouseout="this.style.background='rgba(96,165,250,.08)'">🔍 Inspect ${escapeHTML(target)}</button>`:''}
+              ${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}
+            </div>`;
+            })()}
+          </div>
         </div>`}).join('')}
       </div>`}
     </div>`;
@@ -12267,24 +12289,47 @@ function adminActionUser(username, action) {
 function reviewNSFW(idx, action) {
   const queue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
   if (!queue[idx]) return;
-  showCustomInput('Review Note', 'Add a note (optional):', (note) => {
+  showCustomInput('Review Note', 'Add a note (optional):', async (note) => {
     const item = queue[idx];
-    logAudit('nsfw_'+action, item.uploader, note||action);
-    if (action === 'warn') adminActionUser(item.uploader, 'warn');
-    if (action === 'remove' && item.hash) {
-      // Add hash to banned list so same content is auto-blocked in future
+    const target = item.uploader || null;
+    logAudit('nsfw_'+action, target||'?', note||action);
+
+    if (action === 'warn' && target) {
+      await firebase.database().ref('users/'+target+'/activeWarning').set({
+        reason: note || 'NSFW content violation',
+        issuedBy: CU.username,
+        issuedAt: new Date().toISOString()
+      }).catch(()=>{});
+      logAudit('warn', target, note || 'NSFW content');
+      toast('Warning issued to ' + target, 'success');
+    } else if (action === 'suspend' && target) {
+      adminActionUser(target, 'suspend');
+    } else if (action === 'ban' && target) {
+      const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+      const banObj = { username: target, reason: note || 'NSFW content violation', bannedBy: CU.username, bannedAt: new Date().toISOString(), category: 'NSFW Content' };
+      bans.push(banObj);
+      localStorage.setItem('ftz_bans', JSON.stringify(bans));
+      _saveBanToFirebase(banObj);
+      await firebase.database().ref('users/'+target+'/banned').set(true).catch(()=>{});
+      await firebase.database().ref('users/'+target+'/banReason').set(note || 'NSFW content violation').catch(()=>{});
+      logAudit('ban', target, note || 'NSFW content');
+      toast(target + ' has been banned', 'success');
+    }
+
+    // Add hash to banned list for remove/ban actions
+    if ((action === 'ban' || action === 'remove') && item.hash) {
       _nsfwBannedHashes.push(item.hash);
       localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(_nsfwBannedHashes));
       try { firebase.database().ref('admin/nsfw_banned_hashes').set(_nsfwBannedHashes); } catch {}
     }
+
     // Remove from queue
     const itemId = item.id;
     queue.splice(idx, 1);
     localStorage.setItem('ftz_nsfw_queue', JSON.stringify(queue));
-    // Remove from Firebase queue
     try { firebase.database().ref('admin/nsfw_queue/' + itemId).remove(); } catch {}
-    toast(`Content ${action}d`, 'success');
-    loadAdminTab('nsfw_queue');
+    toast(action === 'approve' ? 'Content approved' : action === 'delete' ? 'Deleted forever' : 'Content ' + action + 'd', 'success');
+    _loadAdminPage('nsfw_queue');
   });
 }
 

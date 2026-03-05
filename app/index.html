@@ -24,7 +24,7 @@
 <script src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <style>
-:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.22);--bg:#0a0d14;--rail:#060810;--sidebar:#13161d;--channel:#0f1219;--panel:#161a23;--panel2:#1a1f29;--panel3:#1e2430;--border:#252d3d;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;}
+:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.22);--bg:#0a0d14;--rail:#060810;--sidebar:#13161d;--channel:#0f1219;--panel:#161a23;--panel2:#1a1f29;--panel3:#1e2430;--border:#252d3d;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--elev-1:0 2px 8px rgba(0,0,0,.25);--elev-2:0 8px 24px rgba(0,0,0,.35);--elev-3:0 16px 42px rgba(0,0,0,.55);--font-ui:'DM Sans',sans-serif;--font-display:'Syne',sans-serif;--state-success:#3ecf6e;--state-warning:#f59e0b;--state-danger:#f87171;--state-info:#60a5fa;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;overflow:hidden;}
 body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:row;}
 ::selection{background:rgba(255,249,62,.2);}
@@ -256,6 +256,18 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .fi-info{flex:1;min-width:0;}
 .fi-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fi-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ui-btn{border-radius:var(--radius-sm);padding:6px 10px;transition:all .15s;border:1px solid rgba(255,255,255,.1);cursor:pointer;font-family:var(--font-ui);font-weight:600;font-size:12px;}
+.ui-btn:hover{transform:translateY(-1px);}
+.ui-btn-ghost{background:rgba(255,255,255,.05);color:rgba(255,255,255,.65);}
+.ui-btn-ghost:hover{background:rgba(255,255,255,.1);color:#fff;}
+.ui-btn-icon{background:none;border:none;color:rgba(255,255,255,.35);width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.ui-btn-icon:hover{background:rgba(255,255,255,.06);color:#fff;}
+.ui-panel{background:linear-gradient(165deg,var(--sidebar),rgba(8,10,18,.98));border:1.5px solid rgba(255,255,255,.08);box-shadow:var(--elev-3);}
+.ui-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.02em;}
+.ui-badge-warning{background:rgba(245,158,11,.12);color:var(--state-warning);border:1px solid rgba(245,158,11,.24);}
+.ui-popover{border-radius:var(--radius-lg);border:1px solid rgba(255,255,255,.08);box-shadow:var(--elev-2);backdrop-filter:blur(16px);}
+.notif-panel-header{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;}
+.notif-mark-read-btn{font-size:11px;padding:4px 10px;}
 /* Userbar — spans both sidebars */
 .userbar{min-height:52px;max-height:52px;background:linear-gradient(135deg,rgba(255,255,255,.035),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:14px;display:flex;align-items:center;padding:6px 8px;gap:6px;flex-shrink:0;box-sizing:border-box;backdrop-filter:blur(16px);transition:all .25s cubic-bezier(.22,1,.36,1);position:fixed;bottom:0;left:0;z-index:15;width:calc(190px - 12px);margin:6px 6px 8px;box-shadow:0 2px 16px rgba(0,0,0,.25);}
 .userbar:hover{background:linear-gradient(135deg,rgba(255,249,62,.05),rgba(255,255,255,.04));border-color:rgba(255,249,62,.12);box-shadow:0 4px 24px rgba(0,0,0,.35),0 0 0 1px rgba(255,249,62,.05);}
@@ -1602,7 +1614,13 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     if(el&&el.style.display!=='none'){
       el.querySelector('.lbl').textContent='Taking too long — retrying...';
       setTimeout(function(){
-        el.style.display='none';
+        var retry=document.createElement('button');
+        retry.className='ui-btn ui-btn-ghost';
+        retry.style.marginTop='10px';
+        retry.textContent='Retry loading';
+        retry.onclick=function(){ window.location.reload(); };
+        if(!el.querySelector('button')) el.appendChild(retry);
+        setTimeout(function(){ if(el&&el.style.display!=='none') el.style.display='none'; }, 4500);
         // If no user session, redirect to login
         if(!localStorage.getItem('ftz_current')&&!localStorage.getItem('fortized_current_user')){
           window.location.href='/login';
@@ -1641,14 +1659,14 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 <div class="emoji-picker-panel" id="emoji-picker"></div>
 
 <!-- NOTIFICATION PANEL -->
-<div class="notif-panel" id="notif-panel" style="width:380px;max-width:380px;">
-  <div class="np-header" style="padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;">
+<div class="notif-panel ui-panel" id="notif-panel" style="width:380px;max-width:380px;">
+  <div class="np-header notif-panel-header">
     <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
     </div>
     <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin:0;flex:1;">Notifications</h3>
-    <button onclick="markAllRead()" style="font-size:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.5);cursor:pointer;padding:4px 10px;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Mark all read</button>
-    <button onclick="toggleNotifPanel()" style="background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:20px;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='none'">×</button>
+    <button onclick="markAllRead()" class="ui-btn ui-btn-ghost notif-mark-read-btn">Mark all read</button>
+    <button onclick="toggleNotifPanel()" class="ui-btn-icon" aria-label="Close notifications">×</button>
   </div>
   <div class="np-list" id="np-list" style="flex:1;overflow-y:auto;padding:6px;"><div style="padding:20px;text-align:center;font-size:13px;color:var(--muted);">Loading…</div></div>
 </div>
@@ -2329,7 +2347,7 @@ let voiceParticipants = [];
 let isMuted = false;
 let isDeafened = false;
 let notifPanelOpen = false;
-let notifSettings = {messages:true,friendRequests:true,bastionActivity:true,mentions:true,sounds:true};
+let notifSettings = {messages:true,friendRequests:true,bastionActivity:true,mentions:true,sounds:true,priorityOnly:false,digestMode:false,priorityChannels:[]};
 let _globalSettings = JSON.parse(localStorage.getItem('ftz_global_settings')||'{"disableEmoticonConversion":false}');
 function saveGlobalSettings() { localStorage.setItem('ftz_global_settings', JSON.stringify(_globalSettings)); }
 let replyingTo = null;
@@ -6692,6 +6710,36 @@ function updateDOBField(){
   if(hint)hint.textContent=tier?'Age tier: '+labels[tier]:'⚠️ Must be 13+';
 }
 
+function runFortizedOnboarding() {
+  if (!CU?.username) return;
+  const k = 'ftz_onboarding_v2_' + CU.username;
+  if (localStorage.getItem(k)) return;
+  localStorage.setItem(k, '1');
+  const steps = [
+    '👋 Welcome to Fortized! Start with your first message in DMs.',
+    '🏰 Next: join or create your first Bastion.',
+    '🎙 Try voice once to unlock your social streak.',
+    '💡 Pro tip: upload one custom emoji to boost identity.'
+  ];
+  steps.forEach((s, i) => setTimeout(() => toast(s, 'info'), i * 3200));
+}
+
+function initFortizedUXResilience() {
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 900) {
+      document.getElementById('mobile-overlay')?.classList.remove('active');
+      document.getElementById('sidebar')?.classList.remove('mobile-open');
+    }
+  });
+  document.addEventListener('error', (e) => {
+    const t = e.target;
+    if (!(t instanceof HTMLImageElement)) return;
+    if (t.dataset.fallbackApplied) return;
+    t.dataset.fallbackApplied = '1';
+    t.src = '/default pfp2.png';
+  }, true);
+}
+
 // ════════════════════════════════════════════
 // APP INIT
 // ════════════════════════════════════════════
@@ -6782,6 +6830,8 @@ function updateDOBField(){
 
   // Show home view FIRST — before any setup that could throw
   showView('home');
+  setTimeout(runFortizedOnboarding, 1400);
+  initFortizedUXResilience();
 
   try { saveCurrentToAccounts(); } catch(e) { console.warn('[init] saveCurrentToAccounts:', e); }
   try { updateUserbar(); } catch(e) { console.warn('[init] updateUserbar:', e); }
@@ -11031,9 +11081,33 @@ function showCustomConfirm(message,callback){
 // ════════════════════════════════════════════
 function openModal(id){
   if (id === 'modal-new-dm') { setTimeout(() => switchNewDMTab('dm'), 10); }
-  const el=document.getElementById(id);if(el)el.classList.add('open');}
-function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
-document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open');});
+  const el=document.getElementById(id);if(el){el.classList.add('open');_trapFocusInOverlay(el);}}
+function closeModal(id){const el=document.getElementById(id);if(el){el.classList.remove('open');_releaseFocusTrap(el);}}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay')){e.target.classList.remove('open');_releaseFocusTrap(e.target);}});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const top = [...document.querySelectorAll('.modal-overlay.open')].pop();
+  if (top) { top.classList.remove('open'); _releaseFocusTrap(top); }
+});
+
+function _trapFocusInOverlay(overlay){
+  if (!overlay) return;
+  const sel='button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
+  const nodes=[...overlay.querySelectorAll(sel)].filter(n=>!n.disabled&&n.offsetParent!==null);
+  if (!nodes.length) return;
+  const first=nodes[0],last=nodes[nodes.length-1];
+  const handler=(e)=>{
+    if(e.key!=='Tab') return;
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  };
+  overlay._focusTrapHandler=handler;
+  overlay.addEventListener('keydown',handler);
+  setTimeout(()=>first.focus(),20);
+}
+function _releaseFocusTrap(overlay){
+  if(overlay?._focusTrapHandler){overlay.removeEventListener('keydown',overlay._focusTrapHandler);overlay._focusTrapHandler=null;}
+}
 
 // ════════════════════════════════════════════
 // TOAST
@@ -20331,6 +20405,8 @@ function initCrossDeviceSync() {
   _notifSyncListener = notifRef.on('child_added', snap => {
     const notif = snap.val();
     if (!notif) return;
+    if (!shouldDeliverRealtimeNotif(notif)) return;
+    if (notifSettings.digestMode) { queueDigestNotif(notif); return; }
     // Auto-unhide DM conversations when new messages arrive
     if (notif.type === 'dm' && notif.from) {
       unhideDMConversation('dm_' + notif.from);
@@ -20643,6 +20719,34 @@ async function saveAllSettings() {
 // ════════════════════════════════════════════════════════════
 let _notifToastQueue = [];
 let _notifToastActive = null;
+let _notifDigestBuffer = [];
+let _notifDigestTimer = null;
+
+function _isPriorityNotif(notif) {
+  if (!notif) return false;
+  if (notif.type === 'mention' || notif.type === 'friend_request') return true;
+  const chId = notif.data?.channelId;
+  return !!(chId && (notifSettings.priorityChannels || []).includes(chId));
+}
+
+function shouldDeliverRealtimeNotif(notif) {
+  if (notifSettings.priorityOnly && !_isPriorityNotif(notif)) return false;
+  if (notif.type === 'dm' && notifSettings.messages === false) return false;
+  if (notif.type === 'mention' && notifSettings.mentions === false) return false;
+  if (notif.type === 'friend_request' && notifSettings.friendRequests === false) return false;
+  return true;
+}
+
+function queueDigestNotif(notif) {
+  _notifDigestBuffer.push(notif);
+  if (_notifDigestTimer) return;
+  _notifDigestTimer = setTimeout(() => {
+    const n = _notifDigestBuffer.length;
+    _notifDigestBuffer = [];
+    _notifDigestTimer = null;
+    if (n > 0) toast('🧾 Digest: ' + n + ' new notifications', 'info');
+  }, 90000);
+}
 
 function showNotifToast(notif) {
   // DND: suppress all notification popups
@@ -20705,6 +20809,8 @@ function initNotifToasts() {
   ref.on('child_added', snap => {
     const n = snap.val();
     if (!n || n.seen) return;
+    if (!shouldDeliverRealtimeNotif(n)) return;
+    if (notifSettings.digestMode) { queueDigestNotif(n); return; }
     // Mark as seen
     snap.ref.update({seen: true}).catch(()=>{});
     // Show toast (only for new ones - check timestamp)

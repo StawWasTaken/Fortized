@@ -24,282 +24,211 @@
   --accent-dim: rgba(255,249,62,.08);
   --accent-border: rgba(255,249,62,.18);
   --accent-glow: rgba(255,249,62,.3);
-  --bg: #080a0f;
-  --panel: rgba(12,15,22,.95);
+  --bg: #0a0d14;
+  --panel: rgba(14,17,26,.95);
+  --panel-solid: #10131c;
   --border: #1a2030;
   --radius: 14px;
   --muted: #5a6478;
   --muted-light: #8b95a8;
   --text: #c8d0dc;
   --nav-h: 68px;
+  --green: #4ade80;
+  --yellow: #facc15;
+  --red: #f87171;
+  --orange: #fb923c;
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:#fff;font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:10px;}
 a{text-decoration:none;}
-.nav-root{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;padding:0 40px;background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid var(--border);box-shadow:0 1px 40px rgba(0,0,0,.4);}
+::selection{background:rgba(255,249,62,.2);}
+
+/* ── Nav ─────────────────────────────────── */
+.nav-root{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;padding:0 40px;background:rgba(10,13,20,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid var(--border);box-shadow:0 1px 40px rgba(0,0,0,.4);}
 .nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:32px;}
 .nav-logo img{height:28px;width:28px;object-fit:contain;}
 .nav-logo-word{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.5px;}
-.nav-logo-badge{font-size:8.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#080a0f;background:var(--accent);border-radius:4px;padding:2.5px 6px;line-height:1;}
 .nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:4px;gap:1px;}
 .nav-pill{font-size:13.5px;font-weight:500;color:var(--muted-light);padding:7px 14px;border-radius:9px;transition:color .15s,background .15s;white-space:nowrap;}
 .nav-pill:hover{color:#fff;background:rgba(255,255,255,.06);}
 .nav-pill.active{color:var(--accent);background:rgba(255,249,62,.07);}
 .nav-sep{width:1px;height:22px;background:rgba(255,255,255,.07);margin:0 12px;flex-shrink:0;}
-.nav-community-tag{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--muted-light);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:100px;padding:6px 14px 6px 10px;margin-right:4px;}
-.nav-community-tag .live-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.7);animation:navDotBlink 2.5s ease infinite;}
-@keyframes navDotBlink{0%,100%{opacity:1;}50%{opacity:.3;}}
 .nav-spacer{flex:1;}
 .nav-right{display:flex;align-items:center;gap:8px;}
 .nav-btn-login{font-size:13.5px;font-weight:600;color:var(--muted-light);padding:8px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);transition:color .15s,border-color .15s,background .15s;}
 .nav-btn-login:hover{color:#fff;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06);}
-.nav-btn-cta{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#080a0f;background:var(--accent);padding:9px 20px;border-radius:10px;transition:box-shadow .2s,filter .15s,transform .14s;position:relative;overflow:hidden;}
+.nav-btn-cta{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#0a0d14;background:var(--accent);padding:9px 20px;border-radius:10px;transition:box-shadow .2s,filter .15s,transform .14s;position:relative;overflow:hidden;}
 .nav-btn-cta::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);opacity:0;transition:opacity .2s;}
 .nav-btn-cta:hover{box-shadow:0 0 28px var(--accent-glow);filter:brightness(1.06);transform:translateY(-1px);}
 .nav-btn-cta:hover::before{opacity:1;}
 .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);}
 .nav-hamburger span{display:block;width:20px;height:1.5px;background:var(--muted-light);border-radius:2px;transition:transform .2s,opacity .2s;}
-@media(max-width:900px){.nav-pill-group,.nav-community-tag,.nav-sep{display:none;}.nav-hamburger{display:flex;}}
+@media(max-width:900px){.nav-pill-group,.nav-sep{display:none;}.nav-hamburger{display:flex;}}
 @media(max-width:600px){.nav-btn-login{display:none;}}
 
-.page-hero{padding:72px 72px 56px;position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
-.page-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,rgba(8,10,15,1) 42%,rgba(8,10,15,.78) 100%),url("/Fortized banner2.png") center/cover no-repeat;z-index:0;}
-.page-hero::after{content:"";position:absolute;inset:0;z-index:0;background-image:linear-gradient(rgba(255,249,62,.011) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.011) 1px,transparent 1px);background-size:56px 56px;pointer-events:none;}
-.hero-spotlight{position:absolute;top:-120px;left:-80px;z-index:0;width:500px;height:500px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,249,62,.06) 0%,transparent 65%);pointer-events:none;animation:spotDrift 9s ease-in-out infinite;}
-@keyframes spotDrift{0%,100%{transform:translate(0,0);}50%{transform:translate(40px,30px);}}
-.hero-inner{position:relative;z-index:1;}
-.hero-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:32px;}
-.hero-left{max-width:620px;}
-.eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);background:rgba(255,249,62,.06);border:1px solid var(--accent-border);border-radius:100px;padding:5px 13px;margin-bottom:22px;}
-.eyebrow::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--accent);}
-.page-hero h1{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;letter-spacing:-2px;line-height:1.02;margin-bottom:16px;}
-.hero-desc{font-size:16px;color:var(--muted-light);line-height:1.7;margin-bottom:32px;max-width:460px;}
-.search-wrap{position:relative;max-width:520px;margin-bottom:26px;}
-.search-wrap input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,249,62,.2);border-radius:12px;padding:14px 52px 14px 18px;font-family:'DM Sans',sans-serif;font-size:14.5px;color:#fff;outline:none;transition:border-color .2s,box-shadow .2s;}
-.search-wrap input::placeholder{color:var(--muted);}
-.search-wrap input:focus{border-color:rgba(255,249,62,.42);box-shadow:0 0 0 3px rgba(255,249,62,.07);}
-.search-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:17px;pointer-events:none;}
-.search-results{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:#0d1120;border:1px solid rgba(255,249,62,.18);border-radius:12px;z-index:100;overflow:hidden;box-shadow:0 16px 44px rgba(0,0,0,.6);}
-.search-results.show{display:block;}
-.search-result-item{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border);}
-.search-result-item:last-child{border-bottom:none;}
-.search-result-item:hover{background:rgba(255,249,62,.04);}
-.sri-cat{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:var(--accent-dim);border:1px solid rgba(255,249,62,.14);border-radius:4px;padding:1.5px 7px;flex-shrink:0;}
-.sri-title{font-size:13.5px;color:#dde3ed;flex:1;}
-.sri-arrow{color:var(--muted);font-size:13px;}
-.status-widget{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;padding:18px 22px;min-width:240px;flex-shrink:0;}
-.status-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
-.status-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);}
-.status-row:last-child{border-bottom:none;padding-bottom:0;}
-.status-row-label{font-size:12.5px;color:var(--muted-light);display:flex;align-items:center;gap:8px;}
-.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.dot-green{background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.5);}
-.dot-yellow{background:#facc15;box-shadow:0 0 8px rgba(250,204,21,.5);animation:blink 2s ease infinite;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
-.status-badge{font-size:10.5px;font-weight:700;border-radius:5px;padding:2px 8px;}
-.badge-operational{color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);}
-.badge-degraded{color:#facc15;background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.2);}
-.topic-chips{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:40px;}
-.topic-chip{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted-light);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:8px 14px;cursor:pointer;transition:color .15s,border-color .15s,background .15s;}
-.topic-chip:hover{color:var(--accent);border-color:var(--accent-border);background:var(--accent-dim);}
-.topic-chip-icon{font-size:15px;}
+/* ── Page container ──────────────────────── */
+.page-container{max-width:960px;margin:0 auto;padding:0 32px;}
 
-.quick-actions{padding:56px 72px 0;}
-.qa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-.qa-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:28px 24px;display:flex;flex-direction:column;gap:14px;align-items:flex-start;cursor:pointer;position:relative;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s;text-decoration:none;}
-.qa-card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,249,62,.04),transparent);opacity:0;transition:opacity .2s;}
-.qa-card:hover{transform:translateY(-4px);border-color:rgba(255,249,62,.2);box-shadow:0 16px 40px rgba(0,0,0,.45);}
-.qa-card:hover::before{opacity:1;}
-.qa-icon{width:46px;height:46px;border-radius:13px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:20px;}
-.qa-label{font-family:'Syne',sans-serif;font-size:14.5px;font-weight:700;color:#fff;}
-.qa-desc{font-size:12.5px;color:var(--muted-light);line-height:1.55;}
-.qa-arrow{margin-top:auto;font-size:13px;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:5px;transition:gap .15s;}
-.qa-card:hover .qa-arrow{gap:9px;}
+/* ── Header Section ──────────────────────── */
+.support-header{padding:64px 0 48px;text-align:center;border-bottom:1px solid var(--border);}
+.support-header h1{font-family:'Syne',sans-serif;font-size:42px;font-weight:800;letter-spacing:-1.5px;margin-bottom:12px;}
+.support-header p{font-size:15.5px;color:var(--muted-light);line-height:1.7;max-width:520px;margin:0 auto;}
 
-.section-wrap{padding:72px 72px 0;}
-.section-label{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
-.section-label::before{content:"";width:16px;height:1.5px;background:var(--accent);}
-.section-heading{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:28px;}
+/* ── Section titles ──────────────────────── */
+.section-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+.section-heading{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-1px;margin-bottom:28px;}
 
-.faq-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
-.faq-tab{font-size:12.5px;font-weight:600;color:var(--muted-light);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:100px;padding:7px 16px;cursor:pointer;transition:color .15s,border-color .15s,background .15s;}
-.faq-tab:hover{color:#fff;border-color:rgba(255,255,255,.1);}
-.faq-tab.active{color:var(--accent);background:var(--accent-dim);border-color:var(--accent-border);}
-.faq-list{display:flex;flex-direction:column;gap:8px;}
-.faq-item{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .18s;}
-.faq-item.open{border-color:rgba(255,249,62,.18);}
-.faq-question{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;cursor:pointer;transition:background .15s;}
-.faq-question:hover{background:rgba(255,249,62,.02);}
-.fq-text{font-size:14.5px;font-weight:600;color:#e2e8f3;line-height:1.4;}
-.fq-icon{width:26px;height:26px;border-radius:7px;flex-shrink:0;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted-light);font-weight:700;transition:background .15s,color .15s,transform .2s;}
-.faq-item.open .fq-icon{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-border);transform:rotate(45deg);}
-.faq-answer{max-height:0;overflow:hidden;transition:max-height .32s cubic-bezier(.22,1,.36,1),padding .32s;padding:0 22px;font-size:14px;color:var(--muted-light);line-height:1.78;}
-.faq-item.open .faq-answer{max-height:400px;padding:0 22px 18px;}
+/* ── Status Section ──────────────────────── */
+.status-section{padding:48px 0 40px;border-bottom:1px solid var(--border);}
+.status-summary{display:flex;align-items:center;gap:10px;padding:14px 20px;border-radius:12px;margin-bottom:20px;font-size:14px;font-weight:600;}
+.status-summary.all-ok{background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.18);color:var(--green);}
+.status-summary.has-issues{background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.18);color:var(--yellow);}
+.status-summary-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.status-summary.all-ok .status-summary-dot{background:var(--green);box-shadow:0 0 10px rgba(74,222,128,.5);}
+.status-summary.has-issues .status-summary-dot{background:var(--yellow);box-shadow:0 0 10px rgba(250,204,21,.5);}
+.status-list{display:flex;flex-direction:column;gap:6px;}
+.status-item{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--panel);border:1px solid var(--border);border-radius:12px;transition:border-color .2s;}
+.status-item:hover{border-color:rgba(255,255,255,.1);}
+.status-item-left{display:flex;align-items:center;gap:12px;}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-operational{background:var(--green);box-shadow:0 0 8px rgba(74,222,128,.5);}
+.dot-degraded{background:var(--yellow);box-shadow:0 0 8px rgba(250,204,21,.5);animation:dotPulse 2s ease infinite;}
+.dot-partial{background:var(--orange);box-shadow:0 0 8px rgba(251,146,60,.5);animation:dotPulse 2s ease infinite;}
+.dot-maintenance{background:var(--muted-light);box-shadow:0 0 8px rgba(139,149,168,.3);}
+.dot-outage{background:var(--red);box-shadow:0 0 8px rgba(248,113,113,.5);animation:dotPulse 1.5s ease infinite;}
+@keyframes dotPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.status-name{font-size:14px;font-weight:600;color:#fff;}
+.status-desc{font-size:12px;color:var(--muted);margin-top:2px;}
+.status-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
+.status-badge{font-size:11px;font-weight:700;border-radius:6px;padding:3px 10px;white-space:nowrap;}
+.badge-operational{color:var(--green);background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.18);}
+.badge-degraded{color:var(--yellow);background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.18);}
+.badge-partial{color:var(--orange);background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.18);}
+.badge-maintenance{color:var(--muted-light);background:rgba(139,149,168,.08);border:1px solid rgba(139,149,168,.18);}
+.badge-outage{color:var(--red);background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);}
+.status-incident{font-size:11px;color:var(--muted);margin-top:2px;}
+.status-refresh{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:11.5px;color:var(--muted);}
+.status-refresh-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:dotPulse 3s ease infinite;}
 
-/* ── Guide Cards ──────────────────────────────── */
-.guides-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
-.guide-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;transition:transform .2s,border-color .2s,box-shadow .2s;display:flex;flex-direction:column;}
-.guide-card:hover{transform:translateY(-4px);border-color:rgba(255,249,62,.18);box-shadow:0 16px 40px rgba(0,0,0,.45);}
-.guide-card-header{padding:22px 22px 0;display:flex;align-items:flex-start;gap:14px;}
-.guide-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.guide-meta{flex:1;}
-.guide-cat{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:4px;padding:2px 8px;display:inline-block;margin-bottom:6px;}
-.guide-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;line-height:1.3;}
-.guide-body{padding:12px 22px 0;font-size:13px;color:var(--muted-light);line-height:1.65;flex:1;}
-.guide-steps{padding:14px 22px 0;display:flex;flex-direction:column;gap:8px;}
-.guide-step{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--muted-light);line-height:1.55;}
-.guide-step-num{width:20px;height:20px;border-radius:6px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.14);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--accent);flex-shrink:0;margin-top:1px;}
-.guide-step strong{color:#dde3ed;}
-.guide-footer{padding:16px 22px 20px;display:flex;align-items:center;justify-content:space-between;margin-top:auto;}
-.guide-read-time{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;}
-.guide-expand-btn{font-size:12px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:5px;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:8px;padding:6px 12px;transition:background .15s,gap .15s;cursor:pointer;}
-.guide-card:hover .guide-expand-btn{gap:8px;background:rgba(255,249,62,.12);}
+/* ── Support Resources Section ───────────── */
+.resources-section{padding:48px 0 40px;border-bottom:1px solid var(--border);}
+.resources-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:768px){.resources-grid{grid-template-columns:1fr;}}
+.resource-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:28px 24px;display:flex;flex-direction:column;gap:12px;cursor:pointer;position:relative;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s;}
+.resource-card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,249,62,.04),transparent);opacity:0;transition:opacity .2s;}
+.resource-card:hover{transform:translateY(-3px);border-color:rgba(255,249,62,.2);box-shadow:0 12px 36px rgba(0,0,0,.4);}
+.resource-card:hover::before{opacity:1;}
+.resource-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:20px;}
+.resource-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;}
+.resource-desc{font-size:13px;color:var(--muted-light);line-height:1.6;}
+.resource-link{font-size:12.5px;font-weight:600;color:var(--accent);margin-top:auto;padding-top:4px;}
 
-/* ── Full Guide Modal ─────────────────────────── */
-.guide-modal-overlay{position:fixed;inset:0;background:rgba(4,6,12,.82);backdrop-filter:blur(10px);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .22s;}
-.guide-modal-overlay.open{opacity:1;pointer-events:all;}
-.guide-modal{background:#0b0e1a;border:1px solid rgba(255,249,62,.18);border-radius:22px;max-width:680px;width:100%;max-height:82vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.7);transform:translateY(20px);transition:transform .28s cubic-bezier(.22,1,.36,1);}
-.guide-modal-overlay.open .guide-modal{transform:translateY(0);}
-.gm-header{padding:28px 32px 22px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;position:sticky;top:0;background:#0b0e1a;z-index:2;}
-.gm-title-wrap{display:flex;align-items:flex-start;gap:14px;}
-.gm-icon{width:48px;height:48px;border-radius:14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.14);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-.gm-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;letter-spacing:-.4px;line-height:1.25;}
-.gm-cat{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-top:4px;}
-.gm-close{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--muted-light);cursor:pointer;transition:background .15s,color .15s;flex-shrink:0;}
-.gm-close:hover{background:rgba(255,255,255,.09);color:#fff;}
-.gm-body{padding:28px 32px 32px;}
-.gm-intro{font-size:14.5px;color:var(--muted-light);line-height:1.78;margin-bottom:28px;}
-.gm-section{margin-bottom:26px;}
-.gm-section-title{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#fff;letter-spacing:.02em;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.gm-section-title::before{content:"";width:3px;height:16px;background:var(--accent);border-radius:2px;flex-shrink:0;}
-.gm-steps-list{display:flex;flex-direction:column;gap:10px;}
-.gm-step{display:flex;align-items:flex-start;gap:12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:11px;padding:14px 16px;}
-.gm-step-num{width:24px;height:24px;border-radius:7px;background:var(--accent-dim);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--accent);flex-shrink:0;margin-top:1px;}
-.gm-step-content{flex:1;}
-.gm-step-content strong{font-size:13.5px;color:#e8edf5;display:block;margin-bottom:3px;}
-.gm-step-content p{font-size:13px;color:var(--muted-light);line-height:1.6;}
-.gm-tip{background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.14);border-left:3px solid var(--accent);border-radius:10px;padding:14px 16px;font-size:13px;color:#c8d0dc;line-height:1.65;margin-top:16px;}
-.gm-tip strong{color:var(--accent);}
-.gm-note{background:rgba(148,163,184,.04);border:1px solid rgba(148,163,184,.1);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--muted-light);line-height:1.6;margin-top:12px;}
-.gm-tag-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
-.gm-tag{font-size:11.5px;font-weight:600;color:var(--muted-light);background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:4px 10px;}
+/* ── FAQ Section ─────────────────────────── */
+.faq-section{padding:48px 0 40px;border-bottom:1px solid var(--border);}
+.faq-list{display:flex;flex-direction:column;gap:6px;}
+.faq-item{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s;}
+.faq-item:hover{border-color:rgba(255,255,255,.1);}
+.faq-question{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;user-select:none;gap:16px;}
+.fq-text{font-size:14px;font-weight:600;color:#fff;line-height:1.4;}
+.fq-icon{font-size:18px;color:var(--muted);flex-shrink:0;transition:transform .25s;font-weight:300;width:20px;text-align:center;}
+.faq-answer{max-height:0;overflow:hidden;transition:max-height .35s ease,padding .3s ease;padding:0 20px;font-size:13.5px;color:var(--muted-light);line-height:1.7;}
+.faq-item.open .faq-answer{max-height:300px;padding:0 20px 18px;}
+.faq-item.open .fq-icon{transform:rotate(45deg);color:var(--accent);}
+.faq-item.open{border-color:rgba(255,249,62,.15);}
 
-.contact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-.contact-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:30px 26px;display:flex;flex-direction:column;gap:14px;transition:border-color .18s,transform .2s,box-shadow .2s;}
-.contact-card:hover{border-color:rgba(255,249,62,.18);transform:translateY(-3px);box-shadow:0 14px 36px rgba(0,0,0,.4);}
-.cc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
-.cc-icon{width:50px;height:50px;border-radius:14px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-.cc-eta{font-size:10.5px;font-weight:700;color:var(--muted-light);background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:3px 9px;white-space:nowrap;}
-.cc-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;}
-.cc-desc{font-size:13px;color:var(--muted-light);line-height:1.65;flex:1;}
-.cc-btn{display:inline-flex;align-items:center;gap:7px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;padding:10px 18px;border-radius:10px;transition:filter .15s,box-shadow .15s,transform .14s;cursor:pointer;border:none;width:fit-content;}
-.cc-btn:hover{transform:translateY(-1px);}
-.cc-btn-primary{background:var(--accent);color:#080a0f;}
-.cc-btn-primary:hover{box-shadow:0 0 24px var(--accent-glow);filter:brightness(1.05);}
-.cc-btn-outline{background:transparent;color:#fff;border:1.5px solid var(--border)!important;}
-.cc-btn-outline:hover{border-color:rgba(255,255,255,.15)!important;background:rgba(255,255,255,.04);}
+/* ── Guides Section ──────────────────────── */
+.guides-section{padding:48px 0 40px;border-bottom:1px solid var(--border);}
+.guides-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+@media(max-width:700px){.guides-grid{grid-template-columns:1fr;}}
+.guide-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px;cursor:pointer;transition:transform .2s,border-color .2s,box-shadow .2s;position:relative;overflow:hidden;}
+.guide-card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,249,62,.03),transparent);opacity:0;transition:opacity .2s;}
+.guide-card:hover{transform:translateY(-3px);border-color:rgba(255,249,62,.18);box-shadow:0 12px 36px rgba(0,0,0,.4);}
+.guide-card:hover::before{opacity:1;}
+.guide-card-header{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
+.guide-icon{width:40px;height:40px;border-radius:10px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.guide-meta .guide-cat{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;}
+.guide-meta .guide-title{font-family:'Syne',sans-serif;font-size:14.5px;font-weight:700;color:#fff;}
+.guide-body{font-size:13px;color:var(--muted-light);line-height:1.6;margin-bottom:12px;}
+.guide-arrow{font-size:12.5px;font-weight:600;color:var(--accent);}
 
-.safety-support-band{margin:56px 72px 0;background:rgba(255,249,62,.03);border:1px solid rgba(255,249,62,.12);border-top:3px solid var(--accent);border-radius:20px;padding:36px 44px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;position:relative;overflow:hidden;}
-.safety-support-band::after{content:"";position:absolute;top:-80px;right:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(255,249,62,.06),transparent 65%);pointer-events:none;}
-.ssb-left{display:flex;align-items:center;gap:20px;}
-.ssb-icon{width:56px;height:56px;border-radius:16px;flex-shrink:0;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.16);display:flex;align-items:center;justify-content:center;font-size:26px;}
-.ssb-text h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:5px;}
-.ssb-text p{font-size:13.5px;color:var(--muted-light);line-height:1.6;max-width:460px;}
-.ssb-actions{display:flex;gap:10px;flex-wrap:wrap;}
-.ssb-btn{display:inline-flex;align-items:center;gap:7px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;padding:11px 20px;border-radius:10px;cursor:pointer;border:none;transition:filter .15s,box-shadow .15s,transform .14s;}
-.ssb-btn:hover{transform:translateY(-1px);}
-.ssb-btn-primary{background:var(--accent);color:#080a0f;}
-.ssb-btn-primary:hover{box-shadow:0 0 24px var(--accent-glow);filter:brightness(1.05);}
-.ssb-btn-ghost{background:transparent;color:var(--muted-light);border:1.5px solid var(--border)!important;}
-.ssb-btn-ghost:hover{color:#fff;border-color:rgba(255,255,255,.14)!important;}
-
-footer{border-top:1px solid var(--border);padding:28px 72px;margin-top:80px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px;}
-.footer-left{display:flex;align-items:center;gap:16px;}
-.footer-logo{display:flex;align-items:center;gap:9px;}
-.footer-logo img{height:20px;opacity:.45;}
-.footer-logo span{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#2d3548;}
-.footer-socials{display:flex;align-items:center;gap:10px;padding-left:6px;border-left:1px solid rgba(255,255,255,.06);}
-.footer-socials a{color:#374151;transition:color .2s;display:flex;align-items:center;}
-.footer-socials a:hover{color:var(--muted-light);}
-footer .copy{font-size:12px;color:#2d3548;text-align:center;}
-.footer-links{display:flex;gap:18px;justify-content:flex-end;}
-.footer-links a{font-size:12px;color:#374151;transition:color .15s;}
-.footer-links a:hover{color:var(--muted-light);}
-
-@media(max-width:1024px){.guides-grid,.qa-grid,.contact-grid{grid-template-columns:1fr 1fr;}}
-@media(max-width:768px){
-  .nav-root,.quick-actions,.section-wrap,footer,.safety-support-band{padding-left:24px;padding-right:24px;}
-  .page-hero{padding:52px 24px 40px;}
-  .hero-top{flex-direction:column;}
-  .qa-grid,.guides-grid,.contact-grid{grid-template-columns:1fr;}
-  footer{grid-template-columns:1fr;text-align:center;}
-  .footer-left{justify-content:center;}
-  .footer-links{justify-content:center;}
-  .safety-support-band{margin-left:24px;margin-right:24px;}
-  .gm-header,.gm-body{padding-left:20px;padding-right:20px;}
-}
-img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
-
-/* ── Contact Admins Section ──────────────────── */
-.contact-section{padding:72px 72px 0;}
-.contact-hero-band{background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));border:1px solid rgba(255,249,62,.14);border-radius:22px;padding:40px 44px;margin-bottom:36px;display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap;position:relative;overflow:hidden;}
-.contact-hero-band::before{content:"";position:absolute;top:-60px;right:-60px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(255,249,62,.06),transparent 65%);pointer-events:none;}
-.chb-left{display:flex;align-items:center;gap:20px;}
-.chb-icon{width:56px;height:56px;border-radius:16px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.16);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
-.chb-text h3{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:5px;letter-spacing:-.4px;}
-.chb-text p{font-size:13.5px;color:var(--muted-light);line-height:1.6;max-width:480px;}
-.contact-form-wrap{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start;}
-.contact-form{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:32px 30px;}
-.cf-field{margin-bottom:20px;}
-.cf-field:last-of-type{margin-bottom:0;}
-.cf-label{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
-.cf-input,.cf-select,.cf-textarea{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:14px;color:#fff;outline:none;transition:border-color .2s,box-shadow .2s;}
-.cf-input::placeholder,.cf-textarea::placeholder{color:var(--muted);}
-.cf-input:focus,.cf-select:focus,.cf-textarea:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
-.cf-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%235a6478'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer;}
-.cf-select option{background:#0c0f18;color:#fff;}
-.cf-textarea{min-height:140px;resize:vertical;line-height:1.65;}
+/* ── Contact Section ─────────────────────── */
+.contact-section{padding:48px 0 56px;}
+.contact-intro{background:rgba(255,249,62,.03);border:1px solid rgba(255,249,62,.12);border-radius:14px;padding:24px 28px;margin-bottom:28px;font-size:14px;color:var(--text);line-height:1.7;}
+.contact-intro strong{color:#fff;}
+.contact-form{display:flex;flex-direction:column;gap:16px;}
 .cf-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.cf-submit{display:inline-flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:13px 28px;border-radius:10px;border:none;cursor:pointer;transition:all .18s;margin-top:22px;}
-.cf-submit-primary{background:var(--accent);color:#080a0f;}
-.cf-submit-primary:hover{box-shadow:0 0 28px var(--accent-glow);filter:brightness(1.05);transform:translateY(-1px);}
-.cf-submit:disabled{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important;filter:none!important;}
-.cf-success{display:none;background:rgba(62,207,110,.06);border:1px solid rgba(62,207,110,.18);border-radius:14px;padding:24px;text-align:center;}
+@media(max-width:600px){.cf-row{grid-template-columns:1fr;}}
+.cf-field{display:flex;flex-direction:column;gap:6px;}
+.cf-label{font-size:12px;font-weight:600;color:var(--muted-light);letter-spacing:.04em;}
+.cf-input,.cf-select{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:14px;color:#fff;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none;}
+.cf-input::placeholder{color:var(--muted);}
+.cf-input:focus,.cf-select:focus,.cf-textarea:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
+.cf-select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a6478' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+.cf-select option{background:#13161d;color:#fff;}
+.cf-textarea{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:14px;color:#fff;outline:none;resize:vertical;min-height:140px;transition:border-color .2s,box-shadow .2s;}
+.cf-textarea::placeholder{color:var(--muted);}
+.cf-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.cf-submit{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#0a0d14;background:var(--accent);padding:12px 28px;border-radius:10px;border:none;cursor:pointer;transition:box-shadow .2s,filter .15s,transform .14s;}
+.cf-submit:hover{box-shadow:0 0 24px var(--accent-glow);filter:brightness(1.05);transform:translateY(-1px);}
+.cf-submit:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+.cf-char-count{font-size:11px;color:var(--muted);}
+.cf-success{display:none;text-align:center;padding:48px 24px;}
 .cf-success.show{display:block;}
-.cf-success-icon{font-size:36px;margin-bottom:10px;}
-.cf-success h4{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#3ecf6e;margin-bottom:6px;}
-.cf-success p{font-size:13px;color:var(--muted-light);line-height:1.6;}
-.contact-sidebar{display:flex;flex-direction:column;gap:14px;}
-.cs-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px 20px;transition:border-color .18s;}
-.cs-card:hover{border-color:rgba(255,249,62,.14);}
-.cs-card-icon{width:40px;height:40px;border-radius:11px;background:rgba(255,249,62,.07);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;}
-.cs-card h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;}
-.cs-card p{font-size:12.5px;color:var(--muted-light);line-height:1.6;}
-.cs-card-highlight{border-color:rgba(248,113,113,.18);background:linear-gradient(135deg,rgba(248,113,113,.03),var(--panel));}
-.cs-card-highlight .cs-card-icon{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.16);}
-.cs-card-highlight:hover{border-color:rgba(248,113,113,.28);}
-@media(max-width:1024px){.contact-form-wrap{grid-template-columns:1fr;}.contact-sidebar{flex-direction:row;flex-wrap:wrap;}.cs-card{flex:1;min-width:200px;}}
-@media(max-width:768px){.contact-section{padding-left:24px;padding-right:24px;}.contact-hero-band{padding:28px 24px;}.cf-row{grid-template-columns:1fr;}.contact-sidebar{flex-direction:column;}}
+.cf-success-icon{font-size:40px;margin-bottom:16px;}
+.cf-success h4{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:10px;}
+.cf-success p{font-size:14px;color:var(--muted-light);line-height:1.7;max-width:480px;margin:0 auto 20px;}
+
+/* ── Guide Modal ─────────────────────────── */
+.guide-modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.guide-modal-overlay.open{opacity:1;pointer-events:auto;}
+.guide-modal{background:#10131c;border:1px solid var(--border);border-radius:20px;width:90%;max-width:680px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.6);}
+.gm-header{display:flex;align-items:center;justify-content:space-between;padding:22px 28px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.gm-title-wrap{display:flex;align-items:center;gap:14px;}
+.gm-icon{font-size:24px;}
+.gm-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;}
+.gm-cat{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-top:3px;}
+.gm-close{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px;transition:background .15s,color .15s;}
+.gm-close:hover{background:rgba(255,255,255,.06);color:#fff;}
+.gm-body{padding:28px;overflow-y:auto;font-size:14px;color:var(--text);line-height:1.75;}
+.gm-intro{font-size:14.5px;color:var(--muted-light);line-height:1.75;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.gm-section{margin-bottom:28px;}
+.gm-section-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:14px;}
+.gm-steps-list{display:flex;flex-direction:column;gap:12px;margin-bottom:14px;}
+.gm-step{display:flex;gap:14px;align-items:flex-start;}
+.gm-step-num{width:26px;height:26px;border-radius:8px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.14);color:var(--accent);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.gm-step-content{font-size:13.5px;line-height:1.65;}
+.gm-step-content strong{color:#fff;}
+.gm-step-content p{color:var(--muted-light);margin-top:3px;}
+.gm-tip{background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.12);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--text);line-height:1.65;margin-top:8px;}
+.gm-note{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--muted-light);line-height:1.65;}
+.gm-tag-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.gm-tag{font-size:11.5px;font-weight:600;color:var(--text);background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:4px 10px;}
+
+/* ── Footer ──────────────────────────────── */
+footer{padding:32px 40px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.footer-left{display:flex;align-items:center;gap:20px;}
+.footer-logo{display:flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;}
+.footer-logo img{width:22px;height:22px;object-fit:contain;}
+.footer-socials{display:flex;gap:10px;}
+.footer-socials a{color:var(--muted);transition:color .15s;}
+.footer-socials a:hover{color:#fff;}
+.copy{font-size:12px;color:var(--muted);}
+.footer-links{display:flex;gap:18px;}
+.footer-links a{font-size:12.5px;color:var(--muted-light);transition:color .15s;}
+.footer-links a:hover{color:#fff;}
+
+/* ── Mobile nav drawer ───────────────────── */
+.mobile-drawer{display:none;position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(10,13,20,.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:16px 24px;flex-direction:column;gap:4px;z-index:199;}
+.mobile-drawer.open{display:flex;}
+.mobile-drawer a{font-size:14px;font-weight:500;color:var(--muted-light);padding:10px 12px;border-radius:8px;transition:color .15s,background .15s;}
+.mobile-drawer a:hover,.mobile-drawer a.active{color:var(--accent);background:rgba(255,249,62,.06);}
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script>
-if (!firebase.apps.length) firebase.initializeApp({
-  apiKey: "AIzaSyDeKw90592XdSKSXr1mefodYhca53AVP9M",
-  authDomain: "fortized-5ffcf.firebaseapp.com",
-  databaseURL: "https://fortized-5ffcf-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "fortized-5ffcf",
-  storageBucket: "fortized-5ffcf.firebasestorage.app",
-  messagingSenderId: "232126031951",
-  appId: "1:232126031951:web:c66312d3175f137c25223a"
-});
-</script>
-<script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
+<!-- ── Navigation ──────────────────────────── -->
 <nav class="nav-root">
   <a href="/" class="nav-logo">
     <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
@@ -316,262 +245,264 @@ if (!firebase.apps.length) firebase.initializeApp({
   <div class="nav-right">
     <a href="/login" class="nav-btn-login">Login</a>
     <a href="/signup" class="nav-btn-cta">Join the Fortress →</a>
-    <div class="nav-hamburger" id="navHamburger">
+    <div class="nav-hamburger" id="navHamburger" onclick="document.getElementById('mobileDrawer').classList.toggle('open')">
       <span></span><span></span><span></span>
     </div>
   </div>
 </nav>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a href="/">Home</a>
+  <a href="/blog">Blog</a>
+  <a href="/support" class="active">Support</a>
+  <a href="/download">Download</a>
+</div>
 
-<div class="page-hero">
-  <div class="hero-spotlight"></div>
-  <div class="hero-inner">
-    <div class="hero-top">
-      <div class="hero-left">
-        <div class="eyebrow">Fortized Support</div>
-        <h1>How can we<br>help you?</h1>
-        <p class="hero-desc">Find answers, report issues, and get in touch with the Stawdio team. Your Fortress is in good hands.</p>
-        <div class="search-wrap">
-          <input type="text" id="searchInput" placeholder='Search... e.g. "reset password", "bastion roles"' autocomplete="off">
-          <span class="search-icon">🔍</span>
-          <div class="search-results" id="searchResults"></div>
-        </div>
-        <div class="topic-chips">
-          <span class="topic-chip" onclick="filterFaq('account')"><span class="topic-chip-icon">🧑‍💻</span>Account</span>
-          <span class="topic-chip" onclick="filterFaq('bastion')"><span class="topic-chip-icon">🏰</span>Bastions</span>
-          <span class="topic-chip" onclick="filterFaq('radiance')"><span class="topic-chip-icon">✨</span>Radiance</span>
-          <span class="topic-chip" onclick="filterFaq('safety')"><span class="topic-chip-icon">🛡</span>Safety</span>
-          <span class="topic-chip" onclick="filterFaq('technical')"><span class="topic-chip-icon">⚙️</span>Technical</span>
-          <span class="topic-chip" onclick="filterFaq('all')"><span class="topic-chip-icon">📋</span>All Topics</span>
+<div class="page-container">
+
+<!-- ═══ 1. HEADER ═══════════════════════════ -->
+<div class="support-header">
+  <h1>Fortized Support</h1>
+  <p>Find answers, check platform status, or contact the Fortized team.</p>
+</div>
+
+<!-- ═══ 2. FORTIZED STATUS ═════════════════ -->
+<div class="status-section" id="status">
+  <div class="section-label">System Status</div>
+  <div class="section-heading">Fortized Status</div>
+  <div class="status-summary all-ok" id="statusSummary">
+    <span class="status-summary-dot"></span>
+    <span id="statusSummaryText">All Fortized systems are operational.</span>
+  </div>
+  <div class="status-list" id="statusList">
+    <div class="status-item" data-service="website">
+      <div class="status-item-left">
+        <span class="status-dot dot-operational"></span>
+        <div>
+          <div class="status-name">Fortized Website</div>
+          <div class="status-desc">Main website platform including login, navigation, and public pages.</div>
         </div>
       </div>
-      <div class="status-widget">
-        <div class="status-title">⚡ Platform Status</div>
-        <div class="status-row"><span class="status-row-label"><span class="status-dot dot-green"></span>Fortized Web</span><span class="status-badge badge-operational">Operational</span></div>
-        <div class="status-row"><span class="status-row-label"><span class="status-dot dot-green"></span>Messaging</span><span class="status-badge badge-operational">Operational</span></div>
-        <div class="status-row"><span class="status-row-label"><span class="status-dot dot-green"></span>Voice Channels</span><span class="status-badge badge-operational">Operational</span></div>
-        <div class="status-row"><span class="status-row-label"><span class="status-dot dot-yellow"></span>The Atelier</span><span class="status-badge badge-operational">Preview</span></div>
-        <div class="status-row"><span class="status-row-label"><span class="status-dot dot-green"></span>AutoMod</span><span class="status-badge badge-operational">Operational</span></div>
+      <div class="status-right">
+        <span class="status-badge badge-operational">Operational</span>
+      </div>
+    </div>
+    <div class="status-item" data-service="app">
+      <div class="status-item-left">
+        <span class="status-dot dot-operational"></span>
+        <div>
+          <div class="status-name">Fortized App</div>
+          <div class="status-desc">Desktop and mobile applications that run the Fortized web interface.</div>
+        </div>
+      </div>
+      <div class="status-right">
+        <span class="status-badge badge-operational">Operational</span>
+      </div>
+    </div>
+    <div class="status-item" data-service="services">
+      <div class="status-item-left">
+        <span class="status-dot dot-operational"></span>
+        <div>
+          <div class="status-name">Fortized Services</div>
+          <div class="status-desc">Backend services including messaging, bots, Party Rooms, and Bastion systems.</div>
+        </div>
+      </div>
+      <div class="status-right">
+        <span class="status-badge badge-operational">Operational</span>
+      </div>
+    </div>
+    <div class="status-item" data-service="data">
+      <div class="status-item-left">
+        <span class="status-dot dot-operational"></span>
+        <div>
+          <div class="status-name">Data</div>
+          <div class="status-desc">Database systems including account data, messages, Bastions, and storage.</div>
+        </div>
+      </div>
+      <div class="status-right">
+        <span class="status-badge badge-operational">Operational</span>
       </div>
     </div>
   </div>
-</div>
-
-<div class="quick-actions" style="padding-top:48px;">
-  <div class="qa-grid">
-    <a href="#faq" class="qa-card"><div class="qa-icon">📖</div><div class="qa-label">Browse FAQ</div><div class="qa-desc">Common questions answered about accounts, Bastions, and Radiance.</div><div class="qa-arrow">View all →</div></a>
-    <a href="#guides" class="qa-card"><div class="qa-icon">📚</div><div class="qa-label">Guides & Docs</div><div class="qa-desc">Step-by-step guides for setting up Bastions, Radiance, AutoMod, and more.</div><div class="qa-arrow">Browse guides →</div></a>
-    <a href="#contact" class="qa-card"><div class="qa-icon">📩</div><div class="qa-label">Contact Admins</div><div class="qa-desc">Submit support requests, appeal bans or suspensions, and reach the moderation team directly.</div><div class="qa-arrow">Get in touch →</div></a>
+  <div class="status-refresh">
+    <span class="status-refresh-dot"></span>
+    Auto-refreshes every 60 seconds &middot; <span id="lastRefreshed">Just now</span>
   </div>
 </div>
 
-<div class="section-wrap" id="faq" style="padding-top:64px;">
+<!-- ═══ 3. SUPPORT RESOURCES ═══════════════ -->
+<div class="resources-section" id="resources">
   <div class="section-label">Help Center</div>
-  <div class="section-heading">Frequently asked questions</div>
-  <div class="faq-tabs" id="faqTabs">
-    <div class="faq-tab active" onclick="filterFaq('all')">All</div>
-    <div class="faq-tab" onclick="filterFaq('account')">🧑‍💻 Account</div>
-    <div class="faq-tab" onclick="filterFaq('bastion')">🏰 Bastions</div>
-    <div class="faq-tab" onclick="filterFaq('radiance')">✨ Radiance</div>
-    <div class="faq-tab" onclick="filterFaq('safety')">🛡 Safety</div>
-    <div class="faq-tab" onclick="filterFaq('technical')">⚙️ Technical</div>
-  </div>
-  <div class="faq-list" id="faqList">
-    <div class="faq-item" data-cat="account"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I reset my password?</span><span class="fq-icon">+</span></div><div class="faq-answer">On the login page, click "Forgot Password" and enter your registered email. Because Fortized currently uses local browser storage, your credentials are stored on your device — clearing browser data will remove your account locally.</div></div>
-    <div class="faq-item" data-cat="account"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I delete my Fortized account?</span><span class="fq-icon">+</span></div><div class="faq-answer">Navigate to Settings → Account → Delete Account. EU users have the right to full data erasure under GDPR. If you require additional assistance, reach out through our support channels.</div></div>
-    <div class="faq-item" data-cat="account"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">Can I change my username or display name?</span><span class="fq-icon">+</span></div><div class="faq-answer">Yes. Head to Settings → Profile to update your username, display name, and profile picture at any time. Changes are reflected immediately across all Bastions.</div></div>
-    <div class="faq-item" data-cat="account"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What is the minimum age to use Fortized?</span><span class="fq-icon">+</span></div><div class="faq-answer">Fortized requires users to be at least 13 years old globally. In EU member states, the minimum age is 16, or 13 with verifiable parental/guardian consent.</div></div>
-    <div class="faq-item" data-cat="bastion"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I create a Bastion?</span><span class="fq-icon">+</span></div><div class="faq-answer">Click the "+" button in the Bastion sidebar to open the creation flow. Set your Bastion's name, visibility (public or private), and configure initial Chambers. As the owner, you have full administrative authority at all times.</div></div>
-    <div class="faq-item" data-cat="bastion"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What are Chambers and Ranks?</span><span class="fq-icon">+</span></div><div class="faq-answer">Chambers are organized channels within a Bastion — text, voice, or announcement. Ranks are the role system with unique permissions and visual identifiers, giving your community clear hierarchy from day one.</div></div>
-    <div class="faq-item" data-cat="bastion"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">Can Fortized staff access or override my Bastion?</span><span class="fq-icon">+</span></div><div class="faq-answer">No. Bastion Sovereignty is a core principle. Stawdio Group never overrides or bypasses admin controls. The only exception is enforcement of our Terms of Use in cases of severe violations such as illegal content.</div></div>
-    <div class="faq-item" data-cat="radiance"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What is Radiance and how do I get it?</span><span class="fq-icon">+</span></div><div class="faq-answer">Radiance is Fortized's premium status, unlocked entirely through community engagement — no credit card required. Earn Onyx by completing quests, inviting friends, and claiming daily rewards in The Atelier.</div></div>
-    <div class="faq-item" data-cat="radiance"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What perks does Radiance include?</span><span class="fq-icon">+</span></div><div class="faq-answer">Active Radiance members receive: a custom Radiance Shield badge, an animated avatar border (Profile Glow), extended messaging (up to 4,000 characters), a custom profile banner, and 45MB uploads. Radiance+ adds custom fonts and the ability to gift Radiance to friends. All perks are cosmetic. The Atelier also offers free appearances like Midnight Citadel and purchasable ones like Onyx Pure.</div></div>
-    <div class="faq-item" data-cat="safety"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I report a user or message?</span><span class="fq-icon">+</span></div><div class="faq-answer">Right-click or long-press any message to access the "Report" option. Reports go directly to the Fortized Security Department for review. For urgent incidents, escalate via our support channels below.</div></div>
-    <div class="faq-item" data-cat="safety"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What does AutoMod do?</span><span class="fq-icon">+</span></div><div class="faq-answer">AutoMod is Fortized's real-time content moderation system. It detects and acts on policy-violating messages before they reach other users. Bastion owners can also configure custom keyword filters.</div></div>
-    <div class="faq-item" data-cat="safety"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">I've been wrongly banned. How do I appeal?</span><span class="fq-icon">+</span></div><div class="faq-answer">Submit an appeal through official support channels including your username and a description. EU users have the right to contest termination decisions under the EU Digital Services Act. We respond within 15 business days.</div></div>
-    <div class="faq-item" data-cat="technical"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">Why did my account data disappear?</span><span class="fq-icon">+</span></div><div class="faq-answer">Fortized currently stores account data in your browser's localStorage. Clearing your browser cache or switching browsers will remove local data. Cloud sync will be introduced in a future update.</div></div>
-    <div class="faq-item" data-cat="technical"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">Is Fortized available as a desktop or mobile app?</span><span class="fq-icon">+</span></div><div class="faq-answer">Fortized is currently accessible via web browser. A dedicated desktop app and mobile application are on the roadmap. For the best experience, we recommend a modern Chromium-based browser on desktop.</div></div>
-    <div class="faq-item" data-cat="technical"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">I found a bug or security vulnerability. What do I do?</span><span class="fq-icon">+</span></div><div class="faq-answer">Report bugs through official support channels or the in-app feedback tool. For security vulnerabilities, contact the Fortized Security Department directly and do not publicly disclose until reviewed. Responsible disclosure is greatly appreciated.</div></div>
+  <div class="section-heading">Support Resources</div>
+  <div class="resources-grid">
+    <a href="#faq" class="resource-card">
+      <div class="resource-icon">📖</div>
+      <div class="resource-title">Frequently Asked Questions</div>
+      <div class="resource-desc">Common questions about accounts, Radiance subscriptions, Bastions, safety, bots, and more.</div>
+      <div class="resource-link">Browse FAQ →</div>
+    </a>
+    <a href="#guides" class="resource-card">
+      <div class="resource-icon">📚</div>
+      <div class="resource-title">Guides & Documentation</div>
+      <div class="resource-desc">Step-by-step guides for getting started, managing Bastions, using Party Rooms, creating bots, and more.</div>
+      <div class="resource-link">Browse guides →</div>
+    </a>
+    <a href="#contact" class="resource-card">
+      <div class="resource-icon">📩</div>
+      <div class="resource-title">Contact Us</div>
+      <div class="resource-desc">Submit support requests, appeal bans, report safety concerns, or reach the Fortized team directly.</div>
+      <div class="resource-link">Get in touch →</div>
+    </a>
   </div>
 </div>
 
-<!-- ── GUIDES SECTION ───────────────────────── -->
-<div class="section-wrap" id="guides" style="padding-top:72px;">
-  <div class="section-label">Knowledge Base</div>
-  <div class="section-heading">Guides &amp; documentation</div>
-  <div class="guides-grid">
+<!-- ═══ FAQ ════════════════════════════════ -->
+<div class="faq-section" id="faq">
+  <div class="section-label">Common Questions</div>
+  <div class="section-heading">Frequently Asked Questions</div>
+  <div class="faq-list" id="faqList">
+    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I create an account on Fortized?</span><span class="fq-icon">+</span></div><div class="faq-answer">Visit fortized.com/signup and follow the registration steps. You'll need a valid email address and to meet the minimum age requirement (13 globally, 16 in the EU or 13 with parental consent).</div></div>
+    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What is Radiance and how do I get it?</span><span class="fq-icon">+</span></div><div class="faq-answer">Radiance is Fortized's premium status, unlocked entirely through community engagement — no credit card required. Earn Onyx by completing quests, inviting friends, and claiming daily rewards in The Atelier. Once you have enough Onyx, redeem it for Radiance status in the shop.</div></div>
+    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">What is Onyx and how does The Atelier work?</span><span class="fq-icon">+</span></div><div class="faq-answer">Onyx is Fortized's earn-only currency. You cannot buy it — you earn it through daily logins, quests, inviting friends, and community events. The Atelier is Fortized's cosmetic shop where you can spend Onyx on appearances, Radiance status, and other items.</div></div>
+    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I create and manage a Bastion?</span><span class="fq-icon">+</span></div><div class="faq-answer">Click the + button in the Bastion sidebar to open the creation flow. Set your Bastion's name, visibility (public or private), and configure initial Chambers. As the owner, you have full administrative authority including Ranks, permissions, and moderation tools.</div></div>
+    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I report a user or safety concern?</span><span class="fq-icon">+</span></div><div class="faq-answer">Right-click or long-press any message to access the "Report" option. Reports go directly to the Fortized Security Department for review. For urgent incidents, use the contact form below with the "Safety Concern" category.</div></div>
+    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I appeal a ban or suspension?</span><span class="fq-icon">+</span></div><div class="faq-answer">Use the contact form below and select "Ban Appeal" as the category. Include your username, the approximate date of the action, and a clear explanation. EU users have the right to contest decisions under the Digital Services Act. Appeals are reviewed within 15 business days.</div></div>
+    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I create bots on Fortized?</span><span class="fq-icon">+</span></div><div class="faq-answer">Fortized supports custom bot creation for Bastions. You can create bots through the Developer Portal in your settings. Bots can interact with messaging, events, and moderation features within your Bastion.</div></div>
+    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">Can I change my username or display name?</span><span class="fq-icon">+</span></div><div class="faq-answer">Yes. Head to Settings → Profile to update your username, display name, and profile picture at any time. Changes are reflected immediately across all Bastions.</div></div>
+    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">Why did my account data disappear?</span><span class="fq-icon">+</span></div><div class="faq-answer">Fortized currently stores account data in your browser's localStorage. Clearing your browser cache or switching browsers will remove local data. Cloud sync will be introduced in a future update.</div></div>
+    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span class="fq-text">How do I delete my Fortized account?</span><span class="fq-icon">+</span></div><div class="faq-answer">Navigate to Settings → Account → Delete Account. EU users have the right to full data erasure under GDPR. If you require additional assistance, use the contact form below.</div></div>
+  </div>
+</div>
 
-    <!-- Guide 1: Setting up a Bastion -->
+<!-- ═══ GUIDES ═════════════════════════════ -->
+<div class="guides-section" id="guides">
+  <div class="section-label">Knowledge Base</div>
+  <div class="section-heading">Guides & Documentation</div>
+  <div class="guides-grid">
+    <div class="guide-card" onclick="openGuide('getting-started')">
+      <div class="guide-card-header">
+        <div class="guide-icon">🚀</div>
+        <div class="guide-meta">
+          <span class="guide-cat">Basics</span>
+          <div class="guide-title">Getting Started with Fortized</div>
+        </div>
+      </div>
+      <div class="guide-body">Learn how to create your account, set up your profile, and navigate the Fortized interface.</div>
+      <div class="guide-arrow">Read guide →</div>
+    </div>
     <div class="guide-card" onclick="openGuide('bastion-setup')">
       <div class="guide-card-header">
         <div class="guide-icon">🏰</div>
         <div class="guide-meta">
-          <span class="guide-cat">Getting Started</span>
-          <div class="guide-title">Setting up your first Bastion</div>
+          <span class="guide-cat">Community</span>
+          <div class="guide-title">Managing Bastions</div>
         </div>
       </div>
-      <div class="guide-body">A complete walkthrough for creating, naming, and configuring your Bastion from scratch.</div>
-      <div class="guide-steps">
-        <div class="guide-step"><div class="guide-step-num">1</div><span><strong>Create your Bastion</strong> via the + button in the sidebar</span></div>
-        <div class="guide-step"><div class="guide-step-num">2</div><span><strong>Add Chambers</strong> — text, voice, or announcements</span></div>
-        <div class="guide-step"><div class="guide-step-num">3</div><span><strong>Configure Ranks</strong> and set up your invite link</span></div>
-      </div>
-      <div class="guide-footer">
-        <span class="guide-read-time">⏱ 5 min read</span>
-        <span class="guide-expand-btn">Read guide →</span>
-      </div>
+      <div class="guide-body">Create, configure, and manage your Bastion — Chambers, Ranks, permissions, and invites.</div>
+      <div class="guide-arrow">Read guide →</div>
     </div>
-
-    <!-- Guide 2: Onyx & Radiance -->
+    <div class="guide-card" onclick="openGuide('party-rooms')">
+      <div class="guide-card-header">
+        <div class="guide-icon">🎉</div>
+        <div class="guide-meta">
+          <span class="guide-cat">Features</span>
+          <div class="guide-title">Using Party Rooms</div>
+        </div>
+      </div>
+      <div class="guide-body">Host voice and video sessions with your community using Fortized Party Rooms.</div>
+      <div class="guide-arrow">Read guide →</div>
+    </div>
+    <div class="guide-card" onclick="openGuide('bots-guide')">
+      <div class="guide-card-header">
+        <div class="guide-icon">🤖</div>
+        <div class="guide-meta">
+          <span class="guide-cat">Developer</span>
+          <div class="guide-title">Creating Bots</div>
+        </div>
+      </div>
+      <div class="guide-body">Build custom bots for your Bastion using the Fortized Developer Portal and APIs.</div>
+      <div class="guide-arrow">Read guide →</div>
+    </div>
     <div class="guide-card" onclick="openGuide('radiance-guide')">
       <div class="guide-card-header">
         <div class="guide-icon">✨</div>
         <div class="guide-meta">
           <span class="guide-cat">The Atelier</span>
-          <div class="guide-title">How Onyx &amp; Radiance work</div>
+          <div class="guide-title">Using the Atelier and Onyx</div>
         </div>
       </div>
-      <div class="guide-body">Learn how to earn Onyx through quests and daily rewards, and trade it for Radiance status.</div>
-      <div class="guide-steps">
-        <div class="guide-step"><div class="guide-step-num">1</div><span><strong>Open The Atelier</strong> from the left sidebar</span></div>
-        <div class="guide-step"><div class="guide-step-num">2</div><span><strong>Complete quests</strong> and claim daily Onyx rewards</span></div>
-        <div class="guide-step"><div class="guide-step-num">3</div><span><strong>Redeem Onyx</strong> for Radiance status in the shop</span></div>
-      </div>
-      <div class="guide-footer">
-        <span class="guide-read-time">⏱ 4 min read</span>
-        <span class="guide-expand-btn">Read guide →</span>
-      </div>
+      <div class="guide-body">Earn Onyx through quests and daily rewards, and trade it for Radiance status and cosmetics.</div>
+      <div class="guide-arrow">Read guide →</div>
     </div>
-
-    <!-- Guide 3: AutoMod -->
     <div class="guide-card" onclick="openGuide('automod-guide')">
       <div class="guide-card-header">
         <div class="guide-icon">🛡</div>
         <div class="guide-meta">
           <span class="guide-cat">Safety</span>
-          <div class="guide-title">Configuring AutoMod for your Bastion</div>
+          <div class="guide-title">Safety and Moderation Tools</div>
         </div>
       </div>
-      <div class="guide-body">Step-by-step instructions for setting up keyword filters, raid protection, and user verification.</div>
-      <div class="guide-steps">
-        <div class="guide-step"><div class="guide-step-num">1</div><span><strong>Go to Bastion Settings</strong> → Safety → AutoMod</span></div>
-        <div class="guide-step"><div class="guide-step-num">2</div><span><strong>Enable rules</strong> and add custom keyword filters</span></div>
-        <div class="guide-step"><div class="guide-step-num">3</div><span><strong>Set actions</strong>: warn, mute, kick, or auto-ban</span></div>
-      </div>
-      <div class="guide-footer">
-        <span class="guide-read-time">⏱ 6 min read</span>
-        <span class="guide-expand-btn">Read guide →</span>
-      </div>
+      <div class="guide-body">Configure AutoMod, keyword filters, raid protection, and reporting tools for your Bastion.</div>
+      <div class="guide-arrow">Read guide →</div>
     </div>
-
   </div>
 </div>
 
-<!-- ── CONTACT THE ADMINS ────────────────────── -->
+<!-- ═══ 4. CONTACT FORTIZED ════════════════ -->
 <div class="contact-section" id="contact">
   <div class="section-label">Get Help</div>
-  <div class="section-heading">Contact the Admins</div>
-
-  <div class="contact-hero-band">
-    <div class="chb-left">
-      <div class="chb-icon">📩</div>
-      <div class="chb-text">
-        <h3>Need help? We're here.</h3>
-        <p>Whether you need general support, want to appeal a ban or suspension, or have a safety concern — reach out directly to the Fortized moderation team. We typically respond within 24-48 hours.</p>
+  <div class="section-heading">Contact Fortized</div>
+  <div class="contact-intro">
+    <strong>Need help? We're here.</strong> Whether you need general support, want to appeal a ban or suspension, or have a safety concern, reach out directly to the Fortized team. We typically respond within a couple of hours.
+  </div>
+  <div id="contactForm">
+    <div class="contact-form">
+      <div class="cf-row">
+        <div class="cf-field">
+          <label class="cf-label">Email Address</label>
+          <input type="email" class="cf-input" id="cfEmail" placeholder="your@email.com">
+        </div>
+        <div class="cf-field">
+          <label class="cf-label">Username (optional)</label>
+          <input type="text" class="cf-input" id="cfUsername" placeholder="e.g. Stawkins" maxlength="32">
+        </div>
+      </div>
+      <div class="cf-field">
+        <label class="cf-label">Subject</label>
+        <input type="text" class="cf-input" id="cfSubject" placeholder="Brief description of your issue" maxlength="120">
+      </div>
+      <div class="cf-field">
+        <label class="cf-label">Message</label>
+        <textarea class="cf-textarea" id="cfMessage" placeholder="Describe your issue in detail. The more context you provide, the faster we can help..." maxlength="2000"></textarea>
+      </div>
+      <div class="cf-field">
+        <label class="cf-label">Category</label>
+        <select class="cf-select" id="cfCategory">
+          <option value="" disabled selected>Select a category...</option>
+          <option value="general">General Support</option>
+          <option value="account">Account Issue</option>
+          <option value="ban-appeal">Ban Appeal</option>
+          <option value="safety">Safety Concern</option>
+          <option value="bug">Bug Report</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="cf-footer">
+        <button class="cf-submit" id="cfSubmitBtn" onclick="submitContactForm()">Send Message →</button>
+        <span class="cf-char-count" id="cfCharCount">0 / 2000</span>
       </div>
     </div>
   </div>
-
-  <div class="contact-form-wrap">
-    <div>
-      <div class="contact-form" id="contactForm">
-        <div class="cf-row">
-          <div class="cf-field">
-            <label class="cf-label">Your Username</label>
-            <input type="text" class="cf-input" id="cfUsername" placeholder="e.g. Stawkins" maxlength="32">
-          </div>
-          <div class="cf-field">
-            <label class="cf-label">Email Address</label>
-            <input type="email" class="cf-input" id="cfEmail" placeholder="your@email.com">
-          </div>
-        </div>
-        <div class="cf-field">
-          <label class="cf-label">Category</label>
-          <select class="cf-select" id="cfCategory">
-            <option value="" disabled selected>Select a topic...</option>
-            <option value="general">General Support</option>
-            <option value="ban-appeal">Ban Appeal</option>
-            <option value="suspend-appeal">Suspension Appeal</option>
-            <option value="report">Report a User / Safety Concern</option>
-            <option value="bug">Bug Report</option>
-            <option value="account">Account Recovery</option>
-            <option value="feedback">Feedback & Suggestions</option>
-          </select>
-        </div>
-        <div class="cf-field" id="cfAppealInfo" style="display:none;">
-          <div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.14);border-left:3px solid #f59e0b;border-radius:10px;padding:14px 16px;font-size:13px;color:#c8d0dc;line-height:1.65;">
-            <strong style="color:#f59e0b;">Appeal Information:</strong> Please include your username, approximate date of action, and a clear explanation of why you believe the decision should be reconsidered. Appeals are reviewed by the Fortized Security Department within 15 business days.
-          </div>
-        </div>
-        <div class="cf-field">
-          <label class="cf-label">Subject</label>
-          <input type="text" class="cf-input" id="cfSubject" placeholder="Brief description of your issue" maxlength="120">
-        </div>
-        <div class="cf-field">
-          <label class="cf-label">Message</label>
-          <textarea class="cf-textarea" id="cfMessage" placeholder="Describe your issue in detail. The more context you provide, the faster we can help..." maxlength="2000"></textarea>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-          <button class="cf-submit cf-submit-primary" id="cfSubmitBtn" onclick="submitContactForm()">Send Message →</button>
-          <span style="font-size:11px;color:var(--muted);" id="cfCharCount">0 / 2000</span>
-        </div>
-      </div>
-      <div class="cf-success" id="cfSuccess">
-        <div class="cf-success-icon">✅</div>
-        <h4>Message Sent Successfully</h4>
-        <p>Your request has been submitted to the Fortized moderation team. You'll receive a response at the email address you provided within 24-48 hours. For urgent safety concerns, responses are prioritized.</p>
-        <button class="cf-submit cf-submit-primary" onclick="resetContactForm()" style="margin-top:16px;">Submit Another Request</button>
-      </div>
-    </div>
-
-    <div class="contact-sidebar">
-      <div class="cs-card cs-card-highlight">
-        <div class="cs-card-icon">⚖️</div>
-        <h4>Ban & Suspension Appeals</h4>
-        <p>Believe your ban or suspension was unjust? Select "Ban Appeal" or "Suspension Appeal" from the category dropdown to file a formal appeal. EU users have the right to contest decisions under the Digital Services Act.</p>
-      </div>
-      <div class="cs-card">
-        <div class="cs-card-icon">🛡</div>
-        <h4>Safety & Security</h4>
-        <p>For urgent safety concerns including harassment, threats, or illegal content — select "Report a User" and our Security Department will prioritize your request.</p>
-      </div>
-      <div class="cs-card">
-        <div class="cs-card-icon">⏱</div>
-        <h4>Response Times</h4>
-        <p>General support: 24-48 hours. Appeals: up to 15 business days. Safety reports: prioritized within 24 hours. All times are estimates.</p>
-      </div>
-      <div class="cs-card">
-        <div class="cs-card-icon">📜</div>
-        <h4>Policies & Legal</h4>
-        <p>Review our <a href="/privacy" style="color:var(--accent);text-decoration:none;font-weight:600;">Privacy Policy</a> and <a href="/terms" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Service</a> before submitting your request.</p>
-      </div>
-    </div>
+  <div class="cf-success" id="cfSuccess">
+    <div class="cf-success-icon">✅</div>
+    <h4>Message Sent Successfully</h4>
+    <p>Your request has been submitted to the Fortized team. You'll receive a response at the email address you provided. For urgent safety concerns, responses are prioritized.</p>
+    <button class="cf-submit" onclick="resetContactForm()" style="margin-top:8px;">Submit Another Request</button>
   </div>
 </div>
 
-<div class="safety-support-band">
-  <div class="ssb-left">
-    <div class="ssb-icon">🏰</div>
-    <div class="ssb-text">
-      <h3>Your Fortress. Our commitment.</h3>
-      <p>Fortized is built on a layered security architecture. From AutoMod and Raid Protection to the dedicated Fortized Security Department — every wall is designed to hold.</p>
-    </div>
-  </div>
-  <div class="ssb-actions">
-    <a href="/privacy" class="ssb-btn ssb-btn-primary">Privacy Policy</a>
-    <a href="/terms" class="ssb-btn ssb-btn-ghost">Terms of Service</a>
-  </div>
-</div>
+</div><!-- /.page-container -->
 
+<!-- ── Footer ─────────────────────────────── -->
 <footer>
   <div class="footer-left">
     <a href="/" class="footer-logo">
@@ -592,7 +523,7 @@ if (!firebase.apps.length) firebase.initializeApp({
   </div>
 </footer>
 
-<!-- ── GUIDE MODALS ─────────────────────────── -->
+<!-- ── Guide Modal ─────────────────────────── -->
 <div class="guide-modal-overlay" id="modalOverlay" onclick="closeGuideOnOverlay(event)">
   <div class="guide-modal" id="guideModal">
     <div class="gm-header">
@@ -610,158 +541,263 @@ if (!firebase.apps.length) firebase.initializeApp({
 </div>
 
 <script>
-/* ── FAQ ───────────────────── */
+/* ── FAQ toggle ───────────────────────────── */
 function toggleFaq(btn) {
   const item = btn.parentElement;
   const isOpen = item.classList.contains('open');
   document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
   if (!isOpen) item.classList.add('open');
 }
-function filterFaq(cat) {
-  document.querySelectorAll('.faq-tab').forEach(t => t.classList.remove('active'));
-  const tabMap = { all:0, account:1, bastion:2, radiance:3, safety:4, technical:5 };
-  const tabs = document.querySelectorAll('.faq-tab');
-  if (tabs[tabMap[cat]]) tabs[tabMap[cat]].classList.add('active');
-  document.querySelectorAll('.faq-item').forEach(item => {
-    item.style.display = (cat === 'all' || item.dataset.cat === cat) ? '' : 'none';
-    item.classList.remove('open');
-  });
-  document.getElementById('faq').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+/* ── Status auto-refresh ──────────────────── */
+const STATUS_CONFIG = {
+  website:  { name:'Fortized Website',  status:'operational' },
+  app:      { name:'Fortized App',      status:'operational' },
+  services: { name:'Fortized Services', status:'operational' },
+  data:     { name:'Data',              status:'operational' }
+};
+
+const STATUS_LABELS = {
+  operational: { text:'Operational', badge:'badge-operational', dot:'dot-operational' },
+  degraded:    { text:'Degraded performance', badge:'badge-degraded', dot:'dot-degraded' },
+  partial:     { text:'Partial outage', badge:'badge-partial', dot:'dot-partial' },
+  maintenance: { text:'Under maintenance', badge:'badge-maintenance', dot:'dot-maintenance' },
+  outage:      { text:'Major outage', badge:'badge-outage', dot:'dot-outage' }
+};
+
+function refreshStatus() {
+  if (typeof firebase !== 'undefined' && firebase.database) {
+    firebase.database().ref('status/services').once('value').then(snap => {
+      const data = snap.val();
+      if (!data) return;
+      let allOk = true;
+      document.querySelectorAll('.status-item').forEach(item => {
+        const svc = item.dataset.service;
+        if (data[svc]) {
+          const st = data[svc].status || 'operational';
+          const info = STATUS_LABELS[st] || STATUS_LABELS.operational;
+          const dot = item.querySelector('.status-dot');
+          const badge = item.querySelector('.status-badge');
+          dot.className = 'status-dot ' + info.dot;
+          badge.className = 'status-badge ' + info.badge;
+          badge.textContent = info.text;
+          const existing = item.querySelector('.status-incident');
+          if (existing) existing.remove();
+          if (data[svc].incident) {
+            const inc = document.createElement('div');
+            inc.className = 'status-incident';
+            inc.textContent = data[svc].incident;
+            item.querySelector('.status-right').appendChild(inc);
+          }
+          if (st !== 'operational') allOk = false;
+        }
+      });
+      const summary = document.getElementById('statusSummary');
+      const summaryText = document.getElementById('statusSummaryText');
+      if (allOk) {
+        summary.className = 'status-summary all-ok';
+        summaryText.textContent = 'All Fortized systems are operational.';
+      } else {
+        summary.className = 'status-summary has-issues';
+        summaryText.textContent = 'Some Fortized systems are experiencing issues.';
+      }
+    }).catch(() => {});
+  }
+  document.getElementById('lastRefreshed').textContent = 'Just now';
 }
 
-/* ── SEARCH ────────────────── */
-const SEARCH_DATA = [
-  { cat:'Account', title:'How do I reset my password?', id:'account' },
-  { cat:'Account', title:'How do I delete my account?', id:'account' },
-  { cat:'Account', title:'Changing username or display name', id:'account' },
-  { cat:'Bastion', title:'Creating a Bastion', id:'bastion' },
-  { cat:'Bastion', title:'Chambers and Ranks explained', id:'bastion' },
-  { cat:'Radiance', title:'What is Radiance and how to get it', id:'radiance' },
-  { cat:'Radiance', title:'Radiance perks and benefits', id:'radiance' },
-  { cat:'Safety', title:'Reporting a user or message', id:'safety' },
-  { cat:'Safety', title:'What does AutoMod do?', id:'safety' },
-  { cat:'Safety', title:'Appeal a ban or suspension', id:'safety' },
-  { cat:'Technical', title:'Account data disappeared / localStorage', id:'technical' },
-  { cat:'Technical', title:'Desktop and mobile app availability', id:'technical' },
-  { cat:'Technical', title:'Reporting a bug or security vulnerability', id:'technical' },
-  { cat:'Support', title:'Contact the admins', id:'contact' },
-  { cat:'Support', title:'Appeal a ban', id:'contact' },
-  { cat:'Support', title:'Appeal a suspension', id:'contact' },
-  { cat:'Support', title:'Report a safety concern', id:'contact' },
-  { cat:'Support', title:'Account recovery help', id:'contact' },
-];
-const input = document.getElementById('searchInput');
-const results = document.getElementById('searchResults');
-input.addEventListener('input', () => {
-  const q = input.value.trim().toLowerCase();
-  if (q.length < 2) { results.classList.remove('show'); return; }
-  const filtered = SEARCH_DATA.filter(d => d.title.toLowerCase().includes(q) || d.cat.toLowerCase().includes(q)).slice(0, 6);
-  if (!filtered.length) { results.classList.remove('show'); return; }
-  results.innerHTML = filtered.map(d => `<div class="search-result-item" onclick="${d.id === 'contact' ? "document.getElementById(\'contact\').scrollIntoView({behavior:\'smooth\',block:\'start\'});closeSearch();" : "filterFaq(\'"+d.id+"\');closeSearch();"}"><span class="sri-cat">${d.cat}</span><span class="sri-title">${d.title}</span><span class="sri-arrow">→</span></div>`).join('');
-  results.classList.add('show');
-});
-function closeSearch() { results.classList.remove('show'); input.value = ''; }
-document.addEventListener('click', e => { if (!e.target.closest('.search-wrap')) closeSearch(); });
+refreshStatus();
+setInterval(refreshStatus, 60000);
 
-/* ── GUIDE MODAL DATA ──────── */
+/* ── Contact form ─────────────────────────── */
+const cfMessage = document.getElementById('cfMessage');
+const cfCharCount = document.getElementById('cfCharCount');
+if (cfMessage) cfMessage.addEventListener('input', () => {
+  cfCharCount.textContent = cfMessage.value.length + ' / 2000';
+});
+
+async function submitContactForm() {
+  const email = document.getElementById('cfEmail').value.trim();
+  const username = document.getElementById('cfUsername').value.trim();
+  const subject = document.getElementById('cfSubject').value.trim();
+  const message = document.getElementById('cfMessage').value.trim();
+  const category = document.getElementById('cfCategory').value;
+  if (!email || !subject || !message || !category) { alert('Please fill in all required fields.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Please enter a valid email address.'); return; }
+  const btn = document.getElementById('cfSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    if (typeof firebase !== 'undefined' && firebase.database) {
+      await firebase.database().ref('support/tickets').push({
+        email, username: username || null, subject, message, category,
+        submittedAt: new Date().toISOString(),
+        status: 'open'
+      });
+    }
+    document.getElementById('contactForm').style.display = 'none';
+    document.getElementById('cfSuccess').classList.add('show');
+  } catch(e) {
+    console.error('Failed to submit support ticket:', e);
+    alert('Failed to send your request. Please try again.');
+    btn.disabled = false; btn.textContent = 'Send Message →';
+  }
+}
+
+function resetContactForm() {
+  document.getElementById('contactForm').style.display = '';
+  document.getElementById('cfSuccess').classList.remove('show');
+  document.getElementById('cfEmail').value = '';
+  document.getElementById('cfUsername').value = '';
+  document.getElementById('cfSubject').value = '';
+  document.getElementById('cfMessage').value = '';
+  document.getElementById('cfCategory').selectedIndex = 0;
+  document.getElementById('cfCharCount').textContent = '0 / 2000';
+  document.getElementById('cfSubmitBtn').disabled = false;
+  document.getElementById('cfSubmitBtn').textContent = 'Send Message →';
+}
+
+/* ── Guide modals ─────────────────────────── */
 const GUIDES = {
-  'bastion-setup': {
-    icon:'🏰', cat:'Getting Started', title:'Setting up your first Bastion',
+  'getting-started': {
+    icon:'🚀', cat:'Basics', title:'Getting Started with Fortized',
     body:`
-      <p class="gm-intro">Creating your first Bastion takes less than two minutes. This guide walks you through every step — from naming your community to inviting your first members.</p>
+      <p class="gm-intro">Welcome to Fortized. This guide covers everything you need to get started — from creating your account to navigating the interface and joining your first Bastion.</p>
+      <div class="gm-section">
+        <div class="gm-section-title">Creating your account</div>
+        <div class="gm-steps-list">
+          <div class="gm-step"><div class="gm-step-num">1</div><div class="gm-step-content"><strong>Visit fortized.com/signup</strong><p>Enter your email, choose a username, and set a password. You must be at least 13 years old (16 in the EU, or 13 with parental consent).</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">2</div><div class="gm-step-content"><strong>Set up your profile</strong><p>Upload a profile picture, set a display name, and customize your status. You can change all of these later in Settings.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">3</div><div class="gm-step-content"><strong>Explore the interface</strong><p>The sidebar shows your Bastions, direct messages, and navigation. Click the compass icon to discover public Bastions and communities.</p></div></div>
+        </div>
+      </div>
+      <div class="gm-section">
+        <div class="gm-section-title">Joining a Bastion</div>
+        <div class="gm-steps-list">
+          <div class="gm-step"><div class="gm-step-num">4</div><div class="gm-step-content"><strong>Use an invite link</strong><p>Paste an invite link from a friend into your browser or click it directly. You'll be added to the Bastion immediately.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">5</div><div class="gm-step-content"><strong>Browse public Bastions</strong><p>Use the discovery feature to find communities that match your interests. Click "Join" to become a member.</p></div></div>
+        </div>
+        <div class="gm-tip"><strong>Tip:</strong> Start by joining a few Bastions and chatting in their Chambers to get familiar with the platform before creating your own.</div>
+      </div>
+    `
+  },
+  'bastion-setup': {
+    icon:'🏰', cat:'Community', title:'Managing Bastions',
+    body:`
+      <p class="gm-intro">Bastions are communities on Fortized. This guide walks you through creating, configuring, and managing your Bastion.</p>
       <div class="gm-section">
         <div class="gm-section-title">Creating your Bastion</div>
         <div class="gm-steps-list">
-          <div class="gm-step"><div class="gm-step-num">1</div><div class="gm-step-content"><strong>Click the + icon</strong><p>Find the circular + button at the bottom of the Bastion sidebar on the left. Click it to open the Bastion creation wizard.</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">2</div><div class="gm-step-content"><strong>Name your Bastion</strong><p>Choose a name up to 32 characters. This will appear in the sidebar and on your public invite page. You can change it later in Settings.</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">3</div><div class="gm-step-content"><strong>Set visibility</strong><p>Choose <em>Public</em> to appear in Fortized's discovery index, or <em>Private</em> to require an invite link. Private Bastions are not searchable.</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">4</div><div class="gm-step-content"><strong>Upload an icon (optional)</strong><p>Upload a square image (minimum 256×256px) as your Bastion icon. PNG or WebP recommended. You can skip this and add it later.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">1</div><div class="gm-step-content"><strong>Click the + icon</strong><p>Find the + button at the bottom of the Bastion sidebar. Click it to open the creation wizard.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">2</div><div class="gm-step-content"><strong>Name your Bastion</strong><p>Choose a name up to 32 characters. Set visibility to Public (discoverable) or Private (invite-only).</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">3</div><div class="gm-step-content"><strong>Set up Chambers</strong><p>Chambers are channels within your Bastion — text, voice, or announcement. Group them into categories for organization.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">4</div><div class="gm-step-content"><strong>Configure Ranks</strong><p>Create roles with specific permissions. Assign them to moderators and trusted members to help manage your community.</p></div></div>
         </div>
       </div>
       <div class="gm-section">
-        <div class="gm-section-title">Setting up Chambers</div>
+        <div class="gm-section-title">Inviting members</div>
         <div class="gm-steps-list">
-          <div class="gm-step"><div class="gm-step-num">5</div><div class="gm-step-content"><strong>Add your first Chamber</strong><p>Chambers are channels inside your Bastion. Click the + next to a category to add one. Choose between Text, Voice, or Announcement.</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">6</div><div class="gm-step-content"><strong>Create categories</strong><p>Group related Chambers into collapsible categories. Example: a "General" category with #welcome, #announcements, and #chat.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">5</div><div class="gm-step-content"><strong>Generate invite links</strong><p>Right-click any Chamber and select "Invite People." Set expiry and max use count, then share the link.</p></div></div>
         </div>
-        <div class="gm-tip"><strong>💡 Tip:</strong> Keep your initial Chamber list short. Three to five Chambers is enough to start — you can always add more as your community grows.</div>
+        <div class="gm-tip"><strong>Tip:</strong> Start with 3-5 Chambers. You can always add more as your community grows.</div>
       </div>
+      <div class="gm-note">As Bastion owner, you hold the highest authority. Stawdio Group never overrides or bypasses admin controls except in cases of severe Terms of Use violations.</div>
+    `
+  },
+  'party-rooms': {
+    icon:'🎉', cat:'Features', title:'Using Party Rooms',
+    body:`
+      <p class="gm-intro">Party Rooms let you host live voice and video sessions with your Bastion members. They're great for hangouts, meetings, gaming sessions, and events.</p>
       <div class="gm-section">
-        <div class="gm-section-title">Inviting your first members</div>
+        <div class="gm-section-title">Creating a Party Room</div>
         <div class="gm-steps-list">
-          <div class="gm-step"><div class="gm-step-num">7</div><div class="gm-step-content"><strong>Generate an invite link</strong><p>Right-click any Chamber and select "Invite People." You can set an expiry (24 hours, 7 days, or never) and a max use count.</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">8</div><div class="gm-step-content"><strong>Share your link</strong><p>Share it via direct message, social media, or embed it on your website. Invite links look like: <code style="font-size:11px;color:var(--accent);">fortized.gg/invite/xxxxx</code></p></div></div>
+          <div class="gm-step"><div class="gm-step-num">1</div><div class="gm-step-content"><strong>Open a voice Chamber</strong><p>Click any voice Chamber in your Bastion to join it. You'll be connected to the voice channel immediately.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">2</div><div class="gm-step-content"><strong>Start a Party Room</strong><p>Click the "Start Party" button in a voice Chamber to create a Party Room. This enables video, screen sharing, and activity features.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">3</div><div class="gm-step-content"><strong>Invite participants</strong><p>Members can join your Party Room by clicking on the voice Chamber. You can also send direct invites.</p></div></div>
         </div>
       </div>
-      <div class="gm-note">As Bastion owner, you hold the highest authority. You can assign Ranks to moderators to help manage your community as it grows.</div>
+      <div class="gm-tip"><strong>Tip:</strong> Use Party Rooms for community events like game nights, watch parties, or Q&A sessions to boost engagement in your Bastion.</div>
+    `
+  },
+  'bots-guide': {
+    icon:'🤖', cat:'Developer', title:'Creating Bots',
+    body:`
+      <p class="gm-intro">Fortized supports custom bot development for Bastions. Bots can automate tasks, moderate content, provide information, and enhance the community experience.</p>
+      <div class="gm-section">
+        <div class="gm-section-title">Getting started with bots</div>
+        <div class="gm-steps-list">
+          <div class="gm-step"><div class="gm-step-num">1</div><div class="gm-step-content"><strong>Open the Developer Portal</strong><p>Navigate to Settings → Developer → Applications. Click "New Application" to begin.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">2</div><div class="gm-step-content"><strong>Create your bot</strong><p>Give your bot a name, description, and icon. Configure its permissions and the Bastions it can access.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">3</div><div class="gm-step-content"><strong>Generate a token</strong><p>Create an authentication token for your bot. Keep this secret — never share it publicly.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">4</div><div class="gm-step-content"><strong>Build and deploy</strong><p>Use the Fortized Bot API to program your bot's behavior. Deploy it on your own server or a cloud hosting service.</p></div></div>
+        </div>
+      </div>
+      <div class="gm-note">Bots must comply with Fortized's Terms of Use. Bots that spam, scrape data, or violate user privacy will be permanently banned.</div>
     `
   },
   'radiance-guide': {
-    icon:'✨', cat:'The Atelier', title:'How Onyx & Radiance work',
+    icon:'✨', cat:'The Atelier', title:'Using the Atelier and Onyx',
     body:`
-      <p class="gm-intro">Radiance is Fortized's premium membership tier — and unlike most platforms, it costs nothing. You earn it by being active in the community. Here's exactly how.</p>
+      <p class="gm-intro">Radiance is Fortized's premium membership — and unlike most platforms, it costs nothing. You earn it through community engagement. Here's how.</p>
       <div class="gm-section">
         <div class="gm-section-title">What is Onyx?</div>
-        <p style="font-size:14px;color:var(--muted-light);line-height:1.75;margin-bottom:12px;">Onyx is Fortized's earn-only currency. You cannot buy it — you earn it through activity. Onyx is used exclusively to unlock Radiance status and cosmetic items in The Atelier shop.</p>
+        <p style="font-size:14px;color:var(--muted-light);line-height:1.75;margin-bottom:12px;">Onyx is Fortized's earn-only currency. You cannot buy it — you earn it through activity. Onyx is used to unlock Radiance status and cosmetic items in The Atelier shop.</p>
         <div class="gm-tag-list">
-          <span class="gm-tag">✅ Free to earn</span>
-          <span class="gm-tag">🚫 Cannot be purchased</span>
-          <span class="gm-tag">🔄 Resets after Radiance activation</span>
+          <span class="gm-tag">Free to earn</span>
+          <span class="gm-tag">Cannot be purchased</span>
+          <span class="gm-tag">Resets after Radiance activation</span>
         </div>
       </div>
       <div class="gm-section">
         <div class="gm-section-title">How to earn Onyx</div>
         <div class="gm-steps-list">
-          <div class="gm-step"><div class="gm-step-num">1</div><div class="gm-step-content"><strong>Daily login reward</strong><p>Open Fortized each day to claim your daily Onyx drop. Streak bonuses multiply your reward after 7 consecutive days.</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">2</div><div class="gm-step-content"><strong>Complete quests</strong><p>The Atelier offers daily, weekly, and seasonal quests. Examples: "Send 20 messages today," "Join a voice channel," "React to 5 posts."</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">3</div><div class="gm-step-content"><strong>Invite friends</strong><p>Earn a one-time Onyx bonus for each friend who joins Fortized using your personal invite link and becomes an active user.</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">4</div><div class="gm-step-content"><strong>Community events</strong><p>Seasonal events and Bastion events occasionally reward bonus Onyx. Watch The Atelier's "Events" tab for announcements.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">1</div><div class="gm-step-content"><strong>Daily login reward</strong><p>Open Fortized each day to claim your daily Onyx. Streak bonuses multiply your reward after 7 consecutive days.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">2</div><div class="gm-step-content"><strong>Complete quests</strong><p>The Atelier offers daily, weekly, and seasonal quests like "Send 20 messages" or "Join a voice channel."</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">3</div><div class="gm-step-content"><strong>Invite friends</strong><p>Earn a one-time Onyx bonus for each friend who joins and becomes active.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">4</div><div class="gm-step-content"><strong>Community events</strong><p>Seasonal and Bastion events occasionally reward bonus Onyx.</p></div></div>
         </div>
       </div>
       <div class="gm-section">
         <div class="gm-section-title">Activating Radiance</div>
         <div class="gm-steps-list">
-          <div class="gm-step"><div class="gm-step-num">5</div><div class="gm-step-content"><strong>Open The Atelier</strong><p>Click the ✨ sparkle icon in the left sidebar or go to your profile and tap "The Atelier."</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">6</div><div class="gm-step-content"><strong>Go to the Shop tab</strong><p>Find the Radiance listing. Check the current Onyx cost — this is updated seasonally.</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">7</div><div class="gm-step-content"><strong>Redeem and activate</strong><p>Tap "Activate Radiance." Your badge, animated border, and extended messaging unlock instantly.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">5</div><div class="gm-step-content"><strong>Open The Atelier</strong><p>Click the sparkle icon in the sidebar or go to your profile and tap "The Atelier."</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">6</div><div class="gm-step-content"><strong>Redeem Onyx for Radiance</strong><p>Find the Radiance listing in the Shop tab and tap "Activate." Your badge, animated border, and extended messaging unlock instantly.</p></div></div>
         </div>
-        <div class="gm-tip"><strong>💡 Tip:</strong> Radiance is valid for 30 days from activation. Re-earn Onyx before it expires to keep your status continuous.</div>
+        <div class="gm-tip"><strong>Tip:</strong> Radiance is valid for 30 days. Re-earn Onyx before it expires to keep your status continuous.</div>
       </div>
     `
   },
   'automod-guide': {
-    icon:'🛡', cat:'Safety', title:'Configuring AutoMod for your Bastion',
+    icon:'🛡', cat:'Safety', title:'Safety and Moderation Tools',
     body:`
-      <p class="gm-intro">AutoMod is Fortized's built-in, real-time moderation engine. It filters content before it reaches your members, so your Bastion stays clean even when you're offline.</p>
+      <p class="gm-intro">AutoMod is Fortized's built-in real-time moderation engine. It filters content before it reaches your members, so your Bastion stays clean even when you're offline.</p>
       <div class="gm-section">
         <div class="gm-section-title">Accessing AutoMod settings</div>
         <div class="gm-steps-list">
-          <div class="gm-step"><div class="gm-step-num">1</div><div class="gm-step-content"><strong>Open Bastion Settings</strong><p>Click the gear icon next to your Bastion name in the sidebar, or right-click the Bastion icon and select "Settings."</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">2</div><div class="gm-step-content"><strong>Navigate to Safety → AutoMod</strong><p>The AutoMod panel is in the Safety section. Only the Bastion owner and Ranks with "Manage Bastion" permission can access this.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">1</div><div class="gm-step-content"><strong>Open Bastion Settings</strong><p>Click the gear icon next to your Bastion name, or right-click the Bastion icon and select "Settings."</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">2</div><div class="gm-step-content"><strong>Navigate to Safety → AutoMod</strong><p>Only the Bastion owner and Ranks with "Manage Bastion" permission can access this.</p></div></div>
         </div>
       </div>
       <div class="gm-section">
         <div class="gm-section-title">Setting up rules</div>
         <div class="gm-steps-list">
-          <div class="gm-step"><div class="gm-step-num">3</div><div class="gm-step-content"><strong>Enable built-in rule sets</strong><p>Toggle on any of the pre-built rules: Hate Speech Filter, Spam Detection, Link Blocking, and Mass Mention Guard. Each can be enabled independently.</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">4</div><div class="gm-step-content"><strong>Add custom keyword filters</strong><p>Under "Custom Filters," add words or phrases to block. Supports exact match and wildcard patterns (e.g. <code style="font-size:11px;color:var(--accent);">bad*word</code>).</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">5</div><div class="gm-step-content"><strong>Choose an action per rule</strong><p>For each rule, set what AutoMod does when triggered: <em>Delete silently</em>, <em>Warn user</em>, <em>Timeout (mute)</em>, or <em>Kick from Bastion</em>.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">3</div><div class="gm-step-content"><strong>Enable built-in rules</strong><p>Toggle on pre-built rules: Hate Speech Filter, Spam Detection, Link Blocking, and Mass Mention Guard.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">4</div><div class="gm-step-content"><strong>Add custom keyword filters</strong><p>Under "Custom Filters," add words or phrases to block. Supports exact match and wildcard patterns.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">5</div><div class="gm-step-content"><strong>Choose actions per rule</strong><p>Set what AutoMod does when triggered: Delete silently, Warn user, Timeout (mute), or Kick from Bastion.</p></div></div>
         </div>
       </div>
       <div class="gm-section">
         <div class="gm-section-title">Raid Protection</div>
         <div class="gm-steps-list">
-          <div class="gm-step"><div class="gm-step-num">6</div><div class="gm-step-content"><strong>Enable Raid Protection</strong><p>When a sudden spike of new accounts joins, AutoMod activates a slowdown gate — requiring phone or email verification before they can post.</p></div></div>
-          <div class="gm-step"><div class="gm-step-num">7</div><div class="gm-step-content"><strong>Set the sensitivity threshold</strong><p>Choose Low (30+ joins/min), Medium (10+), or High (5+) based on your community's normal growth rate.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">6</div><div class="gm-step-content"><strong>Enable Raid Protection</strong><p>When a sudden spike of new accounts joins, AutoMod activates a slowdown gate requiring verification.</p></div></div>
+          <div class="gm-step"><div class="gm-step-num">7</div><div class="gm-step-content"><strong>Set sensitivity</strong><p>Choose Low (30+ joins/min), Medium (10+), or High (5+) based on your community's normal growth.</p></div></div>
         </div>
-        <div class="gm-tip"><strong>💡 Tip:</strong> Set up an "AutoMod Log" Chamber (announcement type, moderator-only) so every AutoMod action is recorded and visible to your mod team.</div>
+        <div class="gm-tip"><strong>Tip:</strong> Set up an "AutoMod Log" Chamber so every action is recorded and visible to your mod team.</div>
       </div>
-      <div class="gm-note">AutoMod actions are reversible. If a message was incorrectly flagged, moderators can review and restore it from the AutoMod Log within 24 hours.</div>
+      <div class="gm-note">AutoMod actions are reversible. Moderators can review and restore incorrectly flagged messages from the AutoMod Log within 24 hours.</div>
     `
-  },
+  }
 };
 
-/* ── Modal logic ───────────── */
 function openGuide(id) {
   const g = GUIDES[id];
   if (!g) return;
@@ -781,66 +817,20 @@ function closeGuideOnOverlay(e) {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeGuide(); });
 
-/* ── Contact Form ─────────── */
-const cfCategory = document.getElementById('cfCategory');
-const cfAppealInfo = document.getElementById('cfAppealInfo');
-const cfMessage = document.getElementById('cfMessage');
-const cfCharCount = document.getElementById('cfCharCount');
-if (cfCategory) cfCategory.addEventListener('change', () => {
-  cfAppealInfo.style.display = (cfCategory.value === 'ban-appeal' || cfCategory.value === 'suspend-appeal') ? 'block' : 'none';
-});
-if (cfMessage) cfMessage.addEventListener('input', () => {
-  cfCharCount.textContent = cfMessage.value.length + ' / 2000';
-});
-async function submitContactForm() {
-  const username = document.getElementById('cfUsername').value.trim();
-  const email = document.getElementById('cfEmail').value.trim();
-  const category = document.getElementById('cfCategory').value;
-  const subject = document.getElementById('cfSubject').value.trim();
-  const message = document.getElementById('cfMessage').value.trim();
-  if (!username || !email || !category || !subject || !message) { alert('Please fill in all fields.'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Please enter a valid email address.'); return; }
-  const btn = document.getElementById('cfSubmitBtn');
-  btn.disabled = true; btn.textContent = 'Sending...';
-  try {
-    if (typeof firebase !== 'undefined' && firebase.database) {
-      await firebase.database().ref('support/tickets').push({
-        username, email, category, subject, message,
-        submittedAt: new Date().toISOString(),
-        status: 'open'
-      });
-    }
-    document.getElementById('contactForm').style.display = 'none';
-    document.getElementById('cfSuccess').classList.add('show');
-  } catch(e) {
-    console.error('Failed to submit support ticket:', e);
-    alert('Failed to send your request. Please try again.');
-    btn.disabled = false; btn.textContent = 'Send Message →';
-  }
+/* ── Hash navigation ──────────────────────── */
+if (window.location.hash) {
+  setTimeout(() => {
+    const el = document.querySelector(window.location.hash);
+    if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+  }, 300);
 }
-function resetContactForm() {
-  document.getElementById('contactForm').style.display = '';
-  document.getElementById('cfSuccess').classList.remove('show');
-  document.getElementById('cfUsername').value = '';
-  document.getElementById('cfEmail').value = '';
-  document.getElementById('cfCategory').selectedIndex = 0;
-  document.getElementById('cfSubject').value = '';
-  document.getElementById('cfMessage').value = '';
-  document.getElementById('cfCharCount').textContent = '0 / 2000';
-  document.getElementById('cfAppealInfo').style.display = 'none';
-  document.getElementById('cfSubmitBtn').disabled = false;
-  document.getElementById('cfSubmitBtn').textContent = 'Send Message →';
-}
-/* Handle #contact hash on load */
-if (window.location.hash === '#contact') { setTimeout(() => { document.getElementById('contact').scrollIntoView({ behavior:'smooth', block:'start' }); }, 300); }
 
-/* ── Scroll reveal ─────────── */
-const revealEls = document.querySelectorAll('.guide-card, .qa-card');
+/* ── Scroll reveal ────────────────────────── */
+const revealEls = document.querySelectorAll('.resource-card, .guide-card, .status-item, .faq-item');
 const ro = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; ro.unobserve(e.target); }});
 }, { threshold:0.08 });
-revealEls.forEach(el => { el.style.opacity='0'; el.style.transform='translateY(20px)'; el.style.transition='opacity .5s ease, transform .5s ease'; ro.observe(el); });
+revealEls.forEach(el => { el.style.opacity='0'; el.style.transform='translateY(12px)'; el.style.transition='opacity .4s ease, transform .4s ease'; ro.observe(el); });
 </script>
-<script>if (typeof twemoji !== 'undefined') { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); }</script>
 </body>
 </html>

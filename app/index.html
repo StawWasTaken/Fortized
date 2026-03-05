@@ -24,7 +24,7 @@
 <script src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <style>
-:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.22);--bg:#07090e;--rail:#04060a;--sidebar:#0b0e15;--channel:#0d1018;--panel:#101420;--panel2:#131822;--panel3:#161c28;--border:#1c2335;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;}
+:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.22);--bg:#07090e;--rail:#04060a;--sidebar:#13161d;--channel:#0d1018;--panel:#101420;--panel2:#131822;--panel3:#161c28;--border:#1c2335;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;overflow:hidden;}
 body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:row;}
 ::selection{background:rgba(255,249,62,.2);}
@@ -9738,7 +9738,7 @@ function buildProfileView(tab) {
     const currentTheme = localStorage.getItem(_appearanceKey()) || 'fortized_classic';
     const unlocked = CU?.unlockedAppearances || [];
     const allThemes = [
-      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', bg:'#07090e', sidebar:'#0b0e15', channel:'#0d1018', panel:'#101420', accent:'#fef83d', border:'#1c2335', muted:'#4e5a6f', bodyGrad:'', free:true},
+      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', bg:'#07090e', sidebar:'#13161d', channel:'#0d1018', panel:'#101420', accent:'#fef83d', border:'#1c2335', muted:'#4e5a6f', bodyGrad:'', free:true},
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
@@ -20428,7 +20428,7 @@ function applyAppearance(themeId) {
     // Fortized Classic (default)
     document.documentElement.style.setProperty('--bg',         '#07090e');
     document.documentElement.style.setProperty('--rail',       '#04060a');
-    document.documentElement.style.setProperty('--sidebar',    '#0b0e15');
+    document.documentElement.style.setProperty('--sidebar',    '#13161d');
     document.documentElement.style.setProperty('--channel',    '#0d1018');
     document.documentElement.style.setProperty('--panel',      '#101420');
     document.documentElement.style.setProperty('--panel2',     '#131822');
@@ -20458,7 +20458,7 @@ function applyAppearance(themeId) {
 // Appearance preview helpers
 let _appearancePreviewId = null;
 const _appearanceThemeData = {
-  fortized_classic: {id:'fortized_classic', name:'Fortized Classic', bg:'#07090e', sidebar:'#0b0e15', channel:'#0d1018', panel:'#101420', accent:'#fef83d', border:'#1c2335', muted:'#4e5a6f', bodyGrad:''},
+  fortized_classic: {id:'fortized_classic', name:'Fortized Classic', bg:'#07090e', sidebar:'#13161d', channel:'#0d1018', panel:'#101420', accent:'#fef83d', border:'#1c2335', muted:'#4e5a6f', bodyGrad:''},
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},

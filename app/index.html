@@ -1137,14 +1137,18 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ctx-menu{position:fixed;z-index:9999;background:rgba(14,17,26,.96);border:1px solid var(--surface-border-hover);border-radius:var(--radius-md);padding:6px 0;min-width:220px;max-width:280px;box-shadow:var(--shadow-lg),0 0 0 1px rgba(255,255,255,.03);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);animation:ctxIn .14s var(--ease-out);display:none;overflow:hidden;}
 .ctx-menu.ctx-visible{display:block;}
 /* ── System Announcement Banner ─────────────────── */
-.sys-announce-bar{position:fixed;top:0;left:0;right:0;z-index:8000;background:linear-gradient(90deg,rgba(255,249,62,.12),rgba(255,249,62,.06));border-bottom:1px solid rgba(255,249,62,.15);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;align-items:center;gap:12px;padding:10px 20px;animation:announceDrop .3s cubic-bezier(.22,1,.36,1);transform-origin:top;}
+.sys-announce-bar{position:fixed;top:0;left:0;right:0;z-index:8000;background:linear-gradient(90deg,rgba(255,249,62,.14),rgba(255,200,62,.08),rgba(255,249,62,.14));border-bottom:1px solid rgba(255,249,62,.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;gap:14px;padding:12px 24px;animation:announceDrop .35s cubic-bezier(.22,1,.36,1);transform-origin:top;box-shadow:0 4px 24px rgba(0,0,0,.3),0 0 40px rgba(255,249,62,.03);}
+.sys-announce-bar::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,249,62,.03),transparent);animation:announceShimmer 4s ease infinite;pointer-events:none;}
+@keyframes announceShimmer{0%,100%{opacity:0}50%{opacity:1}}
 @keyframes announceDrop{from{opacity:0;transform:translateY(-100%);}to{opacity:1;transform:none;}}
-.sys-announce-bar .sa-icon{width:28px;height:28px;border-radius:9px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.sys-announce-bar .sa-icon svg{width:14px;height:14px;color:var(--accent);}
-.sys-announce-bar .sa-text{flex:1;font-size:13px;font-weight:600;color:rgba(255,255,255,.9);line-height:1.4;}
-.sys-announce-bar .sa-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:1px;}
-.sys-announce-bar .sa-close{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;}
-.sys-announce-bar .sa-close:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);}
+.sys-announce-bar .sa-icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,rgba(255,249,62,.15),rgba(255,200,62,.08));border:1px solid rgba(255,249,62,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 10px rgba(255,249,62,.1);animation:announcePulse 2.5s ease-in-out infinite;}
+@keyframes announcePulse{0%,100%{box-shadow:0 2px 10px rgba(255,249,62,.1)}50%{box-shadow:0 2px 16px rgba(255,249,62,.2)}}
+.sys-announce-bar .sa-icon svg{width:16px;height:16px;color:var(--accent);}
+.sys-announce-bar .sa-text{flex:1;font-size:13.5px;font-weight:600;color:rgba(255,255,255,.92);line-height:1.45;letter-spacing:.01em;}
+.sys-announce-bar .sa-label{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:2px;display:flex;align-items:center;gap:5px;}
+.sys-announce-bar .sa-label::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:adm-badge-pulse 2s infinite;}
+.sys-announce-bar .sa-close{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;}
+.sys-announce-bar .sa-close:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.15);}
 /* ── Feedback Toast UI ─────────────────────────── */
 .ftz-feedback-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);z-index:7500;background:rgba(14,17,26,.95);border:1.5px solid rgba(255,249,62,.12);border-radius:18px;padding:var(--space-md) var(--space-lg);box-shadow:var(--shadow-lg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);opacity:0;transition:all .3s var(--ease-out);pointer-events:none;max-width:380px;width:90%;}
 .ftz-feedback-toast.visible{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
@@ -1270,7 +1274,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .tmpl-desc{font-size:10.5px;color:var(--muted);}
 
 /* ── BADGE SYSTEM ─────────────────────────────────── */
-.ftz-badge { display:inline-flex;align-items:center;justify-content:center;position:relative;width:36px;height:36px;flex-shrink:0;cursor:pointer;vertical-align:middle;margin:0 2px;transition:transform .18s cubic-bezier(.22,1,.36,1),filter .18s; }
+.ftz-badge { display:inline-flex;align-items:center;justify-content:center;position:relative;width:42px;height:42px;flex-shrink:0;cursor:pointer;vertical-align:middle;margin:0 3px;transition:transform .18s cubic-bezier(.22,1,.36,1),filter .18s; }
 .ftz-badge:hover { transform:scale(1.18);filter:drop-shadow(0 0 8px currentColor);z-index:99999; }
 .ftz-badge img { width:100%;height:100%;object-fit:contain;pointer-events:none; }
 .ftz-badge .badge-tooltip { position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%) scale(.92);opacity:0;pointer-events:none;white-space:nowrap;padding:8px 14px;border-radius:10px;background:#111319;border:1px solid rgba(255,255,255,.1);color:#c8d0dc;font-size:12.5px;font-weight:600;letter-spacing:.01em;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.6);transition:opacity .14s,transform .14s cubic-bezier(.22,1,.36,1); }
@@ -1287,7 +1291,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ftz-badge.badge-quest { color:#9ca3af; }
 .ftz-badge.badge-onyx { color:#fff93e; }
 /* Badge row container */
-.ftz-badge-row { display:inline-flex;align-items:center;gap:5px;vertical-align:middle;margin-left:6px;overflow:visible; }
+.ftz-badge-row { display:inline-flex;align-items:center;gap:6px;vertical-align:middle;margin-left:8px;overflow:visible; }
 
 /* ── LOADING SKELETON ─────────────────────────────── */
 @keyframes shimmer { 0%{background-position:-600px 0} 100%{background-position:600px 0} }
@@ -1402,6 +1406,132 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .poll-card.ended .poll-option{cursor:default;opacity:.85;}
 .poll-card.ended .poll-option:hover{transform:none;box-shadow:none;}
 @keyframes pollBarGrow{from{width:0}to{width:var(--pct)}}
+
+/* ── THREAD SYSTEM ───────────────────────────────── */
+.thread-panel{position:fixed;top:0;right:0;bottom:0;width:380px;background:var(--panel);border-left:1px solid var(--border);z-index:7000;display:flex;flex-direction:column;animation:slideInRight .2s cubic-bezier(.22,1,.36,1);}
+@keyframes slideInRight{from{opacity:0;transform:translateX(100%);}to{opacity:1;transform:none;}}
+.thread-panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.thread-panel-header .tph-title{flex:1;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;}
+.thread-panel-header .tph-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;border-radius:8px;line-height:1;transition:background .12s;}
+.thread-panel-header .tph-close:hover{background:rgba(255,255,255,.06);}
+.thread-origin{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);background:var(--panel2);}
+.thread-origin .to-author{font-size:12px;font-weight:700;color:rgba(255,255,255,.7);margin-bottom:3px;}
+.thread-origin .to-text{font-size:12.5px;color:var(--muted-light);line-height:1.5;}
+.thread-replies{flex:1;overflow-y:auto;padding:8px 12px;}
+.thread-reply{display:flex;gap:8px;padding:8px 10px;border-radius:10px;transition:background .1s;}
+.thread-reply:hover{background:rgba(255,255,255,.03);}
+.thread-reply .tr-av{width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;}
+.thread-reply .tr-av img{width:100%;height:100%;object-fit:cover;}
+.thread-reply .tr-body{flex:1;min-width:0;}
+.thread-reply .tr-meta{display:flex;align-items:baseline;gap:6px;margin-bottom:2px;}
+.thread-reply .tr-name{font-size:12px;font-weight:700;color:rgba(255,255,255,.8);}
+.thread-reply .tr-time{font-size:10px;color:var(--muted);}
+.thread-reply .tr-text{font-size:12.5px;color:var(--muted-light);line-height:1.5;word-break:break-word;}
+.thread-compose{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
+.thread-compose textarea{flex:1;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:10px;color:#fff;padding:8px 12px;font-family:inherit;font-size:12.5px;resize:none;min-height:36px;max-height:100px;transition:border-color .15s;}
+.thread-compose textarea:focus{outline:none;border-color:rgba(255,249,62,.3);}
+.thread-compose button{padding:8px 14px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .12s;}
+.thread-compose button:hover{background:var(--accent);color:#060810;}
+.msg-thread-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;margin-top:4px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.12);border-radius:100px;font-size:11px;font-weight:600;color:#60a5fa;cursor:pointer;transition:all .12s;}
+.msg-thread-badge:hover{background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.25);}
+.msg-thread-badge svg{width:12px;height:12px;}
+
+/* ── ADVANCED SEARCH ─────────────────────────────── */
+.adv-search-panel{position:fixed;top:0;right:0;bottom:0;width:380px;background:var(--panel);border-left:1px solid var(--border);z-index:7000;display:flex;flex-direction:column;animation:slideInRight .2s cubic-bezier(.22,1,.36,1);}
+.adv-search-header{padding:16px 18px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.adv-search-header .ash-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:10px;}
+.adv-search-header input{width:100%;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:10px;color:#fff;padding:9px 12px;font-family:inherit;font-size:13px;transition:border-color .15s;}
+.adv-search-header input:focus{outline:none;border-color:rgba(255,249,62,.3);}
+.adv-search-filters{padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;flex-wrap:wrap;gap:6px;flex-shrink:0;}
+.asf-chip{padding:4px 10px;border-radius:100px;background:var(--surface-1);border:1px solid var(--surface-border);font-size:11px;font-weight:600;color:var(--muted-light);cursor:pointer;transition:all .12s;}
+.asf-chip:hover,.asf-chip.active{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);}
+.adv-search-results{flex:1;overflow-y:auto;padding:8px 12px;}
+.asr-item{padding:10px 12px;border-radius:10px;cursor:pointer;transition:background .1s;margin-bottom:2px;}
+.asr-item:hover{background:rgba(255,255,255,.04);}
+.asr-item .asr-from{font-size:12px;font-weight:700;color:rgba(255,255,255,.7);}
+.asr-item .asr-time{font-size:10px;color:var(--muted);margin-left:6px;}
+.asr-item .asr-text{font-size:12.5px;color:var(--muted-light);margin-top:2px;line-height:1.45;}
+.asr-item .asr-text mark{background:rgba(255,249,62,.2);color:#fff;border-radius:2px;padding:0 2px;}
+
+/* ── KEYBOARD SHORTCUTS OVERLAY ──────────────────── */
+.kbd-overlay{position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(16px);z-index:9000;display:flex;align-items:center;justify-content:center;animation:fadeIn .15s;}
+.kbd-card{background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;padding:28px 32px;box-shadow:var(--elev-3);}
+.kbd-card h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:4px;}
+.kbd-card .kbd-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
+.kbd-section{margin-bottom:18px;}
+.kbd-section h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.kbd-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.kbd-row:last-child{border-bottom:none;}
+.kbd-row .kr-label{font-size:13px;color:rgba(255,255,255,.7);}
+.kbd-row .kr-keys{display:flex;gap:4px;}
+.kbd-row .kr-key{padding:3px 8px;background:var(--surface-2);border:1px solid var(--surface-border);border-radius:6px;font-size:11px;font-weight:700;font-family:monospace;color:rgba(255,255,255,.6);}
+
+/* ── CUSTOM SOUNDBOARD ───────────────────────────── */
+.soundboard-panel{position:fixed;bottom:80px;right:20px;width:320px;background:var(--panel);border:1px solid var(--border);border-radius:18px;z-index:6000;box-shadow:var(--elev-3);animation:ctxIn .14s cubic-bezier(.22,1,.36,1);overflow:hidden;}
+.soundboard-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.soundboard-header .sbh-title{flex:1;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;}
+.soundboard-grid{padding:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:260px;overflow-y:auto;}
+.sb-clip{padding:10px 8px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:10px;cursor:pointer;text-align:center;transition:all .12s;font-size:11px;font-weight:600;color:var(--muted-light);}
+.sb-clip:hover{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);transform:scale(1.02);}
+.sb-clip.playing{background:var(--accent);color:#060810;border-color:var(--accent);}
+.sb-upload{padding:12px 16px;border-top:1px solid var(--border);text-align:center;}
+
+/* ── EVENTS / CALENDAR ───────────────────────────── */
+.events-panel{padding:16px;}
+.event-card{background:var(--panel2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:10px;transition:border-color .15s,box-shadow .15s;}
+.event-card:hover{border-color:rgba(255,249,62,.15);box-shadow:0 4px 16px rgba(0,0,0,.15);}
+.event-card .ec-banner{height:80px;background:linear-gradient(135deg,rgba(255,249,62,.08),rgba(96,165,250,.06));display:flex;align-items:center;justify-content:center;font-size:32px;position:relative;}
+.event-card .ec-date-badge{position:absolute;top:10px;right:10px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 10px;text-align:center;}
+.event-card .ec-date-badge .edb-month{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);}
+.event-card .ec-date-badge .edb-day{font-size:16px;font-weight:800;color:#fff;line-height:1.1;}
+.event-card .ec-body{padding:14px 16px;}
+.event-card .ec-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;}
+.event-card .ec-desc{font-size:12px;color:var(--muted-light);line-height:1.45;margin-bottom:8px;}
+.event-card .ec-meta{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--muted);}
+.event-card .ec-rsvp{margin-left:auto;}
+.event-card .ec-rsvp button{padding:5px 12px;border-radius:100px;font-size:11px;font-weight:700;cursor:pointer;transition:all .12s;}
+.event-card .ec-rsvp .rsvp-yes{background:var(--accent-dim);border:1px solid var(--accent-mid);color:var(--accent);}
+.event-card .ec-rsvp .rsvp-yes:hover{background:var(--accent);color:#060810;}
+.event-card .ec-rsvp .rsvp-yes.active{background:var(--accent);color:#060810;}
+.event-countdown{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:4px;}
+
+/* ── USER NOTES ──────────────────────────────────── */
+.user-note-section{margin-top:12px;padding:10px 12px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:10px;}
+.user-note-section .uns-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+.user-note-section textarea{width:100%;background:transparent;border:none;color:var(--text);font-family:inherit;font-size:12px;resize:none;min-height:40px;line-height:1.5;}
+.user-note-section textarea:focus{outline:none;}
+.user-note-section textarea::placeholder{color:var(--muted);}
+
+/* ── SLOW MODE INDICATOR ─────────────────────────── */
+.slowmode-bar{padding:6px 14px;background:rgba(245,158,11,.06);border-top:1px solid rgba(245,158,11,.1);display:flex;align-items:center;gap:8px;font-size:11.5px;color:#f59e0b;font-weight:600;flex-shrink:0;}
+.slowmode-bar .sm-timer{font-family:'Syne',sans-serif;font-weight:800;font-size:13px;}
+
+/* ── FAVOURITES / QUICK ACCESS ───────────────────── */
+.fav-section{padding:4px 10px 0;}
+.fav-section .fav-header{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:6px 4px 4px;display:flex;align-items:center;gap:4px;}
+.fav-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;cursor:pointer;transition:all .12s;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.55);}
+.fav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);}
+.fav-item .fav-star{color:var(--accent);font-size:10px;}
+
+/* ── NOTIFICATION SETTINGS PER CHANNEL ───────────── */
+.notif-settings-modal{position:fixed;inset:0;background:rgba(4,6,10,.85);backdrop-filter:blur(12px);z-index:8000;display:flex;align-items:center;justify-content:center;}
+.ns-card{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:340px;width:100%;}
+.ns-card h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:14px;}
+.ns-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;transition:all .12s;margin-bottom:4px;}
+.ns-opt:hover{background:rgba(255,255,255,.04);}
+.ns-opt.active{background:var(--accent-dim);border:1px solid var(--accent-mid);}
+.ns-opt .nso-icon{width:32px;height:32px;border-radius:10px;background:var(--surface-1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.ns-opt .nso-label{font-size:13px;font-weight:600;}
+.ns-opt .nso-desc{font-size:11px;color:var(--muted);}
+
+/* ── UNDO DELETE TOAST ───────────────────────────── */
+.undo-toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:10px 18px;display:flex;align-items:center;gap:12px;z-index:9500;box-shadow:var(--elev-2);animation:undoSlideUp .2s cubic-bezier(.22,1,.36,1);}
+@keyframes undoSlideUp{from{opacity:0;transform:translateX(-50%) translateY(20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.undo-toast .ut-text{font-size:13px;font-weight:600;color:rgba(255,255,255,.8);}
+.undo-toast .ut-btn{padding:5px 14px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .1s;}
+.undo-toast .ut-btn:hover{filter:brightness(1.1);}
+.undo-toast .ut-progress{position:absolute;bottom:0;left:0;height:2px;background:var(--accent);border-radius:0 0 14px 14px;animation:undoProgress 5s linear forwards;}
+@keyframes undoProgress{from{width:100%}to{width:0}}
 
 /* ── COPY MSG LINK TOOLTIP ────────────────────────── */
 .msg-link-copied { position:fixed;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:11px;color:var(--accent);z-index:9999;pointer-events:none;animation:fadeIn .15s,fadeOut .3s 1.2s forwards; }
@@ -5849,8 +5979,9 @@ async function saveEdit(msgId) {
   } catch(e){ console.warn('Edit persist error',e); }
   toast('Message edited','success');
 }
+let _undoDeleteTimer = null;
+let _undoDeleteData = null;
 function deleteMsg(msgId, context) {
-  // Capture current state at call time (not inside async callback where state might change)
   const _curDM = curDM;
   const _curGC = typeof curGC !== 'undefined' ? curGC : null;
   const _curBastion = curBastion;
@@ -5877,8 +6008,10 @@ function deleteMsg(msgId, context) {
         if (bid && chName) ref = firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`);
       }
       if (ref) {
-        // Animate out immediately for instant feedback
         const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+        // Capture message data for undo
+        let msgSnapshot = null;
+        try { const snap = await ref.get(); if (snap.exists()) msgSnapshot = snap.val(); } catch {}
         if (row) {
           if (row.classList.contains('msg-first')) {
             let next = row.nextElementSibling;
@@ -5906,9 +6039,8 @@ function deleteMsg(msgId, context) {
           setTimeout(() => { row.style.maxHeight = '0'; row.style.padding = '0'; row.style.margin = '0'; }, 80);
           setTimeout(() => row.remove(), 300);
         }
-        toast('Message deleted','success');
-        // Remove from Firebase in background (no await needed for UI)
-        ref.remove().catch(e => console.warn('Firebase delete error:', e));
+        // Show undo toast instead of immediate delete
+        _showUndoDelete(ref, msgSnapshot, msgId);
       } else {
         toast('Could not determine message location','error');
       }
@@ -5917,6 +6049,42 @@ function deleteMsg(msgId, context) {
       toast('Failed to delete message: ' + (e.message||'unknown error'), 'error');
     }
   });
+}
+function _showUndoDelete(ref, msgSnapshot, msgId) {
+  document.querySelector('.undo-toast')?.remove();
+  clearTimeout(_undoDeleteTimer);
+  _undoDeleteData = { ref, msgSnapshot, msgId };
+  const el = document.createElement('div');
+  el.className = 'undo-toast';
+  el.innerHTML = `<span class="ut-text">Message deleted</span><button class="ut-btn" onclick="_undoDelete()">Undo</button><div class="ut-progress"></div>`;
+  document.body.appendChild(el);
+  _undoDeleteTimer = setTimeout(() => {
+    // Actually delete from Firebase after 5 seconds
+    if (_undoDeleteData && _undoDeleteData.ref) {
+      _undoDeleteData.ref.remove().catch(e => console.warn('Firebase delete error:', e));
+    }
+    _undoDeleteData = null;
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(-50%) translateY(20px)';
+    el.style.transition = 'all .2s ease';
+    setTimeout(() => el.remove(), 200);
+  }, 5000);
+}
+function _undoDelete() {
+  if (!_undoDeleteData) return;
+  clearTimeout(_undoDeleteTimer);
+  const { ref, msgSnapshot } = _undoDeleteData;
+  if (ref && msgSnapshot) {
+    ref.set(msgSnapshot).then(() => {
+      toast('Message restored!','success');
+      // Refresh the current view
+      if (curDM) { loadDMMessages(curDM); }
+      else if (typeof curGC !== 'undefined' && curGC) { loadGCMessages(curGC); }
+      else if (curBastion !== null) { const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel]; if (ch) loadChannelMessages(curBastion, curChannel); }
+    }).catch(() => toast('Failed to restore','error'));
+  }
+  _undoDeleteData = null;
+  document.querySelector('.undo-toast')?.remove();
 }
 function forwardMsg(text) {
   forwardMsgText=text;
@@ -6401,20 +6569,8 @@ function toggleDeafen(){
 // FRIENDS
 // ════════════════════════════════════════════
 async function renderFriendsList(filter='all') {
-  const list=document.getElementById('friends-list');
-  if (!list) return;
-  const friends=CU?.friends||[];
-  const pending=CU?.friendRequestsReceived||[];
-  let html='';
-  if (filter!=='online'&&pending.length){
-    html+=`<div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Pending — ${pending.length}</div>`;
-    pending.forEach(f=>{html+=`<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong> sent you a friend request</p></div><div style="display:flex;gap:6px;"><button class="rn-accept" onclick="acceptFriend('${escapeHTML(f)}')">✓</button><button class="rn-decline" onclick="declineFriend('${escapeHTML(f)}')">✕</button></div></div>`;});
-  }
-  if (friends.length){
-    html+=`<div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:12px 0 8px;">Friends — ${friends.length}</div>`;
-    friends.forEach(f=>{html+=`<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p style="font-weight:600;">${escapeHTML(f)}</p></div><div style="display:flex;gap:6px;"><button class="btn-g" style="padding:6px 12px;font-size:12px;" onclick="openDMView('${escapeHTML(f)}')">💬</button><button class="btn-d" style="padding:6px 12px;font-size:12px;" onclick="removeFriend('${escapeHTML(f)}')">Remove</button></div></div>`;});
-  }
-  list.innerHTML=html||`<div class="empty-state"><div class="ei">👥</div><h3>No friends yet</h3><p>Add friends by username!</p><button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button></div>`;
+  // Use the enhanced sorted friends list
+  return renderFriendsSorted(_friendSortMode || 'online');
 }
 function filterFriends(filter,btn){
   document.querySelectorAll('#friends-tabs .disc-tab').forEach(b=>b.classList.remove('active'));
@@ -7766,6 +7922,9 @@ function renderBSettingsNav(activeTab) {
     {id:'invites',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',label:'Invites'},
     {id:'members',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',label:'Members'},
     {id:'bans',icon:'🔨',label:'Bans'},
+    {label:'Community'},
+    {id:'events',icon:'📅',label:'Events'},
+    {id:'slowmode',icon:'🐌',label:'Slow Mode'},
     {label:'Living Bastion'},
     {id:'mood',icon:'🏰',label:'Bastion Mood'},
     {id:'reputation',icon:'🛡️',label:'Reputation'},
@@ -8091,7 +8250,30 @@ function renderBSettingsMain(tab) {
         <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">${CU.onyx||0}</div>
       </div>
       <div style="display:grid;gap:12px;">${tierCards}</div>
-      ${level>=3?`<div style="text-align:center;margin-top:16px;padding:12px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:12px;"><span style="font-size:16px;">👑</span><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fbbf24;margin-top:4px;">Sovereign Level — Maximum Boost!</div></div>`:''}`;
+      ${level>=3?`<div style="text-align:center;margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:14px;">
+        <span style="font-size:22px;">👑</span>
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fbbf24;margin-top:6px;">Sovereign Level — Maximum Boost!</div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(251,191,36,.1);">
+          <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:rgba(255,255,255,.6);">Vanity Invite URL</div>
+          <div style="display:flex;gap:6px;">
+            <span style="padding:7px 12px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:8px;font-size:12px;color:var(--muted);">fortized.com/</span>
+            <input class="settings-input" id="vanity-url-input" value="${escapeHTML(b.vanityUrl||'')}" placeholder="your-bastion" style="flex:1;font-size:12px;">
+            <button class="btn-a" style="padding:6px 14px;font-size:11px;" onclick="_saveVanityUrl()">Save</button>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:rgba(255,255,255,.6);">Upload Limit</div>
+          <div style="font-size:13px;color:#fbbf24;font-weight:700;">50 MB per file (up from 8 MB)</div>
+        </div>
+      </div>`:''}
+      ${level>0?`<div style="margin-top:16px;padding:14px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Active Perks Summary</div>
+        <div style="font-size:12px;color:var(--muted-light);line-height:1.7;">
+          ${level>=1?'✅ 25+ emoji slots<br>✅ Animated icon<br>✅ 128kbps voice<br>':''}
+          ${level>=2?'✅ 35+ emoji slots<br>✅ HD banner<br>✅ 256kbps voice<br>✅ Custom role icons<br>':''}
+          ${level>=3?'✅ 50 emoji slots<br>✅ Vanity URL<br>✅ 384kbps voice<br>✅ Splash screen<br>':''}
+        </div>
+      </div>`:''}`;
   }
   else if (tab==='mood') {
     const curMood = calculateBastionMood(b);
@@ -8168,6 +8350,32 @@ function renderBSettingsMain(tab) {
         <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:12px;">Reset all reputation scores for a fresh season. This cannot be undone.</div>
         <button class="btn-d" onclick="showCustomConfirm('Reset all reputation for this Bastion?',()=>resetBastionReputation('${escapeHTML(bastionId)}'))">Reset Reputation</button>
       </div>`:''}`;
+  }
+  else if (tab==='events') {
+    const bastionId = b.globalId||b.name;
+    main.innerHTML = `<div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">📅 Events</div><div id="bastion-events-container"></div>`;
+    _renderEventsPanel(document.getElementById('bastion-events-container'), bastionId);
+  }
+  else if (tab==='slowmode') {
+    const bastionId = b.globalId||b.name;
+    const channels = b.channels||[];
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🐌 Slow Mode</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Rate-limit messages per channel. Only bastion admins and owners can configure.</div>
+      ${channels.map((ch,i) => {
+        const sm = _getSlowMode(bastionId, ch.name||'general');
+        const smLabel = sm===0?'Off':sm<60?sm+'s':sm<300?(sm/60)+'m':'5m';
+        return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
+          <span style="font-size:14px;">#</span>
+          <span style="flex:1;font-size:13px;font-weight:600;">${escapeHTML(ch.name||'general')}</span>
+          <div style="display:flex;gap:4px;">
+            ${[0,30,60,300].map((s,si)=>{
+              const l = ['Off','30s','1m','5m'][si];
+              return `<button class="${sm===s?'btn-a':'btn-g'}" style="padding:4px 10px;font-size:10px;" onclick="_setSlowMode('${escapeHTML(bastionId)}','${escapeHTML(ch.name||'general')}',${s});renderBSettingsMain('slowmode');">${l}</button>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('')||'<div style="color:var(--muted);font-size:12px;">No channels configured</div>'}`;
   }
   else if (tab==='danger') {
     main.innerHTML = `
@@ -11033,8 +11241,9 @@ function handleContextMenu(e) {
       label: 'Interaction',
       items: [
         { icon: isPinned ? _ctxSvg('unpin') : _ctxSvg('pin'), label: isPinned ? 'Unpin Message' : 'Pin Message', action: () => pinMessage(msgId, text) },
-        ...(inBastion ? [{ icon: _ctxSvg('thread'), label: 'Create Thread', action: () => toast('Threads coming soon', 'info') }] : []),
+        ...(inBastion ? [{ icon: _ctxSvg('thread'), label: 'Create Thread', action: () => openThread(msgId, text, msgRow?.dataset?.from || '') }] : []),
         { icon: _ctxSvg('globe'), label: 'Translate', action: () => { _translateMessage(msgRow, text); } },
+        { icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', label: 'Add Note on User', action: () => _openUserNote(msgRow?.dataset?.from || '') },
       ]
     };
 
@@ -11702,7 +11911,7 @@ function _renderAdminNav(active) {
       ...(isSuperAdmin()?[{id:'backup_restore',svg:_admSvg.backup,label:'Backup & Restore'}]:[]),
       ...(isSuperAdmin()?[{id:'settings',svg:_admSvg.settings,label:'Configuration'}]:[]),
       ...(isSuperAdmin()?[{id:'staff',svg:_admSvg.staff,label:'Staff'}]:[]),
-      {id:'support_tickets',svg:_admSvg.tickets,label:'Inbox'},
+      {id:'support_tickets',svg:_admSvg.tickets,label:'Inbox & Feedback'},
     ]}]:[]),
   ];
   nav.innerHTML = secs.map(s=>`
@@ -12161,6 +12370,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div style="width:60px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('bastions')">Bastions <span id="hq-sort-bastions"></span></div>
         <div style="width:50px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('age')">Age <span id="hq-sort-age"></span></div>
         <div style="width:75px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('joined')">Joined <span id="hq-sort-joined"></span></div>
+        <div style="width:75px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('lastSeen')">Last Seen <span id="hq-sort-lastSeen"></span></div>
         <div style="width:65px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('radiance')">Radiance <span id="hq-sort-radiance"></span></div>
         <div style="width:50px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('role')">Role <span id="hq-sort-role"></span></div>
         <div style="width:55px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('risk')">Risk <span id="hq-sort-risk"></span></div>
@@ -12456,11 +12666,21 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   }
   else if (tab === 'support_tickets') {
     const isSA = isSuperAdmin();
+    // Load feedback data from Firebase
+    let feedbackData = [];
+    try {
+      const fbSnap = await firebase.database().ref('feedback').limitToLast(50).get();
+      if (fbSnap.exists()) { fbSnap.forEach(c => { const v = c.val(); v._key = c.key; feedbackData.push(v); }); feedbackData.reverse(); }
+    } catch {}
+    const posCount = feedbackData.filter(f=>f.rating==='positive').length;
+    const neuCount = feedbackData.filter(f=>f.rating==='neutral').length;
+    const negCount = feedbackData.filter(f=>f.rating==='negative').length;
+    const total = feedbackData.length || 1;
     main.innerHTML = `<div style="padding:24px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
         <div>
-          <div style="font-size:20px;font-weight:800;">Inbox</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:3px;">${isSA ? 'All tickets' : 'Non-sensitive tickets only'}</div>
+          <div style="font-size:20px;font-weight:800;">Inbox & Feedback</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:3px;">${isSA ? 'All tickets & user feedback' : 'Non-sensitive tickets only'}</div>
         </div>
         <div style="display:flex;gap:8px;">
           <select id="_ticket-filter" onchange="_filterTickets()" style="background:var(--channel,#0d1018);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;">
@@ -12470,6 +12690,48 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           </select>
         </div>
       </div>
+      <!-- Feedback Summary -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+        <div class="hq-stat" style="--stat-accent:#60a5fa;"><div class="hq-stat-val" style="color:#60a5fa;font-size:20px;">${feedbackData.length}</div><div class="hq-stat-label">Total Feedback</div></div>
+        <div class="hq-stat" style="--stat-accent:#3ecf6e;"><div class="hq-stat-val" style="color:#3ecf6e;font-size:20px;">${posCount}</div><div class="hq-stat-label">Positive</div></div>
+        <div class="hq-stat" style="--stat-accent:#f59e0b;"><div class="hq-stat-val" style="color:#f59e0b;font-size:20px;">${neuCount}</div><div class="hq-stat-label">Neutral</div></div>
+        <div class="hq-stat" style="--stat-accent:#f87171;"><div class="hq-stat-val" style="color:#f87171;font-size:20px;">${negCount}</div><div class="hq-stat-label">Negative</div></div>
+      </div>
+      <!-- Satisfaction Bar -->
+      <div style="margin-bottom:20px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:12px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Satisfaction</div>
+        <div style="height:8px;background:var(--surface-1);border-radius:4px;overflow:hidden;display:flex;">
+          <div style="height:100%;width:${(posCount/total*100).toFixed(0)}%;background:#3ecf6e;"></div>
+          <div style="height:100%;width:${(neuCount/total*100).toFixed(0)}%;background:#f59e0b;"></div>
+          <div style="height:100%;width:${(negCount/total*100).toFixed(0)}%;background:#f87171;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px;">
+          <span style="color:#3ecf6e;">${(posCount/total*100).toFixed(0)}% positive</span>
+          <span style="color:#f59e0b;">${(neuCount/total*100).toFixed(0)}% neutral</span>
+          <span style="color:#f87171;">${(negCount/total*100).toFixed(0)}% negative</span>
+        </div>
+      </div>
+      <!-- Recent Feedback -->
+      ${feedbackData.length ? `<div style="margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Recent Feedback</div>
+        <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-height:200px;overflow-y:auto;">
+          ${feedbackData.slice(0,20).map(f => {
+            const rColor = f.rating==='positive'?'#3ecf6e':f.rating==='negative'?'#f87171':'#f59e0b';
+            const rIcon = f.rating==='positive'?'👍':f.rating==='negative'?'👎':'😐';
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
+              <span style="font-size:14px;">${rIcon}</span>
+              <div style="flex:1;min-width:0;">
+                <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);">${escapeHTML(f.user||'?')}</span>
+                <span style="font-size:11px;color:var(--muted);margin-left:6px;">${escapeHTML(f.action||'')}</span>
+              </div>
+              <span style="font-size:10px;color:${rColor};font-weight:700;text-transform:uppercase;">${f.rating||''}</span>
+              <span style="font-size:10px;color:var(--muted);">${f.ts?formatTimeAgo(f.ts):''}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+      <!-- Support Tickets -->
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Support Tickets</div>
       <div id="admin-tickets-list"><div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">Loading tickets…</div></div>
     </div>`;
     _loadAdminSupportTickets();
@@ -12478,32 +12740,65 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
 
   else if (tab === 'broadcast') {
     if (!isSuperAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
-    const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
-    const currentMsg = gs.announcement || '';
-    const statusMsg = gs.platformStatus || '';
+    // Fetch latest from Firebase to ensure we have current state
+    let currentMsg = '', statusMsg = '';
+    try {
+      const annSnap = await firebase.database().ref('admin/global_settings/announcement').get();
+      if (annSnap.exists()) currentMsg = annSnap.val() || '';
+      const statSnap = await firebase.database().ref('admin/global_settings/platformStatus').get();
+      if (statSnap.exists()) statusMsg = statSnap.val() || '';
+      // Sync to localStorage
+      const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
+      gs.announcement = currentMsg; gs.platformStatus = statusMsg;
+      localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
+    } catch {
+      const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
+      currentMsg = gs.announcement || '';
+      statusMsg = gs.platformStatus || '';
+    }
     main.innerHTML = `<div style="padding:var(--space-xl);">
-      <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Broadcast Center</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:var(--space-xl);">Send system-wide announcements and manage platform messaging.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg);">
+      <div style="display:flex;align-items:center;gap:var(--space-md);margin-bottom:var(--space-xs);">
+        <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(255,249,62,.12),rgba(255,200,62,.06));border:1px solid rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;font-size:20px;">📡</div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;">Broadcast Center</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.35);">Send system-wide announcements and manage platform messaging.</div>
+        </div>
+      </div>
+      ${currentMsg ? `<div style="margin:var(--space-lg) 0;padding:14px 18px;background:linear-gradient(90deg,rgba(255,249,62,.08),rgba(255,200,62,.04));border:1px solid rgba(255,249,62,.15);border-radius:14px;display:flex;align-items:center;gap:12px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:adm-badge-pulse 2s infinite;flex-shrink:0;"></div>
+        <div style="flex:1;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:2px;">LIVE BROADCAST</div><div style="font-size:13px;color:rgba(255,255,255,.8);">${escapeHTML(currentMsg)}</div></div>
+        <button class="hq-quick-btn" onclick="_clearAnnouncement()" style="flex-shrink:0;">End Broadcast</button>
+      </div>` : `<div style="margin:var(--space-lg) 0;padding:14px 18px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;display:flex;align-items:center;gap:12px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;"></div>
+        <div style="font-size:13px;color:var(--muted);">No active broadcast</div>
+      </div>`}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg);margin-top:var(--space-lg);">
         <div class="hq-panel">
-          <div class="hq-panel-head"><h3>System Announcement</h3></div>
+          <div class="hq-panel-head">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <h3>System Announcement</h3>
+          </div>
           <div style="padding:var(--space-lg);">
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">This banner is shown to ALL users at the top of the app.</div>
             <textarea id="_broadcast-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(currentMsg)}</textarea>
             <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
-              <button class="hq-quick-btn" onclick="_broadcastAnnouncement()" style="background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);">Broadcast</button>
+              <button class="hq-quick-btn" onclick="_broadcastAnnouncement()" style="background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);font-weight:700;">🔴 Broadcast</button>
               <button class="hq-quick-btn" onclick="_clearAnnouncement()">Clear</button>
             </div>
-            ${currentMsg ? `<div style="margin-top:var(--space-md);padding:var(--space-sm) var(--space-md);background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);font-size:12px;color:var(--accent);">Active: ${escapeHTML(currentMsg.slice(0,80))}${currentMsg.length>80?'…':''}</div>` : ''}
           </div>
         </div>
         <div class="hq-panel">
-          <div class="hq-panel-head"><h3>Platform Status</h3></div>
+          <div class="hq-panel-head">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <h3>Platform Status</h3>
+            ${statusMsg ? '<div style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;color:#3ecf6e;font-weight:600;"><div style="width:5px;height:5px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px #3ecf6e88;"></div>ACTIVE</div>' : ''}
+          </div>
           <div style="padding:var(--space-lg);">
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Set a status message visible on the platform status page.</div>
             <textarea id="_status-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(statusMsg)}</textarea>
             <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
-              <button class="hq-quick-btn" onclick="_updatePlatformStatus()">Update Status</button>
+              <button class="hq-quick-btn" onclick="_updatePlatformStatus()" style="background:rgba(62,207,110,.08);border-color:rgba(62,207,110,.15);color:#3ecf6e;">Update Status</button>
+              <button class="hq-quick-btn" onclick="document.getElementById('_status-msg').value='';_updatePlatformStatus()">Clear Status</button>
             </div>
           </div>
         </div>
@@ -12512,16 +12807,34 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div class="hq-panel-head"><h3>Quick Messages</h3></div>
         <div style="padding:var(--space-lg);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);">
           ${[
-            {t:'Maintenance Soon',m:'Fortized will undergo scheduled maintenance shortly. Please save your work.'},
-            {t:'Update Available',m:'A new update is available! Refresh your page to get the latest features.'},
-            {t:'Welcome Event',m:'Welcome to the community! Check out the latest events in your Bastion.'},
-          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="document.getElementById('_broadcast-msg').value='${q.m}'">
+            {t:'🔧 Maintenance Soon',m:'Fortized will undergo scheduled maintenance shortly. Please save your work.'},
+            {t:'🚀 Update Available',m:'A new update is available! Refresh your page to get the latest features.'},
+            {t:'🎉 Welcome Event',m:'Welcome to the community! Check out the latest events in your Bastion.'},
+            {t:'⚡ Emergency',m:'We are aware of current issues and working on a fix. Thank you for your patience.'},
+            {t:'🎊 Celebration',m:'Thank you for being part of Fortized! Enjoy special perks today.'},
+            {t:'📢 New Feature',m:'We just launched something new! Check it out and let us know what you think.'},
+          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="document.getElementById('_broadcast-msg').value='${q.m.replace(/'/g,"\\'")}'">
             <span style="font-weight:700;font-size:11px;">${q.t}</span>
             <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,50)}…</span>
           </button>`).join('')}
         </div>
       </div>
+      <div class="hq-panel" style="margin-top:var(--space-lg);">
+        <div class="hq-panel-head"><h3>Broadcast Preview</h3></div>
+        <div style="padding:var(--space-lg);">
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Preview how the announcement banner looks to users:</div>
+          <div style="background:linear-gradient(90deg,rgba(255,249,62,.14),rgba(255,200,62,.08),rgba(255,249,62,.14));border:1px solid rgba(255,249,62,.2);border-radius:12px;padding:12px 18px;display:flex;align-items:center;gap:14px;">
+            <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,rgba(255,249,62,.15),rgba(255,200,62,.08));border:1px solid rgba(255,249,62,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+            <div style="flex:1;"><div style="font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:2px;display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);"></span>System Announcement</div><div style="font-size:13.5px;font-weight:600;color:rgba(255,255,255,.92);" id="_bc-preview-text">${currentMsg ? escapeHTML(currentMsg) : 'Your broadcast message will appear here…'}</div></div>
+          </div>
+        </div>
+      </div>
     </div>`;
+    // Live preview update
+    document.getElementById('_broadcast-msg')?.addEventListener('input', e => {
+      const prev = document.getElementById('_bc-preview-text');
+      if (prev) prev.textContent = e.target.value || 'Your broadcast message will appear here…';
+    });
   }
 
   else if (tab === 'analytics') {
@@ -12893,14 +13206,41 @@ async function _deleteTicket(id) {
 async function _broadcastAnnouncement() {
   const msg = document.getElementById('_broadcast-msg')?.value?.trim();
   if (!msg) { toast('Enter a message first','error'); return; }
-  try { await firebase.database().ref('admin/global_settings/announcement').set(msg); logAudit('broadcast', 'all', msg.slice(0,80)); toast('Announcement broadcast!','success'); } catch { toast('Failed to broadcast','error'); }
+  try {
+    await firebase.database().ref('admin/global_settings/announcement').set(msg);
+    // Also update localStorage so the broadcast center shows current state
+    const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
+    gs.announcement = msg;
+    localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
+    logAudit('broadcast', 'all', msg.slice(0,80));
+    toast('Announcement broadcast!','success');
+    // Refresh the broadcast tab to show active announcement
+    _loadAdminPage('broadcast');
+  } catch { toast('Failed to broadcast','error'); }
 }
 async function _clearAnnouncement() {
-  try { await firebase.database().ref('admin/global_settings/announcement').remove(); logAudit('clear_broadcast', 'all', ''); toast('Announcement cleared','success'); _loadAdminPage('broadcast'); } catch { toast('Failed','error'); }
+  try {
+    await firebase.database().ref('admin/global_settings/announcement').remove();
+    const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
+    delete gs.announcement;
+    localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
+    logAudit('clear_broadcast', 'all', '');
+    toast('Announcement cleared','success');
+    _loadAdminPage('broadcast');
+  } catch { toast('Failed','error'); }
 }
 async function _updatePlatformStatus() {
   const msg = document.getElementById('_status-msg')?.value?.trim() || '';
-  try { await firebase.database().ref('admin/global_settings/platformStatus').set(msg); logAudit('platform_status', 'system', msg.slice(0,80)); toast('Status updated','success'); } catch { toast('Failed','error'); }
+  try {
+    await firebase.database().ref('admin/global_settings/platformStatus').set(msg);
+    const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
+    gs.platformStatus = msg;
+    localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
+    logAudit('platform_status', 'system', msg.slice(0,80));
+    toast('Status updated','success');
+    // Refresh the broadcast tab
+    _loadAdminPage('broadcast');
+  } catch { toast('Failed','error'); }
 }
 function _exportAdminData(type) {
   let data;
@@ -14829,6 +15169,10 @@ function renderAllUsersList(users) {
         vb = rMap[getStaffRole(b.username)] || 0;
         return _hqSortDir * (va - vb);
       case 'risk': return _hqSortDir * (_calcUserRisk(a) - _calcUserRisk(b));
+      case 'lastSeen':
+        va = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
+        vb = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+        return _hqSortDir * (va - vb);
       case 'status':
         const sMap = {online:3,away:2,dnd:1,offline:0,invisible:0};
         va = sMap[_hqUserStatuses[a.username]] || 0;
@@ -14882,6 +15226,7 @@ function renderAllUsersList(users) {
       <div style="width:60px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);">${(u.bastions||[]).length}</div>
       <div style="width:50px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);">${ageDays !== null ? ageDays : '—'}</div>
       <div style="width:75px;text-align:center;font-size:10px;color:rgba(255,255,255,.3);">${joinDate?new Date(joinDate).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'—'}</div>
+      <div style="width:75px;text-align:center;font-size:10px;color:${statusVal==='online'?'#3ecf6e':'rgba(255,255,255,.3)'};">${statusVal==='online'?'Now':u.lastSeen?formatTimeAgo(u.lastSeen):'—'}</div>
       <div style="width:65px;text-align:center;">${hasRadPlus?'<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(168,85,247,.12);color:#a855f7;">R+</span>':hasRad?'<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(255,249,62,.1);color:#ffd93e;">R</span>':'<span style="font-size:8px;color:rgba(255,255,255,.12);">—</span>'}</div>
       <div style="width:50px;text-align:center;">${roleBadge}</div>
       <div style="width:55px;text-align:center;"><div style="display:inline-block;width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,.06);overflow:hidden;"><div style="height:100%;width:${risk}%;background:${riskColor};border-radius:2px;"></div></div><div style="font-size:8px;color:${riskColor};margin-top:1px;">${risk}</div></div>
@@ -22414,6 +22759,646 @@ async function upgradeOnyxBadge(amount) {
     renderAtelierTab('shop');
   });
 }
+
+// ════════════════════════════════════════════
+// MESSAGE THREADS
+// ════════════════════════════════════════════
+let _activeThread = null;
+let _threadListener = null;
+function openThread(msgId, text, from) {
+  if (!curBastion && curBastion !== 0) { toast('Threads are only available in Bastion channels','info'); return; }
+  const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
+  const bid = b?.globalId||b?.name; const chName = ch?.name||'general';
+  if (!bid) return;
+  _activeThread = { msgId, text, from, bid, chName };
+  document.getElementById('thread-panel')?.remove();
+  const panel = document.createElement('div');
+  panel.className = 'thread-panel';
+  panel.id = 'thread-panel';
+  panel.innerHTML = `
+    <div class="thread-panel-header">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="tph-title">Thread</span>
+      <button class="tph-close" onclick="_closeThread()">✕</button>
+    </div>
+    <div class="thread-origin">
+      <div class="to-author">${escapeHTML(from)}</div>
+      <div class="to-text">${escapeHTML(text.slice(0,200))}</div>
+    </div>
+    <div class="thread-replies" id="thread-replies"></div>
+    <div class="thread-compose">
+      <textarea id="thread-input" placeholder="Reply to thread…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_sendThreadReply();}"></textarea>
+      <button onclick="_sendThreadReply()">Reply</button>
+    </div>`;
+  document.body.appendChild(panel);
+  _listenThreadReplies(bid, chName, msgId);
+}
+function _closeThread() {
+  if (_threadListener) { _threadListener(); _threadListener = null; }
+  _activeThread = null;
+  const p = document.getElementById('thread-panel');
+  if (p) { p.style.opacity='0'; p.style.transform='translateX(100%)'; p.style.transition='all .2s ease'; setTimeout(()=>p.remove(),200); }
+}
+function _listenThreadReplies(bid, chName, msgId) {
+  if (_threadListener) _threadListener();
+  const ref = firebase.database().ref(`threads/${bid}/${chName}/${msgId}`).orderByChild('timestamp');
+  const cb = ref.on('value', snap => {
+    const replies = [];
+    if (snap.exists()) snap.forEach(c => { const v = c.val(); v._key = c.key; replies.push(v); });
+    _renderThreadReplies(replies);
+  });
+  _threadListener = () => ref.off('value', cb);
+}
+function _renderThreadReplies(replies) {
+  const container = document.getElementById('thread-replies');
+  if (!container) return;
+  if (!replies.length) { container.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--muted);font-size:12px;">No replies yet. Start the conversation!</div>'; return; }
+  container.innerHTML = replies.map(r => `
+    <div class="thread-reply">
+      <div class="tr-av">${buildAvatarHTML(null,r.from||'',28)}</div>
+      <div class="tr-body">
+        <div class="tr-meta"><span class="tr-name">${escapeHTML(r.from||'')}</span><span class="tr-time">${r.timestamp?new Date(r.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''}</span></div>
+        <div class="tr-text">${parseMD(escapeHTML(r.text||''))}</div>
+      </div>
+    </div>`).join('');
+  container.scrollTop = container.scrollHeight;
+}
+async function _sendThreadReply() {
+  if (!_activeThread) return;
+  const input = document.getElementById('thread-input');
+  const text = input?.value?.trim();
+  if (!text) return;
+  input.value = '';
+  const { bid, chName, msgId } = _activeThread;
+  const reply = { from: CU.username, text, timestamp: new Date().toISOString() };
+  try {
+    await firebase.database().ref(`threads/${bid}/${chName}/${msgId}`).push(reply);
+    // Update thread count on the parent message
+    const countRef = firebase.database().ref(`threadCounts/${bid}/${chName}/${msgId}`);
+    countRef.transaction(v => (v||0)+1);
+  } catch(e) { toast('Failed to reply','error'); }
+}
+
+// ════════════════════════════════════════════
+// ADVANCED SEARCH
+// ════════════════════════════════════════════
+let _advSearchFilter = 'all';
+function openAdvancedSearch() {
+  document.getElementById('adv-search-panel')?.remove();
+  const panel = document.createElement('div');
+  panel.className = 'adv-search-panel';
+  panel.id = 'adv-search-panel';
+  panel.innerHTML = `
+    <div class="adv-search-header">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span class="ash-title">Advanced Search</span>
+        <button onclick="_closeEl('adv-search-panel')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;">✕</button>
+      </div>
+      <input id="adv-search-input" placeholder="Search messages…" oninput="_runAdvSearch(this.value)" autofocus>
+    </div>
+    <div class="adv-search-filters">
+      <div class="asf-chip active" onclick="_setSearchFilter('all',this)">All</div>
+      <div class="asf-chip" onclick="_setSearchFilter('has:image',this)">Has Image</div>
+      <div class="asf-chip" onclick="_setSearchFilter('has:link',this)">Has Link</div>
+      <div class="asf-chip" onclick="_setSearchFilter('from:',this)">By User</div>
+    </div>
+    <div class="adv-search-results" id="adv-search-results">
+      <div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">Type to search messages</div>
+    </div>`;
+  document.body.appendChild(panel);
+  document.getElementById('adv-search-input')?.focus();
+}
+function _setSearchFilter(filter, chip) {
+  _advSearchFilter = filter;
+  document.querySelectorAll('.asf-chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  if (filter === 'from:') {
+    showCustomInput('Search by User','Enter username:', (username) => {
+      if (username) { _advSearchFilter = 'from:' + username; _runAdvSearch(document.getElementById('adv-search-input')?.value || ''); }
+    });
+  } else {
+    _runAdvSearch(document.getElementById('adv-search-input')?.value || '');
+  }
+}
+let _advSearchTimeout = null;
+function _runAdvSearch(q) {
+  clearTimeout(_advSearchTimeout);
+  _advSearchTimeout = setTimeout(async () => {
+    const results = document.getElementById('adv-search-results');
+    if (!results) return;
+    if (!q.trim() && _advSearchFilter === 'all') { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">Type to search messages</div>'; return; }
+    results.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Searching…</div>';
+    const allMsgs = [];
+    try {
+      // Search DMs
+      if (curDM) {
+        const dmKey = [CU.username, curDM].sort().join('__');
+        const snap = await firebase.database().ref('dms/' + dmKey).limitToLast(200).get();
+        if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'dm'; v._loc = curDM; allMsgs.push(v); });
+      }
+      // Search current bastion channel
+      if (curBastion !== null) {
+        const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
+        const bid = b?.globalId||b?.name; const chName = ch?.name||'general';
+        if (bid) {
+          const snap = await firebase.database().ref(`bastionMsgs/${bid}/${chName}`).limitToLast(200).get();
+          if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'ch'; v._loc = chName; allMsgs.push(v); });
+        }
+      }
+    } catch {}
+    let filtered = allMsgs.filter(m => m.text && m.from !== '__system__');
+    if (q.trim()) filtered = filtered.filter(m => (m.text||'').toLowerCase().includes(q.toLowerCase()));
+    if (_advSearchFilter === 'has:image') filtered = filtered.filter(m => /\.(png|jpg|jpeg|gif|webp)/i.test(m.text||''));
+    else if (_advSearchFilter === 'has:link') filtered = filtered.filter(m => /https?:\/\//.test(m.text||''));
+    else if (_advSearchFilter.startsWith('from:')) { const u = _advSearchFilter.slice(5).toLowerCase(); filtered = filtered.filter(m => (m.from||'').toLowerCase().includes(u)); }
+    filtered.sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0));
+    if (!filtered.length) { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">No results found</div>'; return; }
+    results.innerHTML = filtered.slice(0,50).map(m => {
+      const hl = q.trim() ? (m.text||'').replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>') : escapeHTML((m.text||'').slice(0,120));
+      return `<div class="asr-item"><span class="asr-from">${escapeHTML(m.from||'')}</span><span class="asr-time">${m.timestamp?new Date(m.timestamp).toLocaleDateString():''}</span><div class="asr-text">${hl}</div></div>`;
+    }).join('');
+  }, 350);
+}
+
+// ════════════════════════════════════════════
+// KEYBOARD SHORTCUTS (PC ONLY)
+// ════════════════════════════════════════════
+let _kbdShortcutsActive = false;
+function _initKeyboardShortcuts() {
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+    // Ctrl+K — Quick search
+    if (e.ctrlKey && e.key === 'k') { e.preventDefault(); openAdvancedSearch(); return; }
+    // Ctrl+/ — Shortcut list
+    if (e.ctrlKey && e.key === '/') { e.preventDefault(); _showKbdShortcuts(); return; }
+    // Ctrl+Shift+M — Toggle mute
+    if (e.ctrlKey && e.shiftKey && e.key === 'M') { e.preventDefault(); toast('Notifications toggled','info'); return; }
+    // Escape — Close panels
+    if (e.key === 'Escape') {
+      document.getElementById('thread-panel') && _closeThread();
+      document.getElementById('adv-search-panel') && _closeEl('adv-search-panel');
+      document.getElementById('pins-panel') && _closeEl('pins-panel');
+      document.querySelector('.kbd-overlay')?.remove();
+      document.querySelector('.soundboard-panel')?.remove();
+      document.querySelector('.notif-settings-modal')?.remove();
+    }
+  });
+}
+function _showKbdShortcuts() {
+  document.querySelector('.kbd-overlay')?.remove();
+  const el = document.createElement('div');
+  el.className = 'kbd-overlay';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  el.innerHTML = `<div class="kbd-card">
+    <h2>Keyboard Shortcuts</h2>
+    <div class="kbd-sub">PC-only shortcuts for power users</div>
+    <div class="kbd-section"><h3>Navigation</h3>
+      <div class="kbd-row"><span class="kr-label">Quick Search</span><div class="kr-keys"><span class="kr-key">Ctrl</span><span class="kr-key">K</span></div></div>
+      <div class="kbd-row"><span class="kr-label">Shortcut List</span><div class="kr-keys"><span class="kr-key">Ctrl</span><span class="kr-key">/</span></div></div>
+      <div class="kbd-row"><span class="kr-label">Toggle Mute</span><div class="kr-keys"><span class="kr-key">Ctrl</span><span class="kr-key">Shift</span><span class="kr-key">M</span></div></div>
+    </div>
+    <div class="kbd-section"><h3>Messages</h3>
+      <div class="kbd-row"><span class="kr-label">Send Message</span><div class="kr-keys"><span class="kr-key">Enter</span></div></div>
+      <div class="kbd-row"><span class="kr-label">New Line</span><div class="kr-keys"><span class="kr-key">Shift</span><span class="kr-key">Enter</span></div></div>
+      <div class="kbd-row"><span class="kr-label">Close Panels</span><div class="kr-keys"><span class="kr-key">Esc</span></div></div>
+    </div>
+    <div style="text-align:center;margin-top:12px;"><button class="btn-g" style="padding:8px 20px;font-size:12px;" onclick="this.closest('.kbd-overlay').remove()">Close</button></div>
+  </div>`;
+  document.body.appendChild(el);
+}
+
+// ════════════════════════════════════════════
+// CUSTOM SOUNDBOARD (Radiance Users)
+// ════════════════════════════════════════════
+const _defaultSounds = [
+  { name:'Airhorn', emoji:'📯', url:'data:audio/wav;base64,UklGR' },
+  { name:'Drum Roll', emoji:'🥁' },
+  { name:'Sad Trombone', emoji:'🎺' },
+  { name:'Applause', emoji:'👏' },
+  { name:'Crickets', emoji:'🦗' },
+  { name:'Ba Dum Tss', emoji:'🥁' },
+];
+let _sbPlaying = null;
+function openSoundboard() {
+  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  if (!hasRadiance) { toast('Soundboard is a Radiance feature','info'); return; }
+  document.querySelector('.soundboard-panel')?.remove();
+  const customs = JSON.parse(localStorage.getItem('ftz_soundboard_' + CU.username) || '[]');
+  const el = document.createElement('div');
+  el.className = 'soundboard-panel';
+  el.innerHTML = `
+    <div class="soundboard-header">
+      <span style="font-size:16px;">🔊</span>
+      <span class="sbh-title">Soundboard</span>
+      <button onclick="this.closest('.soundboard-panel').remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;margin-left:auto;">✕</button>
+    </div>
+    <div class="soundboard-grid" id="sb-grid">
+      ${_defaultSounds.map((s,i)=>`<div class="sb-clip" onclick="_playSoundClip(${i})">${s.emoji}<br>${s.name}</div>`).join('')}
+      ${customs.map((s,i)=>`<div class="sb-clip" onclick="_playCustomClip(${i})">${s.emoji||'🎵'}<br>${escapeHTML(s.name||'Custom')}</div>`).join('')}
+    </div>
+    <div class="sb-upload">
+      <button class="btn-g" style="padding:6px 14px;font-size:11px;" onclick="_uploadSoundClip()">+ Upload Clip</button>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;">Max 5 seconds, .mp3/.wav</div>
+    </div>`;
+  document.body.appendChild(el);
+}
+function _playSoundClip(idx) {
+  toast(_defaultSounds[idx]?.name + ' played!','info');
+}
+function _playCustomClip(idx) {
+  const customs = JSON.parse(localStorage.getItem('ftz_soundboard_' + CU.username) || '[]');
+  if (customs[idx]?.data) {
+    try { const a = new Audio(customs[idx].data); a.volume = 0.5; a.play(); } catch {}
+  }
+  toast('Playing ' + (customs[idx]?.name || 'clip'),'info');
+}
+function _uploadSoundClip() {
+  showCustomInput('Upload Sound Clip','Name for this clip:', (name) => {
+    if (!name) return;
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'audio/mp3,audio/wav,audio/mpeg,.mp3,.wav';
+    inp.onchange = () => {
+      const f = inp.files[0];
+      if (!f) return;
+      if (f.size > 500000) { toast('File too large (max 500KB)','error'); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const customs = JSON.parse(localStorage.getItem('ftz_soundboard_' + CU.username) || '[]');
+        if (customs.length >= 12) { toast('Max 12 custom clips','error'); return; }
+        customs.push({ name, emoji:'🎵', data: reader.result });
+        localStorage.setItem('ftz_soundboard_' + CU.username, JSON.stringify(customs));
+        toast('Sound clip added!','success');
+        openSoundboard();
+      };
+      reader.readAsDataURL(f);
+    };
+    inp.click();
+  });
+}
+
+// ════════════════════════════════════════════
+// EVENTS / CALENDAR SYSTEM
+// ════════════════════════════════════════════
+function _renderEventsPanel(container, bastionId) {
+  if (!container) return;
+  container.innerHTML = `
+    <div class="events-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">Events</div>
+        <button class="btn-a" style="padding:6px 14px;font-size:11px;" onclick="_createEvent('${escapeHTML(bastionId)}')">+ Create Event</button>
+      </div>
+      <div id="events-list"><div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">Loading events…</div></div>
+    </div>`;
+  _loadEvents(bastionId);
+}
+async function _loadEvents(bastionId) {
+  const list = document.getElementById('events-list');
+  if (!list) return;
+  try {
+    const snap = await firebase.database().ref('events/' + bastionId).get();
+    if (!snap.exists()) { list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">No upcoming events</div>'; return; }
+    const events = [];
+    snap.forEach(c => { const v = c.val(); v._key = c.key; events.push(v); });
+    events.sort((a,b) => new Date(a.date||0) - new Date(b.date||0));
+    const now = new Date();
+    list.innerHTML = events.map(ev => {
+      const d = new Date(ev.date);
+      const isPast = d < now;
+      const rsvps = ev.rsvps ? Object.keys(ev.rsvps).length : 0;
+      const userRsvp = ev.rsvps?.[CU.username];
+      const diff = d - now;
+      const days = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const countdown = isPast ? 'Ended' : days > 0 ? days+'d '+hours+'h' : hours > 0 ? hours+'h' : 'Starting soon!';
+      return `<div class="event-card" ${isPast?'style="opacity:.6;"':''}>
+        <div class="ec-banner">${ev.emoji||'📅'}
+          <div class="ec-date-badge"><div class="edb-month">${d.toLocaleString('en',{month:'short'})}</div><div class="edb-day">${d.getDate()}</div></div>
+        </div>
+        <div class="ec-body">
+          <div class="ec-title">${escapeHTML(ev.title||'')}</div>
+          <div class="ec-desc">${escapeHTML((ev.description||'').slice(0,150))}</div>
+          <div class="ec-meta">
+            <span>${rsvps} interested</span>
+            <div class="event-countdown">⏱ ${countdown}</div>
+            <div class="ec-rsvp">
+              <button class="rsvp-yes ${userRsvp?'active':''}" onclick="_rsvpEvent('${escapeHTML(bastionId)}','${ev._key}')">
+                ${userRsvp?'✓ Going':'Interested'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch { list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">Failed to load events</div>'; }
+}
+function _createEvent(bastionId) {
+  showCustomInput('Create Event','Event title:', (title) => {
+    if (!title) return;
+    showCustomInput('Event Description','Description (optional):', (desc) => {
+      showCustomInput('Event Date','Date (YYYY-MM-DD HH:MM):', async (dateStr) => {
+        if (!dateStr) return;
+        const ev = { title, description: desc||'', date: new Date(dateStr).toISOString(), emoji:'📅', createdBy: CU.username, createdAt: new Date().toISOString() };
+        try { await firebase.database().ref('events/' + bastionId).push(ev); toast('Event created!','success'); _loadEvents(bastionId); } catch { toast('Failed','error'); }
+      });
+    });
+  });
+}
+async function _rsvpEvent(bastionId, eventKey) {
+  const path = 'events/' + bastionId + '/' + eventKey + '/rsvps/' + CU.username;
+  try {
+    const snap = await firebase.database().ref(path).get();
+    if (snap.exists()) { await firebase.database().ref(path).remove(); toast('RSVP removed','info'); }
+    else { await firebase.database().ref(path).set(true); toast('RSVP confirmed!','success'); }
+    _loadEvents(bastionId);
+  } catch { toast('Failed','error'); }
+}
+
+// ════════════════════════════════════════════
+// USER NOTES (private, localStorage)
+// ════════════════════════════════════════════
+function _openUserNote(username) {
+  if (!username) return;
+  const notes = JSON.parse(localStorage.getItem('ftz_user_notes_' + CU.username) || '{}');
+  const existing = notes[username] || '';
+  showCustomInput('Note on ' + username, 'Private note (only visible to you):', (note) => {
+    if (note === null) return;
+    notes[username] = note;
+    localStorage.setItem('ftz_user_notes_' + CU.username, JSON.stringify(notes));
+    toast(note ? 'Note saved!' : 'Note cleared','success');
+  }, existing);
+}
+function _getUserNote(username) {
+  const notes = JSON.parse(localStorage.getItem('ftz_user_notes_' + CU.username) || '{}');
+  return notes[username] || '';
+}
+
+// ════════════════════════════════════════════
+// SLOW MODE PER CHANNEL
+// ════════════════════════════════════════════
+let _slowModeCooldowns = {};
+function _getSlowMode(bastionId, chName) {
+  return parseInt(localStorage.getItem('ftz_slowmode_' + bastionId + '_' + chName) || '0');
+}
+function _setSlowMode(bastionId, chName, seconds) {
+  if (seconds > 0) localStorage.setItem('ftz_slowmode_' + bastionId + '_' + chName, seconds);
+  else localStorage.removeItem('ftz_slowmode_' + bastionId + '_' + chName);
+  toast(seconds > 0 ? 'Slow mode: ' + seconds + 's' : 'Slow mode disabled','success');
+  // Update via Firebase for all users
+  try { firebase.database().ref('bastionSettings/' + bastionId + '/slowmode/' + chName).set(seconds); } catch {}
+}
+function _checkSlowMode() {
+  if (curBastion === null) return true;
+  const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
+  const bid = b?.globalId||b?.name; const chName = ch?.name||'general';
+  if (!bid) return true;
+  const cooldown = _getSlowMode(bid, chName);
+  if (!cooldown) return true;
+  const key = bid + '_' + chName;
+  const last = _slowModeCooldowns[key] || 0;
+  const elapsed = (Date.now() - last) / 1000;
+  if (elapsed < cooldown) {
+    toast('Slow mode: wait ' + Math.ceil(cooldown - elapsed) + 's', 'info');
+    return false;
+  }
+  _slowModeCooldowns[key] = Date.now();
+  return true;
+}
+function _showSlowModeSettings(bastionId, chName) {
+  const current = _getSlowMode(bastionId, chName);
+  const opts = [0, 30, 60, 300];
+  const labels = ['Off', '30s', '1m', '5m'];
+  let html = '<div style="padding:20px;"><div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;margin-bottom:12px;">Slow Mode</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+  opts.forEach((s,i) => {
+    html += `<button class="btn-${s===current?'a':'g'}" style="padding:8px 16px;font-size:12px;" onclick="_setSlowMode('${escapeHTML(bastionId)}','${escapeHTML(chName)}',${s});closeModal('modal-slowmode');">${labels[i]}</button>`;
+  });
+  html += '</div></div>';
+  _showQuickModal('modal-slowmode', html);
+}
+
+// ════════════════════════════════════════════
+// FRIEND LIST SORTING
+// ════════════════════════════════════════════
+let _friendSortMode = 'online';
+async function renderFriendsSorted(mode) {
+  _friendSortMode = mode || _friendSortMode;
+  const list = document.getElementById('friends-list');
+  if (!list) return;
+  const friends = CU?.friends || [];
+  const pending = CU?.friendRequestsReceived || [];
+  let html = '';
+  // Pending section first
+  if (pending.length) {
+    html += `<div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Pending — ${pending.length}</div>`;
+    pending.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong> sent you a friend request</p></div><div style="display:flex;gap:6px;"><button class="rn-accept" onclick="acceptFriend('${escapeHTML(f)}')">✓</button><button class="rn-decline" onclick="declineFriend('${escapeHTML(f)}')">✕</button></div></div>`; });
+  }
+  if (!friends.length) { list.innerHTML = html || `<div class="empty-state"><div class="ei">👥</div><h3>No friends yet</h3><p>Add friends by username!</p><button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button></div>`; return; }
+  // Fetch statuses
+  let statuses = {};
+  try { const snap = await firebase.database().ref('statuses').get(); if (snap.exists()) statuses = snap.val(); } catch {}
+  let sorted = [...friends];
+  if (_friendSortMode === 'online') sorted.sort((a,b) => { const sa = statuses[a]==='online'?2:statuses[a]==='away'?1:0; const sb = statuses[b]==='online'?2:statuses[b]==='away'?1:0; return sb-sa; });
+  else if (_friendSortMode === 'alpha') sorted.sort((a,b) => a.localeCompare(b));
+  else if (_friendSortMode === 'recent') sorted.reverse();
+  html += `<div style="display:flex;align-items:center;gap:6px;margin:10px 0 8px;">
+    <span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Friends — ${friends.length}</span>
+    <span style="margin-left:auto;display:flex;gap:4px;">
+      <button class="asf-chip ${_friendSortMode==='online'?'active':''}" onclick="renderFriendsSorted('online')" style="font-size:10px;padding:2px 8px;">Online</button>
+      <button class="asf-chip ${_friendSortMode==='alpha'?'active':''}" onclick="renderFriendsSorted('alpha')" style="font-size:10px;padding:2px 8px;">A-Z</button>
+      <button class="asf-chip ${_friendSortMode==='recent'?'active':''}" onclick="renderFriendsSorted('recent')" style="font-size:10px;padding:2px 8px;">Recent</button>
+    </span>
+  </div>`;
+  sorted.forEach(f => {
+    const st = statuses[f] || 'offline';
+    const stColor = st==='online'?'#3ecf6e':st==='away'?'#f59e0b':st==='dnd'?'#f87171':'#4a4a5a';
+    html += `<div class="activity-item"><div class="act-icon" style="position:relative;">${buildAvatarHTML(null,f,40)}<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${stColor};border:2px solid var(--panel);"></div></div><div class="act-text"><p style="font-weight:600;">${escapeHTML(f)}</p><span style="font-size:10px;color:${stColor};">${st}</span></div><div style="display:flex;gap:6px;"><button class="btn-g" style="padding:6px 12px;font-size:12px;" onclick="openDMView('${escapeHTML(f)}')">💬</button><button class="btn-d" style="padding:6px 12px;font-size:12px;" onclick="removeFriend('${escapeHTML(f)}')">Remove</button></div></div>`;
+  });
+  list.innerHTML = html;
+}
+
+// ════════════════════════════════════════════
+// FAVOURITES / QUICK ACCESS
+// ════════════════════════════════════════════
+function _getFavourites() { return JSON.parse(localStorage.getItem('ftz_favourites_' + CU.username) || '[]'); }
+function _saveFavourites(favs) { localStorage.setItem('ftz_favourites_' + CU.username, JSON.stringify(favs)); }
+function _toggleFavourite(type, id, label) {
+  const favs = _getFavourites();
+  const idx = favs.findIndex(f => f.type === type && f.id === id);
+  if (idx >= 0) { favs.splice(idx,1); toast('Removed from favourites','info'); }
+  else { favs.unshift({ type, id, label }); toast('Added to favourites!','success'); }
+  _saveFavourites(favs);
+  _renderFavourites();
+}
+function _renderFavourites() {
+  const favs = _getFavourites();
+  let section = document.getElementById('fav-section');
+  if (!favs.length) { if (section) section.remove(); return; }
+  if (!section) {
+    section = document.createElement('div');
+    section.className = 'fav-section'; section.id = 'fav-section';
+    const nav = document.querySelector('.sidebar-nav');
+    if (nav) nav.parentElement.insertBefore(section, nav.nextElementSibling);
+    else return;
+  }
+  section.innerHTML = `<div class="fav-header">⭐ Quick Access</div>` +
+    favs.slice(0,5).map(f => `<div class="fav-item" onclick="_openFavourite('${f.type}','${escapeHTML(f.id)}')"><span class="fav-star">★</span>${escapeHTML(f.label||f.id)}</div>`).join('');
+}
+function _openFavourite(type, id) {
+  if (type === 'dm') openDMView(id);
+  else if (type === 'channel') { /* navigate to channel */ toast('Opening channel…','info'); }
+}
+
+// ════════════════════════════════════════════
+// NOTIFICATION SETTINGS PER CHANNEL
+// ════════════════════════════════════════════
+function _getChannelNotifSetting(channelKey) {
+  const settings = JSON.parse(localStorage.getItem('ftz_channel_notifs_' + CU.username) || '{}');
+  return settings[channelKey] || 'all';
+}
+function _setChannelNotifSetting(channelKey, mode) {
+  const settings = JSON.parse(localStorage.getItem('ftz_channel_notifs_' + CU.username) || '{}');
+  settings[channelKey] = mode;
+  localStorage.setItem('ftz_channel_notifs_' + CU.username, JSON.stringify(settings));
+}
+function _showChannelNotifSettings(channelKey, channelName) {
+  document.querySelector('.notif-settings-modal')?.remove();
+  const current = _getChannelNotifSetting(channelKey);
+  const el = document.createElement('div');
+  el.className = 'notif-settings-modal';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  const modes = [
+    { id:'all', icon:'🔔', label:'All Messages', desc:'Get notified for every message' },
+    { id:'mentions', icon:'@', label:'Mentions Only', desc:'Only when you are mentioned' },
+    { id:'muted', icon:'🔇', label:'Muted', desc:'No notifications from this channel' },
+  ];
+  el.innerHTML = `<div class="ns-card">
+    <h3>Notifications — ${escapeHTML(channelName||'Channel')}</h3>
+    ${modes.map(m=>`<div class="ns-opt ${current===m.id?'active':''}" onclick="_setChannelNotifSetting('${escapeHTML(channelKey)}','${m.id}');this.closest('.notif-settings-modal').remove();toast('Notification setting updated','success');">
+      <div class="nso-icon">${m.icon}</div>
+      <div><div class="nso-label">${m.label}</div><div class="nso-desc">${m.desc}</div></div>
+    </div>`).join('')}
+  </div>`;
+  document.body.appendChild(el);
+}
+
+// ════════════════════════════════════════════
+// POLLS 2.0 — Enhanced polls with timers, anonymous voting, result graphs
+// ════════════════════════════════════════════
+function _createPoll2(container, context) {
+  let pollOptions = ['',''];
+  let isAnonymous = false;
+  let expiresIn = 0;
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(12px);z-index:8000;display:flex;align-items:center;justify-content:center;';
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  const _renderPollCreate = () => {
+    modal.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:420px;width:100%;padding:24px;">
+      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:14px;">Create Poll</div>
+      <input id="poll2-question" class="settings-input" placeholder="Ask a question…" style="margin-bottom:12px;font-size:14px;">
+      <div id="poll2-options" style="margin-bottom:12px;">
+        ${pollOptions.map((o,i)=>`<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+          <input class="settings-input poll2-opt-input" value="${escapeHTML(o)}" placeholder="Option ${i+1}" style="flex:1;">
+          ${i>1?`<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">✕</button>`:''}
+        </div>`).join('')}
+      </div>
+      <button class="btn-g" style="padding:5px 12px;font-size:11px;margin-bottom:14px;" onclick="document.getElementById('poll2-options').insertAdjacentHTML('beforeend','<div style=\\'display:flex;gap:6px;margin-bottom:6px;align-items:center;\\'><input class=\\'settings-input poll2-opt-input\\' placeholder=\\'Option\\' style=\\'flex:1;\\'><button onclick=\\'this.parentElement.remove()\\' style=\\'background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;\\'>✕</button></div>')">+ Add Option</button>
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-light);cursor:pointer;">
+          <input type="checkbox" id="poll2-anon"> Anonymous voting
+        </label>
+        <select id="poll2-expire" class="settings-input" style="width:auto;font-size:11px;">
+          <option value="0">No expiry</option>
+          <option value="3600000">1 hour</option>
+          <option value="86400000">24 hours</option>
+          <option value="604800000">7 days</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn-g" onclick="this.closest('[style*=fixed]').remove()">Cancel</button>
+        <button class="btn-a" onclick="_submitPoll2(this.closest('[style*=fixed]'))">Create Poll</button>
+      </div>
+    </div>`;
+  };
+  _renderPollCreate();
+  document.body.appendChild(modal);
+}
+function _submitPoll2(modal) {
+  const question = document.getElementById('poll2-question')?.value?.trim();
+  if (!question) { toast('Enter a question','error'); return; }
+  const optInputs = document.querySelectorAll('.poll2-opt-input');
+  const options = [...optInputs].map(i=>i.value.trim()).filter(Boolean);
+  if (options.length < 2) { toast('Need at least 2 options','error'); return; }
+  const isAnon = document.getElementById('poll2-anon')?.checked || false;
+  const expiresIn = parseInt(document.getElementById('poll2-expire')?.value || '0');
+  const poll = {
+    question, options: options.map(o=>({label:o,votes:{}})), anonymous: isAnon,
+    expiresAt: expiresIn > 0 ? new Date(Date.now()+expiresIn).toISOString() : null,
+    createdBy: CU.username, createdAt: new Date().toISOString(),
+  };
+  // Send as a special message
+  const text = `[POLL] ${question}`;
+  if (curDM) {
+    const key = [CU.username,curDM].sort().join('__');
+    firebase.database().ref('dms/'+key).push({ from:CU.username, text, timestamp:new Date().toISOString(), poll });
+  } else if (curBastion !== null) {
+    const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
+    const bid = b?.globalId||b?.name; const chName = ch?.name||'general';
+    if (bid) firebase.database().ref(`bastionMsgs/${bid}/${chName}`).push({ from:CU.username, text, timestamp:new Date().toISOString(), poll });
+  }
+  modal.remove();
+  toast('Poll created!','success');
+}
+
+// ════════════════════════════════════════════
+// HELPER: Quick modal for various features
+// ════════════════════════════════════════════
+function _showQuickModal(id, html) {
+  document.getElementById(id)?.remove();
+  const el = document.createElement('div');
+  el.id = id;
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.85);backdrop-filter:blur(12px);z-index:8000;display:flex;align-items:center;justify-content:center;';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  el.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;max-width:400px;width:100%;">${html}</div>`;
+  document.body.appendChild(el);
+}
+function _closeEl(id) { const el = document.getElementById(id); if (el) { el.style.opacity='0'; el.style.transition='opacity .15s'; setTimeout(()=>el.remove(),150); } }
+
+// ════════════════════════════════════════════
+// VANITY URL for Sovereign Bastions
+// ════════════════════════════════════════════
+async function _saveVanityUrl() {
+  if (curBastion === null) return;
+  const b = CU.bastions[curBastion];
+  const bid = b?.globalId||b?.name;
+  const url = document.getElementById('vanity-url-input')?.value?.trim()?.toLowerCase()?.replace(/[^a-z0-9-]/g,'');
+  if (!url) { toast('Enter a vanity URL','error'); return; }
+  if (url.length < 3 || url.length > 32) { toast('Must be 3-32 characters','error'); return; }
+  b.vanityUrl = url;
+  await saveUser();
+  try { await firebase.database().ref('bastions/' + bid + '/vanityUrl').set(url); } catch {}
+  toast('Vanity URL saved: fortized.com/' + url, 'success');
+}
+
+// ════════════════════════════════════════════
+// LAST SEEN TRACKING
+// ════════════════════════════════════════════
+function _updateLastSeen() {
+  if (!CU?.username) return;
+  const now = new Date().toISOString();
+  try { firebase.database().ref('users/' + CU.username + '/lastSeen').set(now); } catch {}
+}
+// Update last seen every 2 minutes
+if (typeof window !== 'undefined') setInterval(_updateLastSeen, 120000);
+
+// ════════════════════════════════════════════
+// INIT NEW FEATURES ON APP LOAD
+// ════════════════════════════════════════════
+function _initNewFeatures() {
+  _initKeyboardShortcuts();
+  _renderFavourites();
+}
+// Hook into existing init — call after page loads
+if (typeof window !== 'undefined') setTimeout(_initNewFeatures, 1500);
 
 // ── Joyster System Account ──
 async function _ensureJoysterAccount() {

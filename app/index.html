@@ -30,8 +30,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 ::selection{background:rgba(255,249,62,.2);}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#1e2840;border-radius:4px;}
 /* Performance: lazy-render off-screen elements */
-.msg-row{content-visibility:auto;contain-intrinsic-size:auto 52px;}
+.msg-row{content-visibility:auto;contain-intrinsic-size:auto 52px;animation:msgFadeIn .18s ease;}
 .msg-row.msg-first{contain-intrinsic-size:auto 72px;}
+@keyframes msgFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .embed-link-card,.embed-x-card,.embed-invite-card,.embed-spotify-card{content-visibility:auto;contain-intrinsic-size:auto 120px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
 .sidebar{width:190px;min-width:190px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:68px;}
@@ -641,17 +642,30 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .chat-input-actions{display:flex;gap:2px;align-items:center;}
 .chat-input-actions button{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
 .chat-send{display:none;}
-.member-list{width:260px;min-width:260px;max-width:260px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);overflow-y:auto;padding:14px 0;flex-shrink:0;}
-.ml-role-header{padding:8px 16px 5px;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.18);margin-top:12px;}
+.member-list{width:260px;min-width:260px;max-width:260px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);overflow-y:auto;padding:10px 0;flex-shrink:0;}
+.ml-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.04);margin-bottom:4px;}
+.ml-header-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:rgba(255,255,255,.4);letter-spacing:.02em;}
+.ml-header-count{font-size:11px;color:rgba(255,255,255,.15);font-weight:600;}
+.ml-search{margin:0 10px 8px;position:relative;}
+.ml-search input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:7px 12px 7px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:#fff;outline:none;transition:border-color .2s,box-shadow .2s;}
+.ml-search input::placeholder{color:var(--muted);}
+.ml-search input:focus{border-color:rgba(255,249,62,.25);box-shadow:0 0 0 2px rgba(255,249,62,.05);}
+.ml-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;pointer-events:none;}
+.ml-role-header{padding:10px 16px 5px;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-top:8px;display:flex;align-items:center;gap:6px;}
 .ml-role-header:first-child{margin-top:0;}
-.ml-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;overflow:hidden;}
-.ml-entry{display:flex;align-items:center;gap:9px;padding:6px 10px 6px 14px;margin:1px 6px;border-radius:12px;cursor:pointer;transition:all .14s cubic-bezier(.22,1,.36,1);}
-.ml-entry:hover{background:rgba(255,255,255,.04);}
-.ml-av{width:30px;height:30px;border-radius:50%;background:var(--panel);border:1px solid var(--border);font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;}
+.ml-role-header .ml-role-count{font-weight:600;color:rgba(255,255,255,.12);}
+.ml-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;overflow:hidden;}
+.ml-entry{display:flex;align-items:center;gap:10px;padding:7px 12px 7px 14px;margin:1px 8px;border-radius:10px;cursor:pointer;transition:all .16s cubic-bezier(.22,1,.36,1);position:relative;}
+.ml-entry:hover{background:rgba(255,255,255,.05);}
+.ml-entry:active{transform:scale(.98);}
+.ml-av{width:32px;height:32px;border-radius:50%;background:var(--panel);border:1px solid var(--border);font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;}
 .ml-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
 .ml-status{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--channel);}
-.ml-name{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .14s;}
-.ml-entry:hover .ml-name{color:rgba(255,255,255,.8);}
+.ml-name{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .14s;}
+.ml-entry:hover .ml-name{color:rgba(255,255,255,.9);}
+.ml-badges{display:flex;align-items:center;gap:3px;margin-top:1px;}
+.ml-badges img{width:14px;height:14px;object-fit:contain;}
+.ml-custom-status{font-size:10.5px;color:rgba(255,255,255,.2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;}
 .discover-scroll{flex:1;overflow-y:auto;padding:28px;scroll-behavior:smooth;}
 .disc-hero{background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(255,249,62,.1);border-radius:24px;padding:42px 40px;margin-bottom:30px;position:relative;overflow:hidden;}
 .disc-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(255,249,62,.06),transparent 55%),radial-gradient(ellipse at 80% 80%,rgba(62,207,110,.04),transparent 50%);pointer-events:none;}
@@ -1049,39 +1063,37 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .toast.success{border-left:3px solid var(--green);color:#a3e8b8;}
 .toast.error{border-left:3px solid var(--red);color:#fca5a5;}
 .toast.info{border-left:3px solid var(--accent);color:var(--accent);}
-.ctx-menu{position:fixed;z-index:9999;background:rgba(16,20,32,.92);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:6px 0;min-width:230px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.04);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:ctxIn .1s cubic-bezier(.22,1,.36,1);display:none;overflow:hidden;}
+.ctx-menu{position:fixed;z-index:9999;background:rgba(14,17,26,.96);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:6px 0;min-width:220px;max-width:280px;box-shadow:0 12px 48px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.03);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);animation:ctxIn .14s cubic-bezier(.22,1,.36,1);display:none;overflow:hidden;}
 .ctx-menu.ctx-visible{display:block;}
 @keyframes callPulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.4);opacity:0}}
 @keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
-@keyframes ctxIn{from{opacity:0;transform:scale(.95) translateY(-3px);}to{opacity:1;transform:none;}}
+@keyframes ctxIn{from{opacity:0;transform:scale(.96) translateY(-4px);}to{opacity:1;transform:none;}}
 @keyframes ctxRipple{0%{transform:scale(0);opacity:.18;}100%{transform:scale(2.5);opacity:0;}}
 @keyframes ctxCheck{0%{stroke-dashoffset:20;}100%{stroke-dashoffset:0;}}
-.ctx-group{padding:4px 8px;}
-.ctx-group+.ctx-group{border-top:1px solid rgba(255,255,255,.05);margin-left:8px;margin-right:8px;padding-top:4px;}
-.ctx-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:500;color:rgba(220,228,240,.8);cursor:pointer;transition:background .12s,color .12s,transform .08s;position:relative;overflow:hidden;min-height:34px;}
-.ctx-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.95);}
-.ctx-item:hover::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:2.5px;height:55%;background:var(--accent);border-radius:0 2px 2px 0;opacity:1;}
-.ctx-item:active{transform:scale(.98);}
-.ctx-item .ctx-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.55;transition:opacity .12s;}
-.ctx-item:hover .ctx-icon{opacity:.9;}
+.ctx-group{padding:4px 6px;}
+.ctx-group+.ctx-group{border-top:1px solid rgba(255,255,255,.04);margin:2px 10px 0;padding-top:4px;}
+.ctx-item{display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:8px;font-size:13px;font-weight:500;color:rgba(220,228,240,.75);cursor:pointer;transition:background .1s,color .1s,transform .06s;position:relative;overflow:hidden;min-height:32px;}
+.ctx-item:hover{background:rgba(255,249,62,.06);color:rgba(255,255,255,.95);}
+.ctx-item:active{transform:scale(.97);background:rgba(255,249,62,.1);}
+.ctx-item .ctx-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.5;transition:opacity .1s;}
+.ctx-item:hover .ctx-icon{opacity:.85;}
 .ctx-item .ctx-icon svg{width:15px;height:15px;}
 .ctx-item .ctx-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ctx-item .ctx-hint{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.18);margin-left:auto;padding-left:12px;flex-shrink:0;font-family:'SF Mono','Cascadia Code',monospace;}
+.ctx-item .ctx-hint{font-size:10px;font-weight:600;color:rgba(255,255,255,.14);margin-left:auto;padding-left:12px;flex-shrink:0;font-family:'SF Mono','Cascadia Code',monospace;background:rgba(255,255,255,.04);padding:2px 6px;border-radius:4px;}
 .ctx-item.danger{color:rgba(248,113,113,.8);}
 .ctx-item.danger:hover{background:rgba(248,113,113,.08);color:rgba(248,113,113,.95);}
-.ctx-item.danger:hover::before{background:var(--red);}
-.ctx-item.danger .ctx-icon{opacity:.55;}
-.ctx-item.danger:hover .ctx-icon{opacity:.9;}
-.ctx-item.disabled{opacity:.3;pointer-events:none;}
-.ctx-section-label{padding:8px 12px 4px;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.18);}
-.ctx-sep{height:1px;background:rgba(255,255,255,.05);margin:4px 8px;}
+.ctx-item.danger .ctx-icon{opacity:.5;}
+.ctx-item.danger:hover .ctx-icon{opacity:.85;}
+.ctx-item.disabled{opacity:.25;pointer-events:none;}
+.ctx-section-label{padding:8px 12px 3px;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.15);}
+.ctx-sep{height:1px;background:rgba(255,255,255,.04);margin:3px 10px;}
 /* Mobile bottom-sheet context menu */
 @media(max-width:768px){
-.ctx-menu{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;max-width:100%!important;width:100%!important;border-radius:18px 18px 0 0!important;max-height:70vh;overflow-y:auto;animation:ctxSlideUp .2s cubic-bezier(.22,1,.36,1)!important;padding-bottom:env(safe-area-inset-bottom,8px);}
-.ctx-item{min-height:44px;padding:10px 16px;font-size:14px;}
+.ctx-menu{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;max-width:100%!important;width:100%!important;border-radius:16px 16px 0 0!important;max-height:65vh;overflow-y:auto;animation:ctxSlideUp .22s cubic-bezier(.22,1,.36,1)!important;padding-bottom:env(safe-area-inset-bottom,8px);border-bottom:none!important;}
+.ctx-item{min-height:44px;padding:10px 16px;font-size:14.5px;border-radius:10px;}
 .ctx-group{padding:4px 10px;}
 .ctx-section-label{padding:10px 16px 5px;font-size:10px;}
-.ctx-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9998;animation:fadeIn .15s;}
+.ctx-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;animation:fadeIn .15s;backdrop-filter:blur(3px);}
 }
 @keyframes ctxSlideUp{from{opacity:0;transform:translateY(100%);}to{opacity:1;transform:translateY(0);}}
 .notif-panel{position:fixed;top:52px;right:0;width:380px;max-height:calc(100vh - 60px);background:linear-gradient(165deg,var(--sidebar),rgba(8,10,18,.98));border:1.5px solid rgba(255,255,255,.08);border-right:none;border-radius:20px 0 0 20px;box-shadow:-12px 0 48px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04);z-index:500;transform:translateX(100%);transition:transform .25s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;backdrop-filter:blur(16px);}
@@ -2738,18 +2750,30 @@ function saveLocal() {
   if (!CU?.username) return;
   localStorage.setItem('ftz_current', CU.username);
   localStorage.setItem('fortized_current_user', CU.username);
-  localStorage.setItem('ftz_user_' + CU.username, JSON.stringify(CU));
+  try { localStorage.setItem('ftz_user_' + CU.username, JSON.stringify(CU)); } catch(e) { console.warn('localStorage save failed:', e); }
 }
-async function saveUser() {
+let _saveUserTimer = null;
+let _saveUserPromise = null;
+async function saveUser(immediate) {
   saveLocal();
-  try {
-    await FortizedSocial.saveUserObject(CU);
-  } catch(e) {
-    console.warn('saveUser failed, retrying:', e);
-    // Retry once after 1 second on failure
-    try { await new Promise(r => setTimeout(r, 1000)); await FortizedSocial.saveUserObject(CU); }
-    catch(e2) { console.error('saveUser retry failed:', e2); toast('Failed to save data. Check your connection.', 'error'); }
-  }
+  if (!immediate && _saveUserTimer) clearTimeout(_saveUserTimer);
+  const doSave = async () => {
+    if (_saveUserPromise) await _saveUserPromise.catch(()=>{});
+    _saveUserPromise = (async () => {
+      try {
+        await FortizedSocial.saveUserObject(CU);
+      } catch(e) {
+        console.warn('saveUser failed, retrying:', e);
+        try { await new Promise(r => setTimeout(r, 1000)); await FortizedSocial.saveUserObject(CU); }
+        catch(e2) { console.error('saveUser retry failed:', e2); toast('Failed to save data. Check your connection.', 'error'); }
+      } finally { _saveUserPromise = null; }
+    })();
+    return _saveUserPromise;
+  };
+  if (immediate) return doSave();
+  return new Promise(resolve => {
+    _saveUserTimer = setTimeout(() => { doSave().then(resolve).catch(resolve); }, 300);
+  });
 }
 // Sync a local bastion's data to the global bastions collection
 async function _syncBastionToGlobal(bastionIdx) {
@@ -2865,10 +2889,14 @@ function _silentSendEnd(btn) {
     setTimeout(() => { window._sendSilent = false; }, 100);
   }
 }
-function scrollBottom(id) {
+function scrollBottom(id, instant) {
   const el = document.getElementById(id);
   if (el) {
-    el.scrollTop = el.scrollHeight;
+    if (instant) {
+      el.scrollTop = el.scrollHeight;
+    } else {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }
     // Update state if tracked
     if (_chatAutoScroll[el.id]) _chatAutoScroll[el.id].atBottom = true;
   }
@@ -3042,12 +3070,14 @@ function showView(v) {
   if (vEl) {
     vEl.style.display = 'flex';
     vEl.classList.add('active');
-    // Fade in
+    // Smooth fade + slide in
     vEl.style.opacity = '0';
+    vEl.style.transform = 'translateY(4px)';
     requestAnimationFrame(() => {
-      vEl.style.transition = 'opacity .18s ease';
+      vEl.style.transition = 'opacity .22s cubic-bezier(.22,1,.36,1), transform .22s cubic-bezier(.22,1,.36,1)';
       vEl.style.opacity = '1';
-      setTimeout(() => { vEl.style.transition = ''; }, 220);
+      vEl.style.transform = 'translateY(0)';
+      setTimeout(() => { vEl.style.transition = ''; vEl.style.transform = ''; }, 260);
     });
   }
 
@@ -4263,7 +4293,7 @@ async function loadDMMessages(username) {
   try {
     const msgs = await FortizedSocial.getDMMessages(CU.username, username);
     renderMessages(msgsEl, msgs||[], 'dm');
-    scrollBottom('dm-msgs');
+    scrollBottom('dm-msgs', true);
     _attachDMLiveEdits(CU.username, username);
     _dmListener = FortizedSocial.listenDM(CU.username, username, msg => {
       if (curDM!==username) return;
@@ -4530,43 +4560,83 @@ function showGCMemberPanel(meta) {
   document.getElementById('gc-member-panel')?.remove();
   const panel = document.createElement('div');
   panel.id = 'gc-member-panel';
-  panel.style.cssText = 'width:240px;min-width:240px;background:var(--channel);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;';
+  panel.style.cssText = 'width:260px;min-width:260px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;';
   const isOwner = meta.owner === CU.username;
+  const memberCount = (meta.members||[]).length;
   panel.innerHTML = `
-    <div style="padding:18px 14px 12px;border-bottom:1px solid var(--border);">
+    <div style="padding:16px 14px 12px;border-bottom:1px solid rgba(255,255,255,.04);">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${meta.emoji||'👥'}</div>
-        <div>
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;">${escapeHTML(meta.name)}</div>
-          <div style="font-size:11px;color:var(--muted);">${(meta.members||[]).length} members</div>
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${meta.emoji||'👥'}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(meta.name)}</div>
+          <div style="font-size:10.5px;color:var(--muted);">${memberCount} member${memberCount!==1?'s':''}</div>
         </div>
       </div>
       ${isOwner ? `
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button onclick="renameGroupChat('${escapeHTML(meta.id)}')" style="flex:1;padding:6px 10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:12px;color:var(--muted-light);">✏️ Rename</button>
-        <button onclick="addMembersToGC('${escapeHTML(meta.id)}')" style="flex:1;padding:6px 10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:12px;color:var(--muted-light);">➕ Add</button>
+      <div style="display:flex;gap:6px;">
+        <button onclick="renameGroupChat('${escapeHTML(meta.id)}')" style="flex:1;padding:7px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:9px;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--muted-light);transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.07)'" onmouseleave="this.style.background='rgba(255,255,255,.04)'">Rename</button>
+        <button onclick="addMembersToGC('${escapeHTML(meta.id)}')" style="flex:1;padding:7px 10px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:9px;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--accent);transition:all .15s;" onmouseenter="this.style.background='rgba(255,249,62,.1)'" onmouseleave="this.style.background='rgba(255,249,62,.06)'">+ Add</button>
       </div>` : `
-      <button onclick="leaveGroupChat('${escapeHTML(meta.id)}')" style="width:100%;padding:7px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:9px;cursor:pointer;font-size:12px;color:var(--red);">Leave Group</button>`}
+      <button onclick="leaveGroupChat('${escapeHTML(meta.id)}')" style="width:100%;padding:7px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:9px;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--red);transition:all .15s;" onmouseenter="this.style.background='rgba(248,113,113,.1)'" onmouseleave="this.style.background='rgba(248,113,113,.06)'">Leave Group</button>`}
     </div>
-    <div style="padding:12px 14px;flex:1;overflow-y:auto;">
-      <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Members — ${(meta.members||[]).length}</div>
-      ${(meta.members||[]).map(m=>`
-        <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;cursor:pointer;transition:background .1s;" onclick="showMiniProfilePreview('${escapeHTML(m)}',this)" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='transparent'">
-          <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,m,28)}</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(m)}</div>
-            ${m===meta.owner?'<div style="font-size:10px;color:var(--accent);font-weight:700;">Owner</div>':''}
-          </div>
-          ${isOwner && m!==CU.username ? `<button onclick="event.stopPropagation();kickFromGC('${escapeHTML(meta.id)}','${escapeHTML(m)}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:5px;" title="Kick" onmouseenter="this.style.color='var(--red)'" onmouseleave="this.style.color='var(--muted)'">✕</button>`:''}
-        </div>`).join('')}
+    <div style="padding:8px 10px 4px;">
+      <div style="position:relative;"><svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search members..." oninput="_filterGCMembers(this.value)" style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:7px 12px 7px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:#fff;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'"></div>
+    </div>
+    <div style="padding:6px 6px;flex:1;overflow-y:auto;">
+      <div class="ml-role-header" style="margin-top:4px;">Owner</div>
+      ${(meta.members||[]).filter(m=>m===meta.owner).map(m=>_buildGCMemberEntry(m, meta, isOwner)).join('')}
+      <div class="ml-role-header">Members <span class="ml-role-count">— ${memberCount - 1}</span></div>
+      ${(meta.members||[]).filter(m=>m!==meta.owner).map(m=>_buildGCMemberEntry(m, meta, isOwner)).join('')}
     </div>
     ${isOwner ? `
-    <div style="padding:10px 14px;border-top:1px solid var(--border);">
-      <button onclick="deleteGroupChat('${escapeHTML(meta.id)}')" style="width:100%;padding:8px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:9px;cursor:pointer;font-size:12px;color:var(--red);">🗑 Delete Group</button>
+    <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.04);">
+      <button onclick="deleteGroupChat('${escapeHTML(meta.id)}')" style="width:100%;padding:8px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:9px;cursor:pointer;font-size:12px;font-weight:600;color:var(--red);transition:all .15s;" onmouseenter="this.style.background='rgba(248,113,113,.1)'" onmouseleave="this.style.background='rgba(248,113,113,.06)'">Delete Group</button>
     </div>` : ''}`;
   // Inject into DMs view
   const dmsView = document.getElementById('view-dms');
   if (dmsView) dmsView.appendChild(panel);
+  // Deferred pfp loading for GC members
+  (meta.members||[]).forEach(m => {
+    if (m === CU.username) return;
+    setTimeout(() => {
+      FortizedSocial.getUserByName(m).then(ud => {
+        if (!ud) return;
+        const entry = panel.querySelector(`.ml-entry[data-member="${CSS.escape(m)}"]`);
+        if (!entry) return;
+        const nameEl = entry.querySelector('.ml-name');
+        if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
+        if (ud.pfp) {
+          const avWrap = entry.querySelector('.gc-ml-av');
+          if (avWrap) avWrap.innerHTML = `<img src="${ud.pfp}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">`;
+        }
+      }).catch(()=>{});
+    }, 80);
+  });
+}
+function _buildGCMemberEntry(m, meta, isOwner) {
+  const isMe = m === CU.username;
+  const displayN = isMe ? (CU.displayName||CU.username) : m;
+  const pfpSrc = isMe ? CU.pfp : null;
+  const isGCOwner = m === meta.owner;
+  return `<div class="ml-entry" data-member="${escapeHTML(m)}" onclick="showMiniProfilePreview('${escapeHTML(m)}',this)">
+    <div class="gc-ml-av" style="width:30px;height:30px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30)}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:4px;">
+        <div class="ml-name" style="color:${isGCOwner?'var(--accent)':'rgba(255,255,255,.6)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
+        ${isGCOwner?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);padding:1px 5px;border-radius:4px;flex-shrink:0;">OWNER</span>':''}
+      </div>
+    </div>
+    ${isOwner && m!==CU.username ? `<button onclick="event.stopPropagation();kickFromGC('${escapeHTML(meta.id)}','${escapeHTML(m)}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:6px;transition:all .15s;opacity:0;" onmouseenter="this.style.color='var(--red)';this.style.opacity='1'" onmouseleave="this.style.color='var(--muted)';this.style.opacity='0'" title="Kick">✕</button>`:''}
+  </div>`;
+}
+function _filterGCMembers(query) {
+  const q = query.toLowerCase().trim();
+  const panel = document.getElementById('gc-member-panel');
+  if (!panel) return;
+  panel.querySelectorAll('.ml-entry').forEach(entry => {
+    const name = (entry.dataset.member || entry.textContent || '').toLowerCase();
+    entry.style.display = !q || name.includes(q) ? '' : 'none';
+  });
 }
 
 // ── GC messages ────────────────────────────────────
@@ -4578,7 +4648,7 @@ async function loadGCMessages(gcId) {
     const snap = await firebase.database().ref('groupChats/'+gcId+'/messages').orderByKey().get();
     const msgs = snap.exists() ? Object.values(snap.val()) : [];
     renderMessages(msgsEl, msgs, 'gc');
-    scrollBottom('gc-msgs');
+    scrollBottom('gc-msgs', true);
     // Live listener
     const ref = firebase.database().ref('groupChats/'+gcId+'/messages');
     const handler = ref.on('child_added', snap => {
@@ -5225,7 +5295,7 @@ async function loadChannelMessages(idx) {
   try {
     const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name);
     renderMessages(msgsEl,msgs||[],'ch');
-    scrollBottom('ch-msgs-'+idx);
+    scrollBottom('ch-msgs-'+idx, true);
     _attachChLiveEdits(b.globalId||b.name, ch.name);
     _chListener=FortizedSocial.listenBastionChannel(b.globalId||b.name,ch.name,msg=>{
       if (curChannel!==idx) return;
@@ -5656,9 +5726,7 @@ function deleteMsg(msgId, context) {
         if (bid && chName) ref = firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`);
       }
       if (ref) {
-        await ref.remove();
-        // Firebase child_removed listener will handle DOM removal for all clients
-        // But also remove locally for immediate feedback
+        // Animate out immediately for instant feedback
         const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
         if (row) {
           if (row.classList.contains('msg-first')) {
@@ -5679,9 +5747,17 @@ function deleteMsg(msgId, context) {
               FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}}).catch(()=>{});
             }
           }
-          row.remove();
+          row.style.transition = 'opacity .2s ease, transform .2s ease, max-height .25s ease';
+          row.style.opacity = '0';
+          row.style.transform = 'translateX(-12px)';
+          row.style.maxHeight = row.offsetHeight + 'px';
+          row.style.overflow = 'hidden';
+          setTimeout(() => { row.style.maxHeight = '0'; row.style.padding = '0'; row.style.margin = '0'; }, 80);
+          setTimeout(() => row.remove(), 300);
         }
         toast('Message deleted','success');
+        // Remove from Firebase in background (no await needed for UI)
+        ref.remove().catch(e => console.warn('Firebase delete error:', e));
       } else {
         toast('Could not determine message location','error');
       }
@@ -5847,57 +5923,81 @@ async function renderMemberList() {
   // Build member list: always include self + owner + anyone in memberRoles + fetched list
   let members = [];
   try { members = await FortizedSocial.getBastionMembers(b.globalId||b.name) || []; } catch {}
-  // Ensure at minimum owner and current user are shown
   const guaranteed = [b.owner, CU.username].filter(Boolean);
   guaranteed.forEach(u => { if (!members.includes(u)) members.push(u); });
   if (!members.length) members = guaranteed;
-  // Also include anyone who has roles assigned
   const extraFromRoles = Object.keys(b.memberRoles||{});
   extraFromRoles.forEach(u => { if (!members.includes(u)) members.push(u); });
-  // Deduplicate
   members = [...new Set(members)].filter(Boolean);
 
   const roles = b.roles || [];
   const memberRoles = b.memberRoles || {};
-  const isOwner = b.owner === CU.username;
+  const deployedBots = b.deployedBots || [];
+  const totalCount = members.length + deployedBots.length;
 
-  // Group by roles
+  // Group members by their highest role
   const ownerList = members.filter(u => u === b.owner);
-  const onlineList = members.filter(u => u !== b.owner);
+  const roleGroups = {};
+  const noRole = [];
+  members.filter(u => u !== b.owner).forEach(u => {
+    const rids = memberRoles[u] || [];
+    const primaryRole = roles.find(r => rids.includes(r.id));
+    if (primaryRole) {
+      if (!roleGroups[primaryRole.id]) roleGroups[primaryRole.id] = { role: primaryRole, members: [] };
+      roleGroups[primaryRole.id].members.push(u);
+    } else {
+      noRole.push(u);
+    }
+  });
 
   let html = '';
+  // Header with search
+  html += `<div class="ml-header"><span class="ml-header-title">Members</span><span class="ml-header-count">${totalCount}</span></div>`;
+  html += `<div class="ml-search"><svg class="ml-search-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search members..." oninput="_filterMemberList(this.value)"></div>`;
+
   // Owner section
   if (ownerList.length) {
-    html += '<div class="ml-role-header">Owner</div>';
+    html += `<div class="ml-role-header"><img src="/fortized badges/superadmin.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Owner</div>`;
     ownerList.forEach(u => html += buildMemberEntry(u, roles, memberRoles));
   }
-  // Members section
-  if (onlineList.length) {
-    html += `<div class="ml-role-header">Members — ${onlineList.length}</div>`;
-    onlineList.forEach(u => html += buildMemberEntry(u, roles, memberRoles));
+  // Role-grouped sections (sorted by role position)
+  const sortedGroups = Object.values(roleGroups).sort((a,b) => {
+    const aIdx = roles.indexOf(a.role);
+    const bIdx = roles.indexOf(b.role);
+    return aIdx - bIdx;
+  });
+  sortedGroups.forEach(g => {
+    html += `<div class="ml-role-header"><span style="width:6px;height:6px;border-radius:50%;background:${g.role.color||'var(--muted)'};flex-shrink:0;"></span> ${escapeHTML(g.role.name)} <span class="ml-role-count">— ${g.members.length}</span></div>`;
+    g.members.forEach(u => html += buildMemberEntry(u, roles, memberRoles));
+  });
+  // Members without roles
+  if (noRole.length) {
+    html += `<div class="ml-role-header">Members <span class="ml-role-count">— ${noRole.length}</span></div>`;
+    noRole.forEach(u => html += buildMemberEntry(u, roles, memberRoles));
   }
-  // Bots section — show deployed bots
-  const deployedBots = b.deployedBots || [];
+  // Bots section
   if (deployedBots.length) {
-    html += `<div class="ml-role-header">Bots — ${deployedBots.length}</div>`;
-    deployedBots.forEach(bot => {
-      html += buildBotMemberEntry(bot);
-    });
+    html += `<div class="ml-role-header"><img src="/fortized badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">— ${deployedBots.length}</span></div>`;
+    deployedBots.forEach(bot => html += buildBotMemberEntry(bot));
   }
   ml.innerHTML = html;
+}
+function _filterMemberList(query) {
+  const q = query.toLowerCase().trim();
+  document.querySelectorAll('.ml-entry').forEach(entry => {
+    const name = (entry.dataset.member || entry.textContent || '').toLowerCase();
+    entry.style.display = !q || name.includes(q) ? '' : 'none';
+  });
 }
 
 function buildMemberEntry(u, roles, memberRoles) {
   const rids = memberRoles[u] || [];
   const primaryRole = roles.find(r => rids.includes(r.id));
-  const roleTag = primaryRole
-    ? `<span class="role-tag" style="color:${primaryRole.color};background:${primaryRole.color}22;border:1px solid ${primaryRole.color}44;white-space:nowrap;flex-shrink:0;">${escapeHTML(primaryRole.name)}</span>`
-    : '';
   const isMe = u === CU.username;
   const displayN = isMe ? (CU.displayName||CU.username) : u;
   const pfpSrc = isMe ? CU.pfp : (_pfpCache[u] || null);
   const status = isMe ? (CU.status||'online') : 'online';
-  // Defer status/profile fetches to avoid UI freeze
+  // Deferred fetch for profile/status data
   if (!isMe) {
     setTimeout(() => {
       subscribeProfileStatus(u);
@@ -5911,22 +6011,38 @@ function buildMemberEntry(u, roles, memberRoles) {
         if (!entry) return;
         const nameEl = entry.querySelector('.ml-name');
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
-        const avImg = entry.querySelector('img');
-        if (ud.pfp && !avImg) {
-          const avWrap = entry.querySelector('div[style*="position:relative"]');
-          if (avWrap) { const imgEl = avWrap.querySelector('span'); if(imgEl) imgEl.outerHTML = `<img src="${ud.pfp}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">`; }
+        // Update avatar
+        const avWrap = entry.querySelector('.ml-av-wrap');
+        if (ud.pfp && avWrap) {
+          const existingImg = avWrap.querySelector('img:not(.profile-status-dot)');
+          if (!existingImg) avWrap.innerHTML = `<img src="${ud.pfp}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'"><span class="profile-status-dot" data-for="${u}" style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:${FtzStatus.color(status)};border:2px solid var(--channel);"></span>`;
         }
+        // Show badges
+        const badgesEl = entry.querySelector('.ml-badges');
+        if (badgesEl && typeof getUserBadges === 'function') {
+          const badges = getUserBadges(ud).slice(0, 3);
+          if (badges.length) badgesEl.innerHTML = badges.map(b => `<img src="${b.img}" title="${escapeHTML(b.tooltip||'')}" style="width:14px;height:14px;object-fit:contain;">`).join('');
+        }
+        // Show custom status
+        const csEl = entry.querySelector('.ml-custom-status');
+        if (csEl && ud.customStatus) csEl.textContent = ud.customStatus;
       }).catch(()=>{});
     }, 50);
   }
+  const staffRole = getStaffRole(u);
+  const staffBadge = staffRole ? `<img src="/fortized badges/${staffRole === 'superadmin' ? 'superadmin' : staffRole === 'admin' ? 'admin' : 'moderator'}.png" style="width:14px;height:14px;object-fit:contain;" title="${staffRole}">` : '';
+
   return `<div class="ml-entry" data-member="${escapeHTML(u)}" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)">
-    <div style="position:relative;display:inline-flex;flex-shrink:0;">
-      ${buildAvatarHTML(pfpSrc, displayN, 30)}
+    <div class="ml-av-wrap" style="position:relative;display:inline-flex;flex-shrink:0;">
+      ${buildAvatarHTML(pfpSrc, displayN, 32)}
       <span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:${FtzStatus.color(status)};border:2px solid var(--channel);"></span>
     </div>
     <div class="ml-info" style="min-width:0;flex:1;">
-      <div class="ml-name" style="color:${primaryRole?.color||'var(--muted-light)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
-      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${roleTag}${renderRepShield(CU?.bastions?.[curBastion]?.globalId||CU?.bastions?.[curBastion]?.name,u)}</div>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <div class="ml-name" style="color:${primaryRole?.color||'rgba(255,255,255,.6)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
+        <span class="ml-badges">${staffBadge}</span>
+      </div>
+      <div class="ml-custom-status"></div>
     </div>
   </div>`;
 }
@@ -6656,7 +6772,7 @@ function updateDOBField(){
     const rail=document.getElementById('rail');
     if(rail&&!document.getElementById('admin-rail-btn')){
       const role = getStaffRole(CU.username);
-      const roleIcon = role === 'superadmin' ? '👑' : role === 'admin' ? '🛡️' : '🔧';
+      const roleIcon = role === 'superadmin' ? '<img src="/fortized badges/superadmin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">' : role === 'admin' ? '<img src="/fortized badges/admin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">' : '<img src="/fortized badges/moderator.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">';
       const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
       const btn=document.createElement('div');
       btn.id='admin-rail-btn';btn.className='rail-btn';
@@ -10435,7 +10551,21 @@ async function _translateMessage(msgRow, text) {
 function _closeCtxMenu() {
   const menu = document.getElementById('ctx-menu');
   const overlay = document.getElementById('ctx-overlay');
-  if (menu) { menu.classList.remove('ctx-visible'); menu.innerHTML = ''; }
+  if (menu && menu.classList.contains('ctx-visible')) {
+    menu.style.transition = 'opacity .1s ease, transform .1s ease';
+    menu.style.opacity = '0';
+    menu.style.transform = 'scale(.97)';
+    setTimeout(() => {
+      menu.classList.remove('ctx-visible');
+      menu.innerHTML = '';
+      menu.style.transition = '';
+      menu.style.opacity = '';
+      menu.style.transform = '';
+    }, 100);
+  } else if (menu) {
+    menu.classList.remove('ctx-visible');
+    menu.innerHTML = '';
+  }
   if (overlay) overlay.style.display = 'none';
 }
 
@@ -10458,13 +10588,27 @@ function showCtxMenu(x, y, groups) {
       lbl.textContent = group.label;
       gDiv.appendChild(lbl);
     }
+    let itemIdx = 0;
     group.items.forEach(item => {
       const el = document.createElement('div');
       el.className = 'ctx-item' + (item.danger ? ' danger' : '') + (item.disabled ? ' disabled' : '');
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(-6px)';
       el.innerHTML =
         `<span class="ctx-icon">${item.icon || ''}</span>` +
         `<span class="ctx-label">${item.label}</span>` +
         (item.hint ? `<span class="ctx-hint">${item.hint}</span>` : '');
+
+      // Staggered fade-in
+      const delay = itemIdx * 20;
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          el.style.transition = 'opacity .12s ease, transform .12s ease';
+          el.style.opacity = '1';
+          el.style.transform = 'translateX(0)';
+        }, delay);
+      });
+      itemIdx++;
 
       if (item.action && !item.disabled) {
         el.onclick = ev => {
@@ -10472,12 +10616,13 @@ function showCtxMenu(x, y, groups) {
           // Copy action feedback
           if (item.copyFeedback) {
             const iconSpan = el.querySelector('.ctx-icon');
-            const origIcon = iconSpan.innerHTML;
             item.action();
             iconSpan.innerHTML = _ctxSvg('check');
             iconSpan.style.opacity = '1';
             el.querySelector('.ctx-label').textContent = 'Copied!';
-            setTimeout(() => _closeCtxMenu(), 500);
+            el.style.background = 'rgba(62,207,110,.08)';
+            el.style.color = '#3ecf6e';
+            setTimeout(() => _closeCtxMenu(), 400);
             return;
           }
           item.action();
@@ -11671,6 +11816,12 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
                 :`<img src="${escapeHTML(mediaSrc)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="this.style.display='none'">`}
               </div>
             </div>`:''}
+            <!-- AI Feedback -->
+            <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.04);">
+              <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.25);align-self:center;margin-right:4px;">AI Verdict:</span>
+              <button onclick="nsfwAIFeedback(${i},true)" style="padding:6px 14px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:8px;color:#3ecf6e;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;" onmouseover="this.style.background='rgba(62,207,110,.15)'" onmouseout="this.style.background='rgba(62,207,110,.08)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> AI was Right (NSFW)</button>
+              <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> AI was Wrong (NOT NSFW)</button>
+            </div>
             <!-- Actions (same style as reports) -->
             ${(()=>{
               const uRole = target ? getStaffRole(target) : null;
@@ -12730,6 +12881,43 @@ function reviewNSFW(idx, action) {
     toast(action === 'approve' ? 'Content approved' : action === 'delete' ? 'Deleted forever' : 'Content ' + action + 'd', 'success');
     _loadAdminPage('nsfw_queue');
   });
+}
+
+async function nsfwAIFeedback(idx, aiWasCorrect) {
+  const queue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
+  const item = queue[idx];
+  if (!item) return;
+  const feedback = {
+    itemId: item.id || idx,
+    aiLabel: item.aiLabel || 'UNKNOWN',
+    aiScore: item.aiScore || 0,
+    correct: aiWasCorrect,
+    hash: item.hash || null,
+    reviewedBy: CU.username,
+    reviewedAt: new Date().toISOString()
+  };
+  // Store feedback in Firebase for AI learning
+  try {
+    await firebase.database().ref('admin/nsfw_ai_feedback').push(feedback);
+    // If AI was wrong, store hash as safe so model can learn
+    if (!aiWasCorrect && item.hash) {
+      await firebase.database().ref('admin/nsfw_safe_hashes/' + item.hash.replace(/[.#$/\[\]]/g,'_')).set({
+        hash: item.hash,
+        markedSafeBy: CU.username,
+        markedAt: new Date().toISOString()
+      });
+    }
+    // If AI was right, store hash as confirmed NSFW for future auto-blocking
+    if (aiWasCorrect && item.hash) {
+      if (!_nsfwBannedHashes.includes(item.hash)) {
+        _nsfwBannedHashes.push(item.hash);
+        localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(_nsfwBannedHashes));
+        try { firebase.database().ref('admin/nsfw_banned_hashes').set(_nsfwBannedHashes); } catch {}
+      }
+    }
+  } catch(e) { console.warn('AI feedback save failed:', e); }
+  logAudit('nsfw_ai_feedback', item.uploader || '?', aiWasCorrect ? 'AI confirmed correct' : 'AI marked incorrect');
+  toast(aiWasCorrect ? 'AI verdict confirmed — hash flagged' : 'AI verdict corrected — hash marked safe', 'success');
 }
 
 function addStaff(role) {
@@ -17629,7 +17817,15 @@ function _liveUpdateMessage(snap, context) {
 
 function _liveRemoveMessage(snap) {
   const row = document.querySelector(`[data-msgid="${CSS.escape(snap.key)}"]`);
-  if (row) row.remove();
+  if (row) {
+    row.style.transition = 'opacity .2s ease, transform .2s ease, max-height .25s ease';
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(-12px)';
+    row.style.maxHeight = row.offsetHeight + 'px';
+    row.style.overflow = 'hidden';
+    setTimeout(() => { row.style.maxHeight = '0'; row.style.padding = '0'; row.style.margin = '0'; }, 80);
+    setTimeout(() => row.remove(), 300);
+  }
 }
 
 let _dmEditListener = null, _dmRemoveListener = null;
@@ -17800,10 +17996,10 @@ function renderAtelierTab(tab) {
     el.innerHTML = `
       <!-- Radiance status pill -->
       ${hasPlus?`<div style="display:flex;align-items:center;gap:8px;background:rgba(255,157,62,.1);border:1px solid rgba(255,157,62,.25);border-radius:14px;padding:10px 16px;margin-bottom:24px;">
-        <span style="font-size:15px;">🌟</span><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ff9d3e;">Radiance+ Active · ${daysPlus} days left</span>
+        <img src="/fortized badges/radiance+.png" style="width:18px;height:18px;object-fit:contain;"><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ff9d3e;">Radiance+ Active · ${daysPlus} days left</span>
         <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:none;border:1px solid rgba(255,157,62,.25);border-radius:8px;color:#ff9d3e;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">Manage</button>
       </div>`:hasRad?`<div style="display:flex;align-items:center;gap:8px;background:rgba(254,248,61,.05);border:1px solid rgba(254,248,61,.15);border-radius:14px;padding:10px 16px;margin-bottom:24px;">
-        <span style="font-size:15px;">✨</span><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ffd93e;">Radiance Active · ${daysRad} days left</span>
+        <img src="/fortized badges/basic radiance.png" style="width:18px;height:18px;object-fit:contain;"><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ffd93e;">Radiance Active · ${daysRad} days left</span>
         <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:none;border:1px solid rgba(254,248,61,.15);border-radius:8px;color:#ffd93e;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">Manage</button>
       </div>`:''}
 
@@ -17893,12 +18089,12 @@ function renderAtelierTab(tab) {
 
       <!-- Active subscription status -->
       ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,120,62,.12),rgba(255,200,62,.06));border:1.5px solid rgba(255,160,62,.25);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
-        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.12);display:flex;align-items:center;justify-content:center;font-size:28px;">🌟</div>
+        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.12);display:flex;align-items:center;justify-content:center;"><img src="/fortized badges/radiance+.png" style="width:32px;height:32px;object-fit:contain;"></div>
         <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ff9d3e;">Radiance+ Active</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:3px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
         <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:12px;color:var(--red);font-size:12px;padding:8px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
       </div>`:hasRad?`<div style="background:rgba(255,249,62,.05);border:1.5px solid rgba(255,220,62,.15);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
-        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;font-size:28px;">✨</div>
+        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;"><img src="/fortized badges/basic radiance.png" style="width:32px;height:32px;object-fit:contain;"></div>
         <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ffd93e;">Radiance Active</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:3px;">${daysRad} days remaining · Auto-renews · 600 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
         <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:12px;color:var(--red);font-size:12px;padding:8px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
@@ -17911,7 +18107,7 @@ function renderAtelierTab(tab) {
         <!-- Basic Radiance -->
         <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,220,62,.15);border-radius:22px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,220,62,.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,220,62,.15)';this.style.transform=''">
           <div style="padding:24px 24px 18px;">
-            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px;">✨</div>
+            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><img src="/fortized badges/basic radiance.png" style="width:32px;height:32px;object-fit:contain;"></div>
             <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ffd93e;margin-bottom:5px;">Radiance</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Core perks for Fortized fans</div>
             <!-- Perk chips -->
@@ -17935,7 +18131,7 @@ function renderAtelierTab(tab) {
         <div style="background:linear-gradient(160deg,rgba(255,120,62,.07),rgba(255,200,62,.03),rgba(255,255,255,.015));border:1.5px solid rgba(255,160,62,.22);border-radius:22px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,160,62,.4)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(255,160,62,.08)'" onmouseout="this.style.borderColor='rgba(255,160,62,.22)';this.style.transform='';this.style.boxShadow='none'">
           <div class="best-ribbon">BEST VALUE</div>
           <div style="padding:24px 24px 18px;">
-            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px;">🌟</div>
+            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><img src="/fortized badges/radiance+.png" style="width:32px;height:32px;object-fit:contain;"></div>
             <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ff9d3e;margin-bottom:5px;">Radiance+</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Everything unlocked</div>
             <!-- Perk chips — basic + plus -->

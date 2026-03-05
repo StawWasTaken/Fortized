@@ -2310,15 +2310,15 @@ const FORTIZED_ACCOUNT = 'fortized';
 const FtzStatus = (() => {
   const MODES = Object.freeze({
     online:    { color: '#3ecf6e', label: 'Online',          order: 0 },
-    away:      { color: '#f59e0b', label: 'Away',            order: 1 },
+    away:      { color: '#f59e0b', label: 'Idle',            order: 1 },
     dnd:       { color: '#f87171', label: 'Do Not Disturb',  order: 2 },
     invisible: { color: '#6b7280', label: 'Invisible',       order: 3 },
     offline:   { color: '#6b7280', label: 'Offline',         order: 4 },
   });
 
   const VALID = new Set(Object.keys(MODES));
-  const IDLE_TIMEOUT_ACTIVE  = 7 * 60 * 1000; // 7 min when tab visible
-  const IDLE_TIMEOUT_HIDDEN  = 60 * 1000;      // 1 min when tab hidden
+  const IDLE_TIMEOUT_ACTIVE  = 10 * 60 * 1000; // 10 min when tab visible
+  const IDLE_TIMEOUT_HIDDEN  = 60 * 1000;       // 1 min when tab hidden
 
   const CUSTOM_DURATIONS = Object.freeze([
     { id: '30m',     label: '30 min',     ms: 30 * 60000 },
@@ -3205,10 +3205,7 @@ function updateUserbar() {
       uaStatusText.textContent = FtzStatus.label(st);
     }
   }
-  // Sync status to Firebase
-  if (CU.username && st !== 'offline') {
-    FortizedSocial.setStatus(CU.username, FtzStatus.visible(st)).catch(e => console.warn('[updateUserbar] sync failed:', e));
-  }
+  // Status sync handled by FtzStatus.set() and presence system — no redundant broadcast here
   updateOnyxDisplay();
 }
 function _isMobile() { return window.innerWidth <= 768; }
@@ -3488,7 +3485,7 @@ async function _loadRPFriends(friends, container, countEl) {
   const offline = results.filter(r => !FtzStatus.isPresent(r.status));
   if (countEl) countEl.textContent = online.length ? online.length + ' online' : '';
   container.innerHTML = [...online,...offline].map(r=>{
-    const activity = r.game ? `Playing ${escapeHTML(r.game.name)}` : r.customStatus?.text ? `${r.customStatus.emoji||''} ${escapeHTML(r.customStatus.text)}` : FtzStatus.publicLabel(r.status);
+    const activity = r.customStatus?.text ? `${r.customStatus.emoji||''} ${escapeHTML(r.customStatus.text)}` : r.game ? `Playing ${escapeHTML(r.game.name)}` : FtzStatus.publicLabel(r.status);
     return `<div class="rp-friend-item" onclick="openDMView('${escapeHTML(r.username)}')" title="${escapeHTML(activity)}">
       <div class="rp-friend-av">
         <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--panel);font-size:12px;">${buildAvatarHTML(r.pfp,r.displayName,28)}</div>
@@ -10255,7 +10252,7 @@ async function viewUserProfile(username) {
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,249,62,.35);margin-bottom:8px;">About Me</div>
           <div style="font-size:14.5px;color:rgba(255,255,255,.7);line-height:1.65;">${escapeHTML(u.bio.slice(0,400))}${u.bio.length>400?'…':''}</div>
         </div>` : ''}
-        ${u.gameActivity?.name ? `<div style="padding:14px 28px;border-bottom:1px solid rgba(255,255,255,.05);">
+        ${u.gameActivity?.name && !u.customStatus?.text ? `<div style="padding:14px 28px;border-bottom:1px solid rgba(255,255,255,.05);">
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-bottom:8px;">Playing a Game</div>
           <div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:12px;">
             <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${u.gameActivity.icon||'🎮'}</div>
@@ -16140,7 +16137,7 @@ async function saveCustomStatus() {
   const text = ((document.getElementById('status-text-input')||{}).value||'').trim();
   if (!text) { toast('Add some text!','error'); return; }
   // Get selected duration
-  const durBtn = document.querySelector('.status-dur-btn[style*="rgba(255,249,62"]');
+  const durBtn = document.querySelector('.status-dur-btn[style*="rgba(254,248,61"]');
   const duration = durBtn ? durBtn.dataset.dur : 'forever';
   setCustomStatusWithDuration(emoji, text, duration);
   document.getElementById('ftz-status-picker')?.remove();
@@ -19574,17 +19571,17 @@ function initCrossDeviceSync() {
     const changed = JSON.stringify(data) !== JSON.stringify(CU);
     if (!changed) return;
     // Selectively update UI-relevant fields
-    if (data.pfp !== CU.pfp) {
+    if (data.pfp && data.pfp !== CU.pfp) {
       CU.pfp = data.pfp;
       updateUserbar();
       // Update all avatar instances
       document.querySelectorAll('.msg-av-inner img, .ua img').forEach(img => {
-        if (img.src !== data.pfp && data.pfp) img.src = data.pfp;
+        if (img.src !== data.pfp) img.src = data.pfp;
       });
     }
     if (data.banner !== CU.banner) { CU.banner = data.banner; }
     if (data.onyx !== CU.onyx) { CU.onyx = data.onyx; updateOnyxDisplay(); }
-    if (data.status !== CU.status) { CU.status = data.status; updateUserbar(); }
+    // Don't sync status from Firebase — it's managed locally by FtzStatus to avoid conflicting states
     if (data.customStatus && JSON.stringify(data.customStatus) !== JSON.stringify(CU.customStatus)) {
       CU.customStatus = data.customStatus;
       refreshCustomStatusBubble?.();
@@ -19610,8 +19607,8 @@ function initCrossDeviceSync() {
     }
     // Update badge
     updateNotifBadge().catch(()=>{});
-    // Show system notification if supported + permission granted
-    if (Notification?.permission === 'granted' && document.hidden) {
+    // Show system notification if supported + permission granted (DND suppresses)
+    if (Notification?.permission === 'granted' && document.hidden && CU?.status !== 'dnd') {
       let title = 'Fortized';
       let body = 'You have a new notification';
       if (notif.type === 'dm') { title = notif.from || 'New Message'; body = notif.data?.preview || 'Sent you a message'; }
@@ -19639,12 +19636,14 @@ function initCrossDeviceSync() {
   }
   
   // 4. Online presence — write to Firebase on focus/blur/unload
+  // Respect user's chosen status (DND, invisible, away) instead of always broadcasting 'online'
   const presenceRef = firebase.database().ref('.info/connected');
   presenceRef.on('value', snap => {
     if (!snap.val()) return;
-    // Set online when connected
     const statusRef = firebase.database().ref('statuses/' + CU.username);
-    statusRef.set('online').catch(()=>{});
+    // Broadcast the user's visible status (invisible→offline, others stay as-is)
+    const curStatus = CU.status || 'online';
+    statusRef.set(FtzStatus.visible(curStatus)).catch(()=>{});
     // Set offline when disconnected (Firebase handles this automatically)
     statusRef.onDisconnect().set('offline');
   });
@@ -19916,6 +19915,8 @@ let _notifToastQueue = [];
 let _notifToastActive = null;
 
 function showNotifToast(notif) {
+  // DND: suppress all notification popups
+  if (CU?.status === 'dnd') return;
   // Suppress notifications from blocked or ignored users
   if (notif.from && (isUserBlocked(notif.from) || isUserIgnored(notif.from))) return;
   // Each toast stacks above the previous
@@ -19981,16 +19982,51 @@ function initNotifToasts() {
     if (age < 30000) showNotifToast(n); // only if < 30s old
     updateNotifBadge().catch(()=>{});
   });
-  // Joyster: watch friends coming online
+  // Real-time friend status subscriptions — update all UI when friends come online/go offline
+  _subscribeFriendStatuses();
+}
+
+let _friendStatusRefs = {};
+function _subscribeFriendStatuses() {
+  // Unsubscribe old
+  Object.values(_friendStatusRefs).forEach(r => { try { r.ref.off('value', r.handler); } catch {} });
+  _friendStatusRefs = {};
   const friends = CU?.friends || [];
-  if (friends.length) {
-    friends.forEach(f => {
-      try {
-        firebase.database().ref('statuses/' + f).on('value', snap => {
+  if (!friends.length) return;
+  friends.forEach(f => {
+    try {
+      const ref = firebase.database().ref('statuses/' + f);
+      const handler = ref.on('value', snap => {
+        const st = FtzStatus.sanitize(snap.val() || 'offline');
+        // Update all status dots for this user across the entire app
+        document.querySelectorAll('.profile-status-dot[data-for="'+f+'"]').forEach(el => {
+          el.style.background = FtzStatus.color(st);
         });
-      } catch {}
-    });
-  }
+        document.querySelectorAll('.profile-status-label[data-for="'+f+'"]').forEach(el => {
+          el.textContent = FtzStatus.publicLabel(st);
+        });
+        // Update DM home status dots and text
+        const homeDot = document.querySelector('.dm-home-status[data-for="'+CSS.escape(f)+'"]');
+        if (homeDot) homeDot.style.background = FtzStatus.color(st);
+        const homeText = document.querySelector('.dm-home-status-text[data-for="'+CSS.escape(f)+'"]');
+        if (homeText) homeText.textContent = FtzStatus.publicLabel(st);
+        // Refresh Active Now sidebar if it's visible (debounced)
+        _debouncedActiveNowRefresh();
+      });
+      _friendStatusRefs[f] = { ref, handler };
+    } catch {}
+  });
+}
+
+let _activeNowRefreshTimer = null;
+function _debouncedActiveNowRefresh() {
+  if (_activeNowRefreshTimer) clearTimeout(_activeNowRefreshTimer);
+  _activeNowRefreshTimer = setTimeout(() => {
+    const anEl = document.getElementById('active-now-list');
+    if (anEl) renderActiveNowSidebar('active-now-list');
+    const homeAnEl = document.getElementById('home-active-now-list');
+    if (homeAnEl) renderActiveNowSidebar('home-active-now-list');
+  }, 1500);
 }
 
 
@@ -20150,7 +20186,7 @@ async function showMiniProfilePreview(username, anchorEl) {
       <div class="mpp-section-title">About Me</div>
       <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.55;">${escapeHTML(u.bio.slice(0,150))}${u.bio.length>150?'...':''}</div>
     </div>`:''}
-    ${u.gameActivity?.name ? `<div class="mpp-section">
+    ${u.gameActivity?.name && !u.customStatus?.text ? `<div class="mpp-section">
       <div class="mpp-section-title">Playing a Game</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1px solid rgba(255,255,255,.06);">${u.gameActivity.icon||'🎮'}</div>

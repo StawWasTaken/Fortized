@@ -1551,6 +1551,9 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         if(!localStorage.getItem('ftz_current')&&!localStorage.getItem('fortized_current_user')){
           window.location.href='/login';
         }
+        // Fallback: ensure home view is visible if JS init failed
+        var vh=document.getElementById('view-home');
+        if(vh&&vh.style.display!=='flex'){vh.style.display='flex';vh.style.opacity='1';vh.classList.add('active');}
       },1500);
     }
   },10000);
@@ -6614,10 +6617,13 @@ function updateDOBField(){
   if(loader)loader.style.display='none';
   if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
 
-  saveCurrentToAccounts();
-  updateUserbar();
-  renderRailBastions();
-  if(typeof startVCListener==='function') startVCListener(CU.username);
+  // Show home view FIRST — before any setup that could throw
+  showView('home');
+
+  try { saveCurrentToAccounts(); } catch(e) { console.warn('[init] saveCurrentToAccounts:', e); }
+  try { updateUserbar(); } catch(e) { console.warn('[init] updateUserbar:', e); }
+  try { renderRailBastions(); } catch(e) { console.warn('[init] renderRailBastions:', e); }
+  try { if(typeof startVCListener==='function') startVCListener(CU.username); } catch(e) { console.warn('[init] startVCListener:', e); }
   setTimeout(initCrossDeviceSync, 800);
   setTimeout(initNotifToasts, 1200);
   // Sync blocked list from Firebase
@@ -6629,8 +6635,6 @@ function updateDOBField(){
   setTimeout(_syncIgnoreListFromFirebase, 2000);
   // Preload NSFW AI model in background so first scan is fast
   setTimeout(() => { try { _loadNSFWModel(); } catch {} }, 3000);
-
-  showView('home');
   updateNotifBadge().catch(()=>{});
 
   // Sync staff data from Firebase BEFORE checking staff access for sidebar button
@@ -6675,51 +6679,59 @@ function updateDOBField(){
   try{checkTrialLink();}catch{}
   try{checkPersonalInviteLink();}catch{}
   // Show personal invite link if already generated
-  applyRadianceFont();
-  trackRadianceTime();
+  try { applyRadianceFont(); } catch(e) { console.warn('[init] applyRadianceFont:', e); }
+  try { trackRadianceTime(); } catch(e) { console.warn('[init] trackRadianceTime:', e); }
   // Post-init setup: account switcher, periodic updates
   setTimeout(_postInitSetup, 500);
   // Check & listen for maintenance mode
-  checkMaintenanceMode();
-  _listenMaintenanceMode();
+  try { checkMaintenanceMode(); } catch(e) { console.warn('[init] checkMaintenanceMode:', e); }
+  try { _listenMaintenanceMode(); } catch(e) { console.warn('[init] _listenMaintenanceMode:', e); }
   // Listen for force-refresh and session-clear signals from admin
-  _listenForceRefresh();
-  _listenClearSessions();
+  try { _listenForceRefresh(); } catch(e) { console.warn('[init] _listenForceRefresh:', e); }
+  try { _listenClearSessions(); } catch(e) { console.warn('[init] _listenClearSessions:', e); }
   // Listen for real-time ban enforcement — kick user immediately if banned while online
   // Also auto-refresh if ban is revoked (unbanned)
   let _wasBanned = false;
-  firebase.database().ref('admin/bans/' + CU.username).on('value', snap => {
-    if (snap.exists()) { _wasBanned = true; _showBanScreen(snap.val()); }
-    else if (_wasBanned) { location.reload(); }
-  });
+  try {
+    firebase.database().ref('admin/bans/' + CU.username).on('value', snap => {
+      if (snap.exists()) { _wasBanned = true; _showBanScreen(snap.val()); }
+      else if (_wasBanned) { location.reload(); }
+    });
+  } catch(e) { console.warn('[init] ban listener:', e); }
   // Listen for real-time suspension enforcement (new path)
   // Also auto-refresh if suspension is revoked or expires
   let _wasSuspended = false;
-  firebase.database().ref('users/' + CU.username + '/suspension').on('value', snap => {
-    if (snap.exists()) {
-      const data = snap.val();
-      if (data && data.until && new Date(data.until) > new Date()) { _wasSuspended = true; _showSuspendScreen(data); }
-      else if (_wasSuspended) { location.reload(); }
-    } else if (_wasSuspended) { location.reload(); }
-  });
+  try {
+    firebase.database().ref('users/' + CU.username + '/suspension').on('value', snap => {
+      if (snap.exists()) {
+        const data = snap.val();
+        if (data && data.until && new Date(data.until) > new Date()) { _wasSuspended = true; _showSuspendScreen(data); }
+        else if (_wasSuspended) { location.reload(); }
+      } else if (_wasSuspended) { location.reload(); }
+    });
+  } catch(e) { console.warn('[init] suspension listener:', e); }
   // Listen for real-time suspension enforcement (legacy path)
-  firebase.database().ref('users/' + CU.username + '/suspendedUntil').on('value', snap => {
-    if (snap.exists() && new Date(snap.val()) > new Date()) { _wasSuspended = true; _showSuspendScreen({ until: snap.val() }); }
-    else if (_wasSuspended) { location.reload(); }
-  });
+  try {
+    firebase.database().ref('users/' + CU.username + '/suspendedUntil').on('value', snap => {
+      if (snap.exists() && new Date(snap.val()) > new Date()) { _wasSuspended = true; _showSuspendScreen({ until: snap.val() }); }
+      else if (_wasSuspended) { location.reload(); }
+    });
+  } catch(e) { console.warn('[init] suspendedUntil listener:', e); }
   // Listen for real-time warnings
-  firebase.database().ref('users/' + CU.username + '/activeWarning').on('value', snap => {
-    if (snap.exists()) {
-      const w = snap.val();
-      _showWarningOverlay(w.reason || 'Violation of Terms of Use', w.issuedBy, w.contentData || null);
-      firebase.database().ref('users/' + CU.username + '/activeWarning').remove();
-    }
-  });
+  try {
+    firebase.database().ref('users/' + CU.username + '/activeWarning').on('value', snap => {
+      if (snap.exists()) {
+        const w = snap.val();
+        _showWarningOverlay(w.reason || 'Violation of Terms of Use', w.issuedBy, w.contentData || null);
+        firebase.database().ref('users/' + CU.username + '/activeWarning').remove();
+      }
+    });
+  } catch(e) { console.warn('[init] warning listener:', e); }
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling for all staff
-  if(hasStaffAccess())setTimeout(startReportPolling,2000);
+  try { if(hasStaffAccess())setTimeout(startReportPolling,2000); } catch(e) { console.warn('[init] reportPolling:', e); }
   // Listen for real-time staff changes so sidebar updates dynamically
-  _listenStaffChanges();
+  try { _listenStaffChanges(); } catch(e) { console.warn('[init] _listenStaffChanges:', e); }
   // Listen for real-time bastion updates from other members
   setTimeout(_listenBastionUpdates, 1500);
 
@@ -6761,11 +6773,11 @@ function updateDOBField(){
       if (notifPanelOpen) { try { await buildNotifList(); } catch {} }
     });
   } catch {}
-  initIdleDetection();
-  restoreCustomStatusTimer();
+  try { initIdleDetection(); } catch(e) { console.warn('[init] initIdleDetection:', e); }
+  try { restoreCustomStatusTimer(); } catch(e) { console.warn('[init] restoreCustomStatusTimer:', e); }
   // Discord-style: restore the user's chosen status from last session
-  FtzStatus.restoreManualStatus();
-  updateUserbar();
+  try { FtzStatus.restoreManualStatus(); } catch(e) { console.warn('[init] restoreManualStatus:', e); }
+  try { updateUserbar(); } catch(e) { console.warn('[init] updateUserbar2:', e); }
   initDragDrop();
   clearTimeout(_st);
   if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
@@ -6774,6 +6786,8 @@ function updateDOBField(){
     if(_sl)_sl.style.display='none';
     clearTimeout(_st);
     if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
+    // Fallback: ensure home view is visible even if init partially failed
+    try { showView('home'); } catch {}
   }
 })();
 

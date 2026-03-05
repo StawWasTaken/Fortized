@@ -24,7 +24,7 @@
 <script src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <style>
-:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.22);--bg:#07090e;--rail:#04060a;--sidebar:#13161d;--channel:#0d1018;--panel:#101420;--panel2:#131822;--panel3:#161c28;--border:#1c2335;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;}
+:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.22);--bg:#0a0d14;--rail:#060810;--sidebar:#13161d;--channel:#0f1219;--panel:#161a23;--panel2:#1a1f29;--panel3:#1e2430;--border:#252d3d;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;overflow:hidden;}
 body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:row;}
 ::selection{background:rgba(255,249,62,.2);}
@@ -1120,8 +1120,13 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .emoji-tooltip .et-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;}
 .emoji-tooltip .et-code{font-size:11px;color:rgba(255,255,255,.3);font-family:'SF Mono','Cascadia Code',monospace;margin-top:2px;}
 .emoji-tooltip .et-cat{font-size:10.5px;color:rgba(255,249,62,.45);font-weight:600;margin-top:6px;}
-.msg-emoji{cursor:pointer;transition:transform .1s;border-radius:3px;}
-.msg-emoji:hover{transform:scale(1.2);background:rgba(255,255,255,.06);}
+.msg-emoji,.msg-emoji-native{cursor:pointer;transition:transform .1s;border-radius:3px;}
+.msg-emoji:hover,.msg-emoji-native:hover{transform:scale(1.2);background:rgba(255,255,255,.06);}
+.cloud-status-bubble{position:relative;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.08);border-radius:18px 18px 18px 4px;font-size:12.5px;color:rgba(255,255,255,.55);max-width:260px;box-shadow:0 4px 16px rgba(0,0,0,.15);backdrop-filter:blur(8px);}
+.cloud-status-bubble::after{content:'';position:absolute;bottom:-6px;left:12px;width:10px;height:10px;background:rgba(255,255,255,.06);border-bottom:1.5px solid rgba(255,255,255,.08);border-left:1.5px solid rgba(255,255,255,.08);border-radius:0 0 0 4px;transform:skewY(-15deg);}
+.cloud-status-bubble .csb-emoji{font-size:16px;flex-shrink:0;}
+.cloud-status-bubble .csb-emoji img{width:18px;height:18px;object-fit:contain;}
+.cloud-status-bubble .csb-text{font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 /* Mobile bottom-sheet context menu */
 @media(max-width:768px){
 .ctx-menu{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;max-width:100%!important;width:100%!important;border-radius:16px 16px 0 0!important;max-height:65vh;overflow-y:auto;animation:ctxSlideUp .22s cubic-bezier(.22,1,.36,1)!important;padding-bottom:env(safe-area-inset-bottom,8px);border-bottom:none!important;}
@@ -6243,6 +6248,7 @@ function disconnectVoice(){
   const wrap=document.getElementById('bastion-chat-wrap');
   if(wrap)wrap.innerHTML=`<div class="empty-state"><div class="ei">🏰</div><h3>Select a channel</h3></div>`;
   toast('Left party room','info');
+  showFeedbackToast('a voice chat', 'voice_call');
 }
 function toggleVoiceMute(){
   isMuted=!isMuted;
@@ -6334,6 +6340,7 @@ async function acceptFriend(username){
     await FortizedSocial.acceptFriendRequest(CU.username, username);
     await refreshCU();
     toast('Now friends with '+username+'!','success');
+    showFeedbackToast('adding a friend', 'friend_accept');
     renderFriendsList();
     renderDMSidebar(document.getElementById('sidebar-scroll'));
     // Auto-open DM
@@ -7284,6 +7291,7 @@ async function createBastion() {
   cbIconData = null;
   cbSelectedEmoji = '🏰';
   toast(`${bastion.emblem} ${name} created!`, 'success');
+  showFeedbackToast('creating a Bastion', 'bastion_create');
   openBastion(CU.bastions.length - 1);
 }
 
@@ -9434,6 +9442,14 @@ function _showEmojiTooltip(emoji, el) {
   setTimeout(() => tip.remove(), 5000);
 }
 
+// Event delegation: left-click any emoji in chat → show tooltip
+document.addEventListener('click', function(e) {
+  const img = e.target.closest('.msg-emoji, .msg-emoji-native');
+  if (!img) return;
+  const emoji = img.dataset?.emoji || img.alt || img.textContent?.trim();
+  if (emoji) { e.stopPropagation(); _showEmojiTooltip(emoji, img); }
+});
+
 function renderEmojiCell(emoji) {
   const safe = escapeHTML(emoji);
   const url = emojiToTwemojiUrl(emoji);
@@ -9962,7 +9978,7 @@ function buildProfileView(tab) {
     const currentTheme = localStorage.getItem(_appearanceKey()) || 'fortized_classic';
     const unlocked = CU?.unlockedAppearances || [];
     const allThemes = [
-      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', bg:'#07090e', sidebar:'#13161d', channel:'#0d1018', panel:'#101420', accent:'#fef83d', border:'#1c2335', muted:'#4e5a6f', bodyGrad:'', free:true},
+      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', bg:'#0a0d14', sidebar:'#13161d', channel:'#0f1219', panel:'#161a23', accent:'#fef83d', border:'#252d3d', muted:'#4e5a6f', bodyGrad:'', free:true},
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
@@ -10237,7 +10253,7 @@ function buildProfileView(tab) {
     main.innerHTML = `<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3><p>These settings are on the way!</p></div>`;
   }
 }
-async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}CU.displayName=dn;await saveUser();document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');toast('Display name updated!','success');}
+async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}CU.displayName=dn;await saveUser();document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');toast('Display name updated!','success');showFeedbackToast('editing your profile','profile_edit');}
 async function saveEmail(){const e=document.getElementById('email-input')?.value?.trim();CU.email=e;await saveUser();toast('Email updated!','success');}
 async function changePassword(){const old=document.getElementById('pw-old')?.value,nw=document.getElementById('pw-new')?.value,msg=document.getElementById('pw-msg');if(!old||!nw){if(msg){msg.style.color='var(--red)';msg.textContent='Fill both fields.';}return;}if(old!==CU.password){if(msg){msg.style.color='var(--red)';msg.textContent='Current password incorrect.';}return;}if(nw.length<6){if(msg){msg.style.color='var(--red)';msg.textContent='Too short.';}return;}CU.password=nw;await saveUser();if(msg){msg.style.color='var(--green)';msg.textContent='Password updated!';}document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';}
 async function updatePfp(e) {
@@ -10369,6 +10385,27 @@ async function buildNotifList() {
   const list=document.getElementById('np-list'); if(!list) return;
   let notifs=[];
   try{notifs=await FortizedSocial.getNotifications(CU.username)||[];}catch{}
+
+  // Fetch user's support tickets and merge into notifications
+  try {
+    const ticketSnap = await firebase.database().ref('support/tickets').orderByChild('username').equalTo(CU.username).once('value');
+    if (ticketSnap.exists()) {
+      const tickets = ticketSnap.val();
+      Object.entries(tickets).forEach(([id, t]) => {
+        notifs.push({
+          type: 'support_ticket',
+          from: 'Support',
+          time: t.submittedAt || t.createdAt,
+          read: t.status === 'closed',
+          data: { subject: t.subject, status: t.status, category: t.category, ticketId: id }
+        });
+      });
+    }
+  } catch(e) { console.warn('[inbox] ticket fetch:', e); }
+
+  // Sort by time descending
+  notifs.sort((a,b) => new Date(b.time||0) - new Date(a.time||0));
+
   if(!notifs.length){
     list.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;">'
       +'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>'
@@ -10382,10 +10419,11 @@ async function buildNotifList() {
     mention:       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 006 0v-1a10 10 0 10-3.92 7.94"/></svg>',
     bastion:       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',
     call:          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 012 1.18a2 2 0 012-2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 6.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>',
+    support_ticket:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
   };
   const colors = {
     friend_request:'#60a5fa', friend_accept:'#3ecf6e', dm:'#a78bfa',
-    mention:'#ffd93e', bastion:'var(--accent)', call:'#3ecf6e',
+    mention:'#ffd93e', bastion:'var(--accent)', call:'#3ecf6e', support_ticket:'#38bdf8',
   };
   list.innerHTML = notifs.slice(0,25).map(n => {
     const svg = svgs[n.type] || svgs.bastion;
@@ -10396,6 +10434,10 @@ async function buildNotifList() {
     else if(n.type==='dm') text='<strong>'+escapeHTML(n.from)+'</strong>: '+escapeHTML((n.data?.preview||'').slice(0,60));
     else if(n.type==='mention') text='<strong>'+escapeHTML(n.from)+'</strong> mentioned you';
     else if(n.type==='call') text='<strong>'+escapeHTML(n.from)+'</strong> called you';
+    else if(n.type==='support_ticket') {
+      const st = n.data?.status==='closed'?'<span style="color:#3ecf6e;">Closed</span>':'<span style="color:#38bdf8;">Open</span>';
+      text='<strong>Support Ticket</strong>: '+escapeHTML((n.data?.subject||'').slice(0,50))+' — '+st;
+    }
     else text='New notification';
     const actions = n.type==='friend_request'
       ? '<div class="np-actions"><button class="np-accept" onclick="acceptFriend(\''+n.from+'\');buildNotifList()">Accept</button><button class="np-decline" onclick="declineFriend(\''+n.from+'\');buildNotifList()">Decline</button></div>'
@@ -10484,7 +10526,7 @@ async function viewUserProfile(username) {
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:10px;height:10px;border-radius:50%;background:${sc};box-shadow:0 0 8px ${sc}55;"></span>
           <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
         </div>
-        ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:inline-flex;align-items:center;gap:5px;padding:5px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:12.5px;color:rgba(255,255,255,.5);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></span>`}
+        ${customStatus?.text ? `<div class="cloud-status-bubble profile-custom-status" data-for="${escapeHTML(u.username)}"><span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text)}</span></div>` : `<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></div>`}
       </div>
     </div>
     <!-- Bio & info in two-column layout -->
@@ -12655,8 +12697,8 @@ function _dismissAnnouncement() {
 // Shows a non-intrusive feedback toast for platform actions.
 // Not every action triggers it — controlled by probability + cooldown.
 let _lastFeedbackTime = 0;
-const _FEEDBACK_COOLDOWN = 120000; // 2 min cooldown between feedback prompts
-const _FEEDBACK_CHANCE = 0.15; // 15% chance per eligible action
+const _FEEDBACK_COOLDOWN = 60000; // 1 min cooldown between feedback prompts
+const _FEEDBACK_CHANCE = 0.35; // 35% chance per eligible action
 
 function showFeedbackToast(actionLabel, actionType, meta) {
   const now = Date.now();
@@ -13165,8 +13207,17 @@ async function nsfwAIFeedback(idx, aiWasCorrect) {
       }
     }
   } catch(e) { console.warn('AI feedback save failed:', e); }
-  logAudit('nsfw_ai_feedback', item.uploader || '?', aiWasCorrect ? 'AI confirmed correct' : 'AI marked incorrect');
-  toast(aiWasCorrect ? 'AI verdict confirmed — hash flagged' : 'AI verdict corrected — hash marked safe', 'success');
+  // Mark as resolved: remove from queue
+  item.resolved = true;
+  item.resolvedBy = CU.username;
+  item.resolvedAt = new Date().toISOString();
+  item.resolution = aiWasCorrect ? 'ai_confirmed' : 'ai_incorrect';
+  queue.splice(idx, 1);
+  localStorage.setItem('ftz_nsfw_queue', JSON.stringify(queue));
+  logAudit('nsfw_ai_feedback', item.uploader || '?', aiWasCorrect ? 'AI confirmed correct — resolved' : 'AI marked incorrect — resolved');
+  toast(aiWasCorrect ? 'AI verdict confirmed — item resolved' : 'AI verdict corrected — item resolved', 'success');
+  // Refresh the content review page
+  if (typeof _loadAdminPage === 'function') _loadAdminPage('nsfw_queue');
 }
 
 function addStaff(role) {
@@ -14779,8 +14830,8 @@ function parseMD(s) {
   s = s.replace(/((?:\p{Emoji_Presentation}|\p{Extended_Pictographic})(?:\uFE0F)?(?:\u200D(?:\p{Emoji_Presentation}|\p{Extended_Pictographic})(?:\uFE0F)?)*)/gu, (emoji) => {
     try {
       const url = emojiToTwemojiUrl(emoji);
-      const safeEmoji = emoji.replace(/'/g, "\\'");
-      return `<img src="${url}" alt="${emoji}" class="msg-emoji" style="width:1.25em;height:1.25em;object-fit:contain;vertical-align:-0.25em;display:inline-block;" loading="lazy" onclick="_showEmojiTooltip('${safeEmoji}',this)" onerror="this.outerHTML='${emoji}'">`;
+      const safeEmoji = emoji.replace(/'/g, "\\'").replace(/\\/g, '\\\\');
+      return `<img src="${url}" alt="${emoji}" class="msg-emoji" data-emoji="${emoji}" style="width:1.25em;height:1.25em;object-fit:contain;vertical-align:-0.25em;display:inline-block;" loading="lazy" onerror="this.outerHTML='<span class=\\'msg-emoji-native\\' data-emoji=\\'${safeEmoji}\\' style=\\'cursor:pointer;font-size:1.25em;\\'>${emoji}</span>'">`;
     } catch { return emoji; }
   });
   // ═══════════════════════════════════════════════════════
@@ -15869,7 +15920,7 @@ async function showDMUserPanel(username) {
     + '<div style="padding:0 14px 12px;border-bottom:1px solid var(--border);">'
     + '<div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;margin-bottom:1px;">' + escapeHTML(u.displayName||u.username) + '</div>'
     + '<div style="font-size:11px;color:var(--muted);">@' + escapeHTML(u.username) + '</div>'
-    + (u.customStatus?.text ? '<div class="profile-custom-status" data-for="'+escapeHTML(u.username)+'" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:100px;font-size:11px;margin-top:4px;">'+u.customStatus.emoji+' '+escapeHTML(u.customStatus.text)+'</div>' : '<div class="profile-custom-status" data-for="'+escapeHTML(u.username)+'" style="display:none;"></div>')
+    + (u.customStatus?.text ? '<div class="cloud-status-bubble profile-custom-status" data-for="'+escapeHTML(u.username)+'" style="font-size:10.5px;padding:5px 10px;margin-top:6px;"><span class="csb-emoji">'+((u.customStatus.emoji)?'<img src="'+emojiToTwemojiUrl(u.customStatus.emoji)+'" style="width:13px;height:13px;" onerror="this.outerHTML=\''+u.customStatus.emoji+'\'">':'')+'</span><span class="csb-text">'+escapeHTML(u.customStatus.text)+'</span></div>' : '<div class="profile-custom-status" data-for="'+escapeHTML(u.username)+'" style="display:none;"></div>')
     + (hasR ? '<div style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.15),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.25);border-radius:100px;padding:2px 8px;font-size:9.5px;font-weight:700;color:#ffd93e;margin-top:4px;">\u2728 Radiance</div>' : '')
     + '</div>'
     + (u.bio ? '<div style="padding:12px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">About Me</div><div style="font-size:12.5px;color:var(--muted-light);line-height:1.55;">' + escapeHTML(u.bio) + '</div></div>' : '')
@@ -16498,7 +16549,7 @@ function openStatusPicker() {
   // Build preset chips
   const presetHTML = STATUS_PRESETS.map(p => {
     const pUrl = emojiToTwemojiUrl(p.emoji);
-    return `<button class="cloud-preset" onclick="document.getElementById('status-emoji-btn').dataset.emoji='${p.emoji}';document.getElementById('status-emoji-btn').innerHTML='<img src=\\'${pUrl}\\' style=\\'width:24px;height:24px;object-fit:contain;\\'>';document.getElementById('status-text-input').value='${escapeHTML(p.text)}'" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);cursor:pointer;transition:all .12s;white-space:nowrap;" onmouseover="this.style.borderColor='${p.color}44';this.style.background='${p.color}0d'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'"><img src="${pUrl}" style="width:16px;height:16px;object-fit:contain;"><span style="font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);">${escapeHTML(p.text)}</span></button>`;
+    return `<button class="cloud-preset" onclick="document.getElementById('status-emoji-btn').dataset.emoji='${p.emoji}';document.getElementById('status-emoji-btn').innerHTML='<img src=\\'${pUrl}\\' style=\\'width:24px;height:24px;object-fit:contain;\\'>';document.getElementById('status-text-input').value='${escapeHTML(p.text)}';_updateStatusPreview()" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);cursor:pointer;transition:all .12s;white-space:nowrap;" onmouseover="this.style.borderColor='${p.color}44';this.style.background='${p.color}0d'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'"><img src="${pUrl}" style="width:16px;height:16px;object-fit:contain;"><span style="font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);">${escapeHTML(p.text)}</span></button>`;
   }).join('');
 
   overlay.innerHTML = `
@@ -16518,6 +16569,22 @@ function openStatusPicker() {
       </div>
 
       <div style="padding:20px 28px 24px;">
+        <!-- Profile Preview -->
+        <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Preview</div>
+        <div id="status-preview-card" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;margin-bottom:18px;">
+          <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel2);position:relative;">
+            ${CU?.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<div style="width:100%;height:100%;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--accent);">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
+            <span style="position:absolute;bottom:0;right:0;width:14px;height:14px;border-radius:50%;background:${FtzStatus.color(status)};border:3px solid #0f1219;"></span>
+          </div>
+          <div style="min-width:0;flex:1;">
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">${escapeHTML(CU?.displayName||CU?.username||'User')}</div>
+            <div id="status-preview-bubble" style="display:${cur.text?'inline-flex':'none'};" class="cloud-status-bubble" >
+              <span class="csb-emoji" id="status-preview-emoji">${cur.emoji ? `<img src="${emojiToTwemojiUrl(cur.emoji)}" style="width:14px;height:14px;object-fit:contain;">` : ''}</span>
+              <span class="csb-text" id="status-preview-text" style="font-size:11px;">${escapeHTML(cur.text||'')}</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Status Mode -->
         <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Presence</div>
         <div class="sp-mode-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;">
@@ -16534,7 +16601,7 @@ function openStatusPicker() {
           <button onclick="pickStatusEmoji()" id="status-emoji-btn" data-emoji="${escapeHTML(curEmoji)}" style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;" onmouseover="this.style.borderColor='rgba(254,248,61,.2)';this.style.background='rgba(254,248,61,.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.04)'">
             <img src="${twemojiUrl}" style="width:24px;height:24px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;\\'>${curEmoji}</span>'">
           </button>
-          <input id="status-text-input" class="field-input" placeholder="What's happening?" value="${escapeHTML(cur.text||'')}" style="flex:1;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:14px;padding:11px 16px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(254,248,61,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'" maxlength="100">
+          <input id="status-text-input" class="field-input" placeholder="What's happening?" value="${escapeHTML(cur.text||'')}" style="flex:1;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:14px;padding:11px 16px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(254,248,61,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'" maxlength="100" oninput="_updateStatusPreview()">
         </div>
 
         <!-- Quick Presets -->
@@ -16599,6 +16666,7 @@ function pickStatusEmoji() {
       const newUrl = emojiToTwemojiUrl(em);
       btn.innerHTML = `<img src="${newUrl}" style="width:24px;height:24px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;\\'>${em}</span>'">`;
       picker.remove();
+      _updateStatusPreview();
     };
     picker.appendChild(cell);
   });
@@ -16614,6 +16682,23 @@ function pickStatusEmoji() {
     if (r.right > window.innerWidth - 8) picker.style.left = Math.max(8, rect.left - r.width - 8) + 'px';
     if (r.bottom > window.innerHeight - 8) picker.style.top = Math.max(8, window.innerHeight - r.height - 8) + 'px';
   });
+}
+
+function _updateStatusPreview() {
+  const text = (document.getElementById('status-text-input')?.value||'').trim();
+  const emoji = document.getElementById('status-emoji-btn')?.dataset?.emoji||'';
+  const bubble = document.getElementById('status-preview-bubble');
+  const pText = document.getElementById('status-preview-text');
+  const pEmoji = document.getElementById('status-preview-emoji');
+  if (!bubble) return;
+  if (text) {
+    bubble.style.display = 'inline-flex';
+    if (pText) pText.textContent = text;
+    if (pEmoji && emoji) {
+      const url = emojiToTwemojiUrl(emoji);
+      pEmoji.innerHTML = '<img src="'+url+'" style="width:14px;height:14px;object-fit:contain;">';
+    }
+  } else { bubble.style.display = 'none'; }
 }
 
 async function saveCustomStatus() {
@@ -17641,8 +17726,13 @@ function subscribeProfileStatus(username) {
   const handler2 = ref2.on('value', snap => {
     const cs = snap.val();
     document.querySelectorAll('.profile-custom-status[data-for="'+username+'"]').forEach(el=>{
-      if(cs&&cs.text){el.textContent=cs.emoji+' '+cs.text;el.style.display='inline-flex';}
-      else{el.style.display='none';}
+      if(cs&&cs.text){
+        const emojiUrl = cs.emoji ? emojiToTwemojiUrl(cs.emoji) : '';
+        const emojiHtml = emojiUrl ? '<img src="'+emojiUrl+'" style="width:16px;height:16px;object-fit:contain;" onerror="this.outerHTML=\''+cs.emoji+'\'">' : '';
+        el.innerHTML='<span class="csb-emoji">'+emojiHtml+'</span><span class="csb-text">'+escapeHTML(cs.text)+'</span>';
+        el.style.display='inline-flex';
+        if(!el.classList.contains('cloud-status-bubble'))el.classList.add('cloud-status-bubble');
+      } else{el.style.display='none';}
     });
   });
   _profileStatusListeners[username] = {ref,ref2,h1:handler,h2:handler2};
@@ -20820,7 +20910,7 @@ async function showMiniProfilePreview(username, anchorEl) {
           <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="width:8px;height:8px;border-radius:50%;background:${sc};box-shadow:0 0 6px ${sc}55;"></span>
           <span class="profile-status-label" data-for="${escapeHTML(username)}" style="font-size:11.5px;color:rgba(255,255,255,.55);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
         </div>
-        ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:11px;color:rgba(255,255,255,.5);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:none;"></span>`}
+        ${customStatus?.text ? `<div class="cloud-status-bubble profile-custom-status" data-for="${escapeHTML(username)}" style="font-size:11px;padding:6px 12px;"><span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:14px;height:14px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text)}</span></div>` : `<div class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:none;"></div>`}
       </div>
     </div>
     ${u.bio?`<div class="mpp-section">
@@ -20932,14 +21022,14 @@ function applyAppearance(themeId) {
     document.body.style.background = 'linear-gradient(170deg, #010103 0%, #08061a 100%)';
   } else {
     // Fortized Classic (default)
-    document.documentElement.style.setProperty('--bg',         '#07090e');
-    document.documentElement.style.setProperty('--rail',       '#04060a');
+    document.documentElement.style.setProperty('--bg',         '#0a0d14');
+    document.documentElement.style.setProperty('--rail',       '#060810');
     document.documentElement.style.setProperty('--sidebar',    '#13161d');
-    document.documentElement.style.setProperty('--channel',    '#0d1018');
-    document.documentElement.style.setProperty('--panel',      '#101420');
-    document.documentElement.style.setProperty('--panel2',     '#131822');
-    document.documentElement.style.setProperty('--panel3',     '#161c28');
-    document.documentElement.style.setProperty('--border',     '#1c2335');
+    document.documentElement.style.setProperty('--channel',    '#0f1219');
+    document.documentElement.style.setProperty('--panel',      '#161a23');
+    document.documentElement.style.setProperty('--panel2',     '#1a1f29');
+    document.documentElement.style.setProperty('--panel3',     '#1e2430');
+    document.documentElement.style.setProperty('--border',     '#252d3d');
     document.documentElement.style.setProperty('--muted',      '#4e5a6f');
     document.documentElement.style.setProperty('--muted-light','#7d8a9e');
   }

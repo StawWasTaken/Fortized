@@ -1356,9 +1356,21 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ftz-notif-close:hover{color:#fff;}
 
 /* Mini profile preview (first click on avatar in chat) */
-.mini-profile-preview{position:fixed;background:linear-gradient(165deg,var(--panel),rgba(8,10,18,.98));border:1.5px solid rgba(255,255,255,.1);border-radius:20px;z-index:4000;box-shadow:0 24px 72px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.04);overflow:hidden;animation:ctxIn .16s cubic-bezier(.22,1,.36,1);width:340px;backdrop-filter:blur(16px);}
+.mini-profile-preview{position:fixed;background:linear-gradient(165deg,rgba(18,20,36,.97),rgba(8,10,18,.99));border:1.5px solid rgba(255,255,255,.1);border-radius:20px;z-index:4000;box-shadow:0 24px 72px rgba(0,0,0,.85),0 8px 32px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.04),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden;animation:mppSlideIn .22s cubic-bezier(.22,1,.36,1);width:360px;backdrop-filter:blur(24px) saturate(1.4);}
+@keyframes mppSlideIn{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:none}}
 .mpp-banner{height:65px;position:relative;overflow:hidden;}
 .mpp-av{position:absolute;bottom:-24px;left:14px;width:56px;height:56px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:var(--panel2);z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.5);}
+.mini-profile-preview .mpp-section{padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.05);}
+.mini-profile-preview .mpp-section-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,249,62,.35);margin-bottom:6px;}
+.mini-profile-preview .mpp-note{font-size:12px;color:rgba(255,255,255,.35);font-style:italic;padding:8px 18px;border-bottom:1px solid rgba(255,255,255,.05);}
+.mini-profile-preview .mpp-actions{padding:12px 18px;display:flex;gap:8px;}
+.mini-profile-preview .mpp-btn-primary{flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.mini-profile-preview .mpp-btn-primary:hover{filter:brightness(1.12);transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,249,62,.25);}
+.mini-profile-preview .mpp-btn-secondary{flex:1;padding:10px;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;color:rgba(255,255,255,.7);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.mini-profile-preview .mpp-btn-secondary:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);transform:translateY(-1px);}
+.mini-profile-preview .mpp-mutual-av{width:26px;height:26px;border-radius:50%;overflow:hidden;border:2px solid rgba(18,20,36,.97);margin-left:-6px;transition:transform .15s;cursor:pointer;}
+.mini-profile-preview .mpp-mutual-av:first-child{margin-left:0;}
+.mini-profile-preview .mpp-mutual-av:hover{transform:scale(1.15);z-index:2;}
 
 /* Profile themes (Radiance+) */
 .profile-theme-ring{position:absolute;inset:-3px;border-radius:50%;background:var(--pt-gradient,transparent);z-index:-1;}
@@ -1366,6 +1378,16 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 
 /* Transparent PFP support — don't add opaque bg behind transparent avatars */
 .ua img,.fa img,.ml-av img,.msg-av-inner img,.mpp-av img,.profile-av-big img,.chat-welcome .w-av img,.ftz-notif-av img,.voice-avatar-ring img{background:transparent!important;}
+/* DM sidebar close button — appears on hover */
+.friend-item{position:relative;}
+.dm-close-btn{display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:16px;width:22px;height:22px;border-radius:6px;align-items:center;justify-content:center;transition:all .12s;line-height:1;padding:0;z-index:2;}
+.dm-close-btn:hover{color:#fff;background:rgba(255,255,255,.1);}
+.friend-item:hover .dm-close-btn{display:flex;}
+.dm-friends-link{transition:background .12s;}
+.dm-friends-link:hover{background:rgba(255,255,255,.05)!important;}
+/* Ensure all avatar containers properly clip & display user images consistently */
+.fa,.ua,.ml-av,.msg-av-inner,.mpp-av,.ftz-notif-av,.chat-welcome .w-av,.voice-avatar-ring{overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.fa img,.ua img,.ml-av img,.msg-av-inner img,.mpp-av img,.ftz-notif-av img,.chat-welcome .w-av img,.voice-avatar-ring img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
 
 .msg-text.emoji-only img{width:1.4em!important;height:1.4em!important;}
 .msg-text.emoji-only{font-size:20px!important;line-height:1.4;}
@@ -3057,14 +3079,12 @@ function setTopbarDMActions() {
   if (!acts) return;
   acts.innerHTML = `
     <button class="tb-act-btn" title="Voice Call" onclick="if(curDM)startVoiceCall(curDM);else toast('No active DM','error')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
-    <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg></button>
-    <button class="tb-act-btn" title="Notifications" onclick="toast('Notification settings coming soon','info')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>`;
+    <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg></button>`;
 }
 function setTopbarChannelActions() {
   const acts = document.getElementById('tb-actions');
   if (!acts) return;
   acts.innerHTML = `
-    <button class="tb-act-btn" title="Notifications" onclick="toast('Notification settings coming soon','info')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
     <button class="tb-act-btn" title="Pinned Messages" onclick="showPinnedMessages()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg></button>`;
 }
 
@@ -3270,10 +3290,10 @@ function _defaultPfpUrl(name) {
   return hash % 2 === 0 ? '/default pfp.png' : '/default pfp2.png';
 }
 function buildAvatarHTML(pfp, name, size) {
-  const s = `width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;`;
+  const s = `width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;display:block;flex-shrink:0;`;
   const defaultUrl = _defaultPfpUrl(name);
   if (pfp) return `<img src="${pfp}" style="${s}" onerror="this.src='${defaultUrl}'">`;
-  return `<img src="${defaultUrl}" style="${s}" onerror="this.outerHTML='<span style=\\'font-size:${Math.floor(size/2.2)}px;\\'>${(name||'?')[0].toUpperCase()}</span>'">`;
+  return `<img src="${defaultUrl}" style="${s}" onerror="this.outerHTML='<span style=\\'display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;font-size:${Math.floor(size/2.2)}px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:Syne,sans-serif;font-weight:800;flex-shrink:0;\\'>${(name||'?')[0].toUpperCase()}</span>'">`;
 }
 function renderRailBastions() {
   const cont = document.getElementById('rail-bastions');
@@ -3803,87 +3823,156 @@ function _joysterEasterEgg() {
 // ════════════════════════════════════════════
 // DM SIDEBAR & CHAT
 // ════════════════════════════════════════════
+
+// Hidden DMs — persisted in localStorage per user
+function _hiddenDMsKey() { return 'ftz_hidden_dms_' + (CU?.username||''); }
+function getHiddenDMs() { try { return JSON.parse(localStorage.getItem(_hiddenDMsKey()) || '[]'); } catch { return []; } }
+function setHiddenDMs(arr) { localStorage.setItem(_hiddenDMsKey(), JSON.stringify(arr)); }
+function hideDMConversation(id) {
+  const hidden = getHiddenDMs();
+  if (!hidden.includes(id)) { hidden.push(id); setHiddenDMs(hidden); }
+  renderDMSidebar(document.getElementById('sidebar-scroll'));
+}
+function unhideDMConversation(id) {
+  setHiddenDMs(getHiddenDMs().filter(h => h !== id));
+  renderDMSidebar(document.getElementById('sidebar-scroll'));
+}
+
 function renderDMSidebar(scroll) {
   const friends = CU?.friends||[];
   const gcs = CU?.groupChats||[];
+  const hidden = getHiddenDMs();
 
   let html = '';
 
-  // ── Friends quick link ──────────────────
-  html += `<div class="ch-item" style="margin:4px 8px;border-radius:10px;" onclick="showDMFriendsHome()">👥 Friends</div>`;
+  // ── Friends quick link (always at top) ──────────────────
+  html += `<div class="ch-item dm-friends-link" style="margin:4px 8px;border-radius:10px;display:flex;align-items:center;gap:10px;font-weight:700;" onclick="showDMFriendsHome()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;opacity:.7;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Friends</div>`;
 
-  // ── Direct Messages section ──────────────────
-  html += '<div class="sec-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;">Direct Messages</div>';
-  if (friends.length) {
-    html += friends.map(f=>`
-      <div class="friend-item" id="dm-fi-${f}" onclick="openDMView('${escapeHTML(f)}')" oncontextmenu="event.preventDefault();showDMCtxMenu(event,'${escapeHTML(f)}')">
+  // ── Section label: Direct Messages ──────────────────
+  html += '<div class="sec-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;">Direct Messages <button onclick="openModal(\'modal-new-dm\');switchNewDMTab(\'dm\')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;" title="New DM">✏️</button></div>';
+
+  // Build a unified list of all conversations (DMs + GCs), will be sorted chronologically
+  const _dmEntries = [];
+
+  // Add 1-on-1 DMs (friends only, filter out hidden)
+  friends.forEach(f => {
+    if (hidden.includes('dm_' + f)) return;
+    _dmEntries.push({ type: 'dm', id: 'dm_' + f, username: f, lastTime: 0 });
+  });
+
+  // Add group chats (filter out hidden)
+  gcs.forEach(gc => {
+    if (hidden.includes('gc_' + gc.id)) return;
+    _dmEntries.push({ type: 'gc', id: 'gc_' + gc.id, gc, lastTime: 0 });
+  });
+
+  // Render entries immediately (will be sorted async after fetching timestamps)
+  if (_dmEntries.length === 0) {
+    html += '<div style="padding:14px;font-size:12px;color:var(--muted);text-align:center;">No conversations yet.<br><span style="font-size:11px;opacity:.6;">Start chatting with friends!</span></div>';
+  } else {
+    html += '<div id="dm-sorted-list">';
+    _dmEntries.forEach(entry => {
+      if (entry.type === 'dm') {
+        const f = entry.username;
+        html += `
+      <div class="friend-item dm-sortable" id="dm-fi-${escapeHTML(f)}" data-dm-id="dm_${escapeHTML(f)}" data-last-time="0" onclick="openDMView('${escapeHTML(f)}')" oncontextmenu="event.preventDefault();showDMCtxMenu(event,'${escapeHTML(f)}')">
         <div style="position:relative;flex-shrink:0;">
           <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(null,f,34)}</div>
           <span class="profile-status-dot" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:#6b7280;border:2px solid var(--channel);"></span>
         </div>
         <div class="fi-info" style="min-width:0;flex:1;">
           <div class="fi-name" id="dm-dn-${escapeHTML(f)}" style="font-weight:600;">${escapeHTML(f)}</div>
-          <div id="dm-preview-${f}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:130px;"></div>
+          <div id="dm-preview-${escapeHTML(f)}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:120px;"></div>
         </div>
-      </div>`).join('');
-  } else {
-    html += '<div style="padding:8px 14px;font-size:12px;color:var(--muted);">No friends yet.</div>';
-  }
-
-  // ── Group Chats section ──────────────────────
-  html += '<div class="sec-label" style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;padding-right:10px;">Group Chats <button onclick="openModal(\'modal-new-dm\');switchNewDMTab(\'gc\')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;" title="New group">✚</button></div>';
-  if (gcs.length) {
-    html += gcs.map(gc=>`
-      <div class="friend-item" id="gc-fi-${escapeHTML(gc.id)}" onclick="openGroupChatView('${escapeHTML(gc.id)}')">
+        <button class="dm-close-btn" onclick="event.stopPropagation();hideDMConversation('dm_${escapeHTML(f)}')" title="Hide conversation">×</button>
+      </div>`;
+      } else {
+        const gc = entry.gc;
+        html += `
+      <div class="friend-item dm-sortable" id="gc-fi-${escapeHTML(gc.id)}" data-dm-id="gc_${escapeHTML(gc.id)}" data-last-time="0" onclick="openGroupChatView('${escapeHTML(gc.id)}')">
         <div style="width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg,${gc.color||'#7c5cbf'},${gc.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${gc.emoji||'👥'}</div>
         <div class="fi-info" style="min-width:0;flex:1;">
           <div class="fi-name" style="font-weight:600;">${escapeHTML(gc.name)}</div>
-          <div id="gc-preview-${escapeHTML(gc.id)}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:130px;">${(gc.members||[]).length} members</div>
+          <div id="gc-preview-${escapeHTML(gc.id)}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:120px;">${(gc.members||[]).length} members</div>
         </div>
-      </div>`).join('');
-  } else {
-    html += '<div style="padding:8px 14px;font-size:12px;color:var(--muted);">No group chats yet.</div>';
+        <button class="dm-close-btn" onclick="event.stopPropagation();hideDMConversation('gc_${escapeHTML(gc.id)}')" title="Hide conversation">×</button>
+      </div>`;
+      }
+    });
+    html += '</div>';
   }
 
   scroll.innerHTML = html;
 
-  // ── Async: fetch real PFPs, display names, status dots + DM previews (staggered) ─────────
+  // ── Async: fetch last message timestamps, PFPs, display names, status, then sort ─────────
+  const sortPromises = [];
+
   friends.forEach((f, i) => {
-    setTimeout(async () => {
-    try {
-      const u = await FortizedSocial.getUserByName(f);
-      if (u) {
-        const avEl = document.getElementById('dm-av-'+f);
-        if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
-        const dnEl = document.getElementById('dm-dn-'+f);
-        if (dnEl) dnEl.textContent = u.displayName || f;
-        const st = FtzStatus.sanitize(u.status || 'offline');
-        document.querySelectorAll(`.profile-status-dot[data-for="${f}"]`).forEach(d=>d.style.background=FtzStatus.color(st));
-      }
-    } catch {}
-    try {
-      const msgs = await FortizedSocial.getDMMessages(CU.username, f);
-      const last = msgs?.[msgs.length-1];
-      const el = document.getElementById('dm-preview-'+f);
-      if (el && last) {
-        const preview = (last.from===CU.username?'You: ':'') + (last.text||'').replace(/\[FTZ[A-Z]+:[^\]]+\]/g,'📎 File').slice(0,40);
-        el.textContent = preview;
-      }
-    } catch {}
-    }, i * 80); // Stagger to avoid simultaneous Firebase calls
+    if (hidden.includes('dm_' + f)) return;
+    const p = new Promise(resolve => {
+      setTimeout(async () => {
+        try {
+          const u = await FortizedSocial.getUserByName(f);
+          if (u) {
+            const avEl = document.getElementById('dm-av-'+f);
+            if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
+            const dnEl = document.getElementById('dm-dn-'+f);
+            if (dnEl) dnEl.textContent = u.displayName || f;
+            const st = FtzStatus.sanitize(u.status || 'offline');
+            document.querySelectorAll(`.profile-status-dot[data-for="${f}"]`).forEach(d=>d.style.background=FtzStatus.color(st));
+          }
+        } catch {}
+        let lastTime = 0;
+        try {
+          const msgs = await FortizedSocial.getDMMessages(CU.username, f);
+          const last = msgs?.[msgs.length-1];
+          if (last) {
+            lastTime = last.time || last.timestamp || 0;
+            const el = document.getElementById('dm-preview-'+f);
+            if (el) {
+              const preview = (last.from===CU.username?'You: ':'') + (last.text||'').replace(/\[FTZ[A-Z]+:[^\]]+\]/g,'📎 File').slice(0,40);
+              el.textContent = preview;
+            }
+          }
+        } catch {}
+        const row = document.getElementById('dm-fi-'+f);
+        if (row) row.dataset.lastTime = lastTime;
+        resolve();
+      }, i * 60);
+    });
+    sortPromises.push(p);
   });
 
-  // GC last-message previews
   gcs.forEach(async gc => {
-    try {
-      const snap = await firebase.database().ref('groupChats/'+gc.id+'/messages').orderByKey().limitToLast(1).get();
-      if (!snap.exists()) return;
-      const last = Object.values(snap.val())[0];
-      const el = document.getElementById('gc-preview-'+gc.id);
-      if (el && last) {
-        el.textContent = (last.from===CU.username?'You: ':''+last.from+': ') + (last.text||'').slice(0,35);
-      }
-    } catch {}
+    if (hidden.includes('gc_' + gc.id)) return;
+    const p = (async () => {
+      let lastTime = 0;
+      try {
+        const snap = await firebase.database().ref('groupChats/'+gc.id+'/messages').orderByKey().limitToLast(1).get();
+        if (snap.exists()) {
+          const last = Object.values(snap.val())[0];
+          lastTime = last.time || last.timestamp || 0;
+          const el = document.getElementById('gc-preview-'+gc.id);
+          if (el && last) {
+            el.textContent = (last.from===CU.username?'You: ':last.from+': ') + (last.text||'').slice(0,35);
+          }
+        }
+      } catch {}
+      const row = document.getElementById('gc-fi-'+gc.id);
+      if (row) row.dataset.lastTime = lastTime;
+    })();
+    sortPromises.push(p);
+  });
+
+  // After all fetches complete, sort the list by lastTime descending
+  Promise.allSettled(sortPromises).then(() => {
+    const listEl = document.getElementById('dm-sorted-list');
+    if (!listEl) return;
+    const items = Array.from(listEl.querySelectorAll('.dm-sortable'));
+    items.sort((a, b) => (parseInt(b.dataset.lastTime)||0) - (parseInt(a.dataset.lastTime)||0));
+    items.forEach(item => listEl.appendChild(item));
   });
 }
 
@@ -4094,6 +4183,8 @@ let _dmListener = null;
 function openDMView(username) {
   if (!username) return;
   username = (username||"").trim().toLowerCase();
+  // Auto-unhide conversation when opening it
+  unhideDMConversation('dm_' + username);
   curDM = username;
   curGC = null;
   document.getElementById('gc-member-panel')?.remove();
@@ -4367,6 +4458,8 @@ async function createGroupChat() {
 // ── Open a group chat ───────────────────────────────
 async function openGroupChatView(gcId) {
   if (!gcId) return;
+  // Auto-unhide group chat when opening it
+  unhideDMConversation('gc_' + gcId);
   curGC = gcId;
   curDM = null;  // clear 1-on-1 DM
   showView('dms');
@@ -10116,9 +10209,10 @@ async function viewUserProfile(username) {
   const modalEl = document.getElementById('user-modal-body');
   if (!modalEl) { openModal('modal-user'); return; }
 
+  const _mutualFriends = isOwn ? [] : (CU?.friends||[]).filter(f => (u.friends||[]).includes(f));
   modalEl.innerHTML = `
     <div style="${themeBorder}">
-    <div style="background:var(--panel);border-radius:${profileTheme?'18px':'0'};position:relative;">
+    <div style="background:var(--panel);border-radius:${profileTheme?'18px':'0'};position:relative;overflow:hidden;">
     ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
       <div class="pbo-icon">🚫</div>
       <div class="pbo-text">You blocked ${escapeHTML(username)}</div>
@@ -10126,77 +10220,88 @@ async function viewUserProfile(username) {
       <button class="pbo-reveal" onclick="document.getElementById('profile-blocked-overlay').style.display='none'">Show Profile</button>
     </div>` : ''}
     <!-- Banner — tall & immersive -->
-    <div style="height:200px;background:${bannerBg};position:relative;overflow:hidden;border-radius:16px 16px 0 0;">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.03) 30%,rgba(14,16,28,.85));"></div>
+    <div style="height:220px;background:${bannerBg};position:relative;overflow:hidden;border-radius:16px 16px 0 0;">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.02) 40%,rgba(14,16,28,.9));"></div>
+      ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.6;"></div>` : ''}
     </div>
     <!-- Avatar row — PFP overlaps banner -->
-    <div style="padding:0 28px;margin-top:-56px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:2;">
+    <div style="padding:0 28px;margin-top:-60px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:2;">
       <div style="position:relative;">
-        <div style="width:112px;height:112px;border-radius:50%;overflow:hidden;border:6px solid var(--panel);background:var(--panel2);box-shadow:0 8px 32px rgba(0,0,0,.7);">
-          ${buildAvatarHTML(u.pfp, u.displayName||u.username, 108)}
+        <div style="width:120px;height:120px;border-radius:50%;overflow:hidden;border:6px solid var(--panel);background:var(--panel2);box-shadow:0 8px 32px rgba(0,0,0,.7);transition:transform .2s;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform=''">
+          ${buildAvatarHTML(u.pfp, u.displayName||u.username, 114)}
         </div>
-        <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:6px;right:6px;width:22px;height:22px;border-radius:50%;background:${sc};border:4px solid var(--panel);z-index:3;box-shadow:0 0 12px ${sc}66;"></span>
+        <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:8px;right:8px;width:24px;height:24px;border-radius:50%;background:${sc};border:5px solid var(--panel);z-index:3;box-shadow:0 0 14px ${sc}66;"></span>
       </div>
-      <div style="display:flex;gap:6px;padding-bottom:8px;flex-wrap:wrap;justify-content:flex-end;">${renderBadgesHTML(u)}</div>
+      <div style="display:flex;gap:6px;padding-bottom:10px;flex-wrap:wrap;justify-content:flex-end;">${renderBadgesHTML(u)}</div>
     </div>
     <!-- Name + status -->
-    <div style="padding:0 28px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:4px;${u.displayFont&&u.displayFont!=='default'?`font-family:${getDisplayFont(u)};`:''}">${escapeHTML(u.displayName||u.username)}</div>
-      <div style="font-size:14px;color:rgba(255,255,255,.35);margin-bottom:12px;">@${escapeHTML(u.username)}</div>
+    <div style="padding:0 28px 18px;border-bottom:1px solid rgba(255,255,255,.05);">
+      <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;margin-bottom:4px;${u.displayFont&&u.displayFont!=='default'?`font-family:${getDisplayFont(u)};`:''}">${escapeHTML(u.displayName||u.username)}</div>
+      <div style="font-size:14px;color:rgba(255,255,255,.3);margin-bottom:12px;font-weight:500;">@${escapeHTML(u.username)}</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;">
+        <div style="display:flex;align-items:center;gap:6px;padding:5px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;">
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:10px;height:10px;border-radius:50%;background:${sc};box-shadow:0 0 8px ${sc}55;"></span>
           <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
         </div>
-        ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:12.5px;color:rgba(255,255,255,.5);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></span>`}
+        ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:inline-flex;align-items:center;gap:5px;padding:5px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:12.5px;color:rgba(255,255,255,.5);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></span>`}
       </div>
     </div>
-    <!-- Bio -->
-    ${u.bio ? `<div style="padding:16px 28px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,249,62,.35);margin-bottom:8px;">About Me</div>
-      <div style="font-size:14.5px;color:rgba(255,255,255,.7);line-height:1.65;">${escapeHTML(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div>
-    </div>` : ''}
-    <!-- Member since -->
-    ${u.joinedAt||u.createdAt ? `<div style="padding:14px 28px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,249,62,.35);margin-bottom:6px;">Member Since</div>
-      <div style="font-size:14px;color:rgba(255,255,255,.6);font-weight:500;">${new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
-    </div>` : ''}
-    <!-- Custom status / game activity -->
-    ${u.gameActivity?.name ? `<div style="padding:12px 24px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:6px;">Playing a Game</div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${u.gameActivity.icon||'🎮'}</div>
-        <div style="font-size:14px;font-weight:600;">${escapeHTML(u.gameActivity.name)}</div>
+    <!-- Bio & info in two-column layout -->
+    <div style="display:flex;flex-wrap:wrap;gap:0;">
+      <div style="flex:1;min-width:240px;">
+        ${u.bio ? `<div style="padding:16px 28px;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,249,62,.35);margin-bottom:8px;">About Me</div>
+          <div style="font-size:14.5px;color:rgba(255,255,255,.7);line-height:1.65;">${escapeHTML(u.bio.slice(0,400))}${u.bio.length>400?'…':''}</div>
+        </div>` : ''}
+        ${u.gameActivity?.name ? `<div style="padding:14px 28px;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-bottom:8px;">Playing a Game</div>
+          <div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:12px;">
+            <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${u.gameActivity.icon||'🎮'}</div>
+            <div style="min-width:0;"><div style="font-size:14px;font-weight:700;color:#fff;">${escapeHTML(u.gameActivity.name)}</div>${u.gameActivity.details?`<div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">${escapeHTML(u.gameActivity.details)}</div>`:''}</div>
+          </div>
+        </div>` : ''}
+        ${_mutualFriends.length ? `<div style="padding:14px 28px;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,249,62,.35);margin-bottom:8px;">Mutual Friends — ${_mutualFriends.length}</div>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">
+            ${_mutualFriends.slice(0,10).map(f => `<div style="width:30px;height:30px;border-radius:50%;overflow:hidden;border:2px solid var(--panel);margin-left:-4px;cursor:pointer;transition:transform .15s;" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform=''">${buildAvatarHTML(null,f,28)}</div>`).join('')}
+            ${_mutualFriends.length>10?`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.5);margin-left:-4px;border:2px solid var(--panel);font-weight:700;">+${_mutualFriends.length-10}</div>`:''}
+          </div>
+        </div>` : ''}
       </div>
-    </div>` : ''}
-    <!-- Socials -->
-    ${Object.values(socials).some(Boolean) ? `<div style="padding:12px 24px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.3);margin-bottom:7px;">Connections</div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px;">
-        ${[{k:'youtube',l:'YouTube',c:'#ff4444'},{k:'roblox',l:'Roblox',c:'#00b2ff'},{k:'spotify',l:'Spotify',c:'#1db954'},{k:'twitter',l:'X',c:'#1d9bf0'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid ${p.c}33;color:${p.c};font-size:12px;font-weight:600;text-decoration:none;">${p.l} →</a>`).join('')}
+      <div style="min-width:180px;max-width:220px;flex-shrink:0;">
+        ${u.joinedAt||u.createdAt ? `<div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,249,62,.35);margin-bottom:6px;">Member Since</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.6);font-weight:500;">${new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+        </div>` : ''}
+        ${Object.values(socials).some(Boolean) ? `<div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-bottom:8px;">Connections</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            ${[{k:'youtube',l:'YouTube',c:'#ff4444',i:'▶'},{k:'roblox',l:'Roblox',c:'#00b2ff',i:'◆'},{k:'spotify',l:'Spotify',c:'#1db954',i:'♫'},{k:'twitter',l:'X',c:'#1d9bf0',i:'✕'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:10px;border:1px solid ${p.c}22;background:${p.c}0a;color:${p.c};font-size:12.5px;font-weight:600;text-decoration:none;transition:all .15s;" onmouseover="this.style.background='${p.c}18'" onmouseout="this.style.background='${p.c}0a'"><span style="font-size:10px;">${p.i}</span> ${p.l}</a>`).join('')}
+          </div>
+        </div>` : ''}
       </div>
-    </div>` : ''}
+    </div>
     <!-- Actions -->
-    <div style="padding:16px 24px;">
-      ${isOwn ? `<button onclick="closeModal('modal-user');showView('profile')" style="width:100%;padding:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">✏️ Edit Profile</button>` :
+    <div style="padding:18px 28px;">
+      ${isOwn ? `<button onclick="closeModal('modal-user');showView('profile')" style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.borderColor='rgba(255,255,255,.18)'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.borderColor='rgba(255,255,255,.1)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
        `<div style="display:flex;gap:8px;flex-wrap:wrap;">
-          ${isBlocked ? '' : `<button onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')" style="flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;min-width:120px;">Message</button>`}
+          ${isBlocked ? '' : `<button onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')" style="flex:1;padding:12px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;min-width:120px;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
           ${isBlocked ? '' :
-            isFriend ? `<button onclick="closeModal('modal-user');removeFriend('${escapeHTML(username)}')" style="padding:10px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:9px;color:var(--red);font-size:13px;cursor:pointer;">Unfriend</button>` :
-            hasPending ? `<button disabled style="padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.3);font-size:12.5px;">Pending…</button>` :
-            `<button onclick="quickAddFriend('${escapeHTML(username)}')" style="padding:10px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">Add Friend</button>`}
-          ${isBlocked ? '' : `<button onclick="startVoiceCall('${escapeHTML(username)}');closeModal('modal-user')" style="width:42px;height:42px;border-radius:9px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            isFriend ? `<button onclick="closeModal('modal-user');removeFriend('${escapeHTML(username)}')" style="padding:12px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:12px;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Unfriend</button>` :
+            hasPending ? `<button disabled style="padding:12px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.3);font-size:13px;">Pending…</button>` :
+            `<button onclick="quickAddFriend('${escapeHTML(username)}')" style="padding:12px 16px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>`}
+          ${isBlocked ? '' : `<button onclick="startVoiceCall('${escapeHTML(username)}');closeModal('modal-user')" style="width:44px;height:44px;border-radius:12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;" onmouseover="this.style.background='rgba(62,207,110,.16)'" onmouseout="this.style.background='rgba(62,207,110,.08)'">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
           </button>`}
         </div>
-        <div style="display:flex;gap:6px;margin-top:8px;">
-          <button onclick="toggleBlockUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${isBlocked?'rgba(248,113,113,.3)':'rgba(255,255,255,.08)'};background:${isBlocked?'rgba(248,113,113,.06)':'transparent'};color:${isBlocked?'var(--red)':'rgba(255,255,255,.4)'};font-size:12px;cursor:pointer;">${isBlocked?'🚫 Unblock':'Block'}</button>
+        <div style="display:flex;gap:6px;margin-top:10px;">
+          <button onclick="toggleBlockUser('${escapeHTML(username)}')" style="flex:1;padding:8px;border-radius:10px;border:1px solid ${isBlocked?'rgba(248,113,113,.3)':'rgba(255,255,255,.06)'};background:${isBlocked?'rgba(248,113,113,.06)':'rgba(255,255,255,.02)'};color:${isBlocked?'var(--red)':'rgba(255,255,255,.35)'};font-size:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='${isBlocked?'rgba(248,113,113,.06)':'rgba(255,255,255,.02)}'">${isBlocked?'Unblock':'Block'}</button>
           ${!isBlocked ? (ignored
-            ? `<button onclick="unignoreUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(245,158,11,.3);background:rgba(245,158,11,.06);color:#f59e0b;font-size:12px;cursor:pointer;">🔇 Unignore</button>`
-            : `<button onclick="showIgnorePicker('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;">Ignore</button>`)
+            ? `<button onclick="unignoreUser('${escapeHTML(username)}')" style="flex:1;padding:8px;border-radius:10px;border:1px solid rgba(245,158,11,.3);background:rgba(245,158,11,.06);color:#f59e0b;font-size:12px;cursor:pointer;transition:all .15s;">Unignore</button>`
+            : `<button onclick="showIgnorePicker('${escapeHTML(username)}')" style="flex:1;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.02)'">Ignore</button>`)
           : ''}
-          <button onclick="reportUser('${escapeHTML(username)}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;">Report</button>
-          <button onclick="closeModal('modal-user')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;">Close</button>
+          <button onclick="reportUser('${escapeHTML(username)}')" style="flex:1;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.02)'">Report</button>
+          <button onclick="closeModal('modal-user')" style="flex:1;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.02)'">Close</button>
         </div>`}
     </div>
     </div>
@@ -13245,6 +13350,7 @@ function showDMCtxMenu(e, username) {
       { icon: _ctxSvg('copy'), label: 'Copy Username', action: () => navigator.clipboard.writeText(username), copyFeedback: true },
     ]},
     { items: [
+      { icon: _ctxSvg('leave'), label: 'Close DM', action: () => { hideDMConversation('dm_' + username); toast('Conversation hidden — find them in Friends', 'info'); } },
       { icon: _ctxSvg('kick'), label: 'Remove Friend', danger: true, action: () => showCustomConfirm('Remove ' + username + ' from friends?', () => { removeFriend(username); }) },
     ]},
   ];
@@ -19496,6 +19602,10 @@ function initCrossDeviceSync() {
   _notifSyncListener = notifRef.on('child_added', snap => {
     const notif = snap.val();
     if (!notif) return;
+    // Auto-unhide DM conversations when new messages arrive
+    if (notif.type === 'dm' && notif.from) {
+      unhideDMConversation('dm_' + notif.from);
+    }
     // Update badge
     updateNotifBadge().catch(()=>{});
     // Show system notification if supported + permission granted
@@ -20003,54 +20113,70 @@ async function showMiniProfilePreview(username, anchorEl) {
   const themeBorderStyle = profileTheme ? `border:2px solid transparent;background-image:linear-gradient(var(--panel),var(--panel)),linear-gradient(135deg,${profileTheme.color1},${profileTheme.color2});background-origin:border-box;background-clip:padding-box,border-box;` : '';
   const _previewGames = u.gameCollection || u.registeredGames || [];
   const _previewMutuals = (CU?.friends||[]).filter(f => (u.friends||[]).includes(f));
+  const _memberSince = u.joinedAt||u.createdAt ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null;
+  const _isFriend = (CU?.friends||[]).includes(username);
+  const _hasPending = (CU?.friendRequestsSent||[]).includes(username) || (CU?.friendRequestsReceived||[]).includes(username);
   panel.innerHTML = `
-    <!-- Banner -->
-    <div style="height:90px;position:relative;overflow:hidden;background:${bannerBg};border-radius:18px 18px 0 0;">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.05) 30%,rgba(14,16,28,.8));"></div>
+    <!-- Banner with gradient overlay -->
+    <div style="height:100px;position:relative;overflow:hidden;background:${bannerBg};border-radius:18px 18px 0 0;">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.02) 20%,rgba(14,16,28,.88));"></div>
+      ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.7;"></div>` : ''}
     </div>
     <!-- Avatar row overlapping banner -->
-    <div style="padding:0 18px;margin-top:-36px;margin-bottom:10px;display:flex;align-items:flex-end;gap:12px;position:relative;z-index:2;">
-      <div style="position:relative;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
-        <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);background:var(--panel2);box-shadow:0 6px 20px rgba(0,0,0,.6);">
-          ${buildAvatarHTML(u.pfp, u.displayName||u.username, 68)}
+    <div style="padding:0 20px;margin-top:-40px;margin-bottom:10px;display:flex;align-items:flex-end;gap:14px;position:relative;z-index:2;">
+      <div style="position:relative;cursor:pointer;transition:transform .2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform=''" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
+        <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:4px solid rgba(18,20,36,.97);background:var(--panel2);box-shadow:0 6px 24px rgba(0,0,0,.6);">
+          ${buildAvatarHTML(u.pfp, u.displayName||u.username, 76)}
         </div>
-        <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="position:absolute;bottom:3px;right:3px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;box-shadow:0 0 8px ${sc}66;"></span>
+        <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="position:absolute;bottom:4px;right:4px;width:18px;height:18px;border-radius:50%;background:${sc};border:3.5px solid rgba(18,20,36,.97);z-index:3;box-shadow:0 0 10px ${sc}66;"></span>
       </div>
-      <div style="flex:1;min-width:0;padding-bottom:6px;">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
+      <div style="flex:1;min-width:0;padding-bottom:8px;display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end;">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
     </div>
     <!-- Name + status section -->
-    <div style="padding:0 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;margin-bottom:2px;cursor:pointer;${u.displayFont&&u.displayFont!=='default'?`font-family:${getDisplayFont(u)};`:''}" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">${escapeHTML(u.displayName||u.username)}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:8px;">@${escapeHTML(u.username)}</div>
+    <div style="padding:0 20px 14px;border-bottom:1px solid rgba(255,255,255,.05);">
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:2px;cursor:pointer;transition:color .15s;${u.displayFont&&u.displayFont!=='default'?`font-family:${getDisplayFont(u)};`:''}" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='#fff'">${escapeHTML(u.displayName||u.username)}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.3);margin-bottom:8px;font-weight:500;">@${escapeHTML(u.username)}</div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;">
-          <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="width:9px;height:9px;border-radius:50%;background:${sc};box-shadow:0 0 6px ${sc}55;"></span>
-          <span class="profile-status-label" data-for="${escapeHTML(username)}" style="font-size:12px;color:rgba(255,255,255,.55);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
+        <div style="display:flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;">
+          <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="width:8px;height:8px;border-radius:50%;background:${sc};box-shadow:0 0 6px ${sc}55;"></span>
+          <span class="profile-status-label" data-for="${escapeHTML(username)}" style="font-size:11.5px;color:rgba(255,255,255,.55);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
         </div>
-        ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:11.5px;color:rgba(255,255,255,.5);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:none;"></span>`}
+        ${customStatus?.text ? `<span class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:11px;color:rgba(255,255,255,.5);">${customStatus.emoji||''} ${escapeHTML(customStatus.text)}</span>` : `<span class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:none;"></span>`}
       </div>
     </div>
-    ${u.bio?`<div style="padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,249,62,.35);margin-bottom:5px;">About Me</div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.5;">${escapeHTML(u.bio.slice(0,120))}${u.bio.length>120?'...':''}</div>
+    ${u.bio?`<div class="mpp-section">
+      <div class="mpp-section-title">About Me</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.55;">${escapeHTML(u.bio.slice(0,150))}${u.bio.length>150?'...':''}</div>
     </div>`:''}
-    ${_previewMutuals.length?`<div style="padding:8px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,249,62,.35);margin-bottom:5px;">Mutual Friends — ${_previewMutuals.length}</div>
-      <div style="display:flex;gap:-4px;overflow:hidden;">
-        ${_previewMutuals.slice(0,6).map(f => `<div style="width:24px;height:24px;border-radius:50%;overflow:hidden;border:2px solid var(--panel);margin-left:-4px;" title="${escapeHTML(f)}">${buildAvatarHTML(null,f,22)}</div>`).join('')}
-        ${_previewMutuals.length>6?`<div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.5);margin-left:-4px;border:2px solid var(--panel);">+${_previewMutuals.length-6}</div>`:''}
+    ${u.gameActivity?.name ? `<div class="mpp-section">
+      <div class="mpp-section-title">Playing a Game</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1px solid rgba(255,255,255,.06);">${u.gameActivity.icon||'🎮'}</div>
+        <div style="min-width:0;"><div style="font-size:13px;font-weight:600;color:#fff;">${escapeHTML(u.gameActivity.name)}</div>${u.gameActivity.details?`<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px;">${escapeHTML(u.gameActivity.details)}</div>`:''}</div>
+      </div>
+    </div>` : ''}
+    ${_previewMutuals.length?`<div class="mpp-section">
+      <div class="mpp-section-title">Mutual Friends — ${_previewMutuals.length}</div>
+      <div style="display:flex;align-items:center;">
+        ${_previewMutuals.slice(0,8).map(f => `<div class="mpp-mutual-av" title="${escapeHTML(f)}" onclick="event.stopPropagation();document.getElementById('mini-profile-preview')?.remove();showMiniProfilePreview('${escapeHTML(f)}',this)">${buildAvatarHTML(null,f,24)}</div>`).join('')}
+        ${_previewMutuals.length>8?`<div style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.5);margin-left:-6px;border:2px solid rgba(18,20,36,.97);font-weight:700;">+${_previewMutuals.length-8}</div>`:''}
       </div>
     </div>`:''}
-    ${_previewGames.length?`<div style="padding:8px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,249,62,.35);margin-bottom:5px;">Playing</div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;">
-        ${_previewGames.slice(0,4).map(g => `<div style="display:flex;align-items:center;gap:3px;padding:2px 8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;font-size:10.5px;color:rgba(255,255,255,.45);"><span>${g.icon||'🎮'}</span>${escapeHTML(g.name)}</div>`).join('')}
+    ${_memberSince ? `<div class="mpp-section">
+      <div class="mpp-section-title">Member Since</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.45);font-weight:500;">${_memberSince}</div>
+    </div>` : ''}
+    ${_previewGames.length?`<div class="mpp-section">
+      <div class="mpp-section-title">Games</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">
+        ${_previewGames.slice(0,4).map(g => `<div style="display:flex;align-items:center;gap:4px;padding:3px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;font-size:11px;color:rgba(255,255,255,.5);"><span>${g.icon||'🎮'}</span>${escapeHTML(g.name)}</div>`).join('')}
       </div>
     </div>`:''}
     <!-- Action buttons -->
-    <div style="padding:12px 18px;display:flex;gap:8px;">
-      ${!isOwn?`<button onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')" style="flex:1;padding:9px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;transition:all .15s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">Message</button>`:''}
-      <button onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="flex:1;padding:9px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;color:rgba(255,255,255,.7);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">View Profile</button>
+    <div class="mpp-actions">
+      ${!isOwn?`<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`:''}
+      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View Profile</button>
+      ${!isOwn && !_isFriend && !_hasPending ? `<button class="mpp-btn-secondary" style="flex:0;padding:10px 12px;" title="Add Friend" onclick="quickAddFriend('${escapeHTML(username)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>` : ''}
     </div>`;
 
   // Position near the anchor element

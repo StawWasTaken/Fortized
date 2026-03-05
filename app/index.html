@@ -810,21 +810,47 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rad-feats{font-size:12px;color:var(--muted-light);line-height:1.5;}
 .atelier-card{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:22px;margin-bottom:14px;transition:border-color .2s;}
 .atelier-card:hover{border-color:rgba(255,255,255,.1);}
-.admin-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#07090e;}
-.admin-header-bar{height:56px;min-height:56px;background:linear-gradient(90deg,#0c1019,#101420);border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;padding:0 24px;gap:14px;flex-shrink:0;}
+.admin-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#050810;}
+.admin-header-bar{height:52px;min-height:52px;background:linear-gradient(90deg,#080c16,#0c1020,#08101c);border-bottom:1px solid rgba(248,113,113,.08);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;position:relative;overflow:hidden;}
+.admin-header-bar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(248,113,113,.2),rgba(255,249,62,.15),transparent);}
 .admin-body{display:flex;flex:1;overflow:hidden;}
-.admin-nav{width:220px;min-width:220px;background:#0a0d14;border-right:1px solid rgba(255,255,255,.04);overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
-.admin-nav::-webkit-scrollbar{width:3px;}.admin-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px;}
-.admin-main{flex:1;overflow-y:auto;background:#07090e;}
-.admin-main::-webkit-scrollbar{width:5px;}.admin-main::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px;}
-.adm-tab{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:rgba(255,255,255,.45);transition:all .14s ease;margin-bottom:1px;position:relative;}
-.adm-tab:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.7);}
-.adm-tab.active{background:rgba(255,249,62,.06);color:var(--accent,#fff93e);font-weight:600;}
-.adm-tab.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:0 3px 3px 0;background:var(--accent,#fff93e);}
-.adm-tab svg{width:18px;height:18px;flex-shrink:0;opacity:.6;}
-.adm-tab.active svg{opacity:1;}
-.adm-tab .adm-badge{margin-left:auto;background:#f87171;color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:100px;min-width:16px;text-align:center;}
-.adm-sec-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.18);padding:16px 12px 6px;}
+.admin-nav{width:230px;min-width:230px;background:linear-gradient(180deg,#060a12,#040810);border-right:1px solid rgba(248,113,113,.06);overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
+.admin-nav::-webkit-scrollbar{width:3px;}.admin-nav::-webkit-scrollbar-thumb{background:rgba(248,113,113,.12);border-radius:4px;}
+.admin-main{flex:1;overflow-y:auto;background:linear-gradient(165deg,#050810,#080c18);}
+.admin-main::-webkit-scrollbar{width:5px;}.admin-main::-webkit-scrollbar-thumb{background:rgba(248,113,113,.1);border-radius:4px;}
+.adm-tab{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:10px;cursor:pointer;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.4);transition:all .14s ease;margin-bottom:1px;position:relative;border:1px solid transparent;}
+.adm-tab:hover{background:rgba(248,113,113,.04);color:rgba(255,255,255,.7);border-color:rgba(248,113,113,.06);}
+.adm-tab.active{background:linear-gradient(135deg,rgba(248,113,113,.08),rgba(255,249,62,.04));color:#f87171;font-weight:700;border-color:rgba(248,113,113,.12);}
+.adm-tab.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,#f87171,#ff6b6b);box-shadow:0 0 8px rgba(248,113,113,.4);}
+.adm-tab svg{width:17px;height:17px;flex-shrink:0;opacity:.5;}
+.adm-tab.active svg{opacity:1;filter:drop-shadow(0 0 3px rgba(248,113,113,.3));}
+.adm-tab .adm-badge{margin-left:auto;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:100px;min-width:18px;text-align:center;box-shadow:0 2px 8px rgba(248,113,113,.3);animation:adm-badge-pulse 2s infinite;}
+@keyframes adm-badge-pulse{0%,100%{box-shadow:0 2px 8px rgba(248,113,113,.3);}50%{box-shadow:0 2px 12px rgba(248,113,113,.5);}}
+.adm-sec-label{font-size:8.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(248,113,113,.25);padding:18px 14px 6px;}
+.hq-stat{background:linear-gradient(135deg,#0a0e18,#0c1020);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;}
+.hq-stat:hover{border-color:rgba(248,113,113,.15);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.hq-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--stat-accent,#f87171);opacity:.4;transition:opacity .2s;}
+.hq-stat:hover::before{opacity:.8;}
+.hq-stat-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1;}
+.hq-stat-label{font-size:10.5px;color:rgba(255,255,255,.3);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.hq-panel{background:linear-gradient(135deg,#0a0e18,#080c16);border:1px solid rgba(255,255,255,.05);border-radius:16px;overflow:hidden;}
+.hq-panel-head{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px;}
+.hq-panel-head h3{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;margin:0;color:rgba(255,255,255,.7);}
+.hq-threat{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;font-size:11px;font-weight:700;}
+.hq-threat.low{background:rgba(62,207,110,.06);border:1px solid rgba(62,207,110,.12);color:#3ecf6e;}
+.hq-threat.medium{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.12);color:#f59e0b;}
+.hq-threat.high{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);color:#f87171;}
+.hq-threat.critical{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#ff4444;animation:adm-badge-pulse 1.5s infinite;}
+.hq-user-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.03);transition:all .12s;cursor:pointer;}
+.hq-user-row:hover{background:rgba(248,113,113,.03);}
+.hq-user-row:last-child{border-bottom:none;}
+.hq-col-header{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(248,113,113,.02);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(248,113,113,.4);cursor:pointer;user-select:none;}
+.hq-col-header>div:hover{color:rgba(248,113,113,.7);}
+.hq-col-header .sort-active{color:#f87171;}
+.hq-feed-item{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.03);animation:hq-feed-in .3s cubic-bezier(.22,1,.36,1);}
+@keyframes hq-feed-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
+.hq-quick-btn{padding:7px 14px;border-radius:8px;border:1px solid rgba(248,113,113,.12);background:rgba(248,113,113,.04);color:rgba(248,113,113,.6);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.hq-quick-btn:hover{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.25);color:#f87171;}
 @media(max-width:768px){.admin-nav{width:56px;min-width:56px;}.adm-tab span:last-child,.adm-sec-label{display:none;}.adm-tab{justify-content:center;padding:10px;}}
 .profile-wrap{flex:1;display:flex;overflow:hidden;background:linear-gradient(165deg,#0c0f18,#090c14);}
 /* Settings sidebar — Guilded/Fortized style */
@@ -11410,20 +11436,23 @@ async function _openAdminUI() {
   const hdr = document.getElementById('admin-header-bar');
   if (hdr) hdr.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;">
-        <img src="/FortizedSecurity logo.png" style="width:28px;height:28px;border-radius:8px;object-fit:contain;" onerror="this.style.display='none'">
+        <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,rgba(248,113,113,.12),rgba(248,113,113,.04));border:1px solid rgba(248,113,113,.15);display:flex;align-items:center;justify-content:center;">
+          <img src="/FortizedSecurity logo.png" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML='<svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'#f87171\\' stroke-width=\\'2\\'><path d=\\'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\\'/></svg>'">
+        </div>
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacing:.02em;line-height:1;">Staff Console</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;">Fortized Administration</div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacing:.04em;line-height:1;">COMMAND CENTER</div>
+          <div style="font-size:9px;color:rgba(248,113,113,.4);font-weight:600;letter-spacing:.1em;margin-top:2px;">FORTIZED ADMINISTRATION</div>
         </div>
       </div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
-        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#3ecf6e;"><div style="width:5px;height:5px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px #3ecf6e88;"></div>Live</div>
-        <div style="display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;background:${roleColor}12;border:1px solid ${roleColor}30;">
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#3ecf6e;font-weight:700;"><div style="width:6px;height:6px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 8px #3ecf6e88;animation:adm-badge-pulse 2s infinite;"></div>LIVE</div>
+        <div style="width:1px;height:16px;background:rgba(255,255,255,.06);"></div>
+        <div style="display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;background:${roleColor}0d;border:1px solid ${roleColor}25;">
           <span style="color:${roleColor};display:flex;">${roleSvg}</span>
-          <span style="font-size:10.5px;font-weight:700;color:${roleColor};">${roleLabel}</span>
+          <span style="font-size:10px;font-weight:800;color:${roleColor};letter-spacing:.04em;">${roleLabel.toUpperCase()}</span>
         </div>
-        <span style="font-size:11px;color:rgba(255,255,255,.3);">@${escapeHTML(CU.username)}</span>
-        <button onclick="_closeAdminPanel()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5);padding:6px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:.15s;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.5)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Exit</button>
+        <span style="font-size:10.5px;color:rgba(255,255,255,.25);font-weight:500;">@${escapeHTML(CU.username)}</span>
+        <button onclick="_closeAdminPanel()" style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);color:rgba(248,113,113,.5);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;transition:.15s;display:flex;align-items:center;gap:5px;letter-spacing:.02em;" onmouseover="this.style.background='rgba(248,113,113,.12)';this.style.color='#f87171'" onmouseout="this.style.background='rgba(248,113,113,.06)';this.style.color='rgba(248,113,113,.5)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>EXIT</button>
       </div>`;
   startReportPolling();
   _setupAdminLiveSync();
@@ -11554,7 +11583,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
     const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
     const totalStaff = SUPER_ADMINS.length + (staff.admins||[]).length + (staff.moderators||[]).length;
-    let totalUsers = '–', onlineCount = 0, radianceCount = 0;
+    let totalUsers = '–', onlineCount = 0, radianceCount = 0, awayCount = 0, dndCount = 0, newestUsers = [], topOnyx = [];
     try {
       const s = await firebase.database().ref('users').get();
       if (s.exists()) {
@@ -11562,79 +11591,139 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         const usersList = Object.values(usersObj);
         totalUsers = usersList.length;
         radianceCount = usersList.filter(u => u.radianceUntil && new Date(u.radianceUntil) > new Date()).length;
+        newestUsers = usersList.filter(u=>u.createdAt||u.joinedAt).sort((a,b)=>new Date(b.createdAt||b.joinedAt)-new Date(a.createdAt||a.joinedAt)).slice(0,5);
+        topOnyx = [...usersList].sort((a,b)=>(b.onyx||0)-(a.onyx||0)).slice(0,5);
       }
       const statSnap = await firebase.database().ref('statuses').get();
       if (statSnap.exists()) {
-        onlineCount = Object.values(statSnap.val()).filter(s => s === 'online' || s === 'away' || s === 'dnd').length;
+        const statVals = Object.values(statSnap.val());
+        onlineCount = statVals.filter(s => s === 'online').length;
+        awayCount = statVals.filter(s => s === 'away').length;
+        dndCount = statVals.filter(s => s === 'dnd').length;
       }
     } catch {}
-    const pending = reps.filter(r=>r.status!=='resolved').length;
+    const pending = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
     const nsfwQueue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
-    const _svgIcon = (svg, col) => `<div style="width:36px;height:36px;border-radius:10px;background:${col}10;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg></div>`;
-    const _statSvgs = {
-      users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
-      online:'<circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/>',
-      flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
-      ban:'<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>',
-      radiance:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
-      shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
-      chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
-      eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
-    };
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+    const auditLog = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
+    const tickets = JSON.parse(localStorage.getItem('ftz_support_tickets')||'{}');
+    const openTickets = Object.values(tickets).filter(t=>t.status==='open').length;
+
+    // Threat level calculation
+    const threatScore = pending * 3 + nsfwQueue.length * 2 + bans.length + openTickets;
+    const threat = threatScore > 20 ? {level:'CRITICAL',cls:'critical',icon:'🔴'} : threatScore > 10 ? {level:'HIGH',cls:'high',icon:'🟠'} : threatScore > 3 ? {level:'MODERATE',cls:'medium',icon:'🟡'} : {level:'LOW',cls:'low',icon:'🟢'};
+    const activeNow = onlineCount + awayCount + dndCount;
+    const uptime = '99.9%'; // placeholder
+
+    main.innerHTML = `<div style="padding:24px 28px;">
+      <!-- Command Center Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;">Overview</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.35);">${escapeHTML(CU.displayName||CU.username)} · ${getStaffRole(CU.username)||'staff'} · ${new Date().toLocaleDateString()}</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+            <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;">Command Center</div>
+            <div class="hq-threat ${threat.cls}">${threat.icon} THREAT: ${threat.level}</div>
+          </div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.3);">Operator: <span style="color:rgba(248,113,113,.6);">${escapeHTML(CU.displayName||CU.username)}</span> · ${new Date().toLocaleString()} · Session Active</div>
         </div>
-        <button onclick="_syncAdminDataFromFirebase().then(()=>{toast('Synced','success');_loadAdminPage('dashboard');})" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.5);font-size:12px;padding:7px 16px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:6px;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Sync</button>
+        <div style="display:flex;gap:8px;">
+          <button class="hq-quick-btn" onclick="_syncAdminDataFromFirebase().then(()=>{toast('Data synced','success');_loadAdminPage('dashboard');})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync</button>
+          <button class="hq-quick-btn" onclick="_loadAdminPage('all_users')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Users DB</button>
+        </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;">
+
+      <!-- Primary Stats Row -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:10px;">
         ${[
-          {l:'Total Users',v:totalUsers,svg:_statSvgs.users,c:'#60a5fa',t:'all_users'},
-          {l:'Online Now',v:onlineCount,svg:_statSvgs.online,c:'#3ecf6e',t:'all_users'},
-          {l:'Pending Reports',v:pending,svg:_statSvgs.flag,c:pending>0?'#f87171':'#3ecf6e',t:'reports'},
-          {l:'Banned',v:bans.length,svg:_statSvgs.ban,c:bans.length>0?'#f87171':'#3ecf6e',t:'bans'},
-        ].map(s=>`<div onclick="_loadAdminPage('${s.t}')" style="background:#0d1018;border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:18px;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='rgba(255,249,62,.12)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform=''">
-          ${_svgIcon(s.svg,s.c)}
-          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:${s.c};">${s.v}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:3px;font-weight:500;">${s.l}</div>
+          {l:'Total Users',v:totalUsers,c:'#60a5fa',t:'all_users'},
+          {l:'Active Now',v:activeNow,c:'#3ecf6e',t:'all_users',sub:onlineCount+' online · '+awayCount+' idle · '+dndCount+' dnd'},
+          {l:'Pending Reports',v:pending,c:pending>0?'#f87171':'#3ecf6e',t:'reports'},
+          {l:'Content Queue',v:nsfwQueue.length,c:nsfwQueue.length>0?'#f59e0b':'#3ecf6e',t:'nsfw_queue'},
+          {l:'Banned',v:bans.length,c:bans.length>0?'#f87171':'#3ecf6e',t:'bans'},
+        ].map(s=>`<div class="hq-stat" style="--stat-accent:${s.c};" onclick="_loadAdminPage('${s.t}')">
+          <div class="hq-stat-val" style="color:${s.c};">${s.v}</div>
+          <div class="hq-stat-label">${s.l}</div>
+          ${s.sub?`<div style="font-size:9px;color:rgba(255,255,255,.2);margin-top:3px;">${s.sub}</div>`:''}
         </div>`).join('')}
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px;">
         ${[
-          {l:'Radiance Users',v:radianceCount,svg:_statSvgs.radiance,c:'#ffd93e'},
-          {l:'Staff',v:totalStaff,svg:_statSvgs.shield,c:'#a78bfa'},
-          {l:'Reports Total',v:reps.length,svg:_statSvgs.chart,c:'#60a5fa'},
-          {l:'Content Review',v:nsfwQueue.length,svg:_statSvgs.eye,c:nsfwQueue.length>0?'#f59e0b':'#3ecf6e',t:'nsfw_queue'},
-        ].map(s=>`<div ${s.t?`onclick="_loadAdminPage('${s.t}')" style="cursor:pointer;`:'style="'} background:#0d1018;border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:18px;transition:all .18s;">
-          ${_svgIcon(s.svg,s.c)}
-          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:${s.c};">${s.v}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:3px;font-weight:500;">${s.l}</div>
+          {l:'Radiance',v:radianceCount,c:'#ffd93e'},
+          {l:'Staff Members',v:totalStaff,c:'#a78bfa'},
+          {l:'Total Reports',v:reps.length,c:'#60a5fa'},
+          {l:'Open Tickets',v:openTickets,c:openTickets>0?'#38bdf8':'#3ecf6e',t:'support_tickets'},
+          {l:'Uptime',v:uptime,c:'#3ecf6e'},
+        ].map(s=>`<div class="hq-stat" style="--stat-accent:${s.c};" ${s.t?`onclick="_loadAdminPage('${s.t}')"`:''}>
+          <div class="hq-stat-val" style="color:${s.c};font-size:22px;">${s.v}</div>
+          <div class="hq-stat-label">${s.l}</div>
         </div>`).join('')}
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div>
-          <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:10px;">Recent Reports</div>
-          <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
-            ${reps.slice(0,5).map(r=>{const _t=r.username||r.msgFrom||null;return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,.04);">
-              <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:${r.status==='resolved'||r.status==='dismissed'||r.status==='warned'?'rgba(62,207,110,.1)':'rgba(248,113,113,.1)'};color:${r.status==='resolved'||r.status==='dismissed'||r.status==='warned'?'#3ecf6e':'#f87171'};flex-shrink:0;">${r.status||'pending'}</span>
-              <span style="font-size:10px;padding:2px 6px;border-radius:100px;background:${r.type==='message'?'rgba(96,165,250,.1)':'rgba(168,85,247,.1)'};color:${r.type==='message'?'#60a5fa':'#a855f7'};flex-shrink:0;">${r.type==='message'?'msg':'user'}</span>
-              <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;">${escapeHTML(r.reason||'–')}</div><div style="font-size:11px;color:rgba(255,255,255,.35);">by ${escapeHTML(r.reporter||'?')} ${_t?' → <strong style="color:rgba(255,255,255,.5);">'+escapeHTML(_t)+'</strong>':''}</div></div>
-              <div style="display:flex;gap:4px;">
-                ${_t?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(_t)}';adminSearchUser();}},150);" style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.15);color:#60a5fa;font-size:11px;padding:4px 8px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:3px;" title="Inspect ${escapeHTML(_t)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>`:''}
-                ${r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned'?`<button onclick="resolveReport(${reps.indexOf(r)},'resolved');_loadAdminPage('dashboard')" style="background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);color:#3ecf6e;font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;">Resolve</button>`:''}
+
+      <!-- Three-column bottom section -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+        <!-- Recent Reports -->
+        <div class="hq-panel">
+          <div class="hq-panel-head">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            <h3>Incoming Reports</h3>
+            <div style="margin-left:auto;font-size:10px;color:rgba(248,113,113,.5);font-weight:700;">${pending} PENDING</div>
+          </div>
+          <div style="max-height:300px;overflow-y:auto;">
+            ${reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').slice(0,8).map((r,i)=>{const _t=r.username||r.msgFrom||null;return `<div class="hq-user-row" onclick="_loadAdminPage('reports')">
+              <div style="width:8px;height:8px;border-radius:50%;background:#f87171;flex-shrink:0;box-shadow:0 0 6px rgba(248,113,113,.4);"></div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(r.reason||'No reason')}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,.25);">${escapeHTML(r.reporter||'?')}${_t?' → '+escapeHTML(_t):''} · ${r.createdAt?formatTimeAgo(r.createdAt):''}</div>
               </div>
-            </div>`;}).join('')||'<div style="padding:18px;text-align:center;color:rgba(255,255,255,.3);font-size:13px;">No reports</div>'}
+            </div>`;}).join('')||'<div style="padding:24px;text-align:center;color:rgba(62,207,110,.4);font-size:12px;font-weight:600;">All clear</div>'}
           </div>
         </div>
-        <div>
-          <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:10px;">Recent Audit</div>
-          <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
-            ${(JSON.parse(localStorage.getItem('ftz_audit_log')||'[]')).slice(0,5).map(e=>`<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,.04);">
-              <div style="flex:1;min-width:0;font-size:12.5px;"><strong style="color:#f87171;">${escapeHTML(e.action||'?')}</strong> <span style="color:rgba(255,255,255,.5);">·</span> ${escapeHTML(e.target||'')}</div>
-              <div style="font-size:10.5px;color:rgba(255,255,255,.25);flex-shrink:0;">by ${escapeHTML(e.by||'?')}</div>
-            </div>`).join('')||'<div style="padding:18px;text-align:center;color:rgba(255,255,255,.3);font-size:13px;">No events</div>'}
+
+        <!-- Live Activity Feed -->
+        <div class="hq-panel">
+          <div class="hq-panel-head">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <h3>Activity Feed</h3>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;color:#3ecf6e;font-weight:600;"><div style="width:5px;height:5px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px #3ecf6e88;animation:adm-badge-pulse 2s infinite;"></div>LIVE</div>
+          </div>
+          <div style="max-height:300px;overflow-y:auto;" id="hq-live-feed">
+            ${auditLog.slice(0,10).map(e=>{
+              const actionColor = (e.action||'').includes('ban')?'#f87171':(e.action||'').includes('warn')?'#f59e0b':(e.action||'').includes('give')||((e.action||'').includes('grant'))?'#ffd93e':(e.action||'').includes('report')?'#a855f7':'#60a5fa';
+              return `<div class="hq-feed-item">
+                <div style="width:6px;height:6px;border-radius:50%;background:${actionColor};flex-shrink:0;margin-top:5px;box-shadow:0 0 4px ${actionColor}55;"></div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:11.5px;color:rgba(255,255,255,.6);"><span style="color:${actionColor};font-weight:700;">${escapeHTML(e.action||'?')}</span> <span style="color:rgba(255,255,255,.3);">on</span> ${escapeHTML(e.target||'?')}</div>
+                  <div style="font-size:9.5px;color:rgba(255,255,255,.2);">${escapeHTML(e.by||'?')} · ${e.at?formatTimeAgo(e.at):''}</div>
+                </div>
+              </div>`;}).join('')||'<div style="padding:24px;text-align:center;color:rgba(255,255,255,.2);font-size:12px;">No activity yet</div>'}
+          </div>
+        </div>
+
+        <!-- Quick Intel -->
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <!-- Newest Users -->
+          <div class="hq-panel" style="flex:1;">
+            <div class="hq-panel-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              <h3>New Arrivals</h3>
+            </div>
+            ${newestUsers.map(u=>`<div class="hq-user-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
+              <div style="width:26px;height:26px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(u.pfp,u.displayName||u.username,26)}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:11.5px;font-weight:600;color:rgba(255,255,255,.7);">@${escapeHTML(u.username)}</div>
+                <div style="font-size:9.5px;color:rgba(255,255,255,.2);">${u.createdAt?formatTimeAgo(u.createdAt):(u.joinedAt?formatTimeAgo(u.joinedAt):'')}</div>
+              </div>
+            </div>`).join('')||'<div style="padding:14px;text-align:center;color:rgba(255,255,255,.2);font-size:11px;">No data</div>'}
+          </div>
+          <!-- Top Onyx -->
+          <div class="hq-panel" style="flex:1;">
+            <div class="hq-panel-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffd93e" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              <h3>Top Onyx</h3>
+            </div>
+            ${topOnyx.map((u,i)=>`<div class="hq-user-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
+              <div style="font-size:10px;font-weight:800;color:${i===0?'#ffd93e':i===1?'#c0c0c0':i===2?'#cd7f32':'rgba(255,255,255,.3)'};width:16px;text-align:center;">#${i+1}</div>
+              <div style="flex:1;min-width:0;font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);">@${escapeHTML(u.username)}</div>
+              <div style="font-size:12px;font-weight:800;color:#ffd93e;font-family:'Syne',sans-serif;">${(u.onyx||0).toLocaleString()}</div>
+            </div>`).join('')||'<div style="padding:14px;text-align:center;color:rgba(255,255,255,.2);font-size:11px;">No data</div>'}
           </div>
         </div>
       </div>
@@ -11870,27 +11959,62 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     _loadAdminSuspensions();
   }
   else if (tab === 'users') {
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:16px;">Lookup</div>
+    main.innerHTML = `<div style="padding:24px 28px;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Subject Lookup</div>
+          <div style="font-size:11px;color:rgba(248,113,113,.35);font-weight:600;">Search and inspect any user in the database</div>
+        </div>
+      </div>
       <div style="display:flex;gap:8px;margin-bottom:20px;">
-        <input id="admin-user-search" class="settings-input" placeholder="Search username…" style="flex:1;max-width:360px;" onkeydown="if(event.key==='Enter')adminSearchUser()">
-        <button onclick="adminSearchUser()" style="padding:9px 18px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:10px;cursor:pointer;font-weight:700;">Search</button>
+        <div style="position:relative;flex:1;max-width:400px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(248,113,113,.3)" stroke-width="2" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="admin-user-search" class="settings-input" placeholder="Enter target username…" style="padding-left:38px;background:rgba(248,113,113,.03);border:1.5px solid rgba(248,113,113,.1);font-size:13px;" onkeydown="if(event.key==='Enter')adminSearchUser()" onfocus="this.style.borderColor='rgba(248,113,113,.25)'" onblur="this.style.borderColor='rgba(248,113,113,.1)'">
+        </div>
+        <button class="hq-quick-btn" onclick="adminSearchUser()" style="padding:9px 20px;font-size:12px;font-weight:700;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Scan</button>
       </div>
       <div id="admin-user-result"></div>
     </div>`;
   }
   else if (tab === 'all_users') {
-    main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Member List</div>
-        <div style="display:flex;gap:6px;">
-          <button id="sort-reg-btn" class="btn-d" style="font-size:11px;padding:5px 10px;" onclick="sortAllUsers('registration')">By Date</button>
-          <button id="sort-onyx-btn" class="btn-g" style="font-size:11px;padding:5px 10px;" onclick="sortAllUsers('onyx')">By Onyx</button>
+    main.innerHTML = `<div style="padding:24px 28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">User Database</div>
+          <div id="admin-users-count" style="font-size:11px;color:rgba(248,113,113,.4);margin-top:2px;font-weight:600;"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="all-users-search" class="settings-input" placeholder="Search users…" style="width:220px;font-size:12px;background:rgba(248,113,113,.03);border-color:rgba(248,113,113,.1);" oninput="filterAllUsers(this.value)">
+          <select id="hq-user-filter" class="settings-input" style="width:140px;font-size:11px;background:rgba(248,113,113,.03);border-color:rgba(248,113,113,.1);" onchange="_hqFilterUsers()">
+            <option value="all">All Users</option>
+            <option value="online">Online</option>
+            <option value="radiance">Radiance</option>
+            <option value="staff">Staff</option>
+            <option value="banned">Banned</option>
+            <option value="new_24h">New (24h)</option>
+            <option value="new_7d">New (7d)</option>
+            <option value="rich">Rich (1k+ Onyx)</option>
+            <option value="no_friends">No Friends</option>
+            <option value="no_bastions">No Bastions</option>
+          </select>
         </div>
       </div>
-      <input id="all-users-search" class="settings-input" placeholder="Filter by username…" style="max-width:280px;margin-bottom:14px;" oninput="filterAllUsers(this.value)">
-      <div id="admin-users-count" style="font-size:11.5px;color:rgba(255,255,255,.3);margin-bottom:12px;"></div>
-      <div id="all-users-list"></div>
+      <!-- Column Headers (sortable) -->
+      <div class="hq-col-header" style="border-radius:12px 12px 0 0;border:1px solid rgba(255,255,255,.05);">
+        <div style="width:30px;text-align:center;">#</div>
+        <div style="width:32px;"></div>
+        <div style="flex:1;min-width:100px;cursor:pointer;" onclick="_hqSortUsers('username')">User <span id="hq-sort-username"></span></div>
+        <div style="width:70px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('status')">Status <span id="hq-sort-status"></span></div>
+        <div style="width:65px;cursor:pointer;text-align:right;" onclick="_hqSortUsers('onyx')">Onyx <span id="hq-sort-onyx"></span></div>
+        <div style="width:55px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('friends')">Friends <span id="hq-sort-friends"></span></div>
+        <div style="width:60px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('bastions')">Bastions <span id="hq-sort-bastions"></span></div>
+        <div style="width:50px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('age')">Age <span id="hq-sort-age"></span></div>
+        <div style="width:75px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('joined')">Joined <span id="hq-sort-joined"></span></div>
+        <div style="width:65px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('radiance')">Radiance <span id="hq-sort-radiance"></span></div>
+        <div style="width:50px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('role')">Role <span id="hq-sort-role"></span></div>
+        <div style="width:55px;cursor:pointer;text-align:center;" onclick="_hqSortUsers('risk')">Risk <span id="hq-sort-risk"></span></div>
+      </div>
+      <div id="all-users-list" style="border:1px solid rgba(255,255,255,.04);border-top:none;border-radius:0 0 12px 12px;overflow:hidden;max-height:calc(100vh - 260px);overflow-y:auto;"></div>
     </div>`;
     await loadAllUsers(false);
   }
@@ -12882,13 +13006,16 @@ async function adminSearchUser() {
   const raw = document.getElementById('admin-user-search')?.value?.trim().toLowerCase();
   if (!raw) return;
   const result = document.getElementById('admin-user-result');
-  result.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:13px;">Searching…</div>';
+  result.innerHTML = '<div style="color:rgba(248,113,113,.4);font-size:13px;display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;border:2px solid rgba(248,113,113,.3);border-top-color:#f87171;border-radius:50%;animation:spin .6s linear infinite;"></div>Scanning database…</div>';
   let u = null;
   try { u = await FortizedSocial.getUserByName(raw); } catch(e){ console.error(e); }
-  if (!u) { result.innerHTML = '<div style="color:#f87171;font-size:13px;">No user found.</div>'; return; }
+  if (!u) { result.innerHTML = '<div style="color:#f87171;font-size:13px;">Target not found in database.</div>'; return; }
   const username = u.username;
   const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+  const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+  const auditLog = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
   const isBanned = bans.some(b=>b.username===username);
+  const banInfo = bans.find(b=>b.username===username);
   const ageTier = getAgeTier(u.dateOfBirth);
   const hasRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
@@ -12898,71 +13025,126 @@ async function adminSearchUser() {
   try { userStatus = await FortizedSocial.getStatus(username); } catch {}
   const statusColors = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
 
+  // Risk analysis
+  const reportsAgainst = reps.filter(r => (r.username||r.msgFrom||'').toLowerCase() === username.toLowerCase());
+  const reportsBy = reps.filter(r => (r.reporter||'').toLowerCase() === username.toLowerCase());
+  const userAudit = auditLog.filter(e => (e.target||'').toLowerCase() === username.toLowerCase());
+  const risk = _calcUserRisk(u);
+  const riskColor = risk >= 50 ? '#f87171' : risk >= 20 ? '#f59e0b' : risk >= 5 ? '#60a5fa' : '#3ecf6e';
+  const riskLabel = risk >= 50 ? 'CRITICAL' : risk >= 20 ? 'HIGH' : risk >= 5 ? 'MODERATE' : 'LOW';
+  const accountAge = u.createdAt || u.joinedAt ? Math.floor((Date.now() - new Date(u.createdAt||u.joinedAt)) / 86400000) : null;
+
   const myRole = getStaffRole(CU.username);
   const targetStaffRole = getStaffRole(username);
-  const targetStaffBadge = targetStaffRole === 'superadmin' ? '<span style="font-size:10px;font-weight:700;background:rgba(255,215,62,.15);color:#ffd93e;padding:2px 8px;border-radius:100px;">SUPER ADMIN</span>'
-    : targetStaffRole === 'admin' ? '<span style="font-size:10px;font-weight:700;background:rgba(248,113,113,.15);color:#f87171;padding:2px 8px;border-radius:100px;">ADMIN</span>'
-    : targetStaffRole === 'moderator' ? '<span style="font-size:10px;font-weight:700;background:rgba(96,165,250,.15);color:#60a5fa;padding:2px 8px;border-radius:100px;">MODERATOR</span>' : '';
-  // Data visibility based on role
+  const targetStaffBadge = targetStaffRole === 'superadmin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(255,215,62,.15),rgba(255,215,62,.08));color:#ffd93e;padding:3px 10px;border-radius:100px;border:1px solid rgba(255,215,62,.2);">SUPER ADMIN</span>'
+    : targetStaffRole === 'admin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(248,113,113,.15),rgba(248,113,113,.08));color:#f87171;padding:3px 10px;border-radius:100px;border:1px solid rgba(248,113,113,.2);">ADMIN</span>'
+    : targetStaffRole === 'moderator' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(96,165,250,.08));color:#60a5fa;padding:3px 10px;border-radius:100px;border:1px solid rgba(96,165,250,.2);">MODERATOR</span>' : '';
   const canSeeEmail = isSuperAdmin() || isAdmin();
   const canSeePreciseAge = isSuperAdmin();
   const canSeeFullData = isAdmin();
   const ageDisplay = canSeePreciseAge ? (u.dateOfBirth || 'Not set') : (ageTier || 'Unknown');
   const ageLabel = canSeePreciseAge ? 'Date of Birth' : 'Age Tier';
-  // Build info grid based on role
-  const infoGrid = [
-    ['Onyx', u.onyx||0],
-    ['Friends', (u.friends||[]).length],
-    ['Bastions', (u.bastions||[]).length],
-    [ageLabel, ageDisplay],
-    ['Joined', u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Unknown'],
-    ['Radiance', hasRadiancePlus ? 'Plus Active' : hasRadiance ? 'Active' : 'None'],
-    ...(canSeeEmail ? [['Email', u.email || 'N/A']] : []),
-    ['Verified', u.verified ? 'Yes' : 'No'],
-    ...(canSeeFullData ? [
-      ['Status Text', u.customStatus || 'None'],
-      ['Bio', u.bio ? u.bio.slice(0,50) + (u.bio.length>50?'…':'') : 'None'],
-      ...(u.suspendedUntil ? [['Suspended Until', new Date(u.suspendedUntil).toLocaleDateString()]] : []),
-      ...(u.referredBy ? [['Referred By', u.referredBy]] : []),
-    ] : []),
-  ];
+
   result.innerHTML = `
-    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;max-width:720px;">
-      <div style="display:flex;align-items:center;gap:16px;padding:22px 24px;border-bottom:1px solid rgba(255,255,255,.06);">
-        <div style="position:relative;flex-shrink:0;">
-          <div style="width:60px;height:60px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,.1);">${buildAvatarHTML(u.pfp,u.displayName||u.username,60)}</div>
-          <div style="position:absolute;bottom:0;right:0;width:14px;height:14px;border-radius:50%;background:${statusColors[userStatus]||'#6b7280'};border:2.5px solid var(--panel,#101420);"></div>
-        </div>
-        <div style="flex:1;">
-          <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;">${escapeHTML(u.displayName||u.username)}</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.35);">@${escapeHTML(username)} · <span style="color:${statusColors[userStatus]||'#6b7280'}">${userStatus}</span></div>
-          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">
-            ${isBanned?'<span style="font-size:10px;font-weight:700;background:rgba(248,113,113,.15);color:#f87171;padding:2px 8px;border-radius:100px;">BANNED</span>':''}
-            ${targetStaffBadge}
-            ${renderBadgesHTML(u)}
+    <div style="max-width:860px;">
+      <!-- Subject Header -->
+      <div class="hq-panel" style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:18px;padding:22px 24px;position:relative;">
+          <div style="position:relative;flex-shrink:0;">
+            <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:3px solid ${riskColor}33;box-shadow:0 0 20px ${riskColor}15;">${buildAvatarHTML(u.pfp,u.displayName||u.username,72)}</div>
+            <div style="position:absolute;bottom:2px;right:2px;width:16px;height:16px;border-radius:50%;background:${statusColors[userStatus]||'#6b7280'};border:3px solid #0a0e18;box-shadow:0 0 8px ${statusColors[userStatus]||'#6b7280'}55;"></div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">${escapeHTML(u.displayName||u.username)}</div>
+              ${isBanned?'<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;padding:3px 10px;border-radius:100px;animation:adm-badge-pulse 2s infinite;">BANNED</span>':''}
+              ${targetStaffBadge}
+            </div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:6px;">@${escapeHTML(username)} · <span style="color:${statusColors[userStatus]||'#6b7280'};font-weight:600;">${userStatus.toUpperCase()}</span>${accountAge!==null?' · Account age: '+accountAge+'d':''}</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">${renderBadgesHTML(u)}</div>
+          </div>
+          <!-- Risk Gauge -->
+          <div style="flex-shrink:0;text-align:center;padding:12px 18px;background:${riskColor}08;border:1px solid ${riskColor}20;border-radius:14px;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:${riskColor};margin-bottom:4px;">Risk Score</div>
+            <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:${riskColor};line-height:1;">${risk}</div>
+            <div style="font-size:9px;font-weight:700;color:${riskColor};opacity:.6;">${riskLabel}</div>
+            <div style="width:60px;height:4px;border-radius:2px;background:rgba(255,255,255,.06);margin:6px auto 0;overflow:hidden;"><div style="height:100%;width:${risk}%;background:${riskColor};border-radius:2px;transition:width .3s;"></div></div>
           </div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);">
-        ${infoGrid.map(([k,v])=>`
-          <div style="padding:13px 18px;border-right:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04);">
-            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:2px;">${k}</div>
-            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${typeof v === 'string' ? escapeHTML(v) : v}</div>
-          </div>`).join('')}
-      </div>
-      <div style="padding:16px 22px;display:flex;gap:8px;flex-wrap:wrap;">
+
+      <!-- Quick Actions Toolbar -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
         ${myRole==='moderator'?`
-          ${!isMe?`<button onclick="adminActionUser('${escapeHTML(username)}','warn')" style="padding:7px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#f59e0b;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Warn</button>`:''}
+          ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','warn')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Warn</button>`:''}
         `:`
-          ${!isMe?`<button onclick="adminActionUser('${escapeHTML(username)}','warn')" style="padding:7px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#f59e0b;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Warn</button>`:''}
-          ${!isMe?`<button onclick="adminActionUser('${escapeHTML(username)}','suspend')" style="padding:7px 14px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#a855f7;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Suspend</button>`:''}
-          ${!isMe?(isBanned?`<button onclick="adminActionUser('${escapeHTML(username)}','unban')" style="padding:7px 14px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Unban</button>`:`<button onclick="adminActionUser('${escapeHTML(username)}','ban')" style="padding:7px 14px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Ban</button>`):''}
-          ${!isMe && !alreadyFriends?`<button onclick="adminForceFriend('${escapeHTML(username)}')" style="padding:7px 14px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Force Friend</button>`:''}
-          <button onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="padding:7px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Give Onyx</button>
-          <button onclick="adminActionUser('${escapeHTML(username)}','radiance')" style="padding:7px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:#ffd93e;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Radiance</button>
-          <button onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="padding:7px 14px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.15);color:#a855f7;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Radiance+</button>
+          ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','warn')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Warn</button>`:''}
+          ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','suspend')" style="border-color:rgba(168,85,247,.15);background:rgba(168,85,247,.04);color:rgba(168,85,247,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Suspend</button>`:''}
+          ${!isMe?(isBanned?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','unban')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Unban</button>`:`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','ban')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Ban</button>`):''}
+          ${!isMe && !alreadyFriends?`<button class="hq-quick-btn" onclick="adminForceFriend('${escapeHTML(username)}')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);">Force Friend</button>`:''}
+          <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Give Onyx</button>
+          <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','radiance')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Radiance</button>
+          <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="border-color:rgba(168,85,247,.12);background:rgba(168,85,247,.03);color:rgba(168,85,247,.5);">Radiance+</button>
         `}
-        <button onclick="openDMView('${escapeHTML(username)}');_closeAdminPanel();" style="padding:7px 14px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px;">Message</button>
+        <button class="hq-quick-btn" onclick="openDMView('${escapeHTML(username)}');_closeAdminPanel();" style="border-color:rgba(96,165,250,.15);background:rgba(96,165,250,.04);color:rgba(96,165,250,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</button>
+        <button class="hq-quick-btn" onclick="viewUserProfile('${escapeHTML(username)}');_closeAdminPanel();" style="border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.02);color:rgba(255,255,255,.4);">View Profile</button>
+      </div>
+
+      <!-- Intel Grid -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;">
+        <!-- Left: Data Grid -->
+        <div class="hq-panel">
+          <div class="hq-panel-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h3>Subject Intel</h3></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);">
+            ${[
+              ['Onyx Balance', (u.onyx||0).toLocaleString(), '#ffd93e'],
+              ['Friends', (u.friends||[]).length, '#3ecf6e'],
+              ['Bastions', (u.bastions||[]).length, '#60a5fa'],
+              [ageLabel, ageDisplay, '#a78bfa'],
+              ['Joined', u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Unknown', '#60a5fa'],
+              ['Radiance', hasRadiancePlus ? 'Plus Active' : hasRadiance ? 'Active' : 'None', hasRadiancePlus ? '#a855f7' : hasRadiance ? '#ffd93e' : '#6b7280'],
+              ['Verified', u.verified ? 'Yes' : 'No', u.verified ? '#3ecf6e' : '#6b7280'],
+              ['Reports Against', reportsAgainst.length, reportsAgainst.length > 0 ? '#f87171' : '#3ecf6e'],
+              ...(canSeeEmail ? [['Email', u.email || 'N/A', '#38bdf8']] : []),
+              ...(canSeeFullData ? [
+                ['Cloud Status', (u.customStatus?.text) || 'None', '#a78bfa'],
+                ['Bio Length', u.bio ? u.bio.length + ' chars' : 'None', '#60a5fa'],
+                ['Reports Filed', reportsBy.length, '#f59e0b'],
+                ...(u.suspension ? [['Suspension', 'Active', '#a855f7']] : []),
+                ...(u.referredBy ? [['Referred By', u.referredBy, '#3ecf6e']] : []),
+              ] : []),
+            ].map(([k,v,c])=>`
+              <div style="padding:12px 16px;border-right:1px solid rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.03);">
+                <div style="font-size:9.5px;color:rgba(255,255,255,.25);margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;">${k}</div>
+                <div style="font-size:13px;font-weight:700;color:${c||'rgba(255,255,255,.7)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${typeof v === 'string' ? escapeHTML(v) : v}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <!-- Right: Activity Timeline + Ban Info -->
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          ${isBanned && banInfo ? `<div class="hq-panel">
+            <div class="hq-panel-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><h3 style="color:#f87171;">Ban Record</h3></div>
+            <div style="padding:12px 16px;">
+              <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px;"><strong>Reason:</strong> ${escapeHTML(banInfo.reason||'No reason')}</div>
+              ${banInfo.bannedBy?`<div style="font-size:11px;color:rgba(255,255,255,.3);">Banned by: ${escapeHTML(banInfo.bannedBy)} · ${banInfo.bannedAt?new Date(banInfo.bannedAt).toLocaleDateString():''}</div>`:''}
+            </div>
+          </div>` : ''}
+          <div class="hq-panel" style="flex:1;">
+            <div class="hq-panel-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><h3>Mod History</h3></div>
+            <div style="max-height:200px;overflow-y:auto;">
+              ${userAudit.length ? userAudit.slice(0,10).map(e=>{
+                const aColor = (e.action||'').includes('ban')?'#f87171':(e.action||'').includes('warn')?'#f59e0b':(e.action||'').includes('suspend')?'#a855f7':'#60a5fa';
+                return `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.03);">
+                  <div style="width:5px;height:5px;border-radius:50%;background:${aColor};flex-shrink:0;margin-top:5px;"></div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:11px;color:rgba(255,255,255,.5);"><span style="color:${aColor};font-weight:700;">${escapeHTML(e.action||'?')}</span>${e.note?' — '+escapeHTML(e.note):''}</div>
+                    <div style="font-size:9px;color:rgba(255,255,255,.2);">by ${escapeHTML(e.by||'?')} · ${e.at?formatTimeAgo(e.at):''}</div>
+                  </div>
+                </div>`;}).join('') : '<div style="padding:16px;text-align:center;color:rgba(62,207,110,.4);font-size:11px;">Clean record</div>'}
+            </div>
+          </div>
+        </div>
       </div>
     </div>`;
 }
@@ -14165,56 +14347,155 @@ async function saveAssignedRoles(username, overlay) {
 let allUsersData = [];
 let allUsersSortBy = 'registration';
 
-function sortAllUsers(by) {
-  allUsersSortBy = by;
-  document.getElementById('sort-reg-btn')?.classList.toggle('btn-d', by==='registration');
-  document.getElementById('sort-reg-btn')?.classList.toggle('btn-g', by!=='registration');
-  document.getElementById('sort-onyx-btn')?.classList.toggle('btn-d', by==='onyx');
-  document.getElementById('sort-onyx-btn')?.classList.toggle('btn-g', by!=='onyx');
-  renderAllUsersList(allUsersData);
-}
+let _hqSortField = 'joined';
+let _hqSortDir = -1; // -1 = descending, 1 = ascending
+let _hqFilterType = 'all';
+let _hqUserStatuses = {};
+
+function sortAllUsers(by) { _hqSortField = by; _hqSortDir = -1; renderAllUsersList(allUsersData); }
 
 function filterAllUsers(q) {
-  const filtered = allUsersData.filter(u => (u.username||'').toLowerCase().includes(q.toLowerCase()));
+  let filtered = allUsersData;
+  if (q) filtered = filtered.filter(u => (u.username||'').toLowerCase().includes(q.toLowerCase()) || (u.displayName||'').toLowerCase().includes(q.toLowerCase()) || (u.email||'').toLowerCase().includes(q.toLowerCase()));
+  _applyHqFilter(filtered);
+}
+
+function _hqSortUsers(field) {
+  if (_hqSortField === field) _hqSortDir *= -1;
+  else { _hqSortField = field; _hqSortDir = field === 'username' ? 1 : -1; }
+  // Update sort indicators
+  document.querySelectorAll('[id^="hq-sort-"]').forEach(el => { el.textContent = ''; el.classList.remove('sort-active'); });
+  const ind = document.getElementById('hq-sort-' + field);
+  if (ind) { ind.textContent = _hqSortDir > 0 ? '▲' : '▼'; ind.classList.add('sort-active'); }
+  const q = document.getElementById('all-users-search')?.value || '';
+  filterAllUsers(q);
+}
+
+function _hqFilterUsers() {
+  _hqFilterType = document.getElementById('hq-user-filter')?.value || 'all';
+  const q = document.getElementById('all-users-search')?.value || '';
+  filterAllUsers(q);
+}
+
+function _applyHqFilter(users) {
+  const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+  const bannedNames = bans.map(b => (b.username||'').toLowerCase());
+  const now = new Date();
+  let filtered = users;
+  if (_hqFilterType === 'online') filtered = users.filter(u => {const s = _hqUserStatuses[u.username]; return s === 'online' || s === 'away' || s === 'dnd';});
+  else if (_hqFilterType === 'radiance') filtered = users.filter(u => u.radianceUntil && new Date(u.radianceUntil) > now);
+  else if (_hqFilterType === 'staff') filtered = users.filter(u => getStaffRole(u.username));
+  else if (_hqFilterType === 'banned') filtered = users.filter(u => bannedNames.includes((u.username||'').toLowerCase()));
+  else if (_hqFilterType === 'new_24h') filtered = users.filter(u => (now - new Date(u.createdAt||u.joinedAt||0)) < 86400000);
+  else if (_hqFilterType === 'new_7d') filtered = users.filter(u => (now - new Date(u.createdAt||u.joinedAt||0)) < 604800000);
+  else if (_hqFilterType === 'rich') filtered = users.filter(u => (u.onyx||0) >= 1000);
+  else if (_hqFilterType === 'no_friends') filtered = users.filter(u => !(u.friends||[]).length);
+  else if (_hqFilterType === 'no_bastions') filtered = users.filter(u => !(u.bastions||[]).length);
   renderAllUsersList(filtered);
+}
+
+function _calcUserRisk(u) {
+  const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+  const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+  let score = 0;
+  if (bans.some(b => (b.username||'').toLowerCase() === (u.username||'').toLowerCase())) score += 50;
+  const reportsAgainst = reps.filter(r => (r.username||r.msgFrom||'').toLowerCase() === (u.username||'').toLowerCase());
+  score += reportsAgainst.length * 10;
+  if (u.suspension) score += 20;
+  if (!(u.friends||[]).length && !(u.bastions||[]).length) score += 5;
+  const age = (Date.now() - new Date(u.createdAt||u.joinedAt||0)) / 86400000;
+  if (age < 1) score += 8;
+  else if (age < 7) score += 3;
+  return Math.min(100, score);
 }
 
 function renderAllUsersList(users) {
   const list = document.getElementById('all-users-list');
   if (!list) return;
+  const cnt = document.getElementById('admin-users-count');
+  if (cnt) cnt.textContent = users.length + ' users · sorted by ' + _hqSortField + ' · filter: ' + _hqFilterType;
+
   const sorted = [...users].sort((a,b) => {
-    if (allUsersSortBy === 'onyx') return (b.onyx||0) - (a.onyx||0);
-    const da = new Date(a.createdAt||a.joinedAt||'2000-01-01'), db = new Date(b.createdAt||b.joinedAt||'2000-01-01');
-    return db - da;
+    let va, vb;
+    switch(_hqSortField) {
+      case 'username': va = (a.username||'').toLowerCase(); vb = (b.username||'').toLowerCase(); return _hqSortDir * va.localeCompare(vb);
+      case 'onyx': return _hqSortDir * ((a.onyx||0) - (b.onyx||0));
+      case 'friends': return _hqSortDir * ((a.friends||[]).length - (b.friends||[]).length);
+      case 'bastions': return _hqSortDir * ((a.bastions||[]).length - (b.bastions||[]).length);
+      case 'age':
+        va = a.dateOfBirth ? new Date(a.dateOfBirth).getTime() : 0;
+        vb = b.dateOfBirth ? new Date(b.dateOfBirth).getTime() : 0;
+        return _hqSortDir * (va - vb);
+      case 'joined':
+        va = new Date(a.createdAt||a.joinedAt||'2000-01-01').getTime();
+        vb = new Date(b.createdAt||b.joinedAt||'2000-01-01').getTime();
+        return _hqSortDir * (va - vb);
+      case 'radiance':
+        va = a.radianceUntil ? new Date(a.radianceUntil).getTime() : 0;
+        vb = b.radianceUntil ? new Date(b.radianceUntil).getTime() : 0;
+        return _hqSortDir * (va - vb);
+      case 'role':
+        const rMap = {superadmin:4,admin:3,moderator:2};
+        va = rMap[getStaffRole(a.username)] || 0;
+        vb = rMap[getStaffRole(b.username)] || 0;
+        return _hqSortDir * (va - vb);
+      case 'risk': return _hqSortDir * (_calcUserRisk(a) - _calcUserRisk(b));
+      case 'status':
+        const sMap = {online:3,away:2,dnd:1,offline:0,invisible:0};
+        va = sMap[_hqUserStatuses[a.username]] || 0;
+        vb = sMap[_hqUserStatuses[b.username]] || 0;
+        return _hqSortDir * (va - vb);
+      default:
+        va = new Date(a.createdAt||a.joinedAt||'2000-01-01').getTime();
+        vb = new Date(b.createdAt||b.joinedAt||'2000-01-01').getTime();
+        return _hqSortDir * (va - vb);
+    }
   });
+
   if (!sorted.length) {
-    list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted);">No users found yet.<br><span style="font-size:11px;">Users appear here once they log in or create bastions.</span></div>';
+    list.innerHTML = '<div style="padding:32px;text-align:center;color:rgba(255,255,255,.2);font-size:12px;">No users match filters</div>';
     return;
   }
-  list.innerHTML = sorted.map((u,i) => {
+
+  const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+  const bannedNames = bans.map(b => (b.username||'').toLowerCase());
+
+  list.innerHTML = sorted.slice(0, 200).map((u,i) => {
     const hasRad = u.radianceUntil && new Date(u.radianceUntil) > new Date();
     const hasRadPlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
     const staffRole = getStaffRole(u.username);
-    const staffBadge = staffRole === 'superadmin' ? '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(255,215,62,.1);color:#ffd93e;">SUPER</span>'
-      : staffRole === 'admin' ? '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:#f87171;">ADMIN</span>'
-      : staffRole === 'moderator' ? '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;">MOD</span>' : '';
-    const ageTier = getAgeTier(u.dateOfBirth);
-    return `
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;cursor:pointer;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.25)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="adminInspectUser('${escapeHTML(u.username)}')">
-      <div style="font-size:11px;color:var(--muted);width:22px;text-align:right;flex-shrink:0;">${i+1}</div>
-      <div style="flex-shrink:0;">${buildAvatarHTML(u.pfp,u.displayName||u.username,36)}</div>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-          <span style="font-weight:700;font-size:13.5px;">${escapeHTML(u.displayName||u.username)}</span>
-          ${staffBadge}
-          ${u.verified?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(62,207,110,.1);color:#3ecf6e;">✓</span>':''}
+    const isBanned = bannedNames.includes((u.username||'').toLowerCase());
+    const risk = _calcUserRisk(u);
+    const riskColor = risk >= 50 ? '#f87171' : risk >= 20 ? '#f59e0b' : risk >= 5 ? '#60a5fa' : '#3ecf6e';
+    const statusVal = _hqUserStatuses[u.username] || 'offline';
+    const statusColor = statusVal === 'online' ? '#3ecf6e' : statusVal === 'away' ? '#f59e0b' : statusVal === 'dnd' ? '#f87171' : '#4a4a5a';
+    const roleBadge = staffRole === 'superadmin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(255,215,62,.1);color:#ffd93e;">SA</span>'
+      : staffRole === 'admin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:#f87171;">ADM</span>'
+      : staffRole === 'moderator' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;">MOD</span>' : '<span style="font-size:8px;color:rgba(255,255,255,.15);">—</span>';
+    const ageDays = u.dateOfBirth ? Math.floor((Date.now() - new Date(u.dateOfBirth)) / 86400000 / 365.25) : null;
+    const joinDate = u.createdAt || u.joinedAt;
+
+    return `<div class="hq-user-row" onclick="adminInspectUser('${escapeHTML(u.username)}')" ${isBanned?'style="background:rgba(248,113,113,.03);"':''}>
+      <div style="width:30px;text-align:center;font-size:10px;color:rgba(255,255,255,.2);font-weight:700;">${i+1}</div>
+      <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;position:relative;">${buildAvatarHTML(u.pfp,u.displayName||u.username,32)}
+        <div style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${statusColor};border:2px solid #0a0e18;"></div>
+      </div>
+      <div style="flex:1;min-width:100px;overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;color:${isBanned?'#f87171':'rgba(255,255,255,.8)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(u.displayName||u.username)}</span>
+          ${isBanned?'<span style="font-size:7px;font-weight:800;padding:1px 4px;border-radius:3px;background:#f87171;color:#fff;">BAN</span>':''}
         </div>
-        <div style="font-size:11px;color:var(--muted);">@${escapeHTML(u.username)} · ${u.createdAt?new Date(u.createdAt).toLocaleDateString():(u.joinedAt?new Date(u.joinedAt).toLocaleDateString():'Unknown')} · ${ageTier||'No DOB'} · ${(u.friends||[]).length} friends · ${(u.bastions||[]).length} bastions</div>
+        <div style="font-size:9.5px;color:rgba(255,255,255,.2);">@${escapeHTML(u.username)}</div>
       </div>
-      <div style="text-align:right;flex-shrink:0;">
-        <div style="font-size:12px;font-weight:700;color:var(--accent);">${u.onyx||0} ◆</div>
-        ${hasRadPlus?'<div style="font-size:9px;color:#a855f7;font-weight:700;letter-spacing:.05em;">RAD+</div>':hasRad?'<div style="font-size:9px;color:var(--accent);font-weight:700;letter-spacing:.05em;">RADIANCE</div>':''}
-      </div>
+      <div style="width:70px;text-align:center;"><div style="width:8px;height:8px;border-radius:50%;background:${statusColor};margin:0 auto;box-shadow:0 0 4px ${statusColor}55;"></div></div>
+      <div style="width:65px;text-align:right;font-size:11px;font-weight:700;color:#ffd93e;font-family:'Syne',sans-serif;">${(u.onyx||0).toLocaleString()}</div>
+      <div style="width:55px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);">${(u.friends||[]).length}</div>
+      <div style="width:60px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);">${(u.bastions||[]).length}</div>
+      <div style="width:50px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);">${ageDays !== null ? ageDays : '—'}</div>
+      <div style="width:75px;text-align:center;font-size:10px;color:rgba(255,255,255,.3);">${joinDate?new Date(joinDate).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'—'}</div>
+      <div style="width:65px;text-align:center;">${hasRadPlus?'<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(168,85,247,.12);color:#a855f7;">R+</span>':hasRad?'<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(255,249,62,.1);color:#ffd93e;">R</span>':'<span style="font-size:8px;color:rgba(255,255,255,.12);">—</span>'}</div>
+      <div style="width:50px;text-align:center;">${roleBadge}</div>
+      <div style="width:55px;text-align:center;"><div style="display:inline-block;width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,.06);overflow:hidden;"><div style="height:100%;width:${risk}%;background:${riskColor};border-radius:2px;"></div></div><div style="font-size:8px;color:${riskColor};margin-top:1px;">${risk}</div></div>
     </div>`}).join('');
 }
 
@@ -14429,15 +14710,18 @@ async function loadAllUsers(silent = false) {
     Object.values(data).forEach(u => { if (u?.username) knownUsers.set(u.username, u); });
   } catch(e) { console.warn('Failed to load users:', e); }
 
+  // Fetch all statuses for the database view
+  try {
+    const statSnap = await firebase.database().ref('statuses').get();
+    if (statSnap.exists()) _hqUserStatuses = statSnap.val() || {};
+  } catch { _hqUserStatuses = {}; }
+
   // Always include self
   if (CU?.username && !knownUsers.has(CU.username)) knownUsers.set(CU.username, CU);
 
   allUsersData = [...knownUsers.values()].filter(u => u?.username);
 
-  const cnt = document.getElementById('admin-users-count');
-  if (cnt) cnt.textContent = allUsersData.length + ' users';
-
-  if (!silent) renderAllUsersList(allUsersData);
+  if (!silent) { _hqFilterType = document.getElementById('hq-user-filter')?.value || 'all'; filterAllUsers(document.getElementById('all-users-search')?.value||''); }
   else {
     const q = document.getElementById('all-users-search')?.value || '';
     filterAllUsers(q);

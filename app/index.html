@@ -1374,6 +1374,35 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .forum-reply-delete:hover { opacity:1!important;color:#f87171!important; }
 .forum-reply-compose { padding:10px 16px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;align-items:flex-end; }
 
+/* ── POLL ROOM SYSTEM ────────────────────────────── */
+.poll-card{background:var(--panel);border:1.5px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:12px;transition:border-color .2s,box-shadow .2s;}
+.poll-card:hover{border-color:rgba(255,249,62,.12);box-shadow:0 4px 20px rgba(0,0,0,.15);}
+.poll-card-header{padding:18px 22px 14px;display:flex;align-items:flex-start;gap:14px;}
+.poll-card-icon{width:42px;height:42px;border-radius:12px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.poll-card-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;line-height:1.3;margin-bottom:3px;}
+.poll-card-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.poll-card-body{padding:0 22px 18px;}
+.poll-option{position:relative;border-radius:12px;overflow:hidden;margin-bottom:8px;cursor:pointer;transition:transform .15s,box-shadow .15s;border:1.5px solid var(--border);background:var(--panel2);}
+.poll-option:hover{transform:translateX(3px);box-shadow:0 2px 12px rgba(0,0,0,.15);border-color:rgba(255,255,255,.1);}
+.poll-option.voted{border-color:var(--accent-mid);}
+.poll-option.voted .poll-opt-bar{background:linear-gradient(90deg,rgba(255,249,62,.2),rgba(255,200,62,.08));}
+.poll-opt-bar{position:absolute;top:0;left:0;bottom:0;background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border-radius:10px;transition:width .6s cubic-bezier(.22,1,.36,1);z-index:0;}
+.poll-opt-content{position:relative;z-index:1;padding:12px 16px;display:flex;align-items:center;gap:10px;}
+.poll-opt-check{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;font-size:12px;}
+.poll-option.voted .poll-opt-check{background:var(--accent);border-color:var(--accent);color:#060810;}
+.poll-opt-label{flex:1;font-size:14px;font-weight:600;color:rgba(255,255,255,.85);}
+.poll-opt-pct{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:rgba(255,255,255,.5);min-width:42px;text-align:right;}
+.poll-option.voted .poll-opt-pct{color:var(--accent);}
+.poll-opt-voters{display:flex;align-items:center;margin-left:6px;}
+.poll-opt-voters img,.poll-opt-voters .pov-av{width:22px;height:22px;border-radius:50%;border:2px solid var(--panel);margin-left:-6px;object-fit:cover;}
+.poll-opt-voters .pov-av:first-child{margin-left:0;}
+.poll-card-footer{padding:12px 22px 16px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px;}
+.poll-card-footer .pcf-responses{font-size:12.5px;color:var(--muted);font-weight:600;}
+.poll-card-footer .pcf-time{font-size:11.5px;color:var(--muted);margin-left:auto;}
+.poll-card.ended .poll-option{cursor:default;opacity:.85;}
+.poll-card.ended .poll-option:hover{transform:none;box-shadow:none;}
+@keyframes pollBarGrow{from{width:0}to{width:var(--pct)}}
+
 /* ── COPY MSG LINK TOOLTIP ────────────────────────── */
 .msg-link-copied { position:fixed;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:11px;color:var(--accent);z-index:9999;pointer-events:none;animation:fadeIn .15s,fadeOut .3s 1.2s forwards; }
 @keyframes fadeOut { to{opacity:0;transform:translateY(-4px)} }
@@ -5197,7 +5226,7 @@ function renderBastionSidebar(scroll) {
   let pollHTML='';
   pollChs.forEach(function(ch){
     const ri=chs.indexOf(ch);
-    pollHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+    pollHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="openPollChannel(${ri})">
       <span class="ch-hash">🗳</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
@@ -5295,6 +5324,7 @@ function selectChannel(idx) {
   const b=CU.bastions?.[curBastion];
   const ch=b?.channels?.[idx];
   if (!ch) return;
+  _teardownPollLive();
   curChannel=idx;
   if (typeof closeMobileCtxSidebar === 'function') closeMobileCtxSidebar();
   // Remember last channel for this bastion
@@ -17370,6 +17400,7 @@ async function clearCustomStatus() {
 // FORUM CHANNELS
 // ═══════════════════════════════════════════════════════════
 function openForumChannel(chIdx) {
+  _teardownPollLive();
   curChannel = chIdx;
   const b = CU.bastions&&CU.bastions[curBastion];
   const ch = b&&b.channels&&b.channels[chIdx];
@@ -17606,6 +17637,281 @@ function ftzTimeAgo(date) {
   if (d<3600000) return Math.floor(d/60000)+'m ago';
   if (d<86400000) return Math.floor(d/3600000)+'h ago';
   return Math.floor(d/86400000)+'d ago';
+}
+
+// ════════════════════════════════════════════════════════════
+// POLL ROOM SYSTEM — Guilded-style polls & forms
+// ════════════════════════════════════════════════════════════
+let _pollLiveRef = null;
+
+function _getPollDbPath(bastionId, channelName) {
+  return 'bastionPolls/' + bastionId + '/' + channelName.replace(/[.#$\[\]]/g, '_');
+}
+
+async function openPollChannel(chIdx) {
+  curChannel = chIdx;
+  const b = CU.bastions?.[curBastion];
+  const ch = b?.channels?.[chIdx];
+  if (!ch) return;
+  document.querySelectorAll('.ch-item-2027,.ch-item').forEach(el => el.classList.remove('active'));
+  const sid = document.getElementById('ch-sb-' + chIdx);
+  if (sid) sid.classList.add('active');
+  if (curBastion !== null && b) localStorage.setItem('ftz_last_ch_' + (b.globalId||b.name||curBastion), chIdx);
+
+  const wrap = document.getElementById('bastion-chat-wrap');
+  if (!wrap) return;
+  const bastionId = b.globalId || b.name;
+  const isOwner = b.owner === CU?.username;
+  const canCreate = isOwner || hasPerm('manage_polls');
+
+  // Load polls from Firebase
+  let polls = [];
+  try {
+    const snap = await firebase.database().ref(_getPollDbPath(bastionId, ch.name)).orderByChild('createdAt').get();
+    if (snap.exists()) polls = Object.entries(snap.val()).map(([k, v]) => ({ ...v, _key: k }));
+    polls.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  } catch {}
+
+  const totalResponses = polls.reduce((s, p) => s + Object.keys(p.voters || {}).length, 0);
+
+  wrap.innerHTML = `<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+    <div style="padding:16px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--panel);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="poll-card-icon">🗳</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;">${escapeHTML(ch.name)}</div>
+          <div style="font-size:11.5px;color:var(--muted);">${polls.length} poll${polls.length !== 1 ? 's' : ''} · ${totalResponses} total responses</div>
+        </div>
+      </div>
+      ${canCreate ? `<button class="btn-a" onclick="openCreatePollModal(${chIdx})" style="font-size:12.5px;padding:8px 18px;display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Poll</button>` : ''}
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 18px;" id="poll-list-wrap">
+      ${polls.length ? polls.map(p => _renderPollCard(p, chIdx)).join('') : `<div style="text-align:center;padding:60px 20px;color:var(--muted);">
+        <div style="font-size:40px;margin-bottom:14px;opacity:.4;">🗳</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px;">No polls yet</div>
+        <div style="font-size:13px;color:var(--muted);">${canCreate ? 'Create the first poll to gather opinions!' : 'Waiting for a poll to be created.'}</div>
+      </div>`}
+    </div>
+  </div>`;
+
+  // Live listener
+  _teardownPollLive();
+  _pollLiveRef = firebase.database().ref(_getPollDbPath(bastionId, ch.name));
+  _pollLiveRef.on('value', snap => {
+    if (curChannel !== chIdx) return;
+    const el = document.getElementById('poll-list-wrap');
+    if (!el) return;
+    let livePolls = [];
+    if (snap.exists()) livePolls = Object.entries(snap.val()).map(([k, v]) => ({ ...v, _key: k }));
+    livePolls.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if (livePolls.length) {
+      el.innerHTML = livePolls.map(p => _renderPollCard(p, chIdx)).join('');
+    }
+  });
+}
+
+function _teardownPollLive() {
+  if (_pollLiveRef) { try { _pollLiveRef.off(); } catch {} _pollLiveRef = null; }
+}
+
+function _renderPollCard(poll, chIdx) {
+  const voters = poll.voters || {};
+  const totalVotes = Object.keys(voters).length;
+  const myVote = voters[CU?.username];
+  const hasVoted = myVote !== undefined && myVote !== null;
+  const isEnded = poll.endsAt && new Date(poll.endsAt) < new Date();
+  const isMulti = poll.multiSelect;
+  const showResults = hasVoted || isEnded;
+
+  // Count votes per option
+  const optCounts = {};
+  (poll.options || []).forEach((_, i) => { optCounts[i] = 0; });
+  Object.values(voters).forEach(v => {
+    if (Array.isArray(v)) v.forEach(i => { optCounts[i] = (optCounts[i] || 0) + 1; });
+    else optCounts[v] = (optCounts[v] || 0) + 1;
+  });
+
+  // Collect voters per option for avatar display
+  const optVoters = {};
+  (poll.options || []).forEach((_, i) => { optVoters[i] = []; });
+  Object.entries(voters).forEach(([user, v]) => {
+    if (Array.isArray(v)) v.forEach(i => { if (optVoters[i]) optVoters[i].push(user); });
+    else if (optVoters[v]) optVoters[v].push(user);
+  });
+
+  const optionsHTML = (poll.options || []).map((opt, i) => {
+    const count = optCounts[i] || 0;
+    const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+    const isMyVote = hasVoted && (Array.isArray(myVote) ? myVote.includes(i) : myVote === i);
+    const voterAvatars = (optVoters[i] || []).slice(0, 4).map(u =>
+      `<div class="pov-av" title="${escapeHTML(u)}">${buildAvatarHTML(null, u, 20)}</div>`
+    ).join('');
+    const extraCount = (optVoters[i] || []).length - 4;
+
+    return `<div class="poll-option${isMyVote ? ' voted' : ''}${isEnded ? '' : ''}" ${!isEnded && !hasVoted ? `onclick="_votePoll('${escapeHTML(poll._key)}',${i},${chIdx})"` : ''}>
+      <div class="poll-opt-bar" style="width:${showResults ? pct : 0}%;"></div>
+      <div class="poll-opt-content">
+        <div class="poll-opt-check">${isMyVote ? '✓' : ''}</div>
+        <div class="poll-opt-label">${escapeHTML(opt)}</div>
+        ${showResults ? `<div class="poll-opt-pct">${pct}%</div>` : ''}
+        ${showResults && voterAvatars ? `<div class="poll-opt-voters">${voterAvatars}${extraCount > 0 ? `<div class="pov-av" style="background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--muted);font-weight:700;">+${extraCount}</div>` : ''}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const createdAgo = poll.createdAt ? ftzTimeAgo(new Date(poll.createdAt)) : '';
+  const endLabel = poll.endsAt ? (isEnded ? 'Ended' : 'Ends ' + ftzTimeAgo(new Date(poll.endsAt)).replace(' ago', '') + ' left') : '';
+  const b = CU.bastions?.[curBastion];
+  const canDelete = b?.owner === CU?.username || poll.createdBy === CU?.username;
+
+  return `<div class="poll-card${isEnded ? ' ended' : ''}">
+    <div class="poll-card-header">
+      <div class="poll-card-icon">${isMulti ? '☑' : '🗳'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);opacity:.6;">${isMulti ? 'Form' : 'Poll'}</span>
+          ${isEnded ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(255,255,255,.06);color:var(--muted);">ENDED</span>' : ''}
+        </div>
+        <div class="poll-card-title">${escapeHTML(poll.question || 'Untitled Poll')}</div>
+        <div class="poll-card-meta">
+          <span>${totalVotes} response${totalVotes !== 1 ? 's' : ''}</span>
+          <span>·</span>
+          <span>by ${escapeHTML(poll.createdBy || '?')}</span>
+        </div>
+      </div>
+      ${canDelete ? `<button onclick="_deletePoll('${escapeHTML(poll._key)}',${chIdx})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;opacity:.4;transition:opacity .15s;" onmouseover="this.style.opacity='1';this.style.color='var(--red)'" onmouseout="this.style.opacity='.4';this.style.color='var(--muted)'">×</button>` : ''}
+    </div>
+    <div class="poll-card-body">${optionsHTML}</div>
+    <div class="poll-card-footer">
+      <span class="pcf-responses">${totalVotes} vote${totalVotes !== 1 ? 's' : ''}</span>
+      ${hasVoted && !isEnded ? `<button onclick="_unvotePoll('${escapeHTML(poll._key)}',${chIdx})" style="background:none;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:4px 12px;color:var(--muted);font-size:11px;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">Change vote</button>` : ''}
+      <span class="pcf-time">${createdAgo}${endLabel ? ' · ' + endLabel : ''}</span>
+    </div>
+  </div>`;
+}
+
+async function _votePoll(pollKey, optionIdx, chIdx) {
+  const b = CU.bastions?.[curBastion];
+  const ch = b?.channels?.[chIdx];
+  if (!b || !ch) return;
+  const bastionId = b.globalId || b.name;
+  const path = _getPollDbPath(bastionId, ch.name) + '/' + pollKey + '/voters/' + CU.username;
+  try {
+    await firebase.database().ref(path).set(optionIdx);
+  } catch { toast('Vote failed', 'error'); }
+}
+
+async function _unvotePoll(pollKey, chIdx) {
+  const b = CU.bastions?.[curBastion];
+  const ch = b?.channels?.[chIdx];
+  if (!b || !ch) return;
+  const bastionId = b.globalId || b.name;
+  const path = _getPollDbPath(bastionId, ch.name) + '/' + pollKey + '/voters/' + CU.username;
+  try {
+    await firebase.database().ref(path).remove();
+  } catch { toast('Failed', 'error'); }
+}
+
+async function _deletePoll(pollKey, chIdx) {
+  if (!confirm('Delete this poll? All votes will be lost.')) return;
+  const b = CU.bastions?.[curBastion];
+  const ch = b?.channels?.[chIdx];
+  if (!b || !ch) return;
+  const bastionId = b.globalId || b.name;
+  try {
+    await firebase.database().ref(_getPollDbPath(bastionId, ch.name) + '/' + pollKey).remove();
+    toast('Poll deleted', 'success');
+  } catch { toast('Failed', 'error'); }
+}
+
+function openCreatePollModal(chIdx) {
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-poll-create-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:520px;width:100%;padding:28px;max-height:90vh;overflow-y:auto;">
+    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;">🗳 Create Poll</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Ask a question and let your community vote.</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);opacity:.5;margin-bottom:6px;">Question</div>
+    <input id="poll-q" class="field-input" placeholder="What are we all playing for game night?" maxlength="200" style="margin-bottom:14px;font-size:14px;font-weight:600;">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);opacity:.5;margin-bottom:6px;">Options</div>
+    <div id="poll-opts-list">
+      <input class="field-input poll-opt-input" placeholder="Option 1" maxlength="100" style="margin-bottom:6px;">
+      <input class="field-input poll-opt-input" placeholder="Option 2" maxlength="100" style="margin-bottom:6px;">
+    </div>
+    <button onclick="_addPollOption()" style="background:none;border:1px dashed rgba(255,255,255,.1);border-radius:10px;padding:8px;width:100%;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;margin-bottom:16px;" onmouseover="this.style.borderColor='var(--accent-mid)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='var(--muted)'">+ Add option</button>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:rgba(255,255,255,.6);cursor:pointer;">
+        <input type="checkbox" id="poll-multi" style="accent-color:var(--accent);"> Allow multiple answers
+      </label>
+    </div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);opacity:.5;margin-bottom:6px;">Duration (optional)</div>
+    <select id="poll-duration" style="background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:#fff;font-size:13px;font-family:inherit;margin-bottom:18px;width:100%;">
+      <option value="">No end date</option>
+      <option value="1h">1 hour</option>
+      <option value="6h">6 hours</option>
+      <option value="12h">12 hours</option>
+      <option value="1d">1 day</option>
+      <option value="3d">3 days</option>
+      <option value="7d">7 days</option>
+    </select>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-a" style="flex:1;" onclick="_submitNewPoll(${chIdx})">Create Poll</button>
+      <button class="btn-g" style="flex:1;" onclick="document.querySelector('.ftz-poll-create-overlay')?.remove()">Cancel</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('poll-q')?.focus(), 50);
+}
+
+function _addPollOption() {
+  const list = document.getElementById('poll-opts-list');
+  if (!list) return;
+  const count = list.querySelectorAll('.poll-opt-input').length;
+  if (count >= 10) { toast('Max 10 options', 'error'); return; }
+  const inp = document.createElement('input');
+  inp.className = 'field-input poll-opt-input';
+  inp.placeholder = 'Option ' + (count + 1);
+  inp.maxLength = 100;
+  inp.style.marginBottom = '6px';
+  list.appendChild(inp);
+}
+
+async function _submitNewPoll(chIdx) {
+  const question = document.getElementById('poll-q')?.value?.trim();
+  if (!question) { toast('Enter a question', 'error'); return; }
+  const optEls = document.querySelectorAll('.poll-opt-input');
+  const options = [];
+  optEls.forEach(el => { const v = el.value.trim(); if (v) options.push(v); });
+  if (options.length < 2) { toast('Need at least 2 options', 'error'); return; }
+  const multiSelect = document.getElementById('poll-multi')?.checked || false;
+  const durVal = document.getElementById('poll-duration')?.value || '';
+  let endsAt = null;
+  if (durVal) {
+    const now = Date.now();
+    const durMap = { '1h': 3600000, '6h': 21600000, '12h': 43200000, '1d': 86400000, '3d': 259200000, '7d': 604800000 };
+    endsAt = new Date(now + (durMap[durVal] || 0)).toISOString();
+  }
+
+  const b = CU.bastions?.[curBastion];
+  const ch = b?.channels?.[chIdx];
+  if (!b || !ch) return;
+  const bastionId = b.globalId || b.name;
+  const pollData = {
+    question,
+    options,
+    multiSelect,
+    createdBy: CU.username,
+    createdAt: new Date().toISOString(),
+    endsAt,
+    voters: {}
+  };
+
+  try {
+    await firebase.database().ref(_getPollDbPath(bastionId, ch.name)).push(pollData);
+    document.querySelector('.ftz-poll-create-overlay')?.remove();
+    toast('Poll created!', 'success');
+    openPollChannel(chIdx);
+  } catch { toast('Failed to create poll', 'error'); }
 }
 
 // ════════════════════════════════════════════

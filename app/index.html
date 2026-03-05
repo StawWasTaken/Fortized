@@ -901,7 +901,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .toggle.on{background:var(--accent);border-color:rgba(255,249,62,.3);box-shadow:0 0 8px rgba(255,249,62,.15);}
 .toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;}
 .toggle.on::after{transform:translateX(18px);}
-.radiance-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,200,62,.12),rgba(255,249,62,.12));border:1px solid rgba(255,220,62,.25);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:#ffd93e;margin-top:5px;}
+.radiance-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,160,62,.12),rgba(255,180,62,.12));border:1px solid rgba(255,160,62,.25);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:#ff9d3e;margin-top:5px;}
 .bsettings-wrap{flex:1;display:flex;overflow:hidden;}
 .bsettings-nav{width:220px;min-width:220px;border-right:1px solid var(--border);background:var(--channel);overflow-y:auto;padding:12px 0;}
 .bsettings-main{flex:1;overflow-y:auto;padding:28px;}
@@ -1111,6 +1111,17 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ctx-item.disabled{opacity:.25;pointer-events:none;}
 .ctx-section-label{padding:8px 12px 3px;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.15);}
 .ctx-sep{height:1px;background:rgba(255,255,255,.04);margin:3px 10px;}
+/* ── Emoji Tooltip (Discord-style) ─────────────── */
+.emoji-tooltip{position:fixed;z-index:9000;background:rgba(14,17,26,.96);border:1.5px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;box-shadow:0 12px 44px rgba(0,0,0,.6);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);pointer-events:auto;animation:emojiTipIn .15s cubic-bezier(.22,1,.36,1);min-width:200px;max-width:260px;}
+@keyframes emojiTipIn{from{opacity:0;transform:translateY(4px) scale(.97);}to{opacity:1;transform:none;}}
+.emoji-tooltip .et-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.emoji-tooltip .et-big{width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.emoji-tooltip .et-big img{width:36px;height:36px;object-fit:contain;}
+.emoji-tooltip .et-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;}
+.emoji-tooltip .et-code{font-size:11px;color:rgba(255,255,255,.3);font-family:'SF Mono','Cascadia Code',monospace;margin-top:2px;}
+.emoji-tooltip .et-cat{font-size:10.5px;color:rgba(255,249,62,.45);font-weight:600;margin-top:6px;}
+.msg-emoji{cursor:pointer;transition:transform .1s;border-radius:3px;}
+.msg-emoji:hover{transform:scale(1.2);background:rgba(255,255,255,.06);}
 /* Mobile bottom-sheet context menu */
 @media(max-width:768px){
 .ctx-menu{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;max-width:100%!important;width:100%!important;border-radius:16px 16px 0 0!important;max-height:65vh;overflow-y:auto;animation:ctxSlideUp .22s cubic-bezier(.22,1,.36,1)!important;padding-bottom:env(safe-area-inset-bottom,8px);border-bottom:none!important;}
@@ -1240,9 +1251,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* ── (stat strip + hero styles now in main home CSS block above) ── */
 
 /* ── RADIANCE / RADIANCE+ ─────────────────────────── */
-.rad-basic { background:linear-gradient(135deg,rgba(255,200,62,.12),rgba(255,249,62,.08));border-color:rgba(255,220,62,.25);color:#ffd93e; }
-.rad-plus { background:linear-gradient(135deg,rgba(255,100,62,.15),rgba(255,220,62,.1));border-color:rgba(255,150,62,.35);color:#ff9d3e; }
-.radplus-badge { display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,120,62,.2),rgba(255,200,62,.15));border:1px solid rgba(255,160,62,.35);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:#ff9d3e; }
+.rad-basic { background:linear-gradient(135deg,rgba(255,140,62,.12),rgba(255,180,62,.08));border-color:rgba(255,160,62,.25);color:#ff9d3e; }
+.rad-plus { background:linear-gradient(135deg,rgba(255,220,62,.12),rgba(255,249,62,.1));border-color:rgba(255,220,62,.35);color:#ffd93e; }
+.radplus-badge { display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,220,62,.2),rgba(255,249,62,.15));border:1px solid rgba(255,220,62,.35);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:#ffd93e; }
 
 /* ── SWITCH ACCOUNTS ──────────────────────────────── */
 .account-switcher { position:fixed;bottom:70px;left:10px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:10px;min-width:220px;z-index:2000;box-shadow:0 20px 50px rgba(0,0,0,.7);animation:ctxIn .14s cubic-bezier(.22,1,.36,1); }
@@ -9353,6 +9364,76 @@ function emojiToTwemojiUrl(emoji) {
   return 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/' + codePoints + '.svg';
 }
 
+// ── Emoji Name Database (common emojis) ──────────────────
+const EMOJI_NAMES = {
+  '😀':'grinning face','😃':'grinning face with big eyes','😄':'grinning face with smiling eyes','😁':'beaming face','😆':'grinning squinting face','😅':'grinning face with sweat','🤣':'rolling on the floor laughing','😂':'face with tears of joy','🙂':'slightly smiling face','🙃':'upside-down face','😉':'winking face','😊':'smiling face with smiling eyes','😇':'smiling face with halo','🥰':'smiling face with hearts','😍':'heart eyes','🤩':'star-struck','😘':'face blowing a kiss','😗':'kissing face','😚':'kissing face with closed eyes','😙':'kissing face with smiling eyes','🥲':'smiling face with tear','😋':'face savoring food','😛':'face with tongue','😜':'winking face with tongue','🤪':'zany face','😝':'squinting face with tongue','🤑':'money-mouth face','🤗':'hugging face','🤭':'face with hand over mouth','🤫':'shushing face','🤔':'thinking face','🤐':'zipper-mouth face','🤨':'face with raised eyebrow','😐':'neutral face','😑':'expressionless face','😶':'face without mouth','😏':'smirking face','😒':'unamused face','🙄':'face with rolling eyes','😬':'grimacing face','🤥':'lying face','😌':'relieved face','😔':'pensive face','😪':'sleepy face','🤤':'drooling face','😴':'sleeping face','😷':'face with medical mask','🤒':'face with thermometer','🤕':'face with head-bandage','🤢':'nauseated face','🤮':'face vomiting','🥵':'hot face','🥶':'cold face','🥴':'woozy face','😵':'face with crossed-out eyes','🤯':'exploding head','🤠':'cowboy hat face','🥳':'partying face','🥸':'disguised face','😎':'smiling face with sunglasses','🤓':'nerd face','🧐':'face with monocle','😕':'confused face','😟':'worried face','🙁':'slightly frowning face','😮':'face with open mouth','😯':'hushed face','😲':'astonished face','😳':'flushed face','🥺':'pleading face','😦':'frowning face with open mouth','😧':'anguished face','😨':'fearful face','😰':'anxious face with sweat','😥':'sad but relieved face','😢':'crying face','😭':'loudly crying face','😱':'face screaming in fear','😖':'confounded face','😣':'persevering face','😞':'disappointed face','😓':'downcast face with sweat','😩':'weary face','😫':'tired face','🥱':'yawning face','😤':'face with steam from nose','😡':'pouting face','😠':'angry face','🤬':'face with symbols on mouth','😈':'smiling face with horns','👿':'angry face with horns','💀':'skull','☠️':'skull and crossbones','💩':'pile of poo','🤡':'clown face','👹':'ogre','👺':'goblin','👻':'ghost','👽':'alien','👾':'alien monster','🤖':'robot','😺':'grinning cat','😸':'grinning cat with smiling eyes','😹':'cat with tears of joy','😻':'smiling cat with heart-eyes','😼':'cat with wry smile','😽':'kissing cat','🙀':'weary cat','😿':'crying cat','😾':'pouting cat',
+  '❤️':'red heart','🧡':'orange heart','💛':'yellow heart','💚':'green heart','💙':'blue heart','💜':'purple heart','🖤':'black heart','🤍':'white heart','🤎':'brown heart','💔':'broken heart','❣️':'heart exclamation','💕':'two hearts','💞':'revolving hearts','💓':'beating heart','💗':'growing heart','💖':'sparkling heart','💘':'heart with arrow','💝':'heart with ribbon','💟':'heart decoration','🔥':'fire','✨':'sparkles','⭐':'star','🌟':'glowing star','💫':'dizzy','🎉':'party popper','🎊':'confetti ball',
+  '👍':'thumbs up','👎':'thumbs down','👊':'oncoming fist','✊':'raised fist','🤛':'left-facing fist','🤜':'right-facing fist','👏':'clapping hands','🙌':'raising hands','👐':'open hands','🤲':'palms up together','🤝':'handshake','🙏':'folded hands','✌️':'victory hand','🤞':'crossed fingers','🤟':'love-you gesture','🤘':'sign of the horns','👌':'OK hand','🤌':'pinched fingers','🤏':'pinching hand','👈':'backhand index pointing left','👉':'backhand index pointing right','👆':'backhand index pointing up','👇':'backhand index pointing down','☝️':'index pointing up','✋':'raised hand','🤚':'raised back of hand','🖐️':'hand with fingers splayed','🖖':'vulcan salute','👋':'waving hand','🤙':'call me hand','💪':'flexed biceps','🦾':'mechanical arm','🖕':'middle finger',
+  '🎮':'video game','🎵':'musical note','🎶':'musical notes','💻':'laptop','📚':'books','😴':'sleeping face','🍕':'pizza','✈️':'airplane','🏋️':'person lifting weights','🎨':'artist palette','🔮':'crystal ball','🪐':'ringed planet','🌸':'cherry blossom','🐾':'paw prints','🍂':'fallen leaf','🎧':'headphone','🌍':'globe showing Europe-Africa','☕':'hot beverage','🎯':'bullseye','🏆':'trophy','💎':'gem stone','🌺':'hibiscus','🍜':'steaming bowl','🍿':'popcorn','🎶':'musical notes','🐉':'dragon','🧁':'cupcake','🎲':'game die','🌈':'rainbow','🦋':'butterfly',
+  '👑':'crown','💰':'money bag','🔑':'key','📱':'mobile phone','💡':'light bulb','🔔':'bell','📌':'pushpin','🏠':'house','🌙':'crescent moon','☀️':'sun','⚡':'high voltage','🌊':'water wave','🍀':'four leaf clover','🌻':'sunflower','🍎':'red apple','🍔':'hamburger','🎂':'birthday cake','🍩':'doughnut','🍦':'soft ice cream','🥤':'cup with straw',
+};
+
+// Emoji category mapping
+const EMOJI_CATEGORIES = {
+  '😀':'Smileys & People','😃':'Smileys & People','😄':'Smileys & People','😁':'Smileys & People','😆':'Smileys & People','😅':'Smileys & People','🤣':'Smileys & People','😂':'Smileys & People','🙂':'Smileys & People','😉':'Smileys & People','😊':'Smileys & People','😇':'Smileys & People','🥰':'Smileys & People','😍':'Smileys & People','🤩':'Smileys & People','😘':'Smileys & People','😎':'Smileys & People','🤔':'Smileys & People','😤':'Smileys & People','😡':'Smileys & People','😭':'Smileys & People','🥺':'Smileys & People','😱':'Smileys & People','🤗':'Smileys & People','🤭':'Smileys & People','🤫':'Smileys & People','🥳':'Smileys & People','😈':'Smileys & People',
+  '❤️':'Symbols','🧡':'Symbols','💛':'Symbols','💚':'Symbols','💙':'Symbols','💜':'Symbols','🖤':'Symbols','🔥':'Symbols','✨':'Symbols','⭐':'Symbols','🌟':'Symbols','💫':'Symbols','🎉':'Symbols','🎊':'Symbols',
+  '👍':'Gestures','👎':'Gestures','👊':'Gestures','✊':'Gestures','👏':'Gestures','🙌':'Gestures','🤝':'Gestures','🙏':'Gestures','✌️':'Gestures','👋':'Gestures','💪':'Gestures','🤞':'Gestures',
+  '🎮':'Objects','🎵':'Objects','💻':'Objects','📚':'Objects','🍕':'Food & Drink','✈️':'Travel','🎨':'Activities','🏆':'Activities','💎':'Objects','🌍':'Travel','☕':'Food & Drink','🍔':'Food & Drink','🎂':'Food & Drink',
+  '🐉':'Animals & Nature','🦋':'Animals & Nature','🐾':'Animals & Nature','🌸':'Animals & Nature','🌺':'Animals & Nature','🌻':'Animals & Nature','🍀':'Animals & Nature','🌈':'Animals & Nature',
+};
+
+// ── Emoji Click Tooltip (Discord-style) ─────────────────
+function _showEmojiTooltip(emoji, el) {
+  // Remove any existing tooltip
+  document.querySelector('.emoji-tooltip')?.remove();
+
+  const name = EMOJI_NAMES[emoji] || 'emoji';
+  const category = EMOJI_CATEGORIES[emoji] || 'Emoji';
+  const codePoints = [...emoji].map(c => 'U+' + c.codePointAt(0).toString(16).toUpperCase()).join(' ');
+  const url = emojiToTwemojiUrl(emoji);
+
+  const tip = document.createElement('div');
+  tip.className = 'emoji-tooltip';
+  tip.innerHTML = `
+    <div class="et-header">
+      <div class="et-big"><img src="${url}" onerror="this.outerHTML='<span style=\\'font-size:28px;\\'>${emoji}</span>'"></div>
+      <div>
+        <div class="et-name">:${name.replace(/\s+/g,'_')}:</div>
+        <div class="et-code">${codePoints}</div>
+      </div>
+    </div>
+    <div class="et-cat">${category}</div>`;
+
+  document.body.appendChild(tip);
+
+  // Position near the clicked emoji
+  const rect = el.getBoundingClientRect();
+  const tipRect = tip.getBoundingClientRect();
+  let top = rect.top - tipRect.height - 8;
+  let left = rect.left + rect.width/2 - tipRect.width/2;
+  if (top < 8) top = rect.bottom + 8;
+  if (left < 8) left = 8;
+  if (left + tipRect.width > window.innerWidth - 8) left = window.innerWidth - tipRect.width - 8;
+  tip.style.top = top + 'px';
+  tip.style.left = left + 'px';
+
+  // Close on click outside or scroll
+  const close = (e) => {
+    if (!tip.contains(e.target)) {
+      tip.remove();
+      document.removeEventListener('click', close);
+      document.removeEventListener('scroll', close, true);
+    }
+  };
+  setTimeout(() => {
+    document.addEventListener('click', close);
+    document.addEventListener('scroll', close, true);
+  }, 10);
+
+  // Auto-close after 5s
+  setTimeout(() => tip.remove(), 5000);
+}
+
 function renderEmojiCell(emoji) {
   const safe = escapeHTML(emoji);
   const url = emojiToTwemojiUrl(emoji);
@@ -14694,10 +14775,12 @@ function parseMD(s) {
     </div>`;
   });
   // Twemoji: replace Unicode emoji with Twemoji images for consistent rendering
+  // Added onclick for emoji tooltip (Discord-style click-to-describe)
   s = s.replace(/((?:\p{Emoji_Presentation}|\p{Extended_Pictographic})(?:\uFE0F)?(?:\u200D(?:\p{Emoji_Presentation}|\p{Extended_Pictographic})(?:\uFE0F)?)*)/gu, (emoji) => {
     try {
       const url = emojiToTwemojiUrl(emoji);
-      return `<img src="${url}" alt="${emoji}" class="msg-emoji" style="width:1.25em;height:1.25em;object-fit:contain;vertical-align:-0.25em;display:inline-block;" loading="lazy" onerror="this.outerHTML='${emoji}'">`;
+      const safeEmoji = emoji.replace(/'/g, "\\'");
+      return `<img src="${url}" alt="${emoji}" class="msg-emoji" style="width:1.25em;height:1.25em;object-fit:contain;vertical-align:-0.25em;display:inline-block;" loading="lazy" onclick="_showEmojiTooltip('${safeEmoji}',this)" onerror="this.outerHTML='${emoji}'">`;
     } catch { return emoji; }
   });
   // ═══════════════════════════════════════════════════════
@@ -15531,7 +15614,11 @@ function radianceBadgeHTML(user) {
   const totalDays = user.radianceTotalMs ? Math.floor(user.radianceTotalMs / 86400000) : 0;
   if (!active && totalDays < 1) return '';
   const label = active ? '\u2728 Radiance Active' : ('\u2728 ' + totalDays + 'd Radiance');
-  return '<span style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(255,200,62,.15),rgba(255,249,62,.1));border:1px solid rgba(255,220,62,.3);border-radius:100px;padding:2px 9px;font-size:10px;font-weight:700;color:#ffd93e;">' + label + '</span>';
+  const isPlus = user.radiancePlusUntil && new Date(user.radiancePlusUntil) > new Date();
+  const badgeColor = isPlus ? '#ffd93e' : '#ff9d3e';
+  const badgeBg = isPlus ? 'rgba(255,220,62,.15),rgba(255,249,62,.1)' : 'rgba(255,160,62,.15),rgba(255,180,62,.1)';
+  const badgeBorder = isPlus ? 'rgba(255,220,62,.3)' : 'rgba(255,160,62,.3)';
+  return '<span style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,'+badgeBg+');border:1px solid '+badgeBorder+';border-radius:100px;padding:2px 9px;font-size:10px;font-weight:700;color:'+badgeColor+';">' + label + '</span>';
 }
 
 // ════════════════════════════════════════════
@@ -18188,12 +18275,12 @@ function renderAtelierTab(tab) {
     el.style.padding = '0';
     el.innerHTML = `
       <!-- Radiance status pill -->
-      ${hasPlus?`<div style="display:flex;align-items:center;gap:8px;background:rgba(255,157,62,.1);border:1px solid rgba(255,157,62,.25);border-radius:14px;padding:10px 16px;margin-bottom:24px;">
-        <img src="/fortized badges/radiance+.png" style="width:18px;height:18px;object-fit:contain;"><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ff9d3e;">Radiance+ Active · ${daysPlus} days left</span>
-        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:none;border:1px solid rgba(255,157,62,.25);border-radius:8px;color:#ff9d3e;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">Manage</button>
-      </div>`:hasRad?`<div style="display:flex;align-items:center;gap:8px;background:rgba(254,248,61,.05);border:1px solid rgba(254,248,61,.15);border-radius:14px;padding:10px 16px;margin-bottom:24px;">
-        <img src="/fortized badges/basic radiance.png" style="width:18px;height:18px;object-fit:contain;"><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ffd93e;">Radiance Active · ${daysRad} days left</span>
-        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:none;border:1px solid rgba(254,248,61,.15);border-radius:8px;color:#ffd93e;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">Manage</button>
+      ${hasPlus?`<div style="display:flex;align-items:center;gap:8px;background:rgba(255,220,62,.08);border:1px solid rgba(255,220,62,.2);border-radius:14px;padding:10px 16px;margin-bottom:24px;">
+        <img src="/fortized badges/radiance+.png" style="width:18px;height:18px;object-fit:contain;"><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ffd93e;">Radiance+ Active · ${daysPlus} days left</span>
+        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:none;border:1px solid rgba(255,220,62,.2);border-radius:8px;color:#ffd93e;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">Manage</button>
+      </div>`:hasRad?`<div style="display:flex;align-items:center;gap:8px;background:rgba(255,160,62,.08);border:1px solid rgba(255,160,62,.2);border-radius:14px;padding:10px 16px;margin-bottom:24px;">
+        <img src="/fortized badges/basic radiance.png" style="width:18px;height:18px;object-fit:contain;"><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ff9d3e;">Radiance Active · ${daysRad} days left</span>
+        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:none;border:1px solid rgba(255,160,62,.2);border-radius:8px;color:#ff9d3e;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">Manage</button>
       </div>`:''}
 
       <div style="display:flex;flex-direction:column;gap:32px;padding-bottom:60px;">
@@ -18209,7 +18296,7 @@ function renderAtelierTab(tab) {
                 <div style="font-size:28px;margin-bottom:12px;">${p.icon}</div>
                 <div style="font-size:12.5px;font-weight:700;color:#fff;margin-bottom:4px;">${p.name}</div>
                 <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.4;">${p.desc}</div>
-                ${p.plus?`<div style="position:absolute;top:10px;right:10px;font-size:9px;font-weight:800;color:#ff9d3e;background:rgba(255,160,62,.12);border:1px solid rgba(255,160,62,.2);padding:2px 7px;border-radius:100px;">+</div>`:''}
+                ${p.plus?`<div style="position:absolute;top:10px;right:10px;font-size:9px;font-weight:800;color:#ffd93e;background:rgba(255,220,62,.12);border:1px solid rgba(255,220,62,.2);padding:2px 7px;border-radius:100px;">+</div>`:''}
                 ${!unlocked?`<div style="position:absolute;bottom:12px;right:12px;font-size:14px;opacity:.35;">🔒</div>`:`<div style="position:absolute;bottom:12px;right:12px;font-size:12px;color:${p.color};">✓</div>`}
               </div>`;
             }).join('')}
@@ -18281,14 +18368,14 @@ function renderAtelierTab(tab) {
     el.innerHTML = `<div style="padding:32px;max-width:800px;">
 
       <!-- Active subscription status -->
-      ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,120,62,.12),rgba(255,200,62,.06));border:1.5px solid rgba(255,160,62,.25);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
-        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.12);display:flex;align-items:center;justify-content:center;"><img src="/fortized badges/radiance+.png" style="width:32px;height:32px;object-fit:contain;"></div>
-        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ff9d3e;">Radiance+ Active</div>
+      ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,220,62,.1),rgba(255,249,62,.05));border:1.5px solid rgba(255,220,62,.2);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
+        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.1);display:flex;align-items:center;justify-content:center;"><img src="/fortized badges/radiance+.png" style="width:32px;height:32px;object-fit:contain;"></div>
+        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ffd93e;">Radiance+ Active</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:3px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
         <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:12px;color:var(--red);font-size:12px;padding:8px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
-      </div>`:hasRad?`<div style="background:rgba(255,249,62,.05);border:1.5px solid rgba(255,220,62,.15);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
-        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;"><img src="/fortized badges/basic radiance.png" style="width:32px;height:32px;object-fit:contain;"></div>
-        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ffd93e;">Radiance Active</div>
+      </div>`:hasRad?`<div style="background:rgba(255,160,62,.07);border:1.5px solid rgba(255,160,62,.18);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
+        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;"><img src="/fortized badges/basic radiance.png" style="width:32px;height:32px;object-fit:contain;"></div>
+        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ff9d3e;">Radiance Active</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:3px;">${daysRad} days remaining · Auto-renews · 600 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
         <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:12px;color:var(--red);font-size:12px;padding:8px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
       </div>`:''}
@@ -18297,15 +18384,15 @@ function renderAtelierTab(tab) {
       <div class="atel-section-hdr">Choose a Plan</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:32px;">
 
-        <!-- Basic Radiance -->
-        <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,220,62,.15);border-radius:22px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,220,62,.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,220,62,.15)';this.style.transform=''">
+        <!-- Basic Radiance (orange) -->
+        <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,160,62,.15);border-radius:22px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,160,62,.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,160,62,.15)';this.style.transform=''">
           <div style="padding:24px 24px 18px;">
-            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><img src="/fortized badges/basic radiance.png" style="width:32px;height:32px;object-fit:contain;"></div>
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ffd93e;margin-bottom:5px;">Radiance</div>
+            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><img src="/fortized badges/basic radiance.png" style="width:32px;height:32px;object-fit:contain;"></div>
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ff9d3e;margin-bottom:5px;">Radiance</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Core perks for Fortized fans</div>
             <!-- Perk chips -->
             <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px;">
-              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,220,62,.07);color:rgba(255,220,62,.75);border:1px solid rgba(255,220,62,.12);">${p}</span>`).join('')}
+              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,160,62,.07);color:rgba(255,160,62,.75);border:1px solid rgba(255,160,62,.12);">${p}</span>`).join('')}
             </div>
           </div>
           <!-- Price buttons -->
@@ -18320,23 +18407,23 @@ function renderAtelierTab(tab) {
           </div>
         </div>
 
-        <!-- Radiance+ -->
-        <div style="background:linear-gradient(160deg,rgba(255,120,62,.07),rgba(255,200,62,.03),rgba(255,255,255,.015));border:1.5px solid rgba(255,160,62,.22);border-radius:22px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,160,62,.4)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(255,160,62,.08)'" onmouseout="this.style.borderColor='rgba(255,160,62,.22)';this.style.transform='';this.style.boxShadow='none'">
+        <!-- Radiance+ (yellow) -->
+        <div style="background:linear-gradient(160deg,rgba(255,220,62,.06),rgba(255,249,62,.03),rgba(255,255,255,.015));border:1.5px solid rgba(255,220,62,.22);border-radius:22px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,220,62,.4)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(255,220,62,.08)'" onmouseout="this.style.borderColor='rgba(255,220,62,.22)';this.style.transform='';this.style.boxShadow='none'">
           <div class="best-ribbon">BEST VALUE</div>
           <div style="padding:24px 24px 18px;">
-            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><img src="/fortized badges/radiance+.png" style="width:32px;height:32px;object-fit:contain;"></div>
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ff9d3e;margin-bottom:5px;">Radiance+</div>
+            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><img src="/fortized badges/radiance+.png" style="width:32px;height:32px;object-fit:contain;"></div>
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ffd93e;margin-bottom:5px;">Radiance+</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Everything unlocked</div>
             <!-- Perk chips — basic + plus -->
             <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px;">
-              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,160,62,.07);color:rgba(255,160,62,.75);border:1px solid rgba(255,160,62,.12);">${p}</span>`).join('')}
-              ${PLAN_PLUS.map(p=>`<span class="perk-chip" style="background:rgba(255,200,62,.1);color:rgba(255,200,62,.85);border:1px solid rgba(255,200,62,.18);font-weight:800;">${p}</span>`).join('')}
+              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,220,62,.07);color:rgba(255,220,62,.75);border:1px solid rgba(255,220,62,.12);">${p}</span>`).join('')}
+              ${PLAN_PLUS.map(p=>`<span class="perk-chip" style="background:rgba(255,249,62,.1);color:rgba(255,249,62,.85);border:1px solid rgba(255,249,62,.18);font-weight:800;">${p}</span>`).join('')}
             </div>
           </div>
           <div style="padding:0 18px 20px;">
             <div style="display:flex;flex-direction:column;gap:6px;">
               ${PRICES.plus.map((pl,i)=>`
-                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===0?'linear-gradient(90deg,#ff9d3e,#ffd93e)':'rgba(255,255,255,.04)'};color:${i===0?'#060810':'rgba(255,255,255,.6)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;" onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
+                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===0?'linear-gradient(90deg,#ffd93e,#fff93e)':'rgba(255,255,255,.04)'};color:${i===0?'#060810':'rgba(255,255,255,.6)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;" onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
                   <span>${pl.days} Days</span>
                   <span>${pl.onyx} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">${i===0?' 🔥':''}</span>
                 </button>`).join('')}
@@ -18362,133 +18449,135 @@ function renderAtelierTab(tab) {
     const today = new Date().toDateString();
     const dailyLog = CU?.questsDailyLog || {};
 
-    // Daily claim: resets every day
     const dailyClaimDone = isDailyQuestDone('daily_claim');
-    // Invite: resets every day (track separately)
     const inviteDone = dailyLog.invite === today;
 
     const QUESTS_DEF = [
-      {
-        id:'daily_claim', icon:'🎁', title:'Daily Claim', category:'Daily', daily:true,
-        desc:'Claim your free 50 Onyx reward. Refreshes every day at midnight.',
-        reward:50, unit:'Onyx', done: dailyClaimDone,
-        action:`claimDailyQuest()`
-      },
-      {
-        id:'send_msg', icon:'💬', title:'Send a Message', category:'Daily', daily:true,
-        desc:'Chat with someone — send at least one message today. Stay connected!',
-        reward:10, unit:'Onyx',
-        done: (dailyLog.send_msg === today),
-        action:`showView('dms')`
-      },
-      {
-        id:'invite', icon:'🔗', title:'Invite a Friend', category:'Daily', daily:true,
-        desc:'Share your invite link. Earn +9 Onyx for each friend who joins and stays 24h. Refreshes daily.',
-        reward:9, unit:'Onyx/friend', done: inviteDone,
-        action:`regeneratePersonalInvite();if(CU&&!CU.questsDailyLog)CU.questsDailyLog={};if(CU)CU.questsDailyLog.invite=new Date().toDateString();saveUser().catch(()=>{});switchAtelierTab('overview',document.getElementById('atnav-overview'))`
-      },
-      {
-        id:'join_bastion', icon:'🏰', title:'Join a Bastion', category:'Beginner', daily:false,
-        desc:'Find and join any public Bastion community using Discover.',
-        reward:25, unit:'Onyx',
-        done: completed.includes('join_bastion') || (CU?.bastions||[]).length > 0,
-        action:`showView('discover')`
-      },
-      {
-        id:'add_friend', icon:'👥', title:'Add Your First Friend', category:'Beginner', daily:false,
-        desc:'Send a friend request to someone on Fortized.',
-        reward:15, unit:'Onyx',
-        done: completed.includes('add_friend') || (CU?.friends||[]).length > 0,
-        action:`openModal('modal-add-friend')`
-      },
-      {
-        id:'set_pfp', icon:'🖼️', title:'Set Your Avatar', category:'Beginner', daily:false,
-        desc:'Upload a profile picture to personalize your account.',
-        reward:20, unit:'Onyx',
-        done: completed.includes('set_pfp') || !!CU?.pfp,
-        action:`showView('profile')`
-      },
+      { id:'daily_claim', icon:'🎁', title:'Daily Claim', category:'Daily', daily:true, desc:'Claim your free 50 Onyx. Resets at midnight.', reward:50, unit:'Onyx', done: dailyClaimDone, action:`claimDailyQuest()` },
+      { id:'send_msg', icon:'💬', title:'Send a Message', category:'Daily', daily:true, desc:'Chat with someone today. Stay connected!', reward:10, unit:'Onyx', done: (dailyLog.send_msg === today), action:`showView('dms')` },
+      { id:'invite', icon:'🔗', title:'Invite a Friend', category:'Daily', daily:true, desc:'+9 Onyx per friend who joins. Resets daily.', reward:9, unit:'Onyx/friend', done: inviteDone, action:`regeneratePersonalInvite();if(CU&&!CU.questsDailyLog)CU.questsDailyLog={};if(CU)CU.questsDailyLog.invite=new Date().toDateString();saveUser().catch(()=>{});switchAtelierTab('overview',document.getElementById('atnav-overview'))` },
+      { id:'join_bastion', icon:'🏰', title:'Join a Bastion', category:'Beginner', daily:false, desc:'Find and join any public Bastion community.', reward:25, unit:'Onyx', done: completed.includes('join_bastion') || (CU?.bastions||[]).length > 0, action:`showView('discover')` },
+      { id:'add_friend', icon:'👥', title:'Add Your First Friend', category:'Beginner', daily:false, desc:'Send a friend request to someone.', reward:15, unit:'Onyx', done: completed.includes('add_friend') || (CU?.friends||[]).length > 0, action:`openModal('modal-add-friend')` },
+      { id:'set_pfp', icon:'🖼️', title:'Set Your Avatar', category:'Beginner', daily:false, desc:'Upload a profile picture to stand out.', reward:20, unit:'Onyx', done: completed.includes('set_pfp') || !!CU?.pfp, action:`showView('profile')` },
     ];
 
+    const dailyQ = QUESTS_DEF.filter(q => q.daily);
+    const beginnerQ = QUESTS_DEF.filter(q => !q.daily);
     const activeQ = QUESTS_DEF.filter(q => !q.done);
-    const doneQ   = QUESTS_DEF.filter(q => q.done);
+    const doneQ = QUESTS_DEF.filter(q => q.done);
     const qTab = el._questTab || 'available';
+    const dailyDone = dailyQ.filter(q => q.done).length;
+    const dailyTotal = dailyQ.length;
+    const totalOnyx = doneQ.reduce((s,q) => s + q.reward, 0);
 
-    // Quest thumbnail bg — all have banner images with 0.85 dark overlay
-    const QUEST_BANNERS = {
-      daily_claim: '/Fortized banner.png',
-      invite:      '/Fortized banner4.png',
-      join_bastion:'/Fortized banner.png',
-      add_friend:  '/Fortized banner4.png',
-      set_pfp:     '/Fortized banner.png',
-    };
-    const questThumbHTML = (q) => {
-      const banner = QUEST_BANNERS[q.id] || '/Fortized banner.png';
-      return `<div style="height:80px;position:relative;overflow:hidden;background:#0a0d18;border-radius:18px 18px 0 0;">
-        <img src="${banner}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
-        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.82);"></div>
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;">${q.icon}</div>
-        ${q.done?'<div style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:rgba(62,207,110,.9);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:800;">✓</div>':''}
-        <span style="position:absolute;top:8px;left:10px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:100px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.55);letter-spacing:.04em;backdrop-filter:blur(6px);">${q.daily?'🔄 Daily':q.category}</span>
+    const questCardHTML = (q) => {
+      const catColor = q.daily ? '#60a5fa' : '#a78bfa';
+      return `<div style="background:${q.done?'rgba(62,207,110,.025)':'rgba(255,255,255,.02)'};border:1.5px solid ${q.done?'rgba(62,207,110,.1)':'rgba(255,255,255,.05)'};border-radius:16px;padding:16px 18px;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:14px;" ${!q.done?`onmouseover="this.style.borderColor='rgba(255,249,62,.15)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(0,0,0,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'"`:''}>
+        <div style="width:46px;height:46px;border-radius:14px;background:${q.done?'rgba(62,207,110,.08)':'rgba(255,255,255,.03)'};border:1px solid ${q.done?'rgba(62,207,110,.12)':'rgba(255,255,255,.06)'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative;">
+          ${q.icon}
+          ${q.done?'<div style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;border:2px solid #0a0d14;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>':''}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+            <span style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:${q.done?'rgba(255,255,255,.45)':'#fff'};">${q.title}</span>
+            <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;background:${catColor}12;color:${catColor};border:1px solid ${catColor}20;letter-spacing:.03em;">${q.daily?'DAILY':q.category.toUpperCase()}</span>
+          </div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.35);line-height:1.4;margin-bottom:8px;">${q.desc}</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;max-width:120px;">
+              <div style="height:100%;border-radius:2px;width:${q.done?100:0}%;background:${q.done?'var(--green)':'var(--accent)'};transition:width .4s cubic-bezier(.22,1,.36,1);"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:${q.done?'var(--green)':'var(--accent)'};">+${q.reward} <img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;vertical-align:-1px;"></span>
+          </div>
+        </div>
+        ${!q.done
+          ? `<button onclick="${q.action}" style="padding:8px 16px;border-radius:12px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.12);color:var(--accent);font-size:11.5px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;" onmouseover="this.style.background='rgba(255,249,62,.14)'" onmouseout="this.style.background='rgba(255,249,62,.08)'">Go</button>`
+          : `<span style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;">${q.daily?'Resets daily':'Done'}</span>`}
       </div>`;
     };
 
     el.style.padding = '0';
-    el.innerHTML = [
-      // ── Quest page header ──
-      '<div style="position:relative;overflow:hidden;height:200px;background:#0a0d18;flex-shrink:0;">',
-        '<img src="/Fortized banner2.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55;" onerror="this.style.display=\'none\'">',
-        '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(7,9,18,.1),rgba(7,9,18,.85));"></div>',
-        '<div style="position:absolute;bottom:22px;left:32px;">',
-          '<div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.6);margin-bottom:5px;">FORTIZED</div>',
-          `<div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5);">Quests · Earn Onyx</div>`,
-        '</div>',
-      '</div>',
-// ── Invite banner ──
-      '<div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#0a1428,#0d1c34);border-top:1px solid rgba(255,255,255,.04);">',
-        '<img src="/Fortized banner4.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.2;" onerror="this.style.display=\'none\'">',
-        '<div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(10,20,40,.9) 50%,rgba(10,20,40,.45));"></div>',
-        '<div style="position:relative;padding:20px 32px;display:flex;align-items:center;gap:16px;">',
-          '<div style="width:48px;height:48px;border-radius:16px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.18);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔗</div>',
-          '<div style="flex:1;">',
-            '<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(96,165,250,.65);margin-bottom:4px;">DAILY QUEST</div>',
-            '<div style="font-family:\'Syne\',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;color:#fff;">Invite a Friend</div>',
-            '<div style="font-size:12px;color:rgba(255,255,255,.4);">Share your link · +9 Onyx per friend who joins · Resets daily</div>',
-          '</div>',
-          `<button onclick="regeneratePersonalInvite();if(CU&&!CU.questsDailyLog)CU.questsDailyLog={};if(CU)CU.questsDailyLog.invite=new Date().toDateString();saveUser().catch(()=>{});switchAtelierTab('overview',document.getElementById('atnav-overview'))" style="background:${inviteDone?'rgba(255,255,255,.05)':'rgba(96,165,250,.12)'};color:${inviteDone?'rgba(255,255,255,.25)':'#93c5fd'};border:1px solid ${inviteDone?'rgba(255,255,255,.06)':'rgba(96,165,250,.2)'};border-radius:14px;padding:9px 20px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;cursor:${inviteDone?'not-allowed':'pointer'};white-space:nowrap;transition:all .18s;">${inviteDone?'Done Today ✓':'+9 ⬡ Get Link'}</button>`,
-        '</div>',
-      '</div>',
-      // ── Tabs ──
-      '<div style="padding:20px 28px 0;">',
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">',
-          '<div style="display:flex;gap:8px;">',
-            `<button class="quest-tab-chip ${qTab==='available'?'active':''}" onclick="setQuestTab('available')" id="qtab-available">Available (${activeQ.length})</button>`,
-            `<button class="quest-tab-chip ${qTab==='completed'?'active':''}" onclick="setQuestTab('completed')" id="qtab-completed">Completed (${doneQ.length})</button>`,
-          '</div>',
-        '</div>',
-        // ── Quest grid ──
-        '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding-bottom:40px;">',
-          (qTab === 'available' ? activeQ : doneQ).map(q => [
-            `<div style="background:${q.done?'rgba(62,207,110,.035)':'rgba(255,255,255,.025)'};border:1px solid ${q.done?'rgba(62,207,110,.08)':'rgba(255,255,255,.06)'};border-radius:18px;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);" ${!q.done?`onmouseover="this.style.borderColor='rgba(255,249,62,.18)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.transform='';this.style.boxShadow='none'"`:''}>`,
-              questThumbHTML(q),
-              '<div style="padding:14px 16px;">',
-                `<div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;margin-bottom:4px;">${q.title}</div>`,
-                `<div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.5;margin-bottom:10px;">${q.desc}</div>`,
-                '<div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-bottom:10px;">',
-                  `<div style="height:100%;border-radius:2px;width:${q.done?100:0}%;background:${q.done?'var(--green)':'var(--accent)'};transition:width .3s;"></div>`,
-                '</div>',
-                '<div style="display:flex;align-items:center;justify-content:space-between;">',
-                  `<span style="font-size:11.5px;font-weight:700;color:${q.done?'var(--green)':'var(--accent)'};">+${q.reward} ${q.unit}</span>`,
-                  !q.done
-                    ? `<button onclick="${q.action}" style="background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);border-radius:12px;color:var(--accent);font-size:11px;font-weight:700;padding:5px 14px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.14)'" onmouseout="this.style.background='rgba(255,249,62,.08)'">Go →</button>`
-                    : `<span style="font-size:11px;color:rgba(255,255,255,.2);">${q.daily?'Resets daily':'Completed'}</span>`,
-                '</div>',
-              '</div>',
-            '</div>',
-          ].join('')).join('') || `<div style="grid-column:1/-1;text-align:center;padding:40px;font-size:13.5px;color:rgba(255,255,255,.25);background:rgba(255,255,255,.015);border-radius:18px;border:1px solid rgba(255,255,255,.04);">${qTab==='available'?'All quests done today! 🎉 Come back tomorrow.':'No completed quests yet.'}</div>`,
-        '</div>',
-      '</div>',
-    ].join('');
+    el.innerHTML = `
+      <!-- Quest Header -->
+      <div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#080b14,#0c1020);padding:28px 32px 24px;border-bottom:1px solid rgba(255,255,255,.04);">
+        <div style="position:absolute;inset:0;background:url('/Fortized banner2.png') center/cover;opacity:.12;"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(8,11,20,.9),rgba(12,16,32,.85));"></div>
+        <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;">
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.5);margin-bottom:6px;">FORTIZED QUESTS</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;">Earn Onyx</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.35);line-height:1.5;">Complete quests to earn Onyx currency. Daily quests refresh at midnight.</div>
+          </div>
+          <!-- Daily progress ring -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">
+            <div style="position:relative;width:64px;height:64px;">
+              <svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg);">
+                <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="4"/>
+                <circle cx="32" cy="32" r="28" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="${28*2*Math.PI}" stroke-dashoffset="${28*2*Math.PI*(1-dailyDone/Math.max(dailyTotal,1))}" style="transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);"/>
+              </svg>
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">${dailyDone}/${dailyTotal}</div>
+            </div>
+            <span style="font-size:9.5px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;">Daily</span>
+          </div>
+        </div>
+
+        <!-- Stats row -->
+        <div style="position:relative;display:flex;gap:12px;margin-top:18px;">
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);border-radius:10px;">
+            <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;">
+            <span style="font-size:11.5px;font-weight:700;color:var(--accent);">${totalOnyx} earned</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(62,207,110,.06);border:1px solid rgba(62,207,110,.1);border-radius:10px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style="font-size:11.5px;font-weight:700;color:var(--green);">${doneQ.length}/${QUESTS_DEF.length} done</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quest Content -->
+      <div style="padding:22px 28px 60px;">
+        <!-- Tabs -->
+        <div style="display:flex;gap:8px;margin-bottom:20px;">
+          <button class="quest-tab-chip ${qTab==='available'?'active':''}" onclick="setQuestTab('available')" id="qtab-available">Available (${activeQ.length})</button>
+          <button class="quest-tab-chip ${qTab==='completed'?'active':''}" onclick="setQuestTab('completed')" id="qtab-completed">Completed (${doneQ.length})</button>
+        </div>
+
+        ${qTab === 'available' ? `
+          <!-- Daily Quests Section -->
+          ${activeQ.filter(q=>q.daily).length ? `
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(96,165,250,.5);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Daily Quests
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+              ${activeQ.filter(q=>q.daily).map(q=>questCardHTML(q)).join('')}
+            </div>` : ''}
+
+          <!-- Beginner/Other Quests -->
+          ${activeQ.filter(q=>!q.daily).length ? `
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(167,139,250,.5);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              One-Time Quests
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+              ${activeQ.filter(q=>!q.daily).map(q=>questCardHTML(q)).join('')}
+            </div>` : ''}
+
+          ${!activeQ.length ? `<div style="text-align:center;padding:48px 24px;background:rgba(255,255,255,.015);border-radius:18px;border:1px solid rgba(255,255,255,.04);">
+            <div style="font-size:40px;margin-bottom:12px;">🎉</div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:rgba(255,255,255,.5);margin-bottom:6px;">All Done!</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.25);">Come back tomorrow for new daily quests.</div>
+          </div>` : ''}
+        ` : `
+          <!-- Completed quests list -->
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${doneQ.map(q=>questCardHTML(q)).join('') || `<div style="text-align:center;padding:48px 24px;background:rgba(255,255,255,.015);border-radius:18px;border:1px solid rgba(255,255,255,.04);">
+              <div style="font-size:40px;margin-bottom:12px;">📋</div>
+              <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.3);">No completed quests yet.</div>
+            </div>`}
+          </div>
+        `}
+      </div>`;
 
     el._questTab = qTab;
   }
@@ -18498,99 +18587,126 @@ function renderAtelierTab(tab) {
     const shopTab = el._shopTab || 'featured';
     const CATS = ['All','Frames','Effects','Badges','Colors'];
     const shopCat = el._shopCat || 'All';
+    const ownedAppearances = CU?.unlockedAppearances || [];
+
+    // Shop item definitions
+    const SHOP_APPEARANCES = [
+      { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(140,100,220,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
+      { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(255,249,62,.18)', hoverBorder:'rgba(255,249,62,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
+    ];
+
+    const onyxTier = CU?.onyxBadge ? _getOnyxTier(CU.onyxBadgeSpent||0) : null;
 
     el.style.padding = '0';
     el.innerHTML = `
-      <!-- Shop top tabs -->
-      <div style="padding:0 28px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(0,0,0,.12);display:flex;gap:0;align-items:center;">
-        ${['featured','browse','coming_soon'].map(t=>`
-          <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:15px 20px;background:transparent;border:none;border-bottom:2px solid ${shopTab===t?'var(--accent)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.35)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;" onmouseover="if(!this.style.borderBottomColor.includes('var'))this.style.color='rgba(255,255,255,.7)'" onmouseout="if(!this.style.borderBottomColor.includes('var'))this.style.color='rgba(255,255,255,.35)'">${t==='featured'?'Featured':t==='browse'?'Browse':'Coming Soon'}</button>`).join('')}
-        <div style="flex:1;"></div>
-        <div style="font-size:12px;color:rgba(255,255,255,.25);padding-right:4px;">${bal} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"> balance</div>
+      <!-- Shop Header -->
+      <div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#08091a,#0c1020);padding:24px 32px 20px;border-bottom:1px solid rgba(255,255,255,.04);">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(255,249,62,.03),transparent 70%);"></div>
+        <div style="position:relative;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.4);margin-bottom:5px;">ATELIER</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Shop</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,249,62,.06);border:1.5px solid rgba(255,249,62,.12);border-radius:14px;">
+            <img src="/Onyx.png" style="width:18px;height:18px;object-fit:contain;">
+            <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--accent);">${bal}</span>
+            <span style="font-size:11px;color:rgba(255,255,255,.3);font-weight:500;">Onyx</span>
+          </div>
+        </div>
+
+        <!-- Shop Tabs -->
+        <div style="position:relative;display:flex;gap:4px;margin-top:18px;">
+          ${['featured','browse','coming_soon'].map(t=>`
+            <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:9px 18px;border-radius:12px;border:1.5px solid ${shopTab===t?'rgba(255,249,62,.2)':'transparent'};background:${shopTab===t?'rgba(255,249,62,.06)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.35)'};font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="if('${t}'!=='${shopTab}')this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.7)'" onmouseout="if('${t}'!=='${shopTab}'){this.style.background='transparent';this.style.color='rgba(255,255,255,.35)'}">${t==='featured'?'Featured':t==='browse'?'Browse':'Coming Soon'}</button>`).join('')}
+        </div>
       </div>
 
-      <div style="padding:28px 32px 60px;">
+      <div style="padding:24px 32px 60px;">
         ${shopTab==='featured'?`
-          <!-- Featured: Onyx Pure Appearance -->
-          <div class="atel-section-hdr">Appearances</div>
-          <div style="background:linear-gradient(135deg,#010103,#08061a,#0e0a22);border:1.5px solid rgba(140,100,220,.18);border-radius:22px;overflow:hidden;margin-bottom:28px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(140,100,220,.35)';this.style.boxShadow='0 8px 40px rgba(100,60,180,.12)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(140,100,220,.18)';this.style.boxShadow='none';this.style.transform=''">
-            <div style="height:130px;background:linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%);display:flex;gap:4px;padding:16px;position:relative;border-radius:22px 22px 0 0;">
-              <div style="width:26px;background:#020206;border-radius:8px;"></div>
-              <div style="flex:1;background:rgba(255,255,255,.025);border-radius:8px;padding:12px;">
-                <div style="height:7px;background:#fff93e;border-radius:100px;width:45%;margin-bottom:6px;"></div>
-                <div style="height:5px;background:rgba(255,255,255,.07);border-radius:100px;width:75%;"></div>
-              </div>
-              <div style="position:absolute;bottom:12px;right:16px;font-size:11px;color:rgba(140,100,220,.55);font-weight:700;letter-spacing:.05em;">ONYX PURE</div>
-            </div>
-            <div style="padding:20px 22px;display:flex;align-items:center;gap:16px;">
-              <div style="flex:1;">
-                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:5px;">Onyx Pure</div>
-                <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.55;">The darkest appearance. A subtle gradient towards dark purple. Pure immersion.</div>
-              </div>
-              ${(CU?.unlockedAppearances||[]).includes('onyx_pure')
-                ? '<div style="padding:10px 22px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:14px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'
-                : `<button onclick="event.stopPropagation();buyAppearance('onyx_pure',150)" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(255,249,62,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(255,249,62,.15)'"><img src='/Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 150 Onyx</button>`}
-            </div>
+          <!-- Appearances -->
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Appearances
           </div>
-
-          <!-- Midnight Citadel Appearance -->
-          <div style="background:linear-gradient(135deg,#050812,#0a1220,#101a38);border:1.5px solid rgba(255,249,62,.18);border-radius:22px;overflow:hidden;margin-bottom:28px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,249,62,.35)';this.style.boxShadow='0 8px 40px rgba(255,249,62,.12)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,249,62,.18)';this.style.boxShadow='none';this.style.transform=''">
-            <div style="height:130px;background:linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%);display:flex;gap:4px;padding:16px;position:relative;border-radius:22px 22px 0 0;">
-              <div style="width:26px;background:#080e1a;border-radius:8px;"></div>
-              <div style="flex:1;background:rgba(255,255,255,.025);border-radius:8px;padding:12px;">
-                <div style="height:7px;background:#fff93e;border-radius:100px;width:45%;margin-bottom:6px;"></div>
-                <div style="height:5px;background:rgba(255,255,255,.07);border-radius:100px;width:75%;"></div>
-              </div>
-              <div style="position:absolute;bottom:12px;right:16px;font-size:11px;color:rgba(255,249,62,.55);font-weight:700;letter-spacing:.05em;">MIDNIGHT CITADEL</div>
-            </div>
-            <div style="padding:20px 22px;display:flex;align-items:center;gap:16px;">
-              <div style="flex:1;">
-                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:5px;">Midnight Citadel</div>
-                <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.55;">A deep blue fortress under a twilight sky. Deep blue backgrounds with the signature Fortized yellow accent.</div>
-              </div>
-              ${(CU?.unlockedAppearances||[]).includes('midnight_citadel')
-                ? '<div style="padding:10px 22px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:14px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'
-                : `<button onclick="event.stopPropagation();buyAppearance('midnight_citadel',185)" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(255,249,62,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(255,249,62,.15)'"><img src='/Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 185 Onyx</button>`}
-            </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;">
+            ${SHOP_APPEARANCES.map(a => {
+              const owned = ownedAppearances.includes(a.id);
+              return `<div style="background:${a.gradient};border:1.5px solid ${a.borderColor};border-radius:20px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='${a.hoverBorder}';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(0,0,0,.3)'" onmouseout="this.style.borderColor='${a.borderColor}';this.style.transform='';this.style.boxShadow='none'">
+                <!-- Mini preview -->
+                <div style="height:100px;background:${a.previewBg};display:flex;gap:3px;padding:12px;position:relative;">
+                  <div style="width:20px;background:${a.sidebarBg};border-radius:6px;"></div>
+                  <div style="flex:1;background:rgba(255,255,255,.02);border-radius:6px;padding:10px;">
+                    <div style="height:5px;background:#fff93e;border-radius:100px;width:40%;margin-bottom:5px;"></div>
+                    <div style="height:4px;background:rgba(255,255,255,.06);border-radius:100px;width:65%;"></div>
+                  </div>
+                  <span style="position:absolute;bottom:8px;right:12px;font-size:9px;color:${a.labelColor};font-weight:700;letter-spacing:.05em;">${a.name.toUpperCase()}</span>
+                </div>
+                <div style="padding:16px 18px;">
+                  <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:4px;">${a.name}</div>
+                  <div style="font-size:11.5px;color:rgba(255,255,255,.35);line-height:1.5;margin-bottom:12px;min-height:34px;">${a.desc}</div>
+                  ${owned
+                    ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:#3ecf6e;font-size:12px;font-weight:700;text-align:center;">Owned</div>'
+                    : `<button onclick="event.stopPropagation();buyAppearance('${a.id}',${a.price})" style="width:100%;padding:9px 16px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:14px;height:14px;object-fit:contain;'> ${a.price} Onyx</button>`}
+                </div>
+              </div>`;
+            }).join('')}
           </div>
 
           <!-- Onyx Badge -->
-          <div class="atel-section-hdr" style="margin-top:24px;">Badges</div>
-          <div style="background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.15);border-radius:22px;overflow:hidden;margin-bottom:28px;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,249,62,.15)';this.style.transform=''">
-            <div style="padding:20px 22px;display:flex;align-items:center;gap:16px;">
-              <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;"><img src="/fortized badges/onyx.png" style="width:36px;height:36px;object-fit:contain;"></div>
-              <div style="flex:1;">
-                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:3px;">Onyx Badge</div>
-                <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.55;">A progression badge that evolves as you invest more Onyx. Tiers: Apprentice → Adept → Artisan → Master.</div>
-                ${CU?.onyxBadge?`<div style="margin-top:6px;font-size:11px;color:#fff93e;font-weight:600;">Current: ${_getOnyxTier(CU.onyxBadgeSpent||0).name} · ${CU.onyxBadgeSpent||0} Onyx invested</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+            Badges
+          </div>
+          <div style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.12);border-radius:20px;overflow:hidden;margin-bottom:32px;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(255,249,62,.12)';this.style.transform=''">
+            <div style="padding:18px 20px;display:flex;align-items:center;gap:16px;">
+              <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="/fortized badges/onyx.png" style="width:34px;height:34px;object-fit:contain;"></div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+                  <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">Onyx Badge</span>
+                  ${onyxTier ? `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.12);">${onyxTier.name.split(' ')[1]}</span>` : ''}
+                </div>
+                <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;">Evolves as you invest Onyx. Apprentice → Adept → Artisan → Master.</div>
+                ${CU?.onyxBadge?`<div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                  <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;max-width:160px;">
+                    <div style="height:100%;border-radius:2px;background:var(--accent);width:${Math.min(100,(CU.onyxBadgeSpent||0)/100)}%;transition:width .4s;"></div>
+                  </div>
+                  <span style="font-size:10.5px;font-weight:600;color:rgba(255,249,62,.6);">${CU.onyxBadgeSpent||0} invested</span>
+                </div>
                 <div style="display:flex;gap:6px;margin-top:8px;">
-                  ${[{amt:100,label:'100'},{amt:500,label:'500'},{amt:1000,label:'1K'}].map(u=>`<button onclick="upgradeOnyxBadge(${u.amt})" style="padding:6px 14px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);border-radius:10px;color:#fff93e;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.14)'" onmouseout="this.style.background='rgba(255,249,62,.08)'"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> +${u.label}</button>`).join('')}
+                  ${[{amt:100,label:'100'},{amt:500,label:'500'},{amt:1000,label:'1K'}].map(u=>`<button onclick="upgradeOnyxBadge(${u.amt})" style="padding:5px 12px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);border-radius:10px;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .12s;" onmouseover="this.style.background='rgba(255,249,62,.12)'" onmouseout="this.style.background='rgba(255,249,62,.06)'"><img src='/Onyx.png' style='width:11px;height:11px;object-fit:contain;'> +${u.label}</button>`).join('')}
                 </div>`:''}
               </div>
-              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.15);transition:all .18s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''"><img src='/Onyx.png' style='width:16px;height:16px;object-fit:contain;'> 100 Onyx</button>`:'<div style="padding:10px 22px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:14px;color:#3ecf6e;font-family:Syne,sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">Owned</div>'}
+              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 20px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;flex-shrink:0;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:14px;height:14px;object-fit:contain;'> 100</button>`:'<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:#3ecf6e;font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0;">Owned</div>'}
             </div>
           </div>
 
-          <!-- More coming soon -->
-          <div class="atel-section-hdr" style="margin-top:24px;">Upcoming Items</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
-            ${[{n:'Avatar Frames',i:'🖼️',c:'#a78bfa'},{n:'Profile Effects',i:'✨',c:'#60a5fa'},{n:'Name Colors',i:'🎨',c:'#fb923c'}].map(it=>`
-              <div style="background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.06);border-radius:18px;overflow:hidden;position:relative;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,255,255,.12)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.transform=''">
-                <div style="height:105px;background:linear-gradient(135deg,${it.c}12,rgba(0,0,0,.25));display:flex;align-items:center;justify-content:center;font-size:46px;opacity:.45;border-radius:18px 18px 0 0;">${it.i}</div>
-                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="font-size:28px;opacity:.35;">🔒</div></div>
-                <div style="padding:14px 16px;"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.45);">${it.n}</div><div style="font-size:11px;color:rgba(255,255,255,.2);margin-top:4px;">Coming soon</div></div>
+          <!-- Upcoming -->
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Coming Soon
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+            ${[{n:'Avatar Frames',i:'🖼️',c:'#a78bfa',d:'Decorate your profile picture'},{n:'Profile Effects',i:'✨',c:'#60a5fa',d:'Animated effects on your card'},{n:'Name Colors',i:'🎨',c:'#fb923c',d:'Stand out with colored names'}].map(it=>`
+              <div style="background:rgba(255,255,255,.015);border:1.5px solid rgba(255,255,255,.05);border-radius:16px;overflow:hidden;position:relative;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='${it.c}33';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform=''">
+                <div style="height:80px;background:linear-gradient(135deg,${it.c}08,rgba(0,0,0,.2));display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;">
+                  <span style="opacity:.4;">${it.i}</span>
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="font-size:22px;opacity:.3;">🔒</div></div>
+                </div>
+                <div style="padding:12px 14px;">
+                  <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:3px;">${it.n}</div>
+                  <div style="font-size:10.5px;color:rgba(255,255,255,.2);line-height:1.4;">${it.d}</div>
+                </div>
               </div>`).join('')}
           </div>`:`
-          <!-- Browse / Coming Soon state -->
-          <div style="padding:20px 0;">
-            <!-- Category filter chips -->
+          <!-- Browse / Coming Soon -->
+          <div style="padding:8px 0;">
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;">
               ${CATS.map(cat=>`<button class="shop-filter-chip${shopCat===cat?' active':''}" onclick="setShopCat('${cat}')">${cat}</button>`).join('')}
             </div>
-            <div style="text-align:center;padding:60px 24px;background:rgba(255,255,255,.015);border-radius:20px;border:1px solid rgba(255,255,255,.04);">
-              <div style="font-size:48px;margin-bottom:16px;opacity:.25;">📦</div>
-              <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,.25);">No items yet</div>
-              <div style="font-size:13px;color:rgba(255,255,255,.18);margin-top:7px;">Check back when the shop launches!</div>
+            <div style="text-align:center;padding:56px 24px;background:rgba(255,255,255,.015);border-radius:18px;border:1.5px solid rgba(255,255,255,.04);">
+              <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px;border:1px solid rgba(255,255,255,.05);">📦</div>
+              <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:rgba(255,255,255,.3);margin-bottom:5px;">Nothing here yet</div>
+              <div style="font-size:12.5px;color:rgba(255,255,255,.18);">New items are coming soon. Stay tuned!</div>
             </div>
           </div>`}
       </div>`;

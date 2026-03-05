@@ -5925,7 +5925,7 @@ function buildMemberEntry(u, roles, memberRoles) {
 }
 
 function buildBotMemberEntry(bot) {
-  const emblem = bot.emblem || '🤖';
+  const emblem = bot.emblem || '<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
   const name = bot.name || 'Bot';
   return `<div class="ml-entry bot-entry" onclick="showBotProfilePreview('${escapeHTML(bot.id||bot.name)}',this)">
     <div style="position:relative;display:inline-flex;flex-shrink:0;">
@@ -5959,7 +5959,7 @@ function showBotProfilePreview(botId, el) {
   panel.style.top = top + 'px';
   panel.innerHTML = `
     <div style="background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(96,165,250,.05));padding:20px;text-align:center;">
-      <div style="width:56px;height:56px;border-radius:50%;background:rgba(96,165,250,.12);border:2px solid rgba(96,165,250,.25);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 8px;">${bot.emblem||'🤖'}</div>
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(96,165,250,.12);border:2px solid rgba(96,165,250,.25);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 8px;overflow:hidden;">${bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
       <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
         <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">${escapeHTML(bot.name)}</span>
         <span class="bot-badge">BOT</span>
@@ -7176,7 +7176,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
           <div style="padding:16px 14px;">
             <div style="display:flex;flex-direction:column;gap:8px;">
               <div style="display:flex;align-items:center;gap:8px;">
-                <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">🤖</div>
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;"><img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;"></div>
                 <div>
                   <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);">Fortized</div>
                   <div id="crm-pv-welcome" style="font-size:12px;color:rgba(255,255,255,.3);line-height:1.4;">Welcome to <strong style="color:rgba(255,255,255,.5);">#new-room</strong>! This is the start of the channel.</div>
@@ -7441,7 +7441,7 @@ function renderBSettingsNav(activeTab) {
     {id:'emojis',icon:'😊',label:'Custom Emojis'},
     {label:'Moderation'},
     {id:'automod',icon:'🛡️',label:'AutoMod'},
-    {id:'bots',icon:'🤖',label:'Bots'},
+    {id:'bots',icon:'<img src="/Fortized Bot.png" style="width:14px;height:14px;">',label:'Bots'},
     {id:'invites',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',label:'Invites'},
     {id:'members',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',label:'Members'},
     {id:'bans',icon:'🔨',label:'Bans'},
@@ -7636,7 +7636,7 @@ function renderBSettingsMain(tab) {
       {key:'profanityFilter',icon:'🤬',title:'Profanity Filter',desc:'Automatically filter commonly offensive language.'},
     ];
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🤖 AutoMod 2.0</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"> AutoMod 2.0</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Modular safety toggles. Enable or disable each rule independently.</div>
       ${amRules.map(r=>`<div class="automod-rule">
         <div class="amr-header"><span style="font-size:20px;">${r.icon}</span><div class="amr-title">${r.title}</div>
@@ -7871,7 +7871,7 @@ function renderBSettingsMain(tab) {
     const bots = (b.deployedBots||[]);
     const availBots = (CU.bots||[]).filter(bot=>!bots.find(db=>db.id===bot.id));
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🤖 Bastion Bots</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"> Bastion Bots</div>
       <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Manage bots deployed to this bastion. Bots can automate tasks, moderate, and respond to commands.</div>
       <div style="display:flex;gap:8px;margin-bottom:20px;">
         <button class="btn-a" onclick="openDeployBotPicker()" style="font-size:12.5px;">+ Deploy Bot</button>
@@ -7880,7 +7880,7 @@ function renderBSettingsMain(tab) {
       <div id="bastion-bots-list">
         ${bots.length ? bots.map(bot => `
           <div class="bot-card" style="margin-bottom:8px;">
-            <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
+            <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
             <div class="bot-meta">
               <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
               <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
@@ -8423,7 +8423,7 @@ function renderMyBotsView(main) {
       <div id="my-bots-list">
         ${bots.length ? bots.map((bot,i) => `
           <div class="bot-card" style="margin-bottom:10px;" onclick="openBotEditor(${i})">
-            <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
+            <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
             <div class="bot-meta">
               <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span>
                 ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">● Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">○ Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">🔒 Private</span>'}
@@ -8442,7 +8442,7 @@ function renderMyBotsView(main) {
           </div>
         `).join('') : `
           <div style="text-align:center;padding:40px 20px;">
-            <div style="font-size:36px;margin-bottom:12px;">🤖</div>
+            <div style="font-size:36px;margin-bottom:12px;"><img src="/Fortized Bot.png" style="width:36px;height:36px;"></div>
             <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;">No Bots Yet</div>
             <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:16px;">Create your first bot to start automating your Bastions.</div>
             <button class="btn-a" onclick="openCreateBotModal()">Create Bot</button>
@@ -8476,10 +8476,10 @@ function renderCreateBotStep(step) {
 
   if (step === 1) {
     body.innerHTML = `
-      <div class="modal-title">🤖 Create a Bot</div>
+      <div class="modal-title" style="display:flex;align-items:center;gap:8px;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"> Create a Bot</div>
       <div class="modal-sub" style="margin-bottom:16px;">Step 1 of 3 — Identity</div>
       <div style="display:flex;gap:14px;margin-bottom:16px;">
-        <div style="width:64px;height:64px;border-radius:16px;background:var(--panel2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;" onclick="document.getElementById('bot-avatar-upload').click()" id="bot-avatar-prev">🤖</div>
+        <div style="width:64px;height:64px;border-radius:16px;background:var(--panel2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;" onclick="document.getElementById('bot-avatar-upload').click()" id="bot-avatar-prev"><img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;border-radius:16px;"></div>
         <input id="bot-avatar-upload" type="file" accept="image/*" style="display:none;" onchange="previewBotAvatar(event)">
         <div style="flex:1;">
           <input class="modal-input" id="cbot-name" placeholder="Bot Name" maxlength="32">
@@ -8498,7 +8498,7 @@ function renderCreateBotStep(step) {
       </div>`;
   } else if (step === 2) {
     body.innerHTML = `
-      <div class="modal-title">🤖 Script Type</div>
+      <div class="modal-title" style="display:flex;align-items:center;gap:8px;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"> Script Type</div>
       <div class="modal-sub" style="margin-bottom:16px;">Step 2 of 3 — Choose how your bot is programmed</div>
       <div style="display:flex;gap:10px;margin-bottom:20px;">
         <div id="stype-block" class="vis-opt active" onclick="document.querySelectorAll('#create-bot-body .vis-opt').forEach(e=>e.classList.remove('active'));this.classList.add('active')" style="flex:1;cursor:pointer;">
@@ -8562,7 +8562,7 @@ function finalizeBotCreation() {
   const bot = {
     id: 'bot_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
     name, bio, avatar,
-    emblem: '🤖',
+    emblem: '<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">',
     visibility: vis,
     scriptType,
     permissions: perms,
@@ -8595,7 +8595,7 @@ function openBotEditor(idx) {
     <div style="max-width:720px;padding-bottom:40px;">
       <button class="btn-g" onclick="buildProfileView('my_bots')" style="margin-bottom:16px;font-size:12px;">← Back to My Bots</button>
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
-        <div class="bot-av" style="width:56px;height:56px;font-size:26px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
+        <div class="bot-av" style="width:56px;height:56px;font-size:26px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
         <div>
           <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
           <div style="font-size:12px;color:var(--muted);">Owner: @${escapeHTML(bot.owner)} · Created ${new Date(bot.createdAt).toLocaleDateString()} · v${bot.version}</div>
@@ -8811,7 +8811,7 @@ function renderArsenalView(main) {
 function renderArsenalCard(bot) {
   return `<div class="bot-card" style="flex-direction:column;gap:10px;cursor:default;">
     <div style="display:flex;gap:12px;align-items:center;">
-      <div class="bot-av">${bot.emblem||'🤖'}</div>
+      <div class="bot-av">${bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
       <div style="flex:1;min-width:0;">
         <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
         <div style="font-size:11px;color:var(--muted);">by @${escapeHTML(bot.owner)} · v${bot.version}</div>
@@ -8921,7 +8921,7 @@ function openDeployBotPicker() {
         <div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;margin-bottom:16px;">
           ${myBots.map((bot,i) => `
             <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .12s;" onmouseover="this.style.borderColor='rgba(167,139,250,.3)'" onmouseout="this.style.borderColor='var(--border)'" onclick="deployMyBot(${i})">
-              <div class="bot-av" style="width:36px;height:36px;font-size:16px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'🤖')}</div>
+              <div class="bot-av" style="width:36px;height:36px;font-size:16px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
               <div style="flex:1;"><div style="font-weight:600;font-size:13px;">${escapeHTML(bot.name)}</div><div style="font-size:11px;color:var(--muted);">${(bot.commands||[]).length} commands · ${(bot.scripts||[]).length} scripts</div></div>
             </div>
           `).join('')}
@@ -8977,7 +8977,7 @@ function getBotProfile(bot) {
     name: bot.name,
     bio: bot.bio || '',
     avatar: bot.avatar || '',
-    emblem: bot.emblem || '🤖',
+    emblem: bot.emblem || '<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">',
     owner: bot.owner,
     createdAt: bot.createdAt,
     commands: bot.commands || [],
@@ -15838,7 +15838,7 @@ function openBotCommandPanel(inputId, context) {
   const list = document.getElementById('botcmd-list');
   if (!commands.length) {
     list.innerHTML = `<div class="botcmd-empty">
-      <div style="font-size:22px;margin-bottom:6px;opacity:.3;">🤖</div>
+      <div style="margin-bottom:6px;opacity:.3;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"></div>
       No bot commands available${context !== 'ch' ? '<br><span style="font-size:11px;color:rgba(255,255,255,.2);">Bot commands are only available in bastion channels.</span>' : ' in this bastion.'}
     </div>`;
   } else {

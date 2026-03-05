@@ -1051,9 +1051,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .toast.info{border-left:3px solid var(--accent);color:var(--accent);}
 .ctx-menu{position:fixed;z-index:9999;background:rgba(16,20,32,.92);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:6px 0;min-width:230px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.04);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:ctxIn .1s cubic-bezier(.22,1,.36,1);display:none;overflow:hidden;}
 .ctx-menu.ctx-visible{display:block;}
-@keyframes vcPulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes callPulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.4);opacity:0}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 @keyframes ctxIn{from{opacity:0;transform:scale(.95) translateY(-3px);}to{opacity:1;transform:none;}}
 @keyframes ctxRipple{0%{transform:scale(0);opacity:.18;}100%{transform:scale(2.5);opacity:0;}}
 @keyframes ctxCheck{0%{stroke-dashoffset:20;}100%{stroke-dashoffset:0;}}
@@ -1512,6 +1511,11 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   /* Bastion banner */
   .bastion-banner-hero{height:120px;}
   .bastion-banner-hero img{height:120px;}
+  /* Toast above mobile userbar */
+  #toast-container{bottom:140px!important;right:12px!important;left:12px!important;align-items:stretch;}
+  /* Voice call room mobile adjustments */
+  #vc-call-bar{padding:0!important;}
+  #vc-call-bar>div:nth-child(2){gap:30px!important;padding:20px!important;}
 }
 
 /* ── SMALL PHONE (max-width: 480px) ──── */
@@ -16587,13 +16591,35 @@ async function answerVoiceCall(partner, offerSdp) {
 
 async function _vcSetup(isCaller) {
   _vc.localStream = await navigator.mediaDevices.getUserMedia({audio:true,video:false}).catch(()=>null);
-  _vc.pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]});
+  if (!_vc.localStream) { toast('Could not access microphone','error'); }
+  _vc.pc = new RTCPeerConnection({iceServers:[
+    {urls:'stun:stun.l.google.com:19302'},
+    {urls:'stun:stun1.l.google.com:19302'},
+    {urls:'stun:stun2.l.google.com:19302'},
+    {urls:'stun:stun3.l.google.com:19302'},
+    {urls:'stun:stun4.l.google.com:19302'},
+  ]});
   if (_vc.localStream) _vc.localStream.getTracks().forEach(t=>_vc.pc.addTrack(t,_vc.localStream));
   _vc.pc.ontrack = e => {
     _vc.remoteStream = e.streams[0];
+    // Always keep audio routed to the hidden audio element
     let audioEl = document.getElementById('vc-remote-audio');
     if (!audioEl) { audioEl=document.createElement('audio'); audioEl.id='vc-remote-audio'; audioEl.autoplay=true; document.body.appendChild(audioEl); }
     audioEl.srcObject = _vc.remoteStream;
+    // If a screen share video track arrives, show it in the call room
+    if (e.track.kind === 'video') {
+      _showScreenInRoom(true);
+    }
+  };
+  // Monitor connection state for quality feedback
+  _vc.pc.onconnectionstatechange = () => {
+    const st = _vc.pc?.connectionState;
+    if (st === 'disconnected') toast('Connection unstable…','info');
+    else if (st === 'failed') { toast('Call connection lost','error'); endVoiceCall(); }
+  };
+  _vc.pc.oniceconnectionstatechange = () => {
+    const st = _vc.pc?.iceConnectionState;
+    if (st === 'failed') { toast('Call connection lost','error'); endVoiceCall(); }
   };
   const path = vcSignalPath(CU.username, _vc.partner);
   _vc.pc.onicecandidate = e => {
@@ -16616,17 +16642,27 @@ async function endVoiceCall() {
   if (_vc._speakChecker) { clearInterval(_vc._speakChecker); _vc._speakChecker=null; }
   if (_vc.localStream) _vc.localStream.getTracks().forEach(t=>t.stop());
   if (_vc.screenStream) _vc.screenStream.getTracks().forEach(t=>t.stop());
-  if (_vc.pc) { _vc.pc.close(); }
+  if (_vc.pc) { try { _vc.pc.close(); } catch {} }
   if (_vc.sigRef) {
     // Signal to partner that call ended
-    firebase.database().ref(_vc.sigRef).update({ended:true,endedBy:CU.username,ts:Date.now()});
-    firebase.database().ref(_vc.sigRef+'/ice').off();
-    firebase.database().ref(_vc.sigRef+'/answer').off();
+    try { firebase.database().ref(_vc.sigRef).update({ended:true,endedBy:CU.username,ts:Date.now()}); } catch {}
+    try { firebase.database().ref(_vc.sigRef+'/ice').off(); } catch {}
+    try { firebase.database().ref(_vc.sigRef+'/answer').off(); } catch {}
+    try { firebase.database().ref(_vc.sigRef).off('value'); } catch {}
+    // Clean up stale signal data after a short delay (let partner read the 'ended' flag first)
+    const sigPath = _vc.sigRef;
+    setTimeout(() => { try { firebase.database().ref(sigPath).remove(); } catch {} }, 5000);
   }
+  // Clean up ALL voice call UI elements
   document.getElementById('vc-remote-audio')?.remove();
   document.getElementById('vc-call-bar')?.remove();
   document.getElementById('vc-watch-overlay')?.remove();
-  _vc = {pc:null,localStream:null,remoteStream:null,partner:null,isCaller:false,muted:false,deafened:false,screenStream:null,watchingTogether:false,watchYtUrl:'',sigRef:null};
+  document.getElementById('calling-screen-modal')?.remove();
+  document.getElementById('incoming-call-modal')?.remove();
+  document.getElementById('vc-screen-overlay')?.remove();
+  document.getElementById('vc-content-panel')?.remove();
+  document.getElementById('wt-player-overlay')?.remove();
+  _vc = {pc:null,localStream:null,remoteStream:null,partner:null,isCaller:false,muted:false,deafened:false,screenStream:null,watchingTogether:false,watchYtUrl:'',sigRef:null,_callStartTime:0,_callTimerInterval:null,_speakChecker:null};
 }
 
 function toggleVCMute() {
@@ -16793,7 +16829,15 @@ async function renderVoiceCallUI(partner, isCaller) {
     +'<span style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:#fff;">Voice Call</span>'
     +'<span style="font-size:12px;color:rgba(255,255,255,.4);">with '+escapeHTML(partner)+'</span>'
     +'</div>'
-    +'<div id="vc-timer" style="font-family:monospace;font-size:13px;color:rgba(255,255,255,.5);">0:00</div>';
+    +'<div style="display:flex;align-items:center;gap:12px;">'
+    +'<div id="vc-quality" style="display:flex;align-items:flex-end;gap:2px;height:14px;" title="Connection quality">'
+    +'<div class="vc-q-bar" style="width:3px;height:4px;border-radius:1px;background:rgba(255,255,255,.2);transition:background .3s;"></div>'
+    +'<div class="vc-q-bar" style="width:3px;height:7px;border-radius:1px;background:rgba(255,255,255,.2);transition:background .3s;"></div>'
+    +'<div class="vc-q-bar" style="width:3px;height:10px;border-radius:1px;background:rgba(255,255,255,.2);transition:background .3s;"></div>'
+    +'<div class="vc-q-bar" style="width:3px;height:14px;border-radius:1px;background:rgba(255,255,255,.2);transition:background .3s;"></div>'
+    +'</div>'
+    +'<div id="vc-timer" style="font-family:monospace;font-size:13px;color:rgba(255,255,255,.5);">0:00</div>'
+    +'</div>';
 
   // --- PARTICIPANTS AREA ---
   const participants = document.createElement('div');
@@ -16886,8 +16930,9 @@ async function renderVoiceCallUI(partner, isCaller) {
   room.appendChild(topBar); room.appendChild(participants); room.appendChild(controls);
   document.body.appendChild(room);
 
-  // Start call timer
+  // Start call timer + quality monitor
   _vc._callStartTime = Date.now();
+  _startVCQualityMonitor();
   _vc._callTimerInterval = setInterval(()=>{
     const el = document.getElementById('vc-timer');
     if (el) {
@@ -16896,7 +16941,7 @@ async function renderVoiceCallUI(partner, isCaller) {
     } else { clearInterval(_vc._callTimerInterval); }
   }, 1000);
 
-  // Speaking indicator via Web Audio analyser
+  // Speaking indicator via Web Audio analyser (self)
   if (_vc.localStream) {
     try {
       const actx = new AudioContext();
@@ -16914,6 +16959,45 @@ async function renderVoiceCallUI(partner, isCaller) {
       _vc._speakChecker = checkSpeak;
     } catch {}
   }
+  // Speaking indicator for partner (remote stream)
+  if (_vc.remoteStream) {
+    try {
+      const actx2 = new AudioContext();
+      const src2 = actx2.createMediaStreamSource(_vc.remoteStream);
+      const analyser2 = actx2.createAnalyser(); analyser2.fftSize=256;
+      src2.connect(analyser2);
+      const data2 = new Uint8Array(analyser2.frequencyBinCount);
+      const checkPartnerSpeak = setInterval(()=>{
+        if (!document.getElementById('vc-partner-ring')) { clearInterval(checkPartnerSpeak); return; }
+        analyser2.getByteFrequencyData(data2);
+        const vol2 = data2.reduce((a,b)=>a+b,0)/data2.length;
+        const pRing = document.getElementById('vc-partner-ring');
+        if(pRing) pRing.style.borderColor = vol2>12?'#3ecf6e':'rgba(255,255,255,.08)';
+      },100);
+    } catch {}
+  } else {
+    // Remote stream may not be ready yet — attach when it arrives
+    const _waitRemote = setInterval(()=>{
+      if (!document.getElementById('vc-partner-ring') || !_vc.pc) { clearInterval(_waitRemote); return; }
+      if (_vc.remoteStream) {
+        clearInterval(_waitRemote);
+        try {
+          const actx3 = new AudioContext();
+          const src3 = actx3.createMediaStreamSource(_vc.remoteStream);
+          const analyser3 = actx3.createAnalyser(); analyser3.fftSize=256;
+          src3.connect(analyser3);
+          const data3 = new Uint8Array(analyser3.frequencyBinCount);
+          const checkP = setInterval(()=>{
+            if (!document.getElementById('vc-partner-ring')) { clearInterval(checkP); return; }
+            analyser3.getByteFrequencyData(data3);
+            const v = data3.reduce((a,b)=>a+b,0)/data3.length;
+            const pr = document.getElementById('vc-partner-ring');
+            if(pr) pr.style.borderColor = v>12?'#3ecf6e':'rgba(255,255,255,.08)';
+          },100);
+        } catch {}
+      }
+    }, 500);
+  }
 }
 function _vcBtn(id, icon, fn, title, color) {
   return '<button id="'+id+'" onclick="'+fn+'" title="'+title+'" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:'+color+';font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;">'+icon+'</button>';
@@ -16927,14 +17011,47 @@ function updateVCBar() {
   if(myMuted) myMuted.style.display = _vc.muted?'flex':'none';
 }
 
+// Connection quality indicator — polls WebRTC stats
+function _startVCQualityMonitor() {
+  const _qInterval = setInterval(async ()=>{
+    const qEl = document.getElementById('vc-quality');
+    if (!qEl || !_vc.pc) { clearInterval(_qInterval); return; }
+    try {
+      const stats = await _vc.pc.getStats();
+      let rtt = null;
+      stats.forEach(report => {
+        if (report.type==='candidate-pair' && report.state==='succeeded' && report.currentRoundTripTime!=null) {
+          rtt = report.currentRoundTripTime * 1000; // ms
+        }
+      });
+      const bars = qEl.querySelectorAll('.vc-q-bar');
+      // Quality levels based on RTT: excellent <80ms, good <150ms, fair <300ms, poor >300ms
+      let level = 4; // default: excellent
+      if (rtt !== null) {
+        if (rtt > 300) level = 1;
+        else if (rtt > 150) level = 2;
+        else if (rtt > 80) level = 3;
+        else level = 4;
+      }
+      const colors = { 4:'#3ecf6e', 3:'#3ecf6e', 2:'#f59e0b', 1:'#f87171' };
+      bars.forEach((bar, i) => {
+        bar.style.background = i < level ? (colors[level]||'#3ecf6e') : 'rgba(255,255,255,.12)';
+      });
+    } catch {}
+  }, 3000);
+}
+
 // Listen for incoming calls globally
 function startVCListener(myUsername) {
+  const _vcListenerStart = Date.now();
   const ref = firebase.database().ref('vcSignal').orderByKey();
   const _vcHandler = snap => {
     const path = snap.key;
     if (!path.includes(myUsername)) return;
     const data = snap.val();
-    if (!data||data.ended) return;
+    if (!data||data.ended||data.declined||data.cancelled) return;
+    // Ignore signals older than 60s (stale from previous sessions)
+    if (data.ts && (Date.now() - data.ts) > 60000) return;
     if (data.type==='offer' && data.from!==myUsername && !_vc.pc) {
       // Incoming call
       const caller = data.from;
@@ -17419,12 +17536,16 @@ function _showScreenInRoom(isRemote) {
     }
     // Also listen for new tracks in case stream not ready
     if (_vc.pc) {
+      const _prevOnTrack = _vc.pc.ontrack;
       _vc.pc.ontrack = (e) => {
+        // Keep audio working via the original handler
+        if (_prevOnTrack) _prevOnTrack(e);
         _vc.remoteStream = e.streams[0];
-        const vtracks = e.streams[0].getVideoTracks();
-        if (vtracks.length > 0) vid.srcObject = new MediaStream(vtracks);
-        else vid.srcObject = e.streams[0];
-        if (!document.getElementById('vc-screen-video')) {} // already set above
+        if (e.track.kind === 'video') {
+          const vtracks = e.streams[0].getVideoTracks();
+          const screenVid = document.getElementById('vc-screen-video');
+          if (screenVid && vtracks.length > 0) screenVid.srcObject = new MediaStream(vtracks);
+        }
       };
     }
   }

@@ -9373,8 +9373,8 @@ const EMOJI_NAMES = {
   '👑':'crown','💰':'money bag','🔑':'key','📱':'mobile phone','💡':'light bulb','🔔':'bell','📌':'pushpin','🏠':'house','🌙':'crescent moon','☀️':'sun','⚡':'high voltage','🌊':'water wave','🍀':'four leaf clover','🌻':'sunflower','🍎':'red apple','🍔':'hamburger','🎂':'birthday cake','🍩':'doughnut','🍦':'soft ice cream','🥤':'cup with straw',
 };
 
-// Emoji category mapping
-const EMOJI_CATEGORIES = {
+// Emoji category mapping (for tooltip display — renamed to avoid conflict with EMOJI_CATEGORIES array)
+const EMOJI_CAT_MAP = {
   '😀':'Smileys & People','😃':'Smileys & People','😄':'Smileys & People','😁':'Smileys & People','😆':'Smileys & People','😅':'Smileys & People','🤣':'Smileys & People','😂':'Smileys & People','🙂':'Smileys & People','😉':'Smileys & People','😊':'Smileys & People','😇':'Smileys & People','🥰':'Smileys & People','😍':'Smileys & People','🤩':'Smileys & People','😘':'Smileys & People','😎':'Smileys & People','🤔':'Smileys & People','😤':'Smileys & People','😡':'Smileys & People','😭':'Smileys & People','🥺':'Smileys & People','😱':'Smileys & People','🤗':'Smileys & People','🤭':'Smileys & People','🤫':'Smileys & People','🥳':'Smileys & People','😈':'Smileys & People',
   '❤️':'Symbols','🧡':'Symbols','💛':'Symbols','💚':'Symbols','💙':'Symbols','💜':'Symbols','🖤':'Symbols','🔥':'Symbols','✨':'Symbols','⭐':'Symbols','🌟':'Symbols','💫':'Symbols','🎉':'Symbols','🎊':'Symbols',
   '👍':'Gestures','👎':'Gestures','👊':'Gestures','✊':'Gestures','👏':'Gestures','🙌':'Gestures','🤝':'Gestures','🙏':'Gestures','✌️':'Gestures','👋':'Gestures','💪':'Gestures','🤞':'Gestures',
@@ -9388,7 +9388,7 @@ function _showEmojiTooltip(emoji, el) {
   document.querySelector('.emoji-tooltip')?.remove();
 
   const name = EMOJI_NAMES[emoji] || 'emoji';
-  const category = EMOJI_CATEGORIES[emoji] || 'Emoji';
+  const category = EMOJI_CAT_MAP[emoji] || 'Emoji';
   const codePoints = [...emoji].map(c => 'U+' + c.codePointAt(0).toString(16).toUpperCase()).join(' ');
   const url = emojiToTwemojiUrl(emoji);
 

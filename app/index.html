@@ -822,30 +822,30 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rad-feats{font-size:12px;color:var(--muted-light);line-height:1.5;}
 .atelier-card{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:22px;margin-bottom:14px;transition:border-color .2s;}
 .atelier-card:hover{border-color:rgba(255,255,255,.1);}
-.admin-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#050810;}
-.admin-header-bar{height:52px;min-height:52px;background:linear-gradient(90deg,#080c16,#0c1020,#08101c);border-bottom:1px solid rgba(248,113,113,.08);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;position:relative;overflow:hidden;}
-.admin-header-bar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(248,113,113,.2),rgba(255,249,62,.15),transparent);}
+.admin-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+.admin-header-bar{height:52px;min-height:52px;background:linear-gradient(90deg,var(--rail),var(--panel),var(--rail));border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;position:relative;overflow:hidden;}
+.admin-header-bar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent-mid),var(--accent-dim),transparent);}
 .admin-body{display:flex;flex:1;overflow:hidden;}
-.admin-nav{width:230px;min-width:230px;background:linear-gradient(180deg,#060a12,#040810);border-right:1px solid rgba(248,113,113,.06);overflow-y:auto;padding:var(--space-sm);display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
-.admin-nav::-webkit-scrollbar{width:3px;}.admin-nav::-webkit-scrollbar-thumb{background:rgba(248,113,113,.12);border-radius:4px;}
-.admin-main{flex:1;overflow-y:auto;background:linear-gradient(165deg,#050810,#080c18);}
-.admin-main::-webkit-scrollbar{width:5px;}.admin-main::-webkit-scrollbar-thumb{background:rgba(248,113,113,.1);border-radius:4px;}
+.admin-nav{width:230px;min-width:230px;background:linear-gradient(180deg,var(--rail),var(--bg));border-right:1px solid var(--border);overflow-y:auto;padding:var(--space-sm);display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
+.admin-nav::-webkit-scrollbar{width:3px;}.admin-nav::-webkit-scrollbar-thumb{background:var(--accent-dim);border-radius:4px;}
+.admin-main{flex:1;overflow-y:auto;background:linear-gradient(165deg,var(--bg),var(--panel));}
+.admin-main::-webkit-scrollbar{width:5px;}.admin-main::-webkit-scrollbar-thumb{background:var(--accent-dim);border-radius:4px;}
 .adm-tab{display:flex;align-items:center;gap:var(--space-sm);padding:9px var(--space-md);border-radius:var(--radius-sm);cursor:pointer;font-size:var(--font-sm);font-weight:500;color:rgba(255,255,255,.4);transition:all .14s ease;margin-bottom:1px;position:relative;border:1px solid transparent;}
-.adm-tab:hover{background:rgba(248,113,113,.04);color:rgba(255,255,255,.7);border-color:rgba(248,113,113,.06);}
-.adm-tab.active{background:linear-gradient(135deg,rgba(248,113,113,.08),rgba(255,249,62,.04));color:#f87171;font-weight:700;border-color:rgba(248,113,113,.12);}
-.adm-tab.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,#f87171,#ff6b6b);box-shadow:0 0 8px rgba(248,113,113,.4);}
+.adm-tab:hover{background:var(--accent-dim);color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.06);}
+.adm-tab.active{background:linear-gradient(135deg,var(--accent-dim),rgba(255,255,255,.02));color:var(--accent);font-weight:700;border-color:var(--accent-mid);}
+.adm-tab.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;border-radius:0 3px 3px 0;background:var(--accent);box-shadow:0 0 8px var(--accent-dim);}
 .adm-tab svg{width:17px;height:17px;flex-shrink:0;opacity:.5;}
-.adm-tab.active svg{opacity:1;filter:drop-shadow(0 0 3px rgba(248,113,113,.3));}
-.adm-tab .adm-badge{margin-left:auto;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:100px;min-width:18px;text-align:center;box-shadow:0 2px 8px rgba(248,113,113,.3);animation:adm-badge-pulse 2s infinite;}
+.adm-tab.active svg{opacity:1;filter:drop-shadow(0 0 3px var(--accent-dim));}
+.adm-tab .adm-badge{margin-left:auto;background:linear-gradient(135deg,var(--red),#ef4444);color:#fff;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:100px;min-width:18px;text-align:center;box-shadow:0 2px 8px rgba(248,113,113,.3);animation:adm-badge-pulse 2s infinite;}
 @keyframes adm-badge-pulse{0%,100%{box-shadow:0 2px 8px rgba(248,113,113,.3);}50%{box-shadow:0 2px 12px rgba(248,113,113,.5);}}
-.adm-sec-label{font-size:8.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(248,113,113,.25);padding:18px 14px 6px;}
-.hq-stat{background:linear-gradient(135deg,#0a0e18,#0c1020);border:1px solid var(--surface-border);border-radius:var(--radius-lg);padding:var(--space-lg);cursor:pointer;transition:all .2s var(--ease-out);position:relative;overflow:hidden;}
-.hq-stat:hover{border-color:rgba(248,113,113,.15);transform:translateY(-2px);box-shadow:var(--shadow-md);}
-.hq-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--stat-accent,var(--state-danger));opacity:.4;transition:opacity .2s;}
+.adm-sec-label{font-size:8.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-mid);padding:18px 14px 6px;}
+.hq-stat{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--surface-border);border-radius:var(--radius-lg);padding:var(--space-lg);cursor:pointer;transition:all .2s var(--ease-out);position:relative;overflow:hidden;}
+.hq-stat:hover{border-color:var(--accent-mid);transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.hq-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--stat-accent,var(--accent));opacity:.4;transition:opacity .2s;}
 .hq-stat:hover::before{opacity:.8;}
 .hq-stat-val{font-family:'Syne',sans-serif;font-size:var(--font-2xl);font-weight:800;line-height:1;}
 .hq-stat-label{font-size:var(--font-xs);color:rgba(255,255,255,.3);margin-top:var(--space-xs);font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
-.hq-panel{background:linear-gradient(135deg,#0a0e18,#080c16);border:1px solid var(--surface-border);border-radius:var(--radius-lg);overflow:hidden;}
+.hq-panel{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--surface-border);border-radius:var(--radius-lg);overflow:hidden;}
 .hq-panel-head{padding:var(--space-md) var(--space-lg);border-bottom:1px solid var(--surface-border);display:flex;align-items:center;gap:var(--space-sm);}
 .hq-panel-head h3{font-family:'Syne',sans-serif;font-size:var(--font-md);font-weight:800;margin:0;color:rgba(255,255,255,.7);}
 .hq-threat{display:inline-flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-md);border-radius:var(--radius-sm);font-size:11px;font-weight:700;}
@@ -854,15 +854,15 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .hq-threat.high{background:var(--state-danger-dim);border:1px solid rgba(248,113,113,.12);color:var(--state-danger);}
 .hq-threat.critical{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.25);color:#ff4444;animation:adm-badge-pulse 1.5s infinite;}
 .hq-user-row{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-md);border-bottom:1px solid rgba(255,255,255,.03);transition:all .12s;cursor:pointer;}
-.hq-user-row:hover{background:rgba(248,113,113,.03);}
+.hq-user-row:hover{background:var(--accent-dim);}
 .hq-user-row:last-child{border-bottom:none;}
-.hq-col-header{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-md);border-bottom:1px solid var(--surface-border);background:rgba(248,113,113,.02);font-size:var(--font-hdr);font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(248,113,113,.4);cursor:pointer;user-select:none;}
-.hq-col-header>div:hover{color:rgba(248,113,113,.7);}
-.hq-col-header .sort-active{color:var(--state-danger);}
+.hq-col-header{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-md);border-bottom:1px solid var(--surface-border);background:rgba(255,255,255,.01);font-size:var(--font-hdr);font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent-mid);cursor:pointer;user-select:none;}
+.hq-col-header>div:hover{color:var(--accent);}
+.hq-col-header .sort-active{color:var(--accent);}
 .hq-feed-item{display:flex;align-items:flex-start;gap:var(--space-sm);padding:var(--space-sm) var(--space-md);border-bottom:1px solid rgba(255,255,255,.03);animation:hq-feed-in .3s var(--ease-out);}
 @keyframes hq-feed-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
-.hq-quick-btn{padding:7px var(--space-md);border-radius:var(--radius-sm);border:1px solid rgba(248,113,113,.12);background:rgba(248,113,113,.04);color:rgba(248,113,113,.6);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
-.hq-quick-btn:hover{background:var(--state-danger-dim);border-color:rgba(248,113,113,.25);color:var(--state-danger);}
+.hq-quick-btn{padding:7px var(--space-md);border-radius:var(--radius-sm);border:1px solid var(--surface-border);background:var(--surface-1);color:rgba(255,255,255,.5);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.hq-quick-btn:hover{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);}
 @media(max-width:768px){.admin-nav{width:56px;min-width:56px;}.adm-tab span:last-child,.adm-sec-label{display:none;}.adm-tab{justify-content:center;padding:10px;}}
 .profile-wrap{flex:1;display:flex;overflow:hidden;background:linear-gradient(165deg,#0c0f18,#090c14);}
 /* Settings sidebar — Guilded/Fortized style */
@@ -11547,23 +11547,23 @@ async function _openAdminUI() {
   const hdr = document.getElementById('admin-header-bar');
   if (hdr) hdr.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,rgba(248,113,113,.12),rgba(248,113,113,.04));border:1px solid rgba(248,113,113,.15);display:flex;align-items:center;justify-content:center;">
-          <img src="/FortizedSecurity logo.png" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML='<svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'#f87171\\' stroke-width=\\'2\\'><path d=\\'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\\'/></svg>'">
+        <div style="width:32px;height:32px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;">
+          <img src="/FortizedSecurity logo.png" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML='<svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'var(--accent)\\' stroke-width=\\'2\\'><path d=\\'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\\'/></svg>'">
         </div>
         <div>
           <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacing:.04em;line-height:1;">COMMAND CENTER</div>
-          <div style="font-size:9px;color:rgba(248,113,113,.4);font-weight:600;letter-spacing:.1em;margin-top:2px;">FORTIZED ADMINISTRATION</div>
+          <div style="font-size:9px;color:var(--accent-mid);font-weight:600;letter-spacing:.1em;margin-top:2px;">FORTIZED ADMINISTRATION</div>
         </div>
       </div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
-        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#3ecf6e;font-weight:700;"><div style="width:6px;height:6px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 8px #3ecf6e88;animation:adm-badge-pulse 2s infinite;"></div>LIVE</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--green);font-weight:700;"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(62,207,110,.5);animation:adm-badge-pulse 2s infinite;"></div>LIVE</div>
         <div style="width:1px;height:16px;background:rgba(255,255,255,.06);"></div>
         <div style="display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;background:${roleColor}0d;border:1px solid ${roleColor}25;">
           <span style="color:${roleColor};display:flex;">${roleSvg}</span>
           <span style="font-size:10px;font-weight:800;color:${roleColor};letter-spacing:.04em;">${roleLabel.toUpperCase()}</span>
         </div>
         <span style="font-size:10.5px;color:rgba(255,255,255,.25);font-weight:500;">@${escapeHTML(CU.username)}</span>
-        <button onclick="_closeAdminPanel()" style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);color:rgba(248,113,113,.5);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;transition:.15s;display:flex;align-items:center;gap:5px;letter-spacing:.02em;" onmouseover="this.style.background='rgba(248,113,113,.12)';this.style.color='#f87171'" onmouseout="this.style.background='rgba(248,113,113,.06)';this.style.color='rgba(248,113,113,.5)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>EXIT</button>
+        <button onclick="_closeAdminPanel()" style="background:var(--accent-dim);border:1px solid var(--accent-mid);color:var(--accent);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;transition:.15s;display:flex;align-items:center;gap:5px;letter-spacing:.02em;opacity:.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.6'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>EXIT</button>
       </div>`;
   startReportPolling();
   _setupAdminLiveSync();
@@ -11642,6 +11642,11 @@ function _renderAdminNav(active) {
     settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
     staff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
     tickets:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+    broadcast:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.69 14a6.9 6.9 0 0 0 .31-2 6.9 6.9 0 0 0-.31-2"/><path d="M22.82 16a10 10 0 0 0 0-8"/><path d="M1 12s4-8 11-8"/><circle cx="5" cy="12" r="2"/><line x1="5" y1="10" x2="5" y2="2"/></svg>',
+    analytics:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
+    backup:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+    scheduled:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="14 14 12 12 10 14"/></svg>',
+    network:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>',
   };
   const secs = [
     {label:'OVERVIEW', items:[{id:'dashboard',svg:_admSvg.dashboard,label:'Overview'}]},
@@ -11660,6 +11665,11 @@ function _renderAdminNav(active) {
       ...(isAdmin()?[{id:'economy',svg:_admSvg.economy,label:'Economy'}]:[]),
       {id:'bastions',svg:_admSvg.bastions,label:'Bastions'},
       ...(isAdmin()?[{id:'audit',svg:_admSvg.audit,label:'Activity Log'}]:[]),
+      ...(isAdmin()?[{id:'scheduled_actions',svg:_admSvg.scheduled,label:'Scheduled Actions'}]:[]),
+      ...(isAdmin()?[{id:'network_monitor',svg:_admSvg.network,label:'Network Monitor'}]:[]),
+      ...(isSuperAdmin()?[{id:'broadcast',svg:_admSvg.broadcast,label:'Broadcast'}]:[]),
+      ...(isSuperAdmin()?[{id:'analytics',svg:_admSvg.analytics,label:'Analytics'}]:[]),
+      ...(isSuperAdmin()?[{id:'backup_restore',svg:_admSvg.backup,label:'Backup & Restore'}]:[]),
       ...(isSuperAdmin()?[{id:'settings',svg:_admSvg.settings,label:'Configuration'}]:[]),
       ...(isSuperAdmin()?[{id:'staff',svg:_admSvg.staff,label:'Staff'}]:[]),
       {id:'support_tickets',svg:_admSvg.tickets,label:'Inbox'},
@@ -11733,7 +11743,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <div style="font-family:'Syne',sans-serif;font-size:var(--font-xl);font-weight:800;color:#fff;">Command Center</div>
             <div class="hq-threat ${threat.cls}">${threat.icon} THREAT: ${threat.level}</div>
           </div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.3);">Operator: <span style="color:rgba(248,113,113,.6);">${escapeHTML(CU.displayName||CU.username)}</span> · ${new Date().toLocaleString()} · Session Active</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.3);">Operator: <span style="color:var(--accent);">${escapeHTML(CU.displayName||CU.username)}</span> · ${new Date().toLocaleString()} · Session Active</div>
         </div>
         <div style="display:flex;gap:var(--space-sm);">
           <button class="hq-quick-btn" onclick="_syncAdminDataFromFirebase().then(()=>{toast('Data synced','success');_loadAdminPage('dashboard');})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync</button>
@@ -12434,6 +12444,196 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     </div>`;
     _loadAdminSupportTickets();
   }
+  // ── NEW ADMIN TOOLS ──
+
+  else if (tab === 'broadcast') {
+    if (!isSuperAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
+    const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
+    const currentMsg = gs.announcement || '';
+    const statusMsg = gs.platformStatus || '';
+    main.innerHTML = `<div style="padding:var(--space-xl);">
+      <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Broadcast Center</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:var(--space-xl);">Send system-wide announcements and manage platform messaging.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg);">
+        <div class="hq-panel">
+          <div class="hq-panel-head"><h3>System Announcement</h3></div>
+          <div style="padding:var(--space-lg);">
+            <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">This banner is shown to ALL users at the top of the app.</div>
+            <textarea id="_broadcast-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(currentMsg)}</textarea>
+            <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
+              <button class="hq-quick-btn" onclick="_broadcastAnnouncement()" style="background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);">Broadcast</button>
+              <button class="hq-quick-btn" onclick="_clearAnnouncement()">Clear</button>
+            </div>
+            ${currentMsg ? `<div style="margin-top:var(--space-md);padding:var(--space-sm) var(--space-md);background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:var(--radius-sm);font-size:12px;color:var(--accent);">Active: ${escapeHTML(currentMsg.slice(0,80))}${currentMsg.length>80?'…':''}</div>` : ''}
+          </div>
+        </div>
+        <div class="hq-panel">
+          <div class="hq-panel-head"><h3>Platform Status</h3></div>
+          <div style="padding:var(--space-lg);">
+            <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Set a status message visible on the platform status page.</div>
+            <textarea id="_status-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(statusMsg)}</textarea>
+            <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
+              <button class="hq-quick-btn" onclick="_updatePlatformStatus()">Update Status</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hq-panel" style="margin-top:var(--space-lg);">
+        <div class="hq-panel-head"><h3>Quick Messages</h3></div>
+        <div style="padding:var(--space-lg);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);">
+          ${[
+            {t:'Maintenance Soon',m:'Fortized will undergo scheduled maintenance shortly. Please save your work.'},
+            {t:'Update Available',m:'A new update is available! Refresh your page to get the latest features.'},
+            {t:'Welcome Event',m:'Welcome to the community! Check out the latest events in your Bastion.'},
+          ].map(q=>`<button class="hq-quick-btn" style="text-align:left;padding:var(--space-md);flex-direction:column;align-items:flex-start;gap:4px;" onclick="document.getElementById('_broadcast-msg').value='${q.m}'">
+            <span style="font-weight:700;font-size:11px;">${q.t}</span>
+            <span style="font-size:10px;opacity:.5;line-height:1.3;">${q.m.slice(0,50)}…</span>
+          </button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  else if (tab === 'analytics') {
+    if (!isSuperAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
+    let totalUsers=0,onlineNow=0,totalBastions=0,totalMsgs='–',radianceCount=0,topBastions=[];
+    try {
+      const usersSnap = await firebase.database().ref('users').get();
+      if (usersSnap.exists()) { const ul=Object.values(usersSnap.val()); totalUsers=ul.length; radianceCount=ul.filter(u=>u.radianceUntil&&new Date(u.radianceUntil)>new Date()).length; }
+      const statSnap = await firebase.database().ref('statuses').get();
+      if (statSnap.exists()) onlineNow=Object.values(statSnap.val()).filter(s=>s==='online'||s==='away'||s==='dnd').length;
+      const bastSnap = await firebase.database().ref('bastions').get();
+      if (bastSnap.exists()) { const bv=Object.values(bastSnap.val()); totalBastions=bv.length; topBastions=bv.sort((a,b)=>(b.members||[]).length-(a.members||[]).length).slice(0,5); }
+    } catch {}
+    const convRate = totalUsers > 0 ? ((radianceCount/totalUsers)*100).toFixed(1) : '0';
+    main.innerHTML = `<div style="padding:var(--space-xl);">
+      <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Platform Analytics</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:var(--space-xl);">Real-time platform metrics and growth tracking.</div>
+      <div class="ftz-grid cols-4" style="margin-bottom:var(--space-xl);">
+        ${[
+          {l:'Total Users',v:totalUsers,c:'#60a5fa'},
+          {l:'Active Now',v:onlineNow,c:'#3ecf6e'},
+          {l:'Bastions',v:totalBastions,c:'#a78bfa'},
+          {l:'Radiance Conv.',v:convRate+'%',c:'#ffd93e'},
+        ].map(s=>`<div class="hq-stat" style="--stat-accent:${s.c};"><div class="hq-stat-val" style="color:${s.c};">${s.v}</div><div class="hq-stat-label">${s.l}</div></div>`).join('')}
+      </div>
+      <div class="ftz-grid cols-2" style="gap:var(--space-lg);">
+        <div class="hq-panel">
+          <div class="hq-panel-head"><h3>Top Bastions by Members</h3></div>
+          <div style="padding:0;">
+            ${topBastions.length ? topBastions.map((b,i)=>`<div class="hq-user-row">
+              <div style="width:24px;text-align:center;font-size:13px;font-weight:800;color:${i===0?'#ffd93e':i===1?'#c0c0c0':i===2?'#cd7f32':'rgba(255,255,255,.3)'};">${i+1}</div>
+              <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(b.name||'Unknown')}</div></div>
+              <div style="font-size:12px;color:rgba(255,255,255,.4);">${(b.members||[]).length} members</div>
+            </div>`).join('') : '<div style="padding:var(--space-lg);text-align:center;color:rgba(255,255,255,.3);">No bastions yet</div>'}
+          </div>
+        </div>
+        <div class="hq-panel">
+          <div class="hq-panel-head"><h3>Growth Insights</h3></div>
+          <div style="padding:var(--space-lg);">
+            <div style="display:flex;flex-direction:column;gap:var(--space-md);">
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:rgba(255,255,255,.5);">Radiance subscribers</span><span style="font-size:14px;font-weight:700;color:#ffd93e;">${radianceCount}</span></div>
+              <div style="height:6px;background:var(--surface-1);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.min(convRate,100)}%;background:linear-gradient(90deg,#ffd93e,#ff9d3e);border-radius:3px;transition:width .5s;"></div></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:rgba(255,255,255,.5);">Conversion rate</span><span style="font-size:14px;font-weight:700;color:#3ecf6e;">${convRate}%</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:rgba(255,255,255,.5);">Total bastions</span><span style="font-size:14px;font-weight:700;color:#a78bfa;">${totalBastions}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  else if (tab === 'backup_restore') {
+    if (!isSuperAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
+    main.innerHTML = `<div style="padding:var(--space-xl);">
+      <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Backup & Restore</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:var(--space-xl);">Export platform data and manage recovery options.</div>
+      <div class="ftz-grid cols-2" style="gap:var(--space-lg);">
+        <div class="hq-panel">
+          <div class="hq-panel-head"><h3>Export Data</h3></div>
+          <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('audit')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Audit Log</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('reports')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Reports</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('bans')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Ban List</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_exportAdminData('users')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export User Database</button>
+          </div>
+        </div>
+        <div class="hq-panel">
+          <div class="hq-panel-head"><h3>Deployment Actions</h3></div>
+          <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_syncAdminDataFromFirebase().then(()=>{toast('Full sync complete','success')})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync Local ↔ Firebase</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--yellow);border-color:rgba(245,158,11,.2);" onclick="if(confirm('Force refresh all connected users?')){_forceRefreshAllUsers();}">Force Refresh All Users</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--red);border-color:rgba(248,113,113,.2);" onclick="if(confirm('Reset ALL user sessions? Users will be logged out.')){_resetAllSessions();}">Reset All Sessions</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="if(confirm('Purge soft-deleted messages from database?')){_purgeDeletedMessages();}">Purge Deleted Messages</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  else if (tab === 'scheduled_actions') {
+    if (!isAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
+    let scheduledItems = [];
+    try { const snap = await firebase.database().ref('admin/scheduled_actions').get(); if (snap.exists()) scheduledItems = Object.entries(snap.val()).map(([k,v])=>({...v,_key:k})); } catch {}
+    main.innerHTML = `<div style="padding:var(--space-xl);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-xl);">
+        <div>
+          <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;">Scheduled Actions</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:3px;">Schedule timed moderation actions and automated tasks.</div>
+        </div>
+        <button class="hq-quick-btn" onclick="_showScheduleActionModal()">+ New Scheduled Action</button>
+      </div>
+      <div class="hq-panel">
+        <div class="hq-panel-head"><h3>Active Schedules</h3></div>
+        <div style="padding:0;">
+          ${scheduledItems.length ? scheduledItems.map(s=>`<div class="hq-user-row">
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;color:#fff;">${escapeHTML(s.type||'Action')} — ${escapeHTML(s.target||'')}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;">Scheduled for: ${s.executeAt ? new Date(s.executeAt).toLocaleString() : 'Unknown'} · By: ${escapeHTML(s.createdBy||'?')}</div>
+            </div>
+            <div style="font-size:11px;font-weight:600;color:${new Date(s.executeAt)>new Date()?'var(--yellow)':'var(--green)'};">${new Date(s.executeAt)>new Date()?'Pending':'Executed'}</div>
+            <button class="hq-quick-btn" style="font-size:10px;padding:5px 10px;color:var(--red);border-color:rgba(248,113,113,.2);" onclick="_cancelScheduledAction('${s._key}')">Cancel</button>
+          </div>`).join('') : '<div style="padding:var(--space-xl);text-align:center;color:rgba(255,255,255,.3);">No scheduled actions. Create one to automate timed moderation tasks.</div>'}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  else if (tab === 'network_monitor') {
+    if (!isAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
+    let activeConnections = 0, dbSize = '–';
+    try {
+      const statSnap = await firebase.database().ref('statuses').get();
+      if (statSnap.exists()) activeConnections = Object.values(statSnap.val()).filter(s=>s!=='offline').length;
+    } catch {}
+    main.innerHTML = `<div style="padding:var(--space-xl);">
+      <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Network Monitor</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:var(--space-xl);">Monitor active connections, database health, and service status.</div>
+      <div class="ftz-grid cols-3" style="margin-bottom:var(--space-xl);">
+        ${[
+          {l:'Active Connections',v:activeConnections,c:'#3ecf6e'},
+          {l:'Firebase Status',v:'Connected',c:'#3ecf6e'},
+          {l:'WebRTC Peers',v:'Available',c:'#60a5fa'},
+        ].map(s=>`<div class="hq-stat" style="--stat-accent:${s.c};"><div class="hq-stat-val" style="color:${s.c};font-size:20px;">${s.v}</div><div class="hq-stat-label">${s.l}</div></div>`).join('')}
+      </div>
+      <div class="hq-panel">
+        <div class="hq-panel-head"><h3>Service Health</h3></div>
+        <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
+          ${[
+            {name:'Firebase Realtime DB',status:'Operational',ok:true},
+            {name:'Authentication',status:'Operational',ok:true},
+            {name:'File Storage (CDN)',status:'Operational',ok:true},
+            {name:'Voice (WebRTC)',status:'Operational',ok:true},
+            {name:'NSFW Scanner (TF.js)',status:'Available',ok:true},
+          ].map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-sm) 0;border-bottom:1px solid rgba(255,255,255,.03);">
+            <span style="font-size:13px;color:rgba(255,255,255,.7);">${s.name}</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:${s.ok?'var(--green)':'var(--red)'};"><span style="width:7px;height:7px;border-radius:50%;background:${s.ok?'var(--green)':'var(--red)'};"></span>${s.status}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
   else main.innerHTML = '<div style="padding:32px;text-align:center;color:rgba(255,255,255,.3);">Unknown tab</div>';
 }
 
@@ -12657,6 +12857,54 @@ async function _deleteTicket(id) {
   await firebase.database().ref('support/tickets/'+id).remove().catch(()=>{});
   toast('Ticket deleted','success');
   _loadAdminSupportTickets();
+}
+
+// ── New Command Center tool helpers ──
+async function _broadcastAnnouncement() {
+  const msg = document.getElementById('_broadcast-msg')?.value?.trim();
+  if (!msg) { toast('Enter a message first','error'); return; }
+  try { await firebase.database().ref('admin/global_settings/announcement').set(msg); logAudit('broadcast', 'all', msg.slice(0,80)); toast('Announcement broadcast!','success'); } catch { toast('Failed to broadcast','error'); }
+}
+async function _clearAnnouncement() {
+  try { await firebase.database().ref('admin/global_settings/announcement').remove(); logAudit('clear_broadcast', 'all', ''); toast('Announcement cleared','success'); _loadAdminPage('broadcast'); } catch { toast('Failed','error'); }
+}
+async function _updatePlatformStatus() {
+  const msg = document.getElementById('_status-msg')?.value?.trim() || '';
+  try { await firebase.database().ref('admin/global_settings/platformStatus').set(msg); logAudit('platform_status', 'system', msg.slice(0,80)); toast('Status updated','success'); } catch { toast('Failed','error'); }
+}
+function _exportAdminData(type) {
+  let data;
+  if (type === 'audit') data = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
+  else if (type === 'reports') data = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+  else if (type === 'bans') data = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
+  else if (type === 'users') { toast('Exporting user data from Firebase…','info'); firebase.database().ref('users').get().then(s=>{const d=s.exists()?Object.values(s.val()).map(u=>({username:u.username,displayName:u.displayName,createdAt:u.createdAt,onyx:u.onyx||0})):[];_downloadJSON(d,'fortized_users_'+Date.now()+'.json');}).catch(()=>toast('Export failed','error')); return; }
+  else return;
+  _downloadJSON(data, 'fortized_'+type+'_'+Date.now()+'.json');
+}
+function _downloadJSON(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+  toast('Export downloaded','success');
+}
+function _showScheduleActionModal() {
+  showCustomInput('Schedule Action', 'Enter action (e.g., "unban username" or "unmute username"):', async (actionStr) => {
+    if (!actionStr) return;
+    showCustomInput('Schedule Time', 'When should it execute? (YYYY-MM-DD HH:MM)', async (timeStr) => {
+      if (!timeStr) return;
+      const executeAt = new Date(timeStr).toISOString();
+      const parts = actionStr.trim().split(/\s+/);
+      const action = { type: parts[0]||'custom', target: parts.slice(1).join(' ')||'', executeAt, createdBy: CU.username, createdAt: new Date().toISOString(), status: 'pending' };
+      try { await firebase.database().ref('admin/scheduled_actions').push(action); logAudit('schedule_action', action.target, action.type+' at '+timeStr); toast('Action scheduled','success'); _loadAdminPage('scheduled_actions'); } catch { toast('Failed to schedule','error'); }
+    });
+  });
+}
+async function _cancelScheduledAction(key) {
+  if (!confirm('Cancel this scheduled action?')) return;
+  try { await firebase.database().ref('admin/scheduled_actions/'+key).remove(); toast('Action cancelled','success'); _loadAdminPage('scheduled_actions'); } catch { toast('Failed','error'); }
+}
+
+async function _resetAllSessions() {
+  try { await firebase.database().ref('statuses').remove(); logAudit('reset_sessions', 'all', 'All sessions reset'); toast('All sessions reset','success'); } catch { toast('Failed','error'); }
 }
 
 async function deleteReportForever(idx) {

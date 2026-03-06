@@ -25,6 +25,8 @@ const FortizedSocial = (() => {
     globalBastion: id   => `globalBastions/${id}`,
     invites:            `invites`,
     invite:      code   => `invites/${code}`,
+    bastionTemplates:       `bastionTemplates`,
+    bastionTemplate: id  => `bastionTemplates/${id}`,
   };
 
   // ── Normalize username ─────────────────────────────────────

@@ -1374,6 +1374,43 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .tmpl-emoji{font-size:26px;margin-bottom:5px;}
 .tmpl-name{font-size:12px;font-weight:700;margin-bottom:2px;}
 .tmpl-desc{font-size:10.5px;color:var(--muted);}
+/* ── Template Import Cards ──── */
+.tmpl-import-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;transition:all .15s;background:var(--panel);}
+.tmpl-import-card:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);}
+.tmpl-import-card .tic-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tmpl-import-card .tic-icon.discord{background:rgba(88,101,242,.12);}
+.tmpl-import-card .tic-icon.fortized{background:rgba(255,249,62,.08);}
+.tmpl-import-card .tic-meta{flex:1;min-width:0;}
+.tmpl-import-card .tic-title{font-size:13.5px;font-weight:700;color:#fff;}
+.tmpl-import-card .tic-desc{font-size:11.5px;color:var(--muted-light);margin-top:2px;}
+.tmpl-import-card .tic-btn{padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;flex-shrink:0;}
+.tmpl-import-card .tic-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
+/* ── Template Link Input ──── */
+.tmpl-link-input-wrap{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;padding:0 14px;margin-bottom:12px;transition:border-color .15s;}
+.tmpl-link-input-wrap:focus-within{border-color:rgba(255,249,62,.3);}
+.tmpl-link-input-wrap input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;padding:10px 0;font-family:inherit;}
+.tmpl-link-input-wrap input::placeholder{color:rgba(255,255,255,.2);}
+.tmpl-link-input-wrap .tli-icon{font-size:16px;flex-shrink:0;opacity:.4;}
+/* ── Template Preview Card ──── */
+.tmpl-preview{padding:16px;background:var(--panel);border:1.5px solid var(--border);border-radius:14px;margin-bottom:14px;animation:embedIn .18s cubic-bezier(.22,1,.36,1) both;}
+.tmpl-preview .tp-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.tmpl-preview .tp-icon{width:48px;height:48px;border-radius:14px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;}
+.tmpl-preview .tp-icon img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.tmpl-preview .tp-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;}
+.tmpl-preview .tp-desc{font-size:12px;color:var(--muted-light);margin-top:2px;}
+.tmpl-preview .tp-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.tmpl-preview .tp-stat{font-size:11px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:4px;padding:3px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:100px;}
+.tmpl-preview .tp-channels,.tmpl-preview .tp-roles{margin-bottom:8px;}
+.tmpl-preview .tp-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;}
+.tmpl-preview .tp-ch{display:flex;align-items:center;gap:6px;font-size:11.5px;color:rgba(255,255,255,.55);padding:3px 0;}
+.tmpl-preview .tp-ch-icon{font-size:11px;opacity:.6;width:16px;text-align:center;}
+.tmpl-preview .tp-role-pills{display:flex;flex-wrap:wrap;gap:4px;}
+.tmpl-preview .tp-role-pill{font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:100px;}
+/* ── Bastion Template Link Badge ──── */
+.bastion-tmpl-link{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.1);border-radius:12px;margin-top:8px;}
+.bastion-tmpl-link code{flex:1;font-size:11.5px;color:rgba(255,249,62,.7);font-family:'SF Mono','Cascadia Code',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bastion-tmpl-link .btl-copy{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.15);color:var(--accent);cursor:pointer;transition:all .12s;flex-shrink:0;}
+.bastion-tmpl-link .btl-copy:hover{background:rgba(255,249,62,.18);}
 
 /* ── BADGE SYSTEM ─────────────────────────────────── */
 .ftz-badge { display:inline-flex;align-items:center;justify-content:center;position:relative;width:38px;height:38px;flex-shrink:0;cursor:pointer;vertical-align:middle;margin:0 1px;transition:transform .18s cubic-bezier(.22,1,.36,1),filter .18s; }
@@ -2482,14 +2519,14 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
 <!-- CREATE BASTION -->
 <div class="modal-overlay" id="modal-create-bastion">
-  <div class="modal">
+  <div class="modal" style="max-width:520px;width:100%;">
     <div class="modal-bar"></div>
     <div class="modal-body">
       <div class="modal-title">Create a Bastion</div>
       <div class="modal-sub">Build your community — your way</div>
       <!-- Step 1: choose path -->
       <div id="cb-step-1">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
           <div onclick="showBastionStep2('custom')" style="padding:18px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:.15s;" onmouseenter="this.style.borderColor='var(--accent-mid)'" onmouseleave="this.style.borderColor='var(--border)'">
             <div style="font-size:28px;margin-bottom:6px;">🏗️</div>
             <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;">Create My Own</div>
@@ -2501,8 +2538,46 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
             <div style="font-size:11.5px;color:var(--muted-light);margin-top:3px;">Pre-configured channels</div>
           </div>
         </div>
+        <!-- Template import section -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div style="flex:1;height:1px;background:rgba(255,255,255,.06);"></div>
+            <span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Or import from</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,.06);"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="tmpl-import-card" onclick="showImportTemplateStep('discord')">
+              <div class="tic-icon discord">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>
+              </div>
+              <div class="tic-meta">
+                <div class="tic-title">Discord server template</div>
+                <div class="tic-desc">Automagically import server channels, categories, and roles</div>
+              </div>
+              <div class="tic-btn">Import</div>
+            </div>
+            <div class="tmpl-import-card" onclick="showImportTemplateStep('fortized')">
+              <div class="tic-icon fortized">
+                <img src="/Fortized icon.png" style="width:24px;height:24px;border-radius:6px;">
+              </div>
+              <div class="tic-meta">
+                <div class="tic-title">Fortized bastion template</div>
+                <div class="tic-desc">Import from a shared bastion template link</div>
+              </div>
+              <div class="tic-btn">Import</div>
+            </div>
+          </div>
+        </div>
         <div class="modal-actions">
           <button class="btn-g" onclick="closeModal('modal-create-bastion')">Cancel</button>
+        </div>
+      </div>
+      <!-- Step: Import Template (Discord or Fortized) -->
+      <div id="cb-step-import" style="display:none;">
+        <div id="cb-import-content"></div>
+        <div class="modal-actions">
+          <button class="btn-g" onclick="showBastionStep1()">&#8592; Back</button>
+          <button class="btn-a" id="cb-import-continue-btn" style="display:none;" onclick="continueFromImportedTemplate()">Continue with Template</button>
         </div>
       </div>
       <!-- Step 2a: templates -->
@@ -2529,12 +2604,13 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn-g" onclick="showBastionStep1()">← Back</button>
-          <button class="btn-a" onclick="showBastionStep2('custom',true)">Continue →</button>
+          <button class="btn-g" onclick="showBastionStep1()">&#8592; Back</button>
+          <button class="btn-a" onclick="showBastionStep2('custom',true)">Continue &#8594;</button>
         </div>
       </div>
       <!-- Step 2b: custom create form -->
       <div id="cb-step-form" style="display:none;">
+        <div id="cb-import-banner" style="display:none;"></div>
         <div style="display:flex;gap:12px;margin-bottom:14px;">
           <div id="cb-icon-preview" style="width:60px;height:60px;border-radius:14px;background:var(--panel2);border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;overflow:hidden;transition:all .2s;" onclick="document.getElementById('cb-icon-upload').click()" onmouseenter="this.style.borderColor='rgba(255,249,62,.3)'" onmouseleave="this.style.borderColor='var(--border)'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
           <input id="cb-icon-upload" type="file" accept="image/*,image/gif" style="display:none;" onchange="previewCBIcon(event)">
@@ -2561,8 +2637,8 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         </div>
         <div class="modal-error" id="cb-error"></div>
         <div class="modal-actions">
-          <button class="btn-g" onclick="showBastionStep1()">← Back</button>
-          <button class="btn-a" onclick="createBastion()">Create Bastion ✨</button>
+          <button class="btn-g" onclick="showBastionStep1()">&#8592; Back</button>
+          <button class="btn-a" onclick="createBastion()">Create Bastion</button>
         </div>
       </div>
     </div>
@@ -5773,6 +5849,7 @@ function toggleBastionNameDropdown(e) {
       <div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('invites')"><span class="bnd-icon">🔗</span> Invite Friends</div>
       <div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('boost')"><span class="bnd-icon">⚡</span> Boost</div>
       ${(isOwner||hasPerm('manage_channels'))?`<div class="bnd-action" onclick="closeBastionNameDD();showCreateRoomModal(curBastion)"><span class="bnd-icon">➕</span> Create Room</div>`:''}
+      ${isOwner?`<div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('templates')"><span class="bnd-icon">📋</span> Save as Template</div>`:''}
       ${isOwner?`<div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings()"><span class="bnd-icon">⚙️</span> Settings</div>`:''}
       <div class="bnd-action danger" onclick="closeBastionNameDD();openModal('modal-leave-bastion')"><span class="bnd-icon">🚪</span> Leave Bastion</div>
     </div>`;
@@ -7816,10 +7893,14 @@ function renderBastionTemplateGrid() {
 }
 function showBastionStep1() {
   _selectedBastionTemplate = null;
+  _importedTemplateData = null;
   const s1=document.getElementById('cb-step-1');
   const st=document.getElementById('cb-step-templates');
   const sf=document.getElementById('cb-step-form');
-  if(s1){s1.style.display='';} if(st){st.style.display='none';} if(sf){sf.style.display='none';}
+  const si=document.getElementById('cb-step-import');
+  const banner=document.getElementById('cb-import-banner');
+  if(s1){s1.style.display='';} if(st){st.style.display='none';} if(sf){sf.style.display='none';} if(si){si.style.display='none';}
+  if(banner){banner.style.display='none';banner.innerHTML='';}
   // reset template selection
   document.querySelectorAll('[id^=tmpl-]').forEach(el=>el.classList.remove('sel'));
 }
@@ -7828,7 +7909,9 @@ function showBastionStep2(type, fromTemplate) {
   const s1=document.getElementById('cb-step-1');
   const st=document.getElementById('cb-step-templates');
   const sf=document.getElementById('cb-step-form');
+  const si=document.getElementById('cb-step-import');
   if(s1) s1.style.display='none';
+  if(si) si.style.display='none';
   if(type==='template' && !fromTemplate) {
     if(st) { st.style.display=''; renderBastionTemplateGrid(); } if(sf) sf.style.display='none';
   } else {
@@ -8027,6 +8110,348 @@ const ROLE_TEMPLATES = {
   },
 };
 
+// ── Imported template data (Discord or Fortized) ──
+let _importedTemplateData = null;
+
+function showImportTemplateStep(type) {
+  const s1=document.getElementById('cb-step-1');
+  const si=document.getElementById('cb-step-import');
+  const content=document.getElementById('cb-import-content');
+  const continueBtn=document.getElementById('cb-import-continue-btn');
+  if(s1) s1.style.display='none';
+  if(si) si.style.display='';
+  if(continueBtn) continueBtn.style.display='none';
+  _importedTemplateData = null;
+
+  if(type==='discord') {
+    content.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(88,101,242,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>
+        </div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;">Import Discord Server Template</div>
+          <div style="font-size:11.5px;color:var(--muted-light);">Paste a discord.new template link to import channels, categories, and roles</div>
+        </div>
+      </div>
+      <div class="tmpl-link-input-wrap">
+        <span class="tli-icon">🔗</span>
+        <input type="text" id="cb-discord-link" placeholder="https://discord.new/JA8DM5jyBHCd" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="modal-error" id="cb-import-error" style="margin-bottom:8px;"></div>
+      <button class="btn-a" style="width:100%;" onclick="importDiscordTemplate()">Fetch Template</button>
+      <div id="cb-import-preview" style="margin-top:14px;"></div>`;
+  } else {
+    content.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <img src="/Fortized icon.png" style="width:22px;height:22px;border-radius:5px;">
+        </div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;">Import Fortized Bastion Template</div>
+          <div style="font-size:11.5px;color:var(--muted-light);">Paste a Fortized bastion template link to clone a bastion layout</div>
+        </div>
+      </div>
+      <div class="tmpl-link-input-wrap">
+        <span class="tli-icon">🏰</span>
+        <input type="text" id="cb-fortized-link" placeholder="https://fortized.com/template/abc123" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="modal-error" id="cb-import-error" style="margin-bottom:8px;"></div>
+      <button class="btn-a" style="width:100%;" onclick="importFortizedTemplate()">Fetch Template</button>
+      <div id="cb-import-preview" style="margin-top:14px;"></div>`;
+  }
+}
+
+async function importDiscordTemplate() {
+  const linkInput = document.getElementById('cb-discord-link');
+  const errEl = document.getElementById('cb-import-error');
+  const previewEl = document.getElementById('cb-import-preview');
+  const link = (linkInput?.value||'').trim();
+  if(errEl) errEl.textContent = '';
+
+  // Validate discord.new link format
+  const discordMatch = link.match(/discord\.new\/([A-Za-z0-9]+)/);
+  if(!discordMatch) {
+    if(errEl) errEl.textContent = 'Invalid Discord template link. Expected format: https://discord.new/CODE';
+    return;
+  }
+  const templateCode = discordMatch[1];
+
+  if(previewEl) previewEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12.5px;"><div style="margin-bottom:6px;">Fetching template...</div><div style="width:24px;height:24px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto;"></div></div>';
+
+  try {
+    // Fetch the Discord template via their API
+    const resp = await fetch('https://discord.com/api/v10/guilds/templates/' + encodeURIComponent(templateCode));
+    if(!resp.ok) throw new Error('Template not found or expired (HTTP ' + resp.status + ')');
+    const data = await resp.json();
+
+    // Parse the template into Fortized format
+    const guild = data.serialized_source_guild || {};
+    const name = data.name || guild.name || 'Imported Server';
+    const desc = data.description || guild.description || '';
+
+    // Map Discord channels to Fortized channels
+    const discordChannels = guild.channels || [];
+    // Build category map
+    const categoryMap = {};
+    const categories = [];
+    discordChannels.filter(ch => ch.type === 4).forEach(cat => {
+      const catId = 'cat_' + (cat.id || Math.random().toString(36).slice(2));
+      categoryMap[cat.id] = catId;
+      categories.push({id: catId, name: cat.name});
+    });
+
+    const typeMap = {0:'text', 2:'voice', 5:'announcement', 13:'forum', 15:'forum'};
+    const channels = discordChannels.filter(ch => ch.type !== 4).map(ch => {
+      const mapped = {
+        name: ch.name || 'unnamed',
+        type: typeMap[ch.type] || 'text',
+        desc: ch.topic || '',
+      };
+      if(ch.parent_id != null && categoryMap[ch.parent_id]) {
+        mapped.categoryId = categoryMap[ch.parent_id];
+      }
+      if(ch.nsfw) mapped.nsfw = true;
+      return mapped;
+    });
+
+    // Map Discord roles to Fortized roles
+    const roleColors = ['#fbbf24','#60a5fa','#3ecf6e','#a78bfa','#f87171','#22d3ee','#e879f9','#fb923c','#9ca3af'];
+    const discordRoles = (guild.roles || []).filter(r => r.name !== '@everyone').sort((a,b) => (b.position||0) - (a.position||0));
+    const roles = discordRoles.map((r, i) => ({
+      id: r.name.toLowerCase().replace(/[^a-z0-9]/g,'_') || 'role_'+i,
+      name: r.name,
+      color: r.color ? '#'+r.color.toString(16).padStart(6,'0') : (roleColors[i % roleColors.length]),
+      permissions: (r.permissions & 0x8) ? ['administrator'] : ['send_messages','read_history','add_reactions'],
+      priority: Math.max(1, (discordRoles.length - i) * 10),
+      displayAsTag: i < 3,
+    }));
+
+    // Always ensure admin + member roles exist
+    if(!roles.find(r=>r.permissions?.includes('administrator'))) {
+      roles.unshift({id:'admin',name:'Admin',color:'#fbbf24',permissions:['administrator'],priority:100,displayAsTag:true});
+    }
+    if(!roles.find(r=>r.id==='member'||r.name==='Member')) {
+      roles.push({id:'member',name:'Member',color:'#60a5fa',permissions:['send_messages','read_history','add_reactions'],priority:1,displayAsTag:false});
+    }
+
+    _importedTemplateData = {
+      source: 'discord',
+      name, desc,
+      channels: channels.length ? channels : [{name:'general',type:'text',desc:'General discussion'}],
+      categories,
+      roles,
+      emblem: '🏰',
+    };
+
+    // Show preview
+    const chIcon = {text:'#',voice:'🎙',forum:'💬',announcement:'📢',poll:'🗳'};
+    const previewChs = channels.slice(0,8).map(c=>`<div class="tp-ch"><span class="tp-ch-icon">${chIcon[c.type]||'#'}</span>${escapeHTML(c.name)}</div>`).join('');
+    const previewRoles = roles.slice(0,5).map(r=>`<span class="tp-role-pill" style="color:${r.color};background:${r.color}15;border:1px solid ${r.color}33;">${escapeHTML(r.name)}</span>`).join('');
+    previewEl.innerHTML = `<div class="tmpl-preview">
+      <div class="tp-header">
+        <div class="tp-icon" style="background:rgba(88,101,242,.12);"><svg width="26" height="26" viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028z"/></svg></div>
+        <div>
+          <div class="tp-name">${escapeHTML(name)}</div>
+          <div class="tp-desc">${escapeHTML(desc||'Discord server template')}</div>
+        </div>
+      </div>
+      <div class="tp-stats">
+        <div class="tp-stat">#️ ${channels.length} channels</div>
+        <div class="tp-stat">🛡️ ${roles.length} roles</div>
+        ${categories.length?`<div class="tp-stat">📁 ${categories.length} categories</div>`:''}
+      </div>
+      <div class="tp-channels">
+        <div class="tp-section-label">Channels</div>
+        ${previewChs}
+        ${channels.length>8?`<div style="font-size:10.5px;color:var(--muted);padding:2px 0;">+${channels.length-8} more</div>`:''}
+      </div>
+      <div class="tp-roles">
+        <div class="tp-section-label">Roles</div>
+        <div class="tp-role-pills">${previewRoles}${roles.length>5?`<span style="font-size:9.5px;color:var(--muted);padding:2px 4px;">+${roles.length-5}</span>`:''}</div>
+      </div>
+    </div>`;
+    const continueBtn = document.getElementById('cb-import-continue-btn');
+    if(continueBtn) continueBtn.style.display = '';
+  } catch(e) {
+    if(errEl) errEl.textContent = e.message || 'Failed to fetch Discord template';
+    if(previewEl) previewEl.innerHTML = '';
+  }
+}
+
+async function importFortizedTemplate() {
+  const linkInput = document.getElementById('cb-fortized-link');
+  const errEl = document.getElementById('cb-import-error');
+  const previewEl = document.getElementById('cb-import-preview');
+  const link = (linkInput?.value||'').trim();
+  if(errEl) errEl.textContent = '';
+
+  // Extract template ID from link
+  const ftzMatch = link.match(/template\/([A-Za-z0-9_-]+)/);
+  if(!ftzMatch) {
+    if(errEl) errEl.textContent = 'Invalid Fortized template link. Expected format: https://fortized.com/template/ID';
+    return;
+  }
+  const templateId = ftzMatch[1];
+
+  if(previewEl) previewEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12.5px;"><div style="margin-bottom:6px;">Fetching template...</div><div style="width:24px;height:24px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto;"></div></div>';
+
+  try {
+    const snap = await firebase.database().ref('bastionTemplates/' + templateId).get();
+    if(!snap.exists()) throw new Error('Template not found. It may have been deleted or the link is invalid.');
+    const tmplData = snap.val();
+
+    _importedTemplateData = {
+      source: 'fortized',
+      name: tmplData.name || 'Imported Bastion',
+      desc: tmplData.desc || '',
+      channels: tmplData.channels || [{name:'general',type:'text',desc:'General discussion'}],
+      categories: tmplData.categories || [],
+      roles: tmplData.roles || [{id:'admin',name:'Admin',color:'#fbbf24',permissions:['administrator'],priority:100,displayAsTag:true},{id:'member',name:'Member',color:'#60a5fa',permissions:['send_messages','read_history','add_reactions'],priority:1,displayAsTag:false}],
+      emblem: tmplData.emblem || '🏰',
+      icon: tmplData.icon || null,
+      banner: tmplData.banner || null,
+    };
+
+    const chIcon = {text:'#',voice:'🎙',forum:'💬',announcement:'📢',poll:'🗳'};
+    const previewChs = _importedTemplateData.channels.slice(0,8).map(c=>`<div class="tp-ch"><span class="tp-ch-icon">${chIcon[c.type]||'#'}</span>${escapeHTML(c.name)}</div>`).join('');
+    const previewRoles = _importedTemplateData.roles.slice(0,5).map(r=>`<span class="tp-role-pill" style="color:${r.color};background:${r.color}15;border:1px solid ${r.color}33;">${escapeHTML(r.name)}</span>`).join('');
+    previewEl.innerHTML = `<div class="tmpl-preview">
+      <div class="tp-header">
+        <div class="tp-icon">${_importedTemplateData.icon?`<img src="${_importedTemplateData.icon}">`:(_importedTemplateData.emblem||'🏰')}</div>
+        <div>
+          <div class="tp-name">${escapeHTML(_importedTemplateData.name)}</div>
+          <div class="tp-desc">${escapeHTML(_importedTemplateData.desc||'Fortized bastion template')}</div>
+        </div>
+      </div>
+      <div class="tp-stats">
+        <div class="tp-stat">#️ ${_importedTemplateData.channels.length} channels</div>
+        <div class="tp-stat">🛡️ ${_importedTemplateData.roles.length} roles</div>
+        ${(_importedTemplateData.categories||[]).length?`<div class="tp-stat">📁 ${_importedTemplateData.categories.length} categories</div>`:''}
+        ${tmplData.createdBy?`<div class="tp-stat">👤 by @${escapeHTML(tmplData.createdBy)}</div>`:''}
+      </div>
+      <div class="tp-channels">
+        <div class="tp-section-label">Channels</div>
+        ${previewChs}
+        ${_importedTemplateData.channels.length>8?`<div style="font-size:10.5px;color:var(--muted);padding:2px 0;">+${_importedTemplateData.channels.length-8} more</div>`:''}
+      </div>
+      <div class="tp-roles">
+        <div class="tp-section-label">Roles</div>
+        <div class="tp-role-pills">${previewRoles}${_importedTemplateData.roles.length>5?`<span style="font-size:9.5px;color:var(--muted);padding:2px 4px;">+${_importedTemplateData.roles.length-5}</span>`:''}</div>
+      </div>
+    </div>`;
+    const continueBtn = document.getElementById('cb-import-continue-btn');
+    if(continueBtn) continueBtn.style.display = '';
+  } catch(e) {
+    if(errEl) errEl.textContent = e.message || 'Failed to fetch template';
+    if(previewEl) previewEl.innerHTML = '';
+  }
+}
+
+function continueFromImportedTemplate() {
+  if(!_importedTemplateData) return;
+  const si = document.getElementById('cb-step-import');
+  const sf = document.getElementById('cb-step-form');
+  const banner = document.getElementById('cb-import-banner');
+  if(si) si.style.display='none';
+  if(sf) sf.style.display='';
+
+  // Pre-fill form with imported data
+  const nameInp = document.getElementById('cb-name');
+  const descInp = document.getElementById('cb-desc');
+  const iconPrev = document.getElementById('cb-icon-preview');
+  if(nameInp) nameInp.value = _importedTemplateData.name || '';
+  if(descInp) descInp.value = _importedTemplateData.desc || '';
+  if(_importedTemplateData.emblem && iconPrev) iconPrev.textContent = _importedTemplateData.emblem;
+  cbSelectedEmoji = _importedTemplateData.emblem || '🏰';
+
+  // Show import info banner
+  if(banner) {
+    const src = _importedTemplateData.source === 'discord' ? 'Discord server' : 'Fortized bastion';
+    banner.style.display = '';
+    banner.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(62,207,110,.06);border:1px solid rgba(62,207,110,.15);border-radius:10px;margin-bottom:14px;font-size:12px;color:rgba(62,207,110,.8);font-weight:600;">
+      <span style="font-size:15px;">✓</span> Importing from ${src} template — ${_importedTemplateData.channels.length} channels, ${_importedTemplateData.roles.length} roles
+    </div>`;
+  }
+  _renderCBRoleTemplateRow();
+  setTimeout(()=>{nameInp?.focus();},80);
+}
+
+// ── Bastion Template Link System ──
+async function generateBastionTemplateLink(bastionIdx) {
+  const b = CU.bastions?.[bastionIdx != null ? bastionIdx : curBastion];
+  if(!b) { toast('No bastion selected','error'); return; }
+
+  const templateId = (CU.username + '_tmpl_' + Date.now()).replace(/[^a-z0-9_]/gi,'');
+  const tmplData = {
+    name: b.name,
+    desc: b.desc || '',
+    emblem: b.emblem || '🏰',
+    icon: b.icon || null,
+    banner: b.banner || null,
+    channels: (b.channels||[]).map(ch => ({name:ch.name, type:ch.type, desc:ch.desc||'', categoryId:ch.categoryId||null, nsfw:ch.nsfw||false})),
+    categories: b.categories || [],
+    roles: (b.roles||[]).map(r => ({id:r.id, name:r.name, color:r.color, permissions:r.permissions||[], priority:r.priority||0, displayAsTag:r.displayAsTag||false})),
+    createdBy: CU.username,
+    createdAt: new Date().toISOString(),
+    bastionName: b.name,
+  };
+
+  try {
+    await firebase.database().ref('bastionTemplates/' + templateId).set(tmplData);
+    const link = 'https://fortized.com/template/' + templateId;
+    b.templateLink = link;
+    b.templateId = templateId;
+    await saveUser();
+    _syncBastionToGlobal(bastionIdx != null ? bastionIdx : curBastion);
+    toast('Template link generated!', 'success');
+    return link;
+  } catch(e) {
+    toast('Failed to generate template link','error');
+    return null;
+  }
+}
+
+async function copyBastionTemplateLink(link) {
+  try {
+    await navigator.clipboard.writeText(link);
+    toast('Template link copied!','success');
+  } catch {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = link; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    toast('Template link copied!','success');
+  }
+}
+
+async function regenerateBastionTemplateLink(bastionIdx) {
+  const b = CU.bastions?.[bastionIdx != null ? bastionIdx : curBastion];
+  if(!b) return;
+  // Delete old template if exists
+  if(b.templateId) {
+    try { await firebase.database().ref('bastionTemplates/' + b.templateId).remove(); } catch {}
+  }
+  b.templateLink = null;
+  b.templateId = null;
+  const link = await generateBastionTemplateLink(bastionIdx);
+  if(link) renderBSettingsMain('templates');
+}
+
+async function deleteBastionTemplateLink(bastionIdx) {
+  const b = CU.bastions?.[bastionIdx != null ? bastionIdx : curBastion];
+  if(!b) return;
+  if(b.templateId) {
+    try { await firebase.database().ref('bastionTemplates/' + b.templateId).remove(); } catch {}
+  }
+  b.templateLink = null;
+  b.templateId = null;
+  await saveUser();
+  _syncBastionToGlobal(bastionIdx != null ? bastionIdx : curBastion);
+  toast('Template link deleted','info');
+  renderBSettingsMain('templates');
+}
+
 async function createBastion() {
   const name = document.getElementById('cb-name')?.value?.trim();
   const desc = document.getElementById('cb-desc')?.value?.trim();
@@ -8034,26 +8459,43 @@ async function createBastion() {
   if (!name) { if(err)err.textContent='Bastion name is required'; return; }
   if (err) err.textContent = '';
 
-    const tmpl = _selectedBastionTemplate && BASTION_TEMPLATES[_selectedBastionTemplate.id];
-  const _chs = tmpl
-    ? tmpl.channels
-    : [{name:'general',type:'text',desc:'General discussion'},{name:'announcements',type:'text',desc:'Important announcements'},{name:'lounge',type:'voice',desc:'Voice lounge'}];
-  const _roleTmpl = _selectedRoleTemplate && ROLE_TEMPLATES[_selectedRoleTemplate];
-  const _roles = _roleTmpl
-    ? _roleTmpl.roles.map(r=>({...r}))
-    : tmpl
-    ? tmpl.roles.map(r=>({...r, permissions: r.id==='admin' ? PERMISSIONS.map(p=>p[0]) : ['send_messages','read_history','add_reactions']}))
-    : [
-        {id:'admin',name:'Admin',color:'#fbbf24',permissions:PERMISSIONS.map(p=>p[0])},
-        {id:'member',name:'Member',color:'#60a5fa',permissions:['send_messages','read_history','add_reactions']},
-      ];
+  // Check if we have imported template data
+  const imported = _importedTemplateData;
+  const tmpl = !imported && _selectedBastionTemplate && BASTION_TEMPLATES[_selectedBastionTemplate.id];
+
+  let _chs, _roles, _cats;
+  if(imported) {
+    _chs = imported.channels;
+    _roles = imported.roles.map(r=>({...r}));
+    _cats = imported.categories || [];
+    // Ensure admin role has full perms
+    _roles.forEach(r => { if(r.permissions?.includes('administrator')) r.permissions = PERMISSIONS.map(p=>p[0]); });
+  } else if(tmpl) {
+    _chs = tmpl.channels;
+    _roles = tmpl.roles.map(r=>({...r, permissions: r.id==='admin' ? PERMISSIONS.map(p=>p[0]) : (r.permissions||['send_messages','read_history','add_reactions'])}));
+    _cats = [];
+  } else {
+    _chs = [{name:'general',type:'text',desc:'General discussion'},{name:'announcements',type:'text',desc:'Important announcements'},{name:'lounge',type:'voice',desc:'Voice lounge'}];
+    _cats = [];
+    const _roleTmpl = _selectedRoleTemplate && ROLE_TEMPLATES[_selectedRoleTemplate];
+    _roles = _roleTmpl
+      ? _roleTmpl.roles.map(r=>({...r}))
+      : [
+          {id:'admin',name:'Admin',color:'#fbbf24',permissions:PERMISSIONS.map(p=>p[0])},
+          {id:'member',name:'Member',color:'#60a5fa',permissions:['send_messages','read_history','add_reactions']},
+        ];
+  }
   _selectedRoleTemplate = null;
+  _importedTemplateData = null;
+
   const bastion = {
-    name, desc: desc||tmpl?.description||'',
+    name, desc: desc||imported?.desc||tmpl?.description||'',
     tagline: '',
-    emblem: cbSelectedEmoji||(tmpl?.emoji)||'🏰',
-    icon: cbIconData||null,
+    emblem: cbSelectedEmoji||(imported?.emblem)||(tmpl?.emoji)||'🏰',
+    icon: cbIconData||(imported?.icon)||null,
+    banner: imported?.banner||null,
     channels: _chs,
+    categories: _cats,
     roles: _roles,
     owner: CU.username,
     public: cbVisibility === 'public',
@@ -8729,6 +9171,7 @@ function renderBSettingsNav(activeTab) {
     {id:'reputation',icon:'🛡️',label:'Reputation'},
     {label:'Perks'},
     {id:'boost',icon:'⚡',label:'Boost'},
+    {id:'templates',icon:'📋',label:'Templates'},
     {label:'Danger'},
     {id:'danger',icon:'⚠️',label:'Danger Zone'},
   ];
@@ -9222,6 +9665,64 @@ function renderBSettingsMain(tab) {
             </div>
           </div>
         `).join('') : '<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No bots deployed yet. Click "Deploy Bot" to add one.</div>'}
+      </div>`;
+  }
+  else if (tab==='templates') {
+    const isOwner = b.owner===CU.username;
+    const hasLink = !!b.templateLink;
+    const chIcon = {text:'#',voice:'🎙',forum:'💬',announcement:'📢',poll:'🗳'};
+    const previewChs = (b.channels||[]).slice(0,6).map(c=>`<div style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,.5);padding:2px 0;"><span style="font-size:11px;opacity:.6;">${chIcon[c.type]||'#'}</span>${escapeHTML(c.name)}</div>`).join('');
+    const previewRoles = (b.roles||[]).slice(0,5).map(r=>`<span style="font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:100px;color:${r.color};background:${r.color}15;border:1px solid ${r.color}33;">${escapeHTML(r.name)}</span>`).join(' ');
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">📋 Bastion Templates</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Save your bastion as a template that others can use to create bastions with the same layout, channels, roles, and design.</div>
+      ${isOwner ? `
+      <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:18px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Template Link</div>
+        <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Anyone with this link can create a new bastion using your layout as a starting point. Your messages, members, and private data are <strong>never</strong> shared.</div>
+        ${hasLink ? `
+          <div class="bastion-tmpl-link">
+            <code>${escapeHTML(b.templateLink)}</code>
+            <button class="btl-copy" onclick="copyBastionTemplateLink('${escapeHTML(b.templateLink)}')">Copy</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <button class="btn-g" style="font-size:12px;padding:7px 14px;" onclick="regenerateBastionTemplateLink(curBastion)">Regenerate Link</button>
+            <button class="btn-d" style="font-size:12px;padding:7px 14px;" onclick="deleteBastionTemplateLink(curBastion)">Delete Link</button>
+          </div>
+        ` : `
+          <button class="btn-a" style="font-size:13px;padding:9px 18px;" onclick="generateBastionTemplateLink(curBastion).then(link=>{if(link)renderBSettingsMain('templates');})">Generate Template Link</button>
+        `}
+      </div>
+      ` : `
+      <div style="padding:16px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.1);border-radius:14px;margin-bottom:18px;font-size:12.5px;color:var(--muted-light);">
+        Only the bastion owner can generate and manage template links.
+      </div>`}
+      <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Template Preview</div>
+        <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">This is what others will see when they import your bastion template.</div>
+        <div class="tmpl-preview" style="margin-bottom:0;">
+          <div class="tp-header">
+            <div class="tp-icon">${b.icon?`<img src="${b.icon}">`:((b.emblem)||'🏰')}</div>
+            <div>
+              <div class="tp-name">${escapeHTML(b.name)}</div>
+              <div class="tp-desc">${escapeHTML(b.desc||'No description')}</div>
+            </div>
+          </div>
+          <div class="tp-stats">
+            <div class="tp-stat">#️ ${(b.channels||[]).length} channels</div>
+            <div class="tp-stat">🛡️ ${(b.roles||[]).length} roles</div>
+            ${(b.categories||[]).length?`<div class="tp-stat">📁 ${(b.categories||[]).length} categories</div>`:''}
+          </div>
+          <div class="tp-channels">
+            <div class="tp-section-label">Channels</div>
+            ${previewChs}
+            ${(b.channels||[]).length>6?`<div style="font-size:10.5px;color:var(--muted);padding:2px 0;">+${(b.channels||[]).length-6} more</div>`:''}
+          </div>
+          <div class="tp-roles">
+            <div class="tp-section-label">Roles</div>
+            <div class="tp-role-pills" style="display:flex;flex-wrap:wrap;gap:4px;">${previewRoles}${(b.roles||[]).length>5?`<span style="font-size:9.5px;color:var(--muted);padding:2px 4px;">+${(b.roles||[]).length-5}</span>`:''}</div>
+          </div>
+        </div>
       </div>`;
   }
   else {
@@ -15940,6 +16441,7 @@ function showRailBastionCtx(e, idx) {
         { icon: _ctxSvg('settings'), label: 'Bastion Settings', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings(),100); } },
         { icon: _ctxSvg('edit'), label: 'Edit Bastion', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings('overview'),100); } },
         { icon: _ctxSvg('profile'), label: 'Manage Members', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings('members'),100); } },
+        { icon: _ctxSvg('create'), label: 'Save as Template', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings('templates'),100); } },
       ]
     }] : []),
     { items: [

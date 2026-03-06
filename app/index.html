@@ -1861,7 +1861,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* Mini profile preview (first click on avatar in chat) */
 /* ── MINI PROFILE PREVIEW — redesigned ────────────── */
 /* ── Mini Profile Preview (popup card) ── */
-.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:20px;z-index:4000;box-shadow:0 32px 80px rgba(0,0,0,.9),0 12px 32px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.03);overflow:hidden;animation:mppSlideIn .26s cubic-bezier(.22,1,.36,1);width:350px;backdrop-filter:blur(24px);}
+.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:20px;z-index:4000;box-shadow:0 32px 80px rgba(0,0,0,.9),0 12px 32px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.03);overflow:hidden;overflow-y:auto;max-height:calc(100vh - 32px);animation:mppSlideIn .26s cubic-bezier(.22,1,.36,1);width:350px;backdrop-filter:blur(24px);}
 @keyframes mppSlideIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
 .mpp-banner{height:100px;position:relative;overflow:hidden;}
 .mpp-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,rgba(11,13,23,.35) 55%,transparent 100%);}
@@ -6102,6 +6102,8 @@ async function leaveBastion(idx) {
   if (!b) return;
   closeModal('modal-leave-bastion');
   try{await FortizedSocial.removeBastionMember(b.globalId||b.name,CU.username);}catch{}
+  // Clean local memberRoles so member list doesn't ghost
+  if(b.memberRoles) delete b.memberRoles[CU.username];
   CU.bastions.splice(idx,1);
   await saveUser();
   curBastion=null; curChannel=null;
@@ -7082,7 +7084,10 @@ async function renderMemberList() {
   const guaranteed = [b.owner, CU.username].filter(Boolean);
   guaranteed.forEach(u => { if (!members.includes(u)) members.push(u); });
   if (!members.length) members = guaranteed;
-  const extraFromRoles = Object.keys(b.memberRoles||{});
+  // Only add memberRoles users who are actually in the fetched members list
+  // (prevents ghost entries from users who left but weren't cleaned from memberRoles)
+  const fetchedSet = new Set(members);
+  const extraFromRoles = Object.keys(b.memberRoles||{}).filter(u => fetchedSet.has(u));
   extraFromRoles.forEach(u => { if (!members.includes(u)) members.push(u); });
   members = [...new Set(members)].filter(Boolean);
 
@@ -10270,8 +10275,11 @@ async function kickMember(username) {
     try {
       const b=CU.bastions[curBastion];
       await FortizedSocial.removeBastionMember(b.globalId||b.name,username);
+      // Clean local memberRoles so member list updates immediately
+      if(b.memberRoles) delete b.memberRoles[username];
       toast(`${username} kicked`,'info');
       loadBastionMembersList();
+      renderMemberList();
     } catch { toast('Error','error'); }
   });
 }
@@ -10295,8 +10303,10 @@ async function banMemberByName() {
   if(b.bans.find(ban=>ban.username===username)){toast('Already banned','error');return;}
   b.bans.push({username,reason,date:new Date().toISOString()});
   try{await FortizedSocial.removeBastionMember(b.globalId||b.name,username);}catch{}
+  if(b.memberRoles) delete b.memberRoles[username];
   await saveUser();
   renderBSettingsMain('bans');
+  renderMemberList();
   toast(`${username} banned`,'success');
 }
 async function boostBastion(level, cost) {
@@ -10313,6 +10323,7 @@ async function confirmLeaveBastion() {
   document.getElementById('leave-title').textContent=`Leave ${b.name}?`;
   document.getElementById('leave-confirm-btn').onclick=async()=>{
     try{await FortizedSocial.removeBastionMember(b.globalId||b.name,CU.username);}catch{}
+    if(b.memberRoles) delete b.memberRoles[CU.username];
     CU.bastions.splice(curBastion,1);
     await saveUser(); closeModal('modal-leave-bastion'); curBastion=null;
     renderRailBastions(); showView('home'); toast('Left bastion','info');
@@ -12261,7 +12272,7 @@ function buildProfileView(tab) {
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
-      {id:'sunset',           name:'Sunset',           desc:'Warm purple to golden yellow gradient',    bg:'#1a0410', sidebar:'#1a0412', channel:'#200616', panel:'#28081c', accent:'#fef93b', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e8a040 75%,#f5d035 88%,#fef93b 100%)', cost:100, locked:!unlocked.includes('sunset')},
+      {id:'sunset',           name:'Sunset',           desc:'Warm purple to golden yellow gradient',    bg:'#1a0410', sidebar:'#1a0412', channel:'#200616', panel:'#28081c', accent:'#f5d978', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e0994a 75%,#f0c45e 88%,#f5d978 100%)', cost:100, locked:!unlocked.includes('sunset')},
     ];
     const defaultThemes = allThemes.filter(t => t.free);
     const ownedThemes = allThemes.filter(t => !t.free && !t.locked);
@@ -12790,7 +12801,7 @@ async function viewUserProfile(username) {
       <!-- Avatar -->
       <div class="up-left-av-area">
         <div style="position:relative;">
-          <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 80)}</div>
+          <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 87)}</div>
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:2px;right:2px;width:20px;height:20px;border-radius:50%;background:${sc};border:3.5px solid var(--panel);z-index:3;box-shadow:0 0 10px ${sc}66;"></span>
         </div>
       </div>
@@ -17403,6 +17414,8 @@ function leaveBastion(idx) {
   }
   showCustomConfirm('Leave "' + b.name + '"? You can rejoin with an invite.', async () => {
     try { await FortizedSocial.removeBastionMember(b.globalId || b.name, CU.username); } catch {}
+    // Clean local memberRoles so member list doesn't ghost
+    if(b.memberRoles) delete b.memberRoles[CU.username];
     CU.bastions.splice(idx, 1);
     await saveUser();
     renderRailBastions();
@@ -19101,7 +19114,7 @@ async function showDMUserPanel(username) {
     // PFP
     + '<div style="padding:0 16px;margin-top:-36px;margin-bottom:8px;position:relative;z-index:2;">'
     + '<div style="position:relative;display:inline-block;">'
-    + '<div style="width:72px;height:72px;border-radius:50%;background:var(--panel2);border:4px solid var(--channel);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.6);">' + buildAvatarHTML(u.pfp,u.displayName||u.username,72) + '</div>'
+    + '<div style="width:72px;height:72px;border-radius:50%;background:var(--panel2);border:4px solid var(--channel);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.6);">' + buildAvatarHTML(u.pfp,u.displayName||u.username,64) + '</div>'
     + '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" style="position:absolute;bottom:3px;right:3px;width:14px;height:14px;border-radius:50%;background:' + sc + ';border:3px solid var(--channel);box-shadow:0 0 8px '+sc+'55;"></span>'
     + '</div>'
     + '</div>'
@@ -22202,7 +22215,7 @@ function renderAtelierTab(tab) {
     const SHOP_APPEARANCES = [
       { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(140,100,220,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
       { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(255,249,62,.18)', hoverBorder:'rgba(255,249,62,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
-      { id:'sunset', name:'Sunset', desc:'A warm gradient from deep purple to golden yellow. Watch the sun set over your fortress.', price:100, gradient:'linear-gradient(135deg,#240517,#5e1a2e,#fef93b)', borderColor:'rgba(254,249,59,.18)', hoverBorder:'rgba(254,249,59,.4)', labelColor:'rgba(254,249,59,.6)', previewBg:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e8a040 75%,#f5d035 88%,#fef93b 100%)', sidebarBg:'#1a0412' },
+      { id:'sunset', name:'Sunset', desc:'A warm gradient from deep purple to golden yellow. Watch the sun set over your fortress.', price:100, gradient:'linear-gradient(135deg,#240517,#5e1a2e,#f5d978)', borderColor:'rgba(245,217,120,.18)', hoverBorder:'rgba(245,217,120,.4)', labelColor:'rgba(245,217,120,.6)', previewBg:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e0994a 75%,#f0c45e 88%,#f5d978 100%)', sidebarBg:'#1a0412' },
     ];
 
     const onyxTier = CU?.onyxBadge ? _getOnyxTier(CU.onyxBadgeSpent||0) : null;
@@ -24461,7 +24474,7 @@ async function showMiniProfilePreview(username, anchorEl) {
       ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.7;z-index:3;"></div>` : ''}
     </div>
     <!-- Avatar + Name side by side -->
-    <div style="display:flex;align-items:flex-end;gap:12px;padding:0 18px;margin-top:-32px;position:relative;z-index:2;">
+    <div class="mpp-av-row">
       <div style="position:relative;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
         <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 68)}</div>
         <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="position:absolute;bottom:2px;right:2px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;box-shadow:0 0 8px ${sc}55;"></span>
@@ -24605,7 +24618,7 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--border',     '#3e0e2a');
     document.documentElement.style.setProperty('--muted',      '#7a3a5a');
     document.documentElement.style.setProperty('--muted-light','#a05878');
-    document.body.style.background = 'linear-gradient(170deg, #240517 0%, #4a1228 20%, #8c2a3a 40%, #c7604a 58%, #e8a040 75%, #f5d035 88%, #fef93b 100%)';
+    document.body.style.background = 'linear-gradient(170deg, #240517 0%, #4a1228 20%, #8c2a3a 40%, #c7604a 58%, #e0994a 75%, #f0c45e 88%, #f5d978 100%)';
   } else {
     // Fortized Classic (default)
     sidebarColor = '#13161d';
@@ -24647,7 +24660,7 @@ const _appearanceThemeData = {
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#030407', sidebar:'#050710', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
-  sunset:           {id:'sunset',           name:'Sunset',           bg:'#1a0410', sidebar:'#1a0412', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#200616', panel:'#28081c', accent:'#fef93b', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e8a040 75%,#f5d035 88%,#fef93b 100%)'},
+  sunset:           {id:'sunset',           name:'Sunset',           bg:'#1a0410', sidebar:'#1a0412', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#200616', panel:'#28081c', accent:'#f5d978', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e0994a 75%,#f0c45e 88%,#f5d978 100%)'},
 };
 
 function _buildPreviewMockup(t, label) {

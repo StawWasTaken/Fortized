@@ -435,13 +435,120 @@ const FortizedSocial = (() => {
     await dbTransaction(P.invite(code) + '/uses', n => (n || 0) + 1);
   }
 
-  // ── Real-time Listeners ────────────────────────────────────
+  // ── Socket.io Real-Time Layer ──────────────────────────────
+  // Socket.io provides instant delivery; Firebase listeners are kept as fallback
+  // for data persistence and offline/reconnection scenarios.
+  let _socket = null;
+  let _socketReady = false;
+  let _socketCallbacks = {};
+  let _socketRooms = new Set();
+
+  function _getSocketURL() {
+    if (typeof window !== 'undefined' && window.location) {
+      const loc = window.location;
+      if (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') {
+        return loc.protocol + '//' + loc.hostname + ':3000';
+      }
+      return loc.origin;
+    }
+    return 'http://localhost:3000';
+  }
+
+  function initSocket(username, callbacks) {
+    _socketCallbacks = callbacks || {};
+    if (_socket) { _socket.disconnect(); }
+    if (typeof window === 'undefined' || typeof window.io === 'undefined') {
+      console.warn('[Fortized] Socket.io client not loaded, falling back to Firebase listeners');
+      return startFirebasePolling(username, callbacks);
+    }
+    try {
+      _socket = window.io(_getSocketURL(), {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+      });
+      _socket.on('connect', function() {
+        _socketReady = true;
+        _socket.emit('identify', {
+          username: norm(username),
+          status: callbacks.initialStatus || 'online',
+          gameActivity: callbacks.initialGameActivity || null,
+        });
+        _socketRooms.forEach(function(room) { _socket.emit('room:join', room); });
+      });
+      _socket.on('disconnect', function() { _socketReady = false; });
+      _socket.on('message:new', function(data) {
+        _socketCallbacks.onMessage?.(data.room, data.message);
+      });
+      _socket.on('typing:update', function(data) {
+        _socketCallbacks.onTyping?.(data.room, data.users);
+      });
+      _socket.on('presence:update', function(data) {
+        _socketCallbacks.onStatusChange?.({ username: data.username, status: data.status, gameActivity: data.gameActivity });
+      });
+      _socket.on('notification:new', function(notif) {
+        _socketCallbacks.onNewNotification?.(notif);
+        updateNotifBadgeExternal(username);
+      });
+      _socket.on('friend:request:new', function(data) {
+        _socketCallbacks.onFriendRequest?.(data);
+      });
+      _socket.on('friend:accepted', function(data) {
+        _socketCallbacks.onFriendAccepted?.(data);
+      });
+      _socket.on('reaction:update', function(data) {
+        _socketCallbacks.onReaction?.(data);
+      });
+    } catch (e) {
+      console.warn('[Fortized] Socket.io init failed, using Firebase fallback', e);
+      return startFirebasePolling(username, callbacks);
+    }
+  }
+
+  function getSocket() { return _socket; }
+  function isSocketReady() { return _socketReady; }
+
+  function socketEmit(event, data) {
+    if (_socket && _socketReady) { _socket.emit(event, data); return true; }
+    return false;
+  }
+
+  function joinRoom(type, id1, id2) {
+    var room = { type: type, id1: id1, id2: id2 };
+    _socketRooms.add(room);
+    if (_socket && _socketReady) _socket.emit('room:join', room);
+  }
+  function leaveRoom(type, id1, id2) {
+    _socketRooms.forEach(function(r) {
+      if (r.type === type && r.id1 === id1 && r.id2 === id2) _socketRooms.delete(r);
+    });
+    if (_socket && _socketReady) _socket.emit('room:leave', { type: type, id1: id1, id2: id2 });
+  }
+
+  function queryPresence(usernames) {
+    return new Promise(function(resolve) {
+      if (_socket && _socketReady) {
+        _socket.emit('presence:query', usernames, resolve);
+        setTimeout(function() { resolve(null); }, 3000);
+      } else { resolve(null); }
+    });
+  }
+
+  function disconnectSocket() {
+    if (_socket) { _socket.disconnect(); _socket = null; }
+    _socketReady = false;
+    _socketRooms.clear();
+  }
+
+  // ── Firebase Real-time Listeners (fallback) ──────────────
   let _listeners = [];
   let _callbacks = {};
 
-  function startPolling(username, callbacks = {}) {
-    _callbacks = callbacks;
-    stopPolling();
+  function startFirebasePolling(username, callbacks) {
+    _callbacks = callbacks || {};
+    stopFirebasePolling();
     username = norm(username);
 
     const notifRef = db.ref(P.notifs(username));
@@ -466,7 +573,18 @@ const FortizedSocial = (() => {
     _listeners.push({ ref: statusRef, event: 'child_changed', handler: statusHandler });
   }
 
+  function startPolling(username, callbacks) {
+    callbacks = callbacks || {};
+    initSocket(username, callbacks);
+    startFirebasePolling(username, callbacks);
+  }
+
   function stopPolling() {
+    disconnectSocket();
+    stopFirebasePolling();
+  }
+
+  function stopFirebasePolling() {
     _listeners.forEach(({ ref, event, handler }) => {
       try { ref.off(event, handler); } catch (_) {}
     });
@@ -474,15 +592,23 @@ const FortizedSocial = (() => {
   }
 
   function listenBastionChannel(bastionId, channelId, callback) {
+    joinRoom('bastion', bastionId, channelId);
     const ref = db.ref(P.bastionMsgs(bastionId, channelId));
     const handler = ref.on('child_added', snap => { callback?.(snap.val()); });
-    return () => ref.off('child_added', handler);
+    return () => {
+      ref.off('child_added', handler);
+      leaveRoom('bastion', bastionId, channelId);
+    };
   }
 
   function listenDM(user1, user2, callback) {
+    joinRoom('dm', norm(user1), norm(user2));
     const ref = db.ref(P.dm(norm(user1), norm(user2)));
     const handler = ref.on('child_added', snap => { callback?.(snap.val()); });
-    return () => ref.off('child_added', handler);
+    return () => {
+      ref.off('child_added', handler);
+      leaveRoom('dm', norm(user1), norm(user2));
+    };
   }
 
   async function updateNotifBadgeExternal(username) {
@@ -529,6 +655,8 @@ const FortizedSocial = (() => {
     getInvite, saveInvite, incrementInviteUses,
     submitReport,
     startPolling, stopPolling, listenBastionChannel, listenDM,
+    initSocket, getSocket, isSocketReady, socketEmit,
+    joinRoom, leaveRoom, queryPresence, disconnectSocket,
     playNotificationSound,
   };
 

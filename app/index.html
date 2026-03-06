@@ -1368,15 +1368,52 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .embed-link-card:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(0,0,0,.35),0 0 0 1px rgba(254,248,61,.1);border-color:rgba(254,248,61,.18);}
 .embed-link-card:hover::before{opacity:1;}
 .embed-link-card .elc-body { padding:14px 16px;flex:1;min-width:0;display:flex;flex-direction:column;gap:6px; }
-.embed-link-card .elc-site { display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(254,248,61,.45); }
+.embed-link-card .elc-site { display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent-mid); }
 .embed-link-card .elc-title { font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 .embed-link-card .elc-desc { font-size:12px;color:var(--muted-light);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
 .embed-link-card .elc-url { font-size:9px;color:var(--muted);font-family:monospace;opacity:.5;letter-spacing:.02em; }
-.embed-link-card .elc-thumb { width:85px;min-width:85px;background:linear-gradient(135deg,rgba(254,248,61,.03),rgba(255,255,255,.01));display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.35;border-left:1px solid rgba(254,248,61,.04); }
-.embed-invite-card { border-radius:20px;overflow:hidden;max-width:400px;background:linear-gradient(160deg,rgba(254,248,61,.02),rgba(255,255,255,.01));border:1.5px solid rgba(254,248,61,.1);margin:8px 0;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);box-shadow:0 4px 20px rgba(0,0,0,.25);position:relative; }
-.embed-invite-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(254,248,61,.05),transparent 50%);pointer-events:none;opacity:0;transition:opacity .2s;z-index:0;}
-.embed-invite-card:hover{transform:translateY(-2px);border-color:rgba(254,248,61,.28);box-shadow:0 10px 40px rgba(0,0,0,.35),0 0 24px rgba(254,248,61,.04);}
+.embed-link-card .elc-thumb { width:85px;min-width:85px;background:linear-gradient(135deg,var(--accent-dim),var(--surface-1));display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.35;border-left:1px solid var(--surface-border); }
+.embed-invite-card { border-radius:20px;overflow:hidden;max-width:400px;background:linear-gradient(160deg,var(--accent-dim),var(--surface-1));border:1.5px solid var(--accent-mid);margin:8px 0;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);box-shadow:var(--shadow-sm);position:relative; }
+.embed-invite-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,var(--accent-dim),transparent 50%);pointer-events:none;opacity:0;transition:opacity .2s;z-index:0;}
+.embed-invite-card:hover{transform:translateY(-2px);border-color:var(--accent-mid);box-shadow:var(--shadow-md);}
 .embed-invite-card:hover::before{opacity:1;}
+/* ── Bastion Invite Dialog (Guilded-style) ─── */
+.invite-overlay{position:fixed;inset:0;background:rgba(4,6,10,.96);backdrop-filter:blur(24px);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;animation:inviteOverlayIn .3s ease both;}
+@keyframes inviteOverlayIn{from{opacity:0}to{opacity:1}}
+.invite-panel{display:flex;border-radius:16px;overflow:hidden;max-width:820px;width:100%;box-shadow:0 40px 100px rgba(0,0,0,.7);animation:invitePanelIn .35s cubic-bezier(.22,1,.36,1) both;background:var(--panel);}
+@keyframes invitePanelIn{from{opacity:0;transform:scale(.96) translateY(12px)}to{opacity:1;transform:none}}
+.invite-left{flex:1;display:flex;flex-direction:column;align-items:center;padding:48px 40px 36px;text-align:center;background:var(--panel);min-width:0;}
+.invite-right{width:380px;flex-shrink:0;background:#1a1e28;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.invite-right-pattern{position:absolute;inset:0;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M15 8a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm30 0a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm-30 30a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm30 0a3 3 0 1 1 0 6 3 3 0 0 1 0-6z' fill='%23fff' fill-opacity='1'/%3E%3C/svg%3E");background-size:60px 60px;}
+.invite-right-icons{position:absolute;inset:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);gap:8px;padding:16px;opacity:.05;}
+.invite-right-icons svg{width:100%;height:100%;color:#fff;}
+.invite-right-logo{position:relative;z-index:1;width:140px;height:140px;border-radius:20px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid rgba(255,255,255,.08);box-shadow:0 16px 48px rgba(0,0,0,.5);}
+.invite-right-logo img{width:100%;height:100%;object-fit:cover;}
+.invite-right-logo .invite-emblem{font-size:56px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(255,249,62,.08);}
+.invite-avatar{width:72px;height:72px;border-radius:50%;overflow:hidden;margin-bottom:20px;border:3px solid rgba(255,249,62,.15);box-shadow:0 4px 20px rgba(0,0,0,.4);}
+.invite-avatar img{width:100%;height:100%;object-fit:cover;}
+.invite-subtitle{font-size:14px;color:var(--muted-light);margin-bottom:4px;line-height:1.4;}
+.invite-subtitle strong{color:var(--accent);font-weight:700;}
+.invite-bastion-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.invite-bastion-name .invite-verified{width:18px;height:18px;color:var(--accent);flex-shrink:0;}
+.invite-meta{display:flex;align-items:center;justify-content:center;gap:16px;font-size:12px;color:var(--muted);margin-bottom:24px;}
+.invite-meta .invite-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+.invite-meta .invite-dot.online{background:var(--green);}
+.invite-desc{font-size:13px;color:var(--muted-light);margin-bottom:24px;max-width:320px;line-height:1.5;font-style:italic;}
+.invite-actions{width:100%;max-width:300px;display:flex;flex-direction:column;gap:10px;}
+.invite-accept-btn{width:100%;padding:13px 24px;border-radius:var(--radius-md);background:var(--accent);color:#060810;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .15s;}
+.invite-accept-btn:hover{filter:brightness(1.06);transform:translateY(-1px);}
+.invite-accept-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.invite-decline-btn{width:100%;padding:12px 24px;border-radius:var(--radius-md);background:transparent;color:var(--muted-light);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;border:1px solid var(--border);cursor:pointer;transition:all .15s;}
+.invite-decline-btn:hover{border-color:rgba(255,255,255,.15);background:var(--surface-1);}
+.invite-input{width:100%;padding:12px 16px;border-radius:var(--radius-md);background:transparent;border:1.5px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .15s;}
+.invite-input::placeholder{color:var(--muted);}
+.invite-input:focus{border-color:var(--accent);}
+.invite-input-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);cursor:pointer;font-size:16px;line-height:1;transition:color .15s;}
+.invite-input-clear:hover{color:var(--text);}
+.invite-login-link{font-size:13px;color:var(--muted-light);margin-top:8px;cursor:pointer;transition:color .15s;}
+.invite-login-link:hover{color:var(--accent);}
+@media(max-width:720px){.invite-panel{flex-direction:column;max-width:440px;}.invite-right{width:100%;height:180px;}.invite-left{padding:36px 28px 28px;}}
 @keyframes embedIn { from{opacity:0;transform:translateY(6px) scale(.98)} to{opacity:1;transform:none} }
 .embed-x-card,.embed-spotify-card { border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.015),rgba(255,255,255,.005));border:1.5px solid rgba(255,255,255,.06);max-width:500px;margin:8px 0;overflow:hidden;cursor:pointer;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;transition:all .22s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(6px);position:relative; }
 .embed-x-card { border-left:3px solid #1d9bf0; }
@@ -15351,35 +15388,105 @@ async function checkInviteLink() {
   url.searchParams.delete('invite');
   history.replaceState({}, '', url);
 
-  if (!CU?.username) { toast('Please log in to accept the invite','info'); return; }
-
-  // Use the enhanced joinByInvite that does multi-strategy lookup
+  // Use the enhanced joinByInvite that handles both logged-in and guest users
   await joinByInvite(invite);
 }
 
-function showBastionInviteDialog(bastion, inviterName, inviteCode) {
+async function showBastionInviteDialog(bastion, inviterName, inviteCode) {
   const overlay = document.createElement('div');
   overlay.id = 'invite-dialog-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.94);backdrop-filter:blur(20px);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.className = 'invite-overlay';
+
+  // Try to fetch inviter's avatar
+  let inviterPfp = '';
+  try {
+    const inviterUser = await FortizedSocial.getUserByName(inviterName);
+    if (inviterUser?.pfp) inviterPfp = inviterUser.pfp;
+  } catch {}
+  const inviterAvatarHTML = inviterPfp
+    ? `<img src="${inviterPfp}" onerror="this.src='${_defaultPfpUrl(inviterName)}'">`
+    : `<img src="${_defaultPfpUrl(inviterName)}">`;
+
+  const boostLv = bastion.boostLevel || 0;
+  const memberCount = bastion.memberCount || 1;
+  const isLoggedIn = !!CU?.username;
+  const verifiedBadge = boostLv >= 1 ? `<svg class="invite-verified" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` : '';
+
+  // Right panel: bastion logo
+  const bastionLogoInner = bastion.icon
+    ? `<img src="${escapeHTML(bastion.icon)}">`
+    : `<div class="invite-emblem">${bastion.emblem||'🏰'}</div>`;
+
+  // Gaming icon pattern SVGs for right panel
+  const iconsSVG = [
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 12h4m-2-2v4m5.5-1h.01M17 11h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4m-2-2v4m7-1h.01M15 11h.01"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 18.5a6.5 6.5 0 100-13 6.5 6.5 0 000 13zM12 14a2 2 0 100-4 2 2 0 000 4z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v1m0 16v1m-8-9H3m18 0h-1m-2.636-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707"/><circle cx="12" cy="12" r="4"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a7 7 0 017 7c0 5-7 13-7 13S5 14 5 9a7 7 0 017-7z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12,2 15,8.5 22,9.3 17,14 18.2,21 12,17.8 5.8,21 7,14 2,9.3 9,8.5"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4,17 10,11 4,5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 3a3 3 0 00-3 3v12a3 3 0 003 3 3 3 0 003-3 3 3 0 00-3-3H6a3 3 0 00-3 3 3 3 0 003 3 3 3 0 003-3V6a3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3h12a3 3 0 003-3 3 3 0 00-3-3z"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>'
+  ];
+
+  // Actions based on login state
+  let actionsHTML;
+  if (isLoggedIn) {
+    actionsHTML = `
+      <div class="invite-actions">
+        <button class="invite-accept-btn" onclick="acceptBastionInvite(this,'${escapeHTML(bastion.id||bastion.name)}','${escapeHTML(inviteCode)}')">Accept Invite</button>
+        <button class="invite-decline-btn" onclick="document.getElementById('invite-dialog-overlay').remove()">Decline</button>
+      </div>`;
+  } else {
+    actionsHTML = `
+      <div class="invite-actions">
+        <div style="position:relative;width:100%;">
+          <input class="invite-input" type="text" id="invite-guest-name" placeholder="What do you want to be called?" maxlength="24" autocomplete="off">
+          <span class="invite-input-clear" onclick="document.getElementById('invite-guest-name').value='';document.getElementById('invite-guest-name').focus();">&times;</span>
+        </div>
+        <button class="invite-accept-btn" onclick="handleInviteGuestContinue(this,'${escapeHTML(bastion.id||bastion.name)}','${escapeHTML(inviteCode)}')">Continue</button>
+        <span class="invite-login-link" onclick="document.getElementById('invite-dialog-overlay').remove();window.location.href='/login';">Log in</span>
+      </div>`;
+  }
+
   overlay.innerHTML = `
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:24px;max-width:420px;width:100%;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.8);">
-      <div style="height:80px;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(62,207,110,.04));display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;overflow:hidden;">
-        ${bastion.icon ? `<img src="${bastion.icon}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:.3;">` : ''}
-        <span style="position:relative;z-index:1;">${bastion.emblem||'🏰'}</span>
+    <div class="invite-panel">
+      <div class="invite-left">
+        <div class="invite-avatar">${inviterAvatarHTML}</div>
+        <div class="invite-subtitle">Accept <strong>${escapeHTML(inviterName)}</strong>'s invite to join</div>
+        <div class="invite-bastion-name">${escapeHTML(bastion.name)} ${verifiedBadge}</div>
+        <div class="invite-meta">
+          <span style="display:flex;align-items:center;gap:5px;"><span class="invite-dot online"></span> ${memberCount} Online</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span class="invite-dot"></span> ${memberCount} Member${memberCount!==1?'s':''}</span>
+        </div>
+        ${bastion.desc ? `<div class="invite-desc">${escapeHTML(bastion.desc)}</div>` : ''}
+        ${actionsHTML}
       </div>
-      <div style="padding:26px 28px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Bastion Invite</div>
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;">${escapeHTML(bastion.name)}</div>
-        <div style="font-size:13.5px;color:var(--muted-light);margin-bottom:20px;">
-          <strong style="color:var(--accent);">${escapeHTML(inviterName)}</strong> is inviting you to join <strong>${escapeHTML(bastion.name)}</strong>!
-        </div>
-        ${bastion.desc ? `<div style="font-size:12.5px;color:var(--muted);margin-bottom:18px;font-style:italic;">${escapeHTML(bastion.desc)}</div>` : ''}
-        <div style="display:flex;gap:10px;">
-          <button class="btn-a" style="flex:1;padding:12px;" onclick="acceptBastionInvite(this,'${escapeHTML(bastion.id||bastion.name)}','${escapeHTML(inviteCode)}')">Accept</button>
-          <button class="btn-g" style="flex:1;padding:12px;" onclick="document.getElementById('invite-dialog-overlay').remove()">Decline</button>
-        </div>
+      <div class="invite-right">
+        <div class="invite-right-icons">${iconsSVG.map(s=>`<div>${s}</div>`).join('')}</div>
+        <div class="invite-right-logo">${bastionLogoInner}</div>
       </div>
     </div>`;
+
+  // Close on background click
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
 }
 
@@ -15394,7 +15501,17 @@ async function acceptBastionInvite(btn, bastionId, inviteCode) {
       try { await FortizedSocial.incrementInviteUses(inviteCode); } catch {}
     }
     document.getElementById('invite-dialog-overlay')?.remove();
-  } catch { btn.disabled = false; btn.textContent = 'Accept'; toast('Failed to join','error'); }
+  } catch { btn.disabled = false; btn.textContent = 'Accept Invite'; toast('Failed to join','error'); }
+}
+function handleInviteGuestContinue(btn, bastionId, inviteCode) {
+  const nameInput = document.getElementById('invite-guest-name');
+  const name = (nameInput?.value||'').trim();
+  if (!name) { nameInput?.focus(); toast('Please enter a name','info'); return; }
+  // Store the pending invite info so we can resume after signup/login
+  sessionStorage.setItem('pendingInvite', JSON.stringify({bastionId, inviteCode, guestName: name}));
+  document.getElementById('invite-dialog-overlay')?.remove();
+  // Redirect to login/signup flow — store invite + name for after auth
+  window.location.href = '/login?invite=' + encodeURIComponent(inviteCode);
 }
 // Join a bastion by ID. If hasInvite=true, skip the public-only check.
 async function joinBastionById(bastionId, hasInvite) {
@@ -16263,22 +16380,22 @@ function parseMD(s) {
   s = s.replace(/https?:\/\/[^\s]*[?&]invite=([\w]+)[^\s]*/gi, (url, code) => {
     const alreadyMember = (CU?.bastions||[]).some(b=>(b.invites||[]).some(inv=>inv.code===code));
     return `<div class="embed-invite-card" onclick="joinByInvite('${escapeHTML(code)}')" style="max-width:400px;">
-      <div style="height:90px;background:linear-gradient(135deg,#0d1a12,#0a1020,#1a0d28);position:relative;overflow:hidden;">
-        <div style="position:absolute;inset:0;opacity:.04;background-image:radial-gradient(circle,rgba(254,248,61,.9) 1px,transparent 1px);background-size:20px 20px;"></div>
-        <div style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:200px;height:120px;border-radius:50%;background:radial-gradient(ellipse,rgba(254,248,61,.15) 0%,transparent 70%);filter:blur(16px);"></div>
-        <div style="position:absolute;bottom:12px;left:16px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(254,248,61,.35);">Bastion Invite</div>
+      <div style="height:90px;background:linear-gradient(135deg,var(--rail),var(--bg),var(--panel));position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;opacity:.04;background-image:radial-gradient(circle,var(--accent) 1px,transparent 1px);background-size:20px 20px;"></div>
+        <div style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:200px;height:120px;border-radius:50%;background:radial-gradient(ellipse,var(--accent-dim) 0%,transparent 70%);filter:blur(16px);"></div>
+        <div style="position:absolute;bottom:12px;left:16px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--accent-mid);">Bastion Invite</div>
       </div>
       <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;">
-        <div style="width:50px;height:50px;border-radius:14px;background:rgba(254,248,61,.06);border:1.5px solid rgba(254,248,61,.1);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">🏰</div>
+        <div style="width:50px;height:50px;border-radius:14px;background:var(--accent-dim);border:1.5px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">🏰</div>
         <div style="flex:1;min-width:0;">
           <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Fortized Bastion</div>
-          <div style="font-size:10.5px;color:var(--muted-light);margin-top:3px;">Invite code: <code style="background:rgba(254,248,61,.04);padding:2px 8px;border-radius:6px;font-size:10px;border:1px solid rgba(254,248,61,.06);">${escapeHTML(code)}</code></div>
+          <div style="font-size:10.5px;color:var(--muted-light);margin-top:3px;">Invite code: <code style="background:var(--accent-dim);padding:2px 8px;border-radius:6px;font-size:10px;border:1px solid var(--surface-border);">${escapeHTML(code)}</code></div>
         </div>
       </div>
       <div style="padding:4px 18px 14px;">
-        <button style="width:100%;padding:11px;border-radius:14px;background:${alreadyMember?'rgba(255,255,255,.04)':'#fef83d'};color:${alreadyMember?'var(--muted-light)':'#060810'};font-family:'Syne',sans-serif;font-size:13px;font-weight:800;border:${alreadyMember?'1.5px solid var(--border)':'none'};cursor:${alreadyMember?'default':'pointer'};transition:all .15s;"${!alreadyMember?' onmouseover="this.style.filter=\'brightness(1.08)\'" onmouseout="this.style.filter=\'\'"':''}>${alreadyMember?'✓ Already a Member':'🏰 Join Bastion'}</button>
+        <button style="width:100%;padding:11px;border-radius:14px;background:${alreadyMember?'var(--surface-1)':'var(--accent)'};color:${alreadyMember?'var(--muted-light)':'#060810'};font-family:'Syne',sans-serif;font-size:13px;font-weight:800;border:${alreadyMember?'1.5px solid var(--border)':'none'};cursor:${alreadyMember?'default':'pointer'};transition:all .15s;"${!alreadyMember?' onmouseover="this.style.filter=\'brightness(1.08)\'" onmouseout="this.style.filter=\'\'"':''}>${alreadyMember?'✓ Already a Member':'🏰 Join Bastion'}</button>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 18px;border-top:1px solid rgba(254,248,61,.04);background:rgba(0,0,0,.08);font-size:10px;color:var(--muted);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 18px;border-top:1px solid var(--surface-border);background:rgba(0,0,0,.08);font-size:10px;color:var(--muted);">
         <span style="display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg> Fortized</span>
         <span style="font-family:monospace;font-size:9px;">${escapeHTML(code)}</span>
       </div>
@@ -21153,7 +21270,6 @@ async function adminGrantRadiancePlus() {
 
 async function joinByInvite(code) {
   if (!code) return;
-  if (!CU?.username) { toast('Please log in first', 'error'); return; }
   toast('Looking up invite…', 'info');
   try {
     // Strategy 1: Check the dedicated invites collection first
@@ -21217,7 +21333,7 @@ async function joinByInvite(code) {
     const gid = foundBastion.id || foundBastion.globalId;
     const already = (CU.bastions||[]).some(ub => gid && ub.globalId === gid);
     if (already) { toast("You're already in " + foundBastion.name, 'info'); return; }
-    showBastionInviteDialog(foundBastion, inviterName || 'Someone', code);
+    await showBastionInviteDialog(foundBastion, inviterName || 'Someone', code);
   } catch(e) {
     toast('Could not load invite: ' + (e.message||e), 'error');
   }

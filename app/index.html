@@ -3163,6 +3163,7 @@ const FtzStatus = (() => {
     window.addEventListener('beforeunload', () => {
       if (!CU?.username) return;
       _stopElectronIdlePoll();
+      if (typeof _stopAutoActivityDetection === 'function') _stopAutoActivityDetection();
       _broadcast('offline');
     });
   }
@@ -8141,6 +8142,8 @@ function initFortizedUXResilience() {
     });
   } catch {}
   try { initIdleDetection(); } catch(e) { console.warn('[init] initIdleDetection:', e); }
+  // Auto-detect game activity in Electron desktop app (Discord-style)
+  try { _startAutoActivityDetection(); } catch(e) { console.warn('[init] autoActivityDetection:', e); }
   try { restoreCustomStatusTimer(); } catch(e) { console.warn('[init] restoreCustomStatusTimer:', e); }
   // Discord-style: restore the user's chosen status from last session
   try { FtzStatus.restoreManualStatus(); } catch(e) { console.warn('[init] restoreManualStatus:', e); }
@@ -19090,6 +19093,12 @@ function renderActivityDetectionTab(main) {
 function toggleActivityDetection(el) {
   const isOn = el.classList.toggle('on');
   localStorage.setItem('ftz_activity_detection', isOn ? 'true' : 'false');
+  if (isOn) {
+    _startAutoActivityDetection();
+  } else {
+    _stopAutoActivityDetection();
+    if (_gameActivity) setGameActivity(null);
+  }
   _updateUserbarActivity();
 }
 
@@ -21449,21 +21458,119 @@ function ftzVideoSeek(id, e) {
 // ════════════════════════════════════════════
 const KNOWN_GAMES = [
   {name:'Roblox', icon:'🎮', keywords:['roblox','robloxplayer','roblox player']},
-  {name:'X (Twitter)', icon:'🏗️', keywords:['twitter']},
-  {name:'Minecraft', icon:'⛏️', keywords:['minecraft','javaw','minecraftlauncher']},
-  {name:'Fortnite', icon:'🎯', keywords:['fortnite','epicgameslauncher']},
-  {name:'Steam', icon:'🎮', keywords:['steam']},
+  {name:'Minecraft', icon:'⛏️', keywords:['minecraft','javaw','minecraftlauncher','minecraft launcher']},
+  {name:'Fortnite', icon:'🎯', keywords:['fortnite','fortniteclient','epicgameslauncher']},
+  {name:'Valorant', icon:'🔫', keywords:['valorant','valorant-win64-shipping','riot client']},
+  {name:'League of Legends', icon:'⚔️', keywords:['league of legends','leagueclient','league']},
+  {name:'Counter-Strike 2', icon:'🔫', keywords:['cs2','counter-strike','csgo']},
+  {name:'Apex Legends', icon:'🎯', keywords:['apex legends','r5apex']},
+  {name:'Overwatch 2', icon:'🎮', keywords:['overwatch']},
+  {name:'Rocket League', icon:'🚀', keywords:['rocketleague','rocket league']},
+  {name:'Among Us', icon:'🚀', keywords:['among us','among_us']},
+  {name:'Genshin Impact', icon:'⚡', keywords:['genshinimpact','genshin impact','yuanshen']},
+  {name:'Call of Duty', icon:'🔫', keywords:['call of duty','cod','modernwarfare','warzone']},
+  {name:'GTA V', icon:'🚗', keywords:['gta5','gtav','grand theft auto','playgtav']},
+  {name:'Terraria', icon:'⛏️', keywords:['terraria']},
+  {name:'Stardew Valley', icon:'🌾', keywords:['stardew valley','stardew']},
+  {name:'Hollow Knight', icon:'🗡️', keywords:['hollow knight','hollow_knight']},
+  {name:'Celeste', icon:'🍓', keywords:['celeste']},
+  {name:'Spotify', icon:'🎵', keywords:['spotify']},
+  {name:'VS Code', icon:'💻', keywords:['visual studio code','code']},
+  {name:'OBS Studio', icon:'🎥', keywords:['obs','obs64','obs studio']},
+  {name:'Blender', icon:'🎨', keywords:['blender']},
+  {name:'Unity', icon:'🕹️', keywords:['unity']},
+  {name:'Photoshop', icon:'🖼️', keywords:['photoshop']},
+  {name:'Steam', icon:'🎮', keywords:['steam','steamwebhelper']},
   {name:'Discord', icon:'💬', keywords:['discord']},
 ];
 
 let _gameActivity = null;
 let _gameActivityInterval = null;
+let _autoActivityPoller = null;
 let _userCustomApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
 
+// ── Automatic Game Activity Detection (Electron / Discord-style) ──
+// In the desktop app, automatically polls running processes and sets
+// game activity when a known/custom game is detected — no user action needed.
+const AUTO_ACTIVITY_POLL_MS = 15_000; // check every 15s
+
+function _matchRunningApp(processList) {
+  if (!processList || !Array.isArray(processList)) return null;
+  const customApps = _userCustomApps.map(a => ({
+    name: a.name, icon: a.icon || '🎮',
+    keywords: [a.name.toLowerCase()]
+  }));
+  const allApps = [...KNOWN_GAMES, ...customApps];
+  // Also include user's game collection
+  const gameCollection = (CU?.gameCollection || []).map(g => ({
+    name: g.name, icon: g.icon || '🎮',
+    keywords: [g.name.toLowerCase()]
+  }));
+  const combined = [...allApps, ...gameCollection];
+  const seen = new Set();
+  for (const proc of processList) {
+    const pName = (typeof proc === 'string' ? proc : proc?.name || '').toLowerCase();
+    if (!pName) continue;
+    for (const app of combined) {
+      if (seen.has(app.name)) continue;
+      const matched = (app.keywords || []).some(kw => pName.includes(kw))
+        || pName.includes(app.name.toLowerCase());
+      if (matched) {
+        seen.add(app.name);
+        return { name: app.name, icon: app.icon };
+      }
+    }
+  }
+  return null;
+}
+
+function _startAutoActivityDetection() {
+  if (_autoActivityPoller) return;
+  if (!window.electronAPI?.getRunningApps) return;
+  const activityEnabled = () => localStorage.getItem('ftz_activity_detection') !== 'false';
+  _autoActivityPoller = setInterval(async () => {
+    if (!CU?.username || !activityEnabled()) return;
+    try {
+      const apps = await window.electronAPI.getRunningApps();
+      const detected = _matchRunningApp(apps);
+      if (detected) {
+        // Only update if activity changed (avoid spamming Firebase)
+        if (!_gameActivity || _gameActivity.name !== detected.name) {
+          setGameActivity(detected.name, detected.icon);
+        }
+      } else if (_gameActivity) {
+        // Game closed — clear activity
+        setGameActivity(null);
+      }
+    } catch {}
+  }, AUTO_ACTIVITY_POLL_MS);
+  // Run immediately on start
+  (async () => {
+    if (!activityEnabled()) return;
+    try {
+      const apps = await window.electronAPI.getRunningApps();
+      const detected = _matchRunningApp(apps);
+      if (detected) setGameActivity(detected.name, detected.icon);
+    } catch {}
+  })();
+}
+
+function _stopAutoActivityDetection() {
+  if (_autoActivityPoller) { clearInterval(_autoActivityPoller); _autoActivityPoller = null; }
+}
+
 async function detectGameActivity() {
-  // Screen Capture API hack: getDisplayMedia triggers the browser's window
-  // picker. The selected track's label often contains the window title,
-  // which we match against KNOWN_GAMES + user custom apps.
+  // Desktop (Electron): use process list for instant detection
+  if (window.electronAPI?.getRunningApps) {
+    try {
+      const apps = await window.electronAPI.getRunningApps();
+      const detected = _matchRunningApp(apps);
+      if (detected) return detected;
+    } catch {}
+  }
+  // Web fallback: Screen Capture API hack — getDisplayMedia triggers the
+  // browser's window picker. The selected track's label often contains
+  // the window title, which we match against KNOWN_GAMES + user custom apps.
   try {
     const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
     const track = stream.getVideoTracks()[0];

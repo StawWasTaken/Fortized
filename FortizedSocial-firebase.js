@@ -424,8 +424,14 @@ const FortizedSocial = (() => {
     await dbSet(P.bastionMembers(bastionId), members);
   }
   async function removeBastionMember(bastionId, username) {
+    const u = norm(username);
     const members = await getBastionMembers(bastionId);
-    await dbSet(P.bastionMembers(bastionId), members.filter(u => u !== norm(username)));
+    await dbSet(P.bastionMembers(bastionId), members.filter(m => m !== u));
+    // Also clean memberRoles so the user doesn't ghost in member lists
+    try {
+      const ref = firebase.database().ref(P.globalBastion(bastionId) + '/memberRoles/' + u);
+      await ref.remove();
+    } catch {}
   }
 
   // ── Invites ────────────────────────────────────────────────

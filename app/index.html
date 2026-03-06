@@ -881,7 +881,6 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rad-price span{font-size:12px;color:var(--muted-light);font-family:'DM Sans',sans-serif;font-weight:400;}
 .rad-feats{font-size:12px;color:var(--muted-light);line-height:1.5;}
 .atelier-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:22px;margin-bottom:12px;transition:all .14s;}
-.atelier-card:hover{border-color:rgba(255,255,255,.08);}
 .atelier-card:hover{border-color:rgba(255,255,255,.1);}
 .admin-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
 .admin-header-bar{height:52px;min-height:52px;background:linear-gradient(90deg,var(--rail),var(--panel),var(--rail));border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;position:relative;overflow:hidden;}
@@ -3118,16 +3117,15 @@ const FtzStatus = (() => {
       }
     });
 
+    // Use Firebase onDisconnect to reliably set offline status when tab closes
+    if (CU?.username) {
+      try {
+        firebase.database().ref('statuses/' + CU.username).onDisconnect().set('offline');
+      } catch {}
+    }
     window.addEventListener('beforeunload', () => {
       if (!CU?.username) return;
-      // Don't clear manual status on unload — just broadcast offline
       _broadcast('offline');
-      try {
-        navigator.sendBeacon?.(
-          'https://fortized-5ffcf-default-rtdb.europe-west1.firebasedatabase.app/statuses/' + CU.username + '.json',
-          JSON.stringify('offline')
-        );
-      } catch {}
     });
   }
 
@@ -4043,7 +4041,7 @@ function updateAtelierSidebar() {
 function _defaultPfpUrl(name) {
   // Deterministic random based on name — always same for same user
   const hash = (name||'').split('').reduce((a,c) => a + c.charCodeAt(0), 0);
-  return hash % 2 === 0 ? '/default pfp.png' : '/default pfp2.png';
+  return hash % 2 === 0 ? '/default%20pfp.png' : '/default%20pfp2.png';
 }
 function buildAvatarHTML(pfp, name, size) {
   const s = 'width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;display:block;flex-shrink:0;';
@@ -5083,7 +5081,7 @@ function showDMFriendsHome() {
               </div>
             </div>
             <div class="uv-header-actions">
-              <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
+              <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
             </div>
           </div>
         </div>
@@ -5499,7 +5497,7 @@ function showGCMemberPanel(meta) {
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
         if (ud.pfp) {
           const avWrap = entry.querySelector('.gc-ml-av');
-          if (avWrap) avWrap.innerHTML = `<img src="${ud.pfp}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">`;
+          if (avWrap) avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'">`;
         }
       }).catch(()=>{});
     }, 80);
@@ -6920,7 +6918,7 @@ function _undoDelete() {
       // Refresh the current view
       if (curDM) { loadDMMessages(curDM); }
       else if (typeof curGC !== 'undefined' && curGC) { loadGCMessages(curGC); }
-      else if (curBastion !== null) { const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel]; if (ch) loadChannelMessages(curBastion, curChannel); }
+      else if (curBastion !== null) { const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel]; if (ch) loadChannelMessages(curChannel); }
     }).catch(() => toast('Failed to restore','error'));
   }
   document.querySelector('.undo-toast')?.remove();
@@ -6968,8 +6966,8 @@ async function toggleReaction(msgId, emoji, context) {
   if (context === 'dm' && curDM) {
     const sorted = [me, curDM.toLowerCase()].sort().join('__');
     refPath = `dms/${sorted}/${msgId}/reactions/${emoji}`;
-  } else if (context === 'gc' && typeof _curGC !== 'undefined' && _curGC) {
-    refPath = `groupChats/${_curGC}/messages/${msgId}/reactions/${emoji}`;
+  } else if (context === 'gc' && typeof curGC !== 'undefined' && curGC) {
+    refPath = `groupChats/${curGC}/messages/${msgId}/reactions/${emoji}`;
   } else if (context === 'ch' && curBastion !== null) {
     const b = CU.bastions?.[curBastion];
     const ch = b?.channels?.[curChannel];
@@ -6977,7 +6975,7 @@ async function toggleReaction(msgId, emoji, context) {
     const bid = b.globalId || b.name;
     refPath = `bastionMsgs/${bid}/${ch.name}/${msgId}/reactions/${emoji}`;
   }
-  if (!refPath) { toast('Reacted with ' + emoji, 'success'); return; }
+  if (!refPath) { toast('Could not react here', 'error'); return; }
   try {
     const ref = firebase.database().ref(refPath);
     const snap = await ref.get();
@@ -6991,7 +6989,7 @@ async function toggleReaction(msgId, emoji, context) {
     if (users.length === 0) await ref.remove();
     else await ref.set(users);
     // Award reputation for reactions in bastions
-    if (context === 'ch' && !users.includes(me) === false && curBastion !== null) {
+    if (context === 'ch' && users.includes(me) && curBastion !== null) {
       const b = CU.bastions?.[curBastion];
       if (b) {
         const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
@@ -7003,7 +7001,7 @@ async function toggleReaction(msgId, emoji, context) {
     updateReactionUI(msgId, emoji, users, context);
   } catch (err) {
     console.error('Reaction error:', err);
-    toast('Reacted with ' + emoji, 'success');
+    toast('Failed to react', 'error');
   }
 }
 function updateReactionUI(msgId, emoji, users, context) {
@@ -7176,7 +7174,7 @@ function buildMemberEntry(u, roles, memberRoles) {
         const avWrap = entry.querySelector('.ml-av-wrap');
         if (ud.pfp && avWrap) {
           const existingImg = avWrap.querySelector('img:not(.profile-status-dot)');
-          if (!existingImg) avWrap.innerHTML = `<img src="${ud.pfp}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'"><span class="profile-status-dot" data-for="${u}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(status)};border:2.5px solid rgba(12,14,24,.98);"></span>`;
+          if (!existingImg) avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(status)};border:2.5px solid rgba(12,14,24,.98);"></span>`;
         }
         // Show badges
         const badgesEl = entry.querySelector('.ml-badges');
@@ -7186,7 +7184,7 @@ function buildMemberEntry(u, roles, memberRoles) {
         }
         // Show custom status
         const csEl = entry.querySelector('.ml-custom-status');
-        if (csEl && ud.customStatus) csEl.textContent = ud.customStatus;
+        if (csEl && ud.customStatus) csEl.textContent = typeof ud.customStatus === 'object' ? (ud.customStatus.emoji||'') + ' ' + (ud.customStatus.text||'') : ud.customStatus;
       }).catch(()=>{});
     }, 50);
   }
@@ -7333,8 +7331,8 @@ async function _joinVoiceFirebase(b, ch, idx) {
     await firebase.database().ref(path).set({name:CU.username,pfp:CU.pfp||'',joinedAt:Date.now(),muted:isMuted});
     // Listen for other participants
     const partRef = firebase.database().ref('voiceChannels/' + bastionId + '/' + ch.name + '/participants');
-    window._vcPartListener && window._vcPartListener();
-    window._vcPartListener = partRef.on('value', snap => {
+    if (window._vcPartRef && window._vcPartCallback) { window._vcPartRef.off('value', window._vcPartCallback); }
+    window._vcPartCallback = snap => {
       const data = snap.val() || {};
       voiceParticipants = Object.values(data).map(p => ({name:p.name,pfp:p.pfp,muted:p.muted}));
       const grid = document.getElementById('vc-avatars-grid');
@@ -7343,7 +7341,9 @@ async function _joinVoiceFirebase(b, ch, idx) {
       if (countEl) countEl.textContent = voiceParticipants.length;
       const vcb = document.getElementById('vcb-participants');
       if (vcb) vcb.innerHTML = voiceParticipants.map(p=>`<div class="vcb-part">${buildAvatarHTML(p.pfp,p.name,18)} ${escapeHTML(p.name)}</div>`).join('');
-    });
+    };
+    window._vcPartRef = partRef;
+    partRef.on('value', window._vcPartCallback);
     // Remove on disconnect
     firebase.database().ref(path).onDisconnect().remove();
   } catch(e) {}
@@ -7356,7 +7356,7 @@ function _leaveVoiceFirebase() {
     if (!ch) return;
     const bastionId = b.globalId || b.name;
     firebase.database().ref('voiceChannels/' + bastionId + '/' + ch.name + '/participants/' + CU.username).remove();
-    if (window._vcPartListener) { window._vcPartListener(); window._vcPartListener = null; }
+    if (window._vcPartRef && window._vcPartCallback) { window._vcPartRef.off('value', window._vcPartCallback); window._vcPartRef = null; window._vcPartCallback = null; }
   } catch(e) {}
 }
 function disconnectVoice(){
@@ -7378,8 +7378,8 @@ function toggleVoiceMute(){
     if(b&&ch) {
       const bastionId=b.globalId||b.name;
       firebase.database().ref('voiceChannels/'+bastionId+'/'+ch.name+'/participants/'+CU.username+'/muted').set(isMuted).catch(()=>{});
+      _renderVoicePanel(ch, voiceChannel);
     }
-    _renderVoicePanel(ch, voiceChannel);
   }
 }
 function toggleVoiceDeafen(){
@@ -7399,7 +7399,7 @@ function toggleMic(){
 }
 function toggleDeafen(){
   isDeafened=!isDeafened;
-  if(isDeafened) { isMuted=true; toggleMic(); isMuted=true; }
+  if(isDeafened) { isMuted=true; const mb=document.getElementById('mic-btn'); if(mb) mb.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/><line x1="1" y1="1" x2="23" y2="23" stroke="#f87171" stroke-width="2.5"/></svg>'; }
   const b=document.getElementById('deafen-btn');
   if(b) b.innerHTML=isDeafened
     ?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/><line x1="1" y1="1" x2="23" y2="23" stroke="#f87171" stroke-width="2.5"/></svg>'
@@ -7606,7 +7606,7 @@ async function promptJoinPublicBastion(bastionId){
 // ════════════════════════════════════════════
 // MISC MISSING
 // ════════════════════════════════════════════
-function pickCBEmoji(){
+function pickCBEmoji(event){
   const emojis=['🏰','⚔️','🛡️','🔮','🏹','🌟','🔥','❄️','🌊','⛩️','🎮','🎨','🎵','🎭','🎯','🧩','⚡','🌺','🦋','🐉','🦅','🌈','🦁','🐺','🦊','🎪','🚀','💫','🌙','☀️'];
   const x=event&&event.clientX||window.innerWidth/2;
   const y=event&&event.clientY||window.innerHeight/2;
@@ -9480,12 +9480,12 @@ async function saveOverviewConfig() {
     ctaLabel: document.getElementById('ov-ed-cta-label')?.value?.trim() || '',
     ctaUrl: document.getElementById('ov-ed-cta-url')?.value?.trim() || '',
     footerText: document.getElementById('ov-ed-footer')?.value?.trim() || '',
-    showStats: document.getElementById('ov-ed-stats')?.checked !== false,
-    showRooms: document.getElementById('ov-ed-rooms')?.checked !== false,
-    showAnnouncements: document.getElementById('ov-ed-announcements')?.checked !== false,
-    showForums: document.getElementById('ov-ed-forums')?.checked !== false,
-    showRoles: document.getElementById('ov-ed-roles')?.checked !== false,
-    showInvite: document.getElementById('ov-ed-invite')?.checked !== false,
+    showStats: document.getElementById('ov-ed-stats')?.checked ?? true,
+    showRooms: document.getElementById('ov-ed-rooms')?.checked ?? true,
+    showAnnouncements: document.getElementById('ov-ed-announcements')?.checked ?? true,
+    showForums: document.getElementById('ov-ed-forums')?.checked ?? true,
+    showRoles: document.getElementById('ov-ed-roles')?.checked ?? true,
+    showInvite: document.getElementById('ov-ed-invite')?.checked ?? true,
   };
   document.getElementById('modal-ov-editor')?.remove();
   try {
@@ -10967,7 +10967,7 @@ function removeBotScript(idx, sIdx) {
 
 function toggleBot(idx) {
   const bot = CU.bots?.[idx]; if (!bot) return;
-  bot.enabled = bot.enabled === false;
+  bot.enabled = !bot.enabled;
   saveUser();
   openBotEditor(idx);
   toast(bot.enabled ? 'Bot enabled' : 'Bot disabled', 'info');
@@ -11152,7 +11152,7 @@ function deployMyBot(botIdx) {
 function toggleBastionBot(botId) {
   const b = CU.bastions?.[curBastion]; if (!b) return;
   const db = (b.deployedBots||[]).find(d => d.id === botId);
-  if (db) { db.enabled = db.enabled === false; saveUser(); renderBSettingsMain('bots'); }
+  if (db) { db.enabled = !db.enabled; saveUser(); renderBSettingsMain('bots'); }
 }
 
 function removeBastionBot(botId) {
@@ -11558,7 +11558,7 @@ function _showEmojiInfoPopover(emoji, type, e) {
   if (isFtz) { typeLabel = 'Official Fortized Emoji'; usageLabel = 'Official Fortized Emoji — available everywhere.'; }
   if (bCustom) { typeLabel = 'Bastion Emoji'; usageLabel = 'Available in: ' + escapeHTML(bName); }
   const previewHTML = type === 'unicode'
-    ? `<img src="${emojiToTwemojiUrl(emoji)}" style="width:48px;height:48px;object-fit:contain;" onerror="this.outerHTML='<span style=font-size:42px>${emoji}</span>'">`
+    ? `<img src="${emojiToTwemojiUrl(emoji)}" style="width:48px;height:48px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:42px\\'>${emoji}</span>'">`
     : (isFtz ? `<img src="${escapeHTML(isFtz)}" style="width:48px;height:48px;object-fit:contain;">` : (bCustom ? `<img src="${escapeHTML(bCustom.data)}" style="width:48px;height:48px;object-fit:contain;">` : emoji));
   pop.innerHTML = `<div class="eip-preview">${previewHTML}</div><div class="eip-name">${escapeHTML(nameStr)}</div><div class="eip-type">${typeLabel}</div><div style="font-size:10px;color:rgba(255,255,255,.25);text-align:center;margin-top:6px;">${usageLabel}</div>`;
   document.body.appendChild(pop);
@@ -12222,7 +12222,7 @@ function buildProfileView(tab) {
       <div class="settings-section-title">DENSITY</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         ${['default','compact','cozy'].map(d => `
-          <div onclick="localStorage.setItem('ftz_density','${d}');document.documentElement.dataset.density='${d}';buildProfileView('interface_density')" style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:${currentDensity===d?'rgba(254,248,61,.04)':'rgba(255,255,255,.02)'};border:1.5px solid ${currentDensity===d?'rgba(254,248,61,.15)':'rgba(255,255,255,.06)'};border-radius:14px;cursor:pointer;transition:all .15s;" onmouseenter="this.style.borderColor='rgba(255,255,255,.12)'" onmouseleave="this.style.borderColor='${currentDensity===d?'rgba(254,248,61,.15)':'rgba(255,255,255,.06)'}'"'>
+          <div onclick="localStorage.setItem('ftz_density','${d}');document.documentElement.dataset.density='${d}';buildProfileView('interface_density')" style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:${currentDensity===d?'rgba(254,248,61,.04)':'rgba(255,255,255,.02)'};border:1.5px solid ${currentDensity===d?'rgba(254,248,61,.15)':'rgba(255,255,255,.06)'};border-radius:14px;cursor:pointer;transition:all .15s;" onmouseenter="this.style.borderColor='rgba(255,255,255,.12)'" onmouseleave="this.style.borderColor='${currentDensity===d?'rgba(254,248,61,.15)':'rgba(255,255,255,.06)'}'">
             <div style="width:16px;height:16px;border-radius:50%;border:2px solid ${currentDensity===d?'var(--accent)':'rgba(255,255,255,.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               ${currentDensity===d?'<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);"></div>':''}
             </div>
@@ -17378,22 +17378,7 @@ function startReportPolling() {
 // ════════════════════════════════════════════
 // REGISTERED GAMES
 // ════════════════════════════════════════════
-function addRegisteredGame() {
-  showCustomInput('Add Game', 'Enter the game name:', async (name) => {
-    if (!name?.trim()) return;
-    CU.registeredGames = CU.registeredGames || [];
-    CU.registeredGames.push({
-      name: name.trim(),
-      icon: '🎮',
-      addedAt: new Date().toISOString(),
-      active: true
-    });
-    await saveUser();
-    buildProfileView('registered_games');
-    toast('Game added! It will show on your profile when active.', 'success');
-  });
-}
-
+// addRegisteredGame() is defined later with a full UI picker
 async function removeRegisteredGame(idx) {
   CU.registeredGames = CU.registeredGames || [];
   CU.registeredGames.splice(idx, 1);
@@ -17560,6 +17545,7 @@ function generateTrialLink() {
 // ════════════════════════════════════════════
 // GIPHY PICKER
 // ════════════════════════════════════════════
+let _giphyTimeout = null;
 function searchGiphy(q, targetInputId) {
   clearTimeout(_giphyTimeout);
   if (!q.trim()) { loadGiphyTrending(targetInputId); return; }
@@ -18768,7 +18754,7 @@ function radianceBadgeHTML(user) {
   const totalDays = user.radianceTotalMs ? Math.floor(user.radianceTotalMs / 86400000) : 0;
   if (!active && totalDays < 1) return '';
   const label = active ? '\u2728 Radiance Active' : ('\u2728 ' + totalDays + 'd Radiance');
-  const isPlus = user.radiancePlusUntil && new Date(user.radiancePlusUntil) > new Date();
+  const isPlus = user.radiancePlus && new Date(user.radiancePlus) > new Date();
   const badgeColor = isPlus ? '#ffd93e' : '#ff9d3e';
   const badgeBg = isPlus ? 'rgba(255,220,62,.15),rgba(255,249,62,.1)' : 'rgba(255,160,62,.15),rgba(255,180,62,.1)';
   const badgeBorder = isPlus ? 'rgba(255,220,62,.3)' : 'rgba(255,160,62,.3)';
@@ -18853,8 +18839,7 @@ const GAME_CATALOG = [
   {name:'Hades',icon:'\uD83D\uDD25',genre:'Roguelike'},
   {name:'Celeste',icon:'\u2744\uFE0F',genre:'Platformer'},
   {name:'Chess',icon:'\u265F\uFE0F',genre:'Strategy'},
-  {name:'X (Twitter)',icon:'\uD83C\uDF10',genre:'Platform'},
-  {name:'Terraria',icon:'\uD83C\uDF33',genre:'Sandbox'},
+  {name:'X (Twitter)',icon:'\uD83C\uDF10',genre:'Social'},
 ];
 
 function renderGameCollectionTab(main) {
@@ -19413,7 +19398,7 @@ function openStickerPicker(inputId) {
   }
 
   const bastionTabsHTML = Object.entries(bastionNames).map(([idx, name]) =>
-    `<button class="spp-tab" onclick="_filterStickerBastion('${idx}')">${escapeHTML(name)}</button>`
+    `<button class="spp-tab" onclick="_filterStickerBastion('${idx}', event)">${escapeHTML(name)}</button>`
   ).join('');
 
   picker.innerHTML = `
@@ -19425,7 +19410,7 @@ function openStickerPicker(inputId) {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="sticker-search-input" placeholder="Search stickers…" oninput="_searchStickers(this.value)">
     </div>
-    ${bastionTabsHTML ? `<div class="spp-tabs"><button class="spp-tab active" onclick="_filterStickerBastion('all')">All</button>${bastionTabsHTML}</div>` : ''}
+    ${bastionTabsHTML ? `<div class="spp-tabs"><button class="spp-tab active" onclick="_filterStickerBastion('all', event)">All</button>${bastionTabsHTML}</div>` : ''}
     <div class="spp-grid" id="sticker-grid"></div>
   `;
 
@@ -19461,9 +19446,9 @@ function _searchStickers(q) {
   _renderStickers(filtered);
 }
 
-function _filterStickerBastion(bastionIdx) {
+function _filterStickerBastion(bastionIdx, event) {
   document.querySelectorAll('.spp-tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
+  if (event && event.target) event.target.classList.add('active');
   if (bastionIdx === 'all') {
     _renderStickers(window._allStickersCache);
   } else {
@@ -19499,7 +19484,8 @@ function _sendSticker(url, name) {
 
 function _stickerOutsideClose(e) {
   const picker = document.getElementById('sticker-picker');
-  if (picker && !picker.contains(e.target)) { picker.remove(); return; }
+  if (!picker) return;
+  if (!picker.contains(e.target)) { picker.remove(); return; }
   document.addEventListener('mousedown', _stickerOutsideClose, {once:true, capture:true});
 }
 
@@ -19592,7 +19578,8 @@ function _insertBotCmd(cmdName, inputId) {
 
 function _botcmdOutsideClose(e) {
   const picker = document.getElementById('botcmd-picker');
-  if (picker && !picker.contains(e.target)) { picker.remove(); return; }
+  if (!picker) return;
+  if (!picker.contains(e.target)) { picker.remove(); return; }
   document.addEventListener('mousedown', _botcmdOutsideClose, {once:true, capture:true});
 }
 
@@ -19669,7 +19656,7 @@ function handleChatSend(context, chIdx) {
     else if (isAudio) token = '[FTZAUD:'+att.name+'|'+att.data+']';
     else token = '[FTZFILE:'+att.name+'|'+sizeMB+'|'+att.data+']';
     // Prepend to chat input
-    const inp = document.getElementById(context==='dm'?'dm-input':'ch-input');
+    const inp = document.getElementById(context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input');
     if (inp) {
       const existing = inp.value.trim();
       inp.value = (existing ? existing+' ' : '') + token;
@@ -19678,6 +19665,7 @@ function handleChatSend(context, chIdx) {
     window._pendingAttachment = null;
   }
   if (context==='dm') sendDM();
+  else if (context==='gc') sendGCMessage();
   else if (chIdx!=null) sendChannelMsg(chIdx);
   else if (curChannel!=null) sendChannelMsg(curChannel);
 }
@@ -19813,7 +19801,7 @@ function openStatusPicker() {
         <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Clear After</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;">
           ${FtzStatus.CUSTOM_DURATIONS.map(d=>
-            `<button class="status-dur-btn" data-dur="${d.id}" onclick="document.querySelectorAll('.status-dur-btn').forEach(b=>{b.style.background='transparent';b.style.borderColor='rgba(255,255,255,.06)';b.style.color='rgba(255,255,255,.45)'});this.style.background='rgba(254,248,61,.08)';this.style.borderColor='rgba(254,248,61,.2)';this.style.color='var(--accent)'" style="padding:7px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.06);background:transparent;color:rgba(255,255,255,.45);font-size:11.5px;font-weight:600;cursor:pointer;transition:.15s;">${d.label}</button>`
+            `<button class="status-dur-btn" data-dur="${d.id}" onclick="document.querySelectorAll('.status-dur-btn').forEach(b=>{b.removeAttribute('data-selected');b.style.background='transparent';b.style.borderColor='rgba(255,255,255,.06)';b.style.color='rgba(255,255,255,.45)'});this.setAttribute('data-selected','true');this.style.background='rgba(254,248,61,.08)';this.style.borderColor='rgba(254,248,61,.2)';this.style.color='var(--accent)'" style="padding:7px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.06);background:transparent;color:rgba(255,255,255,.45);font-size:11.5px;font-weight:600;cursor:pointer;transition:.15s;">${d.label}</button>`
           ).join('')}
         </div>
 
@@ -19832,7 +19820,7 @@ function pickStatusMode(mode, el) {
   document.querySelectorAll('.sp-mode-opt').forEach(o => {
     const isSel = o.dataset.mode===mode;
     o.classList.toggle('sel', isSel);
-    o.style.borderColor = isSel ? 'rgba(254,248,61,.2)' : 'var(--border)';
+    o.style.borderColor = isSel ? 'rgba(254,248,61,.2)' : 'rgba(255,255,255,.06)';
     o.style.background = isSel ? 'rgba(254,248,61,.04)' : 'transparent';
     const span = o.querySelector('span');
     if (span) span.style.color = isSel ? '#fff' : 'rgba(255,255,255,.6)';
@@ -19906,7 +19894,7 @@ async function saveCustomStatus() {
   const text = ((document.getElementById('status-text-input')||{}).value||'').trim();
   if (!text) { toast('Add some text!','error'); return; }
   // Get selected duration
-  const durBtn = document.querySelector('.status-dur-btn[style*="rgba(254,248,61"]');
+  const durBtn = document.querySelector('.status-dur-btn[data-selected="true"]');
   const duration = durBtn ? durBtn.dataset.dur : 'forever';
   setCustomStatusWithDuration(emoji, text, duration);
   document.getElementById('ftz-status-picker')?.remove();
@@ -20070,7 +20058,7 @@ async function deleteForumPost(chIdx, postIdx) {
 async function deleteForumReply(chIdx, postIdx, replyIdx) {
   const b = CU.bastions&&CU.bastions[curBastion]; if (!b) return;
   const post = b.channels[chIdx]?.posts?.[postIdx];
-  if (!post) return;
+  if (!post || !post.replies) return;
   post.replies.splice(replyIdx, 1);
   await saveUser();
   openForumPost(chIdx, postIdx);
@@ -20737,7 +20725,7 @@ function renderScreenShareView(isRemote) {
   ov.id = 'vc-screen-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:#000;z-index:6000;display:flex;flex-direction:column;';
   ov.innerHTML = '<div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.05);flex-shrink:0;">'
-    +'<div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;">🖥 '+(isRemote?escapeHTML(_vc.partner):' You')+' is sharing their screen</div>'
+    +'<div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;">🖥 '+(isRemote?escapeHTML(_vc.partner)+' is sharing their screen':'You are sharing your screen')+'</div>'
     +'<button id="vc-screen-close-btn" style="background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;">✕</button>'
     +'</div>'
     +'<div style="flex:1;display:flex;align-items:center;justify-content:center;">'
@@ -23129,6 +23117,7 @@ function renderAcPanel(ta) {
   });
   panel.style.display = 'flex';
   panel.style.flexDirection = 'column';
+  if (!panel.classList.contains('show')) panel.classList.add('show');
 }
 
 function applyEmojiAcById(idx) {
@@ -23157,7 +23146,7 @@ function applyEmojiAc(result, ta) {
 
 function hideEmojiAc() {
   const panel = document.getElementById('emoji-ac-panel');
-  if (panel) panel.style.display = 'none';
+  if (panel) { panel.style.display = 'none'; panel.classList.remove('show'); }
   _acResults = [];
   _acStartPos = -1;
   _acTarget = null;
@@ -23165,7 +23154,7 @@ function hideEmojiAc() {
 
 // Wire up autocomplete when DM/GC/channel views are opened
 function wireAllEmojiAutocomplete() {
-  ['dm-input','gc-input','ch-input'].forEach(setupEmojiAutocomplete);
+  ['dm-input','gc-input','ch-input','thread-input'].forEach(setupEmojiAutocomplete);
 }
 
 
@@ -23857,6 +23846,7 @@ function initCrossDeviceSync() {
     if (JSON.stringify(data.customStatus||null) !== JSON.stringify(CU.customStatus||null)) {
       if (data.customStatus) { CU.customStatus = data.customStatus; } else { delete CU.customStatus; }
       refreshCustomStatusBubble?.();
+      try { FtzStatus.restoreCustomTimer(); } catch {}
     }
     if (data.friends && JSON.stringify(data.friends) !== JSON.stringify(CU.friends)) {
       CU.friends = data.friends;
@@ -25507,7 +25497,9 @@ function _createEvent(bastionId) {
     showCustomInput('Event Description','Description (optional):', (desc) => {
       showCustomInput('Event Date','Date (YYYY-MM-DD HH:MM):', async (dateStr) => {
         if (!dateStr) return;
-        const ev = { title, description: desc||'', date: new Date(dateStr).toISOString(), emoji:'📅', createdBy: CU.username, createdAt: new Date().toISOString() };
+        const parsedDate = new Date(dateStr);
+        if (isNaN(parsedDate.getTime())) { toast('Invalid date format. Use YYYY-MM-DD HH:MM','error'); return; }
+        const ev = { title, description: desc||'', date: parsedDate.toISOString(), emoji:'📅', createdBy: CU.username, createdAt: new Date().toISOString() };
         try { await firebase.database().ref('events/' + bastionId).push(ev); toast('Event created!','success'); _loadEvents(bastionId); } catch { toast('Failed','error'); }
       });
     });
@@ -25556,6 +25548,16 @@ function _setSlowMode(bastionId, chName, seconds) {
   // Update via Firebase for all users
   try { firebase.database().ref('bastionSettings/' + bastionId + '/slowmode/' + chName).set(seconds); } catch {}
 }
+// Sync slow mode from Firebase so all users see the setting
+function _syncSlowMode(bastionId, chName) {
+  try {
+    firebase.database().ref('bastionSettings/' + bastionId + '/slowmode/' + chName).on('value', snap => {
+      const v = parseInt(snap.val() || '0');
+      if (v > 0) localStorage.setItem('ftz_slowmode_' + bastionId + '_' + chName, v);
+      else localStorage.removeItem('ftz_slowmode_' + bastionId + '_' + chName);
+    });
+  } catch {}
+}
 function _checkSlowMode() {
   if (curBastion === null) return true;
   const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
@@ -25580,7 +25582,7 @@ function _showSlowModeSettings(bastionId, chName) {
   let html = '<div style="padding:20px;"><div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;margin-bottom:12px;">Slow Mode</div>';
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
   opts.forEach((s,i) => {
-    html += `<button class="btn-${s===current?'a':'g'}" style="padding:8px 16px;font-size:12px;" onclick="_setSlowMode('${escapeHTML(bastionId)}','${escapeHTML(chName)}',${s});closeModal('modal-slowmode');">${labels[i]}</button>`;
+    html += `<button class="btn-${s===current?'a':'g'}" style="padding:8px 16px;font-size:12px;" onclick="_setSlowMode('${escapeHTML(bastionId)}','${escapeHTML(chName)}',${s});document.getElementById('modal-slowmode')?.remove();">${labels[i]}</button>`;
   });
   html += '</div></div>';
   _showQuickModal('modal-slowmode', html);

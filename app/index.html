@@ -3097,7 +3097,37 @@ const FtzStatus = (() => {
     }
   }
 
+  // ── Electron system-level idle detection ───────────────
+  let _electronIdlePoller = null;
+  const ELECTRON_IDLE_POLL_MS = 15_000;  // check every 15s
+  const ELECTRON_IDLE_THRESHOLD = 10 * 60; // 10 min in seconds
+
+  function _startElectronIdlePoll() {
+    if (_electronIdlePoller) return;
+    _electronIdlePoller = setInterval(async () => {
+      if (!CU?.username) return;
+      try {
+        const idleSec = await window.electronAPI.getSystemIdleTime();
+        if (typeof idleSec !== 'number') return;
+        if (idleSec >= ELECTRON_IDLE_THRESHOLD && _manualStatus === 'online' && !_autoAway) {
+          _goIdle();
+        } else if (idleSec < ELECTRON_IDLE_THRESHOLD && _autoAway) {
+          // User returned — restore manual status
+          _autoAway = false;
+          CU.status = _manualStatus || 'online';
+          _broadcast(CU.status);
+          updateUserbar();
+        }
+      } catch {}
+    }, ELECTRON_IDLE_POLL_MS);
+  }
+
+  function _stopElectronIdlePoll() {
+    if (_electronIdlePoller) { clearInterval(_electronIdlePoller); _electronIdlePoller = null; }
+  }
+
   function initIdle() {
+    // DOM-level activity detection (works in browser + Electron)
     ['mousemove','keydown','click','touchstart','scroll','mousedown'].forEach(ev => {
       document.addEventListener(ev, _resetIdle, { passive: true });
     });
@@ -3117,6 +3147,13 @@ const FtzStatus = (() => {
       }
     });
 
+    // Electron desktop: use system-level idle detection via powerMonitor
+    // This properly detects when the user is idle across the whole OS,
+    // not just the browser tab (keyboard/mouse activity in other apps counts)
+    if (window.electronAPI?.getSystemIdleTime) {
+      _startElectronIdlePoll();
+    }
+
     // Use Firebase onDisconnect to reliably set offline status when tab closes
     if (CU?.username) {
       try {
@@ -3125,6 +3162,7 @@ const FtzStatus = (() => {
     }
     window.addEventListener('beforeunload', () => {
       if (!CU?.username) return;
+      _stopElectronIdlePoll();
       _broadcast('offline');
     });
   }
@@ -3136,6 +3174,11 @@ const FtzStatus = (() => {
 
   function _onCustomExpiry() {
     delete CU.customStatus;
+    // Explicitly null out in Firebase — dbUpdate won't remove deleted fields
+    try {
+      const uname = (CU.username || '').toLowerCase();
+      if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(null);
+    } catch {}
     saveUser().catch(() => {});
     refreshCustomStatusBubble();
     toast('Custom status cleared', 'info');
@@ -3151,6 +3194,11 @@ const FtzStatus = (() => {
       _customStatusTimer = setTimeout(_onCustomExpiry, ms);
     }
     CU.customStatus = cs;
+    // Direct write to customStatus sub-path so Firebase listeners fire immediately
+    try {
+      const uname = (CU.username || '').toLowerCase();
+      if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(cs);
+    } catch {}
     saveUser().catch(() => {});
     refreshCustomStatusBubble();
   }
@@ -3158,6 +3206,11 @@ const FtzStatus = (() => {
   function clearCustom() {
     _clearCustomTimer();
     delete CU.customStatus;
+    // Explicitly null out in Firebase — dbUpdate won't remove deleted fields
+    try {
+      const uname = (CU.username || '').toLowerCase();
+      if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(null);
+    } catch {}
     saveUser().catch(() => {});
     refreshCustomStatusBubble();
   }
@@ -15662,12 +15715,12 @@ function _listenBastionUpdates() {
       const local = CU.bastions[idx];
       if (!local || (local.globalId || local.name) !== gid) return;
       // Sync important fields from global bastion
-      const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview'];
+      const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','members','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview'];
       let changed = false;
       let membersChanged = false;
       syncFields.forEach(f => {
         if (fresh[f] !== undefined && JSON.stringify(fresh[f]) !== JSON.stringify(local[f])) {
-          if (f === 'memberRoles' || f === 'memberCount') membersChanged = true;
+          if (f === 'memberRoles' || f === 'memberCount' || f === 'members') membersChanged = true;
           local[f] = fresh[f];
           changed = true;
         }
@@ -15687,8 +15740,15 @@ function _listenBastionUpdates() {
     // Live listener for bastion member list — updates member list in real-time when someone joins/leaves
     firebase.database().ref('globalBastions/' + gid + '/members').on('value', snap => {
       if (!snap.exists()) return;
-      const freshMembers = snap.val();
-      if (!freshMembers || !Array.isArray(freshMembers)) return;
+      const raw = snap.val();
+      if (!raw) return;
+      // Firebase may store arrays as objects — normalize to array
+      const freshMembers = Array.isArray(raw) ? raw : Object.values(raw);
+      // Update the local bastion's members array so renderMemberList has fresh data
+      const local = CU.bastions?.[idx];
+      if (local && (local.globalId || local.name) === gid) {
+        local.members = freshMembers;
+      }
       // Re-render member list if currently viewing this bastion
       if (curBastion === idx && _currentView === 'bastion') {
         if (typeof renderMemberList === 'function') renderMemberList();

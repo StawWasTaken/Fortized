@@ -37,9 +37,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* ── Sidebar (vertical, left) ─────────────────────── */
 .sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:68px;align-items:center;}
 .sidebar-logo{width:100%;padding:12px 0 8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
-.sidebar-logo-icon{width:48px;height:48px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;transition:transform .2s cubic-bezier(.22,1,.36,1),filter .2s,border-radius .2s;flex-shrink:0;}
+.sidebar-logo-icon{width:48px;height:48px;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;transition:transform .2s cubic-bezier(.22,1,.36,1),filter .2s;flex-shrink:0;}
 .sidebar-logo:hover .sidebar-logo-icon{transform:scale(1.08);filter:drop-shadow(0 4px 12px rgba(255,249,62,.25));}
-.sidebar-logo-icon img{width:48px;height:48px;object-fit:contain;border-radius:50%;}
+.sidebar-logo-icon img{width:48px;height:48px;object-fit:contain;border-radius:0;}
 .sidebar-logo-text{display:none;}
 .sidebar-logo.active .sidebar-logo-icon{filter:drop-shadow(0 0 8px rgba(255,249,62,.3));}
 .sidebar-nav{padding:6px 0;display:flex;flex-direction:column;gap:2px;flex-shrink:0;align-items:center;width:100%;}
@@ -245,7 +245,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .sidebar-ctx{width:380px;min-width:380px;background:var(--sidebar-ctx);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid var(--border);}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
-.topbar{height:52px;background:linear-gradient(135deg,rgba(12,14,24,.95),rgba(10,12,20,.98));display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(20px);box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.topbar{height:52px;background:var(--sidebar);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(20px);box-shadow:0 2px 12px rgba(0,0,0,.2);}
 .topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap;color:#fff;letter-spacing:-.01em;}
 .sidebar-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0;scroll-behavior:smooth;scrollbar-width:thin;}
 .sec-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 14px 5px;display:flex;align-items:center;justify-content:space-between;}
@@ -12140,6 +12140,7 @@ function buildProfileView(tab) {
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
+      {id:'sunset',           name:'Sunset',           desc:'Warm purple to golden yellow gradient',    bg:'#1a0410', sidebar:'#1a0412', channel:'#200616', panel:'#28081c', accent:'#fef93b', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#fef93b 100%)', cost:100, locked:!unlocked.includes('sunset')},
     ];
     const defaultThemes = allThemes.filter(t => t.free);
     const ownedThemes = allThemes.filter(t => !t.free && !t.locked);
@@ -22033,6 +22034,7 @@ function renderAtelierTab(tab) {
     const SHOP_APPEARANCES = [
       { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(140,100,220,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
       { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(255,249,62,.18)', hoverBorder:'rgba(255,249,62,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
+      { id:'sunset', name:'Sunset', desc:'A warm gradient from deep purple to golden yellow. Watch the sun set over your fortress.', price:100, gradient:'linear-gradient(135deg,#240517,#5e1a2e,#fef93b)', borderColor:'rgba(254,249,59,.18)', hoverBorder:'rgba(254,249,59,.4)', labelColor:'rgba(254,249,59,.6)', previewBg:'linear-gradient(170deg,#240517 0%,#4a1228 50%,#fef93b 100%)', sidebarBg:'#1a0412' },
     ];
 
     const onyxTier = CU?.onyxBadge ? _getOnyxTier(CU.onyxBadgeSpent||0) : null;
@@ -24421,6 +24423,19 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--muted-light','#44445e');
     // Low gradient towards dark purple
     document.body.style.background = 'linear-gradient(170deg, #010103 0%, #08061a 100%)';
+  } else if (themeId === 'sunset') {
+    sidebarColor = '#1a0412';
+    document.documentElement.style.setProperty('--bg',         '#1a0410');
+    document.documentElement.style.setProperty('--rail',       '#14030e');
+    document.documentElement.style.setProperty('--sidebar',    sidebarColor);
+    document.documentElement.style.setProperty('--channel',    '#200616');
+    document.documentElement.style.setProperty('--panel',      '#28081c');
+    document.documentElement.style.setProperty('--panel2',     '#300a22');
+    document.documentElement.style.setProperty('--panel3',     '#380c28');
+    document.documentElement.style.setProperty('--border',     '#3e0e2a');
+    document.documentElement.style.setProperty('--muted',      '#7a3a5a');
+    document.documentElement.style.setProperty('--muted-light','#a05878');
+    document.body.style.background = 'linear-gradient(170deg, #240517 0%, #fef93b 100%)';
   } else {
     // Fortized Classic (default)
     sidebarColor = '#13161d';
@@ -24438,7 +24453,7 @@ function applyAppearance(themeId) {
   // Secondary sidebar is 18.8% darker than the main sidebar color
   document.documentElement.style.setProperty('--sidebar-ctx', _darkenHex(sidebarColor, 0.188));
   // Reset body gradient if not onyx_pure
-  if (themeId !== 'onyx_pure') document.body.style.background = '';
+  if (themeId !== 'onyx_pure' && themeId !== 'sunset') document.body.style.background = '';
   // All themes keep yellow accent
   document.documentElement.style.setProperty('--accent',     '#fff93e');
   document.documentElement.style.setProperty('--accent-dim', 'rgba(255,249,62,.1)');
@@ -24451,7 +24466,7 @@ function applyAppearance(themeId) {
   const chatInputOuter = document.querySelector('.chat-input-outer');
   if (userbarEl) userbarEl.style.background = '';
   if (chatInputOuter) chatInputOuter.style.background = '';
-  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic'};
+  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic', sunset:'🌅 Sunset'};
   toast((toastMsgs[themeId]||'⚡ Theme')+' activated!', 'success');
 }
 
@@ -24462,6 +24477,7 @@ const _appearanceThemeData = {
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#030407', sidebar:'#050710', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
+  sunset:           {id:'sunset',           name:'Sunset',           bg:'#1a0410', sidebar:'#1a0412', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#200616', panel:'#28081c', accent:'#fef93b', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#fef93b 100%)'},
 };
 
 function _buildPreviewMockup(t, label) {
@@ -24794,7 +24810,7 @@ function saveCustomMood() {
 async function buyAppearance(themeId, cost) {
   const bal = CU?.onyx||0;
   if (bal < cost) { toast('Not enough Onyx! Need '+cost+' ⬡','error'); return; }
-  const names = {onyx_pure:'Onyx Pure', midnight_citadel:'Midnight Citadel'};
+  const names = {onyx_pure:'Onyx Pure', midnight_citadel:'Midnight Citadel', sunset:'Sunset'};
   showCustomConfirm(`Buy ${names[themeId]||themeId} for ${cost} Onyx?`, async () => {
     CU.onyx = bal - cost;
     CU.unlockedAppearances = [...(CU.unlockedAppearances||[]), themeId];

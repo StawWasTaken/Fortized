@@ -982,15 +982,53 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .new-msg-bar{display:flex;align-items:center;gap:0;margin:6px 0;position:relative;z-index:2;pointer-events:none;user-select:none;}
 .new-msg-bar::before,.new-msg-bar::after{content:'';flex:1;height:1px;background:var(--red);}
 .new-msg-bar .new-msg-label{padding:0 10px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--red);white-space:nowrap;}
-/* ── Bastion Hub (member-facing) ─────────── */
+/* ── Overview Room ──────────────────────── */
+.overview-room{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.ov-banner{position:relative;width:100%;height:220px;overflow:hidden;flex-shrink:0;}
+.ov-banner img{width:100%;height:100%;object-fit:cover;filter:brightness(.7) saturate(1.15);}
+.ov-banner .ov-gradient{position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,var(--bg) 100%);}
+.ov-emblem{position:absolute;bottom:-36px;left:50%;transform:translateX(-50%);z-index:3;}
+.ov-emblem .ov-icon{width:80px;height:80px;border-radius:22px;background:var(--panel);border:4px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.6);}
+.ov-emblem .ov-icon img{width:100%;height:100%;object-fit:cover;border-radius:18px;}
+.ov-identity{text-align:center;padding:44px 24px 12px;position:relative;z-index:2;}
+.ov-identity .ov-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;}
+.ov-identity .ov-tagline{font-size:13px;color:var(--muted-light);margin-top:4px;line-height:1.45;max-width:480px;margin-left:auto;margin-right:auto;}
+.ov-badges{display:flex;justify-content:center;gap:6px;padding:8px 0 4px;}
+.ov-badges .ov-badge{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted-light);padding:4px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:100px;}
+.ov-content{padding:16px 32px 40px;max-width:900px;margin:0 auto;width:100%;}
+.ov-section{margin-bottom:20px;}
+.ov-section-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.ov-section-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;}
+.ov-section-link{font-size:11px;color:var(--muted);cursor:pointer;transition:color .12s;}
+.ov-section-link:hover{color:var(--accent);}
+.ov-card-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory;}
+.ov-card-row::-webkit-scrollbar{height:3px;}
+.ov-ann-card{min-width:200px;max-width:240px;padding:14px 16px;background:var(--panel);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .14s;flex-shrink:0;scroll-snap-align:start;}
+.ov-ann-card:hover{border-color:rgba(255,249,62,.2);background:var(--panel2);}
+.ov-ann-card .ov-ac-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ov-ann-card .ov-ac-meta{font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.ov-welcome-card{padding:20px 24px;background:var(--panel);border:1px solid var(--border);border-radius:14px;}
+.ov-welcome-card .ov-wc-text{font-size:13px;color:rgba(255,255,255,.6);line-height:1.65;}
+.ov-stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+.ov-stat-card{padding:14px 16px;background:var(--panel);border:1px solid var(--border);border-radius:12px;text-align:center;}
+.ov-stat-card .ov-sc-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;}
+.ov-stat-card .ov-sc-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+.ov-edit-bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;padding:10px 24px;background:var(--panel);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);}
+.ov-edit-bar .ov-eb-label{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--accent);flex:1;}
+/* Sidebar overview item */
+.ch-overview-item{display:flex;align-items:center;gap:8px;padding:8px 10px;margin:2px 6px 6px;border-radius:10px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,.5);transition:all .12s cubic-bezier(.22,1,.36,1);position:relative;font-weight:600;border:1px solid transparent;}
+.ch-overview-item:hover{background:rgba(255,249,62,.04);color:rgba(255,255,255,.8);border-color:rgba(255,249,62,.08);}
+.ch-overview-item.active{background:rgba(255,249,62,.07);color:var(--accent);border-color:rgba(255,249,62,.12);}
+.ch-overview-item .ov-sidebar-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+/* Legacy Bastion Hub kept for compat */
 .bastion-hub-wrap{flex:1;display:flex;overflow:hidden;}
 .bastion-hub-main{flex:1;overflow-y:auto;padding:32px;background:rgba(10,12,20,.5);}
-.bhub-card{padding:20px 22px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;margin-bottom:10px;transition:all .14s;}
-.bhub-card:hover{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.03);}
+.bhub-card{padding:20px 22px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;transition:all .14s;}
+.bhub-card:hover{border-color:rgba(255,255,255,.1);background:var(--panel2);}
 .bhub-card .bhub-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:8px;color:#fff;}
 .bhub-card .bhub-desc{font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.55;margin-bottom:12px;}
 .bhub-action-row{display:flex;gap:8px;flex-wrap:wrap;}
-.bhub-stat{display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:12px;font-size:12px;color:var(--muted-light);font-weight:500;}
+.bhub-stat{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--muted-light);font-weight:500;}
 .bhub-stat .bhub-stat-val{font-family:'Syne',sans-serif;font-weight:800;color:#fff;font-size:14px;}
 .perm-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
 .perm-info{flex:1;}
@@ -3120,7 +3158,7 @@ async function _syncBastionFromGlobal(bastionIdx) {
     const global = await FortizedSocial.getGlobalBastion(b.globalId);
     if (!global) return;
     // Merge global fields into local copy (owner-managed data)
-    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner'];
+    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview'];
     let changed = false;
     for (const key of syncFields) {
       if (global[key] !== undefined && JSON.stringify(b[key]) !== JSON.stringify(global[key])) {
@@ -3423,7 +3461,7 @@ function updateTopbar(v) {
   if (sep) sep.style.display = 'none';
   if (desc) desc.textContent = '';
   if (acts) acts.innerHTML = '';
-  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'',bsettings:'Bastion Settings',bhub:'Bastion Hub',bastion:'Bastions'};
+  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'',bsettings:'Bastion Settings',bhub:'Overview',bastion:'Bastions'};
   if (labels[v]) title.textContent = labels[v];
   updateOnyxDisplay();
 }
@@ -3819,8 +3857,8 @@ function toggleBastionDropdown(e, idx) {
       <div class="bd-action" onclick="openBastion(${idx});document.querySelector('.bastion-dropdown')?.remove()">
         <span class="bd-icon">🏰</span> Open Bastion
       </div>
-      <div class="bd-action" onclick="openBastion(${idx});setTimeout(()=>openBastionHub(),100);document.querySelector('.bastion-dropdown')?.remove()">
-        <span class="bd-icon">📋</span> Bastion Hub
+      <div class="bd-action" onclick="openBastion(${idx});setTimeout(()=>openOverviewRoom(),100);document.querySelector('.bastion-dropdown')?.remove()">
+        <span class="bd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span> Overview
       </div>
       <div class="bd-action" onclick="openBastion(${idx});openBastionSettings('invites');document.querySelector('.bastion-dropdown')?.remove()">
         <span class="bd-icon">🔗</span> Invite Friends
@@ -5388,15 +5426,19 @@ function openBastion(idx) {
     const b = CU.bastions[idx];
     if (!b) return;
     const lastChKey = 'ftz_last_ch_' + (b.globalId||b.name||idx);
-    const lastChIdx = parseInt(localStorage.getItem(lastChKey)||'-1');
-    const chs = b.channels||[];
-    const fallbackCh = chs.findIndex(ch => ch.type !== 'voice' && ch.type !== 'forum');
-    const autoChIdx = (lastChIdx >= 0 && lastChIdx < chs.length) ? lastChIdx : fallbackCh;
-    if (autoChIdx >= 0) {
-      selectChannel(autoChIdx);
+    const lastVal = localStorage.getItem(lastChKey) || 'overview';
+    if (lastVal === 'overview') {
+      openOverviewRoom();
     } else {
-      const wrap = document.getElementById('bastion-chat-wrap');
-      if (wrap) wrap.innerHTML=`<div class="empty-state"><div class="ei">🏰</div><h3>Pick a channel</h3><p>Select a text or voice channel from the sidebar.</p></div>`;
+      const lastChIdx = parseInt(lastVal);
+      const chs = b.channels||[];
+      const fallbackCh = chs.findIndex(ch => ch.type !== 'voice' && ch.type !== 'forum');
+      const autoChIdx = (lastChIdx >= 0 && lastChIdx < chs.length) ? lastChIdx : fallbackCh;
+      if (autoChIdx >= 0) {
+        selectChannel(autoChIdx);
+      } else {
+        openOverviewRoom();
+      }
     }
     document.getElementById('member-list').innerHTML='';
   });
@@ -5450,6 +5492,12 @@ function renderBastionSidebar(scroll) {
   html+=renderMoodBar(b);
 
   html+=`<div class="sidebar-divider"></div>`;
+
+  // ── Overview Room (always on top, not deletable) ──
+  html+=`<div class="ch-overview-item${curChannel==='overview'?' active':''}" onclick="openOverviewRoom()">
+    <span class="ov-sidebar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+    <span>Overview</span>
+  </div>`;
 
   // ── Room categories (collapsible) ──
   const textChs=chs.filter(c=>c.type==='text'||!c.type);
@@ -5583,7 +5631,7 @@ function toggleBastionNameDropdown(e) {
       <span class="bnd-chip">${boostLv>0?'⚡ Lv.'+boostLv:'⚡ No Boost'}</span>
     </div>
     <div class="bnd-actions">
-      <div class="bnd-action" onclick="closeBastionNameDD();openBastionHub()"><span class="bnd-icon">🏰</span> Bastion Hub</div>
+      <div class="bnd-action" onclick="closeBastionNameDD();openOverviewRoom()"><span class="bnd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span> Overview</div>
       <div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('invites')"><span class="bnd-icon">🔗</span> Invite Friends</div>
       <div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('boost')"><span class="bnd-icon">⚡</span> Boost</div>
       ${(isOwner||hasPerm('manage_channels'))?`<div class="bnd-action" onclick="closeBastionNameDD();showCreateRoomModal(curBastion)"><span class="bnd-icon">➕</span> Create Room</div>`:''}
@@ -5631,7 +5679,7 @@ function selectChannel(idx) {
     const b = CU.bastions[curBastion];
     localStorage.setItem('ftz_last_ch_' + (b.globalId||b.name||curBastion), idx);
   }
-  document.querySelectorAll('.ch-item,.ch-item-2027,.vc-item-2027').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.ch-item,.ch-item-2027,.vc-item-2027,.ch-overview-item').forEach(el=>el.classList.remove('active'));
   const el=document.getElementById('ch-sb-'+idx);
   if (el) el.classList.add('active');
 
@@ -7965,9 +8013,8 @@ async function joinBastionByCode() {
 // BASTION HUB (member-facing)
 // ════════════════════════════════════════════
 function openBastionHub() {
-  if (curBastion === null) return;
-  showView('bhub');
-  renderBastionHub();
+  // Legacy — redirect to new Overview Room
+  openOverviewRoom();
 }
 function renderBastionHub() {
   const main = document.getElementById('bhub-main');
@@ -8062,6 +8109,277 @@ function renderBastionHub() {
       </button>
     </div>` : ''}
   `;
+}
+
+// ════════════════════════════════════════════
+// OVERVIEW ROOM (replaces Bastion Hub)
+// ════════════════════════════════════════════
+function openOverviewRoom() {
+  if (curBastion === null) return;
+  _teardownPollLive?.();
+  curChannel = 'overview';
+  // Remember last channel as overview
+  const b = CU.bastions?.[curBastion];
+  if (b) localStorage.setItem('ftz_last_ch_' + (b.globalId||b.name||curBastion), 'overview');
+  // Ensure we're in bastion view
+  if (_currentView !== 'bastion') showView('bastion');
+  // Update sidebar active states
+  document.querySelectorAll('.ch-item,.ch-item-2027,.vc-item-2027').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.ch-overview-item').forEach(el=>el.classList.add('active'));
+  renderOverviewRoom();
+  // Update topbar
+  const title = document.getElementById('topbar-title');
+  if (title) title.textContent = '';
+  const sep = document.getElementById('tb-sep');
+  const desc = document.getElementById('tb-desc');
+  if (sep) sep.style.display = 'none';
+  if (desc) desc.textContent = '';
+  // Hide member list for overview
+  const ml = document.getElementById('member-list');
+  if (ml) ml.innerHTML = '';
+}
+
+function renderOverviewRoom() {
+  const b = CU.bastions?.[curBastion];
+  const wrap = document.getElementById('bastion-chat-wrap');
+  if (!b || !wrap) return;
+  const isOwner = b.owner === CU.username;
+  const hasAdmin = hasPerm('administrator') || hasPerm('manage_channels');
+  const canEdit = isOwner || hasAdmin;
+  const ov = b.overview || {};
+  const bannerSrc = b.banner || b.icon || '';
+  const emblemHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" onerror="this.outerHTML='🏰'">` : `<span style="font-size:36px;">${b.emblem||'🏰'}</span>`;
+  const memberCount = Object.keys(b.memberRoles||{}).length || (b.members||[]).length || 1;
+  const channelCount = (b.channels||[]).length;
+  const boostLv = b.boostLevel || 0;
+  const tierNames = ['None','Reinforced','Fortified','Sovereign'];
+  const chs = b.channels || [];
+  const roles = b.roles || [];
+
+  // Gather latest announcements from announcement channels
+  const annChs = chs.filter(c => c.type === 'announcement');
+  // Gather forums
+  const forumChs = chs.filter(c => c.type === 'forum');
+
+  // Custom welcome text
+  const welcomeText = ov.welcomeText || b.desc || '';
+  // Custom sections visibility
+  const showAnnouncements = ov.showAnnouncements !== false;
+  const showForums = ov.showForums !== false;
+  const showStats = ov.showStats !== false;
+  const showRoles = ov.showRoles !== false;
+  const showInvite = ov.showInvite !== false;
+
+  // Invites
+  const invites = b.invites || [];
+  const activeInvite = invites.find(inv => {
+    if (inv.expires && new Date(inv.expires) < new Date()) return false;
+    if (inv.maxUses && inv.uses >= inv.maxUses) return false;
+    return true;
+  });
+  const inviteCode = activeInvite ? activeInvite.code : null;
+
+  let html = '<div class="overview-room">';
+
+  // Edit bar for owners/admins
+  if (canEdit) {
+    html += `<div class="ov-edit-bar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <span class="ov-eb-label">Overview Room — Editable</span>
+      <button class="btn-g" style="font-size:11px;padding:5px 12px;" onclick="openOverviewEditor()">Customize</button>
+    </div>`;
+  }
+
+  // Banner
+  if (bannerSrc) {
+    html += `<div class="ov-banner">
+      <img src="${escapeHTML(bannerSrc)}" onerror="this.parentElement.style.display='none'" alt="">
+      <div class="ov-gradient"></div>
+      <div class="ov-emblem"><div class="ov-icon">${emblemHTML}</div></div>
+    </div>`;
+  }
+
+  // Identity
+  html += `<div class="ov-identity" style="${bannerSrc?'':'padding-top:24px;'}">
+    ${bannerSrc ? '' : `<div class="ov-emblem" style="position:relative;margin-bottom:12px;"><div class="ov-icon">${emblemHTML}</div></div>`}
+    <div class="ov-name">${escapeHTML(b.name)}</div>
+    ${b.tagline ? `<div class="ov-tagline">${escapeHTML(b.tagline)}</div>` : ''}
+  </div>`;
+
+  // Badges row
+  html += `<div class="ov-badges">
+    <span class="ov-badge">👥 ${memberCount} member${memberCount!==1?'s':''}</span>
+    <span class="ov-badge">${b.public!==false?'🌍 Public':'🔒 Private'}</span>
+    ${boostLv > 0 ? `<span class="ov-badge" style="color:var(--accent);border-color:rgba(255,249,62,.15);background:rgba(255,249,62,.05);">⚡ ${tierNames[boostLv]}</span>` : ''}
+    <span class="ov-badge">📂 ${channelCount} room${channelCount!==1?'s':''}</span>
+  </div>`;
+
+  html += '<div class="ov-content">';
+
+  // Welcome / About card
+  if (welcomeText) {
+    html += `<div class="ov-section">
+      <div class="ov-welcome-card">
+        <div class="ov-wc-text">${escapeHTML(welcomeText)}</div>
+      </div>
+    </div>`;
+  }
+
+  // Stats grid
+  if (showStats) {
+    html += `<div class="ov-section">
+      <div class="ov-section-header">
+        <span class="ov-section-title">Community Stats</span>
+      </div>
+      <div class="ov-stats-grid">
+        <div class="ov-stat-card"><div class="ov-sc-val">${memberCount}</div><div class="ov-sc-label">Members</div></div>
+        <div class="ov-stat-card"><div class="ov-sc-val">${channelCount}</div><div class="ov-sc-label">Rooms</div></div>
+        <div class="ov-stat-card"><div class="ov-sc-val">${roles.length}</div><div class="ov-sc-label">Roles</div></div>
+        <div class="ov-stat-card"><div class="ov-sc-val">Lv.${boostLv}</div><div class="ov-sc-label">Boost</div></div>
+      </div>
+    </div>`;
+  }
+
+  // Latest announcements
+  if (showAnnouncements && annChs.length > 0) {
+    html += `<div class="ov-section">
+      <div class="ov-section-header">
+        <span class="ov-section-title">Latest announcements</span>
+        <span class="ov-section-link" onclick="selectChannel(${chs.indexOf(annChs[0])})">See all</span>
+      </div>
+      <div class="ov-card-row">
+        ${annChs.map(ch => {
+          const ri = chs.indexOf(ch);
+          return `<div class="ov-ann-card" onclick="selectChannel(${ri})">
+            <div class="ov-ac-title">📢 ${escapeHTML(ch.name)}</div>
+            <div class="ov-ac-meta"><span>in #${escapeHTML(ch.name)}</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Recent forum activity
+  if (showForums && forumChs.length > 0) {
+    html += `<div class="ov-section">
+      <div class="ov-section-header">
+        <span class="ov-section-title">Recent forum activity</span>
+        <span class="ov-section-link" onclick="selectChannel(${chs.indexOf(forumChs[0])})">See all</span>
+      </div>
+      <div class="ov-card-row">
+        ${forumChs.map(ch => {
+          const ri = chs.indexOf(ch);
+          return `<div class="ov-ann-card" onclick="openForumChannel(${ri})">
+            <div class="ov-ac-title">💬 ${escapeHTML(ch.name)}</div>
+            <div class="ov-ac-meta"><span>Forum room</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Your Roles
+  if (showRoles) {
+    const myRoles = ((b.memberRoles||{})[CU.username]||[]).map(rid => roles.find(r=>r.id===rid)).filter(Boolean);
+    html += `<div class="ov-section">
+      <div class="ov-section-header">
+        <span class="ov-section-title">Your Roles</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${myRoles.length ? myRoles.map(r => `<span class="role-tag" style="color:${r.color};background:${r.color}22;border:1px solid ${r.color}44;">${escapeHTML(r.name)}</span>`).join('') : '<span style="font-size:12.5px;color:var(--muted);">No roles assigned yet.</span>'}
+      </div>
+    </div>`;
+  }
+
+  // Invite section
+  if (showInvite) {
+    html += `<div class="ov-section">
+      <div class="ov-section-header">
+        <span class="ov-section-title">Invite Friends</span>
+      </div>
+      <div class="ov-welcome-card">
+        <div class="ov-wc-text" style="margin-bottom:10px;">Share an invite link to bring people into ${escapeHTML(b.name)}.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${inviteCode ? `<button class="btn-a" style="font-size:12px;padding:7px 14px;" onclick="copyInvite('${inviteCode}')">Copy Invite Link</button>` : ''}
+          <button class="btn-g" style="font-size:12px;padding:7px 14px;" onclick="openBastionSettings('invites')">Manage Invites</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  html += '</div></div>';
+  wrap.innerHTML = html;
+}
+
+// Overview editor for owners/admins
+function openOverviewEditor() {
+  const b = CU.bastions?.[curBastion];
+  if (!b) return;
+  const ov = b.overview || {};
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay open';
+  modal.id = 'modal-ov-editor';
+  modal.innerHTML = `<div class="modal" style="max-width:520px;">
+    <div class="modal-bar"></div>
+    <div class="modal-body" style="padding:24px;">
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:18px;display:flex;align-items:center;gap:8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Customize Overview
+      </div>
+
+      <label style="font-size:12px;font-weight:700;color:var(--muted-light);margin-bottom:4px;display:block;">Welcome Message</label>
+      <textarea id="ov-ed-welcome" rows="3" class="field-input" style="resize:vertical;min-height:60px;margin-bottom:14px;">${escapeHTML(ov.welcomeText || b.desc || '')}</textarea>
+
+      <div style="font-size:12px;font-weight:700;color:var(--muted-light);margin-bottom:8px;">Visible Sections</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
+          <input type="checkbox" id="ov-ed-stats" ${ov.showStats!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Community Stats
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
+          <input type="checkbox" id="ov-ed-announcements" ${ov.showAnnouncements!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Latest Announcements
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
+          <input type="checkbox" id="ov-ed-forums" ${ov.showForums!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Recent Forum Activity
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
+          <input type="checkbox" id="ov-ed-roles" ${ov.showRoles!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Your Roles
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
+          <input type="checkbox" id="ov-ed-invite" ${ov.showInvite!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Invite Friends
+        </label>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button class="btn-g" style="flex:1;padding:10px;" onclick="document.getElementById('modal-ov-editor').remove()">Cancel</button>
+        <button class="btn-a" style="flex:1;padding:10px;" onclick="saveOverviewConfig()">Save</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+async function saveOverviewConfig() {
+  const b = CU.bastions?.[curBastion];
+  if (!b) return;
+  b.overview = {
+    welcomeText: document.getElementById('ov-ed-welcome')?.value?.trim() || '',
+    showStats: document.getElementById('ov-ed-stats')?.checked !== false,
+    showAnnouncements: document.getElementById('ov-ed-announcements')?.checked !== false,
+    showForums: document.getElementById('ov-ed-forums')?.checked !== false,
+    showRoles: document.getElementById('ov-ed-roles')?.checked !== false,
+    showInvite: document.getElementById('ov-ed-invite')?.checked !== false,
+  };
+  document.getElementById('modal-ov-editor')?.remove();
+  try {
+    await saveUser();
+    if (b.globalId) {
+      await firebase.database().ref('bastions/' + b.globalId + '/overview').set(b.overview);
+      await firebase.database().ref('globalBastions/' + b.globalId + '/overview').set(b.overview);
+    }
+    toast('Overview updated!', 'success');
+  } catch(e) { toast('Failed to save: ' + e.message, 'error'); }
+  renderOverviewRoom();
 }
 
 // ════════════════════════════════════════════
@@ -13888,7 +14206,7 @@ function _listenBastionUpdates() {
       const local = CU.bastions[idx];
       if (!local || (local.globalId || local.name) !== gid) return;
       // Sync important fields from global bastion
-      const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner'];
+      const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview'];
       let changed = false;
       syncFields.forEach(f => {
         if (fresh[f] !== undefined && JSON.stringify(fresh[f]) !== JSON.stringify(local[f])) {
@@ -14955,7 +15273,7 @@ function showRailBastionCtx(e, idx) {
   const groups = [
     { items: [
       { icon: _ctxSvg('home'), label: 'Open Bastion', action: () => openBastion(idx) },
-      { icon: _ctxSvg('profile'), label: 'Bastion Hub', action: () => { openBastion(idx); setTimeout(()=>openBastionHub(),100); } },
+      { icon: _ctxSvg('profile'), label: 'Overview', action: () => { openBastion(idx); setTimeout(()=>openOverviewRoom(),100); } },
       { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => toast('All read!', 'success') },
       { icon: _ctxSvg('mute'), label: b._muted ? 'Unmute Notifications' : 'Mute Notifications', action: () => { b._muted = !b._muted; toast(b._muted ? 'Bastion muted' : 'Bastion unmuted', 'info'); } },
       { icon: _ctxSvg('addFriend'), label: 'Invite People', action: () => { openBastion(idx); setTimeout(()=>openBastionSettings('invites'),100); } },

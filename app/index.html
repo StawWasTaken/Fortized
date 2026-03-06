@@ -5993,6 +5993,10 @@ function loadChatChannel(idx) {
           <p>${escapeHTML(ch.desc||'Welcome to #'+ch.name+'!')}</p>
         </div>
       </div>
+      <div class="typing-indicator" id="ch-typing-bar" style="opacity:0;">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <span id="ch-typing-text"></span>
+      </div>
       ${buildChatInputBar({inputId:'ch-input',placeholder:'Message #'+escapeHTML(ch.name)+'…',context:'ch',chIdx:idx})}
     </div>`;
   // Apply focus mode if enabled
@@ -6020,6 +6024,7 @@ async function loadChannelMessages(idx) {
     renderMessages(msgsEl,msgs||[],'ch');
     scrollBottom('ch-msgs-'+idx, true);
     _attachChLiveEdits(b.globalId||b.name, ch.name);
+    listenChannelTyping(b.globalId||b.name, ch.name);
     _chListener=FortizedSocial.listenBastionChannel(b.globalId||b.name,ch.name,msg=>{
       if (curChannel!==idx) return;
       const el=document.getElementById('ch-msgs-'+idx);
@@ -6196,6 +6201,7 @@ async function sendChannelMsg(idx) {
   if (!ch) return;
   if (autoModCheck(text,b)) return;
   inp.value=''; inp.style.height='auto';
+  _stopChannelTypingBroadcast();
   const rep=replyingTo;
   cancelReply('ch');
   const echoKey = CU.username + '|' + text;
@@ -6392,8 +6398,15 @@ function appendMessage(container, msg, context, prevAuthor) {
         </div>
         <div class="msg-text" id="mt-${avId}">${parseMD(escapeHTML(msg.text||''))}${editTag}</div>
         ${reactHTML?`<div class="msg-reactions">${reactHTML}</div>`:''}
+        <div class="msg-thread-slot" id="thread-slot-${safeId}"></div>
       </div>
       ${buildMsgActions(msg,context,id)}`;
+    // Load thread count badge for bastion channels
+    if (context === 'ch' && curBastion !== null) {
+      const _tb = CU.bastions?.[curBastion]; const _tch = _tb?.channels?.[curChannel];
+      const _tbid = _tb?.globalId||_tb?.name; const _tchName = _tch?.name||'general';
+      if (_tbid) _loadThreadBadge(_tbid, _tchName, id, safeId, msg.text||'', msg.from||'');
+    }
     FortizedSocial.getUserByName(msg.from).then(u=>{
       if (!u) return;
       if(u.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,u.displayName||msg.from,40);}
@@ -6418,8 +6431,15 @@ function appendMessage(container, msg, context, prevAuthor) {
         ${fwdHTML}${replyHTML}
         <div class="msg-text" id="${textId}">${parseMD(escapeHTML(msg.text||''))}${editTag}</div>
         ${reactHTML?`<div class="msg-reactions">${reactHTML}</div>`:''}
+        <div class="msg-thread-slot" id="thread-slot-${safeId}"></div>
       </div>
       ${buildMsgActions(msg,context,id)}`;
+    // Load thread count badge for bastion channels (continuation messages)
+    if (context === 'ch' && curBastion !== null) {
+      const _tb2 = CU.bastions?.[curBastion]; const _tch2 = _tb2?.channels?.[curChannel];
+      const _tbid2 = _tb2?.globalId||_tb2?.name; const _tchName2 = _tch2?.name||'general';
+      if (_tbid2) _loadThreadBadge(_tbid2, _tchName2, id, safeId, msg.text||'', msg.from||'');
+    }
   }
   container.appendChild(row);
   // Blur messages from blocked or ignored users
@@ -6465,6 +6485,7 @@ function buildMsgActions(msg, context, id) {
   return `<div class="msg-acts">
     <button onclick="addReactionUI(event,'${safeId}','${context}')" title="React"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
     <button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg></button>
+    ${(context==='ch'||context==='channel')?`<button onclick="openThread('${safeId}','${safeText}','${safeFrom}')" title="Thread"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`:''}
     <button onclick="navigator.clipboard.writeText(document.querySelector('[data-msgid=\\'${safeId}\\']')?.dataset.text||'')" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
     <button onclick="forwardMsg('${safeText}')" title="Quote"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>
     ${isOwn?`<button onclick="editMsg('${safeId}')" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`:''}
@@ -17368,7 +17389,7 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           </button>
           <textarea id="${inputId}" placeholder="${placeholder}" rows="1"
             onkeydown="${keydown}"
-            oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':''}updateCharCount('${inputId}')"
+            oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}')"
             onpaste="handlePaste(event,'${inputId}')"></textarea>
           <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
           <div class="chat-input-actions">
@@ -24655,14 +24676,21 @@ function openThread(msgId, text, from) {
       <div class="to-text">${escapeHTML(text.slice(0,200))}</div>
     </div>
     <div class="thread-replies" id="thread-replies"></div>
+    <div class="typing-indicator" id="thread-typing-bar" style="opacity:0;padding:4px 14px 2px;">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+      <span id="thread-typing-text"></span>
+    </div>
     <div class="thread-compose">
-      <textarea id="thread-input" placeholder="Reply to thread…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_sendThreadReply();}"></textarea>
+      <textarea id="thread-input" placeholder="Reply to thread…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_sendThreadReply();}" oninput="_broadcastThreadTyping()"></textarea>
       <button onclick="_sendThreadReply()">Reply</button>
     </div>`;
   document.body.appendChild(panel);
   _listenThreadReplies(bid, chName, msgId);
+  _listenThreadTyping(bid, chName, msgId);
 }
 function _closeThread() {
+  _stopThreadTypingBroadcast();
+  if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch {} _threadTypingListenerOff = null; }
   if (_threadListener) { _threadListener(); _threadListener = null; }
   _activeThread = null;
   const p = document.getElementById('thread-panel');
@@ -24698,6 +24726,7 @@ async function _sendThreadReply() {
   const text = input?.value?.trim();
   if (!text) return;
   input.value = '';
+  _stopThreadTypingBroadcast();
   const { bid, chName, msgId } = _activeThread;
   const reply = { from: CU.username, text, timestamp: new Date().toISOString() };
   try {
@@ -24705,7 +24734,132 @@ async function _sendThreadReply() {
     // Update thread count on the parent message
     const countRef = firebase.database().ref(`threadCounts/${bid}/${chName}/${msgId}`);
     countRef.transaction(v => (v||0)+1);
+    // Update thread badge on the parent message
+    const safeParent = msgId.replace(/[^a-z0-9_\-]/gi, '-');
+    _loadThreadBadge(bid, chName, msgId, safeParent, _activeThread.text||'', _activeThread.from||'');
   } catch(e) { toast('Failed to reply','error'); }
+}
+
+// ── Thread typing indicator ───────────────────────
+let _threadTypingTimeout = null;
+let _threadIsTyping = false;
+let _threadTypingListenerOff = null;
+
+function _threadTypingPath(bid, chName, msgId) { return 'threadTyping/' + bid + '/' + chName + '/' + msgId; }
+
+function _broadcastThreadTyping() {
+  if (!CU?.username || !_activeThread) return;
+  const { bid, chName, msgId } = _activeThread;
+  const ref = firebase.database().ref(_threadTypingPath(bid, chName, msgId) + '/' + CU.username);
+  if (!_threadIsTyping) {
+    _threadIsTyping = true;
+    ref.set({ ts: Date.now(), username: CU.username });
+    ref.onDisconnect().remove();
+  }
+  clearTimeout(_threadTypingTimeout);
+  _threadTypingTimeout = setTimeout(() => { _threadIsTyping = false; ref.remove().catch(() => {}); }, 2500);
+}
+
+function _stopThreadTypingBroadcast() {
+  _threadIsTyping = false;
+  clearTimeout(_threadTypingTimeout);
+  if (CU?.username && _activeThread) {
+    const { bid, chName, msgId } = _activeThread;
+    firebase.database().ref(_threadTypingPath(bid, chName, msgId) + '/' + CU.username).remove().catch(() => {});
+  }
+}
+
+function _listenThreadTyping(bid, chName, msgId) {
+  if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch {} _threadTypingListenerOff = null; }
+  const ref = firebase.database().ref(_threadTypingPath(bid, chName, msgId));
+  const handler = ref.on('value', snap => {
+    const data = snap.val() || {};
+    const others = Object.values(data).filter(v => v && v.username && v.username !== CU.username);
+    const bar = document.getElementById('thread-typing-bar');
+    const txt = document.getElementById('thread-typing-text');
+    if (!bar || !txt) return;
+    if (others.length > 0) {
+      const names = others.slice(0, 2).map(v => '<strong style="color:rgba(255,255,255,.5);">' + escapeHTML(v.username) + '</strong>');
+      txt.innerHTML = names.join(', ') + (others.length === 1 ? ' is typing...' : ' are typing...');
+      bar.style.opacity = '1';
+    } else {
+      bar.style.opacity = '0';
+    }
+  });
+  _threadTypingListenerOff = () => ref.off('value', handler);
+}
+
+// ── Thread count badge loader ─────────────────────
+function _loadThreadBadge(bid, chName, msgId, safeId, text, from) {
+  firebase.database().ref(`threadCounts/${bid}/${chName}/${msgId}`).get().then(snap => {
+    const count = snap.val() || 0;
+    const slot = document.getElementById('thread-slot-' + safeId);
+    if (!slot) return;
+    if (count > 0) {
+      slot.innerHTML = `<div class="msg-thread-badge" onclick="openThread('${escapeHTML(msgId)}','${escapeHTML((text||'').slice(0,100).replace(/'/g,' '))}','${escapeHTML(from)}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        ${count} ${count===1?'reply':'replies'}
+      </div>`;
+    } else {
+      slot.innerHTML = '';
+    }
+  }).catch(() => {});
+}
+
+// ── Channel Typing Indicator ──────────────────────
+let _chTypingTimeout = null;
+let _chIsTyping = false;
+let _chTypingListenerOff = null;
+
+function _chTypingPath(bid, chName) { return 'chTyping/' + bid + '/' + chName; }
+
+function broadcastChannelTyping() {
+  if (!CU?.username || curBastion === null || curChannel === null) return;
+  const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
+  const bid = b?.globalId || b?.name; const chName = ch?.name || 'general';
+  if (!bid) return;
+  const ref = firebase.database().ref(_chTypingPath(bid, chName) + '/' + CU.username);
+  if (!_chIsTyping) {
+    _chIsTyping = true;
+    ref.set({ ts: Date.now(), username: CU.username });
+    ref.onDisconnect().remove();
+  }
+  clearTimeout(_chTypingTimeout);
+  _chTypingTimeout = setTimeout(() => { _chIsTyping = false; ref.remove().catch(() => {}); }, 2500);
+}
+
+function _stopChannelTypingBroadcast() {
+  _chIsTyping = false;
+  clearTimeout(_chTypingTimeout);
+  if (CU?.username && curBastion !== null && curChannel !== null) {
+    const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
+    const bid = b?.globalId || b?.name; const chName = ch?.name || 'general';
+    if (bid) firebase.database().ref(_chTypingPath(bid, chName) + '/' + CU.username).remove().catch(() => {});
+  }
+}
+
+function listenChannelTyping(bid, chName) {
+  if (_chTypingListenerOff) { try { _chTypingListenerOff(); } catch {} _chTypingListenerOff = null; }
+  const ref = firebase.database().ref(_chTypingPath(bid, chName));
+  const handler = ref.on('value', snap => {
+    const data = snap.val() || {};
+    const others = Object.values(data).filter(v => v && v.username && v.username !== CU.username);
+    const bar = document.getElementById('ch-typing-bar');
+    const txt = document.getElementById('ch-typing-text');
+    if (!bar || !txt) return;
+    if (others.length > 0) {
+      const names = others.slice(0, 3).map(v => '<strong style="color:rgba(255,255,255,.5);">' + escapeHTML(v.username) + '</strong>');
+      if (others.length <= 3) {
+        txt.innerHTML = names.join(', ') + (others.length === 1 ? ' is typing...' : ' are typing...');
+      } else {
+        txt.innerHTML = names.join(', ') + ' and ' + (others.length - 3) + ' more are typing...';
+      }
+      bar.style.opacity = '1';
+    } else {
+      bar.style.opacity = '0';
+    }
+  });
+  _chTypingListenerOff = () => ref.off('value', handler);
 }
 
 // ════════════════════════════════════════════

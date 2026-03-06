@@ -2893,10 +2893,42 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 <script>
 
 // ══════════════════════════════════════════════════════════
-// WEB ACTIVITY HELPERS
+// COMPANION BRIDGE  (localhost process scanner)
 // ══════════════════════════════════════════════════════════
-// Pure web app — no native process detection available.
-// Activity is set manually by the user or via screen-share detection.
+// The Fortized Companion is a tiny local helper (Python script) that
+// exposes running processes on http://127.0.0.1:47832.
+// If it's not running we fall back to manual activity picking.
+const COMPANION_PORT = 47832;
+const COMPANION_BASE = 'http://127.0.0.1:' + COMPANION_PORT;
+let _companionOnline = false;
+
+async function companionFetch(path) {
+  try {
+    const r = await fetch(COMPANION_BASE + path, { signal: AbortSignal.timeout(1500) });
+    if (!r.ok) return null;
+    _companionOnline = true;
+    return await r.json();
+  } catch {
+    _companionOnline = false;
+    return null;
+  }
+}
+
+async function companionGetProcesses() {
+  const data = await companionFetch('/processes');
+  return data?.processes || null;
+}
+
+async function companionGetIdleTime() {
+  const data = await companionFetch('/idle');
+  return data?.idle_seconds ?? null;
+}
+
+async function companionPing() {
+  const data = await companionFetch('/ping');
+  _companionOnline = !!(data?.status === 'ok');
+  return _companionOnline;
+}
 
 // ══════════════════════════════════════════════════════════
 // FAVICON NOTIFICATION SWAP
@@ -3103,7 +3135,33 @@ const FtzStatus = (() => {
     }
   }
 
-  // Idle detection is purely browser-based (DOM events + visibilitychange above).
+  // ── Companion-based system idle detection ───────────────
+  let _companionIdlePoller = null;
+  const COMPANION_IDLE_POLL_MS = 15_000;
+  const COMPANION_IDLE_THRESHOLD = 10 * 60; // 10 min
+
+  function _startCompanionIdlePoll() {
+    if (_companionIdlePoller) return;
+    _companionIdlePoller = setInterval(async () => {
+      if (!CU?.username || !_companionOnline) return;
+      try {
+        const idleSec = await companionGetIdleTime();
+        if (typeof idleSec !== 'number' || idleSec < 0) return;
+        if (idleSec >= COMPANION_IDLE_THRESHOLD && _manualStatus === 'online' && !_autoAway) {
+          _goIdle();
+        } else if (idleSec < COMPANION_IDLE_THRESHOLD && _autoAway) {
+          _autoAway = false;
+          CU.status = _manualStatus || 'online';
+          _broadcast(CU.status);
+          updateUserbar();
+        }
+      } catch {}
+    }, COMPANION_IDLE_POLL_MS);
+  }
+
+  function _stopCompanionIdlePoll() {
+    if (_companionIdlePoller) { clearInterval(_companionIdlePoller); _companionIdlePoller = null; }
+  }
 
   function initIdle() {
     // DOM-level activity detection (works in browser + Electron)
@@ -3126,7 +3184,8 @@ const FtzStatus = (() => {
       }
     });
 
-    // Browser idle detection is handled above via DOM events + visibilitychange.
+    // If companion is running, use system-level idle detection too
+    companionPing().then(online => { if (online) _startCompanionIdlePoll(); });
 
     // Use Firebase onDisconnect to reliably set offline status when tab closes
     if (CU?.username) {
@@ -3136,6 +3195,7 @@ const FtzStatus = (() => {
     }
     window.addEventListener('beforeunload', () => {
       if (!CU?.username) return;
+      _stopCompanionIdlePoll();
       if (typeof _stopAutoActivityDetection === 'function') _stopAutoActivityDetection();
       _broadcast('offline');
     });
@@ -18997,8 +19057,18 @@ async function renderActivityDetectionTab(main) {
   if (!main) return;
   const customApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
   const activityEnabled = localStorage.getItem('ftz_activity_detection') !== 'false';
+  const companionUp = await companionPing();
 
-  // ── Current activity section ──
+  // ── Detected apps from companion ──
+  let detectedApps = [];
+  if (companionUp && activityEnabled) {
+    try {
+      const procs = await companionGetProcesses();
+      if (procs) detectedApps = _matchAllRunningApps(procs);
+    } catch {}
+  }
+
+  // ── Current activity ──
   const currentGame = _gameActivity;
   let currentHtml = '';
   if (currentGame) {
@@ -19011,10 +19081,55 @@ async function renderActivityDetectionTab(main) {
       + '<button onclick="setGameActivity(null);renderActivityDetectionTab(this.closest(\'.settings-main\'))" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);color:var(--red);font-size:11px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;">Clear</button>'
       + '</div>';
   } else {
-    currentHtml = '<div style="text-align:center;padding:24px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
-      + '<div style="font-size:28px;margin-bottom:8px;">😴</div>'
-      + '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">No activity set</div>'
-      + '<div style="font-size:12px;color:var(--muted);">Pick a game or app below to show what you\'re up to.</div>'
+    currentHtml = '<div style="text-align:center;padding:20px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
+      + '<div style="font-size:28px;margin-bottom:6px;">😴</div>'
+      + '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">No activity detected</div>'
+      + (companionUp ? '<div style="font-size:12px;color:var(--muted);margin-top:4px;">Open a game or app — it\'ll show up automatically.</div>' : '')
+      + '</div>';
+  }
+
+  // ── Companion status banner ──
+  let companionHtml = '';
+  if (companionUp) {
+    companionHtml = '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.12);border-radius:12px;margin-bottom:16px;">'
+      + '<div style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;flex-shrink:0;"></div>'
+      + '<div style="font-size:12px;color:rgba(62,207,110,.8);font-weight:600;">Companion connected</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-left:auto;">Auto-detecting apps</div>'
+      + '</div>';
+  } else {
+    companionHtml = '<div style="padding:16px;background:rgba(255,200,50,.03);border:1px solid rgba(255,200,50,.12);border-radius:12px;margin-bottom:16px;">'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+      + '<div style="width:8px;height:8px;border-radius:50%;background:rgba(255,200,50,.6);flex-shrink:0;"></div>'
+      + '<div style="font-size:12px;color:rgba(255,200,50,.8);font-weight:600;">Companion not running</div>'
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--muted);line-height:1.5;">To auto-detect games &amp; apps, run the Fortized Companion on your computer:</div>'
+      + '<div style="margin-top:8px;padding:10px 14px;background:rgba(0,0,0,.3);border-radius:8px;font-family:monospace;font-size:12px;color:rgba(255,255,255,.7);user-select:all;">python3 fortized-companion.py</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-top:8px;">Download it from the <b>companion</b> folder. Without it, you can still pick games manually below.</div>'
+      + '</div>';
+  }
+
+  // ── Detected apps (live from companion) ──
+  let detectedHtml = '';
+  if (companionUp && detectedApps.length) {
+    detectedHtml = '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
+    detectedApps.forEach(app => {
+      const enabled = _isAppActivityEnabled(app.name);
+      const isActive = _gameActivity?.name === app.name;
+      detectedHtml += '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:'+(isActive?'rgba(62,207,110,.06)':enabled?'rgba(62,207,110,.02)':'var(--panel)')+';border:1px solid '+(isActive?'rgba(62,207,110,.25)':enabled?'rgba(62,207,110,.1)':'var(--border)')+';border-radius:12px;transition:all .15s;">'
+        + '<span style="font-size:22px;flex-shrink:0;">' + app.icon + '</span>'
+        + '<div style="flex:1;min-width:0;">'
+        + '<div style="font-size:13px;font-weight:700;color:#fff;">' + escapeHTML(app.name) + '</div>'
+        + '<div style="font-size:10.5px;color:'+(isActive?'#3ecf6e':enabled?'rgba(62,207,110,.5)':'var(--muted)')+';">'+(isActive?'Currently showing as activity':enabled?'Detected — will auto-show':'Hidden — won\'t show as status')+'</div>'
+        + '</div>'
+        + '<div class="toggle '+(enabled?'on':'')+'" onclick="toggleDetectedApp(this,\''+escapeHTML(app.name).replace(/'/g,"\\'")+'\')"></div>'
+        + '</div>';
+    });
+    detectedHtml += '</div>';
+  } else if (companionUp) {
+    detectedHtml = '<div style="text-align:center;padding:20px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
+      + '<div style="font-size:28px;margin-bottom:6px;">🔍</div>'
+      + '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">No known apps detected</div>'
+      + '<div style="font-size:12px;color:var(--muted);margin-top:4px;">Open a game and it will appear here automatically.</div>'
       + '</div>';
   }
 
@@ -19035,17 +19150,7 @@ async function renderActivityDetectionTab(main) {
     appListHtml += '</div>';
   }
 
-  // ── Built-in apps with per-app toggles ──
-  const builtInHtml = KNOWN_GAMES.map(g => {
-    const enabled = _isAppActivityEnabled(g.name);
-    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;">'
-    + '<span style="font-size:18px;">' + g.icon + '</span>'
-    + '<span style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.6);flex:1;">' + escapeHTML(g.name) + '</span>'
-    + '<div class="toggle '+(enabled?'on':'')+'" onclick="toggleDetectedApp(this,\''+escapeHTML(g.name).replace(/'/g,"\\'")+'\')"></div>'
-    + '</div>';
-  }).join('');
-
-  // ── Quick-pick grid: built-in games as clickable cards ──
+  // ── Manual quick-pick (fallback) ──
   const quickPickHtml = KNOWN_GAMES.map(g => {
     const active = _gameActivity?.name === g.name;
     return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:'+(active?'rgba(62,207,110,.06)':'var(--panel2)')+';border:1px solid '+(active?'rgba(62,207,110,.2)':'var(--border)')+';border-radius:10px;cursor:pointer;transition:all .15s;" '
@@ -19065,32 +19170,37 @@ async function renderActivityDetectionTab(main) {
     + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'
     + '</div>'
     + '<div>'
-    + '<div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#fff;">Activity Status</div>'
-    + '<div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Show friends what you\'re playing or working on</div>'
+    + '<div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#fff;">Activity Detection</div>'
+    + '<div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Automatically show friends what you\'re playing</div>'
     + '</div></div></div>'
+    // Companion status
+    + companionHtml
     // Master toggle
     + '<div class="settings-section-title">ACTIVITY STATUS</div>'
     + '<div class="settings-row">'
-    + '<div class="settings-row-label"><div class="srl-name">Display current activity as a status message</div><div class="srl-desc">When enabled, your selected game or app will show as your status to other users.</div></div>'
+    + '<div class="settings-row-label"><div class="srl-name">Display current activity as a status message</div><div class="srl-desc">When enabled, Fortized will automatically detect games and apps and show them as your status.</div></div>'
     + '<div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">'
     + '<div class="toggle ' + (activityEnabled ? 'on' : '') + '" onclick="toggleActivityDetection(this)"></div>'
     + '</div></div>'
     // Current activity
     + '<div class="settings-section-title" style="margin-top:28px;">CURRENT ACTIVITY</div>'
-    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">What\'s currently shown on your profile. Pick a game below or add a custom app.</div>'
     + currentHtml
+    // Detected apps (from companion)
+    + (companionUp ? '<div class="settings-section-title" style="margin-top:28px;">DETECTED APPS<button onclick="refreshDetectedApps()" style="float:right;background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;">Refresh</button></div>'
+    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Apps running on your computer right now. Toggle each to control whether it shows as your status.</div>'
+    + '<div id="detected-apps-list">' + detectedHtml + '</div>' : '')
     // Custom apps
     + '<div class="settings-section-title" style="margin-top:28px;">ADD CUSTOM APP</div>'
-    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Add your own games or apps that aren\'t in the list.</div>'
+    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Add your own games or apps to be detected by the companion.</div>'
     + appListHtml
     + '<div style="display:flex;gap:8px;margin-bottom:28px;">'
     + '<input class="field-input" id="da-app-name" placeholder="App name (e.g. Photoshop)" style="flex:1;font-size:12.5px;">'
     + '<input class="field-input" id="da-app-icon" placeholder="\uD83C\uDFAE" style="width:48px;font-size:16px;text-align:center;">'
     + '<button class="btn-a" onclick="addDetectableApp()" style="padding:8px 18px;font-size:12.5px;">Add App</button>'
     + '</div>'
-    // Quick pick grid
-    + '<div class="settings-section-title" style="margin-top:8px;">QUICK PICK</div>'
-    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Click a game or app to set it as your current activity.</div>'
+    // Manual quick pick (fallback)
+    + '<div class="settings-section-title" style="margin-top:8px;">MANUAL PICK</div>'
+    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">' + (companionUp ? 'Or set your activity manually:' : 'Without the companion, set your activity manually:') + '</div>'
     + '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">' + quickPickHtml + '</div>'
     + '</div>';
 }
@@ -19106,9 +19216,43 @@ function toggleDetectedApp(el, appName) {
 
 function quickPickActivity(name, icon) {
   setGameActivity(name, icon);
-  // Re-render the settings tab to reflect the new activity
   const main = document.querySelector('.settings-main');
   if (main) renderActivityDetectionTab(main);
+}
+
+async function refreshDetectedApps() {
+  const container = document.getElementById('detected-apps-list');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:16px;"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto;"></div><div style="font-size:11px;color:var(--muted);margin-top:8px;">Scanning processes\u2026</div></div>';
+  try {
+    const procs = await companionGetProcesses();
+    const apps = procs ? _matchAllRunningApps(procs) : [];
+    if (apps.length) {
+      let html = '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
+      apps.forEach(app => {
+        const enabled = _isAppActivityEnabled(app.name);
+        const isActive = _gameActivity?.name === app.name;
+        html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:'+(isActive?'rgba(62,207,110,.06)':enabled?'rgba(62,207,110,.02)':'var(--panel)')+';border:1px solid '+(isActive?'rgba(62,207,110,.25)':enabled?'rgba(62,207,110,.1)':'var(--border)')+';border-radius:12px;transition:all .15s;">'
+          + '<span style="font-size:22px;flex-shrink:0;">' + app.icon + '</span>'
+          + '<div style="flex:1;min-width:0;">'
+          + '<div style="font-size:13px;font-weight:700;color:#fff;">' + escapeHTML(app.name) + '</div>'
+          + '<div style="font-size:10.5px;color:'+(isActive?'#3ecf6e':enabled?'rgba(62,207,110,.5)':'var(--muted)')+';">'+(isActive?'Currently showing as activity':enabled?'Detected — will auto-show':'Hidden — won\'t show as status')+'</div>'
+          + '</div>'
+          + '<div class="toggle '+(enabled?'on':'')+'" onclick="toggleDetectedApp(this,\''+escapeHTML(app.name).replace(/'/g,"\\'")+'\')"></div>'
+          + '</div>';
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    } else {
+      container.innerHTML = '<div style="text-align:center;padding:20px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
+        + '<div style="font-size:28px;margin-bottom:6px;">🔍</div>'
+        + '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">No known apps detected</div>'
+        + '<div style="font-size:12px;color:var(--muted);margin-top:4px;">Open a game and it will appear here automatically.</div>'
+        + '</div>';
+    }
+  } catch {
+    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">Could not reach companion</div>';
+  }
 }
 
 function toggleActivityDetection(el) {
@@ -21570,9 +21714,36 @@ function _matchRunningApp(processList) {
 }
 
 function _startAutoActivityDetection() {
-  // Web-only: no native process scanning available.
-  // Activity is set manually by the user via the picker or settings.
-  // Nothing to poll — this is intentionally a no-op.
+  if (_autoActivityPoller) return;
+  const activityEnabled = () => localStorage.getItem('ftz_activity_detection') !== 'false';
+  // Poll the companion for running processes
+  _autoActivityPoller = setInterval(async () => {
+    if (!CU?.username || !activityEnabled() || !_companionOnline) return;
+    try {
+      const procs = await companionGetProcesses();
+      if (!procs) return;
+      const detected = _matchRunningApp(procs);
+      if (detected) {
+        if (!_gameActivity || _gameActivity.name !== detected.name) {
+          setGameActivity(detected.name, detected.icon);
+        }
+      } else if (_gameActivity && !_gameActivity._manual) {
+        setGameActivity(null);
+      }
+    } catch {}
+  }, AUTO_ACTIVITY_POLL_MS);
+  // Run once immediately
+  (async () => {
+    if (!activityEnabled()) return;
+    const online = await companionPing();
+    if (!online) return;
+    try {
+      const procs = await companionGetProcesses();
+      if (!procs) return;
+      const detected = _matchRunningApp(procs);
+      if (detected) setGameActivity(detected.name, detected.icon);
+    } catch {}
+  })();
 }
 
 function _stopAutoActivityDetection() {
@@ -21580,7 +21751,17 @@ function _stopAutoActivityDetection() {
 }
 
 async function detectGameActivity() {
-  // Screen Capture API hack — getDisplayMedia triggers the
+  // Try companion first (instant, no user prompt)
+  if (_companionOnline) {
+    try {
+      const procs = await companionGetProcesses();
+      if (procs) {
+        const detected = _matchRunningApp(procs);
+        if (detected) return detected;
+      }
+    } catch {}
+  }
+  // Fallback: Screen Capture API hack — getDisplayMedia triggers the
   // browser's window picker. The selected track's label often contains
   // the window title, which we match against KNOWN_GAMES + user custom apps.
   try {

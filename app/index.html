@@ -7455,7 +7455,7 @@ function _showBanScreen(ban) {
           <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(bannedBy)}</span>
         </div>
       </div>
-      <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">If you wish to appeal, please visit <a href="https://support.fortized.com#contact" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Fortized Support</a></div>
+      <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">If you wish to appeal, please visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Fortized Support</a></div>
       <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f87171;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;" onmouseover="this.style.opacity='.85';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)'">Log Out</button>
     </div>
   </div>`;
@@ -7510,7 +7510,7 @@ function _showSuspendScreen(data) {
           <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(moderator)}</span>
         </div>
       </div>
-      <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">Your account will be reactivated on <span style="color:#fff93e;font-weight:600;">${durationText}</span>. To appeal, visit <a href="https://support.fortized.com#contact" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Fortized Support</a></div>
+      <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">Your account will be reactivated on <span style="color:#fff93e;font-weight:600;">${durationText}</span>. To appeal, visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Fortized Support</a></div>
       <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f59e0b;border:none;border-radius:10px;color:#080a0f;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;" onmouseover="this.style.opacity='.85';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)'">Log Out</button>
     </div>
   </div>`;
@@ -11860,7 +11860,7 @@ function buildProfileView(tab) {
 
       <!-- Quick actions -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;">
-        <a href="https://support.fortized.com" target="_blank" rel="noopener noreferrer" style="text-decoration:none;padding:20px;background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(96,165,250,.02));border:1.5px solid rgba(96,165,250,.12);border-radius:18px;transition:all .2s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(96,165,250,.3)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(96,165,250,.08)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)';this.style.transform='';this.style.boxShadow=''">
+        <a href="/support" target="_blank" rel="noopener noreferrer" style="text-decoration:none;padding:20px;background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(96,165,250,.02));border:1.5px solid rgba(96,165,250,.12);border-radius:18px;transition:all .2s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(96,165,250,.3)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(96,165,250,.08)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)';this.style.transform='';this.style.boxShadow=''">
           <div style="font-size:28px;margin-bottom:10px;">🆘</div>
           <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Get Help</div>
           <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;">Account issues, bastions, Radiance, and more</div>

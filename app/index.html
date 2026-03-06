@@ -1335,6 +1335,14 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-emoji,.msg-emoji-native{cursor:pointer;transition:transform .1s;border-radius:3px;}
 .msg-emoji:hover,.msg-emoji-native:hover{transform:scale(1.2);background:rgba(255,255,255,.06);}
 .cloud-status-bubble{position:relative;display:inline-flex;align-items:center;gap:6px;padding:var(--space-sm) var(--space-md);background:var(--surface-2);border:1.5px solid var(--surface-border-hover);border-radius:18px 18px 18px 4px;font-size:var(--font-sm);color:rgba(255,255,255,.55);max-width:260px;box-shadow:var(--shadow-sm);backdrop-filter:blur(8px);transition:border-color .2s var(--ease-out),box-shadow .2s var(--ease-out);}
+/* Userbar custom status speech bubble — looks like the PFP is talking */
+.ua-custom-status-bubble{display:none;align-items:center;gap:5px;padding:5px 10px;margin:6px 8px 2px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px 12px 12px 4px;font-size:10.5px;color:rgba(255,255,255,.55);position:relative;backdrop-filter:blur(8px);max-width:calc(100% - 16px);box-sizing:border-box;overflow:visible;}
+.ua-custom-status-bubble.active{display:inline-flex;animation:csb-pop .25s cubic-bezier(.22,1,.36,1);}
+.ua-custom-status-bubble::after{content:'';position:absolute;bottom:-5px;left:14px;width:8px;height:8px;background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.08);border-left:1px solid rgba(255,255,255,.08);border-radius:0 0 0 3px;transform:skewY(-15deg);}
+.ua-custom-status-bubble .csb-emoji{flex-shrink:0;}
+.ua-custom-status-bubble .csb-emoji img{width:13px;height:13px;object-fit:contain;}
+.ua-custom-status-bubble .csb-text{font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+@keyframes csb-pop{0%{opacity:0;transform:scale(.9) translateY(4px);}100%{opacity:1;transform:scale(1) translateY(0);}}
 .cloud-status-bubble:hover{border-color:rgba(255,249,62,.15);box-shadow:0 6px 20px rgba(0,0,0,.2);}
 .cloud-status-bubble::after{content:'';position:absolute;bottom:-6px;left:12px;width:10px;height:10px;background:var(--surface-2);border-bottom:1.5px solid var(--surface-border-hover);border-left:1.5px solid var(--surface-border-hover);border-radius:0 0 0 4px;transform:skewY(-15deg);}
 .cloud-status-bubble .csb-emoji{font-size:var(--font-lg);flex-shrink:0;}
@@ -1984,6 +1992,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .sidebar{padding-bottom:60px;}
   .userbar{width:52px!important;padding:0;gap:0;justify-content:center;margin:4px 6px 6px;}
   .userbar .ub-activity-row{display:none!important;}
+  .userbar .ua-custom-status-bubble{display:none!important;}
   .ua-clickable{padding:2px;gap:0;justify-content:center;}
   .own-profile-panel{left:60px;}
   .main{border-top-left-radius:14px;}
@@ -2010,6 +2019,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   /* Userbar on mobile — full width bottom bar */
   .userbar{position:fixed!important;bottom:0!important;left:0!important;width:100%!important;margin:0!important;border-radius:0!important;border:none!important;border-top:1px solid rgba(255,255,255,.06)!important;background:var(--sidebar-ctx)!important;z-index:50!important;min-height:52px!important;max-height:52px!important;padding:0!important;gap:0!important;}
   .userbar .ub-activity-row{display:none!important;}
+  .userbar .ua-custom-status-bubble{display:none!important;}
   .userbar .ub-user-row{padding:6px 12px!important;}
   .ua-info{display:block!important;}
   .ua-btns{display:flex!important;}
@@ -2221,6 +2231,8 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
     </div>
+    <!-- Custom Status Speech Bubble (cloud chat bubble — PFP talks!) -->
+    <div id="ua-custom-status" class="ua-custom-status-bubble"></div>
     <div class="ub-user-row">
       <div class="ua-clickable" id="ua-clickable" onclick="toggleOwnProfilePanel()">
         <div class="ua" id="ua">
@@ -3891,6 +3903,7 @@ function updateUserbar() {
   // Status sync handled by FtzStatus.set() and presence system — no redundant broadcast here
   _updateUserbarActivity();
   updateOnyxDisplay();
+  refreshCustomStatusBubble();
 }
 function _isMobile() { return window.innerWidth <= 768; }
 function _isTablet() { return window.innerWidth <= 1024 && window.innerWidth > 768; }
@@ -19665,11 +19678,14 @@ function refreshCustomStatusBubble() {
   const cs = CU && CU.customStatus;
   if (cs && cs.text) {
     const emojiUrl = cs.emoji ? emojiToTwemojiUrl(cs.emoji) : '';
-    const emojiHTML = emojiUrl ? `<img src="${emojiUrl}" style="width:14px;height:14px;object-fit:contain;" onerror="this.outerHTML='${cs.emoji}'">` : '';
-    el.innerHTML = emojiHTML + '<span style="font-size:10.5px;font-weight:600;">'+escapeHTML(cs.text)+'</span>';
-    el.style.display = 'inline-flex';
+    const emojiHTML = emojiUrl
+      ? `<span class="csb-emoji"><img src="${emojiUrl}" style="width:13px;height:13px;object-fit:contain;" onerror="this.outerHTML='${escapeHTML(cs.emoji)}'"></span>`
+      : (cs.emoji ? `<span class="csb-emoji">${escapeHTML(cs.emoji)}</span>` : '');
+    el.innerHTML = emojiHTML + `<span class="csb-text">${escapeHTML(cs.text)}</span>`;
+    if (!el.classList.contains('active')) el.classList.add('active');
   } else {
-    el.style.display = 'none';
+    el.innerHTML = '';
+    el.classList.remove('active');
   }
 }
 
@@ -23825,8 +23841,8 @@ function initCrossDeviceSync() {
     if (data.banner !== CU.banner) { CU.banner = data.banner; }
     if (data.onyx !== CU.onyx) { CU.onyx = data.onyx; updateOnyxDisplay(); }
     // Don't sync status from Firebase — it's managed locally by FtzStatus to avoid conflicting states
-    if (data.customStatus && JSON.stringify(data.customStatus) !== JSON.stringify(CU.customStatus)) {
-      CU.customStatus = data.customStatus;
+    if (JSON.stringify(data.customStatus||null) !== JSON.stringify(CU.customStatus||null)) {
+      if (data.customStatus) { CU.customStatus = data.customStatus; } else { delete CU.customStatus; }
       refreshCustomStatusBubble?.();
     }
     if (data.friends && JSON.stringify(data.friends) !== JSON.stringify(CU.friends)) {

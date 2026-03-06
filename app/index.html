@@ -13733,7 +13733,7 @@ async function _deleteTicket(id) {
 
 // ── New Command Center tool helpers ──
 async function _broadcastAnnouncement() {
-  const msg = document.getElementById('_broadcast-msg')?.value?.trim();
+  const msg = (document.getElementById('_broadcast-msg')?.value?.trim()) || (document.getElementById('gs-announcement')?.value?.trim());
   if (!msg) { toast('Enter a message first','error'); return; }
   try {
     await firebase.database().ref('admin/global_settings/announcement').set(msg);
@@ -13743,8 +13743,8 @@ async function _broadcastAnnouncement() {
     localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
     logAudit('broadcast', 'all', msg.slice(0,80));
     toast('Announcement broadcast!','success');
-    // Refresh the broadcast tab to show active announcement
-    _loadAdminPage('broadcast');
+    // Refresh the broadcast tab if it's open
+    if (document.getElementById('_broadcast-msg')) _loadAdminPage('broadcast');
   } catch { toast('Failed to broadcast','error'); }
 }
 async function _clearAnnouncement() {
@@ -13935,14 +13935,7 @@ function _clearAllSessions() {
   });
 }
 
-function _broadcastAnnouncement() {
-  const text = document.getElementById('gs-announcement')?.value?.trim();
-  if (!text) { toast('Type an announcement first', 'error'); return; }
-  _updateGlobalSetting('announcement', text);
-  firebase.database().ref('admin/global_settings/announcement').set(text);
-  logAudit('announcement', 'system', 'Announcement set by ' + CU.username + ': ' + text.substring(0,80));
-  toast('Announcement broadcasted to all users', 'success');
-}
+// _broadcastAnnouncement is defined above (async version) — handles both overview and broadcast tabs
 
 function _purgeDeletedMessages() {
   showCustomConfirm('Purge all messages marked as deleted by moderation from Firebase? This cannot be undone.', async () => {

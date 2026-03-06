@@ -19,16 +19,16 @@
 <link rel="icon" type="image/png" href="/Fortized icon.png" id="favicon">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" async defer></script>
 <script src="/FortizedSocial-firebase.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js"></script>
+<!-- NSFW scanning removed — TensorFlow/NSFWJS no longer loaded -->
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <style>
 :root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.22);--bg:#0a0d14;--rail:#060810;--sidebar:#13161d;--sidebar-ctx:#0f1218;--channel:#0f1219;--panel:#161a23;--panel2:#1a1f29;--panel3:#1e2430;--border:#252d3d;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-xs:4px;--space-sm:8px;--space-md:14px;--space-lg:20px;--space-xl:28px;--space-2xl:40px;--space-3xl:56px;--font-ui:'DM Sans',sans-serif;--font-display:'Syne',sans-serif;--font-xs:10.5px;--font-sm:12px;--font-md:13.5px;--font-lg:16px;--font-xl:20px;--font-2xl:28px;--font-hdr:10px;--surface-1:rgba(255,255,255,.03);--surface-2:rgba(255,255,255,.06);--surface-3:rgba(255,255,255,.1);--surface-4:rgba(255,255,255,.15);--surface-border:rgba(255,255,255,.06);--surface-border-hover:rgba(255,255,255,.12);--state-success:var(--green);--state-danger:var(--red);--state-warning:var(--yellow);--state-info:var(--blue);--state-success-dim:rgba(62,207,110,.1);--state-danger-dim:rgba(248,113,113,.1);--state-warning-dim:rgba(245,158,11,.1);--state-info-dim:rgba(96,165,250,.1);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:22px;--radius-pill:100px;--elev-1:0 2px 8px rgba(0,0,0,.25);--elev-2:0 8px 24px rgba(0,0,0,.35);--elev-3:0 16px 42px rgba(0,0,0,.55);--ease-out:cubic-bezier(.22,1,.36,1);--shadow-sm:0 2px 8px rgba(0,0,0,.2);--shadow-md:0 8px 24px rgba(0,0,0,.3);--shadow-lg:0 16px 48px rgba(0,0,0,.45);}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;overflow:hidden;}
 body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:row;}
 ::selection{background:rgba(255,249,62,.2);}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,249,62,.12) transparent;}
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,249,62,.12);border-radius:100px;border:1px solid rgba(255,249,62,.06);}::-webkit-scrollbar-thumb:hover{background:rgba(255,249,62,.22);}
 /* Performance: lazy-render off-screen elements */
 .msg-row{content-visibility:auto;contain-intrinsic-size:auto 52px;animation:msgFadeIn .18s ease;}
@@ -92,17 +92,15 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .sidebar-header .hdr-actions button{width:28px;height:28px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
 .sidebar-header .hdr-actions button:hover{background:rgba(255,255,255,.07);color:#fff;}
 /* ── Bastion Sidebar 2027 ────────────────────────── */
-.bastion-banner-hero{position:relative;width:100%;height:160px;overflow:visible;flex-shrink:0;margin-bottom:0;border-bottom:1.5px solid var(--border);}
-.bastion-banner-hero img{width:100%;height:160px;object-fit:cover;display:block;filter:brightness(.88) saturate(1.15);}
-.bastion-banner-hero .bb-gradient{display:none;}
-.bastion-banner-hero .bb-noise{display:none;}
-.bastion-banner-hero .bb-glow{display:none;}
+.bastion-banner-hero{position:relative;width:100%;height:140px;overflow:visible;flex-shrink:0;margin-bottom:0;}
+.bastion-banner-hero img{width:100%;height:140px;object-fit:cover;display:block;filter:brightness(.72) saturate(1.15);}
+.bastion-banner-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:100%;background:linear-gradient(to top,var(--channel) 0%,rgba(0,0,0,.3) 40%,transparent 100%);pointer-events:none;z-index:1;}
 .bastion-banner-hero .bb-emblem{position:absolute;bottom:-38px;left:50%;transform:translateX(-50%);z-index:3;}
 .bastion-banner-hero .bb-emblem .bastion-emblem{width:80px;height:80px;border-radius:22px;background:var(--panel);border:4px solid var(--channel);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.6);transition:transform .2s,box-shadow .2s;}
 .bastion-banner-hero .bb-emblem .bastion-emblem:hover{transform:scale(1.08);box-shadow:0 8px 32px rgba(0,0,0,.7);}
 .bastion-banner-hero .bb-emblem .bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:18px;}
-.bastion-identity{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;padding:46px 12px 0;gap:2px;}
-.bastion-identity.no-banner{padding-top:14px;}
+.bastion-identity{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;padding:44px 12px 0;gap:2px;}
+.bastion-identity.no-banner{padding-top:12px;}
 .bastion-emblem{width:80px;height:80px;border-radius:22px;background:var(--panel);border:4px solid var(--channel);display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.5);transition:transform .2s,box-shadow .2s;}
 .bastion-emblem:hover{transform:scale(1.08);box-shadow:0 8px 32px rgba(0,0,0,.6);}
 .bastion-emblem img{width:100%;height:100%;object-fit:cover;border-radius:18px;}
@@ -210,32 +208,42 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* ── Message Outline Mode ──── */
 .msg-outline{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px 20px;margin:4px 0;}
 .msg-outline .msg-text{font-size:13.5px;line-height:1.7;}
-.sidebar-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:6px 12px;flex-shrink:0;}
+.sidebar-divider{height:1px;background:rgba(255,255,255,.04);margin:4px 10px 2px;flex-shrink:0;}
 /* Channel categories - 2027 collapsible */
 .ch-cat-wrap{}
-.ch-category{display:flex;align-items:center;gap:5px;padding:12px 10px 5px;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.17);cursor:pointer;transition:color .12s;user-select:none;}
-.ch-category:hover{color:rgba(255,255,255,.3);}
-.ch-category .cat-icon{font-size:12px;opacity:.6;}
-.ch-category .cat-chevron{font-size:8px;transition:transform .25s ease;margin-right:2px;display:inline-block;color:rgba(255,255,255,.2);}
-.ch-category:hover .cat-chevron{color:rgba(255,255,255,.4);}
+.ch-category{display:flex;align-items:center;gap:4px;padding:16px 10px 4px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);cursor:pointer;transition:color .15s;user-select:none;}
+.ch-category:hover{color:rgba(255,255,255,.4);}
+.ch-category .cat-icon{font-size:11px;opacity:.5;margin-right:1px;}
+.ch-category .cat-chevron{font-size:7px;transition:transform .2s cubic-bezier(.22,1,.36,1);margin-right:1px;display:inline-block;color:rgba(255,255,255,.15);}
+.ch-category:hover .cat-chevron{color:rgba(255,255,255,.35);}
 .ch-cat-wrap.collapsed .cat-chevron{transform:rotate(-90deg);}
-.ch-category .cat-add{margin-left:auto;font-size:14px;opacity:0;transition:opacity .15s;background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;}
+.ch-category .cat-add{margin-left:auto;width:16px;height:16px;font-size:13px;opacity:0;transition:opacity .15s;background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .ch-category:hover .cat-add{opacity:1;}
-.ch-cat-items{overflow:hidden;transition:max-height .25s ease,opacity .2s ease;max-height:1000px;opacity:1;}
-.ch-cat-wrap.collapsed .ch-cat-items{max-height:0;opacity:0;}
+.ch-cat-items{overflow:hidden;transition:max-height .25s cubic-bezier(.22,1,.36,1),opacity .2s ease;max-height:1000px;opacity:1;}
+.ch-cat-wrap.collapsed .ch-cat-items{max-height:0;opacity:0;pointer-events:none;}
 /* Channel items - 2027 */
-.ch-item-2027{display:flex;align-items:center;gap:8px;padding:6px 10px;margin:1px 6px;border-radius:8px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,.35);transition:all .12s cubic-bezier(.22,1,.36,1);position:relative;font-weight:500;}
-.ch-item-2027:hover{background:rgba(255,255,255,.045);color:rgba(255,255,255,.8);}
-.ch-item-2027.active{background:rgba(255,249,62,.06);color:var(--accent);font-weight:600;}
-.ch-item-2027.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:50%;background:var(--accent);border-radius:0 3px 3px 0;box-shadow:0 0 8px rgba(255,249,62,.25);}
-.ch-item-2027 .ch-hash{font-size:14px;font-weight:700;color:rgba(255,255,255,.12);transition:color .12s;width:16px;text-align:center;flex-shrink:0;}
-.ch-item-2027:hover .ch-hash{color:rgba(255,255,255,.25);}
-.ch-item-2027.active .ch-hash{color:rgba(255,249,62,.45);}
+.ch-item-2027{display:flex;align-items:center;gap:7px;padding:5px 8px;margin:1px 4px;border-radius:6px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.3);transition:all .1s ease;position:relative;font-weight:500;min-height:32px;}
+.ch-item-2027:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.75);}
+.ch-item-2027.active{background:rgba(255,255,255,.06);color:#fff;font-weight:600;}
+.ch-item-2027.active::before{content:'';position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:3px;height:40%;background:#fff;border-radius:0 2px 2px 0;}
+.ch-item-2027 .ch-hash{font-size:15px;font-weight:600;color:rgba(255,255,255,.15);transition:color .1s;width:18px;text-align:center;flex-shrink:0;}
+.ch-item-2027:hover .ch-hash{color:rgba(255,255,255,.3);}
+.ch-item-2027.active .ch-hash{color:rgba(255,255,255,.5);}
 .ch-item-2027 .ch-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* Unread channel state */
+.ch-item-2027.unread{color:rgba(255,255,255,.85);font-weight:700;}
+.ch-item-2027.unread .ch-hash{color:rgba(255,255,255,.35);}
+.ch-item-2027.unread::after{content:'';position:absolute;left:-2px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 4px rgba(255,255,255,.3);}
+.ch-item-2027 .ch-unread-badge{margin-left:auto;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--accent);color:#000;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ch-item-2027 .ch-mention-badge{margin-left:auto;min-width:16px;height:16px;padding:0 5px;border-radius:8px;background:rgba(248,113,113,.9);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+/* Muted channel */
+.ch-item-2027.muted{opacity:.3;}
+.ch-item-2027.muted:hover{opacity:.5;}
+.ch-item-2027.muted .ch-muted-icon{font-size:11px;opacity:.5;margin-left:auto;flex-shrink:0;}
 /* Voice channel items - 2027 */
-.vc-item-2027{display:flex;align-items:center;gap:8px;padding:6px 10px;margin:1px 6px;border-radius:8px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,.35);transition:all .12s;font-weight:500;}
+.vc-item-2027{display:flex;align-items:center;gap:7px;padding:5px 8px;margin:1px 4px;border-radius:6px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.3);transition:all .1s ease;font-weight:500;min-height:32px;}
 .vc-item-2027:hover{background:rgba(62,207,110,.04);color:rgba(255,255,255,.7);}
-.vc-item-2027.active-vc{background:rgba(62,207,110,.05);color:var(--green);font-weight:600;}
+.vc-item-2027.active-vc{background:rgba(62,207,110,.06);color:var(--green);font-weight:600;}
 .vc-item-2027 .vc-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0;opacity:.5;}
 .vc-item-2027.active-vc .vc-icon{opacity:1;}
 .vc-item-2027 .vc-live{font-size:9px;font-weight:800;color:var(--green);margin-left:auto;display:flex;align-items:center;gap:3px;}
@@ -1059,9 +1067,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ov-room-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--border);color:rgba(255,255,255,.6);font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;font-family:'DM Sans',sans-serif;}
 .ov-room-chip:hover{border-color:rgba(255,249,62,.15);background:var(--panel2);color:#fff;}
 /* Sidebar overview item */
-.ch-overview-item{display:flex;align-items:center;gap:8px;padding:8px 10px;margin:2px 6px 6px;border-radius:10px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,.5);transition:all .12s cubic-bezier(.22,1,.36,1);position:relative;font-weight:600;border:1px solid transparent;}
-.ch-overview-item:hover{background:rgba(255,249,62,.04);color:rgba(255,255,255,.8);border-color:rgba(255,249,62,.08);}
-.ch-overview-item.active{background:rgba(255,249,62,.07);color:var(--accent);border-color:rgba(255,249,62,.12);}
+.ch-overview-item{display:flex;align-items:center;gap:7px;padding:5px 8px;margin:2px 4px 4px;border-radius:6px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.4);transition:all .1s ease;position:relative;font-weight:600;border:1px solid transparent;min-height:32px;}
+.ch-overview-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.8);border-color:transparent;}
+.ch-overview-item.active{background:rgba(255,255,255,.06);color:#fff;border-color:transparent;}
 .ch-overview-item .ov-sidebar-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 /* Legacy Bastion Hub kept for compat */
 .bastion-hub-wrap{flex:1;display:flex;overflow:hidden;}
@@ -1943,7 +1951,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ua img,.fa img,.ml-av img,.msg-av-inner img,.mpp-av img,.profile-av-big img,.chat-welcome .w-av img,.ftz-notif-av img,.voice-avatar-ring img{background:transparent!important;}
 /* DM sidebar close button — appears on hover */
 .friend-item{position:relative;}
-.dm-close-btn{display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:16px;width:22px;height:22px;border-radius:6px;align-items:center;justify-content:center;transition:all .12s;line-height:1;padding:0;z-index:2;}
+.dm-close-btn{display:none;background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:14px;width:18px;height:18px;border-radius:4px;align-items:center;justify-content:center;transition:all .12s;line-height:1;padding:0;z-index:2;}
 .dm-close-btn:hover{color:#fff;background:rgba(255,255,255,.1);}
 .friend-item:hover .dm-close-btn{display:flex;}
 .dm-friends-link{transition:background .12s;}
@@ -2892,6 +2900,23 @@ const _pfpCache = {};
 let curBastion = null;
 let curChannel = null;
 let curDM = null;
+// Unread tracking per channel: Map<bastionIdx_chIdx, {count:number, mentions:number}>
+const _channelUnread = new Map();
+function getChannelUnreadKey(bIdx, chIdx) { return bIdx+'_'+chIdx; }
+function getChannelUnread(bIdx, chIdx) { return _channelUnread.get(getChannelUnreadKey(bIdx,chIdx)) || {count:0, mentions:0}; }
+function markChannelUnread(bIdx, chIdx, mentionMe) {
+  const k = getChannelUnreadKey(bIdx,chIdx);
+  const cur = _channelUnread.get(k) || {count:0, mentions:0};
+  cur.count++;
+  if (mentionMe) cur.mentions++;
+  _channelUnread.set(k, cur);
+  // Re-render sidebar to show badge
+  const scroll = document.querySelector('.sidebar-scroll');
+  if (curBastion === bIdx && scroll) renderBastionSidebar(scroll);
+}
+function clearChannelUnread(bIdx, chIdx) {
+  _channelUnread.delete(getChannelUnreadKey(bIdx,chIdx));
+}
 let voiceConnected = false;
 let _outlineMode = false;
 let voiceChannel = null;
@@ -4735,7 +4760,10 @@ function renderDMSidebar(scroll) {
           <div class="fi-name" id="dm-dn-${escapeHTML(f)}" style="font-weight:600;">${escapeHTML(f)}</div>
           <div id="dm-preview-${escapeHTML(f)}" style="font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:120px;"></div>
         </div>
-        <button class="dm-close-btn" onclick="event.stopPropagation();hideDMConversation('dm_${escapeHTML(f)}')" title="Hide conversation">×</button>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
+          <div id="dm-time-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.15);white-space:nowrap;"></div>
+          <button class="dm-close-btn" onclick="event.stopPropagation();hideDMConversation('dm_${escapeHTML(f)}')" title="Hide conversation">×</button>
+        </div>
       </div>`;
       } else {
         const gc = entry.gc;
@@ -4784,6 +4812,21 @@ function renderDMSidebar(scroll) {
           if (el) {
             const preview = (last.from===CU.username?'You: ':'') + (last.text||'').replace(/\[FTZ[A-Z]+:[^\]]+\]/g,'📎 File').slice(0,40);
             el.textContent = preview;
+          }
+          // Show relative timestamp
+          const timeEl = document.getElementById('dm-time-'+f);
+          if (timeEl && lastTime) {
+            const d = new Date(typeof lastTime === 'number' ? lastTime : Date.parse(lastTime));
+            const now = new Date();
+            const diffMs = now - d;
+            const diffMin = Math.floor(diffMs / 60000);
+            const diffHr = Math.floor(diffMs / 3600000);
+            const diffDay = Math.floor(diffMs / 86400000);
+            if (diffMin < 1) timeEl.textContent = 'now';
+            else if (diffMin < 60) timeEl.textContent = diffMin + 'm';
+            else if (diffHr < 24) timeEl.textContent = diffHr + 'h';
+            else if (diffDay < 7) timeEl.textContent = diffDay + 'd';
+            else timeEl.textContent = d.toLocaleDateString([], {month:'short', day:'numeric'});
           }
         }
       }
@@ -5758,9 +5801,39 @@ async function startNewDM() {
 // ════════════════════════════════════════════
 // BASTION OPEN & SIDEBAR
 // ════════════════════════════════════════════
+// Background channel listeners for unread tracking
+let _bgChListeners = [];
+function _startBgChannelListeners(bIdx) {
+  _stopBgChannelListeners();
+  const b = CU.bastions?.[bIdx];
+  if (!b) return;
+  const chs = b.channels || [];
+  const bastionId = b.globalId || b.name;
+  chs.forEach((ch, chIdx) => {
+    if (ch.type === 'voice') return; // no messages in voice
+    // Skip initial burst of child_added events (existing messages)
+    let ready = false;
+    setTimeout(() => { ready = true; }, 2000);
+    const unsub = FortizedSocial.listenBastionChannel(bastionId, ch.name, msg => {
+      if (!ready) return; // skip initial load
+      // Only track unread if this is NOT the active channel, and NOT from us
+      if (curBastion === bIdx && curChannel === chIdx) return;
+      if (msg.from === CU?.username) return;
+      const isMention = (msg.text || '').includes('@' + (CU?.username || ''));
+      markChannelUnread(bIdx, chIdx, isMention);
+    });
+    if (unsub) _bgChListeners.push(unsub);
+  });
+}
+function _stopBgChannelListeners() {
+  _bgChListeners.forEach(fn => { try { if (typeof fn === 'function') fn(); } catch(e){} });
+  _bgChListeners = [];
+}
+
 function openBastion(idx) {
   if (idx<0||!CU.bastions?.[idx]) return;
   curBastion = idx; curChannel = null;
+  _startBgChannelListeners(idx);
   const isOwner = CU.bastions[idx]?.owner === CU.username;
   // Owner: sync local data up to global
   if (isOwner) setTimeout(() => _syncBastionToGlobal(idx), 100);
@@ -5880,8 +5953,12 @@ function renderBastionSidebar(scroll) {
     const blocked=ch.nsfw&&tier==='child';
     const nsfwTag=ch.nsfw?`<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:rgba(248,113,113,.6);flex-shrink:0;">18+</span>`:'';
     const focusBadge=ch.focusMode?'<span class="focus-mode-badge">FOCUS</span>':'';
-    textHTML+=`<div class="ch-item-2027 ${curChannel===i?'active':''}" id="ch-sb-${i}" ${blocked?'style="opacity:.35;pointer-events:none;"':''}onclick="selectChannel(${i})" oncontextmenu="showChannelCtxMenu(event,${i})">
-      <span class="ch-hash">#</span><span class="ch-name">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${blocked?'<span title="Age blocked" style="margin-left:auto;opacity:.4;">🔒</span>':''}
+    const unread = getChannelUnread(curBastion, i);
+    const isUnread = unread.count > 0 && curChannel !== i;
+    const unreadClass = isUnread ? ' unread' : '';
+    const unreadBadge = unread.mentions > 0 ? `<span class="ch-mention-badge">${unread.mentions}</span>` : '';
+    textHTML+=`<div class="ch-item-2027${curChannel===i?' active':''}${unreadClass}" id="ch-sb-${i}" ${blocked?'style="opacity:.35;pointer-events:none;"':''}onclick="selectChannel(${i})" oncontextmenu="showChannelCtxMenu(event,${i})">
+      <span class="ch-hash">#</span><span class="ch-name">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${unreadBadge}${blocked?'<span title="Age blocked" style="margin-left:auto;opacity:.4;">🔒</span>':''}
     </div>`;
   });
   if (textHTML||canManageChannels) html+=catWrap('text','📝','TEXT ROOMS','text',textHTML);
@@ -5890,7 +5967,9 @@ function renderBastionSidebar(scroll) {
   let forumHTML='';
   forumChs.forEach(function(ch){
     const ri=chs.indexOf(ch);
-    forumHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="openForumChannel(${ri})">
+    const fu = getChannelUnread(curBastion, ri);
+    const fuClass = fu.count > 0 && curChannel !== ri ? ' unread' : '';
+    forumHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${fuClass}" id="ch-sb-${ri}" onclick="openForumChannel(${ri})">
       <span class="ch-hash">💬</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
@@ -5912,7 +5991,9 @@ function renderBastionSidebar(scroll) {
   let announceHTML='';
   announcementChs.forEach(function(ch){
     const ri=chs.indexOf(ch);
-    announceHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+    const au = getChannelUnread(curBastion, ri);
+    const auClass = au.count > 0 && curChannel !== ri ? ' unread' : '';
+    announceHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${auClass}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
       <span class="ch-hash">📢</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
@@ -5922,7 +6003,9 @@ function renderBastionSidebar(scroll) {
   let pollHTML='';
   pollChs.forEach(function(ch){
     const ri=chs.indexOf(ch);
-    pollHTML+=`<div class="ch-item-2027 ${curChannel===ri?'active':''}" id="ch-sb-${ri}" onclick="openPollChannel(${ri})">
+    const pu = getChannelUnread(curBastion, ri);
+    const puClass = pu.count > 0 && curChannel !== ri ? ' unread' : '';
+    pollHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${puClass}" id="ch-sb-${ri}" onclick="openPollChannel(${ri})">
       <span class="ch-hash">🗳</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
@@ -6023,6 +6106,8 @@ function selectChannel(idx) {
   if (!ch) return;
   _teardownPollLive();
   curChannel=idx;
+  // Clear unread for this channel
+  if (curBastion !== null) clearChannelUnread(curBastion, idx);
   if (typeof closeMobileCtxSidebar === 'function') closeMobileCtxSidebar();
   // Remember last channel for this bastion
   if (curBastion !== null && CU.bastions?.[curBastion]) {
@@ -6442,6 +6527,28 @@ function renderMessages(container, msgs, context) {
 }
 
 
+// Get all roles for a user across current bastion context
+function getUserRolesInBastion(username, bastionIdx) {
+  if (bastionIdx === null || bastionIdx === undefined) bastionIdx = curBastion;
+  const b = CU?.bastions?.[bastionIdx];
+  if (!b) return [];
+  const roles = b.roles || [];
+  const memberRoles = (b.memberRoles || {})[username] || [];
+  return roles.filter(r => memberRoles.includes(r.id));
+}
+
+// Render all role tags for a user, first role is visually prominent
+function renderUserRoleTags(username, bastionIdx) {
+  const roles = getUserRolesInBastion(username, bastionIdx);
+  if (!roles.length) return '';
+  return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">' +
+    roles.map((r, i) => {
+      const col = r.color || '#60a5fa';
+      const isFirst = i === 0;
+      return `<span class="role-tag" style="color:${col};background:${col}${isFirst?'33':'18'};border:1px solid ${col}${isFirst?'66':'33'};${isFirst?'font-weight:800;':'font-weight:600;'}">${escapeHTML(r.name)}</span>`;
+    }).join('') + '</div>';
+}
+
 function getMsgRoleTag(fromUser, context) {
   // Only show role tags in bastion channels, not DMs or GC
   if (context !== 'ch' && context !== 'channel') return '';
@@ -6522,7 +6629,7 @@ function appendMessage(container, msg, context, prevAuthor) {
       <div class="msg-content-col ${outlineWrap}">
         ${fwdHTML}${replyHTML}
         <div class="msg-header">
-          <span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>
+          <span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;${roleColor?'color:'+roleColor+';':''}" data-author="${safeFrom}">${safeFrom}</span>
           ${getMsgRoleTag(msg.from, context)}
           <span class="msg-timestamp">·  ${time}</span>
         </div>
@@ -7820,8 +7927,7 @@ function initFortizedUXResilience() {
   setTimeout(_ensureFortizedAccount, 4500);
   // Sync ignore list from Firebase
   setTimeout(_syncIgnoreListFromFirebase, 2000);
-  // Preload NSFW AI model in background so first scan is fast
-  setTimeout(() => { try { _loadNSFWModel(); } catch {} }, 3000);
+  // NSFW scanning disabled — no model preload needed
   updateNotifBadge().catch(()=>{});
 
   // Sync staff data from Firebase BEFORE checking staff access for sidebar button
@@ -10034,13 +10140,6 @@ async function updateBastionIcon(e) {
   const reader = new FileReader();
   reader.onload = async ev => {
     const fileData = ev.target.result;
-    try {
-      const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
-      if (scanResult.flagged && (scanResult.label === 'EXPLICIT' || scanResult.label === 'BANNED_CONTENT')) {
-        toast('This image has been blocked. NSFW content is not allowed.', 'error');
-        return;
-      }
-    } catch(err) { console.warn('NSFW scan error:', err); }
     showCropModal(fileData, 1, async (cropped) => {
       CU.bastions[curBastion].icon = cropped;
       await saveUser();
@@ -12149,7 +12248,7 @@ function buildProfileView(tab) {
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
-      {id:'sunset',           name:'Sunset',           desc:'Warm purple to golden yellow gradient',    bg:'#1a0410', sidebar:'#1a0412', channel:'#200616', panel:'#28081c', accent:'#fef93b', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#fef93b 100%)', cost:100, locked:!unlocked.includes('sunset')},
+      {id:'sunset',           name:'Sunset',           desc:'Warm purple to golden yellow gradient',    bg:'#1a0410', sidebar:'#1a0412', channel:'#200616', panel:'#28081c', accent:'#fef93b', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e8a040 75%,#f5d035 88%,#fef93b 100%)', cost:100, locked:!unlocked.includes('sunset')},
     ];
     const defaultThemes = allThemes.filter(t => t.free);
     const ownedThemes = allThemes.filter(t => !t.free && !t.locked);
@@ -12431,13 +12530,6 @@ async function updatePfp(e) {
   const reader = new FileReader();
   reader.onload = async ev => {
     const fileData = ev.target.result;
-    try {
-      const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
-      if (scanResult.flagged && (scanResult.label === 'EXPLICIT' || scanResult.label === 'BANNED_CONTENT')) {
-        toast('This image has been blocked. NSFW content is not allowed in profile pictures.', 'error');
-        return;
-      }
-    } catch(err) { console.warn('NSFW scan error:', err); }
     showCropModal(fileData, 1, async (cropped) => {
       CU.pfp = cropped;
       await saveUser();
@@ -12462,13 +12554,6 @@ async function updateBanner(e) {
   const reader = new FileReader();
   reader.onload = async ev => {
     const fileData = ev.target.result;
-    try {
-      const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
-      if (scanResult.flagged && (scanResult.label === 'EXPLICIT' || scanResult.label === 'BANNED_CONTENT')) {
-        toast('This image has been blocked. NSFW content is not allowed in banners.', 'error');
-        return;
-      }
-    } catch(err) { console.warn('NSFW scan error:', err); }
     showCropModal(fileData, 16/5, async (cropped) => {
       CU.banner = cropped;
       await saveUser();
@@ -12705,6 +12790,8 @@ async function viewUserProfile(username) {
       </div>
       <!-- Badges -->
       <div class="up-left-badges">${renderBadgesHTML(u)}</div>
+      <!-- Roles (in current bastion context) -->
+      ${curBastion !== null ? `<div style="padding:4px 24px 0;">${renderUserRoleTags(username)}</div>` : ''}
       <!-- Status -->
       <div class="up-left-status">
         <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(255,255,255,.03);border-radius:100px;">
@@ -16332,28 +16419,8 @@ function _simpleImageHash(dataUrl) {
 }
 
 async function scanContentForNSFW(fileData, fileName, uploader, fileType) {
-  const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
-  if (gs.enableNSFWScan === false) return { flagged: false, label: 'SCAN_DISABLED', score: 0 };
-
-  const isMedia = /^(image|video)\//i.test(fileType || '') || /\.(jpg|jpeg|png|gif|webp|mp4|webm|mov|avi)$/i.test(fileName || '');
-  if (!isMedia) return { flagged: false, label: 'NOT_MEDIA', score: 0 };
-
-  // Check banned hashes first (previously flagged & removed content)
-  const hash = _simpleImageHash(fileData);
-  if (_nsfwBannedHashes.includes(hash)) {
-    _flagNsfwContent(fileData, fileName, uploader, fileType, 'BANNED_CONTENT', '1.00', hash);
-    return { flagged: true, label: 'BANNED_CONTENT', score: 1.0 };
-  }
-
-  // AI-based detection using canvas pixel analysis
-  const result = await _analyzeMediaContent(fileData, fileName, fileType);
-
-  if (result.label !== 'SAFE') {
-    _flagNsfwContent(fileData, fileName, uploader, fileType, result.label, result.score, hash);
-    return { flagged: true, label: result.label, score: result.score };
-  }
-
-  return { flagged: false, label: 'SAFE', score: result.score };
+  // NSFW scanning disabled — always return safe
+  return { flagged: false, label: 'SCAN_DISABLED', score: 0 };
 }
 
 let _nsfwModel = null;
@@ -19062,13 +19129,6 @@ async function updateBastionBanner(e) {
   const reader = new FileReader();
   reader.onload = async ev => {
     const fileData = ev.target.result;
-    try {
-      const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
-      if (scanResult.flagged && (scanResult.label === 'EXPLICIT' || scanResult.label === 'BANNED_CONTENT')) {
-        toast('This image has been blocked. NSFW content is not allowed.', 'error');
-        return;
-      }
-    } catch(err) { console.warn('NSFW scan error:', err); }
     showCropModal(fileData, 16/5, async (cropped) => {
       CU.bastions[curBastion].banner = cropped;
       await saveUser();
@@ -19531,24 +19591,6 @@ function openFileUpload(context) {
     const reader = new FileReader();
     reader.onload = async ev => {
       const fileData = ev.target.result;
-      // Run NSFW AI scan on media uploads
-      const isMedia = file.type.startsWith('image/') || file.type.startsWith('video/') || /\.(gif|webp)$/i.test(file.name);
-      if (isMedia) {
-        try {
-          const scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
-          if (scanResult.flagged) {
-            if (scanResult.label === 'BANNED_CONTENT') {
-              toast('This content has been banned and cannot be uploaded.', 'error');
-              return;
-            }
-            if (scanResult.label === 'EXPLICIT') {
-              toast('This content has been blocked. NSFW content is not allowed.', 'error');
-              return;
-            }
-            toast('⚠️ This content has been flagged for review by moderators.', 'warning');
-          }
-        } catch(e) { console.warn('NSFW scan error:', e); }
-      }
       window._pendingAttachment = { name: file.name, type: file.type, data: fileData, size: file.size, context };
       showAttachmentPreview(file.name, file.type, fileData, file.size, context);
     };
@@ -20036,13 +20078,6 @@ function previewForumPostImage(input) {
   var reader = new FileReader();
   reader.onload = async function(e) {
     var fileData = e.target.result;
-    try {
-      var scanResult = await scanContentForNSFW(fileData, file.name, CU?.username, file.type);
-      if (scanResult.flagged && (scanResult.label === 'EXPLICIT' || scanResult.label === 'BANNED_CONTENT')) {
-        toast('This image has been blocked. NSFW content is not allowed.', 'error');
-        return;
-      }
-    } catch(err) { console.warn('NSFW scan error:', err); }
     window._fpImgData = fileData;
     var img = document.getElementById('fp-img-el');
     var preview = document.getElementById('fp-img-preview');
@@ -22151,7 +22186,7 @@ function renderAtelierTab(tab) {
     const SHOP_APPEARANCES = [
       { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(140,100,220,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
       { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(255,249,62,.18)', hoverBorder:'rgba(255,249,62,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
-      { id:'sunset', name:'Sunset', desc:'A warm gradient from deep purple to golden yellow. Watch the sun set over your fortress.', price:100, gradient:'linear-gradient(135deg,#240517,#5e1a2e,#fef93b)', borderColor:'rgba(254,249,59,.18)', hoverBorder:'rgba(254,249,59,.4)', labelColor:'rgba(254,249,59,.6)', previewBg:'linear-gradient(170deg,#240517 0%,#4a1228 50%,#fef93b 100%)', sidebarBg:'#1a0412' },
+      { id:'sunset', name:'Sunset', desc:'A warm gradient from deep purple to golden yellow. Watch the sun set over your fortress.', price:100, gradient:'linear-gradient(135deg,#240517,#5e1a2e,#fef93b)', borderColor:'rgba(254,249,59,.18)', hoverBorder:'rgba(254,249,59,.4)', labelColor:'rgba(254,249,59,.6)', previewBg:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e8a040 75%,#f5d035 88%,#fef93b 100%)', sidebarBg:'#1a0412' },
     ];
 
     const onyxTier = CU?.onyxBadge ? _getOnyxTier(CU.onyxBadgeSpent||0) : null;
@@ -24430,6 +24465,8 @@ async function showMiniProfilePreview(username, anchorEl) {
     </div>
     <!-- Badges -->
     <div style="padding:6px 18px 0;display:flex;flex-wrap:wrap;gap:1px;">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
+    <!-- Roles -->
+    ${curBastion !== null ? `<div style="padding:4px 18px 0;">${renderUserRoleTags(username)}</div>` : ''}
     <div class="mpp-divider"></div>
     <!-- Info sections -->
     ${u.bio?`<div class="mpp-section">
@@ -24552,7 +24589,7 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--border',     '#3e0e2a');
     document.documentElement.style.setProperty('--muted',      '#7a3a5a');
     document.documentElement.style.setProperty('--muted-light','#a05878');
-    document.body.style.background = 'linear-gradient(170deg, #240517 0%, #fef93b 100%)';
+    document.body.style.background = 'linear-gradient(170deg, #240517 0%, #4a1228 20%, #8c2a3a 40%, #c7604a 58%, #e8a040 75%, #f5d035 88%, #fef93b 100%)';
   } else {
     // Fortized Classic (default)
     sidebarColor = '#13161d';
@@ -24594,7 +24631,7 @@ const _appearanceThemeData = {
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#030407', sidebar:'#050710', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
-  sunset:           {id:'sunset',           name:'Sunset',           bg:'#1a0410', sidebar:'#1a0412', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#200616', panel:'#28081c', accent:'#fef93b', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#fef93b 100%)'},
+  sunset:           {id:'sunset',           name:'Sunset',           bg:'#1a0410', sidebar:'#1a0412', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#200616', panel:'#28081c', accent:'#fef93b', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e8a040 75%,#f5d035 88%,#fef93b 100%)'},
 };
 
 function _buildPreviewMockup(t, label) {

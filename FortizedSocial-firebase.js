@@ -456,54 +456,69 @@ const FortizedSocial = (() => {
 
   function initSocket(username, callbacks) {
     _socketCallbacks = callbacks || {};
-    if (_socket) { _socket.disconnect(); }
+    if (_socket) { try { _socket.disconnect(); } catch(_){} _socket = null; }
+    // Socket.io loads async — if not ready yet, try again after a short delay
     if (typeof window === 'undefined' || typeof window.io === 'undefined') {
-      console.warn('[Fortized] Socket.io client not loaded, falling back to Firebase listeners');
-      return startFirebasePolling(username, callbacks);
+      console.log('[Fortized] Socket.io not loaded yet, will retry in 3s');
+      setTimeout(function() {
+        if (typeof window !== 'undefined' && typeof window.io !== 'undefined') {
+          initSocket(username, callbacks);
+        } else {
+          console.warn('[Fortized] Socket.io unavailable, using Firebase only');
+        }
+      }, 3000);
+      return;
     }
     try {
       _socket = window.io(_getSocketURL(), {
         transports: ['websocket', 'polling'],
         reconnection: true,
-        reconnectionAttempts: Infinity,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 2000,
+        reconnectionDelayMax: 10000,
+        timeout: 5000,
       });
       _socket.on('connect', function() {
         _socketReady = true;
+        console.log('[Fortized] Socket.io connected');
         _socket.emit('identify', {
           username: norm(username),
-          status: callbacks.initialStatus || 'online',
-          gameActivity: callbacks.initialGameActivity || null,
+          status: (callbacks || {}).initialStatus || 'online',
+          gameActivity: (callbacks || {}).initialGameActivity || null,
         });
         _socketRooms.forEach(function(room) { _socket.emit('room:join', room); });
       });
       _socket.on('disconnect', function() { _socketReady = false; });
+      _socket.on('connect_error', function() {
+        // Don't spam console — Socket.io will retry up to reconnectionAttempts
+        _socketReady = false;
+      });
       _socket.on('message:new', function(data) {
-        _socketCallbacks.onMessage?.(data.room, data.message);
+        if (_socketCallbacks.onMessage) _socketCallbacks.onMessage(data.room, data.message);
       });
       _socket.on('typing:update', function(data) {
-        _socketCallbacks.onTyping?.(data.room, data.users);
+        if (_socketCallbacks.onTyping) _socketCallbacks.onTyping(data.room, data.users);
       });
       _socket.on('presence:update', function(data) {
-        _socketCallbacks.onStatusChange?.({ username: data.username, status: data.status, gameActivity: data.gameActivity });
+        if (_socketCallbacks.onStatusChange) _socketCallbacks.onStatusChange({ username: data.username, status: data.status });
       });
       _socket.on('notification:new', function(notif) {
-        _socketCallbacks.onNewNotification?.(notif);
+        if (_socketCallbacks.onNewNotification) _socketCallbacks.onNewNotification(notif);
         updateNotifBadgeExternal(username);
       });
       _socket.on('friend:request:new', function(data) {
-        _socketCallbacks.onFriendRequest?.(data);
+        if (_socketCallbacks.onFriendRequest) _socketCallbacks.onFriendRequest(data);
       });
       _socket.on('friend:accepted', function(data) {
-        _socketCallbacks.onFriendAccepted?.(data);
+        if (_socketCallbacks.onFriendAccepted) _socketCallbacks.onFriendAccepted(data);
       });
       _socket.on('reaction:update', function(data) {
-        _socketCallbacks.onReaction?.(data);
+        if (_socketCallbacks.onReaction) _socketCallbacks.onReaction(data);
       });
     } catch (e) {
-      console.warn('[Fortized] Socket.io init failed, using Firebase fallback', e);
-      return startFirebasePolling(username, callbacks);
+      console.warn('[Fortized] Socket.io init failed, Firebase only', e);
+      _socket = null;
+      _socketReady = false;
     }
   }
 
@@ -511,7 +526,9 @@ const FortizedSocial = (() => {
   function isSocketReady() { return _socketReady; }
 
   function socketEmit(event, data) {
-    if (_socket && _socketReady) { _socket.emit(event, data); return true; }
+    try {
+      if (_socket && _socketReady) { _socket.emit(event, data); return true; }
+    } catch(_) {}
     return false;
   }
 
@@ -575,8 +592,10 @@ const FortizedSocial = (() => {
 
   function startPolling(username, callbacks) {
     callbacks = callbacks || {};
-    initSocket(username, callbacks);
+    // Firebase listeners are the primary real-time system — start FIRST
     startFirebasePolling(username, callbacks);
+    // Socket.io is an optional enhancement — start async, never blocks
+    try { initSocket(username, callbacks); } catch(_) {}
   }
 
   function stopPolling() {

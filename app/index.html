@@ -28,7 +28,7 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;overflow:hidden;}
 body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:row;}
 ::selection{background:rgba(255,249,62,.2);}
-::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--panel2);border-radius:4px;}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,249,62,.12);border-radius:100px;border:1px solid rgba(255,249,62,.06);}::-webkit-scrollbar-thumb:hover{background:rgba(255,249,62,.22);}
 /* Performance: lazy-render off-screen elements */
 .msg-row{content-visibility:auto;contain-intrinsic-size:auto 52px;animation:msgFadeIn .18s ease;}
 .msg-row.msg-first{contain-intrinsic-size:auto 72px;}
@@ -329,20 +329,21 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .uv-header-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(254,248,61,.06),transparent 55%);pointer-events:none;}
 .uv-header-content{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;padding:28px 36px 28px;height:100%;min-height:240px;}
 /* ── Active Now Right Sidebar ──── */
-.active-now-sidebar{width:240px;min-width:240px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
-.active-now-header{padding:16px 16px 12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.35);flex-shrink:0;}
-.active-now-list{flex:1;overflow-y:auto;padding:0 8px 16px;}
-.active-now-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;cursor:pointer;transition:background .12s;}
-.active-now-item:hover{background:rgba(255,255,255,.04);}
+.active-now-sidebar{width:260px;min-width:260px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
+.active-now-header{padding:18px 16px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3);flex-shrink:0;display:flex;align-items:center;gap:8px;}
+.active-now-header::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(62,207,110,.5);flex-shrink:0;}
+.active-now-list{flex:1;overflow-y:auto;padding:0 10px 16px;display:flex;flex-direction:column;gap:6px;}
+.active-now-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);backdrop-filter:blur(12px);}
+.active-now-item:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.2);}
 .active-now-item .an-avatar{position:relative;flex-shrink:0;}
-.active-now-item .an-avatar .fa{width:34px;height:34px;border-radius:50%;overflow:hidden;font-size:13px;}
-.active-now-item .an-status-dot{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--channel);}
+.active-now-item .an-avatar .fa{width:36px;height:36px;border-radius:50%;overflow:hidden;font-size:13px;}
+.active-now-item .an-status-dot{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;border-radius:50%;border:2.5px solid var(--channel);box-shadow:0 0 6px rgba(0,0,0,.3);}
 .active-now-item .an-info{flex:1;min-width:0;}
-.active-now-item .an-name{font-size:13px;font-weight:600;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.active-now-item .an-activity{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;}
-.active-now-empty{padding:20px 16px;text-align:center;}
-.active-now-empty .an-empty-icon{font-size:28px;margin-bottom:8px;opacity:.4;}
-.active-now-empty .an-empty-text{font-size:12px;color:var(--muted);line-height:1.5;}
+.active-now-item .an-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'DM Sans',sans-serif;}
+.active-now-item .an-activity{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;margin-top:2px;}
+.active-now-empty{padding:28px 16px;text-align:center;}
+.active-now-empty .an-empty-icon{margin-bottom:10px;opacity:.3;}
+.active-now-empty .an-empty-text{font-size:12px;color:rgba(255,255,255,.25);line-height:1.6;}
 .uv-header-left{display:flex;align-items:center;gap:14px;}
 .uv-header-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid;}
 .uv-header-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.5px;text-shadow:0 2px 12px rgba(0,0,0,.5);}
@@ -719,24 +720,25 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .disc-stats{display:flex;gap:20px;margin-top:14px;position:relative;}
 .disc-stat{font-size:12px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:5px;}
 .disc-stat strong{color:var(--accent);font-size:14px;font-weight:800;}
-.bastion-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
-.bc{background:linear-gradient(160deg,rgba(14,18,28,.95),rgba(10,13,20,.98));border:1px solid rgba(255,255,255,.05);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;}
-.bc::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,249,62,.03),transparent 60%);opacity:0;transition:opacity .2s;pointer-events:none;z-index:1;}
-.bc:hover{border-color:rgba(255,249,62,.15);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 16px rgba(255,249,62,.03);}
+.bastion-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.bc{background:linear-gradient(160deg,rgba(14,18,28,.92),rgba(10,13,20,.96));border:1px solid rgba(255,255,255,.06);border-radius:18px;overflow:hidden;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);position:relative;backdrop-filter:blur(16px);}
+.bc::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,249,62,.04),transparent 60%);opacity:0;transition:opacity .25s;pointer-events:none;z-index:1;}
+.bc:hover{border-color:rgba(255,249,62,.18);transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.4),0 0 20px rgba(255,249,62,.04);}
 .bc:hover::before{opacity:1;}
-.bc-banner{height:80px;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(62,207,110,.03),rgba(18,22,40,.9));display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;position:relative;}
-.bc-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(10,13,20,.8));pointer-events:none;}
+.bc-banner{height:110px;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(62,207,110,.03),rgba(18,22,40,.9));display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;position:relative;}
+.bc-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(10,13,20,.85));pointer-events:none;}
 .bc-banner img{width:100%;height:100%;object-fit:cover;}
-.bc-body{padding:14px 16px;}
-.bc-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.bc-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--panel2),rgba(14,18,28,.95));border:2.5px solid rgba(10,13,20,.95);font-size:18px;display:flex;align-items:center;justify-content:center;margin-top:-28px;position:relative;z-index:2;flex-shrink:0;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.4);}
-.bc-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
-.bc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:-.02em;}
-.bc-desc{font-size:12px;color:rgba(255,255,255,.35);line-height:1.55;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.bc-footer{display:flex;align-items:center;gap:8px;margin-top:4px;}
-.bc-footer .bc-members{font-size:10.5px;color:rgba(255,255,255,.25);display:flex;align-items:center;gap:4px;}
-.bc-footer .bc-members svg{width:12px;height:12px;opacity:.4;}
-.bc-footer .bc-category{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);opacity:.5;margin-left:auto;}
+.bc-body{padding:16px 18px 18px;}
+.bc-meta{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bc-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--panel2),rgba(14,18,28,.95));border:3px solid rgba(10,13,20,.95);font-size:20px;display:flex;align-items:center;justify-content:center;margin-top:-32px;position:relative;z-index:2;flex-shrink:0;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.5);}
+.bc-icon img{width:100%;height:100%;object-fit:cover;border-radius:11px;}
+.bc-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:-.02em;line-height:1.2;}
+.bc-desc{font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-family:'DM Sans',sans-serif;}
+.bc-footer{display:flex;align-items:center;gap:8px;margin-top:6px;}
+.bc-footer .bc-members{font-size:11px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:5px;font-weight:500;}
+.bc-footer .bc-members svg{width:13px;height:13px;opacity:.45;}
+.bc-footer .bc-category{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);opacity:.5;margin-left:auto;}
+.bc-footer .bc-tag{display:inline-flex;padding:3px 10px;border-radius:100px;font-size:9px;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.4);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);}
 /* ── Bastion Mood 2027 ──────────────────────────── */
 .bastion-mood-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:2px 10px 4px;border-radius:14px;cursor:default;transition:all .3s cubic-bezier(.22,1,.36,1);font-size:11.5px;font-weight:600;position:relative;overflow:hidden;backdrop-filter:blur(8px);}
 .bastion-mood-bar:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.15);}
@@ -2238,37 +2240,44 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
       <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
         <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
           <div style="max-width:900px;">
-            <!-- Unified header -->
-            <div class="uv-header" style="border-color:rgba(254,248,61,.1);">
+            <!-- Unified header with multi-stat bar -->
+            <div class="uv-header" style="border-color:rgba(254,248,61,.1);min-height:200px;">
               <img src="/Fortized banner4.png" class="uv-header-bg" onerror="this.style.display='none'">
               <div class="uv-header-grad"></div>
               <div class="uv-header-glow"></div>
-              <div class="uv-header-content">
-                <div class="uv-header-left">
-                  <div class="uv-header-icon" style="background:rgba(254,248,61,.1);border-color:rgba(254,248,61,.18);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <div class="uv-header-content" style="flex-direction:column;align-items:flex-start;gap:14px;min-height:200px;padding-bottom:24px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+                  <div class="uv-header-left">
+                    <div class="uv-header-icon" style="background:rgba(254,248,61,.1);border-color:rgba(254,248,61,.18);">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div>
+                      <div class="uv-header-title" style="font-size:24px;">Friends</div>
+                      <div class="uv-header-sub">Conversations, friends & connections</div>
+                    </div>
                   </div>
-                  <div>
-                    <div class="uv-header-title">Friends</div>
-                    <div class="uv-header-sub">Your conversations & friends</div>
-                  </div>
+                  <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 18px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
                 </div>
-                <div class="uv-header-actions">
-                  <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
+                <!-- Multi-stat bar -->
+                <div id="dm-stat-bar" style="display:flex;gap:20px;margin-top:auto;">
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.35);"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(62,207,110,.4);"></span> <span id="dm-stat-online" style="font-weight:700;color:var(--green);">0</span> Online</div>
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.35);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> <span id="dm-stat-total" style="font-weight:700;color:rgba(255,255,255,.6);">0</span> Total</div>
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.35);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> <span id="dm-stat-bastions" style="font-weight:700;color:rgba(255,255,255,.6);">0</span> Bastions</div>
                 </div>
               </div>
             </div>
-            <!-- Search bar -->
-            <div style="margin-bottom:20px;position:relative;">
-              <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              </span>
-              <input type="text" id="dm-friends-search" placeholder="Search friends..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;" onfocus="this.style.borderColor='rgba(254,248,61,.3)';this.style.background='rgba(255,255,255,.05)'" onblur="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'">
-            </div>
-            <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
-              <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">Online</button>
-              <button class="disc-tab" onclick="dmFriendsFilter('all',this)">All</button>
-              <button class="disc-tab" onclick="dmFriendsFilter('pending',this)">Pending</button>
+            <!-- Tabs + Search flush row -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+              <div id="dm-friends-tabs" style="display:flex;gap:5px;">
+                <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">Online</button>
+                <button class="disc-tab" onclick="dmFriendsFilter('all',this)">All</button>
+                <button class="disc-tab" onclick="dmFriendsFilter('pending',this)">Pending</button>
+              </div>
+              <div style="flex:1;"></div>
+              <div style="position:relative;width:200px;">
+                <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);pointer-events:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+                <input type="text" id="dm-friends-search" placeholder="Search..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:7px 12px 7px 32px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:all .15s;" onfocus="this.style.borderColor='rgba(254,248,61,.2)';this.style.background='rgba(255,255,255,.05)'" onblur="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'">
+              </div>
             </div>
             <div id="dm-friends-list"></div>
           </div>
@@ -2496,16 +2505,16 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
       <!-- Step 2b: custom create form -->
       <div id="cb-step-form" style="display:none;">
         <div style="display:flex;gap:12px;margin-bottom:14px;">
-          <div id="cb-icon-preview" style="width:60px;height:60px;border-radius:14px;background:var(--panel2);border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;flex-shrink:0;overflow:hidden;" onclick="document.getElementById('cb-icon-upload').click()">🏰</div>
-          <input id="cb-icon-upload" type="file" accept="image/*" style="display:none;" onchange="previewCBIcon(event)">
+          <div id="cb-icon-preview" style="width:60px;height:60px;border-radius:14px;background:var(--panel2);border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;overflow:hidden;transition:all .2s;" onclick="document.getElementById('cb-icon-upload').click()" onmouseenter="this.style.borderColor='rgba(255,249,62,.3)'" onmouseleave="this.style.borderColor='var(--border)'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+          <input id="cb-icon-upload" type="file" accept="image/*,image/gif" style="display:none;" onchange="previewCBIcon(event)">
           <div style="flex:1;">
             <input class="modal-input" id="cb-name" placeholder="Bastion name" maxlength="40">
             <input class="modal-input" id="cb-desc" placeholder="Short description (optional)" maxlength="120">
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-          <span id="cb-selected-emoji" style="font-size:22px;padding:4px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:8px;cursor:pointer;" onclick="pickCBEmoji()">🏰</span>
-          <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="pickCBEmoji()">Change Emoji</button>
+          <span id="cb-selected-emoji" style="display:none;">🏰</span>
+          <div style="font-size:11px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Upload an image or GIF as your bastion emblem</div>
         </div>
         <div class="vis-toggle" style="margin-bottom:12px;">
           <div class="vis-opt active" id="vis-public" onclick="setCBVis('public')">
@@ -4577,11 +4586,11 @@ function renderDMFriendsHome() {
   const filter = _dmFriendsFilter;
 
   if (!friends.length) {
-    list.innerHTML = `<div style="text-align:center;padding:40px 20px;">
-      <div style="font-size:36px;margin-bottom:12px;">👥</div>
-      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;">No Friends Yet</div>
-      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:16px;">Add friends by their username to start chatting!</div>
-      <button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button>
+    list.innerHTML = `<div style="text-align:center;padding:48px 20px;">
+      <div style="margin-bottom:14px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;color:rgba(255,255,255,.7);">No Friends Yet</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.3);margin-bottom:18px;line-height:1.5;">Add friends by their username to start chatting</div>
+      <button class="btn-a" onclick="openModal('modal-add-friend')" style="padding:9px 20px;border-radius:12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Friend</button>
     </div>`;
     return;
   }
@@ -4607,17 +4616,17 @@ function renderDMFriendsHome() {
   html += `<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">${filter==='online'?'ONLINE':'ALL FRIENDS'} — ${friends.length}</div>`;
 
   friends.forEach(f => {
-    html += `<div class="dm-friend-row" data-user="${escapeHTML(f)}" style="display:flex;align-items:center;gap:14px;padding:10px 16px;border-radius:10px;transition:all .14s;cursor:pointer;border:1px solid transparent;" onmouseenter="this.style.background='rgba(255,255,255,.03)';this.style.borderColor='rgba(255,255,255,.04)'" onmouseleave="this.style.background='';this.style.borderColor='transparent'" onclick="openDMView('${escapeHTML(f)}')">
+    html += `<div class="dm-friend-row" data-user="${escapeHTML(f)}" style="display:flex;align-items:center;gap:14px;padding:10px 16px;border-radius:12px;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:pointer;border:1px solid transparent;background:transparent;" onmouseenter="this.style.background='rgba(255,255,255,.025)';this.style.borderColor='rgba(255,255,255,.05)'" onmouseleave="this.style.background='';this.style.borderColor='transparent'" onclick="openDMView('${escapeHTML(f)}')">
       <div style="position:relative;flex-shrink:0;">
         <div class="fa" id="dm-home-av-${escapeHTML(f)}" style="width:42px;height:42px;font-size:15px;border:2px solid rgba(255,255,255,.06);">${buildAvatarHTML(null,f,42)}</div>
         <span class="dm-home-status" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;background:#6b7280;border:2.5px solid var(--bg);"></span>
       </div>
       <div style="flex:1;min-width:0;">
         <div id="dm-home-dn-${escapeHTML(f)}" style="font-weight:700;font-size:13.5px;font-family:'Syne',sans-serif;">${escapeHTML(f)}</div>
-        <div class="dm-home-status-text" data-for="${escapeHTML(f)}" style="font-size:11px;color:rgba(255,255,255,.3);margin-top:1px;">Offline</div>
+        <div class="dm-home-status-text" data-for="${escapeHTML(f)}" style="font-size:11px;color:rgba(255,255,255,.25);margin-top:2px;">Offline</div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button style="padding:6px 14px;font-size:11px;font-weight:600;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.5);cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:5px;" onclick="event.stopPropagation();openDMView('${escapeHTML(f)}')" onmouseover="this.style.background='rgba(255,255,255,.07)';this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.5)'">
+        <button style="padding:7px 16px;font-size:11px;font-weight:600;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:rgba(255,255,255,.45);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:5px;" onclick="event.stopPropagation();openDMView('${escapeHTML(f)}')" onmouseover="this.style.borderColor='rgba(255,249,62,.35)';this.style.color='var(--accent)';this.style.background='rgba(255,249,62,.04)';this.style.boxShadow='0 0 12px rgba(255,249,62,.08)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.45)';this.style.background='transparent';this.style.boxShadow='none'">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>
       </div>
     </div>`;
@@ -4625,7 +4634,15 @@ function renderDMFriendsHome() {
 
   list.innerHTML = html;
 
+  // Update stat bar
+  const statOnline = document.getElementById('dm-stat-online');
+  const statTotal = document.getElementById('dm-stat-total');
+  const statBastions = document.getElementById('dm-stat-bastions');
+  if (statTotal) statTotal.textContent = friends.length;
+  if (statBastions) statBastions.textContent = (CU?.bastions||[]).length;
+
   // Async: fetch real PFPs, display names, and statuses
+  let _onlineCount = 0;
   const allUsers = [...new Set([...friends, ...pending])];
   allUsers.forEach(async f => {
     try {
@@ -4634,7 +4651,7 @@ function renderDMFriendsHome() {
 
       // Update friend row avatar + display name
       const avEl = document.getElementById('dm-home-av-'+f);
-      if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 40);
+      if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 42);
       const dnEl = document.getElementById('dm-home-dn-'+f);
       if (dnEl) dnEl.textContent = u.displayName || f;
 
@@ -4648,10 +4665,19 @@ function renderDMFriendsHome() {
       const st = FtzStatus.sanitize(u.status || 'offline');
       const dot = document.querySelector(`.dm-home-status[data-for="${CSS.escape(f)}"]`);
       if (dot) dot.style.background = FtzStatus.color(st);
-      const text = document.querySelector(`.dm-home-status-text[data-for="${CSS.escape(f)}"]`);
-      if (text) text.textContent = u.customStatus || FtzStatus.publicLabel(st);
+      const stText = document.querySelector(`.dm-home-status-text[data-for="${CSS.escape(f)}"]`);
+      if (stText) {
+        const csText = u.customStatus?.text || u.customStatus;
+        stText.textContent = csText || FtzStatus.publicLabel(st);
+      }
       // Subscribe to real-time status updates for consistency
       subscribeProfileStatus(f);
+      // Track online count
+      if (FtzStatus.isPresent(st)) {
+        _onlineCount++;
+        const sob = document.getElementById('dm-stat-online');
+        if (sob) sob.textContent = _onlineCount;
+      }
       // If filtering online and user is offline, hide row
       if (filter === 'online' && !FtzStatus.isPresent(st)) {
         const row = document.querySelector(`.dm-friend-row[data-user="${CSS.escape(f)}"]`);
@@ -4685,8 +4711,8 @@ async function renderActiveNowSidebar(containerId) {
   const friends = CU?.friends || [];
   if (!friends.length) {
     container.innerHTML = `<div class="active-now-empty">
-      <div class="an-empty-icon">😴</div>
-      <div class="an-empty-text">It's quiet for now...<br>When friends are active, they'll show up here.</div>
+      <div class="an-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+      <div class="an-empty-text">It's quiet for now...<br>When friends come online, they'll appear here.</div>
     </div>`;
     return;
   }
@@ -4697,31 +4723,39 @@ async function renderActiveNowSidebar(containerId) {
     try {
       const u = await FortizedSocial.getUserByName(f);
       const st = u?.status || 'offline';
-      return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, customStatus:u?.customStatus||''};
-    } catch { return {username:f, displayName:f, pfp:null, status:'offline', customStatus:''}; }
+      const csText = u?.customStatus?.text || (typeof u?.customStatus === 'string' ? u.customStatus : '');
+      const gameAct = u?.gameActivity?.name || '';
+      return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, customStatus:csText, gameActivity:gameAct};
+    } catch { return {username:f, displayName:f, pfp:null, status:'offline', customStatus:'', gameActivity:''}; }
   }));
 
   const online = results.filter(r => FtzStatus.isPresent(r.status));
 
   if (!online.length) {
     container.innerHTML = `<div class="active-now-empty">
-      <div class="an-empty-icon">😴</div>
-      <div class="an-empty-text">It's quiet for now...<br>When friends are active, they'll show up here.</div>
+      <div class="an-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+      <div class="an-empty-text">It's quiet for now...<br>When friends come online, they'll appear here.</div>
     </div>`;
     return;
   }
 
-  container.innerHTML = online.map(u => `
-    <div class="active-now-item" onclick="openDMView('${escapeHTML(u.username)}')">
+  container.innerHTML = online.map(u => {
+    const activityText = u.gameActivity
+      ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.6;flex-shrink:0;"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> Playing: ${escapeHTML(u.gameActivity)}`
+      : u.customStatus
+        ? escapeHTML(u.customStatus)
+        : FtzStatus.label(u.status);
+    return `<div class="active-now-item" onclick="openDMView('${escapeHTML(u.username)}')">
       <div class="an-avatar">
-        <div class="fa" style="width:34px;height:34px;border-radius:50%;overflow:hidden;font-size:13px;">${buildAvatarHTML(u.pfp, u.displayName, 34)}</div>
-        <span class="an-status-dot" style="background:${FtzStatus.color(u.status)};"></span>
+        <div class="fa" style="width:36px;height:36px;border-radius:50%;overflow:hidden;font-size:13px;">${buildAvatarHTML(u.pfp, u.displayName, 36)}</div>
+        <span class="an-status-dot" style="background:${FtzStatus.color(u.status)};box-shadow:0 0 6px ${FtzStatus.color(u.status)}55;"></span>
       </div>
       <div class="an-info">
         <div class="an-name">${escapeHTML(u.displayName)}</div>
-        <div class="an-activity">${u.customStatus ? escapeHTML(u.customStatus) : FtzStatus.label(u.status)}</div>
+        <div class="an-activity">${activityText}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function showDMFriendsHome() {
@@ -7081,14 +7115,15 @@ function _renderDiscoverFeatured(bastions){
   if(!el)return;
   const featured=bastions.filter(b=>b.public!==false).sort((a,b)=>(b.memberCount||0)-(a.memberCount||0)).slice(0,3);
   if(!featured.length){el.innerHTML='';return;}
-  el.innerHTML=`<div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--muted-light);margin-bottom:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Featured</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
+  el.innerHTML=`<div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:.04em;text-transform:uppercase;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Featured Bastions</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
   ${featured.map(b=>{
     const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
-    return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(62,207,110,.03),rgba(18,22,34,.95));border:1.5px solid rgba(255,249,62,.15);border-radius:18px;padding:18px 20px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(255,249,62,.08)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
-      <div style="width:50px;height:50px;border-radius:14px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;border:1px solid rgba(255,249,62,.12);">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:(b.emblem||'🏰')}</div>
-      <div style="flex:1;min-width:0;"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:3px;">${escapeHTML(b.name)}</div><div style="font-size:11.5px;color:var(--muted-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML((b.desc||'A community bastion').slice(0,60))}</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px;">${b.memberCount||1} members</div></div>
-      ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.1);padding:4px 10px;border-radius:8px;">Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);padding:4px 10px;border-radius:8px;">Join</span>`}
+    const mc = b.memberCount||1;
+    return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid rgba(255,249,62,.12);border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(12px);" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 36px rgba(255,249,62,.06)';this.style.borderColor='rgba(255,249,62,.25)'" onmouseleave="this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,249,62,.12)'">
+      <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,249,62,.1);overflow:hidden;">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}</div>
+      <div style="flex:1;min-width:0;"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'DM Sans',sans-serif;">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.6);display:flex;align-items:center;gap:2px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg> Active</span>`:''}</div></div>
+      ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.12);padding:5px 12px;border-radius:10px;">Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);padding:5px 12px;border-radius:10px;">Join</span>`}
     </div>`;
   }).join('')}</div>`;
 }
@@ -7096,22 +7131,30 @@ function renderDiscoverGrid(bastions){
   const grid=document.getElementById('discover-grid');
   if(!grid)return;
   const filtered=bastions.filter(b=>b.public!==false&&(discoverTab==='all'||(b.category||'').toLowerCase()===discoverTab));
-  if(!filtered.length){grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;"><div style="font-size:40px;margin-bottom:12px;opacity:.4;">🔍</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--muted-light);margin-bottom:6px;">No bastions found</div><div style="font-size:13px;color:var(--muted);">Try a different category or search term</div></div>`;return;}
-  grid.innerHTML=filtered.map(b=>{
+  if(!filtered.length){grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;"><div style="margin-bottom:14px;"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:6px;">No bastions found</div><div style="font-size:13px;color:rgba(255,255,255,.25);">Try a different category or search term</div></div>`;return;}
+  // Sort: trending (most members) first
+  const sorted = [...filtered].sort((a,b) => (b.memberCount||0) - (a.memberCount||0));
+  grid.innerHTML=sorted.map(b=>{
     const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
     const cat=(b.category||'').toLowerCase();
+    const mc = b.memberCount||1;
+    const isTrending = mc >= 5;
+    // Generate sub-genre tags from category
+    const tags = (b.tags || []).slice(0,3);
     return `<div class="bc" onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">
-      <div class="bc-banner">${b.icon?`<img src="${b.icon}" alt="">`:`<span style="position:relative;z-index:1;">${b.emblem||'🏰'}</span>`}</div>
+      <div class="bc-banner">${b.icon?`<img src="${b.icon}" alt="">`:`<div style="position:relative;z-index:1;width:100%;height:100%;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(62,207,110,.04),rgba(18,22,40,.9));display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.2)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`}</div>
       <div class="bc-body">
-        <div class="bc-meta"><div class="bc-icon">${b.icon?`<img src="${b.icon}" alt="">`:(b.emblem||'🏰')}</div><div style="flex:1"></div>
-          ${joined?`<span style="font-size:10.5px;font-weight:700;color:var(--green);background:rgba(52,211,153,.1);padding:3px 10px;border-radius:8px;">✓ Joined</span>`:`<button class="btn-a" style="padding:5px 14px;font-size:11.5px;border-radius:10px;" onclick="event.stopPropagation();promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">Join</button>`}
+        <div class="bc-meta"><div class="bc-icon">${b.icon?`<img src="${b.icon}" alt="">`:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.5)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>`}</div><div style="flex:1"></div>
+          ${joined?`<span style="font-size:10.5px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.15);padding:4px 12px;border-radius:10px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Joined</span>`:`<button style="padding:5px 16px;font-size:11px;font-weight:700;background:transparent;border:1px solid rgba(255,249,62,.2);border-radius:10px;color:var(--accent);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="event.stopPropagation();promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" onmouseenter="this.style.background='rgba(255,249,62,.08)';this.style.borderColor='rgba(255,249,62,.4)';this.style.boxShadow='0 0 12px rgba(255,249,62,.1)'" onmouseleave="this.style.background='transparent';this.style.borderColor='rgba(255,249,62,.2)';this.style.boxShadow='none'">Join</button>`}
         </div>
         <div class="bc-name">${escapeHTML(b.name)}</div>
-        <div class="bc-desc">${escapeHTML((b.desc||'').slice(0,120))}</div>
+        <div class="bc-desc">${escapeHTML((b.desc||'').slice(0,140))}</div>
         <div class="bc-footer">
-          <div class="bc-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> ${b.memberCount||1}</div>
+          <div class="bc-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</div>
+          ${isTrending?`<div style="display:flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:rgba(62,207,110,.7);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Trending</div>`:``}
           ${cat?`<div class="bc-category">${escapeHTML(cat)}</div>`:''}
         </div>
+        ${tags.length?`<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;">${tags.map(t=>`<span class="bc-tag">#${escapeHTML(t)}</span>`).join('')}</div>`:''}
       </div>
     </div>`;
   }).join('');

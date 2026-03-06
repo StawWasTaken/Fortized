@@ -2893,28 +2893,10 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 <script>
 
 // ══════════════════════════════════════════════════════════
-// TAURI NATIVE BRIDGE
+// WEB ACTIVITY HELPERS
 // ══════════════════════════════════════════════════════════
-// The desktop app uses Tauri (Rust + webview). We call Rust
-// commands via window.__TAURI__.core.invoke(). Falls back
-// gracefully on web where __TAURI__ doesn't exist.
-const _isTauri = () => !!(window.__TAURI__?.core?.invoke);
-
-async function tauriInvoke(cmd, args) {
-  if (!_isTauri()) return undefined;
-  return window.__TAURI__.core.invoke(cmd, args || {});
-}
-
-// Convenience wrappers matching Rust command names
-async function nativeGetRunningApps() {
-  if (!_isTauri()) return null;
-  try { return await tauriInvoke('get_running_apps'); } catch { return null; }
-}
-
-async function nativeGetSystemIdleTime() {
-  if (!_isTauri()) return null;
-  try { return await tauriInvoke('get_system_idle_time'); } catch { return null; }
-}
+// Pure web app — no native process detection available.
+// Activity is set manually by the user or via screen-share detection.
 
 // ══════════════════════════════════════════════════════════
 // FAVICON NOTIFICATION SWAP
@@ -3121,34 +3103,7 @@ const FtzStatus = (() => {
     }
   }
 
-  // ── Tauri system-level idle detection ───────────────
-  let _electronIdlePoller = null;
-  const ELECTRON_IDLE_POLL_MS = 15_000;  // check every 15s
-  const ELECTRON_IDLE_THRESHOLD = 10 * 60; // 10 min in seconds
-
-  function _startElectronIdlePoll() {
-    if (_electronIdlePoller) return;
-    _electronIdlePoller = setInterval(async () => {
-      if (!CU?.username) return;
-      try {
-        const idleSec = await nativeGetSystemIdleTime();
-        if (typeof idleSec !== 'number') return;
-        if (idleSec >= ELECTRON_IDLE_THRESHOLD && _manualStatus === 'online' && !_autoAway) {
-          _goIdle();
-        } else if (idleSec < ELECTRON_IDLE_THRESHOLD && _autoAway) {
-          // User returned — restore manual status
-          _autoAway = false;
-          CU.status = _manualStatus || 'online';
-          _broadcast(CU.status);
-          updateUserbar();
-        }
-      } catch {}
-    }, ELECTRON_IDLE_POLL_MS);
-  }
-
-  function _stopElectronIdlePoll() {
-    if (_electronIdlePoller) { clearInterval(_electronIdlePoller); _electronIdlePoller = null; }
-  }
+  // Idle detection is purely browser-based (DOM events + visibilitychange above).
 
   function initIdle() {
     // DOM-level activity detection (works in browser + Electron)
@@ -3171,12 +3126,7 @@ const FtzStatus = (() => {
       }
     });
 
-    // Tauri desktop: use system-level idle detection
-    // This properly detects when the user is idle across the whole OS,
-    // not just the browser tab (keyboard/mouse activity in other apps counts)
-    if (_isTauri()) {
-      _startElectronIdlePoll();
-    }
+    // Browser idle detection is handled above via DOM events + visibilitychange.
 
     // Use Firebase onDisconnect to reliably set offline status when tab closes
     if (CU?.username) {
@@ -3186,7 +3136,6 @@ const FtzStatus = (() => {
     }
     window.addEventListener('beforeunload', () => {
       if (!CU?.username) return;
-      _stopElectronIdlePoll();
       if (typeof _stopAutoActivityDetection === 'function') _stopAutoActivityDetection();
       _broadcast('offline');
     });
@@ -18436,10 +18385,6 @@ function applyRadianceFont() {
 // REGISTERED GAMES - detect running processes
 // ════════════════════════════════════════════
 async function detectRunningApps() {
-  // Desktop (Tauri): use native process list if available
-  if (_isTauri()) {
-    try { const apps = await nativeGetRunningApps(); if (apps) return apps; } catch {}
-  }
   // Build list: user's saved game collection + popular apps
   const userGames = (CU?.gameCollection||[]).map(g=>({ name:g.name, icon:g.icon||'🎮', fromCollection:true }));
   const popularApps = [
@@ -19052,46 +18997,24 @@ async function renderActivityDetectionTab(main) {
   if (!main) return;
   const customApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
   const activityEnabled = localStorage.getItem('ftz_activity_detection') !== 'false';
-  const isDesktop = _isTauri();
 
-  // ── Detect currently running apps (desktop only) ──
-  let detectedApps = [];
-  if (isDesktop && activityEnabled) {
-    try {
-      const procs = await nativeGetRunningApps();
-      detectedApps = _matchAllRunningApps(procs);
-    } catch {}
-  }
-
-  // ── Detected Apps section (Discord-style per-app toggles) ──
-  let detectedHtml = '';
-  if (isDesktop) {
-    if (detectedApps.length) {
-      detectedHtml = '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
-      detectedApps.forEach(app => {
-        const enabled = _isAppActivityEnabled(app.name);
-        detectedHtml += '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:'+(enabled?'rgba(62,207,110,.04)':'var(--panel)')+';border:1px solid '+(enabled?'rgba(62,207,110,.15)':'var(--border)')+';border-radius:12px;transition:all .15s;">'
-          + '<span style="font-size:22px;flex-shrink:0;">' + app.icon + '</span>'
-          + '<div style="flex:1;min-width:0;">'
-          + '<div style="font-size:13px;font-weight:700;color:#fff;">' + escapeHTML(app.name) + '</div>'
-          + '<div style="font-size:10.5px;color:'+(enabled?'rgba(62,207,110,.6)':'var(--muted)')+';">'+(enabled?'Showing as activity':'Hidden — won\'t show as status')+'</div>'
-          + '</div>'
-          + '<div class="toggle '+(enabled?'on':'')+'" onclick="toggleDetectedApp(this,\''+escapeHTML(app.name).replace(/'/g,"\\'")+'\')"></div>'
-          + '</div>';
-      });
-      detectedHtml += '</div>';
-    } else {
-      detectedHtml = '<div style="text-align:center;padding:24px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
-        + '<div style="font-size:32px;margin-bottom:8px;">🔍</div>'
-        + '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">No apps detected right now</div>'
-        + '<div style="font-size:12px;color:var(--muted);">Open a game or app and it will appear here automatically.</div>'
-        + '</div>';
-    }
+  // ── Current activity section ──
+  const currentGame = _gameActivity;
+  let currentHtml = '';
+  if (currentGame) {
+    currentHtml = '<div style="display:flex;align-items:center;gap:14px;padding:16px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.15);border-radius:14px;margin-bottom:16px;">'
+      + '<span style="font-size:28px;">' + (currentGame.icon||'🎮') + '</span>'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(62,207,110,.6);margin-bottom:2px;">Currently showing</div>'
+      + '<div style="font-size:14px;font-weight:700;color:#fff;">' + escapeHTML(currentGame.name||'') + '</div>'
+      + '</div>'
+      + '<button onclick="setGameActivity(null);renderActivityDetectionTab(this.closest(\'.settings-main\'))" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);color:var(--red);font-size:11px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;">Clear</button>'
+      + '</div>';
   } else {
-    detectedHtml = '<div style="text-align:center;padding:24px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
-      + '<div style="font-size:32px;margin-bottom:8px;">🖥️</div>'
-      + '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">Desktop app required</div>'
-      + '<div style="font-size:12px;color:var(--muted);">Automatic detection works in the Fortized desktop app. On web, you can manually pick games below or use screen share detection.</div>'
+    currentHtml = '<div style="text-align:center;padding:24px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
+      + '<div style="font-size:28px;margin-bottom:8px;">😴</div>'
+      + '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">No activity set</div>'
+      + '<div style="font-size:12px;color:var(--muted);">Pick a game or app below to show what you\'re up to.</div>'
       + '</div>';
   }
 
@@ -19122,6 +19045,18 @@ async function renderActivityDetectionTab(main) {
     + '</div>';
   }).join('');
 
+  // ── Quick-pick grid: built-in games as clickable cards ──
+  const quickPickHtml = KNOWN_GAMES.map(g => {
+    const active = _gameActivity?.name === g.name;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:'+(active?'rgba(62,207,110,.06)':'var(--panel2)')+';border:1px solid '+(active?'rgba(62,207,110,.2)':'var(--border)')+';border-radius:10px;cursor:pointer;transition:all .15s;" '
+    + 'onmouseenter="this.style.borderColor=\'var(--accent)\'" onmouseleave="this.style.borderColor=\''+(active?'rgba(62,207,110,.2)':'var(--border)')+'\'" '
+    + 'onclick="quickPickActivity(\''+escapeHTML(g.name).replace(/'/g,"\\'")+'\',\''+g.icon+'\')">'
+    + '<span style="font-size:18px;">' + g.icon + '</span>'
+    + '<span style="font-size:12.5px;font-weight:600;color:'+(active?'#3ecf6e':'rgba(255,255,255,.6)')+';flex:1;">' + escapeHTML(g.name) + '</span>'
+    + (active ? '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:#3ecf6e;letter-spacing:.06em;">Active</span>' : '')
+    + '</div>';
+  }).join('');
+
   main.innerHTML = '<div class="settings-panel">'
     + '<div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(62,207,110,.12);">'
     + '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 60% 40%,rgba(62,207,110,.06),transparent 60%);pointer-events:none;"></div>'
@@ -19130,35 +19065,33 @@ async function renderActivityDetectionTab(main) {
     + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'
     + '</div>'
     + '<div>'
-    + '<div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#fff;">Activity Detection</div>'
-    + '<div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Choose which apps show as your activity status</div>'
+    + '<div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#fff;">Activity Status</div>'
+    + '<div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Show friends what you\'re playing or working on</div>'
     + '</div></div></div>'
     // Master toggle
     + '<div class="settings-section-title">ACTIVITY STATUS</div>'
     + '<div class="settings-row">'
-    + '<div class="settings-row-label"><div class="srl-name">Display current activity as a status message</div><div class="srl-desc">When enabled, Fortized will automatically detect games and apps you\'re running and show them as your status.</div></div>'
+    + '<div class="settings-row-label"><div class="srl-name">Display current activity as a status message</div><div class="srl-desc">When enabled, your selected game or app will show as your status to other users.</div></div>'
     + '<div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">'
     + '<div class="toggle ' + (activityEnabled ? 'on' : '') + '" onclick="toggleActivityDetection(this)"></div>'
     + '</div></div>'
-    // Detected apps (live)
-    + '<div class="settings-section-title" style="margin-top:28px;">DETECTED APPS'
-    + (isDesktop ? '<button onclick="refreshDetectedApps()" style="float:right;background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;">Refresh</button>' : '')
-    + '</div>'
-    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Apps running on your computer right now. Toggle each app to choose whether it shows as your activity status.</div>'
-    + '<div id="detected-apps-list">' + detectedHtml + '</div>'
+    // Current activity
+    + '<div class="settings-section-title" style="margin-top:28px;">CURRENT ACTIVITY</div>'
+    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">What\'s currently shown on your profile. Pick a game below or add a custom app.</div>'
+    + currentHtml
     // Custom apps
     + '<div class="settings-section-title" style="margin-top:28px;">ADD CUSTOM APP</div>'
-    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Add apps that aren\'t detected automatically. These will be recognized by their process name.</div>'
+    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Add your own games or apps that aren\'t in the list.</div>'
     + appListHtml
     + '<div style="display:flex;gap:8px;margin-bottom:28px;">'
     + '<input class="field-input" id="da-app-name" placeholder="App name (e.g. Photoshop)" style="flex:1;font-size:12.5px;">'
     + '<input class="field-input" id="da-app-icon" placeholder="\uD83C\uDFAE" style="width:48px;font-size:16px;text-align:center;">'
     + '<button class="btn-a" onclick="addDetectableApp()" style="padding:8px 18px;font-size:12.5px;">Add App</button>'
     + '</div>'
-    // Built-in apps with toggles
-    + '<div class="settings-section-title" style="margin-top:8px;">GAMES &amp; APPS</div>'
-    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Toggle which built-in apps can show as your activity status.</div>'
-    + '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">' + builtInHtml + '</div>'
+    // Quick pick grid
+    + '<div class="settings-section-title" style="margin-top:8px;">QUICK PICK</div>'
+    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Click a game or app to set it as your current activity.</div>'
+    + '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">' + quickPickHtml + '</div>'
     + '</div>';
 }
 
@@ -19171,38 +19104,11 @@ function toggleDetectedApp(el, appName) {
   }
 }
 
-async function refreshDetectedApps() {
-  const container = document.getElementById('detected-apps-list');
-  if (!container) return;
-  container.innerHTML = '<div style="text-align:center;padding:16px;"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto;"></div><div style="font-size:11px;color:var(--muted);margin-top:8px;">Scanning processes\u2026</div></div>';
-  try {
-    const procs = await nativeGetRunningApps();
-    const apps = _matchAllRunningApps(procs);
-    if (apps.length) {
-      let html = '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
-      apps.forEach(app => {
-        const enabled = _isAppActivityEnabled(app.name);
-        html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:'+(enabled?'rgba(62,207,110,.04)':'var(--panel)')+';border:1px solid '+(enabled?'rgba(62,207,110,.15)':'var(--border)')+';border-radius:12px;transition:all .15s;">'
-          + '<span style="font-size:22px;flex-shrink:0;">' + app.icon + '</span>'
-          + '<div style="flex:1;min-width:0;">'
-          + '<div style="font-size:13px;font-weight:700;color:#fff;">' + escapeHTML(app.name) + '</div>'
-          + '<div style="font-size:10.5px;color:'+(enabled?'rgba(62,207,110,.6)':'var(--muted)')+';">'+(enabled?'Showing as activity':'Hidden — won\'t show as status')+'</div>'
-          + '</div>'
-          + '<div class="toggle '+(enabled?'on':'')+'" onclick="toggleDetectedApp(this,\''+escapeHTML(app.name).replace(/'/g,"\\'")+'\')"></div>'
-          + '</div>';
-      });
-      html += '</div>';
-      container.innerHTML = html;
-    } else {
-      container.innerHTML = '<div style="text-align:center;padding:24px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
-        + '<div style="font-size:32px;margin-bottom:8px;">🔍</div>'
-        + '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">No apps detected right now</div>'
-        + '<div style="font-size:12px;color:var(--muted);">Open a game or app and it will appear here automatically.</div>'
-        + '</div>';
-    }
-  } catch {
-    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">Could not scan processes</div>';
-  }
+function quickPickActivity(name, icon) {
+  setGameActivity(name, icon);
+  // Re-render the settings tab to reflect the new activity
+  const main = document.querySelector('.settings-main');
+  if (main) renderActivityDetectionTab(main);
 }
 
 function toggleActivityDetection(el) {
@@ -21664,34 +21570,9 @@ function _matchRunningApp(processList) {
 }
 
 function _startAutoActivityDetection() {
-  if (_autoActivityPoller) return;
-  if (!_isTauri()) return;
-  const activityEnabled = () => localStorage.getItem('ftz_activity_detection') !== 'false';
-  _autoActivityPoller = setInterval(async () => {
-    if (!CU?.username || !activityEnabled()) return;
-    try {
-      const apps = await nativeGetRunningApps();
-      const detected = _matchRunningApp(apps);
-      if (detected) {
-        // Only update if activity changed (avoid spamming Firebase)
-        if (!_gameActivity || _gameActivity.name !== detected.name) {
-          setGameActivity(detected.name, detected.icon);
-        }
-      } else if (_gameActivity && !_gameActivity._manual) {
-        // Game closed — clear auto-detected activity (keep manual picks)
-        setGameActivity(null);
-      }
-    } catch {}
-  }, AUTO_ACTIVITY_POLL_MS);
-  // Run immediately on start
-  (async () => {
-    if (!activityEnabled()) return;
-    try {
-      const apps = await nativeGetRunningApps();
-      const detected = _matchRunningApp(apps);
-      if (detected) setGameActivity(detected.name, detected.icon);
-    } catch {}
-  })();
+  // Web-only: no native process scanning available.
+  // Activity is set manually by the user via the picker or settings.
+  // Nothing to poll — this is intentionally a no-op.
 }
 
 function _stopAutoActivityDetection() {
@@ -21699,15 +21580,7 @@ function _stopAutoActivityDetection() {
 }
 
 async function detectGameActivity() {
-  // Desktop (Tauri): use native process list for instant detection
-  if (_isTauri()) {
-    try {
-      const apps = await nativeGetRunningApps();
-      const detected = _matchRunningApp(apps);
-      if (detected) return detected;
-    } catch {}
-  }
-  // Web fallback: Screen Capture API hack — getDisplayMedia triggers the
+  // Screen Capture API hack — getDisplayMedia triggers the
   // browser's window picker. The selected track's label often contains
   // the window title, which we match against KNOWN_GAMES + user custom apps.
   try {

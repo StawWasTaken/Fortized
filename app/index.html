@@ -19099,11 +19099,11 @@ async function renderActivityDetectionTab(main) {
   } else {
     companionHtml = '<div style="padding:20px;background:linear-gradient(135deg,rgba(99,102,241,.04),rgba(62,207,110,.04));border:1px solid rgba(99,102,241,.12);border-radius:14px;margin-bottom:16px;text-align:center;">'
       + '<div style="font-size:32px;margin-bottom:10px;">🎮</div>'
-      + '<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Enable Automatic Game Detection</div>'
-      + '<div style="font-size:12px;color:var(--muted);line-height:1.5;max-width:340px;margin:0 auto 14px;">Fortized can automatically detect what game you\'re playing and show it on your profile — just like Discord.</div>'
-      + '<button onclick="showGameDetectionSetup()" style="background:var(--accent);color:#fff;border:none;font-size:13px;font-weight:700;padding:10px 28px;border-radius:10px;cursor:pointer;transition:all .15s;" onmouseover="this.style.filter=\'brightness(1.1)\'" onmouseout="this.style.filter=\'none\'">Set Up (One-Time)</button>'
-      + '<div style="font-size:11px;color:var(--muted);margin-top:10px;">Takes less than a minute. You can also pick games manually below.</div>'
+      + '<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Setting Up Game Detection</div>'
+      + '<div id="companion-auto-setup" style="margin-top:8px;"><div class="pl-spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto 8px;"></div><div style="font-size:12px;color:var(--muted);">Preparing installer\u2026</div></div>'
       + '</div>';
+    // Auto-trigger companion download
+    setTimeout(() => _autoDownloadCompanion(), 600);
   }
 
   // ── Detected apps (live from companion) ──
@@ -19218,30 +19218,44 @@ function quickPickActivity(name, icon) {
   if (main) renderActivityDetectionTab(main);
 }
 
-function showGameDetectionSetup() {
+let _companionDownloadTriggered = false;
+async function _autoDownloadCompanion() {
+  const el = document.getElementById('companion-auto-setup');
+  if (!el || _companionDownloadTriggered) return;
+  _companionDownloadTriggered = true;
+
   const os = navigator.platform?.toLowerCase() || '';
   const isWin = os.includes('win');
-  const isMac = os.includes('mac');
-  const downloadName = isWin ? 'install-windows.bat' : 'install.sh';
-  const runCmd = isWin ? 'Double-click <b>install-windows.bat</b>' : 'Run <b>./install.sh</b> in Terminal';
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;animation:fadeIn .15s;';
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  overlay.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:32px;max-width:440px;width:90%;text-align:center;">'
-    + '<div style="font-size:36px;margin-bottom:12px;">🎮</div>'
-    + '<div style="font-family:\'Syne\',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;">Game Detection Setup</div>'
-    + '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;">This sets up a tiny background service that scans your running apps. It starts automatically on boot — you\'ll never have to think about it again.</div>'
-    + '<div style="text-align:left;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;">'
-    + '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;"><span style="font-size:16px;">1</span><div style="font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.5;">Download the installer from your Fortized app folder:<br><code style="background:rgba(0,0,0,.3);padding:2px 8px;border-radius:4px;font-size:11.5px;">companion/' + downloadName + '</code></div></div>'
-    + '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;"><span style="font-size:16px;">2</span><div style="font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.5;">' + runCmd + '</div></div>'
-    + '<div style="display:flex;align-items:flex-start;gap:10px;"><span style="font-size:16px;">3</span><div style="font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.5;">That\'s it! Games will show up automatically from now on.</div></div>'
-    + '</div>'
-    + '<div style="display:flex;gap:10px;justify-content:center;">'
-    + '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:10px 24px;border-radius:10px;cursor:pointer;">Close</button>'
-    + '</div>'
-    + '<div style="font-size:11px;color:var(--muted);margin-top:14px;">Requires Python 3.6+. Only scans process names — no data leaves your computer.</div>'
-    + '</div>';
-  document.body.appendChild(overlay);
+
+  try {
+    // Fetch the correct installer from the server
+    const installerPath = isWin ? '/companion/install-windows.bat' : '/companion/install.sh';
+    const resp = await fetch(installerPath);
+    if (!resp.ok) throw new Error('fetch failed');
+    const blob = await resp.blob();
+    const fileName = isWin ? 'install-windows.bat' : 'install.sh';
+
+    // Auto-trigger the download
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    // Update UI to show run instructions
+    const runHint = isWin
+      ? 'Double-click <b>install-windows.bat</b> from your Downloads'
+      : 'Open Terminal and run <b>chmod +x ~/Downloads/install.sh && ~/Downloads/install.sh</b>';
+    el.innerHTML = '<div style="font-size:12px;color:rgba(62,207,110,.7);font-weight:600;margin-bottom:6px;">Installer downloaded!</div>'
+      + '<div style="font-size:11.5px;color:var(--muted);line-height:1.5;">' + runHint + '</div>'
+      + '<div style="font-size:10.5px;color:var(--muted);margin-top:8px;">It auto-starts on boot after that \u2014 fully automatic from then on.</div>';
+  } catch {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Could not auto-download the installer.</div>'
+      + '<a href="' + (isWin ? '/companion/install-windows.bat' : '/companion/install.sh') + '" download style="font-size:12px;color:var(--accent);text-decoration:underline;cursor:pointer;">Download manually</a>';
+  }
 }
 
 async function refreshDetectedApps() {

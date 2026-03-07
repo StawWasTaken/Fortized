@@ -12621,7 +12621,7 @@ function buildProfileView(tab) {
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
-      {id:'sunset',           name:'Sunset',           desc:'Warm russet to golden yellow gradient',    bg:'#221412', sidebar:'#2a1210', channel:'#2e1814', panel:'#361c16', accent:'#fbcc4c', border:'#4e2820', muted:'#8a5a4a', bodyGrad:'linear-gradient(170deg,#742a2c 0%,#8c3a30 20%,#a65035 40%,#c77a3a 58%,#dba040 72%,#edbf46 86%,#fbcc4c 100%)', cost:100, locked:!unlocked.includes('sunset')},
+      {id:'sunset',           name:'Sunset',           desc:'Deep plum to golden amber gradient',    bg:'#1a0410', sidebar:'#1a0412', channel:'#200616', panel:'#28081c', accent:'#f5d978', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#1a0410 0%,#2e0820 15%,#4a1228 30%,#742a2c 45%,#a65035 58%,#c77a3a 70%,#dba040 82%,#f5d978 100%)', cost:100, locked:!unlocked.includes('sunset')},
     ];
     const defaultThemes = allThemes.filter(t => t.free);
     const ownedThemes = allThemes.filter(t => !t.free && !t.locked);
@@ -22971,7 +22971,7 @@ function renderAtelierTab(tab) {
     const SHOP_APPEARANCES = [
       { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(140,100,220,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
       { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(255,249,62,.18)', hoverBorder:'rgba(255,249,62,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
-      { id:'sunset', name:'Sunset', desc:'A warm gradient from russet to golden yellow. Watch the sun set over your fortress.', price:100, gradient:'linear-gradient(135deg,#742a2c,#a65035,#fbcc4c)', borderColor:'rgba(251,204,76,.18)', hoverBorder:'rgba(251,204,76,.4)', labelColor:'rgba(251,204,76,.6)', previewBg:'linear-gradient(170deg,#742a2c 0%,#8c3a30 20%,#a65035 40%,#c77a3a 58%,#dba040 72%,#edbf46 86%,#fbcc4c 100%)', sidebarBg:'#2a1210' },
+      { id:'sunset', name:'Sunset', desc:'Deep plum melting into golden amber. Watch the sun set over your fortress.', price:100, gradient:'linear-gradient(135deg,#1a0410,#4a1228,#f5d978)', borderColor:'rgba(245,217,120,.18)', hoverBorder:'rgba(245,217,120,.4)', labelColor:'rgba(245,217,120,.6)', previewBg:'linear-gradient(170deg,#1a0410 0%,#2e0820 15%,#4a1228 30%,#742a2c 45%,#a65035 58%,#c77a3a 70%,#dba040 82%,#f5d978 100%)', sidebarBg:'#1a0412' },
     ];
 
     const onyxTier = CU?.onyxBadge ? _getOnyxTier(CU.onyxBadgeSpent||0) : null;
@@ -23097,15 +23097,14 @@ function renderAtelierTab(tab) {
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;">
             ${[
-              {id:'starter_bundle',name:'Starter Bundle',desc:'Onyx Pure appearance + Onyx Badge. Perfect for newcomers.',items:['Onyx Pure Appearance','Onyx Badge'],origPrice:250,price:200,gradient:'linear-gradient(135deg,rgba(140,100,220,.08),rgba(10,10,30,.9))',borderColor:'rgba(140,100,220,.18)',accent:'#a78bfa'},
-              {id:'sunset_bundle',name:'Sunset Collection',desc:'Sunset appearance + Midnight Citadel. Two premium looks for less.',items:['Sunset Appearance','Midnight Citadel Appearance'],origPrice:285,price:220,gradient:'linear-gradient(135deg,rgba(245,217,120,.06),rgba(36,5,23,.8),rgba(5,8,18,.9))',borderColor:'rgba(245,217,120,.15)',accent:'#f5d978'},
-              {id:'ultimate_bundle',name:'Ultimate Bundle',desc:'All three premium appearances + Onyx Badge. The complete collection.',items:['Onyx Pure','Sunset','Midnight Citadel','Onyx Badge'],origPrice:535,price:380,gradient:'linear-gradient(135deg,rgba(255,249,62,.06),rgba(140,100,220,.04),rgba(245,217,120,.04))',borderColor:'rgba(255,249,62,.18)',accent:'#fff93e'},
+              {id:'sunset_bundle',name:'Sunset Bundle',desc:'The Sunset appearance paired with the Sunset Halo decoration. Bathe your profile in golden light.',items:['Sunset Appearance','Sunset Halo'],origPrice:220,price:175,gradient:'linear-gradient(135deg,rgba(245,217,120,.08),rgba(74,18,40,.6),rgba(26,4,16,.9))',borderColor:'rgba(245,217,120,.15)',accent:'#f5d978'},
+              {id:'midnight_bundle',name:'Midnight Bundle',desc:'Blue Glow decoration + Midnight Citadel appearance. Command the night.',items:['Blue Glow','Midnight Citadel'],origPrice:260,price:210,gradient:'linear-gradient(135deg,rgba(96,165,250,.06),rgba(5,8,18,.9))',borderColor:'rgba(96,165,250,.15)',accent:'#60a5fa'},
             ].map(bundle => {
               const bundleOwned = bundle.items.every(item => {
                 const lower = item.toLowerCase();
-                if (lower.includes('onyx badge')) return !!CU?.onyxBadge;
-                if (lower.includes('onyx pure')) return ownedAppearances.includes('onyx_pure');
+                if (lower.includes('sunset halo')) return (CU?.ownedDecorations||[]).includes('sunset_halo');
                 if (lower.includes('sunset')) return ownedAppearances.includes('sunset');
+                if (lower.includes('blue glow')) return (CU?.ownedDecorations||[]).includes('blue_glow');
                 if (lower.includes('midnight')) return ownedAppearances.includes('midnight_citadel');
                 return false;
               });
@@ -23150,7 +23149,7 @@ function renderAtelierTab(tab) {
           <!-- Browse -->
           <div style="padding:8px 0;">
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;">
-              ${['All','Appearances','Badges','Decorations'].map(cat=>`<button class="shop-filter-chip${shopCat===cat?' active':''}" onclick="setShopCat('${cat}')">${cat}</button>`).join('')}
+              ${['All','Appearances','Badges','Decorations','Bundles'].map(cat=>`<button class="shop-filter-chip${shopCat===cat?' active':''}" onclick="setShopCat('${cat}')">${cat}</button>`).join('')}
             </div>
             ${(shopCat==='All'||shopCat==='Appearances') ? `
             <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
@@ -23211,6 +23210,43 @@ function renderAtelierTab(tab) {
                     : owned
                       ? `<button onclick="event.stopPropagation();equipDecoration('${d.id}')" style="padding:4px 12px;background:${d.color}15;border:1px solid ${d.color}25;border-radius:8px;color:${d.color};font-size:10px;font-weight:700;cursor:pointer;">Equip</button>`
                       : `<button onclick="event.stopPropagation();buyDecoration('${d.id}',${d.price})" style="padding:4px 12px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:3px;"><img src='/Onyx.png' style='width:10px;height:10px;object-fit:contain;'> ${d.price}</button>`}
+                </div>`;
+              }).join('')}
+            </div>` : ''}
+            ${(shopCat==='All'||shopCat==='Bundles') ? `
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              Bundles
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px;">
+              ${[
+                {id:'sunset_bundle',name:'Sunset Bundle',desc:'The Sunset appearance paired with the Sunset Halo decoration.',items:['Sunset Appearance','Sunset Halo'],origPrice:220,price:175,gradient:'linear-gradient(135deg,rgba(245,217,120,.08),rgba(74,18,40,.6),rgba(26,4,16,.9))',borderColor:'rgba(245,217,120,.15)',accent:'#f5d978'},
+                {id:'midnight_bundle',name:'Midnight Bundle',desc:'Blue Glow decoration + Midnight Citadel appearance.',items:['Blue Glow','Midnight Citadel'],origPrice:260,price:210,gradient:'linear-gradient(135deg,rgba(96,165,250,.06),rgba(5,8,18,.9))',borderColor:'rgba(96,165,250,.15)',accent:'#60a5fa'},
+              ].map(bundle => {
+                const bundleOwned = bundle.items.every(item => {
+                  const lower = item.toLowerCase();
+                  if (lower.includes('sunset halo')) return (CU?.ownedDecorations||[]).includes('sunset_halo');
+                  if (lower.includes('sunset')) return ownedAppearances.includes('sunset');
+                  if (lower.includes('blue glow')) return (CU?.ownedDecorations||[]).includes('blue_glow');
+                  if (lower.includes('midnight')) return ownedAppearances.includes('midnight_citadel');
+                  return false;
+                });
+                const discount = Math.round((1 - bundle.price / bundle.origPrice) * 100);
+                return `<div style="background:${bundle.gradient};border:1.5px solid ${bundle.borderColor};border-radius:20px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;" onmouseover="this.style.borderColor='${bundle.accent}44';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(0,0,0,.3)'" onmouseout="this.style.borderColor='${bundle.borderColor}';this.style.transform='';this.style.boxShadow='none'">
+                  <div style="position:absolute;top:12px;right:12px;background:${bundle.accent}22;border:1px solid ${bundle.accent}33;border-radius:8px;padding:3px 8px;font-size:9px;font-weight:800;color:${bundle.accent};z-index:1;">-${discount}%</div>
+                  <div style="padding:20px 18px 14px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${bundle.accent}" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;">${bundle.name}</div>
+                    </div>
+                    <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.5;margin-bottom:12px;">${bundle.desc}</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;">
+                      ${bundle.items.map(item => `<span style="font-size:10px;padding:3px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-weight:600;">${item}</span>`).join('')}
+                    </div>
+                    ${bundleOwned
+                      ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:#3ecf6e;font-size:12px;font-weight:700;text-align:center;">Owned</div>'
+                      : `<button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="width:100%;padding:9px 16px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:14px;height:14px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:4px;">${bundle.origPrice}</span> ${bundle.price} Onyx</button>`}
+                  </div>
                 </div>`;
               }).join('')}
             </div>` : ''}
@@ -25533,18 +25569,18 @@ function applyAppearance(themeId) {
     // Low gradient towards dark purple
     document.body.style.background = 'linear-gradient(170deg, #010103 0%, #08061a 100%)';
   } else if (themeId === 'sunset') {
-    sidebarColor = '#2a1210';
-    document.documentElement.style.setProperty('--bg',         '#221412');
-    document.documentElement.style.setProperty('--rail',       '#1a0e0c');
+    sidebarColor = '#1a0412';
+    document.documentElement.style.setProperty('--bg',         '#1a0410');
+    document.documentElement.style.setProperty('--rail',       '#120308');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
-    document.documentElement.style.setProperty('--channel',    '#2e1814');
-    document.documentElement.style.setProperty('--panel',      '#361c16');
-    document.documentElement.style.setProperty('--panel2',     '#3e201a');
-    document.documentElement.style.setProperty('--panel3',     '#46241e');
-    document.documentElement.style.setProperty('--border',     '#4e2820');
-    document.documentElement.style.setProperty('--muted',      '#8a5a4a');
-    document.documentElement.style.setProperty('--muted-light','#b07868');
-    document.body.style.background = 'linear-gradient(170deg, #742a2c 0%, #8c3a30 20%, #a65035 40%, #c77a3a 58%, #dba040 72%, #edbf46 86%, #fbcc4c 100%)';
+    document.documentElement.style.setProperty('--channel',    '#200616');
+    document.documentElement.style.setProperty('--panel',      '#28081c');
+    document.documentElement.style.setProperty('--panel2',     '#300a22');
+    document.documentElement.style.setProperty('--panel3',     '#380c28');
+    document.documentElement.style.setProperty('--border',     '#3e0e2a');
+    document.documentElement.style.setProperty('--muted',      '#7a3a5a');
+    document.documentElement.style.setProperty('--muted-light','#a05878');
+    document.body.style.background = 'linear-gradient(170deg, #1a0410 0%, #2e0820 15%, #4a1228 30%, #742a2c 45%, #a65035 58%, #c77a3a 70%, #dba040 82%, #f5d978 100%)';
   } else {
     // Fortized Classic (default)
     sidebarColor = '#13161d';
@@ -25586,7 +25622,7 @@ const _appearanceThemeData = {
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#030407', sidebar:'#050710', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
-  sunset:           {id:'sunset',           name:'Sunset',           bg:'#1a0410', sidebar:'#1a0412', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#200616', panel:'#28081c', accent:'#f5d978', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#742a2c 0%,#8c3a30 20%,#a65035 40%,#c77a3a 58%,#dba040 72%,#edbf46 86%,#fbcc4c 100%)'},
+  sunset:           {id:'sunset',           name:'Sunset',           bg:'#1a0410', sidebar:'#1a0412', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#200616', panel:'#28081c', accent:'#f5d978', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#1a0410 0%,#2e0820 15%,#4a1228 30%,#742a2c 45%,#a65035 58%,#c77a3a 70%,#dba040 82%,#f5d978 100%)'},
 };
 
 function _buildPreviewMockup(t, label) {
@@ -25935,9 +25971,8 @@ async function buyBundle(bundleId, cost) {
   const bal = CU?.onyx||0;
   if (bal < cost) { toast('Not enough Onyx! Need '+cost+' Onyx','error'); return; }
   const BUNDLES = {
-    starter_bundle: {name:'Starter Bundle',appearances:['onyx_pure'],badge:true},
-    sunset_bundle: {name:'Sunset Collection',appearances:['sunset','midnight_citadel'],badge:false},
-    ultimate_bundle: {name:'Ultimate Bundle',appearances:['onyx_pure','sunset','midnight_citadel'],badge:true},
+    sunset_bundle: {name:'Sunset Bundle',appearances:['sunset'],decorations:['sunset_halo']},
+    midnight_bundle: {name:'Midnight Bundle',appearances:['midnight_citadel'],decorations:['blue_glow']},
   };
   const bundle = BUNDLES[bundleId];
   if (!bundle) return;
@@ -25946,7 +25981,11 @@ async function buyBundle(bundleId, cost) {
     const unlocked = CU.unlockedAppearances || [];
     bundle.appearances.forEach(a => { if (!unlocked.includes(a)) unlocked.push(a); });
     CU.unlockedAppearances = unlocked;
-    if (bundle.badge && !CU.onyxBadge) { CU.onyxBadge = true; CU.onyxBadgeSpent = (CU.onyxBadgeSpent||0) + 100; }
+    if (bundle.decorations) {
+      const ownedDecos = CU.ownedDecorations || [];
+      bundle.decorations.forEach(d => { if (!ownedDecos.includes(d)) ownedDecos.push(d); });
+      CU.ownedDecorations = ownedDecos;
+    }
     await saveUser(); updateOnyxDisplay();
     toast('Bundle unlocked! Enjoy your new items.','success');
     renderAtelierTab('shop');

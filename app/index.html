@@ -153,6 +153,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-row.msg-system .msg-system-text{flex:1;}
 .msg-row.msg-system .msg-system-text strong{color:rgba(255,255,255,.55);font-weight:600;}
 .msg-row.msg-system .msg-system-time{font-size:10px;color:rgba(255,255,255,.15);flex-shrink:0;}
+.msg-row.msg-system:hover .msg-system-content button{opacity:1;}
 /* ── Enhanced Mentions ──── */
 .mention{display:inline;padding:0 4px;border-radius:6px;cursor:pointer;font-weight:600;font-size:inherit;transition:background .12s,color .12s;position:relative;}
 .mention:hover{filter:brightness(1.2);}
@@ -982,6 +983,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .profile-av-big{width:96px;height:96px;border-radius:50%;background:var(--panel2);border:5px solid var(--panel);font-size:28px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.6);transition:transform .2s cubic-bezier(.22,1,.36,1);}
 .profile-av-big:hover{transform:scale(1.04);}
 .profile-av-big img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+/* Profile Decorations */
+.profile-decoration-wrap{position:relative;display:inline-block;}
+.profile-decoration-overlay{position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);pointer-events:none;z-index:2;object-fit:contain;}
+.profile-decoration-overlay-sm{position:absolute;inset:-4px;width:calc(100% + 8px);height:calc(100% + 8px);pointer-events:none;z-index:2;object-fit:contain;}
+.profile-decoration-overlay-lg{position:absolute;inset:-12px;width:calc(100% + 24px);height:calc(100% + 24px);pointer-events:none;z-index:2;object-fit:contain;}
 .profile-display-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:2px;display:flex;align-items:center;gap:6px;}
 .profile-username{font-size:13px;color:rgba(255,255,255,.3);}
 .profile-content{padding:0 28px 36px;}
@@ -1497,9 +1503,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .embed-link-card .elc-desc { font-size:12px;color:var(--muted-light);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
 .embed-link-card .elc-url { font-size:9px;color:var(--muted);font-family:monospace;opacity:.5;letter-spacing:.02em; }
 .embed-link-card .elc-thumb { width:85px;min-width:85px;background:linear-gradient(135deg,var(--accent-dim),var(--surface-1));display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.35;border-left:1px solid var(--surface-border); }
-.embed-invite-card { border-radius:20px;overflow:hidden;max-width:400px;background:linear-gradient(160deg,var(--accent-dim),var(--surface-1));border:1.5px solid var(--accent-mid);margin:8px 0;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);box-shadow:var(--shadow-sm);position:relative; }
-.embed-invite-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,var(--accent-dim),transparent 50%);pointer-events:none;opacity:0;transition:opacity .2s;z-index:0;}
-.embed-invite-card:hover{transform:translateY(-2px);border-color:var(--accent-mid);box-shadow:var(--shadow-md);}
+.embed-invite-card { border-radius:20px;overflow:hidden;max-width:420px;background:linear-gradient(160deg,rgba(255,249,62,.03),rgba(255,255,255,.015),rgba(255,249,62,.02));border:1.5px solid rgba(255,249,62,.1);margin:8px 0;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);box-shadow:0 4px 20px rgba(0,0,0,.25);position:relative;backdrop-filter:blur(12px); }
+.embed-invite-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 0%,rgba(255,249,62,.06),transparent 60%);pointer-events:none;opacity:0;transition:opacity .25s;z-index:0;}
+.embed-invite-card:hover{transform:translateY(-3px);border-color:rgba(255,249,62,.22);box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 0 1px rgba(255,249,62,.05);}
 .embed-invite-card:hover::before{opacity:1;}
 /* ── Bastion Invite Dialog (Guilded-style) ─── */
 .invite-overlay{position:fixed;inset:0;background:rgba(4,6,10,.96);backdrop-filter:blur(24px);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;animation:inviteOverlayIn .3s ease both;}
@@ -2206,7 +2212,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
       <span>Discover</span>
     </div>
     <div class="rail-btn" id="rb-atelier" onclick="showView('atelier')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       <span>Atelier</span>
     </div>
     <div class="rail-sep" style="margin:8px 10px;"></div>
@@ -3964,6 +3970,12 @@ function updateUserbar() {
       ? `<img src="${CU.pfp}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defPfp}'">`
       : `<img src="${_defPfp}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">`;
     ua.innerHTML = inner;
+    // Add decoration overlay on userbar avatar
+    if (CU.activeDecoration) {
+      ua.style.position='relative'; ua.style.overflow='visible';
+      const decoSrc = getDecorationSrc(CU.activeDecoration);
+      if (decoSrc) ua.insertAdjacentHTML('beforeend', `<img src="${decoSrc}" class="profile-decoration-overlay-sm" style="inset:-3px;width:calc(100% + 6px);height:calc(100% + 6px);" onerror="this.style.display='none'">`);
+    }
     if (!ua.querySelector('#ua-status-dot')) {
       const d = document.createElement('span');
       d.id = 'ua-status-dot'; d.className = 'ua-status-dot';
@@ -6685,10 +6697,14 @@ function appendMessage(container, msg, context, prevAuthor) {
     const row=document.createElement('div');
     row.className='msg-row msg-system';
     row.dataset.msgid=id;
+    row.dataset.text=msg.text||'';
+    row.dataset.from='__system__';
+    const canDeleteSystem = (context==='ch'||context==='channel') && hasPerm('manage_messages');
     row.innerHTML=`<div class="msg-system-content">
       <span class="msg-system-icon">${msg.systemIcon||'→'}</span>
       <span class="msg-system-text">${parseMD(escapeHTML(msg.text||''))}</span>
       <span class="msg-system-time">${time}</span>
+      ${canDeleteSystem?`<button onclick="deleteMsg('${escapeHTML(id)}','${context}')" title="Delete" style="background:none;border:none;cursor:pointer;color:rgba(248,113,113,.4);padding:2px 4px;border-radius:6px;opacity:0;transition:opacity .15s,color .15s;margin-left:4px;display:flex;align-items:center;" onmouseover="this.style.color='rgba(248,113,113,.8)'" onmouseout="this.style.color='rgba(248,113,113,.4)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg></button>`:''}
     </div>`;
     container.appendChild(row);
     return;
@@ -6747,6 +6763,8 @@ function appendMessage(container, msg, context, prevAuthor) {
     FortizedSocial.getUserByName(msg.from).then(u=>{
       if (!u) return;
       if(u.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,u.displayName||msg.from,40);}
+      // Add decoration overlay on chat avatar
+      if(u.activeDecoration){const el=document.getElementById(avId);if(el){el.style.position='relative';el.style.overflow='visible';const existing=el.querySelector('.profile-decoration-overlay-sm');if(!existing){el.insertAdjacentHTML('beforeend',buildDecorationOverlay(u.activeDecoration,'profile-decoration-overlay-sm'));}}}
       // Update author display name
       const authorEl = row.querySelector('.msg-author[data-author="'+CSS.escape(msg.from)+'"]');
       if (authorEl && u.displayName && u.displayName !== msg.from) {
@@ -6947,7 +6965,7 @@ function deleteMsg(msgId, context) {
               const avWrap = next.querySelector('.msg-av-wrap');
               if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
               if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
-              FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}}).catch(()=>{});
+              FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}if(u?.activeDecoration){const el=document.getElementById(avId);if(el){el.style.position='relative';el.style.overflow='visible';el.insertAdjacentHTML('beforeend',buildDecorationOverlay(u.activeDecoration,'profile-decoration-overlay-sm'));}}}).catch(()=>{});
             }
           }
           row.style.transition = 'opacity .2s ease, transform .2s ease, max-height .25s ease';
@@ -7682,11 +7700,15 @@ async function promptJoinPublicBastion(bastionId){
     renderRailBastions();
     toast('Joined '+b.name+'!','success');
     openBastion(CU.bastions.length-1);
-    // Welcome system message in first text channel
-    const wName = CU.displayName||CU.username;
-    const wMsg = '**'+wName+'** joined the bastion. Welcome!';
-    const wCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
-    try { await FortizedSocial.sendBastionChannelMessage(gid, wCh.name, '__system__', wMsg); } catch {}
+    // Welcome system message in first text channel (uses custom welcome if configured)
+    if (localB.welcomeEnabled !== false) {
+      const wName = CU.displayName||CU.username;
+      const wTemplate = localB.welcomeMessage || '**{user}** joined the bastion. Welcome!';
+      const membersList = await FortizedSocial.getBastionMembers(gid).catch(()=>[]) || [];
+      const wMsg = wTemplate.replace(/\{user\}/g, '**'+wName+'**').replace(/\{bastion\}/g, '**'+b.name+'**').replace(/\{count\}/g, String(membersList.length||1));
+      const wChName = localB.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
+      try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch {}
+    }
   }catch(e){toast('Failed to join','error');console.error(e);}
 }
 
@@ -9616,6 +9638,11 @@ function renderBSettingsNav(activeTab) {
     {id:'members',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',label:'Members'},
     {id:'bans',icon:'🔨',label:'Bans'},
     {label:'Community'},
+    {id:'welcome_msg',icon:'👋',label:'Welcome Message'},
+    {id:'rules',icon:'📜',label:'Server Rules'},
+    {id:'announcements',icon:'📣',label:'Announcements'},
+    {id:'insights',icon:'📊',label:'Insights'},
+    {id:'starboard',icon:'⭐',label:'Starboard'},
     {id:'events',icon:'📅',label:'Events'},
     {id:'slowmode',icon:'🐌',label:'Slow Mode'},
     {label:'Living Bastion'},
@@ -10045,6 +10072,158 @@ function renderBSettingsMain(tab) {
         <button class="btn-d" onclick="showCustomConfirm('Reset all reputation for this Bastion?',()=>resetBastionReputation('${escapeHTML(bastionId)}'))">Reset Reputation</button>
       </div>`:''}`;
   }
+  else if (tab==='welcome_msg') {
+    const bastionId = b.globalId||b.name;
+    const welcomeEnabled = b.welcomeEnabled !== false;
+    const welcomeMsg = b.welcomeMessage || '**{user}** joined the bastion. Welcome!';
+    const welcomeChannel = b.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">👋 Welcome Message</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">Customize the greeting shown when new members join your bastion.</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <span style="font-size:13px;font-weight:600;">Enable Welcome Messages</span>
+        <div class="toggle ${welcomeEnabled?'on':''}" onclick="this.classList.toggle('on')" id="welcome-toggle"></div>
+      </div>
+      <div class="settings-title">Welcome Message Template</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Use <code style="background:var(--accent-dim);padding:1px 6px;border-radius:4px;font-size:10px;">{user}</code> for the member name, <code style="background:var(--accent-dim);padding:1px 6px;border-radius:4px;font-size:10px;">{bastion}</code> for server name, <code style="background:var(--accent-dim);padding:1px 6px;border-radius:4px;font-size:10px;">{count}</code> for member count.</div>
+      <textarea class="field-input" id="welcome-msg-input" rows="3" style="resize:vertical;margin-bottom:14px;">${escapeHTML(welcomeMsg)}</textarea>
+      <div class="settings-title">Welcome Channel</div>
+      <select class="field-input" id="welcome-channel-select" style="margin-bottom:20px;">
+        ${(b.channels||[]).filter(ch=>ch.type==='text'||ch.type==='announcement').map(ch=>`<option value="${escapeHTML(ch.name)}" ${ch.name===welcomeChannel?'selected':''}># ${escapeHTML(ch.name)}</option>`).join('')}
+      </select>
+      <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Preview</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.35);font-weight:500;">
+          <span style="font-size:14px;opacity:.6;">→</span>
+          <span id="welcome-preview-text">${parseMD(escapeHTML(welcomeMsg.replace('{user}','**NewMember**').replace('{bastion}','**'+escapeHTML(b.name)+'**').replace('{count}','42')))}</span>
+        </div>
+      </div>
+      <button class="btn-a" onclick="saveBastionWelcome()">Save Welcome Settings</button>`;
+  }
+  else if (tab==='rules') {
+    const rules = b.rules || [];
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">📜 Server Rules</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">Define rules for your bastion. These will be shown to new members when they join.</div>
+      <div id="rules-list">
+        ${rules.map((r,i) => `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
+          <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:var(--accent);flex-shrink:0;">${i+1}</div>
+          <input class="field-input bastion-rule-input" value="${escapeHTML(r)}" style="flex:1;">
+          <button onclick="removeBastionRule(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:17px;padding:6px;">×</button>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn-g" onclick="addBastionRule()">+ Add Rule</button>
+        <button class="btn-a" onclick="saveBastionRules()">Save Rules</button>
+      </div>
+      ${rules.length ? `<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Preview</div>
+        <div style="background:rgba(255,255,255,.015);border:1.5px solid rgba(255,255,255,.05);border-radius:14px;padding:18px;">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;">📜 ${escapeHTML(b.name)} Rules</div>
+          ${rules.map((r,i) => `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
+            <span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:var(--accent);min-width:20px;">${i+1}.</span>
+            <span style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5;">${escapeHTML(r)}</span>
+          </div>`).join('')}
+        </div>
+      </div>` : ''}`;
+  }
+  else if (tab==='announcements') {
+    const bastionId = b.globalId||b.name;
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">📣 Announcements</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">Broadcast an announcement to a channel. Only owners and admins can send announcements.</div>
+      <div class="settings-title">Announcement Channel</div>
+      <select class="field-input" id="announce-channel" style="margin-bottom:14px;">
+        ${(b.channels||[]).filter(ch=>ch.type==='text'||ch.type==='announcement').map(ch=>`<option value="${escapeHTML(ch.name)}">
+          ${ch.type==='announcement'?'📢':'#'} ${escapeHTML(ch.name)}
+        </option>`).join('')}
+      </select>
+      <div class="settings-title">Message</div>
+      <textarea class="field-input" id="announce-msg" rows="4" placeholder="Write your announcement…" style="resize:vertical;margin-bottom:14px;"></textarea>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-light);cursor:pointer;">
+          <input type="checkbox" id="announce-mention-all" style="accent-color:var(--accent);">
+          <span>Mention @everyone</span>
+        </label>
+      </div>
+      <button class="btn-a" onclick="sendBastionAnnouncement()">📣 Send Announcement</button>
+      <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);">
+        <div style="display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Announcements appear as highlighted messages in the selected channel.</div>
+      </div>`;
+  }
+  else if (tab==='insights') {
+    const bastionId = b.globalId||b.name;
+    const memberCount = Object.keys(b.memberRoles||{}).length || 1;
+    const channelCount = (b.channels||[]).length;
+    const roleCount = (b.roles||[]).length;
+    const boostLevel = b.boostLevel||0;
+    const emojiCount = (b.customEmojis||[]).length;
+    const createdAt = b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : 'Unknown';
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">📊 Insights</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">A quick overview of your bastion's stats and health.</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
+        ${[
+          {label:'Members',val:memberCount,icon:'👥',color:'#60a5fa'},
+          {label:'Channels',val:channelCount,icon:'#️⃣',color:'#3ecf6e'},
+          {label:'Roles',val:roleCount,icon:'🛡️',color:'#a78bfa'},
+          {label:'Boost Level',val:boostLevel,icon:'⚡',color:'#ffd93e'},
+          {label:'Custom Emojis',val:emojiCount,icon:'😊',color:'#fb923c'},
+          {label:'Created',val:createdAt,icon:'📅',color:'#f472b6'},
+        ].map(s=>`<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:18px;text-align:center;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${s.color};opacity:.3;"></div>
+          <div style="font-size:24px;margin-bottom:8px;">${s.icon}</div>
+          <div style="font-family:'Syne',sans-serif;font-size:${typeof s.val==='number'?'22':'12'}px;font-weight:800;color:#fff;margin-bottom:4px;">${s.val}</div>
+          <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">${s.label}</div>
+        </div>`).join('')}
+      </div>
+      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:20px;">
+        <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;">🏥 Health Check</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${[
+            {ok:channelCount>0,text:'Has at least one channel',fix:'Add a channel in Rooms Management'},
+            {ok:roleCount>0,text:'Has roles configured',fix:'Create roles in the Roles tab'},
+            {ok:(b.rules||[]).length>0,text:'Has server rules set',fix:'Add rules in the Server Rules tab'},
+            {ok:!!b.banner,text:'Has a banner image',fix:'Upload a banner in Overview'},
+            {ok:!!b.icon,text:'Has a custom icon',fix:'Upload an icon in Overview'},
+          ].map(h=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${h.ok?'rgba(62,207,110,.04)':'rgba(248,113,113,.04)'};border:1px solid ${h.ok?'rgba(62,207,110,.08)':'rgba(248,113,113,.08)'};border-radius:10px;">
+            <span style="font-size:14px;">${h.ok?'✅':'⚠️'}</span>
+            <span style="font-size:12.5px;color:rgba(255,255,255,.6);flex:1;">${h.text}</span>
+            ${!h.ok?`<span style="font-size:10.5px;color:var(--muted);">${h.fix}</span>`:''}
+          </div>`).join('')}
+        </div>
+      </div>`;
+  }
+  else if (tab==='starboard') {
+    const starEnabled = b.starboardEnabled || false;
+    const starThreshold = b.starboardThreshold || 3;
+    const starChannel = b.starboardChannel || '';
+    const starEmoji = b.starboardEmoji || '⭐';
+    main.innerHTML = `
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">⭐ Starboard</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">When a message gets enough reactions, it gets pinned to a special starboard channel for everyone to see.</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <span style="font-size:13px;font-weight:600;">Enable Starboard</span>
+        <div class="toggle ${starEnabled?'on':''}" onclick="this.classList.toggle('on')" id="star-toggle"></div>
+      </div>
+      <div class="settings-title">Reaction Threshold</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Number of reactions needed to pin a message to the starboard.</div>
+      <div style="display:flex;gap:6px;margin-bottom:18px;">
+        ${[2,3,5,8,10].map(n=>`<button class="${starThreshold===n?'btn-a':'btn-g'}" style="padding:6px 14px;font-size:12px;" onclick="document.querySelectorAll('#star-threshold-btns button').forEach(b=>b.className='btn-g');this.className='btn-a'" id="star-threshold-btns">${n}</button>`).join('')}
+        <input type="number" class="field-input" id="star-threshold-input" value="${starThreshold}" min="1" max="50" style="width:70px;">
+      </div>
+      <div class="settings-title">Starboard Emoji</div>
+      <div style="display:flex;gap:6px;margin-bottom:18px;">
+        ${['⭐','🌟','✨','🔥','💎','❤️'].map(e=>`<button style="font-size:20px;padding:6px 10px;background:${starEmoji===e?'rgba(255,249,62,.1)':'rgba(255,255,255,.03)'};border:1.5px solid ${starEmoji===e?'rgba(255,249,62,.2)':'rgba(255,255,255,.05)'};border-radius:10px;cursor:pointer;" onclick="document.getElementById('star-emoji-val').value='${e}';document.querySelectorAll('#star-emoji-row button').forEach(b=>{b.style.background='rgba(255,255,255,.03)';b.style.borderColor='rgba(255,255,255,.05)'});this.style.background='rgba(255,249,62,.1)';this.style.borderColor='rgba(255,249,62,.2)'" id="star-emoji-row">${e}</button>`).join('')}
+        <input type="hidden" id="star-emoji-val" value="${starEmoji}">
+      </div>
+      <div class="settings-title">Starboard Channel</div>
+      <select class="field-input" id="star-channel-select" style="margin-bottom:20px;">
+        <option value="">Select a channel…</option>
+        ${(b.channels||[]).filter(ch=>ch.type==='text').map(ch=>`<option value="${escapeHTML(ch.name)}" ${ch.name===starChannel?'selected':''}># ${escapeHTML(ch.name)}</option>`).join('')}
+      </select>
+      <button class="btn-a" onclick="saveBastionStarboard()">Save Starboard Settings</button>`;
+  }
   else if (tab==='events') {
     const bastionId = b.globalId||b.name;
     main.innerHTML = `<div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">📅 Events</div><div id="bastion-events-container"></div>`;
@@ -10193,6 +10372,63 @@ async function saveBastionOverview() {
   renderRailBastions();
   renderBastionSidebar(document.getElementById('sidebar-scroll'));
   toast('Bastion updated!', 'success');
+}
+// ── Bastion Welcome Message ──
+async function saveBastionWelcome() {
+  const b = CU.bastions[curBastion]; if (!b) return;
+  b.welcomeEnabled = document.getElementById('welcome-toggle')?.classList.contains('on') ?? true;
+  b.welcomeMessage = document.getElementById('welcome-msg-input')?.value?.trim() || '**{user}** joined the bastion. Welcome!';
+  b.welcomeChannel = document.getElementById('welcome-channel-select')?.value || 'general';
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  toast('Welcome settings saved!', 'success');
+}
+// ── Bastion Rules ──
+function addBastionRule() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  b.rules = b.rules || [];
+  b.rules.push('');
+  renderBSettingsMain('rules');
+  setTimeout(() => { const inputs = document.querySelectorAll('.bastion-rule-input'); if (inputs.length) inputs[inputs.length-1].focus(); }, 50);
+}
+function removeBastionRule(i) {
+  const b = CU.bastions?.[curBastion]; if (!b || !b.rules) return;
+  b.rules.splice(i, 1);
+  renderBSettingsMain('rules');
+}
+async function saveBastionRules() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const inputs = document.querySelectorAll('.bastion-rule-input');
+  b.rules = Array.from(inputs).map(inp => inp.value.trim()).filter(Boolean);
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  toast('Rules saved!', 'success');
+}
+// ── Bastion Announcements ──
+async function sendBastionAnnouncement() {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const bastionId = b.globalId || b.name;
+  const channel = document.getElementById('announce-channel')?.value || 'general';
+  const msg = document.getElementById('announce-msg')?.value?.trim();
+  const mentionAll = document.getElementById('announce-mention-all')?.checked;
+  if (!msg) { toast('Write a message first', 'error'); return; }
+  const prefix = mentionAll ? '📣 **@everyone** — ' : '📣 **Announcement** — ';
+  try {
+    await FortizedSocial.sendBastionChannelMessage(bastionId, channel, '__system__', prefix + msg);
+    document.getElementById('announce-msg').value = '';
+    toast('Announcement sent to #' + channel, 'success');
+  } catch (e) { toast('Failed to send announcement', 'error'); }
+}
+// ── Bastion Starboard ──
+async function saveBastionStarboard() {
+  const b = CU.bastions[curBastion]; if (!b) return;
+  b.starboardEnabled = document.getElementById('star-toggle')?.classList.contains('on') ?? false;
+  b.starboardThreshold = parseInt(document.getElementById('star-threshold-input')?.value) || 3;
+  b.starboardEmoji = document.getElementById('star-emoji-val')?.value || '⭐';
+  b.starboardChannel = document.getElementById('star-channel-select')?.value || '';
+  await saveUser();
+  _syncBastionToGlobal(curBastion);
+  toast('Starboard settings saved!', 'success');
 }
 async function setBastionVis(isPublic) {
   const b = CU.bastions[curBastion];
@@ -11875,6 +12111,29 @@ function buildProfileView(tab) {
             </div>
           </div>` : ''}
 
+          <!-- SECTION: Profile Decoration -->
+          <div class="settings-section-title" style="margin-top:32px;">PROFILE DECORATION</div>
+          <div style="background:rgba(255,255,255,.02);border:1px solid rgba(254,248,61,.04);border-radius:16px;padding:16px;">
+            <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;">Choose a decoration to display around your avatar. Buy more in the <span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')">Atelier Shop</span>.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <div style="width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.04);border:2px solid ${!CU.activeDecoration?'var(--accent)':'rgba(255,255,255,.08)'};display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-size:11px;color:var(--muted);" onclick="equipDecoration(null);renderSettingsTab('myprofile')" title="None">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              ${(CU.ownedDecorations||[]).map(decoId => {
+                const d = PROFILE_DECORATIONS.find(d=>d.id===decoId);
+                if (!d) return '';
+                const isEquipped = CU.activeDecoration === decoId;
+                return \`<div style="position:relative;width:58px;height:58px;cursor:pointer;" onclick="equipDecoration('\${decoId}');renderSettingsTab('myprofile')" title="\${d.name}">
+                  <div style="width:58px;height:58px;border-radius:50%;overflow:hidden;border:2px solid \${isEquipped?d.color:'rgba(255,255,255,.08)'};background:var(--panel2);transition:all .15s;">
+                    \${CU.pfp?\\\`<img src="\${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">\\\`:\\\`<div style="width:100%;height:100%;background:\${d.color}22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:Syne,sans-serif;font-weight:800;color:\${d.color};">\${(CU.displayName||CU.username||'U')[0].toUpperCase()}</div>\\\`}
+                  </div>
+                  <img src="\${d.src}" style="position:absolute;inset:-5px;width:calc(100% + 10px);height:calc(100% + 10px);object-fit:contain;pointer-events:none;" onerror="this.style.display='none'">
+                </div>\`;
+              }).join('')}
+              ${!(CU.ownedDecorations||[]).length ? '<div style="font-size:12px;color:var(--muted);padding:8px;">No decorations owned yet</div>' : ''}
+            </div>
+          </div>
+
           <!-- SECTION: Connections -->
           <div class="settings-section-title" style="margin-top:32px;">CONNECTIONS</div>
           <div style="background:rgba(255,255,255,.02);border:1px solid rgba(254,248,61,.04);border-radius:16px;padding:4px 14px;">
@@ -12362,7 +12621,7 @@ function buildProfileView(tab) {
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
-      {id:'sunset',           name:'Sunset',           desc:'Warm purple to golden yellow gradient',    bg:'#1a0410', sidebar:'#1a0412', channel:'#200616', panel:'#28081c', accent:'#f5d978', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e0994a 75%,#f0c45e 88%,#f5d978 100%)', cost:100, locked:!unlocked.includes('sunset')},
+      {id:'sunset',           name:'Sunset',           desc:'Warm russet to golden yellow gradient',    bg:'#221412', sidebar:'#2a1210', channel:'#2e1814', panel:'#361c16', accent:'#fbcc4c', border:'#4e2820', muted:'#8a5a4a', bodyGrad:'linear-gradient(170deg,#742a2c 0%,#8c3a30 20%,#a65035 40%,#c77a3a 58%,#dba040 72%,#edbf46 86%,#fbcc4c 100%)', cost:100, locked:!unlocked.includes('sunset')},
     ];
     const defaultThemes = allThemes.filter(t => t.free);
     const ownedThemes = allThemes.filter(t => !t.free && !t.locked);
@@ -12892,6 +13151,7 @@ async function viewUserProfile(username) {
       <div class="up-left-av-area">
         <div style="position:relative;">
           <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 87)}</div>
+          ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay-lg" onerror="this.style.display='none'">` : ''}
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:2px;right:2px;width:20px;height:20px;border-radius:50%;background:${sc};border:3.5px solid var(--panel);z-index:3;box-shadow:0 0 10px ${sc}66;"></span>
         </div>
       </div>
@@ -13304,11 +13564,16 @@ function handleContextMenu(e) {
   // ── 3) System message — limited actions ──
   if (isSystemMsg) {
     const text = msgRow?.dataset?.text || msgRow?.textContent?.trim() || '';
-    showCtxMenu(e.clientX, e.clientY, [
-      { items: [
-        { icon: _ctxSvg('copy'), label: 'Copy Text', action: () => navigator.clipboard.writeText(text), copyFeedback: true },
-      ]}
-    ]);
+    const msgId = msgRow.dataset.msgid;
+    const inBastion = curBastion !== null;
+    const isBastionAdminCtx = inBastion && hasPerm('manage_messages');
+    const sysItems = [
+      { icon: _ctxSvg('copy'), label: 'Copy Text', action: () => navigator.clipboard.writeText(text), copyFeedback: true },
+    ];
+    if (isBastionAdminCtx) {
+      sysItems.push({ icon: _ctxSvg('trash'), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
+    }
+    showCtxMenu(e.clientX, e.clientY, [{ items: sysItems }]);
     return;
   }
 
@@ -17093,10 +17358,13 @@ async function joinBastionById(bastionId, hasInvite) {
   renderRailBastions();
   toast('Joined '+b.name+'!','success');
   openBastion(CU.bastions.length-1);
-  const wName = CU.displayName||CU.username;
-  const wMsg = '**'+wName+'** joined the bastion. Welcome!';
-  const wCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
-  try { await FortizedSocial.sendBastionChannelMessage(gid, wCh.name, '__system__', wMsg); } catch {}
+  if (localB.welcomeEnabled !== false) {
+    const wName = CU.displayName||CU.username;
+    const wTemplate = localB.welcomeMessage || '**{user}** joined the bastion. Welcome!';
+    const wMsg = wTemplate.replace(/\{user\}/g, '**'+wName+'**').replace(/\{bastion\}/g, '**'+(b.name||'Bastion')+'**').replace(/\{count\}/g, '');
+    const wChName = localB.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
+    try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch {}
+  }
 }
 
 // ════════════════════════════════════════════
@@ -17931,29 +18199,25 @@ function parseMD(s) {
     const invName = invBastion?.name || 'Fortized Bastion';
     const invMembers = invBastion ? (Object.keys(invBastion.memberRoles||{}).length || (invBastion.members||[]).length || 1) : '';
     const bannerHTML = invBanner
-      ? `<div style="height:90px;position:relative;overflow:hidden;border-bottom:1.5px solid var(--border);"><img src="${escapeHTML(invBanner)}" style="width:100%;height:100%;object-fit:cover;filter:brightness(.85);" onerror="this.parentElement.style.background='linear-gradient(135deg,var(--rail),var(--bg))'"><div style="position:absolute;bottom:10px;left:14px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.7);text-shadow:0 1px 4px rgba(0,0,0,.6);">Bastion Invite</div></div>`
-      : `<div style="height:70px;background:linear-gradient(135deg,var(--rail),var(--bg),var(--panel));position:relative;overflow:hidden;border-bottom:1.5px solid var(--border);"><div style="position:absolute;bottom:10px;left:14px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--accent-mid);">Bastion Invite</div></div>`;
+      ? `<div style="height:100px;position:relative;overflow:hidden;"><img src="${escapeHTML(invBanner)}" style="width:100%;height:100%;object-fit:cover;filter:brightness(.75) saturate(1.1);" onerror="this.parentElement.style.background='linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,255,255,.02),rgba(255,249,62,.03)'"><div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(10,13,20,.95) 0%,rgba(10,13,20,.3) 50%,transparent 100%);"></div><div style="position:absolute;top:12px;left:14px;display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,249,62,.6);text-shadow:0 1px 4px rgba(0,0,0,.5);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Invite</div></div>`
+      : `<div style="height:80px;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(18,22,34,.9),rgba(255,249,62,.03));position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 30%,rgba(255,249,62,.06),transparent 65%);"></div><div style="position:absolute;top:12px;left:14px;display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,249,62,.5);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Bastion Invite</div></div>`;
     const emblemHTML = invIcon
-      ? `<img src="${escapeHTML(invIcon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.outerHTML='🏰'">`
+      ? `<img src="${escapeHTML(invIcon)}" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" onerror="this.outerHTML='🏰'">`
       : invEmblem;
-    return `<div class="embed-invite-card" onclick="joinByInvite('${escapeHTML(code)}')" style="max-width:400px;">
+    return `<div class="embed-invite-card" onclick="joinByInvite('${escapeHTML(code)}')">
       ${bannerHTML}
-      <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;">
-        <div style="width:50px;height:50px;border-radius:14px;background:var(--accent-dim);border:1.5px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;overflow:hidden;">${emblemHTML}</div>
+      <div style="display:flex;align-items:center;gap:14px;padding:16px 20px 12px;">
+        <div style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,rgba(255,249,62,.08),rgba(255,249,62,.03));border:1.5px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:transform .2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform=''">${emblemHTML}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(invName)}</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:3px;">
-            <span style="font-size:10.5px;color:var(--muted-light);">Invite code: <code style="background:var(--accent-dim);padding:2px 8px;border-radius:6px;font-size:10px;border:1px solid var(--surface-border);">${escapeHTML(code)}</code></span>
-            ${invMembers ? `<span style="font-size:10px;color:var(--muted);">👥 ${invMembers}</span>` : ''}
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;letter-spacing:-.01em;">${escapeHTML(invName)}</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:5px;">
+            ${invMembers ? `<span style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.35);font-weight:600;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${invMembers} members</span>` : ''}
+            <span style="display:flex;align-items:center;gap:3px;font-size:10px;color:rgba(62,207,110,.5);font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:rgba(62,207,110,.6);display:inline-block;"></span> Online</span>
           </div>
         </div>
       </div>
-      <div style="padding:4px 18px 14px;">
-        <button style="width:100%;padding:11px;border-radius:14px;background:${alreadyMember?'var(--surface-1)':'var(--accent)'};color:${alreadyMember?'var(--muted-light)':'#060810'};font-family:'Syne',sans-serif;font-size:13px;font-weight:800;border:${alreadyMember?'1.5px solid var(--border)':'none'};cursor:${alreadyMember?'default':'pointer'};transition:all .15s;"${!alreadyMember?' onmouseover="this.style.filter=\'brightness(1.08)\'" onmouseout="this.style.filter=\'\'"':''}>${alreadyMember?'✓ Already a Member':'🏰 Join Bastion'}</button>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 18px;border-top:1px solid var(--surface-border);background:rgba(0,0,0,.08);font-size:10px;color:var(--muted);">
-        <span style="display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg> Fortized</span>
-        <span style="font-family:monospace;font-size:9px;">${escapeHTML(code)}</span>
+      <div style="padding:2px 20px 16px;">
+        <button style="width:100%;padding:11px;border-radius:14px;background:${alreadyMember?'rgba(255,255,255,.04)':'linear-gradient(90deg,#fff93e,#ffd93e)'};color:${alreadyMember?'rgba(255,255,255,.4)':'#060810'};font-family:'Syne',sans-serif;font-size:13px;font-weight:800;border:${alreadyMember?'1.5px solid rgba(255,255,255,.06)':'none'};cursor:${alreadyMember?'default':'pointer'};transition:all .18s cubic-bezier(.22,1,.36,1);${!alreadyMember?'box-shadow:0 4px 18px rgba(255,249,62,.15);':''}"${!alreadyMember?' onmouseover="this.style.filter=\'brightness(1.1)\';this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 6px 24px rgba(255,249,62,.25)\'" onmouseout="this.style.filter=\'\';this.style.transform=\'\';this.style.boxShadow=\'0 4px 18px rgba(255,249,62,.15)\'"':''}>${alreadyMember?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg> Already Joined':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Join Bastion'}</button>
       </div>
     </div>`;
   });
@@ -22707,7 +22971,7 @@ function renderAtelierTab(tab) {
     const SHOP_APPEARANCES = [
       { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(140,100,220,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
       { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(255,249,62,.18)', hoverBorder:'rgba(255,249,62,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
-      { id:'sunset', name:'Sunset', desc:'A warm gradient from deep purple to golden yellow. Watch the sun set over your fortress.', price:100, gradient:'linear-gradient(135deg,#240517,#5e1a2e,#f5d978)', borderColor:'rgba(245,217,120,.18)', hoverBorder:'rgba(245,217,120,.4)', labelColor:'rgba(245,217,120,.6)', previewBg:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e0994a 75%,#f0c45e 88%,#f5d978 100%)', sidebarBg:'#1a0412' },
+      { id:'sunset', name:'Sunset', desc:'A warm gradient from russet to golden yellow. Watch the sun set over your fortress.', price:100, gradient:'linear-gradient(135deg,#742a2c,#a65035,#fbcc4c)', borderColor:'rgba(251,204,76,.18)', hoverBorder:'rgba(251,204,76,.4)', labelColor:'rgba(251,204,76,.6)', previewBg:'linear-gradient(170deg,#742a2c 0%,#8c3a30 20%,#a65035 40%,#c77a3a 58%,#dba040 72%,#edbf46 86%,#fbcc4c 100%)', sidebarBg:'#2a1210' },
     ];
 
     const onyxTier = CU?.onyxBadge ? _getOnyxTier(CU.onyxBadgeSpent||0) : null;
@@ -22715,12 +22979,17 @@ function renderAtelierTab(tab) {
     el.style.padding = '0';
     el.innerHTML = `
       <!-- Shop Header -->
-      <div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#08091a,#0c1020);padding:24px 32px 20px;border-bottom:1px solid rgba(255,255,255,.04);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(255,249,62,.03),transparent 70%);"></div>
+      <div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#08091a,#0c1020,#0a0818);padding:28px 32px 22px;border-bottom:1px solid rgba(255,255,255,.04);">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 40%,rgba(255,249,62,.04),transparent 60%),radial-gradient(ellipse at 80% 60%,rgba(167,139,250,.03),transparent 50%);"></div>
         <div style="position:relative;display:flex;align-items:center;justify-content:space-between;">
-          <div>
-            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.4);margin-bottom:5px;">ATELIER</div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Shop</div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:42px;height:42px;border-radius:14px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.4);margin-bottom:3px;">ATELIER</div>
+              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Shop</div>
+            </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,249,62,.06);border:1.5px solid rgba(255,249,62,.12);border-radius:14px;">
             <img src="/Onyx.png" style="width:18px;height:18px;object-fit:contain;">
@@ -22795,6 +23064,71 @@ function renderAtelierTab(tab) {
             </div>
           </div>
 
+          <!-- Profile Decorations -->
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/><path d="M2 12h20"/></svg>
+            Profile Decorations
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px;">
+            ${PROFILE_DECORATIONS.slice(0,4).map(d => {
+              const owned = (CU?.ownedDecorations||[]).includes(d.id);
+              const equipped = CU?.activeDecoration === d.id;
+              return \`<div style="background:rgba(255,255,255,.02);border:1.5px solid \${equipped?d.color+'44':'rgba(255,255,255,.05)'};border-radius:16px;padding:16px 12px;text-align:center;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='\${d.color}33';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='\${equipped?d.color+'44':'rgba(255,255,255,.05)'}';this.style.transform=''">
+                <div style="position:relative;width:52px;height:52px;margin:0 auto 10px;">
+                  <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.06);overflow:hidden;">
+                    \${CU?.pfp?\\\`<img src="\${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">\\\`:\\\`<div style="width:100%;height:100%;background:\${d.color}22;display:flex;align-items:center;justify-content:center;font-size:15px;font-family:Syne,sans-serif;font-weight:800;color:\${d.color};">\${(CU?.displayName||CU?.username||'U')[0].toUpperCase()}</div>\\\`}
+                  </div>
+                  <img src="\${d.src}" style="position:absolute;inset:-5px;width:calc(100% + 10px);height:calc(100% + 10px);object-fit:contain;pointer-events:none;" onerror="this.style.display='none'">
+                </div>
+                <div style="font-size:11px;font-weight:700;color:#fff;margin-bottom:4px;">\${d.name}</div>
+                \${equipped
+                  ? \\\`<div style="font-size:9.5px;font-weight:700;color:\${d.color};">Equipped</div>\\\`
+                  : owned
+                    ? \\\`<button onclick="event.stopPropagation();equipDecoration('\${d.id}')" style="padding:4px 10px;background:\${d.color}15;border:1px solid \${d.color}25;border-radius:8px;color:\${d.color};font-size:9.5px;font-weight:700;cursor:pointer;">Equip</button>\\\`
+                    : \\\`<button onclick="event.stopPropagation();buyDecoration('\${d.id}',\${d.price})" style="padding:4px 10px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-size:9.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:3px;"><img src='/Onyx.png' style='width:10px;height:10px;object-fit:contain;'> \${d.price}</button>\\\`}
+              </div>\`;
+            }).join('')}
+          </div>
+
+          <!-- Bundles -->
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            Bundles
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;">
+            ${[
+              {id:'starter_bundle',name:'Starter Bundle',desc:'Onyx Pure appearance + Onyx Badge. Perfect for newcomers.',items:['Onyx Pure Appearance','Onyx Badge'],origPrice:250,price:200,gradient:'linear-gradient(135deg,rgba(140,100,220,.08),rgba(10,10,30,.9))',borderColor:'rgba(140,100,220,.18)',accent:'#a78bfa'},
+              {id:'sunset_bundle',name:'Sunset Collection',desc:'Sunset appearance + Midnight Citadel. Two premium looks for less.',items:['Sunset Appearance','Midnight Citadel Appearance'],origPrice:285,price:220,gradient:'linear-gradient(135deg,rgba(245,217,120,.06),rgba(36,5,23,.8),rgba(5,8,18,.9))',borderColor:'rgba(245,217,120,.15)',accent:'#f5d978'},
+              {id:'ultimate_bundle',name:'Ultimate Bundle',desc:'All three premium appearances + Onyx Badge. The complete collection.',items:['Onyx Pure','Sunset','Midnight Citadel','Onyx Badge'],origPrice:535,price:380,gradient:'linear-gradient(135deg,rgba(255,249,62,.06),rgba(140,100,220,.04),rgba(245,217,120,.04))',borderColor:'rgba(255,249,62,.18)',accent:'#fff93e'},
+            ].map(bundle => {
+              const bundleOwned = bundle.items.every(item => {
+                const lower = item.toLowerCase();
+                if (lower.includes('onyx badge')) return !!CU?.onyxBadge;
+                if (lower.includes('onyx pure')) return ownedAppearances.includes('onyx_pure');
+                if (lower.includes('sunset')) return ownedAppearances.includes('sunset');
+                if (lower.includes('midnight')) return ownedAppearances.includes('midnight_citadel');
+                return false;
+              });
+              const discount = Math.round((1 - bundle.price / bundle.origPrice) * 100);
+              return \`<div style="background:\${bundle.gradient};border:1.5px solid \${bundle.borderColor};border-radius:20px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;" onmouseover="this.style.borderColor='\${bundle.accent}44';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(0,0,0,.3)'" onmouseout="this.style.borderColor='\${bundle.borderColor}';this.style.transform='';this.style.boxShadow='none'">
+                <div style="position:absolute;top:12px;right:12px;background:\${bundle.accent}22;border:1px solid \${bundle.accent}33;border-radius:8px;padding:3px 8px;font-size:9px;font-weight:800;color:\${bundle.accent};z-index:1;">-\${discount}%</div>
+                <div style="padding:20px 18px 14px;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="\${bundle.accent}" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                    <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;">\${bundle.name}</div>
+                  </div>
+                  <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.5;margin-bottom:12px;">\${bundle.desc}</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;">
+                    \${bundle.items.map(item => \\\`<span style="font-size:10px;padding:3px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-weight:600;">\${item}</span>\\\`).join('')}
+                  </div>
+                  \${bundleOwned
+                    ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:#3ecf6e;font-size:12px;font-weight:700;text-align:center;">Owned</div>'
+                    : \\\`<button onclick="event.stopPropagation();buyBundle('\${bundle.id}',\${bundle.price})" style="width:100%;padding:9px 16px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:14px;height:14px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:4px;">\${bundle.origPrice}</span> \${bundle.price} Onyx</button>\\\`}
+                </div>
+              </div>\`;
+            }).join('')}
+          </div>
+
           <!-- Upcoming -->
           <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -22813,16 +23147,73 @@ function renderAtelierTab(tab) {
                 </div>
               </div>`).join('')}
           </div>`:`
-          <!-- Browse / Coming Soon -->
+          <!-- Browse -->
           <div style="padding:8px 0;">
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;">
-              ${CATS.map(cat=>`<button class="shop-filter-chip${shopCat===cat?' active':''}" onclick="setShopCat('${cat}')">${cat}</button>`).join('')}
+              ${['All','Appearances','Badges','Decorations'].map(cat=>`<button class="shop-filter-chip${shopCat===cat?' active':''}" onclick="setShopCat('${cat}')">${cat}</button>`).join('')}
             </div>
-            <div style="text-align:center;padding:56px 24px;background:rgba(255,255,255,.015);border-radius:18px;border:1.5px solid rgba(255,255,255,.04);">
-              <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px;border:1px solid rgba(255,255,255,.05);">📦</div>
-              <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:rgba(255,255,255,.3);margin-bottom:5px;">Nothing here yet</div>
-              <div style="font-size:12.5px;color:rgba(255,255,255,.18);">New items are coming soon. Stay tuned!</div>
+            ${(shopCat==='All'||shopCat==='Appearances') ? `
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Appearances
             </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px;">
+              ${SHOP_APPEARANCES.map(a => {
+                const owned = ownedAppearances.includes(a.id);
+                return \`<div style="background:\${a.gradient};border:1.5px solid \${a.borderColor};border-radius:20px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='\${a.hoverBorder}';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='\${a.borderColor}';this.style.transform=''">
+                  <div style="height:80px;background:\${a.previewBg};display:flex;gap:3px;padding:10px;position:relative;">
+                    <div style="width:16px;background:\${a.sidebarBg};border-radius:4px;"></div>
+                    <div style="flex:1;background:rgba(255,255,255,.02);border-radius:4px;padding:8px;"><div style="height:4px;background:#fff93e;border-radius:100px;width:35%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.05);border-radius:100px;width:55%;"></div></div>
+                    <span style="position:absolute;bottom:6px;right:10px;font-size:8px;color:\${a.labelColor};font-weight:700;letter-spacing:.04em;">\${a.name.toUpperCase()}</span>
+                  </div>
+                  <div style="padding:14px 16px;">
+                    <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;">\${a.name}</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.4;margin-bottom:10px;">\${a.desc}</div>
+                    \${owned
+                      ? '<div style="padding:7px 14px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:10px;color:#3ecf6e;font-size:11px;font-weight:700;text-align:center;">Owned</div>'
+                      : \\\`<button onclick="event.stopPropagation();buyAppearance('\${a.id}',\${a.price})" style="width:100%;padding:8px 14px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> \${a.price} Onyx</button>\\\`}
+                  </div>
+                </div>\`;
+              }).join('')}
+            </div>` : ''}
+            ${(shopCat==='All'||shopCat==='Badges') ? `
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+              Badges
+            </div>
+            <div style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.12);border-radius:18px;padding:16px 18px;margin-bottom:28px;display:flex;align-items:center;gap:14px;">
+              <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="/fortized badges/onyx.png" style="width:28px;height:28px;object-fit:contain;"></div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">Onyx Badge</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.3);">Evolves as you invest Onyx</div>
+              </div>
+              ${!CU?.onyxBadge?\`<button onclick="buyOnyxBadge()" style="padding:8px 16px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> 100</button>\`:'<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>'}
+            </div>` : ''}
+            ${(shopCat==='All'||shopCat==='Decorations') ? `
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/><path d="M2 12h20"/></svg>
+              Profile Decorations
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;">
+              ${PROFILE_DECORATIONS.map(d => {
+                const owned = (CU?.ownedDecorations||[]).includes(d.id);
+                const equipped = CU?.activeDecoration === d.id;
+                return \`<div style="background:rgba(255,255,255,.02);border:1.5px solid \${equipped?d.color+'44':'rgba(255,255,255,.05)'};border-radius:16px;padding:16px 12px;text-align:center;transition:all .2s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='\${d.color}33';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='\${equipped?d.color+'44':'rgba(255,255,255,.05)'}';this.style.transform=''">
+                  <div style="position:relative;width:56px;height:56px;margin:0 auto 10px;">
+                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                      \${CU?.pfp?\\\`<img src="\${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">\\\`:\\\`<div style="width:100%;height:100%;background:\${d.color}22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:Syne,sans-serif;font-weight:800;color:\${d.color};">U</div>\\\`}
+                    </div>
+                    <img src="\${d.src}" style="position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);object-fit:contain;pointer-events:none;" onerror="this.style.display='none'">
+                  </div>
+                  <div style="font-size:11.5px;font-weight:700;color:#fff;margin-bottom:3px;">\${d.name}</div>
+                  \${equipped
+                    ? \\\`<div style="font-size:10px;font-weight:700;color:\${d.color};">Equipped</div>\\\`
+                    : owned
+                      ? \\\`<button onclick="event.stopPropagation();equipDecoration('\${d.id}')" style="padding:4px 12px;background:\${d.color}15;border:1px solid \${d.color}25;border-radius:8px;color:\${d.color};font-size:10px;font-weight:700;cursor:pointer;">Equip</button>\\\`
+                      : \\\`<button onclick="event.stopPropagation();buyDecoration('\${d.id}',\${d.price})" style="padding:4px 12px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:3px;"><img src='/Onyx.png' style='width:10px;height:10px;object-fit:contain;'> \${d.price}</button>\\\`}
+                </div>\`;
+              }).join('')}
+            </div>` : ''}
           </div>`}
       </div>`;
 
@@ -22883,6 +23274,46 @@ const ONYX_TIERS = [
   { name:'Onyx Artisan', min:2000 },
   { name:'Onyx Master', min:10000 },
 ];
+// ── Profile Decorations ──
+const PROFILE_DECORATIONS = [
+  {id:'blue_glow',name:'Blue Glow',src:'/profile decorations/Blue Glow.png',price:75,color:'#60a5fa'},
+  {id:'cyan_glow',name:'Cyan Glow',src:'/profile decorations/Cyan Glow.png',price:75,color:'#22d3ee'},
+  {id:'green_glow',name:'Green Glow',src:'/profile decorations/Green Glow.png',price:75,color:'#3ecf6e'},
+  {id:'orange_glow',name:'Orange Glow',src:'/profile decorations/Orange Glow.png',price:75,color:'#fb923c'},
+  {id:'pink_glow',name:'Pink Glow',src:'/profile decorations/Pink Glow.png',price:75,color:'#f472b6'},
+  {id:'red_glow',name:'Red Glow',src:'/profile decorations/Red Glow.png',price:75,color:'#f87171'},
+  {id:'sunset_halo',name:'Sunset Halo',src:'/profile decorations/Sunset Halo.png',price:120,color:'#f5d978'},
+  {id:'yellow_glow',name:'Yellow Glow',src:'/profile decorations/Yellow Glow.png',price:75,color:'#fbbf24'},
+];
+function getDecorationSrc(decoId) {
+  const d = PROFILE_DECORATIONS.find(d=>d.id===decoId);
+  return d ? d.src : null;
+}
+function buildDecorationOverlay(decoId, sizeClass) {
+  const src = getDecorationSrc(decoId);
+  if (!src) return '';
+  const cls = sizeClass || 'profile-decoration-overlay';
+  return `<img src="${src}" class="${cls}" alt="" draggable="false">`;
+}
+async function buyDecoration(decoId, price) {
+  const bal = CU?.onyx||0;
+  const d = PROFILE_DECORATIONS.find(d=>d.id===decoId);
+  if (!d) return;
+  if (bal < price) { toast('Not enough Onyx! Need '+price+' Onyx','error'); return; }
+  showCustomConfirm('Buy '+d.name+' for '+price+' Onyx?', async () => {
+    CU.onyx = bal - price;
+    CU.ownedDecorations = [...(CU.ownedDecorations||[]), decoId];
+    CU.activeDecoration = decoId;
+    await saveUser(); updateOnyxDisplay();
+    toast(d.name+' unlocked and equipped!','success');
+    renderAtelierTab('shop');
+  });
+}
+async function equipDecoration(decoId) {
+  CU.activeDecoration = decoId || null;
+  await saveUser();
+  toast(decoId ? 'Decoration equipped!' : 'Decoration removed', 'success');
+}
 function _getOnyxTier(onyxSpent) {
   let tier = ONYX_TIERS[0];
   for (const t of ONYX_TIERS) { if (onyxSpent >= t.min) tier = t; }
@@ -24971,6 +25402,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <div class="mpp-av-row">
       <div style="position:relative;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
         <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 68)}</div>
+        ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" style="inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);" onerror="this.style.display='none'">` : ''}
         <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="position:absolute;bottom:2px;right:2px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;box-shadow:0 0 8px ${sc}55;"></span>
       </div>
       <div style="min-width:0;padding-bottom:6px;">
@@ -25101,18 +25533,18 @@ function applyAppearance(themeId) {
     // Low gradient towards dark purple
     document.body.style.background = 'linear-gradient(170deg, #010103 0%, #08061a 100%)';
   } else if (themeId === 'sunset') {
-    sidebarColor = '#1a0412';
-    document.documentElement.style.setProperty('--bg',         '#1a0410');
-    document.documentElement.style.setProperty('--rail',       '#14030e');
+    sidebarColor = '#2a1210';
+    document.documentElement.style.setProperty('--bg',         '#221412');
+    document.documentElement.style.setProperty('--rail',       '#1a0e0c');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
-    document.documentElement.style.setProperty('--channel',    '#200616');
-    document.documentElement.style.setProperty('--panel',      '#28081c');
-    document.documentElement.style.setProperty('--panel2',     '#300a22');
-    document.documentElement.style.setProperty('--panel3',     '#380c28');
-    document.documentElement.style.setProperty('--border',     '#3e0e2a');
-    document.documentElement.style.setProperty('--muted',      '#7a3a5a');
-    document.documentElement.style.setProperty('--muted-light','#a05878');
-    document.body.style.background = 'linear-gradient(170deg, #240517 0%, #4a1228 20%, #8c2a3a 40%, #c7604a 58%, #e0994a 75%, #f0c45e 88%, #f5d978 100%)';
+    document.documentElement.style.setProperty('--channel',    '#2e1814');
+    document.documentElement.style.setProperty('--panel',      '#361c16');
+    document.documentElement.style.setProperty('--panel2',     '#3e201a');
+    document.documentElement.style.setProperty('--panel3',     '#46241e');
+    document.documentElement.style.setProperty('--border',     '#4e2820');
+    document.documentElement.style.setProperty('--muted',      '#8a5a4a');
+    document.documentElement.style.setProperty('--muted-light','#b07868');
+    document.body.style.background = 'linear-gradient(170deg, #742a2c 0%, #8c3a30 20%, #a65035 40%, #c77a3a 58%, #dba040 72%, #edbf46 86%, #fbcc4c 100%)';
   } else {
     // Fortized Classic (default)
     sidebarColor = '#13161d';
@@ -25154,7 +25586,7 @@ const _appearanceThemeData = {
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#030407', sidebar:'#050710', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
-  sunset:           {id:'sunset',           name:'Sunset',           bg:'#1a0410', sidebar:'#1a0412', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#200616', panel:'#28081c', accent:'#f5d978', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#240517 0%,#4a1228 20%,#8c2a3a 40%,#c7604a 58%,#e0994a 75%,#f0c45e 88%,#f5d978 100%)'},
+  sunset:           {id:'sunset',           name:'Sunset',           bg:'#1a0410', sidebar:'#1a0412', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#200616', panel:'#28081c', accent:'#f5d978', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#742a2c 0%,#8c3a30 20%,#a65035 40%,#c77a3a 58%,#dba040 72%,#edbf46 86%,#fbcc4c 100%)'},
 };
 
 function _buildPreviewMockup(t, label) {
@@ -25498,6 +25930,28 @@ async function buyAppearance(themeId, cost) {
 }
 
 
+// ── Bundle Purchase ──
+async function buyBundle(bundleId, cost) {
+  const bal = CU?.onyx||0;
+  if (bal < cost) { toast('Not enough Onyx! Need '+cost+' Onyx','error'); return; }
+  const BUNDLES = {
+    starter_bundle: {name:'Starter Bundle',appearances:['onyx_pure'],badge:true},
+    sunset_bundle: {name:'Sunset Collection',appearances:['sunset','midnight_citadel'],badge:false},
+    ultimate_bundle: {name:'Ultimate Bundle',appearances:['onyx_pure','sunset','midnight_citadel'],badge:true},
+  };
+  const bundle = BUNDLES[bundleId];
+  if (!bundle) return;
+  showCustomConfirm('Buy '+bundle.name+' for '+cost+' Onyx?', async () => {
+    CU.onyx = bal - cost;
+    const unlocked = CU.unlockedAppearances || [];
+    bundle.appearances.forEach(a => { if (!unlocked.includes(a)) unlocked.push(a); });
+    CU.unlockedAppearances = unlocked;
+    if (bundle.badge && !CU.onyxBadge) { CU.onyxBadge = true; CU.onyxBadgeSpent = (CU.onyxBadgeSpent||0) + 100; }
+    await saveUser(); updateOnyxDisplay();
+    toast('Bundle unlocked! Enjoy your new items.','success');
+    renderAtelierTab('shop');
+  });
+}
 // ── Onyx Badge Purchase & Upgrade ──
 async function buyOnyxBadge() {
   const cost = 100;

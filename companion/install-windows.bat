@@ -9,15 +9,20 @@ echo.
 echo  Setting up automatic game detection...
 echo.
 
-:: Find Python
+:: Find Python (verify it actually runs, not just the Windows Store alias)
 set PYTHON=
-where python >nul 2>&1 && set PYTHON=python
+python --version >nul 2>&1 && set PYTHON=python
 if not defined PYTHON (
-    where python3 >nul 2>&1 && set PYTHON=python3
+    python3 --version >nul 2>&1 && set PYTHON=python3
 )
 if not defined PYTHON (
+    py --version >nul 2>&1 && set PYTHON=py
+)
+if not defined PYTHON (
+    echo.
     echo  [ERROR] Python is not installed.
     echo  Please install Python from https://python.org and try again.
+    echo  Make sure to check "Add Python to PATH" during installation.
     pause
     exit /b 1
 )

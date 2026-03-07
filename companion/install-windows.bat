@@ -1,9 +1,10 @@
 @echo off
-title Fortized — Game Detection Setup
+chcp 65001 >nul
+title Fortized - Game Detection Setup
 echo.
-echo  ╔══════════════════════════════════════╗
-echo  ║   Fortized Game Detection Setup      ║
-echo  ╚══════════════════════════════════════╝
+echo  +======================================+
+echo  ^|   Fortized Game Detection Setup      ^|
+echo  +======================================+
 echo.
 echo  Setting up automatic game detection...
 echo.
@@ -40,4 +41,15 @@ if exist "%~dp0fortized-companion.py" (
     )
 )
 
+echo.
+echo  Starting companion service...
 %PYTHON% "%COMPANION%" --install
+if errorlevel 1 (
+    echo.
+    echo  [ERROR] Companion service failed to install.
+    pause
+    exit /b 1
+)
+echo.
+echo  Setup complete!
+pause

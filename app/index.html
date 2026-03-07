@@ -12621,7 +12621,7 @@ function buildProfileView(tab) {
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
-      {id:'sunset',           name:'Sunset',           desc:'Deep plum to golden amber gradient',    bg:'#1a0410', sidebar:'#1a0412', channel:'#200616', panel:'#28081c', accent:'#f5d978', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#1a0410 0%,#2e0820 15%,#4a1228 30%,#742a2c 45%,#a65035 58%,#c77a3a 70%,#dba040 82%,#f5d978 100%)', cost:100, locked:!unlocked.includes('sunset')},
+      {id:'sunset',           name:'Sunset',           desc:'Sunset gradient overlay on Fortized Classic',    bg:'rgba(10,13,20,0.65)', sidebar:'rgba(19,22,29,0.75)', channel:'rgba(15,18,25,0.65)', panel:'rgba(22,26,35,0.75)', accent:'#fef83d', border:'rgba(37,45,61,0.5)', muted:'#4e5a6f', bodyGrad:'linear-gradient(170deg,#1a0410 0%,#2e0820 15%,#4a1228 30%,#742a2c 45%,#a65035 58%,#c77a3a 70%,#dba040 82%,#f5d978 100%)', cost:100, locked:!unlocked.includes('sunset')},
     ];
     const defaultThemes = allThemes.filter(t => t.free);
     const ownedThemes = allThemes.filter(t => !t.free && !t.locked);
@@ -25569,17 +25569,18 @@ function applyAppearance(themeId) {
     // Low gradient towards dark purple
     document.body.style.background = 'linear-gradient(170deg, #010103 0%, #08061a 100%)';
   } else if (themeId === 'sunset') {
-    sidebarColor = '#1a0412';
-    document.documentElement.style.setProperty('--bg',         '#1a0410');
-    document.documentElement.style.setProperty('--rail',       '#120308');
-    document.documentElement.style.setProperty('--sidebar',    sidebarColor);
-    document.documentElement.style.setProperty('--channel',    '#200616');
-    document.documentElement.style.setProperty('--panel',      '#28081c');
-    document.documentElement.style.setProperty('--panel2',     '#300a22');
-    document.documentElement.style.setProperty('--panel3',     '#380c28');
-    document.documentElement.style.setProperty('--border',     '#3e0e2a');
-    document.documentElement.style.setProperty('--muted',      '#7a3a5a');
-    document.documentElement.style.setProperty('--muted-light','#a05878');
+    // Sunset: Fortized Classic base with semi-transparent elements over sunset gradient
+    sidebarColor = '#13161d';
+    document.documentElement.style.setProperty('--bg',         'rgba(10,13,20,0.65)');
+    document.documentElement.style.setProperty('--rail',       'rgba(6,8,16,0.7)');
+    document.documentElement.style.setProperty('--sidebar',    'rgba(19,22,29,0.75)');
+    document.documentElement.style.setProperty('--channel',    'rgba(15,18,25,0.65)');
+    document.documentElement.style.setProperty('--panel',      'rgba(22,26,35,0.75)');
+    document.documentElement.style.setProperty('--panel2',     'rgba(26,31,41,0.75)');
+    document.documentElement.style.setProperty('--panel3',     'rgba(30,36,48,0.75)');
+    document.documentElement.style.setProperty('--border',     'rgba(37,45,61,0.5)');
+    document.documentElement.style.setProperty('--muted',      '#4e5a6f');
+    document.documentElement.style.setProperty('--muted-light','#7d8a9e');
     document.body.style.background = 'linear-gradient(170deg, #1a0410 0%, #2e0820 15%, #4a1228 30%, #742a2c 45%, #a65035 58%, #c77a3a 70%, #dba040 82%, #f5d978 100%)';
   } else {
     // Fortized Classic (default)
@@ -25597,6 +25598,8 @@ function applyAppearance(themeId) {
   }
   // Secondary sidebar is 18.8% darker than the main sidebar color
   document.documentElement.style.setProperty('--sidebar-ctx', _darkenHex(sidebarColor, 0.188));
+  // For sunset, override sidebar-ctx to be semi-transparent so gradient bleeds through
+  if (themeId === 'sunset') document.documentElement.style.setProperty('--sidebar-ctx', 'rgba(15,18,23,0.8)');
   // Reset body gradient if not onyx_pure
   if (themeId !== 'onyx_pure' && themeId !== 'sunset') document.body.style.background = '';
   // All themes keep yellow accent
@@ -25622,7 +25625,7 @@ const _appearanceThemeData = {
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#030407', sidebar:'#050710', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
-  sunset:           {id:'sunset',           name:'Sunset',           bg:'#1a0410', sidebar:'#1a0412', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#200616', panel:'#28081c', accent:'#f5d978', border:'#3e0e2a', muted:'#7a3a5a', bodyGrad:'linear-gradient(170deg,#1a0410 0%,#2e0820 15%,#4a1228 30%,#742a2c 45%,#a65035 58%,#c77a3a 70%,#dba040 82%,#f5d978 100%)'},
+  sunset:           {id:'sunset',           name:'Sunset',           bg:'rgba(10,13,20,0.65)', sidebar:'rgba(19,22,29,0.75)', get sidebarCtx(){return 'rgba(15,18,23,0.8)';}, channel:'rgba(15,18,25,0.65)', panel:'rgba(22,26,35,0.75)', accent:'#fef83d', border:'rgba(37,45,61,0.5)', muted:'#4e5a6f', bodyGrad:'linear-gradient(170deg,#1a0410 0%,#2e0820 15%,#4a1228 30%,#742a2c 45%,#a65035 58%,#c77a3a 70%,#dba040 82%,#f5d978 100%)'},
 };
 
 function _buildPreviewMockup(t, label) {

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Legal — Fortized</title>
+<meta name="description" content="Fortized Terms of Use and Privacy Policy."/>
+<meta name="theme-color" content="#fff93e"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="Fortized"/>
+<meta property="og:title" content="Legal — Fortized"/>
+<meta property="og:description" content="Fortized Terms of Use and Privacy Policy."/>
+<meta property="og:image" content="https://fortized.com/Fortized banner.png"/>
+<meta property="og:url" content="https://fortized.com/legal"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Legal — Fortized"/>
+<meta name="twitter:description" content="Fortized Terms of Use and Privacy Policy."/>
+<meta name="twitter:image" content="https://fortized.com/Fortized banner.png"/>
+<link rel="icon" type="image/png" href="/Fortized icon2.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --acc:#fff93e;--acc-dim:rgba(255,249,62,.08);--acc-b:rgba(255,249,62,.18);--acc-g:rgba(255,249,62,.3);
+  --bg:#080a0f;--panel:#0c0f1a;--panel-r:#0f1220;--bd:rgba(255,255,255,.06);--bd2:#1a2030;
+  --mu:#4a5568;--mu-l:#8b95a8;--tx:#c8d0dc;--nav-h:68px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:10px}
+
+/* ── Nav ── */
+.nav{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;padding:0 40px;background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid rgba(255,255,255,.05)}
+.nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:32px}
+.nav-logo img{height:28px;width:28px;object-fit:contain}
+.nav-logo-word{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.nav-badge{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);background:var(--acc-dim);border:1px solid var(--acc-b);border-radius:5px;padding:2px 7px;margin-left:2px}
+.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:4px;gap:1px}
+.nav-pill{font-size:13.5px;font-weight:500;color:var(--mu-l);padding:7px 14px;border-radius:9px;transition:color .15s,background .15s}
+.nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-pill.active{color:var(--acc);background:var(--acc-dim)}
+.nav-sp{flex:1}
+.nav-btn{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#101010;background:var(--acc);padding:9px 20px;border-radius:10px;transition:.15s}
+.nav-btn:hover{background:#ffe55c;box-shadow:0 0 20px var(--acc-g)}
+
+/* ── Hero with banner ── */
+.hero{padding:72px 72px 56px;border-bottom:1px solid rgba(255,255,255,.05);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,10,15,1) 40%,rgba(8,10,15,.84) 100%);z-index:1}
+.hero-banner{position:absolute;inset:0;z-index:0}
+.hero-banner img{width:100%;height:100%;object-fit:cover;opacity:.12}
+.grid-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(rgba(255,249,62,.009) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.009) 1px,transparent 1px);background-size:64px 64px}
+.hero-inner{position:relative;z-index:2}
+.hero-breadcrumb{font-size:12px;color:var(--mu);margin-bottom:16px}
+.hero-breadcrumb a{color:var(--mu-l);transition:.15s}.hero-breadcrumb a:hover{color:#fff}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.16);border-radius:100px;padding:5px 14px;margin-bottom:22px}
+.hero-eyebrow::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--acc)}
+.hero h1{font-family:'Syne',sans-serif;font-size:64px;font-weight:800;letter-spacing:-2.5px;line-height:.96;margin-bottom:18px;color:#fff}
+.hero-sub{font-size:15px;color:var(--mu-l);line-height:1.65;max-width:520px}
+.hero-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:20px}
+.hero-meta-item{font-size:12px;color:var(--mu);display:flex;align-items:center;gap:6px}
+.hero-meta-badge{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:5px;padding:2px 8px}
+
+/* ── Tab Switcher ── */
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--bd);background:var(--panel);padding:0 72px}
+.tab{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--mu);padding:14px 22px;cursor:pointer;transition:.14s;position:relative}
+.tab::after{content:'';position:absolute;bottom:-1px;left:15%;right:15%;height:2px;background:var(--acc);border-radius:2px 2px 0 0;opacity:0;transition:.14s}
+.tab.on{color:#fff}.tab.on::after{opacity:1}
+.tab:hover{color:#fff}
+
+/* ── Layout: sidebar + content ── */
+.legal-layout{display:grid;grid-template-columns:240px 1fr;max-width:1100px;margin:0 auto;padding:0 40px}
+
+/* ── Sidebar TOC ── */
+.toc{position:sticky;top:calc(var(--nav-h) + 20px);padding:24px 0;max-height:calc(100vh - var(--nav-h) - 40px);overflow-y:auto}
+.toc::-webkit-scrollbar{width:4px}.toc::-webkit-scrollbar-thumb{background:#1e2535;border-radius:10px}
+.toc-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:500;color:var(--mu-l);cursor:pointer;transition:all .15s var(--ease);border-left:2px solid transparent;margin-bottom:2px}
+.toc-item:hover{color:#fff;background:rgba(255,255,255,.03)}
+.toc-item.active{color:var(--acc);background:var(--acc-dim);border-left-color:var(--acc)}
+.toc-num{width:24px;height:24px;border-radius:7px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.toc-item.active .toc-num{background:var(--acc-dim);color:var(--acc)}
+
+/* ── Content ── */
+.legal-content{padding:48px 0 100px 48px}
+.legal-section{display:none}
+.legal-section.on{display:block}
+
+/* Section header */
+.sec-head{display:flex;align-items:center;gap:14px;margin:2.4em 0 .8em;padding-bottom:14px;border-bottom:1px solid var(--bd)}
+.sec-head:first-child{margin-top:0}
+.sec-num{width:36px;height:36px;border-radius:10px;background:var(--acc-dim);border:1px solid var(--acc-b);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--acc);flex-shrink:0}
+.sec-head h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px}
+
+/* Subsection */
+.sub-label{display:flex;align-items:center;gap:12px;margin:1.4em 0 .5em}
+.sub-label span{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);white-space:nowrap}
+.sub-label::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+/* Body */
+.legal-body{font-size:14.5px;line-height:1.86;color:var(--tx)}
+.legal-body p{margin-bottom:1.2em}
+.legal-body strong{color:#fff;font-weight:600}
+
+/* Lists */
+.legal-body ul{list-style:none;padding:0;margin-bottom:1.2em}
+.legal-body ul li{display:grid;grid-template-columns:20px 1fr;gap:0;padding:13px 0;border-bottom:1px solid var(--bd);font-size:14px;line-height:1.7}
+.legal-body ul li::before{content:'✦';color:var(--acc);font-size:11px;padding-top:3px}
+
+/* Callout boxes */
+.callout{padding:18px 22px;border-radius:13px;margin:1.2em 0;font-size:14px;line-height:1.7}
+.callout-yellow{background:rgba(255,249,62,.04);border:1px solid var(--acc-b);border-left:3px solid var(--acc)}
+.callout-blue{background:rgba(74,144,245,.04);border:1px solid rgba(74,144,245,.18);border-left:3px solid #4a90f5;color:#7eb8f7}
+.callout strong{color:#fff}
+
+/* Footer */
+footer{border-top:1px solid rgba(255,255,255,.05);padding:32px 72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px}
+.footer-left{display:flex;align-items:center;gap:16px}
+.footer-logo{display:flex;align-items:center;gap:9px}
+.footer-logo img{height:20px;width:20px;object-fit:contain;opacity:.6}
+.footer-logo span{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff}
+.footer-socials{display:flex;gap:8px}
+.footer-socials a{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;color:var(--mu);transition:.15s}
+.footer-socials a:hover{color:#fff;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12)}
+.footer-center{text-align:center}
+.copy{font-size:12px;color:#2d3548}
+.footer-links{display:flex;gap:18px;justify-content:flex-end}
+.footer-links a{font-size:12px;color:#374151;transition:.15s}
+.footer-links a:hover{color:var(--mu-l)}
+
+@media(max-width:1024px){
+  .legal-layout{grid-template-columns:1fr;padding:0 24px}
+  .toc{display:none}
+  .legal-content{padding:32px 0 80px}
+}
+@media(max-width:900px){
+  .nav-pill-group{display:none}
+}
+@media(max-width:768px){
+  .nav{padding:0 20px}
+  .hero{padding:48px 24px 36px}.hero h1{font-size:36px}
+  .tab-bar{padding:0 24px}.tab{font-size:12px;padding:12px 14px}
+  footer{padding:24px;grid-template-columns:1fr;text-align:center;gap:14px}
+  .footer-left{justify-content:center;flex-wrap:wrap}
+  .footer-links{justify-content:center;flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/Fortized icon.png" alt="Fortized" onerror="this.src='/Fortized icon2.png'"/>
+    <span class="nav-logo-word">Fortized</span>
+    <span class="nav-badge">Legal</span>
+  </a>
+  <div class="nav-pill-group">
+    <a href="/" class="nav-pill">Home</a>
+    <a href="/blog" class="nav-pill">Blog</a>
+    <a href="/support" class="nav-pill">Support</a>
+    <a href="/legal" class="nav-pill active">Legal</a>
+  </div>
+  <div class="nav-sp"></div>
+  <a href="/app" class="nav-btn">Open App &rarr;</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-banner"><img src="/Fortized banner.png" alt=""/></div>
+  <div class="grid-overlay"></div>
+  <div class="hero-inner">
+    <div class="hero-breadcrumb"><a href="/">Home</a> / Legal</div>
+    <div class="hero-eyebrow">Legal Documents</div>
+    <h1>Terms &amp; Privacy</h1>
+    <p class="hero-sub">Transparency matters. Read our Terms of Use and Privacy Policy below — by Stawdio Group.</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item">Last Updated: March 2026</div>
+      <div class="hero-meta-item">Effective: March 2026</div>
+      <div class="hero-meta-badge">EU / GDPR Compliant</div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab on" onclick="switchLegal('terms',this)">Terms of Use</div>
+  <div class="tab" onclick="switchLegal('privacy',this)">Privacy Policy</div>
+</div>
+
+<div class="legal-layout">
+  <!-- Sidebar TOC -->
+  <aside class="toc" id="toc"></aside>
+
+  <!-- Content -->
+  <div class="legal-content">
+    <!-- TERMS -->
+    <div class="legal-section on" id="sec-terms">
+      <div class="legal-body">
+        <div class="sec-head" id="t-1">
+          <div class="sec-num">01</div>
+          <h2>Acceptance of Terms</h2>
+        </div>
+        <div class="sub-label"><span>1.1 — Scope of Agreement</span></div>
+        <p>By accessing, browsing, or creating an account on Fortized, you confirm that you are at least 13 years of age (or the applicable minimum age in your jurisdiction, which is 16 in most EU member states), and that you have read, understood, and agree to be bound by these Terms of Use in their entirety.</p>
+        <div class="sub-label"><span>1.2 — Operator</span></div>
+        <p>The Service is operated by <strong>Stawdio Group</strong>, a company incorporated under French law. As a French-registered operator, Stawdio Group is subject to French commercial law, the EU General Data Protection Regulation (GDPR), the EU Digital Services Act (DSA), and all other applicable EU legislation.</p>
+
+        <div class="sec-head" id="t-2">
+          <div class="sec-num">02</div>
+          <h2>Accounts &amp; Eligibility</h2>
+        </div>
+        <div class="sub-label"><span>2.1 — Registration Requirements</span></div>
+        <p>When you create an account, you are responsible for:</p>
+        <ul>
+          <li>Providing accurate and complete registration information</li>
+          <li>Maintaining the security of your password and account access</li>
+          <li>All activity that occurs under your account, whether or not you authorised it</li>
+          <li>Notifying us immediately of any unauthorised access to your account</li>
+        </ul>
+        <div class="sub-label"><span>2.2 — Age &amp; Eligibility</span></div>
+        <p>The minimum age to use the Service is 13 globally, and 16 in EU member states unless verifiable parental consent is provided. By registering, you confirm you meet this requirement in your jurisdiction.</p>
+        <div class="sub-label"><span>2.3 — EU Consumer Rights</span></div>
+        <p>EU consumers benefit from a 14-day right of withdrawal under Directive 2011/83/EU for any paid digital services purchased through Fortized, provided consumption has not begun. This right applies in addition to any other remedies under French consumer law.</p>
+
+        <div class="sec-head" id="t-3">
+          <div class="sec-num">03</div>
+          <h2>User Content</h2>
+        </div>
+        <div class="sub-label"><span>3.1 — Ownership</span></div>
+        <p>You retain full ownership of any content you create or share on Fortized. By posting content, you grant Fortized a non-exclusive, royalty-free, revocable licence to display and distribute that content within the platform solely for the purpose of providing the Service.</p>
+        <div class="sub-label"><span>3.2 — Content Responsibility</span></div>
+        <p>You are solely responsible for ensuring your content does not infringe on third-party rights or violate applicable laws. Fortized does not endorse, and is not responsible for, any content posted by users.</p>
+        <div class="sub-label"><span>3.3 — Content Removal</span></div>
+        <p>In accordance with the EU Digital Services Act, users may request the removal of their content at any time. Fortized will process such requests promptly. Users may also contest content moderation decisions through our in-app appeals process.</p>
+
+        <div class="sec-head" id="t-4">
+          <div class="sec-num">04</div>
+          <h2>Platform Safety</h2>
+        </div>
+        <div class="sub-label"><span>4.1 — Safety Infrastructure</span></div>
+        <p>Fortized maintains a comprehensive suite of safety systems including automated content moderation, the Fortized Security Department, age restriction enforcement, community conduct standards, and an accessible in-platform report feature.</p>
+        <div class="callout callout-yellow"><strong>Important:</strong> By creating an account, you accept that Fortized is an interactive social platform with inherent risks. You agree to make use of available safety and reporting tools, and acknowledge that Stawdio Group cannot be held liable for the independent actions of third-party users.</div>
+        <div class="sub-label"><span>4.2 — DSA Compliance</span></div>
+        <p>Stawdio Group's safety infrastructure is designed to comply with obligations under the EU Digital Services Act, including transparency in content moderation, accessible reporting mechanisms, and protections for minors.</p>
+
+        <div class="sec-head" id="t-5">
+          <div class="sec-num">05</div>
+          <h2>Availability &amp; Downtime</h2>
+        </div>
+        <div class="sub-label"><span>5.1 — Service Availability</span></div>
+        <p>Fortized does not guarantee uninterrupted access to the Service. We may perform maintenance, updates, or emergency fixes that result in temporary unavailability. We will make reasonable efforts to notify users in advance of planned downtime.</p>
+
+        <div class="sec-head" id="t-6">
+          <div class="sec-num">06</div>
+          <h2>Limitation of Liability</h2>
+        </div>
+        <div class="sub-label"><span>6.1 — General Limitation</span></div>
+        <p>To the maximum extent permitted by applicable law, Fortized and Stawdio Group shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service. This includes harm resulting from:</p>
+        <ul>
+          <li>The conduct, content, or actions of any other user on the platform</li>
+          <li>Unauthorised access to or alteration of your account or content</li>
+          <li>Temporary or permanent unavailability of the Service</li>
+        </ul>
+        <div class="sub-label"><span>6.2 — EU Consumer Protections</span></div>
+        <p>Nothing in this Article excludes or limits Stawdio Group's liability for death or personal injury caused by our negligence, fraud, or any liability that cannot be excluded under French law or EU consumer protection directives. EU consumer rights remain fully enforceable regardless of these limitations.</p>
+
+        <div class="sec-head" id="t-7">
+          <div class="sec-num">07</div>
+          <h2>Indemnification</h2>
+        </div>
+        <div class="sub-label"><span>7.1 — User Indemnification</span></div>
+        <p>You agree to indemnify, defend, and hold harmless Fortized, Stawdio Group, and their respective officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, or expenses arising from your use of the Service, your violation of these Terms, or your violation of any rights of another user or third party.</p>
+        <div class="sub-label"><span>7.2 — EU Limitation</span></div>
+        <p>This indemnification clause applies only to the extent permitted by applicable French and EU law. It does not override consumer protection rights granted under Directive 93/13/EEC on unfair terms in consumer contracts.</p>
+
+        <div class="sec-head" id="t-8">
+          <div class="sec-num">08</div>
+          <h2>Governing Law &amp; Disputes</h2>
+        </div>
+        <div class="sub-label"><span>8.1 — Governing Law</span></div>
+        <p>These Terms of Service are governed by and construed in accordance with French law. Any disputes arising under these Terms that cannot be resolved amicably shall be subject to the exclusive jurisdiction of the competent courts of France, unless mandatory EU or national law provides otherwise.</p>
+        <div class="sub-label"><span>8.2 — EU Dispute Resolution</span></div>
+        <p>EU users may access alternative dispute resolution services through approved French ADR bodies or through the European Online Dispute Resolution platform. Stawdio Group is committed to participating in good faith in any such proceedings.</p>
+        <div class="sub-label"><span>8.3 — Good-Faith Resolution</span></div>
+        <p>Users agree to raise disputes with Fortized support for good-faith resolution before initiating any formal legal, regulatory, or public proceedings. Fortized will respond to all formal complaints within 15 business days.</p>
+        <div class="sub-label"><span>8.4 — Modifications</span></div>
+        <p>Fortized reserves the right to update these Terms at any time, with a minimum of 30 days' notice provided to users before material changes take effect, in compliance with EU consumer law.</p>
+
+        <p style="margin-top:2em;font-size:13px;color:var(--mu)">&copy; 2026 Fortized / Stawdio Group</p>
+      </div>
+    </div>
+
+    <!-- PRIVACY -->
+    <div class="legal-section" id="sec-privacy">
+      <div class="legal-body">
+        <div class="callout callout-blue"><strong>Note:</strong> Fortized currently operates with local browser storage. Your account data lives on your device, not on remote servers, unless explicitly stated otherwise in a future update.</div>
+
+        <div class="sec-head" id="p-1">
+          <div class="sec-num">01</div>
+          <h2>What We Collect</h2>
+        </div>
+        <p>When you create a Fortized account or use the platform, the following data may be stored:</p>
+        <ul>
+          <li>Your email address, used for account identification</li>
+          <li>Your chosen username and display identity</li>
+          <li>Your password (stored locally; never transmitted in plain text)</li>
+          <li>An optional profile picture you upload</li>
+          <li>In-platform activity such as Bastion membership, friends list, and DMs</li>
+          <li>Usage preferences and platform settings</li>
+        </ul>
+
+        <div class="sec-head" id="p-2">
+          <div class="sec-num">02</div>
+          <h2>How Your Data Is Stored</h2>
+        </div>
+        <div class="sub-label"><span>Local Storage Architecture</span></div>
+        <p>All account data is currently stored in your browser's localStorage. This means:</p>
+        <ul>
+          <li>Data stays on your device and is not synced to external servers</li>
+          <li>Clearing your browser data will erase your Fortized account locally</li>
+          <li>Data is not accessible to Fortized staff or third parties</li>
+        </ul>
+        <div class="callout callout-yellow"><strong>Bastion Sovereignty:</strong> Your Bastion is yours. Our architecture ensures admins retain full, uncompromised control over their communities at all times.</div>
+        <div class="sub-label"><span>Future Cloud Storage</span></div>
+        <p>Future versions of Fortized may introduce cloud storage. If and when this happens, this policy will be updated and users will be notified in-app in advance.</p>
+
+        <div class="sec-head" id="p-3">
+          <div class="sec-num">03</div>
+          <h2>What We Never Do</h2>
+        </div>
+        <ul>
+          <li>We <strong>never sell</strong> your personal data to third parties</li>
+          <li>We <strong>never use</strong> your data for targeted advertising</li>
+          <li>We <strong>never share</strong> your private messages with anyone outside the platform</li>
+          <li>We <strong>never access</strong> your profile picture beyond rendering it in-app</li>
+        </ul>
+
+        <div class="sec-head" id="p-4">
+          <div class="sec-num">04</div>
+          <h2>Trust &amp; Transparency</h2>
+        </div>
+        <p>We believe that security only works when it's visible. Fortized is committed to publishing regular updates on our practices, incident responses, and ongoing platform improvements.</p>
+        <ul>
+          <li><strong>Visible Security Practices:</strong> We publish updates on how we handle threats, incidents, and improvements to platform defences as they happen.</li>
+          <li><strong>Incident Disclosure:</strong> In the event of a security incident affecting user data, we will notify affected users promptly and transparently.</li>
+          <li><strong>Layered Defence:</strong> Security is applied at every layer — from account authentication to community-level access controls.</li>
+          <li><strong>Community Sovereignty:</strong> Bastion owners hold full authority over their communities. We never override or bypass admin controls.</li>
+        </ul>
+
+        <div class="sec-head" id="p-5">
+          <div class="sec-num">05</div>
+          <h2>Your Rights</h2>
+        </div>
+        <p>You have the right to access, modify, or delete your personal data at any time. Because Fortized stores data locally, you can do this directly through your browser settings or through your account profile page.</p>
+        <div class="callout callout-yellow"><strong>GDPR Rights (EU Users):</strong> EU users have the right of access, rectification, erasure, restriction of processing, data portability, and the right to object.</div>
+
+        <div class="sec-head" id="p-6">
+          <div class="sec-num">06</div>
+          <h2>Changes to This Policy</h2>
+        </div>
+        <p>Fortized reserves the right to update this Privacy Policy at any time. Material changes will be communicated via an in-app notice. Continued use of the platform after changes constitutes acceptance of the updated policy.</p>
+        <p><strong>30-Day Notice for Material Changes:</strong> In compliance with EU consumer law, material changes to this policy will be announced at least 30 days before taking effect.</p>
+
+        <p style="margin-top:2em;font-size:13px;color:var(--mu)">&copy; 2026 Fortized / Stawdio Group</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-left">
+    <a href="/" class="footer-logo">
+      <img src="/Fortized icon.png" alt="" onerror="this.src='/Fortized icon2.png'"/>
+      <span>Fortized</span>
+    </a>
+    <div class="footer-socials">
+      <a href="https://www.youtube.com/@stawdio-group" target="_blank" rel="noopener" title="YouTube">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      </a>
+      <a href="https://x.com/StawdioGroup" target="_blank" rel="noopener" title="X (Twitter)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="footer-center">
+    <p class="copy">&copy; 2026 Fortized &middot; Stawdio Group</p>
+  </div>
+  <div class="footer-links">
+    <a href="/app">App</a>
+    <a href="/blog">Blog</a>
+    <a href="/support">Support</a>
+  </div>
+</footer>
+
+<script>
+/* Tab switching */
+function switchLegal(id,btn){
+  document.querySelectorAll('.legal-section').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('sec-'+id)?.classList.add('on');
+  btn.classList.add('on');
+  buildTOC();
+  window.scrollTo({top:document.querySelector('.tab-bar').offsetTop-68,behavior:'smooth'});
+}
+
+/* Build TOC from visible section heads */
+function buildTOC(){
+  const toc=document.getElementById('toc');
+  toc.innerHTML='';
+  const active=document.querySelector('.legal-section.on');
+  if(!active)return;
+  active.querySelectorAll('.sec-head').forEach(sh=>{
+    const num=sh.querySelector('.sec-num')?.textContent||'';
+    const title=sh.querySelector('h2')?.textContent||'';
+    const id=sh.id;
+    const item=document.createElement('div');
+    item.className='toc-item';
+    item.innerHTML='<div class="toc-num">'+num+'</div>'+title;
+    item.onclick=()=>{
+      const el=document.getElementById(id);
+      if(el)window.scrollTo({top:el.offsetTop-90,behavior:'smooth'});
+    };
+    item.dataset.target=id;
+    toc.appendChild(item);
+  });
+  updateActiveTOC();
+}
+
+/* Scroll-spy for TOC */
+function updateActiveTOC(){
+  const items=document.querySelectorAll('.toc-item');
+  const heads=document.querySelectorAll('.legal-section.on .sec-head');
+  let currentId='';
+  heads.forEach(h=>{
+    if(h.getBoundingClientRect().top<=120)currentId=h.id;
+  });
+  items.forEach(item=>{
+    item.classList.toggle('active',item.dataset.target===currentId);
+  });
+}
+window.addEventListener('scroll',updateActiveTOC,{passive:true});
+
+/* URL hash routing */
+(function(){
+  const h=window.location.hash.replace('#','');
+  if(h==='privacy'){
+    document.getElementById('sec-terms').classList.remove('on');
+    document.getElementById('sec-privacy').classList.add('on');
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+    document.querySelectorAll('.tab')[1].classList.add('on');
+  }
+  buildTOC();
+})();
+</script>
+</body>
+</html>

@@ -1,934 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Fortized Blog</title>
-<meta name="description" content="Latest news, updates, and announcements from Fortized.">
-<meta name="theme-color" content="#fff93e">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Fortized">
-<meta property="og:title" content="Fortized Blog">
-<meta property="og:description" content="Latest news, updates, and announcements from Fortized.">
-<meta property="og:image" content="https://fortized.com/Fortized banner.png">
-<meta property="og:url" content="https://fortized.com/blog">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Fortized Blog">
-<meta name="twitter:description" content="Latest news, updates, and announcements from Fortized.">
-<meta name="twitter:image" content="https://fortized.com/Fortized banner.png">
-<link rel="icon" type="image/png" href="/Fortized icon2.png">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<meta name="description" content="Latest news, updates, and announcements from Fortized."/>
+<meta name="theme-color" content="#fff93e"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="Fortized"/>
+<meta property="og:title" content="Fortized Blog"/>
+<meta property="og:description" content="Latest news, updates, and announcements from Fortized."/>
+<meta property="og:image" content="https://fortized.com/Fortized banner.png"/>
+<meta property="og:url" content="https://fortized.com/blog"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Fortized Blog"/>
+<meta name="twitter:description" content="Latest news, updates, and announcements from Fortized."/>
+<meta name="twitter:image" content="https://fortized.com/Fortized banner.png"/>
+<link rel="icon" type="image/png" href="/Fortized icon2.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
 <style>
-:root {
-  --accent: #fff93e;
-  --accent-dim: rgba(255,249,62,.08);
-  --accent-mid: rgba(255,249,62,.18);
-  --accent-glow: rgba(255,249,62,.32);
-  --bg: #080a0f;
-  --panel: #0c0f1a;
-  --panel-raised: #0f1220;
-  --border: rgba(255,255,255,.06);
-  --border-bright: rgba(255,255,255,.1);
-  --muted: #4a5568;
-  --muted-light: #8b95a8;
-  --text: #dde3ed;
-  --nav-h: 68px;
+:root{
+  --acc:#fff93e;--acc-dim:rgba(255,249,62,.08);--acc-b:rgba(255,249,62,.18);--acc-g:rgba(255,249,62,.3);
+  --bg:#080a0f;--panel:#0c0f1a;--panel-r:#0f1220;--bd:rgba(255,255,255,.06);--bd2:#1a2030;
+  --mu:#4a5568;--mu-l:#8b95a8;--tx:#c8d0dc;--nav-h:68px;
+  --ease:cubic-bezier(.22,1,.36,1);
 }
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#1e2535;border-radius:10px}
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
-a { text-decoration: none; color: inherit; }
+/* ── Nav ── */
+.nav{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;padding:0 40px;background:rgba(8,10,15,.96);backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid rgba(255,255,255,.05)}
+.nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:32px}
+.nav-logo img{height:28px;width:28px;object-fit:contain}
+.nav-logo-word{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.nav-pill-group{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:4px;gap:1px}
+.nav-pill{font-size:13.5px;font-weight:500;color:var(--mu-l);padding:7px 14px;border-radius:9px;transition:color .15s,background .15s}
+.nav-pill:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-pill.active{color:var(--acc);background:var(--acc-dim)}
+.nav-sp{flex:1}
+.nav-btn{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#101010;background:var(--acc);padding:9px 20px;border-radius:10px;transition:.15s}
+.nav-btn:hover{background:#ffe55c;box-shadow:0 0 20px var(--acc-g)}
 
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: #1e2535; border-radius: 10px; }
+/* ── Hero with banner ── */
+.hero{padding:80px 72px 72px;position:relative;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.05)}
+.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,10,15,1) 40%,rgba(8,10,15,.84) 100%);z-index:1}
+.hero-banner{position:absolute;inset:0;z-index:0}
+.hero-banner img{width:100%;height:100%;object-fit:cover;opacity:.12}
+.grid-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;background-image:linear-gradient(rgba(255,249,62,.009) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.009) 1px,transparent 1px);background-size:64px 64px}
+.hero-glow{position:absolute;top:-120px;right:-80px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,249,62,.04) 0%,transparent 70%);animation:drift 11s ease-in-out infinite alternate;z-index:1;pointer-events:none}
+@keyframes drift{0%{transform:translate(0,0)}100%{transform:translate(-60px,40px)}}
+.hero-inner{position:relative;z-index:2;max-width:560px}
+.hero-breadcrumb{font-size:12px;color:var(--mu);margin-bottom:16px}
+.hero-breadcrumb a{color:var(--mu-l);transition:.15s}.hero-breadcrumb a:hover{color:#fff}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.16);border-radius:100px;padding:5px 14px;margin-bottom:22px}
+.hero-eyebrow::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--acc)}
+.hero h1{font-family:'Syne',sans-serif;font-size:58px;font-weight:800;letter-spacing:-2.5px;line-height:.96;margin-bottom:18px;color:#fff}
+.hero h1 em{font-style:normal;color:var(--acc)}
+.hero-sub{font-size:15px;color:var(--mu-l);line-height:1.65;max-width:520px}
 
-/* ── NAV ─────────────────────────────────── */
-.nav-root {
-  position: sticky; top: 0; z-index: 200;
-  height: var(--nav-h);
-  display: flex; align-items: center; padding: 0 40px;
-  background: rgba(8,10,15,.96);
-  backdrop-filter: blur(28px) saturate(200%);
-  border-bottom: 1px solid rgba(255,255,255,.05);
-  box-shadow: 0 1px 40px rgba(0,0,0,.4);
-}
-.nav-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-right: 32px; }
-.nav-logo img { height: 28px; width: 28px; object-fit: contain; }
-.nav-logo-word { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -.5px; }
-.nav-pill-group { display: flex; align-items: center; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 4px; gap: 1px; }
-.nav-pill { font-size: 13.5px; font-weight: 500; color: var(--muted-light); padding: 7px 14px; border-radius: 9px; transition: color .15s, background .15s; white-space: nowrap; }
-.nav-pill:hover { color: #fff; background: rgba(255,255,255,.06); }
-.nav-pill.active { color: var(--accent); background: rgba(255,249,62,.07); }
-.nav-sep { width: 1px; height: 22px; background: rgba(255,255,255,.07); margin: 0 12px; flex-shrink: 0; }
-.nav-spacer { flex: 1; }
-.nav-right { display: flex; align-items: center; gap: 8px; }
-.nav-btn-login { font-size: 13.5px; font-weight: 600; color: var(--muted-light); padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.03); transition: color .15s, border-color .15s, background .15s; }
-.nav-btn-login:hover { color: #fff; border-color: rgba(255,255,255,.16); background: rgba(255,255,255,.06); }
-.nav-btn-cta { font-family: 'Syne', sans-serif; font-size: 13.5px; font-weight: 700; color: #080a0f; background: var(--accent); padding: 9px 20px; border-radius: 10px; transition: box-shadow .2s, filter .15s, transform .14s; position: relative; overflow: hidden; }
-.nav-btn-cta::before { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.2), transparent); opacity: 0; transition: opacity .2s; }
-.nav-btn-cta:hover { box-shadow: 0 0 28px var(--accent-glow); filter: brightness(1.06); transform: translateY(-1px); }
-.nav-btn-cta:hover::before { opacity: 1; }
-.nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.03); }
-.nav-hamburger span { display: block; width: 20px; height: 1.5px; background: var(--muted-light); border-radius: 2px; transition: transform .2s, opacity .2s; }
-@media (max-width: 900px) { .nav-pill-group, .nav-sep { display: none; } .nav-hamburger { display: flex; } }
-@media (max-width: 600px) { .nav-btn-login { display: none; } }
+/* ── Blog grid ── */
+.blog-wrap{max-width:1100px;margin:0 auto;padding:48px 72px 80px}
 
-/* ── HERO ─────────────────────────────────── */
-.blog-hero {
-  padding: 80px 72px 72px;
-  position: relative; overflow: hidden;
-  border-bottom: 1px solid rgba(255,255,255,.05);
-}
-.blog-hero::before {
-  content: "";
-  position: absolute; inset: 0;
-  background: linear-gradient(115deg, rgba(8,10,15,1) 38%, rgba(8,10,15,.82) 100%),
-              url("/Fortized banner.png") center / cover no-repeat;
-  z-index: 0;
-}
-.hero-grid-overlay {
-  position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255,249,62,.009) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,249,62,.009) 1px, transparent 1px);
-  background-size: 64px 64px;
-}
-.hero-glow {
-  position: absolute; top: -160px; left: -100px; width: 600px; height: 600px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(255,249,62,.055) 0%, transparent 65%);
-  pointer-events: none; z-index: 0;
-  animation: glowDrift 11s ease-in-out infinite;
-}
-@keyframes glowDrift { 0%,100%{transform:translate(0,0);} 50%{transform:translate(50px,35px);} }
+/* ── Empty state ── */
+.blog-empty{max-width:580px;margin:0 auto;padding:100px 40px;text-align:center}
+.empty-icon{width:72px;height:72px;margin:0 auto 20px;border-radius:50%;background:rgba(255,249,62,.06);border:1px solid var(--acc-b);display:flex;align-items:center;justify-content:center}
+.empty-icon svg{width:32px;height:32px;color:var(--acc);opacity:.5}
+.empty-t{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:10px}
+.empty-s{font-size:14px;color:var(--mu-l);line-height:1.65;margin-bottom:24px}
+.empty-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--acc);background:var(--acc-dim);border:1px solid var(--acc-b);border-radius:8px;padding:8px 16px}
+.empty-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--acc);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-.blog-hero-inner { position: relative; z-index: 1; display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
-.hero-left { max-width: 560px; }
-.blog-eyebrow {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--accent);
-  background: rgba(255,249,62,.06); border: 1px solid rgba(255,249,62,.16);
-  border-radius: 100px; padding: 5px 14px; margin-bottom: 22px;
-}
-.blog-eyebrow::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
-.blog-hero h1 {
-  font-family: 'Syne', sans-serif;
-  font-size: 58px; font-weight: 800; letter-spacing: -2.5px; line-height: .96;
-  margin-bottom: 20px; color: #fff;
-}
-.blog-hero h1 em { font-style: normal; color: var(--accent); }
-.blog-hero-sub { font-size: 15.5px; color: var(--muted-light); line-height: 1.65; max-width: 420px; }
+/* ── Footer ── */
+footer{border-top:1px solid rgba(255,255,255,.05);padding:32px 72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px}
+.footer-left{display:flex;align-items:center;gap:16px}
+.footer-logo{display:flex;align-items:center;gap:9px}
+.footer-logo img{height:20px;width:20px;object-fit:contain;opacity:.6}
+.footer-logo span{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff}
+.footer-socials{display:flex;gap:8px}
+.footer-socials a{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;color:var(--mu);transition:.15s}
+.footer-socials a:hover{color:#fff;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12)}
+.footer-center{text-align:center}
+.copy{font-size:12px;color:#2d3548}
+.footer-links{display:flex;gap:18px;justify-content:flex-end}
+.footer-links a{font-size:12px;color:#374151;transition:.15s}
+.footer-links a:hover{color:var(--mu-l)}
 
-.hero-stats { display: flex; gap: 32px; align-items: center; flex-shrink: 0; }
-.hero-stat { text-align: center; }
-.hero-stat-num { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -1px; }
-.hero-stat-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-light); margin-top: 2px; }
-.hero-stat-divider { width: 1px; height: 44px; background: rgba(255,255,255,.07); }
+/* ── Animations ── */
+.fade-up{opacity:0;transform:translateY(20px);animation:fadeUp .6s var(--ease) forwards}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
 
-/* ── SEARCH BAR ──────────────────────────── */
-.blog-search-wrap {
-  max-width: 520px; position: relative; margin-bottom: 0;
+@media(max-width:900px){
+  .nav-pill-group{display:none}
 }
-.blog-search-input {
-  width: 100%; padding: 12px 18px 12px 44px;
-  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
-  border-radius: 14px; color: #fff; font-family: 'DM Sans', sans-serif;
-  font-size: 14px; outline: none; transition: border-color .2s, box-shadow .2s;
+@media(max-width:768px){
+  .nav{padding:0 20px}
+  .hero{padding:56px 24px 44px}.hero h1{font-size:36px}
+  .blog-wrap{padding:32px 24px 60px}
+  .blog-empty{padding:60px 24px}
+  footer{padding:24px;grid-template-columns:1fr;text-align:center;gap:14px}
+  .footer-left{justify-content:center;flex-wrap:wrap}
+  .footer-links{justify-content:center;flex-wrap:wrap}
 }
-.blog-search-input::placeholder { color: var(--muted); }
-.blog-search-input:focus { border-color: rgba(255,249,62,.3); box-shadow: 0 0 0 3px rgba(255,249,62,.06); }
-.blog-search-icon {
-  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-  width: 16px; height: 16px; color: var(--muted); pointer-events: none;
-}
-.blog-no-results {
-  text-align: center; padding: 60px 24px; color: var(--muted);
-  font-size: 15px; display: none;
-}
-.blog-no-results span { display: block; font-size: 36px; margin-bottom: 12px; opacity: .4; }
-
-/* ── MAIN GRID ────────────────────────────── */
-.blog-wrap { max-width: 1240px; margin: 0 auto; padding: 64px 72px 100px; }
-
-/* ── PINNED CARD ─────────────────────────── */
-.pinned-card {
-  background: var(--panel); border: 1.5px solid rgba(255,249,62,.14);
-  border-radius: 22px; overflow: hidden; cursor: pointer; position: relative;
-  transition: transform .22s, box-shadow .22s, border-color .22s;
-  display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 28px;
-}
-.pinned-card::before {
-  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent); z-index: 2;
-}
-.pinned-card:hover { transform: translateY(-4px); box-shadow: 0 24px 64px rgba(0,0,0,.55); border-color: rgba(255,249,62,.28); }
-.pinned-card-img {
-  height: 100%; min-height: 240px;
-  background: linear-gradient(145deg, rgba(255,249,62,.1) 0%, rgba(255,249,62,.02) 40%, transparent 70%),
-              linear-gradient(to bottom, rgba(8,10,15,.05), rgba(8,10,15,.75)),
-              url("/Fortized banner2.png") center / cover no-repeat;
-  position: relative;
-}
-.pinned-card-img::after {
-  content: ""; position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,249,62,.018) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,249,62,.018) 1px, transparent 1px);
-  background-size: 44px 44px; pointer-events: none;
-}
-.pinned-card-body { padding: 32px 34px; display: flex; flex-direction: column; justify-content: center; }
-.pinned-badge {
-  display: inline-flex; align-items: center; gap: 6px; width: fit-content;
-  font-size: 9.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
-  color: #080a0f; background: var(--accent); padding: 4px 12px; border-radius: 6px; margin-bottom: 14px;
-}
-.pinned-card-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -.7px; line-height: 1.1; color: #fff; margin-bottom: 12px; }
-.pinned-card-excerpt { font-size: 14.5px; color: var(--muted-light); line-height: 1.72; margin-bottom: 20px; }
-
-/* ── FEATURED ROW (hero card + 2 stack) ─── */
-.featured-row { display: grid; grid-template-columns: 1fr 380px; gap: 16px; margin-bottom: 16px; }
-
-/* ── POST GRID ───────────────────────────── */
-.post-grid { margin-top: 28px; }
-.post-grid.search-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-
-.hero-card {
-  background: var(--panel);
-  border: 1px solid rgba(255,255,255,.06);
-  border-radius: 22px; overflow: hidden; cursor: pointer;
-  position: relative;
-  transition: transform .22s, box-shadow .22s, border-color .22s;
-  display: flex; flex-direction: column;
-}
-.hero-card::before {
-  content: "";
-  position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, var(--accent) 70%, transparent 100%);
-  z-index: 2;
-}
-.hero-card:hover { transform: translateY(-5px); box-shadow: 0 28px 70px rgba(0,0,0,.6); border-color: rgba(255,249,62,.2); }
-
-.hero-card-img {
-  height: 260px;
-  background: linear-gradient(145deg, rgba(255,249,62,.1) 0%, rgba(255,249,62,.02) 40%, transparent 70%),
-              linear-gradient(to bottom, rgba(8,10,15,.05), rgba(8,10,15,.75)),
-              url("/Fortized banner4.png") center / cover no-repeat;
-  position: relative; display: flex; align-items: flex-start; padding: 22px;
-}
-.hero-card-img::after {
-  content: "";
-  position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,249,62,.018) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,249,62,.018) 1px, transparent 1px);
-  background-size: 44px 44px; pointer-events: none;
-}
-.hero-card-body { padding: 26px 28px 28px; flex: 1; display: flex; flex-direction: column; }
-.hero-card-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -.6px; line-height: 1.1; color: #fff; margin-bottom: 10px; }
-.hero-card-excerpt { font-size: 14px; color: var(--muted-light); line-height: 1.72; margin-bottom: 20px; flex: 1; }
-.hero-card-footer { display: flex; align-items: center; justify-content: space-between; }
-
-/* ── STACKED SIDE CARDS ───────────────────── */
-.side-stack { display: flex; flex-direction: column; gap: 16px; }
-
-.side-card {
-  background: var(--panel);
-  border: 1px solid rgba(255,255,255,.06);
-  border-radius: 20px; overflow: hidden; cursor: pointer;
-  flex: 1; display: flex; flex-direction: column;
-  transition: transform .2s, box-shadow .2s, border-color .2s;
-  position: relative;
-}
-.side-card:hover { transform: translateY(-3px); box-shadow: 0 18px 48px rgba(0,0,0,.5); border-color: rgba(255,249,62,.16); }
-.side-card-img {
-  height: 110px;
-  background: linear-gradient(145deg, rgba(255,249,62,.07) 0%, transparent 60%),
-              linear-gradient(to bottom, rgba(8,10,15,.1), rgba(8,10,15,.8)),
-              url("/Fortized banner.png") center / cover no-repeat;
-  position: relative;
-}
-.side-card-img::after {
-  content: "";
-  position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,249,62,.014) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,249,62,.014) 1px, transparent 1px);
-  background-size: 36px 36px;
-}
-.side-card-body { padding: 18px 20px 20px; flex: 1; display: flex; flex-direction: column; }
-.side-card-title { font-family: 'Syne', sans-serif; font-size: 15.5px; font-weight: 800; letter-spacing: -.3px; line-height: 1.2; color: #fff; margin-bottom: 6px; }
-.side-card-excerpt { font-size: 12.5px; color: var(--muted-light); line-height: 1.65; flex: 1; margin-bottom: 14px; }
-
-/* ── SECONDARY ROW ────────────────────────── */
-.secondary-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 48px; }
-
-.reg-card {
-  background: var(--panel);
-  border: 1px solid rgba(255,255,255,.06);
-  border-radius: 20px; overflow: hidden; cursor: pointer;
-  display: flex; flex-direction: column;
-  transition: transform .2s, box-shadow .2s, border-color .2s;
-  position: relative;
-}
-.reg-card:hover { transform: translateY(-3px); box-shadow: 0 16px 44px rgba(0,0,0,.5); border-color: rgba(255,249,62,.15); }
-.reg-card-img {
-  height: 130px;
-  background: linear-gradient(145deg, rgba(255,249,62,.06) 0%, transparent 55%),
-              linear-gradient(to bottom, rgba(8,10,15,.1), rgba(8,10,15,.78)),
-              url("/Fortized banner2.png") center / cover no-repeat;
-  position: relative;
-}
-.reg-card-img::after {
-  content: "";
-  position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,249,62,.012) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,249,62,.012) 1px, transparent 1px);
-  background-size: 36px 36px;
-}
-.reg-card-body { padding: 18px 20px 22px; flex: 1; display: flex; flex-direction: column; }
-.reg-card-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: -.3px; line-height: 1.2; color: #fff; margin-bottom: 7px; }
-.reg-card-excerpt { font-size: 12.5px; color: var(--muted-light); line-height: 1.65; flex: 1; margin-bottom: 14px; }
-
-/* ── SHARED CARD PARTS ────────────────────── */
-.card-tag {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 9.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
-  padding: 3px 10px; border-radius: 5px;
-}
-.tag-launch { color: #080a0f; background: var(--accent); }
-.tag-rd { color: var(--accent); background: rgba(255,249,62,.1); border: 1px solid rgba(255,249,62,.2); }
-.tag-announce { color: #60c8ff; background: rgba(96,200,255,.08); border: 1px solid rgba(96,200,255,.18); }
-.tag-safety { color: #7ef5a0; background: rgba(126,245,160,.08); border: 1px solid rgba(126,245,160,.18); }
-
-.card-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-.card-date { font-size: 11.5px; color: var(--muted); }
-.card-readtime { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 3px; }
-
-.author-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 11.5px; color: var(--muted-light);
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 100px; padding: 3px 9px 3px 4px;
-}
-.author-chip-av {
-  width: 20px; height: 20px; border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255,249,62,.3), rgba(255,249,62,.08));
-  border: 1px solid rgba(255,249,62,.28);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 800; color: var(--accent);
-}
-
-.read-link {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
-  color: var(--accent);
-  transition: gap .15s;
-}
-.hero-card:hover .read-link,
-.side-card:hover .read-link,
-.reg-card:hover .read-link { gap: 10px; }
-
-/* ── COMING SOON ──────────────────────────── */
-.coming-section { margin-top: 0; }
-.section-divider {
-  display: flex; align-items: center; gap: 14px;
-  margin-bottom: 20px;
-}
-.section-divider-label {
-  font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase;
-  color: var(--muted); white-space: nowrap;
-}
-.section-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,.05); }
-
-.stubs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stub-card {
-  display: flex; gap: 14px; align-items: center;
-  padding: 16px 18px;
-  background: rgba(255,255,255,.015);
-  border: 1px solid rgba(255,255,255,.04);
-  border-radius: 14px;
-}
-.stub-icon {
-  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-  background: rgba(255,249,62,.04); border: 1px solid rgba(255,249,62,.08);
-  display: flex; align-items: center; justify-content: center; font-size: 18px;
-}
-.stub-cat { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
-.stub-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #3d4a60; line-height: 1.3; }
-
-/* ── ARTICLE VIEW ─────────────────────────── */
-#article-view { display: none; max-width: 820px; margin: 0 auto; padding: 56px 72px 100px; }
-#article-view.open { display: block; }
-#blog-list-view.hidden { display: none; }
-
-.article-back {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 13px; font-weight: 600; color: var(--muted-light);
-  padding: 8px 14px; border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.07);
-  background: rgba(255,255,255,.03);
-  transition: color .15s, border-color .15s, background .15s;
-  margin-bottom: 36px; cursor: pointer;
-}
-.article-back:hover { color: #fff; border-color: rgba(255,255,255,.12); background: rgba(255,255,255,.05); }
-
-.article-full-banner {
-  width: 100%; height: 300px; border-radius: 22px; overflow: hidden;
-  background: linear-gradient(145deg, rgba(255,249,62,.12) 0%, transparent 45%),
-              linear-gradient(to bottom, rgba(8,10,15,.08), rgba(8,10,15,.7)),
-              url("/Fortized banner4.png") center / cover no-repeat;
-  position: relative; border: 1px solid rgba(255,255,255,.06);
-  display: flex; align-items: flex-end; padding: 32px 36px;
-  margin-bottom: 32px;
-}
-.article-full-banner::before {
-  content: ""; position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,249,62,.022) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,249,62,.022) 1px, transparent 1px);
-  background-size: 50px 50px;
-}
-.banner-content { position: relative; z-index: 1; }
-.article-full-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 38px; font-weight: 800; letter-spacing: -1.3px; line-height: 1.05;
-  color: #fff; margin-bottom: 14px; text-shadow: 0 2px 24px rgba(0,0,0,.7);
-}
-.article-full-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-.article-byline {
-  display: flex; align-items: center; gap: 14px;
-  padding: 16px 20px;
-  background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,.06);
-  border-radius: 14px; margin-bottom: 40px;
-}
-.byline-av {
-  width: 42px; height: 42px; border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255,249,62,.25), rgba(255,249,62,.06));
-  border: 2px solid rgba(255,249,62,.28);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--accent);
-  flex-shrink: 0;
-}
-.byline-info .byline-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
-.byline-info .byline-role { font-size: 12px; color: var(--muted-light); }
-.byline-org { margin-left: auto; font-size: 11.5px; color: var(--muted); }
-
-/* ── PROSE ────────────────────────────────── */
-.article-prose { font-family: 'Lora', serif; }
-.article-prose .lead {
-  font-size: 17.5px; color: #c8d0dc; line-height: 1.8; margin-bottom: 34px;
-  padding-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,.06);
-  font-style: italic;
-}
-.article-prose p { font-size: 15.5px; color: var(--muted-light); line-height: 1.9; margin-bottom: 20px; }
-.article-prose h2 {
-  font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800;
-  letter-spacing: -.3px; color: #fff; margin: 40px 0 14px;
-  display: flex; align-items: center; gap: 10px;
-}
-.article-prose h2::before { content: ""; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; flex-shrink: 0; }
-.article-prose ul { list-style: none; margin: 14px 0 26px; display: flex; flex-direction: column; gap: 9px; }
-.article-prose ul li {
-  display: flex; align-items: flex-start; gap: 12px;
-  font-size: 15px; color: var(--muted-light); line-height: 1.65;
-  font-family: 'DM Sans', sans-serif;
-  padding: 13px 16px;
-  background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,.05);
-  border-radius: 11px;
-  transition: border-color .15s, background .15s;
-}
-.article-prose ul li:hover { border-color: rgba(255,249,62,.12); background: rgba(255,249,62,.03); }
-.article-prose ul li::before { content: "✦"; color: var(--accent); font-size: 9px; flex-shrink: 0; margin-top: 5px; }
-.article-prose ul li strong { color: #fff; font-weight: 600; }
-.article-prose .highlight-box {
-  background: rgba(255,249,62,.04);
-  border: 1px solid rgba(255,249,62,.12);
-  border-left: 3px solid var(--accent);
-  border-radius: 13px; padding: 18px 22px; margin: 26px 0;
-  font-size: 14.5px; color: #c8d0dc; line-height: 1.72;
-  font-family: 'DM Sans', sans-serif;
-}
-.article-prose .highlight-box strong { color: var(--accent); }
-.article-prose .quote-block {
-  position: relative;
-  background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,.07);
-  border-left: 3px solid rgba(255,249,62,.35);
-  border-radius: 13px; padding: 20px 24px 20px 30px; margin: 26px 0;
-  font-size: 16px; font-style: italic; color: #c8d0dc; line-height: 1.72;
-}
-.article-prose .quote-block::before {
-  content: "\201C"; position: absolute; top: 6px; left: 12px;
-  font-size: 38px; color: rgba(255,249,62,.2); font-family: 'Lora', serif; line-height: 1;
-}
-.radiance-badge-inline {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: linear-gradient(90deg, rgba(255,200,62,.12), rgba(255,249,62,.1));
-  border: 1px solid rgba(255,220,62,.22); border-radius: 100px;
-  padding: 2px 10px; font-size: 13px; font-weight: 700; color: #ffd93e;
-  vertical-align: middle; font-family: 'DM Sans', sans-serif;
-}
-.article-prose .perks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin: 18px 0 26px; }
-.perk-card {
-  background: var(--panel); border: 1px solid rgba(255,255,255,.06);
-  border-radius: 13px; padding: 16px; display: flex; gap: 11px; align-items: flex-start;
-  transition: border-color .15s, background .15s;
-}
-.perk-card:hover { border-color: rgba(255,249,62,.14); background: rgba(255,249,62,.03); }
-.perk-icon { font-size: 20px; flex-shrink: 0; }
-.perk-body .perk-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
-.perk-body .perk-desc { font-size: 12px; color: var(--muted-light); line-height: 1.5; font-family: 'DM Sans', sans-serif; }
-.article-prose .sign-off {
-  color: var(--muted); font-size: 13.5px; font-style: italic;
-  border-top: 1px solid rgba(255,255,255,.06);
-  padding-top: 22px; margin-top: 8px;
-  font-family: 'DM Sans', sans-serif;
-}
-
-/* ── ANIMATIONS ───────────────────────────── */
-@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-.fade-up { animation: fadeUp .5s cubic-bezier(.22,1,.36,1) both; }
-.d1 { animation-delay: .06s; }
-.d2 { animation-delay: .12s; }
-.d3 { animation-delay: .18s; }
-.d4 { animation-delay: .24s; }
-.d5 { animation-delay: .30s; }
-
-/* ── FOOTER ───────────────────────────────── */
-footer {
-  border-top: 1px solid rgba(255,255,255,.05);
-  padding: 28px 72px;
-  display: grid; grid-template-columns: 1fr auto 1fr;
-  align-items: center; gap: 20px;
-}
-.footer-left { display: flex; align-items: center; gap: 16px; }
-.footer-logo { display: flex; align-items: center; gap: 9px; }
-.footer-logo img { height: 20px; opacity: .4; }
-.footer-logo span { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #2d3548; }
-.footer-socials { display: flex; align-items: center; gap: 10px; padding-left: 6px; border-left: 1px solid rgba(255,255,255,.06); }
-.footer-socials a { color: #374151; transition: color .2s; display: flex; align-items: center; }
-.footer-socials a:hover { color: var(--muted-light); }
-footer .copy { font-size: 12px; color: #2d3548; text-align: center; }
-.footer-links { display: flex; gap: 18px; justify-content: flex-end; }
-.footer-links a { font-size: 12px; color: #374151; transition: color .15s; }
-.footer-links a:hover { color: var(--muted-light); }
-
-/* ── RESPONSIVE ───────────────────────────── */
-@media (max-width: 1024px) {
-  .featured-row { grid-template-columns: 1fr; }
-  .side-stack { flex-direction: row; }
-  .secondary-row { grid-template-columns: 1fr 1fr; }
-  .post-grid.search-grid { grid-template-columns: 1fr 1fr; }
-  .pinned-card { grid-template-columns: 1fr; }
-  .pinned-card-img { min-height: 200px; }
-}
-@media (max-width: 768px) {
-  .nav-root { padding: 0 20px; }
-  .blog-hero { padding: 56px 24px 44px; }
-  .blog-hero h1 { font-size: 40px; }
-  .hero-stats { display: none; }
-  .blog-wrap { padding: 40px 24px 80px; }
-  .featured-row, .secondary-row, .stubs-row, .post-grid.search-grid { grid-template-columns: 1fr; }
-  .side-stack { flex-direction: column; }
-  .pinned-card { grid-template-columns: 1fr; }
-  footer { padding: 20px 24px; grid-template-columns: 1fr; text-align: center; }
-  .footer-left { justify-content: center; }
-  .footer-links { justify-content: center; flex-wrap: wrap; }
-  #article-view { padding: 36px 24px 80px; }
-}
-img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
 </style>
-<script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
-<nav class="nav-root">
+<nav class="nav">
   <a href="/" class="nav-logo">
-    <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
+    <img src="/Fortized icon.png" alt="Fortized" onerror="this.src='/Fortized icon2.png'"/>
     <span class="nav-logo-word">Fortized</span>
   </a>
   <div class="nav-pill-group">
     <a href="/" class="nav-pill">Home</a>
     <a href="/blog" class="nav-pill active">Blog</a>
     <a href="/support" class="nav-pill">Support</a>
-    <a href="/download" class="nav-pill">Download</a>
+    <a href="/legal" class="nav-pill">Legal</a>
   </div>
-  <div class="nav-sep"></div>
-  <div class="nav-spacer"></div>
-  <div class="nav-right">
-    <a href="/login" class="nav-btn-login">Login</a>
-    <a href="/signup" class="nav-btn-cta">Join the Fortress →</a>
-    <div class="nav-hamburger" id="navHamburger">
-      <span></span><span></span><span></span>
-    </div>
-  </div>
+  <div class="nav-sp"></div>
+  <a href="/app" class="nav-btn">Open App &rarr;</a>
 </nav>
 
-<!-- ── BLOG LIST ──────────────────────────── -->
-<div id="blog-list-view">
-  <div class="blog-hero">
-    <div class="hero-glow"></div>
-    <div class="hero-grid-overlay"></div>
-    <div class="blog-hero-inner">
-      <div class="hero-left fade-up">
-        <div class="blog-eyebrow">The Fortized Blog</div>
-        <h1>News &amp;<br><em>Dispatches.</em></h1>
-        <p class="blog-hero-sub">Official articles, R&amp;D announcements, and community updates from the Stawdio Group team.</p>
-      </div>
-      <div class="hero-stats fade-up d2">
-        <div class="hero-stat">
-          <div class="hero-stat-num">8</div>
-          <div class="hero-stat-label">Articles</div>
-        </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <div class="hero-stat-num">4</div>
-          <div class="hero-stat-label">Authors</div>
-        </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <div class="hero-stat-num">Mar</div>
-          <div class="hero-stat-label">Latest</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="blog-wrap">
-    <!-- Search bar -->
-    <div class="blog-search-wrap fade-up d1" style="margin-bottom:32px;">
-      <svg class="blog-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input class="blog-search-input" id="blog-search" placeholder="Search blog posts..." oninput="filterBlogPosts(this.value)">
-    </div>
-
-    <!-- Pinned: What is Fortized? -->
-    <div class="pinned-card fade-up d2" id="pinned-card" onclick="openArticle('whatisfortized')">
-      <div class="pinned-card-img"></div>
-      <div class="pinned-card-body">
-        <div class="pinned-badge">📌 Pinned</div>
-        <div class="card-meta">
-          <span class="card-tag tag-rd">R&amp;D</span>
-          <span class="card-date">February 22, 2026</span>
-          <span class="card-readtime">⏱ 2 min</span>
-        </div>
-        <div class="pinned-card-title">What is Fortized?</div>
-        <div class="pinned-card-excerpt">Fortized started with a simple question: why does building a community feel harder than it should? Here's the structure and identity that makes it different.</div>
-        <div class="card-meta" style="margin-bottom:0;">
-          <div class="author-chip"><div class="author-chip-av">T</div>Tyrianum · R&amp;D</div>
-          <span class="read-link" style="margin-left:auto;">Read Article →</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Dynamic post grid (sorted by date, excluding pinned) -->
-    <div class="post-grid" id="post-grid"></div>
-    <div class="blog-no-results" id="blog-no-results">
-      <span>🔍</span>
-      No posts found matching your search.
-    </div>
+<div class="hero">
+  <div class="hero-banner"><img src="/Fortized banner.png" alt=""/></div>
+  <div class="grid-overlay"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-inner fade-up">
+    <div class="hero-breadcrumb"><a href="/">Home</a> / Blog</div>
+    <div class="hero-eyebrow">The Fortized Blog</div>
+    <h1>News &amp;<br><em>Updates.</em></h1>
+    <p class="hero-sub">Official product updates, platform changes, and community stories from the Fortized team.</p>
   </div>
 </div>
 
-<!-- ── ARTICLE VIEW ──────────────────────── -->
-<div id="article-view">
-  <div class="article-back" onclick="closeArticle()">← Back to Blog</div>
-  <div id="article-content"></div>
+<div class="blog-empty fade-up" style="animation-delay:.15s">
+  <div class="empty-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+  </div>
+  <div class="empty-t">No posts yet</div>
+  <div class="empty-s">The Fortized Blog is getting ready. Product updates, community spotlights, and platform news will appear here soon.</div>
+  <div class="empty-badge">Coming soon</div>
 </div>
 
 <footer>
   <div class="footer-left">
     <a href="/" class="footer-logo">
-      <img src="/Fortized icon.png" alt="" onerror="this.style.display='none'">
+      <img src="/Fortized icon.png" alt="" onerror="this.src='/Fortized icon2.png'"/>
       <span>Fortized</span>
     </a>
     <div class="footer-socials">
-      <a href="https://x.com/Fortized" target="_blank" rel="noopener" title="Fortized on X">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-      </a>
-      <a href="https://x.com/StawdioGroup" target="_blank" rel="noopener" title="Stawdio Group on X">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-      </a>
       <a href="https://www.youtube.com/@stawdio-group" target="_blank" rel="noopener" title="YouTube">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      </a>
+      <a href="https://x.com/StawdioGroup" target="_blank" rel="noopener" title="X (Twitter)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
       </a>
     </div>
   </div>
-  <p class="copy">&copy; 2026 Fortized &middot; Stawdio Group</p>
+  <div class="footer-center">
+    <p class="copy">&copy; 2026 Fortized &middot; Stawdio Group</p>
+  </div>
   <div class="footer-links">
-    <a href="/privacy">Privacy</a>
-    <a href="/terms">Terms</a>
+    <a href="/app">App</a>
+    <a href="/support">Support</a>
+    <a href="/legal">Legal</a>
   </div>
 </footer>
 
-<script>
-const ARTICLES = {
-  desktop: {
-    category:'Announcement', date:'March 3, 2026', readTime:'3 min read',
-    authorInitial:'S', authorPillLabel:'Stawdio Group',
-    title:'The Fortress Comes to Your Desktop', bylineName:'Staw',
-    bylineRole:'Chief Administrative Officer, Stawdio Group',
-    tagClass:'tag-announce', tagLabel:'Announcement',
-    banner:'/Fortized banner5.png',
-    content:`<p class="lead">Today we're making Fortized available as a dedicated desktop application — and it's been one of the most requested features since day one. The Fortress now lives on your machine.</p><p>Since the Beta launched, we've heard the same request over and over: "When can I get Fortized as a real app?" The browser works, but a native experience is something else entirely. So we built it.</p><h2>Why Desktop?</h2><p>The web client will always be there. But a desktop app means Fortized starts when your PC starts. It means system-level notifications that actually work. It means less RAM overhead, faster load times, and the kind of responsiveness you expect from software that lives on your taskbar — not in a browser tab.</p><p>This isn't an Electron wrapper around the website. We went deeper. The desktop client is built to take full advantage of your system while keeping the same seamless experience you already know from the web.</p><h2>What You Get</h2><ul><li><strong>System Tray Integration</strong> — Fortized sits in your tray, ready when you are. Minimize to tray, receive notifications, and jump back in instantly.</li><li><strong>Native Notifications</strong> — OS-level push notifications for mentions, DMs, and Bastion alerts. No more missed messages because you forgot a browser tab.</li><li><strong>Auto-Updates</strong> — The app keeps itself current. Every patch, every feature drop — delivered silently in the background.</li><li><strong>Hardware Acceleration</strong> — Smoother scrolling, faster rendering, and lower CPU usage compared to the browser client.</li><li><strong>Startup Launch</strong> — Option to launch Fortized automatically when your system boots. Your Bastion is always one click away.</li></ul><h2>Cross-Platform from Day One</h2><p>We're shipping for <strong>Windows</strong>, <strong>macOS</strong>, and <strong>Linux</strong> simultaneously. No "coming soon" for any platform. Every Fortress defender gets the same experience regardless of their OS.</p><div class="highlight-box"><strong>Same account. Same Bastions. Same everything.</strong> The desktop app syncs with your existing Fortized account. Log in and you're exactly where you left off — channels, roles, Onyx balance, Radiance status, all of it.</div><h2>Built for the Long Run</h2><p>This is version one, but we're already planning what comes next. Voice and Party Room integration in the native client, custom keybinds, a compact mode for smaller screens, and deeper OS integrations are all on the roadmap.</p><p>The desktop app is available now on the <a href="/download" style="color:var(--accent);text-decoration:underline;">Download page</a>. Grab it for your platform and bring the Fortress to your desktop.</p><p>The gates are open. The walls are strong. Now they're on your machine.</p><p class="sign-off">— Staw, Chief Administrative Officer · Stawdio Group</p>`
-  },
-  betalive: {
-    category:'Launch', date:'February 22, 2026', readTime:'2 min read',
-    authorInitial:'S', authorPillLabel:'Stawdio Group',
-    title:'Fortized Beta is LIVE!', bylineName:'Staw',
-    bylineRole:'Chief Administrative Officer, Stawdio Group',
-    tagClass:'tag-launch', tagLabel:'Launch',
-    content:`<p class="lead">Today is the day. As of February 22, 2026, the Fortized Beta is officially open.</p><p>After months of hard work from the whole team, we're finally moving from internal testing to a live environment. This isn't just another chat app — it's a modern space built for how we actually play and hang out today.</p><h2>What's in the Box?</h2><ul><li><strong>The Atelier:</strong> Our R&D team nailed the integration. You can start earning Onyx through quests right now and trade them for Radiance perks — no credit card required.</li><li><strong>Real Security:</strong> We built walls that actually hold. From AutoMod to Raid Protection, your Bastion is genuinely yours to defend.</li><li><strong>Sovereign Control:</strong> You get full power over your ranks and chambers — no compromises, no fine print.</li></ul><h2>Why Beta?</h2><p>We're open, but we're still refining. This phase is all about stress-testing the tech and listening to your feedback. We want to make sure the foundation is rock solid before the full release.</p><div class="highlight-box"><strong>Your feedback shapes the Fortress.</strong> Every bug report, feature request, and community discussion during Beta directly influences what we build next. This is your platform — help us make it right.</div><p>Big thanks to everyone who helped us get here — the team, the testers, and everyone waiting at the gates. The Fortress is ready to be claimed.</p><p class="sign-off">— Staw, Chief Administrative Officer · Stawdio Group</p>`
-  },
-  atelier: {
-    category:'R&D', date:'February 21, 2026', readTime:'3 min read',
-    authorInitial:'T', authorPillLabel:'Stawdio R&D Department',
-    title:'Introducing The Atelier', bylineName:'Tyrianum',
-    bylineRole:'Chief R&D Officer, Stawdio Group',
-    tagClass:'tag-rd', tagLabel:'R&D',
-    content:`<p class="lead">At Fortized, we believe that building a community shouldn't just be work — it should be rewarding. After an intensive R&D sprint, we are thrilled to officially pull back the curtain on <strong>The Atelier.</strong></p><p>The Atelier is your new hub for progression within the Fortress. It's a space where your loyalty and social reach translate directly into premium status and exclusive aesthetic upgrades.</p><h2>How It Works: The Path of Onyx</h2><ul><li><strong>Complete Quests:</strong> Engage with the community and help us grow.</li><li><strong>Recruit Your Squad:</strong> Invite new allies to Fortized. As you bring more people in, your Onyx reserves grow.</li><li><strong>Daily Rewards:</strong> Consistency pays off. Claim your daily Onyx bonus to keep your balance climbing.</li></ul><h2>Ascend to Radiance</h2><p>What do you do with a mountain of Onyx? You trade it for <span class="radiance-badge-inline">✨ Radiance</span>.</p><p>Radiance is our premium status that sets you apart. Exchange your hard-earned Onyx for Radiance packs ranging from 24-hour boosts to full 30-day memberships. No credit card required.</p><div class="highlight-box"><strong>No credit card. No paywalls.</strong> Radiance is earned entirely through community participation.</div><h2>Radiance Perks</h2><div class="perks-grid"><div class="perk-card"><span class="perk-icon">🎨</span><div class="perk-body"><div class="perk-title">Custom Profile Badge</div><div class="perk-desc">Wear the exclusive Radiance Shield across every Bastion.</div></div></div><div class="perk-card"><span class="perk-icon">🌟</span><div class="perk-body"><div class="perk-title">Animated Border</div><div class="perk-desc">A glowing animated avatar frame that signals your status instantly.</div></div></div><div class="perk-card"><span class="perk-icon">💬</span><div class="perk-body"><div class="perk-title">Extended Messaging</div><div class="perk-desc">Messages up to 4,000 characters.</div></div></div><div class="perk-card"><span class="perk-icon">🖼️</span><div class="perk-body"><div class="perk-title">Custom Banner</div><div class="perk-desc">Personalize your profile with a custom banner.</div></div></div></div><p class="sign-off">— Tyrianum, Chief R&D Officer · Stawdio R&D Department</p>`
-  },
-  safety: {
-    category:'Safety', date:'February 20, 2026', readTime:'4 min read',
-    authorInitial:'W', authorPillLabel:'Stawdio Safety Department',
-    title:'How Stawdio Safety Protects Your Bastion', bylineName:'Weaverdant',
-    bylineRole:'Chief Safety Officer, Stawdio Group',
-    tagClass:'tag-safety', tagLabel:'Safety',
-    content:`<p class="lead">As head of the Stawdio Safety Department, my role is to ensure that every Bastion within Fortized remains under the complete sovereignty of its owner.</p><p>The Fortized Security Department operates as a dedicated force within the broader Stawdio Safety framework. Our mission is simple: keep the Fortress standing, no matter what.</p><h2>Layered Defense Infrastructure</h2><p>We approach platform security the same way a military engineer approaches a fortification — in layers. Each layer is designed to stop threats before they reach the next.</p><div class="highlight-box"><strong>Bastion Sovereignty.</strong> Your Bastion is yours. Our security architecture is designed to ensure that admins retain full, uncompromised control over their communities at all times.</div><h2>Trust &amp; Transparency</h2><p>We believe that security only works when it's visible. That's why the Safety Department publishes regular updates on our practices, incident responses, and ongoing improvements.</p><p class="sign-off">— Weaverdant, Chief Safety Officer · Stawdio Safety Department</p>`
-  },
-  gates: {
-    category:'Announcement', date:'February 21, 2026', readTime:'2 min read',
-    authorInitial:'M', authorPillLabel:'Stawdio Group',
-    title:'The Gates are Unlocking', bylineName:'Maus',
-    bylineRole:'Chief Community Officer, Stawdio Group',
-    tagClass:'tag-announce', tagLabel:'Announcement',
-    content:`<p class="lead">After months of intensive development and rigorous security testing, we are officially on the horizon of a new era. The Fortized Beta is live — and the gates are finally unlocking.</p><p>This is a moment we've been building toward since the very first line of code. Today, we're opening the Fortress to the community.</p><h2>What's Inside</h2><p>The Beta gives you access to the core Fortized experience: Bastions, Chambers, Roles, and the early implementation of our Onyx economy.</p><div class="highlight-box"><strong>Beta means builder.</strong> Your feedback during this phase directly shapes the Fortress.</div><h2>How to Get In</h2><p>Access to the Beta is rolling out progressively. Stay tuned to official channels for your invitation.</p><p class="sign-off">— Maus, Chief Community Officer · Stawdio Group</p>`
-  },
-  bastions2: {
-    category:'R&D', date:'March 2, 2026', readTime:'5 min read',
-    authorInitial:'T', authorPillLabel:'Stawdio R&D Department',
-    title:'Bastions 2.0 — Channels, Roles & Beyond', bylineName:'Tyrianum',
-    bylineRole:'Chief R&D Officer, Stawdio Group',
-    tagClass:'tag-rd', tagLabel:'R&D',
-    content:`<p class="lead">Today we ship the biggest update to Bastions since launch. Bastions 2.0 is the result of weeks of intensive engineering from the R&D department, and it fundamentally changes what your community can be.</p><p>This isn't a patch. It's a rebuild of nearly every subsystem that powers a Bastion — from the way channels work to how roles are structured, from the boost economy to the moderation toolchain. Let's walk through it.</p><h2>🏰 Bastion Shell</h2><p>Every Bastion now has a <strong>Shell</strong> — a rich header that communicates identity at a glance. The Shell displays your banner, tagline, visibility badge (public or private), boost level, and member count directly in the sidebar. Think of it as your Bastion's front door — visitors see it before they even open a channel.</p><h2>📢 New Room Types</h2><p>Text and voice were just the beginning. Bastions 2.0 introduces four entirely new channel types:</p><ul><li><strong>Announcement Channels</strong> — Restricted posting for owners only. Perfect for updates that shouldn't get buried.</li><li><strong>Poll Channels</strong> — Built-in voting rooms where members can create and participate in polls.</li><li><strong>Event Channels</strong> — Schedule and manage community events with a dedicated calendar view.</li><li><strong>Automation Channels</strong> — Bot-integrated rooms for automated workflows and log outputs.</li></ul><p>All six templates — Game Hall, Fellowship, Guild, Study Circle, Artisans, and Academy — have been rebuilt from scratch with these new channel types baked in.</p><h2>🛡️ Roles 2.0</h2><p>Roles have been completely overhauled. Permissions are now organized into six categories: <strong>General, Text, Voice/Party, Automation, Moderation, and Boost</strong>. Each role gets a priority value (0–100) that determines override order, and a new "Display as Tag" toggle that renders the role as a visible badge next to usernames.</p><p>We also expanded the permission set significantly — new entries include Timeout Members, Connect to Voice, Manage Events, Manage Polls, Manage Bots, View Audit Log, Manage Emojis, and Use Custom Emojis.</p><h2>😊 Custom Emoji Manager</h2><p>The emoji system now features a proper manager with a usage progress bar, quick-reference panel showing all shortcodes, and seamless integration with the boost tier system. Slot counts scale from 15 (default) up to 50 at Sovereign level.</p><h2><img src="/Fortized Bot.png" style="width:20px;height:20px;vertical-align:middle;"> AutoMod 2.0</h2><p>AutoMod is no longer just "block links and caps." The new modular AutoMod introduces eight independent safety toggles:</p><ul><li>Block Links, Anti-Spam, Anti-Raid, Slow Mode</li><li>Block Invite Links, Image-Only Mode, New Account Filter, Profanity Filter</li></ul><p>Each toggle operates independently — turn on what you need, leave off what you don't. Combined with the existing keyword blocklist and mention limiter, this is the most granular moderation toolkit we've ever shipped.</p><h2>🔗 Invites Rework</h2><p>The invite system now supports configurable expiry (1 hour to 30 days), max-use limits, usage tracking per invite, and creator attribution. Expired and maxed-out invites are visually flagged and easy to clean up.</p><h2>⚡ Bastion Boosts 2.0</h2><p>Boosts have been restructured around an Onyx-based subscription model — 90 Onyx per level per month. The three tiers are:</p><ul><li><strong>Level 1 — Reinforced:</strong> 25 emoji slots, animated icon, custom invite background, 128kbps voice</li><li><strong>Level 2 — Fortified:</strong> 35 emoji slots, HD banner, 256kbps voice, custom role icons</li><li><strong>Level 3 — Sovereign:</strong> 50 emoji slots, vanity URL, 384kbps voice, custom splash, priority badge</li></ul><p>Your Onyx fuels the Fortress. No credit card. No paywall. Just community engagement.</p><h2>⚠️ Danger Zone</h2><p>The Danger Zone now includes ownership transfer alongside leave and delete actions. If you're stepping down, you can hand the keys to a trusted member without nuking the Bastion.</p><div class="highlight-box"><strong>Bastions 2.0 is live now.</strong> Every existing Bastion automatically gains access to the new room types, Roles 2.0, AutoMod 2.0, and the full Boost tier system. New Bastions created from templates will include the updated channel presets out of the box.</div><p>This update represents our vision for what community infrastructure should look like — powerful enough for serious teams, accessible enough for casual hangouts, and earned entirely through participation.</p><p>We're just getting started. The Fortress grows stronger.</p><p class="sign-off">— Tyrianum, Chief R&D Officer · Stawdio R&D Department</p>`
-  },
-  livingbastions: {
-    category:'R&D', date:'March 2, 2026', readTime:'4 min read',
-    authorInitial:'T', authorPillLabel:'Stawdio R&D Department',
-    title:'Living Bastions — Mood, Reputation & Focus', bylineName:'Tyrianum',
-    bylineRole:'Chief R&D Officer, Stawdio Group',
-    tagClass:'tag-rd', tagLabel:'R&D',
-    content:`<p class="lead">Today, Bastions evolve. We're introducing features that make communities feel alive, structured, and uniquely Fortized.</p><p>This isn't about adding more buttons. It's about giving your Bastion a pulse — an atmosphere that responds to the people inside it. Four new systems ship today, each designed to deepen community identity without adding noise.</p><h2>🏰 Bastion Mood</h2><p>Every Bastion now has a live <strong>Mood State</strong> — a dynamic indicator displayed at the top of your channel list that reflects your community's current energy.</p><p>Moods are calculated from emoji usage patterns, message velocity, Party Room activity, poll engagement, and time of day. The result is one of six states:</p><ul><li><strong>🟢 Strategic</strong> — Focused discussion, planning mode</li><li><strong>🔥 Chaotic</strong> — High energy, rapid messages</li><li><strong>🎉 Celebrating</strong> — Events active, reactions flying</li><li><strong>📚 Focused</strong> — Study circles, deep work</li><li><strong>😌 Chill</strong> — Late night, relaxed vibes</li><li><strong>⚡ Hype</strong> — Big community, lots of activity</li></ul><p>Mood changes are subtle but meaningful — they affect the sidebar banner tint, ambient background particles, and even Joyster's expression in that Bastion.</p><p>Admins can lock a mood manually, disable automatic mood entirely, or set custom moods at Boost Level 2+.</p><div class="highlight-box"><strong>No one else does this.</strong> Bastions aren't just chat rooms — they're atmospheres.</div><h2>🎭 Joyster Interventions</h2><p>Joyster now joins the conversation — optionally. When enabled, Joyster becomes a lightweight, playful system presence that reacts to community moments:</p><ul><li>Chat goes silent for 2 hours? <em>"It's quiet in here… plotting something? 👀"</em></li><li>50+ messages in 5 minutes? <em>"Alright alright, save some energy for the raid."</em></li><li>Someone boosts? <em>"Power increased. Walls reinforced."</em></li><li>New member joins? <em>"A new ally has arrived! Welcome to the Bastion!"</em></li></ul><p>Joyster never interrupts conversation. He only appears as subtle system-style messages — building identity and culture without adding friction.</p><p>Admins can set frequency (Low / Normal / Chaos), restrict to Party Rooms only, or disable entirely.</p><h2>🛡️ Bastion Reputation</h2><p>Communities now recognize contribution. Every member earns <strong>Reputation</strong> inside a Bastion through:</p><ul><li>Message reactions received (+2)</li><li>Poll participation (+5)</li><li>Event attendance (+3)</li><li>Boosting (+25)</li><li>Daily messages (+1, capped at 30/day)</li></ul><p>Reputation is displayed as a small shield icon next to your name in the member list. Hover to see your score and tier — from <em>New</em> to <em>Legendary</em>.</p><p>This is Bastion-specific. Not global clout farming. Your reputation in one community doesn't inflate your status in another.</p><p>Admins can use reputation as a permission gate, reward high-rep members with cosmetic badges, and reset reputation per season.</p><div class="highlight-box"><strong>Community progression without pay-to-win.</strong> Reputation is earned through genuine engagement.</div><h2>🧭 Focus Mode</h2><p>A new optional room setting. When enabled on any channel:</p><ul><li>No reactions</li><li>No GIFs</li><li>No emoji bursts</li><li>Clean, minimal UI</li><li>Typing indicator simplified</li></ul><p>Perfect for Study Circles, Academies, and serious Guild planning. The chat background shifts slightly lighter with reduced UI noise — an intentional environment shift, not just slow mode.</p><p>Admins can toggle Focus Mode per channel from Bastion Settings → Channels.</p><h2>What's Next</h2><p>These four systems represent our vision of what community infrastructure should feel like — alive, responsive, and earned. Bastions aren't static containers anymore. They breathe.</p><p>The Fortress grows stronger.</p><p class="sign-off">— Tyrianum, Chief R&D Officer · Stawdio R&D Department</p>`
-  },
-  whatisfortized: {
-    category:'R&D', date:'February 22, 2026', readTime:'2 min read',
-    authorInitial:'T', authorPillLabel:'Stawdio R&D Department',
-    title:'What is Fortized?', bylineName:'Tyrianum',
-    bylineRole:'Chief R&D Officer, Stawdio Group',
-    tagClass:'tag-rd', tagLabel:'R&D',
-    content:`<p class="lead">Fortized started with a simple question: why does building a community feel harder than it should?</p><p>Most platforms give you chat rooms. Some give you tools. A few give you customization. But very few give you <strong>identity</strong>.</p><p>Fortized is our answer to that gap. We call servers <strong>Bastions</strong> because they're meant to be defended, built upon, and strengthened over time.</p><h2>Three Pillars</h2><ul><li><strong>Structure</strong> — Your Bastions don't turn into chaos. Roles are ranks. Channels are chambers.</li><li><strong>Identity</strong> — With systems like Onyx and Radiance, engagement actually changes how you appear.</li><li><strong>Progression</strong> — Members earn Onyx through daily rewards and quests, exchangeable for Radiance.</li></ul><h2>Earned, Not Bought</h2><div class="highlight-box"><strong>No payment required.</strong> Radiance is unlocked through participation alone.</div><p class="sign-off">— Tyrianum, Chief R&D Officer · Stawdio R&D Department</p>`
-  }
-};
-
-function renderArticle(id) {
-  const a = ARTICLES[id]; if (!a) return false;
-  const bannerStyle = a.banner ? `style="background-image:linear-gradient(145deg, rgba(255,249,62,.12) 0%, transparent 45%),linear-gradient(to bottom, rgba(8,10,15,.08), rgba(8,10,15,.7)),url('${a.banner}');background-position:center;background-size:cover;"` : '';
-  document.getElementById('article-content').innerHTML = `
-    <div class="article-full-banner" ${bannerStyle}>
-      <div class="banner-content">
-        <div class="article-full-title">${a.title}</div>
-        <div class="article-full-meta">
-          <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
-          <span class="card-date">${a.date}</span>
-          <span class="card-readtime">⏱ ${a.readTime}</span>
-        </div>
-      </div>
-    </div>
-    <div class="article-byline">
-      <div class="byline-av">${a.authorInitial}</div>
-      <div class="byline-info">
-        <div class="byline-name">${a.bylineName}</div>
-        <div class="byline-role">${a.bylineRole}</div>
-      </div>
-      <div class="byline-org">${a.authorPillLabel}</div>
-    </div>
-    <div class="article-prose">${a.content}</div>
-  `;
-  document.title = `${a.title} — Fortized Blog`;
-  document.getElementById('blog-list-view').classList.add('hidden');
-  document.getElementById('article-view').classList.add('open');
-  return true;
-}
-
-function openArticle(id) {
-  if (!ARTICLES[id]) return;
-  if (ARTICLES[id].link) { window.location.href = ARTICLES[id].link; return; }
-  const url = new URL(window.location.href);
-  url.searchParams.set('article', id);
-  history.pushState({ articleId: id }, '', url.toString());
-  renderArticle(id);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function closeArticle() {
-  const url = new URL(window.location.href);
-  url.searchParams.delete('article');
-  history.pushState({ articleId: null }, '', url.toString());
-  document.getElementById('blog-list-view').classList.remove('hidden');
-  document.getElementById('article-view').classList.remove('open');
-  document.title = 'Fortized Blog';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-window.addEventListener('popstate', function(e) {
-  const id = e.state && e.state.articleId;
-  if (id && ARTICLES[id]) { renderArticle(id); }
-  else {
-    document.getElementById('blog-list-view').classList.remove('hidden');
-    document.getElementById('article-view').classList.remove('open');
-    document.title = 'Fortized Blog';
-  }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-// ── Dynamic blog grid (sorted by date, pinned excluded) ──
-const PINNED_ID = 'whatisfortized';
-function getExcerpt(content) {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = content;
-  const lead = tmp.querySelector('.lead');
-  return lead ? lead.textContent.slice(0, 160) + (lead.textContent.length > 160 ? '...' : '') : tmp.textContent.slice(0, 160) + '...';
-}
-function parseDate(str) {
-  return new Date(str.replace(/(\w+)\s(\d+),\s(\d+)/, '$1 $2, $3'));
-}
-function renderPostGrid(filter) {
-  const grid = document.getElementById('post-grid');
-  const noResults = document.getElementById('blog-no-results');
-  const pinned = document.getElementById('pinned-card');
-  const q = (filter || '').toLowerCase().trim();
-  // Sort by date descending (most recent first), exclude pinned
-  const sorted = Object.entries(ARTICLES)
-    .filter(([id]) => id !== PINNED_ID)
-    .sort((a, b) => parseDate(b[1].date) - parseDate(a[1].date));
-  const filtered = q
-    ? sorted.filter(([id, a]) => a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q) || a.bylineName.toLowerCase().includes(q))
-    : sorted;
-  // Check pinned match
-  const pinnedA = ARTICLES[PINNED_ID];
-  const pinnedMatch = !q || pinnedA.title.toLowerCase().includes(q) || pinnedA.category.toLowerCase().includes(q);
-  if (pinned) pinned.style.display = pinnedMatch ? '' : 'none';
-  if (filtered.length === 0 && !pinnedMatch) {
-    grid.innerHTML = '';
-    noResults.style.display = 'block';
-    return;
-  }
-  noResults.style.display = 'none';
-
-  // Magazine layout when not searching and have 3+ articles
-  if (!q && filtered.length >= 3) {
-    grid.classList.remove('search-grid');
-    const [hero, side1, side2, ...rest] = filtered;
-    let html = '';
-
-    // Featured row: hero card + 2 side-stacked cards
-    html += `<div class="featured-row fade-up d1">`;
-    html += buildHeroCard(hero[0], hero[1]);
-    html += `<div class="side-stack">`;
-    html += buildSideCard(side1[0], side1[1], 0);
-    html += buildSideCard(side2[0], side2[1], 1);
-    html += `</div></div>`;
-
-    // Remaining articles in a regular grid
-    if (rest.length > 0) {
-      html += `<div class="section-divider fade-up d3"><span class="section-divider-label">More Articles</span><div class="section-divider-line"></div></div>`;
-      html += `<div class="secondary-row fade-up d4">`;
-      html += rest.map(([id, a]) => buildRegCard(id, a)).join('');
-      html += `</div>`;
-    }
-
-    grid.innerHTML = html;
-  } else {
-    // Flat grid for search results or small sets
-    grid.classList.add('search-grid');
-    grid.innerHTML = filtered.map(([id, a], i) => buildRegCard(id, a, i)).join('');
-  }
-}
-
-function buildHeroCard(id, a) {
-  const imgStyle = a.banner ? `style="background-image:linear-gradient(145deg, rgba(255,249,62,.1) 0%, rgba(255,249,62,.02) 40%, transparent 70%),linear-gradient(to bottom, rgba(8,10,15,.05), rgba(8,10,15,.75)),url('${a.banner}') ;background-position:center;background-size:cover;"` : '';
-  return `
-    <div class="hero-card" onclick="openArticle('${id}')">
-      <div class="hero-card-img" ${imgStyle}>
-        <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
-      </div>
-      <div class="hero-card-body">
-        <div class="card-meta">
-          <span class="card-date">${a.date}</span>
-          <span class="card-readtime">${a.readTime}</span>
-        </div>
-        <div class="hero-card-title">${a.title}</div>
-        <div class="hero-card-excerpt">${getExcerpt(a.content)}</div>
-        <div class="hero-card-footer">
-          <div class="author-chip"><div class="author-chip-av">${a.authorInitial}</div>${a.bylineName}</div>
-          <span class="read-link">Read Article →</span>
-        </div>
-      </div>
-    </div>`;
-}
-
-function buildSideCard(id, a, i) {
-  const imgStyle = a.banner ? `style="background-image:linear-gradient(145deg, rgba(255,249,62,.07) 0%, transparent 60%),linear-gradient(to bottom, rgba(8,10,15,.1), rgba(8,10,15,.8)),url('${a.banner}');background-position:center;background-size:cover;"` : '';
-  return `
-    <div class="side-card" onclick="openArticle('${id}')">
-      <div class="side-card-img" ${imgStyle}></div>
-      <div class="side-card-body">
-        <div class="card-meta">
-          <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
-          <span class="card-date">${a.date}</span>
-        </div>
-        <div class="side-card-title">${a.title}</div>
-        <div class="side-card-excerpt">${getExcerpt(a.content).slice(0, 100)}...</div>
-        <div class="card-meta" style="margin-bottom:0;margin-top:auto;">
-          <div class="author-chip"><div class="author-chip-av">${a.authorInitial}</div>${a.bylineName}</div>
-          <span class="read-link" style="margin-left:auto;">Read →</span>
-        </div>
-      </div>
-    </div>`;
-}
-
-function buildRegCard(id, a, i) {
-  const delay = i !== undefined ? `style="animation-delay:${(i * 0.06) + 0.1}s"` : '';
-  const imgStyle = a.banner ? `style="background-image:linear-gradient(145deg, rgba(255,249,62,.06) 0%, transparent 55%),linear-gradient(to bottom, rgba(8,10,15,.1), rgba(8,10,15,.78)),url('${a.banner}');background-position:center;background-size:cover;"` : '';
-  return `
-    <div class="reg-card fade-up" ${delay} onclick="openArticle('${id}')">
-      <div class="reg-card-img" ${imgStyle}></div>
-      <div class="reg-card-body">
-        <div class="card-meta">
-          <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
-          <span class="card-date">${a.date}</span>
-          <span class="card-readtime">${a.readTime}</span>
-        </div>
-        <div class="reg-card-title">${a.title}</div>
-        <div class="reg-card-excerpt">${getExcerpt(a.content)}</div>
-        <div class="card-meta" style="margin-bottom:0;margin-top:auto;">
-          <div class="author-chip"><div class="author-chip-av">${a.authorInitial}</div>${a.bylineName}</div>
-          <span class="read-link" style="margin-left:auto;">Read →</span>
-        </div>
-      </div>
-    </div>`;
-}
-function filterBlogPosts(val) { renderPostGrid(val); }
-renderPostGrid();
-
-(function() {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('article');
-  if (id && ARTICLES[id]) { renderArticle(id); history.replaceState({ articleId: id }, '', window.location.href); }
-})();
-</script>
-<script>if (typeof twemoji !== 'undefined') { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); }</script>
 </body>
 </html>

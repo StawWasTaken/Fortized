@@ -52,6 +52,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rail-btn:hover svg{transform:scale(1.06);}
 .rail-btn.active{background:var(--accent);color:#060810;box-shadow:0 2px 12px rgba(255,249,62,.18);border-radius:16px;}
 .rail-btn.active svg{color:#060810;}
+.rail-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .rail-btn.active::before,.rail-btn:hover::before{display:none;}
 .nav-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--sidebar);}
 .rail-btn[data-tip]:hover::after{display:none;}
@@ -66,7 +67,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rail-bastion .bastion-icon{width:48px;height:48px;border-radius:inherit;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:20px;background:transparent;transition:transform .16s cubic-bezier(.22,1,.36,1);}
 .rail-bastion:hover .bastion-icon{transform:scale(1.05);}
 .rail-bastion .bastion-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
-.rail-notif-badge{position:absolute;top:0;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 3px;z-index:1;}
+.rail-notif-badge{position:absolute;top:0;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 3px;z-index:2;}
 /* Bastion drag-drop */
 .rail-bastion.dragging{opacity:.5;transform:scale(.95);}
 .rail-bastion.drag-over{border-top:2px solid var(--accent);margin-top:-2px;}
@@ -78,7 +79,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .bastion-dropdown{position:fixed;left:80px;top:auto;width:240px;background:var(--panel);border:1px solid var(--border);border-radius:12px;z-index:2000;box-shadow:0 16px 48px rgba(0,0,0,.7),0 0 1px rgba(255,255,255,.05);overflow:hidden;animation:bastionDropIn .15s cubic-bezier(.22,1,.36,1) both;backdrop-filter:blur(20px);}
 @keyframes bastionDropIn{from{opacity:0;transform:translateX(-6px) scale(.97);}to{opacity:1;transform:none;}}
 .bastion-dropdown .bd-header{padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.05);background:linear-gradient(180deg,rgba(255,249,62,.02),transparent);}
-.bastion-dropdown .bd-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bastion-dropdown .bd-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default;}
 .bastion-dropdown .bd-info{display:flex;flex-wrap:wrap;gap:5px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05);}
 .bastion-dropdown .bd-chip{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:rgba(255,255,255,.4);padding:3px 9px;background:rgba(255,255,255,.035);border-radius:100px;border:1px solid rgba(255,255,255,.04);}
 .bastion-dropdown .bd-actions{padding:4px 6px;}
@@ -107,7 +108,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .bastion-meta{text-align:center;min-width:0;width:100%;padding:0 8px;}
 .bastion-meta .bm-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;word-break:break-word;overflow-wrap:break-word;letter-spacing:-.02em;text-shadow:0 1px 8px rgba(0,0,0,.4);line-height:1.3;}
 .bastion-meta .bm-tagline{font-size:11px;color:rgba(255,255,255,.45);word-break:break-word;overflow-wrap:break-word;margin-top:3px;line-height:1.35;}
-.bastion-stats-row{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px 6px;flex-shrink:0;flex-wrap:wrap;}
+.bastion-stats-row{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;flex-shrink:0;flex-wrap:wrap;}
 .bastion-stats-row .bs-chip{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:rgba(255,255,255,.35);padding:4px 10px;background:var(--panel2);border:1px solid var(--border);border-radius:100px;transition:all .15s;cursor:default;}
 .bastion-stats-row .bs-chip:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);}
 .bastion-stats-row .bs-chip.boost{background:linear-gradient(135deg,rgba(255,249,62,.05),rgba(251,191,36,.03));border-color:rgba(255,249,62,.1);color:rgba(255,249,62,.6);cursor:pointer;}
@@ -141,6 +142,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rt-actions{display:flex;align-items:center;gap:2px;margin-left:auto;flex-shrink:0;}
 .rt-action-btn{width:34px;height:34px;border-radius:8px;background:transparent;border:none;color:rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;}
 .rt-action-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);}
+.rt-action-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .rt-action-btn svg{width:18px;height:18px;}
 /* ── Bot badge ──── */
 .bot-badge{display:inline-flex;align-items:center;gap:2px;font-size:8.5px;font-weight:800;padding:1px 5px;border-radius:4px;background:rgba(96,165,250,.15);color:#60a5fa;border:1px solid rgba(96,165,250,.25);letter-spacing:.04em;flex-shrink:0;line-height:1.3;vertical-align:middle;}
@@ -163,7 +165,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .mention-everyone:hover{background:rgba(255,249,62,.2);}
 .mention-here{background:rgba(62,207,110,.1);color:#3ecf6e;border:none;}
 .mention-here:hover{background:rgba(62,207,110,.2);}
-.mention-role{border:none;}
+.mention-role{border:none;background:rgba(167,139,250,.1);color:#a78bfa;}
+.mention-role:hover{background:rgba(167,139,250,.2);}
 .mention-room{background:rgba(167,139,250,.1);color:#a78bfa;cursor:pointer;border:none;}
 .mention-room:hover{background:rgba(167,139,250,.2);}
 .mention-badge{position:absolute;top:-20px;left:50%;transform:translateX(-50%);padding:2px 8px;border-radius:6px;font-size:9px;font-weight:700;background:var(--panel2);border:1px solid var(--border);color:rgba(255,255,255,.5);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;}
@@ -182,6 +185,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* ── Quote Blocks ──── */
 .msg-quote{border-left:3px solid rgba(255,249,62,.3);background:rgba(255,255,255,.02);padding:6px 14px;margin:4px 0;border-radius:0 8px 8px 0;font-size:13px;color:rgba(255,255,255,.55);line-height:1.55;}
 .msg-quote-collapsible{max-height:80px;overflow:hidden;position:relative;cursor:pointer;transition:max-height .3s ease;}
+.msg-quote-collapsible:focus-visible{outline:2px solid rgba(255,249,62,.3);outline-offset:2px;border-radius:4px;}
 .msg-quote-collapsible.expanded{max-height:none;}
 .msg-quote-collapsible:not(.expanded)::after{content:'Click to expand…';position:absolute;bottom:0;left:0;right:0;padding:8px 14px 4px;background:linear-gradient(to bottom,transparent,var(--channel));font-size:10.5px;color:rgba(255,249,62,.5);font-weight:600;text-align:center;}
 /* ── Divider ──── */
@@ -211,7 +215,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-outline .msg-text{font-size:13.5px;line-height:1.7;}
 .sidebar-divider{height:1px;background:rgba(255,255,255,.04);margin:4px 10px 2px;flex-shrink:0;}
 /* Channel categories - 2027 collapsible */
-.ch-cat-wrap{}
+.ch-cat-wrap{transition:opacity .2s ease;}
 .ch-category{display:flex;align-items:center;gap:4px;padding:16px 10px 4px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);cursor:pointer;transition:color .15s;user-select:none;}
 .ch-category:hover{color:rgba(255,255,255,.4);}
 .ch-category .cat-icon{font-size:11px;opacity:.5;margin-right:1px;}
@@ -226,6 +230,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ch-item-2027{display:flex;align-items:center;gap:7px;padding:5px 8px;margin:1px 4px;border-radius:6px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.3);transition:all .1s ease;position:relative;font-weight:500;min-height:32px;}
 .ch-item-2027:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.75);}
 .ch-item-2027.active{background:rgba(255,255,255,.06);color:#fff;font-weight:600;}
+.ch-item-2027:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:6px;}
 .ch-item-2027.active::before{content:'';position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:3px;height:40%;background:#fff;border-radius:0 2px 2px 0;}
 .ch-item-2027 .ch-hash{font-size:15px;font-weight:600;color:rgba(255,255,255,.15);transition:color .1s;width:18px;text-align:center;flex-shrink:0;}
 .ch-item-2027:hover .ch-hash{color:rgba(255,255,255,.3);}
@@ -247,7 +252,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .vc-item-2027.active-vc{background:rgba(62,207,110,.06);color:var(--green);font-weight:600;}
 .vc-item-2027 .vc-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0;opacity:.5;}
 .vc-item-2027.active-vc .vc-icon{opacity:1;}
-.vc-item-2027 .vc-live{font-size:9px;font-weight:800;color:var(--green);margin-left:auto;display:flex;align-items:center;gap:3px;}
+.vc-item-2027 .vc-live{font-size:9px;font-weight:800;color:var(--green);margin-left:auto;display:flex;align-items:center;gap:3px;text-transform:uppercase;letter-spacing:.05em;}
 .vc-item-2027 .vc-live::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);animation:vcPulse 1.5s ease-in-out infinite;}
 @keyframes vcPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.7);}}
 @keyframes voicePanelBg{0%{background-position:0 0;}100%{background-position:28px 28px;}}
@@ -259,16 +264,19 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap;color:#fff;letter-spacing:-.01em;}
 .sidebar-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0;scroll-behavior:smooth;scrollbar-width:thin;}
 .sec-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 14px 5px;display:flex;align-items:center;justify-content:space-between;}
-.sec-label button{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;}
+.sec-label button{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;transition:color .15s;}
+.sec-label button:hover{color:var(--accent);}
 .ch-item{display:flex;align-items:center;gap:9px;padding:7px 10px;margin:1px 8px;border-radius:12px;cursor:pointer;font-size:12.5px;color:var(--muted);transition:all .14s cubic-bezier(.22,1,.36,1);}
 .ch-item:hover{background:rgba(255,255,255,.04);color:var(--text);}
 .ch-item.active{background:rgba(255,249,62,.07);color:var(--accent);}
 .cat-row{display:flex;align-items:center;gap:5px;padding:10px 8px 4px 10px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;}
-.cat-row button{margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;font-size:14px;opacity:0;}
+.cat-row button{margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;font-size:14px;opacity:0;transition:opacity .15s,color .15s;}
 .cat-row:hover button{opacity:1;}
+.cat-row button:hover{color:var(--accent);}
 .friend-item{display:flex;align-items:center;gap:10px;padding:7px 10px;margin:1px 5px;border-radius:8px;cursor:pointer;transition:all .12s;}
 .friend-item:hover{background:rgba(255,255,255,.04);}
 .friend-item.active{background:rgba(255,249,62,.06);}
+.friend-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:8px;}
 .gc-icon{border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
 .fa{position:relative;flex-shrink:0;border-radius:50%;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:visible;}
 .fa .fs{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--sidebar);}
@@ -282,6 +290,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ui-btn-ghost:hover{background:rgba(255,255,255,.1);color:#fff;}
 .ui-btn-icon{background:none;border:none;color:rgba(255,255,255,.35);width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
 .ui-btn-icon:hover{background:rgba(255,255,255,.06);color:#fff;}
+.ui-btn-icon:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .ui-panel{background:linear-gradient(165deg,var(--sidebar),rgba(8,10,18,.98));border:1.5px solid rgba(255,255,255,.08);box-shadow:var(--elev-3);}
 .ui-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.02em;}
 .ui-badge-warning{background:rgba(245,158,11,.12);color:var(--state-warning);border:1px solid rgba(245,158,11,.24);}
@@ -343,7 +352,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .tb-search input{background:transparent;border:none;outline:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;flex:1;}
 .tb-search input::placeholder{color:var(--muted);}
 .content{flex:1;overflow:hidden;position:relative;display:flex;min-width:0;min-height:0;}
-.view{display:none;flex:1;min-width:0;min-height:0;overflow:hidden;}.view.active{display:flex;}
+.view{display:none;flex:1;min-width:0;min-height:0;overflow:hidden;animation:viewFadeIn .2s ease;}.view.active{display:flex;}
+@keyframes viewFadeIn{from{opacity:0;}to{opacity:1;}}
 .app-loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px;}
 .app-loading .lbl{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--muted-light);}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -374,6 +384,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .active-now-empty{padding:28px 16px;text-align:center;}
 .active-now-empty .an-empty-icon{margin-bottom:10px;opacity:.3;}
 .active-now-empty .an-empty-text{font-size:12px;color:rgba(255,255,255,.25);line-height:1.6;}
+.active-now-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .uv-header-left{display:flex;align-items:center;gap:14px;}
 .uv-header-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid;}
 .uv-header-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.5px;text-shadow:0 2px 12px rgba(0,0,0,.5);}
@@ -520,7 +531,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-row:hover{background:rgba(255,255,255,.018);}
 .msg-row iframe{loading:lazy;}
 .msg-row.msg-first{padding-top:14px;margin-top:4px;}
-.msg-row.msg-editing{background:rgba(255,249,62,.03);}
+.msg-row.msg-editing{background:rgba(255,249,62,.03);transition:background .2s;}
 /* PFP column with subtle separator */
 .msg-av-wrap{width:58px;min-width:58px;display:flex;justify-content:center;padding-top:2px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.025);margin-right:4px;}
 .msg-av-inner{width:38px;height:38px;border-radius:50%;background:var(--panel);font-size:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:transform .15s;}
@@ -536,11 +547,14 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-timestamp{font-size:10px;color:rgba(255,255,255,.3);margin-left:4px;font-weight:500;}
 .msg-text{font-size:14.5px;color:rgba(221,227,237,.88);line-height:1.65;word-break:break-word;letter-spacing:.01em;}
 .msg-text code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:5px;font-size:12px;font-family:monospace;}
-.msg-edited{font-size:9.5px;color:rgba(255,255,255,.2);margin-left:4px;}
+.msg-edited{font-size:9.5px;color:rgba(255,255,255,.2);margin-left:4px;cursor:default;transition:color .15s;}
+.msg-edited:hover{color:rgba(255,255,255,.4);}
 /* Reactions */
 .msg-reactions{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
 .r-pill{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;padding:3px 10px;font-size:12px;cursor:pointer;transition:all .15s;}
 .r-pill:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.1);}
+.r-pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.r-pill:active{transform:scale(.95);}
 .r-pill.mine{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);}
 .r-pill.super-react{animation:sr-pulse .5s ease;transform-origin:center;}
 @keyframes sr-pulse{0%{transform:scale(1);}30%{transform:scale(1.3);}60%{transform:scale(0.95);}100%{transform:scale(1);}}
@@ -554,6 +568,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-row:hover .msg-acts{opacity:1;pointer-events:auto;transform:translateY(0);}
 .msg-acts button{background:none;border:none;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
 .msg-acts button:hover{background:rgba(255,255,255,.08);color:#fff;}
+.msg-acts button:active{transform:scale(.9);}
 /* Blocked / Ignored message blur */
 .msg-row.msg-blurred .msg-content-col{filter:blur(6px);user-select:none;pointer-events:none;transition:filter .2s;}
 .msg-row.msg-blurred .msg-acts{display:none!important;}
@@ -563,7 +578,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .msg-row.msg-blurred.msg-revealed .msg-content-col{filter:none;user-select:auto;pointer-events:auto;}
 .msg-row.msg-blurred.msg-revealed .msg-blur-reveal{display:none;}
 /* Blocked profile blur overlay */
-.profile-blocked-overlay{position:absolute;inset:0;background:rgba(7,9,14,.7);backdrop-filter:blur(14px);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20px;gap:10px;}
+.profile-blocked-overlay{position:absolute;inset:0;background:rgba(7,9,14,.7);backdrop-filter:blur(14px);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20px;gap:10px;animation:overlayFadeIn .3s cubic-bezier(.22,1,.36,1);}
+@keyframes overlayFadeIn{from{opacity:0;backdrop-filter:blur(0);}to{opacity:1;backdrop-filter:blur(14px);}}
 .profile-blocked-overlay .pbo-icon{font-size:36px;opacity:.5;}
 .profile-blocked-overlay .pbo-text{font-size:14px;font-weight:700;color:rgba(255,255,255,.5);}
 .profile-blocked-overlay .pbo-sub{font-size:12px;color:rgba(255,255,255,.3);margin-bottom:6px;}
@@ -615,7 +631,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .chat-input-actions{display:flex;align-items:center;gap:4px;flex-shrink:0;padding:0 4px;}
 .chat-send-btn{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#e6e034);border:none;color:#060810;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 12px rgba(255,249,62,.2);}
 .chat-send-btn:hover{filter:brightness(1.08);transform:scale(1.05) translateY(-1px);box-shadow:0 6px 24px rgba(255,249,62,.3);}
-.chat-send-btn:active{transform:scale(.9);}
+.chat-send-btn:active{transform:scale(.9);transition:transform .08s ease-out;}
 /* Attach button (left side of input) */
 .cit-attach{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .16s cubic-bezier(.22,1,.36,1);font-size:18px;font-weight:300;}
 .cit-attach:hover{background:rgba(255,249,62,.07);border-color:rgba(255,249,62,.12);color:var(--accent);}
@@ -654,6 +670,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .spp-tab{padding:7px 16px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,.35);font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);font-family:'DM Sans',sans-serif;}
 .spp-tab:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);}
 .spp-tab.active{background:rgba(255,249,62,.12);color:var(--accent);font-weight:700;box-shadow:0 2px 8px rgba(255,249,62,.08);}
+.spp-tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .spp-grid{flex:1;overflow-y:auto;padding:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;scrollbar-width:thin;}
 .spp-sticker{border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;padding:12px;aspect-ratio:1;}
 .spp-sticker:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.18);transform:scale(1.08) translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3),0 0 0 1px rgba(255,249,62,.06);}
@@ -666,16 +683,17 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .botcmd-list{flex:1;overflow-y:auto;padding:8px;}
 .botcmd-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;cursor:pointer;transition:all .14s;border:1px solid transparent;}
 .botcmd-item:hover{background:rgba(96,165,250,.06);border-color:rgba(96,165,250,.08);}
+.botcmd-item:active{transform:scale(.98);}
 .botcmd-item .bci-prefix{color:#60a5fa;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;flex-shrink:0;min-width:18px;}
 .botcmd-item .bci-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;}
 .botcmd-item .bci-desc{font-size:11.5px;color:var(--muted-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
 .botcmd-item .bci-bot{font-size:8.5px;color:rgba(96,165,250,.45);font-weight:700;margin-left:auto;text-transform:uppercase;letter-spacing:.06em;background:rgba(96,165,250,.07);padding:3px 8px;border-radius:100px;border:1px solid rgba(96,165,250,.1);}
 .botcmd-empty{padding:32px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:13px;line-height:1.6;}
 /* Role accent stripe */
-.msg-role-stripe{position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:1px;opacity:.35;}
+.msg-role-stripe{position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:1px;opacity:.35;transition:opacity .2s;}
 /* Viewing older messages bar */
 .chat-past-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 16px;background:rgba(11,14,21,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,249,62,.1);font-size:12px;color:rgba(255,255,255,.5);transition:opacity .2s,transform .2s;opacity:0;transform:translateY(-100%);pointer-events:none;}
-.chat-past-bar.show{opacity:1;transform:translateY(0);pointer-events:auto;}
+.chat-past-bar.show{opacity:1;transform:translateY(0);pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.3);}
 .chat-past-bar button{background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:var(--accent);border-radius:100px;padding:3px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Syne',sans-serif;}
 .chat-past-bar button:hover{background:rgba(255,249,62,.18);}
 @keyframes pastBarPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,249,62,.15);}50%{box-shadow:0 0 0 6px rgba(255,249,62,0);}}
@@ -696,6 +714,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .media-lightbox-actions button:hover{background:rgba(255,255,255,.14);color:#fff;}
 .media-lightbox-close{position:absolute;top:20px;right:24px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:50%;width:36px;height:36px;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .media-lightbox-close:hover{background:rgba(255,255,255,.12);color:#fff;}
+.media-lightbox-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 /* Drag-drop overlay — scoped to chatbar */
 .drop-overlay{position:absolute;inset:0;background:rgba(255,249,62,.06);border:2px dashed var(--accent);border-radius:12px;z-index:30;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none;}
 .drop-overlay.active{display:flex;}
@@ -1195,24 +1214,30 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .modal.tall{max-height:80vh;display:flex;flex-direction:column;}
 .modal.tall .modal-body{overflow-y:auto;flex:1;}
 @keyframes mIn{from{opacity:0;transform:scale(.93) translateY(14px);}to{opacity:1;transform:none;}}
+@keyframes mOut{from{opacity:1;transform:none;}to{opacity:0;transform:scale(.95) translateY(8px);}}
+@keyframes skeletonPulse{0%,100%{opacity:.4;}50%{opacity:.8;}}
 .modal-bar{height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
 .modal-body{padding:26px;}
 .modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:5px;}
 .modal-sub{font-size:13px;color:var(--muted-light);margin-bottom:22px;}
-.modal-error{font-size:12px;color:var(--red);margin-bottom:8px;min-height:16px;}
+.modal-error{font-size:12px;color:var(--red);margin-bottom:8px;min-height:16px;display:flex;align-items:center;gap:6px;}
+.modal-error:not(:empty)::before{content:'⚠';flex-shrink:0;}
 .modal-success{font-size:12px;color:var(--green);margin-bottom:8px;}
 .modal-actions{display:flex;gap:9px;margin-top:6px;}
 .modal-actions .btn-a,.modal-actions .btn-g{flex:1;justify-content:center;}
 .modal-input{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:11px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;margin-bottom:12px;transition:border-color .12s;}
-.modal-input:focus{border-color:rgba(255,249,62,.32);}
+.modal-input:focus{border-color:rgba(255,249,62,.32);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
 .modal-input::placeholder{color:#252c3d;}
 .btn-a{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#060810;padding:10px 20px;border-radius:var(--radius-md);font-family:'Syne',sans-serif;font-size:var(--font-md);font-weight:700;border:none;cursor:pointer;transition:all .1s;}
 .btn-a:hover{filter:brightness(1.06);transform:translateY(-1px);}
+.btn-a:active{transform:scale(.97);filter:brightness(.95);}
 .btn-a:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 .btn-g{display:inline-flex;align-items:center;gap:7px;background:transparent;color:var(--muted-light);padding:9px 18px;border-radius:var(--radius-md);font-family:'Syne',sans-serif;font-size:var(--font-md);font-weight:700;border:1px solid var(--border);cursor:pointer;transition:all .1s;}
 .btn-g:hover{border-color:#2e3a52;background:var(--surface-1);}
+.btn-g:active{transform:scale(.97);}
 .btn-d{display:inline-flex;align-items:center;gap:7px;background:var(--state-danger-dim);color:var(--red);padding:9px 18px;border-radius:var(--radius-md);font-family:'Syne',sans-serif;font-size:var(--font-md);font-weight:700;border:1px solid rgba(248,113,113,.2);cursor:pointer;transition:all .1s;}
 .btn-d:hover{background:rgba(248,113,113,.18);}
+.btn-d:active{transform:scale(.97);}
 /* ── Normalized Design Token Components ─────────── */
 .ftz-panel{background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color .18s var(--ease-out);}
 .ftz-panel:hover{border-color:var(--surface-border-hover);}
@@ -1286,7 +1311,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ann-card .ann-body{font-size:13.5px;color:rgba(255,255,255,.75);line-height:1.65;word-break:break-word;}
 .ann-card .ann-body img{max-width:100%;border-radius:10px;margin-top:8px;}
 .ann-card .ann-reactions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
-.ann-card .ann-accent-bar{position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--accent);opacity:.3;}
+.ann-card .ann-accent-bar{position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--accent);opacity:.3;transition:opacity .2s;}
+.ann-card:hover .ann-accent-bar{opacity:.6;}
 .ann-compose{flex-shrink:0;padding:12px 16px;border-top:1px solid var(--border);background:var(--channel);}
 .ann-compose textarea{width:100%;padding:12px 14px;background:var(--panel);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:13px;resize:vertical;min-height:48px;max-height:160px;outline:none;transition:border-color .12s;font-family:inherit;}
 .ann-compose textarea:focus{border-color:rgba(255,249,62,.25);}
@@ -2133,7 +2159,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   var t=setTimeout(function(){
     var el=document.getElementById('app-loading');
     if(el&&el.style.display!=='none'){
-      el.querySelector('.lbl').textContent='Taking too long — retrying...';
+      var lbl=el.querySelector('.lbl'); if(lbl) lbl.textContent='Taking too long — retrying...';
       setTimeout(function(){
         var retry=document.createElement('button');
         retry.className='ui-btn ui-btn-ghost';
@@ -2189,13 +2215,13 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
   </div>
-  <div class="np-list" id="np-list"><div style="padding:20px;text-align:center;font-size:13px;color:var(--muted);">Loading…</div></div>
+  <div class="np-list" id="np-list"><div style="padding:16px;display:flex;flex-direction:column;gap:10px;">${[1,2,3].map(()=>'<div style="display:flex;gap:10px;align-items:center;"><div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.04);animation:skeletonPulse 1.5s infinite;flex-shrink:0;"></div><div style="flex:1;display:flex;flex-direction:column;gap:5px;"><div style="height:10px;width:70%;background:rgba(255,255,255,.04);border-radius:4px;animation:skeletonPulse 1.5s infinite;"></div><div style="height:8px;width:40%;background:rgba(255,255,255,.03);border-radius:4px;animation:skeletonPulse 1.5s infinite .2s;"></div></div></div>').join('')}</div></div>
 </div>
 
 <!-- SIDEBAR — Vertical, left side -->
 <!-- Mobile sidebar overlay -->
 <div class="mobile-overlay" id="mobile-overlay" onclick="closeMobileSidebar()"></div>
-<div class="sidebar" id="sidebar">
+<div class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
   <!-- Fortized logo = Home -->
   <div class="sidebar-logo" id="rb-home" onclick="showView('home')">
     <div class="sidebar-logo-icon">
@@ -2205,16 +2231,16 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   </div>
   <!-- Navigation -->
   <div class="sidebar-nav" id="rail">
-    <div class="rail-btn" id="rb-dms" onclick="showView('dms')">
+    <div class="rail-btn" id="rb-dms" onclick="showView('dms')" title="Direct Messages" aria-label="Direct Messages">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       <span>Direct Messages</span>
       <span id="notif-badge" class="nav-badge" style="display:none;">0</span>
     </div>
-    <div class="rail-btn" id="rb-discover" onclick="showView('discover')">
+    <div class="rail-btn" id="rb-discover" onclick="showView('discover')" title="Discover" aria-label="Discover">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <span>Discover</span>
     </div>
-    <div class="rail-btn" id="rb-atelier" onclick="showView('atelier')">
+    <div class="rail-btn" id="rb-atelier" onclick="showView('atelier')" title="Atelier" aria-label="Atelier">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       <span>Atelier</span>
     </div>
@@ -2244,7 +2270,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <div class="ub-user-row">
       <div class="ua-clickable" id="ua-clickable" onclick="toggleOwnProfilePanel()">
         <div class="ua" id="ua">
-          <span id="ua-status-dot" class="ua-status-dot" style="background:#3ecf6e;"></span>
+          <span id="ua-status-dot" class="ua-status-dot" style="background:#3ecf6e;" title="Online" aria-label="Online status"></span>
         </div>
         <div class="ua-info">
           <div class="ua-name" id="ua-name">Loading…</div>
@@ -2252,13 +2278,13 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         </div>
       </div>
       <div class="ua-btns">
-        <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute">
+        <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute" aria-label="Mute or unmute microphone">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
         </button>
-        <button onclick="toggleDeafen()" id="deafen-btn" title="Deafen/Undeafen">
+        <button onclick="toggleDeafen()" id="deafen-btn" title="Deafen/Undeafen" aria-label="Deafen or undeafen">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
         </button>
-        <button onclick="showView('profile')" title="Settings">
+        <button onclick="showView('profile')" title="Settings" aria-label="Open settings">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         </button>
       </div>
@@ -2304,11 +2330,11 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     </div>
     <div class="tb-search">
       <span>🔍</span>
-      <input type="text" placeholder="Search…" id="search-input" oninput="handleSearch(this.value)">
+      <input type="text" placeholder="Search bastions, friends…" id="search-input" oninput="handleSearch(this.value)" aria-label="Search bastions and friends">
     </div>
   </div>
   <!-- Main content area (rounded top-left corner) -->
-  <div class="main">
+  <div class="main" role="main" aria-label="Main content">
 
   <!-- SECONDARY SIDEBAR — context content (channels, friends, etc.) -->
   <div class="sidebar-ctx" id="sidebar-ctx" style="display:none;">
@@ -2608,7 +2634,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 ══════════════════════════════════════════════ -->
 
 <!-- CREATE BASTION -->
-<div class="modal-overlay" id="modal-create-bastion">
+<div class="modal-overlay" role="dialog" id="modal-create-bastion">
   <div class="modal" style="max-width:520px;width:100%;">
     <div class="modal-bar"></div>
     <div class="modal-body">
@@ -2737,7 +2763,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
 <!-- NEW DM -->
 <!-- CREATE GROUP CHAT MODAL -->
-<div class="modal-overlay" id="modal-new-dm">
+<div class="modal-overlay" role="dialog" id="modal-new-dm">
   <div class="modal" style="max-width:480px;width:100%;">
     <div class="modal-bar"></div>
     <div class="modal-body">
@@ -2774,7 +2800,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 </div>
 
 <!-- ADD FRIEND -->
-<div class="modal-overlay" id="modal-add-friend">
+<div class="modal-overlay" role="dialog" id="modal-add-friend">
   <div class="modal">
     <div class="modal-bar"></div>
     <div class="modal-body">
@@ -2793,7 +2819,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 </div>
 
 <!-- JOIN BASTION -->
-<div class="modal-overlay" id="modal-join-bastion">
+<div class="modal-overlay" role="dialog" id="modal-join-bastion">
   <div class="modal">
     <div class="modal-bar"></div>
     <div class="modal-body">
@@ -2810,14 +2836,14 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 </div>
 
 <!-- USER PROFILE -->
-<div class="modal-overlay" id="modal-user">
+<div class="modal-overlay" role="dialog" id="modal-user">
   <div class="modal" style="max-width:820px;width:100%;border-radius:22px;overflow:hidden;background:transparent;border:1.5px solid rgba(255,255,255,.08);box-shadow:0 32px 80px rgba(0,0,0,.8);">
     <div class="modal-body" id="user-modal-body" style="padding:0;background:transparent;max-height:85vh;overflow-y:auto;"></div>
   </div>
 </div>
 
 <!-- FORWARD MESSAGE -->
-<div class="modal-overlay" id="modal-forward">
+<div class="modal-overlay" role="dialog" id="modal-forward">
   <div class="modal tall">
     <div class="modal-bar"></div>
     <div class="modal-body">
@@ -2832,7 +2858,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 </div>
 
 <!-- ROLE EDITOR -->
-<div class="modal-overlay" id="modal-role-editor">
+<div class="modal-overlay" role="dialog" id="modal-role-editor">
   <div class="modal wide tall">
     <div class="modal-bar"></div>
     <div class="modal-body">
@@ -2860,7 +2886,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 </div>
 
 <!-- ASSIGN ROLE -->
-<div class="modal-overlay" id="modal-assign-role">
+<div class="modal-overlay" role="dialog" id="modal-assign-role">
   <div class="modal">
     <div class="modal-bar"></div>
     <div class="modal-body">
@@ -2875,7 +2901,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 </div>
 
 <!-- LEAVE BASTION CONFIRM -->
-<div class="modal-overlay" id="modal-leave-bastion">
+<div class="modal-overlay" role="dialog" id="modal-leave-bastion">
   <div class="modal">
     <div class="modal-bar"></div>
     <div class="modal-body" style="text-align:center;">
@@ -3149,10 +3175,13 @@ const FtzStatus = (() => {
   const COMPANION_IDLE_POLL_MS = 15_000;
   const COMPANION_IDLE_THRESHOLD = 10 * 60; // 10 min
 
+  let _companionIdlePollRunning = false;
   function _startCompanionIdlePoll() {
     if (_companionIdlePoller) return;
     _companionIdlePoller = setInterval(async () => {
+      if (_companionIdlePollRunning) return;
       if (!CU?.username || !_companionOnline) return;
+      _companionIdlePollRunning = true;
       try {
         const idleSec = await companionGetIdleTime();
         if (typeof idleSec !== 'number' || idleSec < 0) return;
@@ -3164,7 +3193,7 @@ const FtzStatus = (() => {
           _broadcast(CU.status);
           updateUserbar();
         }
-      } catch {}
+      } catch {} finally { _companionIdlePollRunning = false; }
     }, COMPANION_IDLE_POLL_MS);
   }
 
@@ -3626,7 +3655,8 @@ function _silentSendStart(btn) {
     if (tip) { tip.style.opacity = '1'; }
     window._sendSilent = true;
     btn.style.background = 'rgba(255,255,255,.15)';
-    btn.querySelector('svg').style.fill = 'var(--accent)';
+    const _svg = btn.querySelector('svg');
+    if (_svg) _svg.style.fill = 'var(--accent)';
   }, 600);
 }
 function _silentSendEnd(btn) {
@@ -3655,8 +3685,10 @@ function scrollBottom(id, instant) {
 }
 function scrollToMsg(msgId) {
   if(!msgId)return;
-  const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-  if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.style.background='rgba(255,249,62,.06)';setTimeout(()=>row.style.background='',1500);}
+  try {
+    const row=document.querySelector(`[data-msgid="${CSS.escape(String(msgId))}"]`);
+    if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.style.background='rgba(255,249,62,.06)';row.style.transition='background .3s';setTimeout(()=>row.style.background='',1500);}
+  } catch(e) { console.warn('scrollToMsg', e); }
 }
 // Smart auto-scroll: track whether user is at bottom
 let _chatAutoScroll={};
@@ -3777,16 +3809,21 @@ function toast(msg, type='info') {
   const container = document.getElementById('toast-container') || (() => {
     const c = document.createElement('div');
     c.id = 'toast-container';
-    c.style.cssText = 'position:fixed;bottom:80px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
+    c.style.cssText = 'position:fixed;bottom:80px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
     document.body.appendChild(c);
     return c;
   })();
   const el = document.createElement('div');
-  const colors = {success:'var(--green)',error:'var(--red)',info:'var(--accent-mid)'};
-  el.style.cssText = `background:var(--panel2);border:1px solid ${colors[type]||colors.info};border-radius:12px;padding:10px 16px;font-size:13.5px;color:var(--text);max-width:320px;box-shadow:0 4px 24px rgba(0,0,0,.4);animation:slideIn .2s ease;`;
-  el.textContent = msg;
+  const colors = {success:'var(--green)',error:'var(--red)',info:'var(--accent-mid)',warning:'var(--yellow)'};
+  const icons = {success:'\u2713',error:'\u2717',info:'\u24d8',warning:'\u26a0'};
+  el.style.cssText = `background:var(--panel2);border:1px solid ${colors[type]||colors.info};border-left:3px solid ${colors[type]||colors.info};border-radius:12px;padding:10px 16px;font-size:13.5px;color:var(--text);max-width:320px;box-shadow:0 4px 24px rgba(0,0,0,.4);animation:slideIn .2s ease;display:flex;align-items:center;gap:8px;pointer-events:auto;transition:opacity .25s,transform .25s;`;
+  el.innerHTML = `<span style="font-size:15px;flex-shrink:0;opacity:.7;">${icons[type]||icons.info}</span><span>${typeof msg==='string'?msg.replace(/</g,'&lt;'):msg}</span>`;
   container.appendChild(el);
-  setTimeout(() => el.remove(), 3500);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(20px)';
+    setTimeout(() => el.remove(), 300);
+  }, 3200);
 }
 
 // ════════════════════════════════════════════
@@ -4413,7 +4450,7 @@ function renderHomePanel() {
   if (realmF) {
     if (!friends0.length) {
       realmF.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:8px 4px;">
-        <div style="font-size:13px;color:var(--muted);">No friends yet.</div>
+        <div style="font-size:13px;color:var(--muted);">No friends yet — click <strong style="color:rgba(255,255,255,.5);">+ Add Friend</strong> to get started!</div>
         <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:11px;padding:6px 14px;">+ Add Friend</button>
       </div>`;
     } else {
@@ -4456,7 +4493,7 @@ async function _loadRealmFriends(friends, container, countEl) {
 // ── Right panel friends loader (async with status) ──
 async function _loadRPFriends(friends, container, countEl) {
   if (!friends.length) {
-    container.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--muted);text-align:center;">No friends yet</div>';
+    container.innerHTML = '<div style="padding:20px;font-size:12px;color:var(--muted);text-align:center;"><div style="font-size:24px;opacity:.3;margin-bottom:6px;">👥</div>No friends yet — add friends by username!</div>';
     return;
   }
   const results = await Promise.all(friends.slice(0,15).map(async f => {
@@ -5262,13 +5299,13 @@ function openDMChat(u) { openDMView(u); }
 async function ensureDMExists(partnerUsername) {
   if (!CU?.username || !partnerUsername || partnerUsername===CU.username) return;
   try {
-    const myIdx = await firebase.database().ref('dmIndex/'+CU.username).get().then(s=>s.val());
+    const myIdx = await firebase.database().ref('dmIndex/'+CU.username).get().then(s=>s.val()).catch(()=>null);
     const arr = myIdx ? (Array.isArray(myIdx)?myIdx:Object.values(myIdx)) : [];
     if (!arr.includes(partnerUsername)) {
       const newArr = [partnerUsername, ...arr.filter(u=>u!==partnerUsername)].slice(0,30);
       await firebase.database().ref('dmIndex/'+CU.username).set(newArr);
     }
-    const theirIdx = await firebase.database().ref('dmIndex/'+partnerUsername).get().then(s=>s.val());
+    const theirIdx = await firebase.database().ref('dmIndex/'+partnerUsername).get().then(s=>s.val()).catch(()=>null);
     const arr2 = theirIdx ? (Array.isArray(theirIdx)?theirIdx:Object.values(theirIdx)) : [];
     if (!arr2.includes(CU.username)) {
       const newArr2 = [CU.username, ...arr2.filter(u=>u!==CU.username)].slice(0,30);
@@ -5290,7 +5327,7 @@ async function loadDMMessages(username) {
       if (curDM!==username) return;
       const el=document.getElementById('dm-msgs');
       if (el) {
-        const mid = msg.id||(msg.from+msg.timestamp);
+        const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
         const dmEchoKey='dm|'+(msg.from||'')+'|'+(msg.text||'');
         if(msg.from===CU.username && _sentEcho.has(dmEchoKey)){
@@ -5648,7 +5685,7 @@ async function loadGCMessages(gcId) {
       const el = document.getElementById('gc-msgs');
       if (!el) return;
       const msg = snap.val();
-      const mid = msg.id||(msg.from+msg.timestamp);
+      const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
       if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
       const echoKey = 'gc|'+msg.from+'|'+(msg.text||'');
       if (msg.from===CU.username && _sentEcho.has(echoKey)) { _sentEcho.delete(echoKey); return; }
@@ -5701,7 +5738,7 @@ async function sendGCMessage() {
     _sentEcho.add(echoKey);
     setTimeout(()=>_sentEcho.delete(echoKey), 6000);
     const rows = msgsEl.querySelectorAll('.msg-row');
-    const lastAuthor = rows.length ? rows[rows.length-1].dataset.from : null;
+    const lastAuthor = rows.length ? (rows[rows.length-1].dataset.from || null) : null;
     appendMessage(msgsEl, msg, 'gc', lastAuthor);
     scrollBottom('gc-msgs');
   }
@@ -5729,8 +5766,9 @@ function broadcastGCTyping() {
 }
 
 function _stopGCTypingBroadcast() {
-  _gcIsTyping=false; clearTimeout(_gcTypingTimeout);
-  if (CU?.username&&curGC) firebase.database().ref(_gcTypingPath(curGC)+'/'+CU.username).remove().catch(()=>{});
+  _gcIsTyping = false;
+  clearTimeout(_gcTypingTimeout);
+  if (CU?.username && curGC) firebase.database().ref(_gcTypingPath(curGC)+'/'+CU.username).remove().catch(()=>{});
 }
 
 function listenGCTyping(gcId, members) {
@@ -5738,7 +5776,7 @@ function listenGCTyping(gcId, members) {
   const ref = firebase.database().ref(_gcTypingPath(gcId));
   const handler = ref.on('value', snap => {
     const data = snap.val()||{};
-    const others = Object.values(data).filter(v=>v&&v.username&&v.username!==CU.username);
+    const others = Object.values(data).filter(v=>v&&v.username&&CU?.username&&v.username!==CU.username);
     const bar = document.getElementById('gc-typing-bar');
     const txt = document.getElementById('gc-typing-text');
     if (!bar||!txt) return;
@@ -5932,7 +5970,7 @@ function _startBgChannelListeners(bIdx) {
       // Only track unread if this is NOT the active channel, and NOT from us
       if (curBastion === bIdx && curChannel === chIdx) return;
       if (msg.from === CU?.username) return;
-      const isMention = (msg.text || '').includes('@' + (CU?.username || ''));
+      const isMention = CU?.username ? (msg.text || '').includes('@' + CU.username) : false;
       markChannelUnread(bIdx, chIdx, isMention);
     });
     if (unsub) _bgChListeners.push(unsub);
@@ -6070,7 +6108,7 @@ function renderBastionSidebar(scroll) {
     const isUnread = unread.count > 0 && curChannel !== i;
     const unreadClass = isUnread ? ' unread' : '';
     const unreadBadge = unread.mentions > 0 ? `<span class="ch-mention-badge">${unread.mentions}</span>` : '';
-    textHTML+=`<div class="ch-item-2027${curChannel===i?' active':''}${unreadClass}" id="ch-sb-${i}" ${blocked?'style="opacity:.35;pointer-events:none;"':''}onclick="selectChannel(${i})" oncontextmenu="showChannelCtxMenu(event,${i})">
+    textHTML+=`<div class="ch-item-2027${curChannel===i?' active':''}${unreadClass}" id="ch-sb-${i}" ${blocked?'style="opacity:.35;pointer-events:none;"':''}onclick="selectChannel(${i})" oncontextmenu="showChannelCtxMenu(event,${i})" title="${escapeHTML(ch.name)}">
       <span class="ch-hash">#</span><span class="ch-name">${escapeHTML(ch.name)}</span>${focusBadge}${nsfwTag}${unreadBadge}${blocked?'<span title="Age blocked" style="margin-left:auto;opacity:.4;">🔒</span>':''}
     </div>`;
   });
@@ -6359,7 +6397,7 @@ async function loadChannelMessages(idx) {
       if (curChannel!==idx) return;
       const el=document.getElementById('ch-msgs-'+idx);
       if (el){
-        const mid = msg.id||(msg.from+msg.timestamp);
+        const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
         const echoKey = (msg.from||'') + '|' + (msg.text||'');
         if (msg.from===CU.username && _sentEcho.has(echoKey)) {
@@ -6424,7 +6462,7 @@ async function _loadAnnouncementRoom(wrap, b, ch, idx) {
     const mid = msg.id || (msg.from + msg.timestamp);
     if (el.querySelector(`[data-ann-id="${CSS.escape(mid)}"]`)) return;
     const card = _buildAnnCard(msg, idx, canPost);
-    el.insertAdjacentHTML('beforeend', card);
+    if (el && document.contains(el)) el.insertAdjacentHTML('beforeend', card);
     el.scrollTop = el.scrollHeight;
     // Load avatar
     _loadAnnAvatar(msg.from, mid);
@@ -6729,7 +6767,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15,17 20,12 15,7"/><path d="M4,18v-2a4,4,0,0,1,4-4h12"/></svg>
     <span style="font-weight:600;">Forwarded</span>${msg.forwardedBy&&msg.forwardedBy!==msg.from?` <span style="opacity:.6;">by ${escapeHTML(msg.forwardedBy)}</span>`:''}
   </div>`:'';
-  const editTag=msg.edited?`<span class="msg-edited">(edited)</span>`:'';
+  const editTag=msg.edited?`<span class="msg-edited" title="Edited${msg.editedAt ? ' at '+new Date(msg.editedAt).toLocaleString() : ''}">(edited)</span>`:'';
   const reactHTML=msg.reactions?Object.entries(msg.reactions).map(([emoji,users])=>{
     const arr=Array.isArray(users)?users:Object.values(users);
     return `<span class="r-pill${arr.includes(CU?.username)?' mine':''}" onclick="toggleReaction('${escapeHTML(id)}','${emoji}','${context}')" onmousedown="_reactionIntensityStart(this,'${escapeHTML(id)}','${emoji}','${context}')" onmouseup="_reactionIntensityEnd()" onmouseleave="_reactionIntensityEnd()">${emoji} ${arr.length}</span>`;
@@ -13419,7 +13457,7 @@ function showCtxMenu(x, y, groups) {
             item.action();
             iconSpan.innerHTML = _ctxSvg('check');
             iconSpan.style.opacity = '1';
-            el.querySelector('.ctx-label').textContent = 'Copied!';
+            const _ctxLbl = el.querySelector('.ctx-label'); if (_ctxLbl) _ctxLbl.textContent = 'Copied!';
             el.style.background = 'rgba(62,207,110,.08)';
             el.style.color = '#3ecf6e';
             setTimeout(() => _closeCtxMenu(), 400);
@@ -15906,8 +15944,8 @@ function _submitFeedback(rating, actionType, btn) {
   } catch(e) { console.warn('[feedback]', e); }
   // Animate out
   if (toast_el) {
-    toast_el.querySelector('.fb-sub').textContent = 'Thanks for your feedback!';
-    toast_el.querySelector('.fb-actions').style.display = 'none';
+    const _fbSub = toast_el.querySelector('.fb-sub'); if (_fbSub) _fbSub.textContent = 'Thanks for your feedback!';
+    const _fbActs = toast_el.querySelector('.fb-actions'); if (_fbActs) _fbActs.style.display = 'none';
     setTimeout(() => { toast_el.classList.remove('visible'); setTimeout(()=>toast_el.remove(),300); }, 1500);
   }
 }
@@ -18318,7 +18356,7 @@ function parseMD(s) {
   // Collapsible quote blocks (>> lines)
   s = s.replace(/(?:^|\n)&gt;&gt;\s*([\s\S]*?)(?=\n(?!&gt;)|$)/gm, function(_, text) {
     const qid = 'q-'+Math.random().toString(36).slice(2,8);
-    const block = '<div class="msg-quote msg-quote-collapsible" id="'+qid+'" onclick="this.classList.toggle(\'expanded\')">'+text.trim()+'</div>';
+    const block = '<div class="msg-quote msg-quote-collapsible" id="'+qid+'" tabindex="0" role="button" aria-expanded="false" onclick="this.classList.toggle(\'expanded\');this.setAttribute(\'aria-expanded\',this.classList.contains(\'expanded\'))" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">'+text.trim()+'</div>';
     _mdSlots.push(block); return '\n\x00MD'+(_mdSlots.length-1)+'\x00';
   });
   // Single-line quote blocks (> line)
@@ -18385,7 +18423,7 @@ function parseMD(s) {
   s = s.replace(/(?:^|\n)---(?:\n|$)/g, function() { const h='<div class="msg-divider"></div>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
 
   // ── LAYER 5: Inline formatting ──
-  s = s.replace(/\|\|(.+?)\|\|/g, function(_,t) { const h='<span class="msg-spoiler" onclick="this.classList.toggle(\'revealed\')">'+t+'</span>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/\|\|(.+?)\|\|/g, function(_,t) { const h='<span class="msg-spoiler" tabindex="0" role="button" aria-label="Spoiler - click to reveal" onclick="this.classList.toggle(\'revealed\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">'+t+'</span>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
   s = s.replace(/==(.+?)==/g, function(_,t) { const h='<span class="msg-highlight">'+t+'</span>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
   s = s.replace(/(?<!~)~(?!~)(.+?)(?<!~)~(?!~)/g, function(_,t) { const h='<span class="msg-small">'+t+'</span>'; _mdSlots.push(h); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
   s = s.replace(/~~(.+?)~~/g, '<s>$1</s>');
@@ -22485,15 +22523,22 @@ function _liveRemoveMessage(snap) {
 }
 
 let _dmEditListener = null, _dmRemoveListener = null;
+let _dmEditHandler = null, _dmRemoveHandler = null;
 function _attachDMLiveEdits(user1, user2) {
   const path = 'dms/'+[user1,user2].sort().join('__');
   const ref = firebase.database().ref(path);
-  // Detach old
-  if (_dmEditListener) { firebase.database().ref(_dmEditListener).off('child_changed'); _dmEditListener = null; }
-  if (_dmRemoveListener) { firebase.database().ref(_dmRemoveListener).off('child_removed'); _dmRemoveListener = null; }
+  // Detach old with proper handler references
+  if (_dmEditListener) {
+    try { firebase.database().ref(_dmEditListener).off('child_changed', _dmEditHandler); } catch{}
+    try { firebase.database().ref(_dmEditListener).off('child_removed', _dmRemoveHandler); } catch{}
+    _dmEditListener = null;
+  }
+  if (_dmRemoveListener) _dmRemoveListener = null;
   _dmEditListener = path; _dmRemoveListener = path;
-  ref.on('child_changed', snap => _liveUpdateMessage(snap, 'dm'));
-  ref.on('child_removed', snap => _liveRemoveMessage(snap));
+  _dmEditHandler = snap => _liveUpdateMessage(snap, 'dm');
+  _dmRemoveHandler = snap => _liveRemoveMessage(snap);
+  ref.on('child_changed', _dmEditHandler);
+  ref.on('child_removed', _dmRemoveHandler);
 }
 
 let _chEditListeners = {};

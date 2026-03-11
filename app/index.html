@@ -12157,10 +12157,11 @@ function buildProfileView(tab) {
         <!-- RIGHT: Live profile preview -->
         <div style="overflow-y:auto;padding:24px 20px;background:var(--panel2);border-left:1px solid var(--border);">
           <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:12px;">Live Preview</div>
-          <div class="profile-preview-card" style="border-radius:18px;overflow:hidden;border:2px solid ${CU.profileTheme?.stroke1 ? `transparent;background-image:linear-gradient(var(--panel),var(--panel)),linear-gradient(135deg,${CU.profileTheme.stroke1},${CU.profileTheme.stroke2||CU.profileTheme.stroke1});background-origin:border-box;background-clip:padding-box,border-box` : 'var(--border)'};box-shadow:${CU.profileTheme?.stroke1 ? `0 0 20px ${CU.profileTheme.stroke1}15` : 'none'};">
+          <div class="profile-preview-card" style="border-radius:18px;overflow:hidden;border:2px solid ${CU.profileTheme?.color1 ? `transparent;background-image:linear-gradient(135deg,${CU.profileTheme.color1}0a,var(--panel) 40%,${CU.profileTheme.color2}08),linear-gradient(135deg,${CU.profileTheme.color1},${CU.profileTheme.color2||CU.profileTheme.color1});background-origin:border-box;background-clip:padding-box,border-box` : 'var(--border)'};box-shadow:${CU.profileTheme?.color1 ? `0 0 20px ${CU.profileTheme.color1}15` : 'none'};">
             <!-- Banner -->
             <div style="height:110px;position:relative;background:linear-gradient(135deg,#0f1830,#1a0f30);overflow:hidden;">
-              ${CU.banner ? `<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;filter:brightness(.9) saturate(1.1);">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${CU.profileTheme?.stroke1||'#1a1f30'},${CU.profileTheme?.stroke2||'#0f1830'});opacity:.6;"></div>`}
+              ${CU.banner ? `<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;filter:brightness(.9) saturate(1.1);">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${CU.profileTheme?.color1||'#1a1f30'},${CU.profileTheme?.color2||'#0f1830'});opacity:.6;"></div>`}
+              ${CU.profileTheme?.color1 ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${CU.profileTheme.color1},${CU.profileTheme.color2});opacity:.6;z-index:2;"></div>` : ''}
             </div>
             <div style="padding:0 18px 20px;">
               <!-- Profile picture + Badge row -->
@@ -13137,7 +13138,7 @@ async function viewUserProfile(username) {
 
   modalEl.innerHTML = `
     <div style="${themeBorder}">
-    <div class="up-card" style="position:relative;">
+    <div class="up-card" style="position:relative;${profileTheme ? `background:linear-gradient(135deg,${profileTheme.color1}0a,var(--panel) 40%,${profileTheme.color2}08);` : ''}">
     ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
       <div class="pbo-icon">🚫</div>
       <div class="pbo-text">You blocked ${escapeHTML(username)}</div>
@@ -25425,6 +25426,15 @@ async function showMiniProfilePreview(username, anchorEl) {
   panel.className = 'mini-profile-preview';
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-label', 'Profile preview for ' + (u.displayName || u.username));
+  if (profileTheme) {
+    panel.style.borderColor = 'transparent';
+    panel.style.backgroundImage = `linear-gradient(135deg,${profileTheme.color1}0a,var(--panel) 40%,${profileTheme.color2}08),linear-gradient(135deg,${profileTheme.color1},${profileTheme.color2})`;
+    panel.style.backgroundOrigin = 'border-box';
+    panel.style.backgroundClip = 'padding-box,border-box';
+    panel.style.borderWidth = '2px';
+    panel.style.borderStyle = 'solid';
+    panel.style.boxShadow = `0 32px 80px rgba(0,0,0,.9),0 12px 32px rgba(0,0,0,.5),0 0 24px ${profileTheme.color1}18`;
+  }
   const bannerBg = u.banner ? `url('${u.banner}') center/cover no-repeat` : `linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#1a1a2e'},${profileTheme?profileTheme.color2+'33':'#0f3460'})`;
   const _previewGames = u.gameCollection || u.registeredGames || [];
   const _isOwnPreview = username === CU?.username;

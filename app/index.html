@@ -260,7 +260,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .sidebar-ctx{width:380px;min-width:380px;background:var(--sidebar-ctx);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid rgba(255,255,255,.04);}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
-.topbar{height:52px;background:var(--sidebar);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;border-bottom:none;}
+.topbar{height:44px;background:var(--sidebar);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;border-bottom:none;}
 .topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap;color:#fff;letter-spacing:-.01em;}
 .sidebar-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0;scroll-behavior:smooth;scrollbar-width:thin;}
 .sec-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 14px 5px;display:flex;align-items:center;justify-content:space-between;}
@@ -421,8 +421,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .realm-lore .rl-text{color:var(--muted-light);line-height:1.5;}
 
 /* ── HERO 2.0 ──────────────────────────────────── */
-.home-hero{width:100%;min-height:260px;background:linear-gradient(145deg,rgba(10,12,20,.85) 0%,rgba(16,19,28,.75) 35%,rgba(20,14,30,.6) 70%,rgba(12,15,24,.8) 100%);position:relative;overflow:hidden;flex-shrink:0;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 36px;border-bottom:1px solid rgba(255,249,62,.06);}
-.home-hero::before{content:"";position:absolute;inset:0;background:url("/Fortized banner.png") center/cover no-repeat;opacity:.2;pointer-events:none;filter:saturate(1.3);}
+.home-hero{width:100%;min-height:260px;background:transparent;position:relative;overflow:hidden;flex-shrink:0;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 36px;border-bottom:1px solid rgba(255,249,62,.06);}
+.home-hero::before{content:"";position:absolute;inset:0;background:url("/Fortized banner.png") center/cover no-repeat;opacity:.35;pointer-events:none;}
 .home-hero::after{content:"";position:absolute;bottom:0;left:0;right:0;height:110px;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none;z-index:1;}
 /* Sparkle particles container */
 .hero-sparkles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
@@ -646,12 +646,12 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .cit-botcmd::after{content:'Bot Commands';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%) scale(.9);background:var(--panel2);color:rgba(255,255,255,.7);font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;border:1px solid var(--border);}
 .cit-botcmd:hover::after{opacity:1;transform:translateX(-50%) scale(1);}
 /* ── Chat Picker Panel (shared base for stickers, bot cmds, GIF) ── */
-.chat-picker-base{position:fixed;background:linear-gradient(180deg,rgba(18,22,32,.97),rgba(14,17,26,.99));border:1px solid rgba(255,255,255,.08);border-radius:16px;z-index:8500;box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.02),inset 0 1px 0 rgba(255,255,255,.04);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(32px) saturate(160%);-webkit-backdrop-filter:blur(32px) saturate(160%);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
-@keyframes pickerSlideIn{from{opacity:0;transform:translateY(12px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
-.chat-picker-header{padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent);}
-.chat-picker-header .cph-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.02em;}
-.chat-picker-header .cph-badge{font-size:8px;color:var(--accent);letter-spacing:.1em;font-weight:700;text-transform:uppercase;margin-left:auto;background:rgba(255,249,62,.06);padding:4px 10px;border-radius:100px;border:1px solid rgba(255,249,62,.1);}
-.chat-picker-search{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.05);position:relative;}
+.chat-picker-base{position:fixed;background:rgba(16,18,28,.96);border:1px solid rgba(255,255,255,.06);border-radius:14px;z-index:8500;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);animation:pickerSlideIn .2s cubic-bezier(.22,1,.36,1);}
+@keyframes pickerSlideIn{from{opacity:0;transform:translateY(8px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+.chat-picker-header{padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px;background:transparent;}
+.chat-picker-header .cph-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacing:-.02em;}
+.chat-picker-header .cph-badge{font-size:8px;color:rgba(255,249,62,.5);letter-spacing:.1em;font-weight:700;text-transform:uppercase;margin-left:auto;background:rgba(255,249,62,.04);padding:3px 8px;border-radius:100px;border:1px solid rgba(255,249,62,.08);}
+.chat-picker-search{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);position:relative;}
 .chat-picker-search input{width:100%;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.07);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 14px 10px 38px;outline:none;box-sizing:border-box;transition:all .2s cubic-bezier(.22,1,.36,1);}
 .chat-picker-search input:focus{border-color:rgba(255,249,62,.25);background:rgba(255,255,255,.07);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
 .chat-picker-search input::placeholder{color:rgba(255,255,255,.22);}
@@ -761,6 +761,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ml-badges img{width:14px;height:14px;object-fit:contain;}
 .ml-custom-status{font-size:10px;color:rgba(255,255,255,.18);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;}
 .discover-scroll{flex:1;overflow-y:auto;padding:28px;scroll-behavior:smooth;}
+.page-banner{position:relative;width:100%;height:200px;overflow:hidden;flex-shrink:0;margin-bottom:0;}
+.page-banner-img{width:100%;height:100%;object-fit:cover;display:block;}
+.page-banner-fade{position:absolute;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none;}
 .disc-hero{background:linear-gradient(135deg,rgba(14,18,30,.95),rgba(10,13,22,.98));border:1px solid rgba(255,249,62,.08);border-radius:16px;padding:36px 36px;margin-bottom:28px;position:relative;overflow:hidden;}
 .disc-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(255,249,62,.05),transparent 50%),radial-gradient(ellipse at 85% 80%,rgba(62,207,110,.03),transparent 45%);pointer-events:none;}
 .disc-hero h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;position:relative;display:flex;align-items:center;gap:10px;}
@@ -845,6 +848,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ci-preview .ci-room-ref{color:#a78bfa;font-weight:600;}
 /* ── Atelier ─────────────────────────────────────── */
 .atelier-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden;background:var(--bg);}
+.atelier-banner{position:relative;width:100%;height:200px;overflow:hidden;flex-shrink:0;}
+.atelier-banner-img{width:100%;height:100%;object-fit:cover;display:block;}
+.atelier-banner-fade{position:absolute;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none;}
 .atelier-nav{display:none;}
 .atelier-nav-scroll{display:none;}
 .atelier-nav-section{display:none;}
@@ -1007,9 +1013,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .profile-av-big img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 /* Profile Decorations */
 .profile-decoration-wrap{position:relative;display:inline-block;}
-.profile-decoration-overlay{position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);pointer-events:none;z-index:2;object-fit:contain;}
-.profile-decoration-overlay-sm{position:absolute;inset:-4px;width:calc(100% + 8px);height:calc(100% + 8px);pointer-events:none;z-index:2;object-fit:contain;}
-.profile-decoration-overlay-lg{position:absolute;inset:-12px;width:calc(100% + 24px);height:calc(100% + 24px);pointer-events:none;z-index:2;object-fit:contain;}
+.profile-decoration-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% + 16px);height:calc(100% + 16px);pointer-events:none;z-index:2;object-fit:contain;}
+.profile-decoration-overlay-sm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% + 8px);height:calc(100% + 8px);pointer-events:none;z-index:2;object-fit:contain;}
+.profile-decoration-overlay-lg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% + 24px);height:calc(100% + 24px);pointer-events:none;z-index:2;object-fit:contain;}
 .profile-display-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:2px;display:flex;align-items:center;gap:6px;}
 .profile-username{font-size:13px;color:rgba(255,255,255,.3);}
 .profile-content{padding:0 28px 36px;}
@@ -1172,31 +1178,31 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .vc-btn.muted-btn{background:rgba(255,255,255,.08);color:var(--text);}
 .vc-btn.muted-btn.active{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);}
 .vc-btn.disc-btn{background:var(--red);color:#fff;}
-/* ── Emoji Picker 2.0 ─────────────────────────── */
-.emoji-picker-panel{position:fixed;width:460px;max-height:560px;background:linear-gradient(180deg,rgba(18,22,32,.97),rgba(14,17,26,.99));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:0;z-index:9000;box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.02),inset 0 1px 0 rgba(255,255,255,.04);display:none;flex-direction:column;overflow:hidden;font-family:'DM Sans',sans-serif;backdrop-filter:blur(32px) saturate(160%);-webkit-backdrop-filter:blur(32px) saturate(160%);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
+/* ── Emoji Picker 3.0 ─────────────────────────── */
+.emoji-picker-panel{position:fixed;width:420px;max-height:520px;background:rgba(16,18,28,.96);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:0;z-index:9000;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02);display:none;flex-direction:column;overflow:hidden;font-family:'DM Sans',sans-serif;backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);animation:pickerSlideIn .2s cubic-bezier(.22,1,.36,1);}
 .emoji-picker-panel.show{display:flex;}
-@keyframes emojiPanelIn{from{opacity:0;transform:translateY(12px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes emojiPanelIn{from{opacity:0;transform:translateY(8px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
 /* Emoji autocomplete dropdown */
-.emoji-autocomplete{position:fixed;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px;z-index:9500;box-shadow:0 12px 40px rgba(0,0,0,.6);max-width:380px;display:none;backdrop-filter:blur(16px);}
-.emoji-autocomplete.show{display:flex;flex-wrap:wrap;gap:4px;}
-.ema-item{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--text);min-width:140px;flex:1;transition:background .1s;}
-.ema-item:hover,.ema-item.selected{background:rgba(255,249,62,.1);color:var(--accent);}
+.emoji-autocomplete{position:fixed;background:rgba(16,18,28,.96);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:6px;z-index:9500;box-shadow:0 12px 36px rgba(0,0,0,.5);max-width:380px;display:none;backdrop-filter:blur(20px);}
+.emoji-autocomplete.show{display:flex;flex-wrap:wrap;gap:3px;}
+.ema-item{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text);min-width:140px;flex:1;transition:background .12s;}
+.ema-item:hover,.ema-item.selected{background:rgba(255,249,62,.08);color:var(--accent);}
 .ema-item img{width:22px;height:22px;object-fit:contain;}
 .ema-item .ema-preview{font-size:20px;line-height:1;}
-.ema-item .ema-name{font-size:11.5px;color:var(--muted-light);font-family:monospace;}
-.epp-search{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.05);}
-.epp-search input{width:100%;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.07);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 14px;outline:none;transition:all .2s cubic-bezier(.22,1,.36,1);box-sizing:border-box;}
-.epp-search input:focus{border-color:rgba(255,249,62,.25);background:rgba(255,255,255,.07);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
-.epp-search input::placeholder{color:rgba(255,255,255,.22);}
-.epp-cats{display:flex;gap:2px;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.05);overflow-x:auto;background:rgba(0,0,0,.1);}
+.ema-item .ema-name{font-size:11px;color:rgba(255,255,255,.25);font-family:monospace;}
+.epp-search{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);}
+.epp-search input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 13px;outline:none;transition:all .18s;box-sizing:border-box;}
+.epp-search input:focus{border-color:rgba(255,249,62,.2);background:rgba(255,255,255,.06);box-shadow:0 0 0 3px rgba(255,249,62,.04);}
+.epp-search input::placeholder{color:rgba(255,255,255,.18);}
+.epp-cats{display:flex;gap:1px;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04);overflow-x:auto;background:transparent;}
 .epp-cats::-webkit-scrollbar{height:0;}
-.epp-cat{width:34px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);border:none;}
-.epp-cat:hover{background:rgba(255,255,255,.07);transform:scale(1.1);}.epp-cat.active{background:rgba(255,249,62,.12);box-shadow:0 2px 8px rgba(255,249,62,.08);}
-.epp-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:10px 12px;max-height:320px;overflow-y:auto;scrollbar-width:thin;}
-.epp-emoji{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);border:none;}
-.epp-emoji:hover{background:rgba(255,249,62,.1);transform:scale(1.25);border-radius:8px;}
-.epp-custom-section{padding:10px 12px;border-top:1px solid rgba(255,255,255,.05);}
-.epp-custom-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,249,62,.35);margin-bottom:8px;padding:0 2px;}
+.epp-cat{width:32px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;flex-shrink:0;transition:all .15s cubic-bezier(.22,1,.36,1);border:none;background:transparent;}
+.epp-cat:hover{background:rgba(255,255,255,.06);transform:scale(1.08);}.epp-cat.active{background:rgba(255,249,62,.1);}
+.epp-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:1px;padding:8px 10px;max-height:300px;overflow-y:auto;scrollbar-width:thin;}
+.epp-emoji{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;transition:all .15s cubic-bezier(.22,1,.36,1);border:none;background:transparent;}
+.epp-emoji:hover{background:rgba(255,249,62,.08);transform:scale(1.2);border-radius:8px;}
+.epp-custom-section{padding:8px 10px;border-top:1px solid rgba(255,255,255,.04);}
+.epp-custom-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,249,62,.3);margin-bottom:6px;padding:0 2px;}
 .epp-custom-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
 .epp-custom-emoji{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:all .18s cubic-bezier(.22,1,.36,1);border:none;}
 .epp-custom-emoji:hover{background:rgba(255,249,62,.1);transform:scale(1.25);border-radius:8px;}
@@ -2422,12 +2428,16 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <!-- DMs VIEW -->
     <div class="view" id="view-dms">
       <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
-        <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
-          <div style="max-width:900px;">
+        <div id="dm-friends-home" style="flex:1;overflow-y:auto;">
+          <div class="page-banner" style="margin-bottom:0;">
+            <img src="/Fortized banner2.png" class="page-banner-img" alt="">
+            <div class="page-banner-fade"></div>
+          </div>
+          <div style="max-width:900px;padding:0 28px 28px;">
             <!-- Clean friends header -->
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
               <div>
-                <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;">Friends</h2>
+                <h2 style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.02em;">Friends</h2>
                 <div id="dm-stat-bar" style="display:flex;gap:16px;margin-top:4px;">
                   <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,.35);"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span> <span id="dm-stat-online" style="font-weight:700;color:var(--green);">0</span> Online</span>
                   <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,.3);"><span id="dm-stat-total" style="font-weight:600;">0</span> Total</span>
@@ -2494,12 +2504,17 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <!-- DISCOVER VIEW -->
     <div class="view" id="view-discover">
       <div class="discover-scroll">
-        <!-- Clean header -->
-        <div style="margin-bottom:24px;">
+        <!-- Discord-style Banner -->
+        <div class="page-banner" style="margin:-28px -28px 0;margin-bottom:0;">
+          <img src="/Fortized banner2.png" class="page-banner-img" alt="">
+          <div class="page-banner-fade"></div>
+        </div>
+        <!-- Header -->
+        <div style="margin-bottom:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <div>
-              <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;">Discover</h2>
-              <p style="font-size:13px;color:rgba(255,255,255,.35);margin:0;">Find communities to join and explore</p>
+              <h2 style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.02em;">Discover</h2>
+              <p style="font-size:12.5px;color:rgba(255,255,255,.3);margin:0;">Find communities to join and explore</p>
             </div>
             <div class="disc-search" style="width:280px;">
               <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
@@ -2526,30 +2541,37 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <!-- ATELIER VIEW -->
     <div class="view" id="view-atelier">
       <div class="atelier-wrap">
-        <div class="atelier-scroll" id="atelier-scroll-outer" style="flex:1;overflow-y:auto;padding:28px;scroll-behavior:smooth;">
-          <!-- Clean header -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-            <div>
-              <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;">Atelier</h2>
-              <p style="font-size:13px;color:rgba(255,255,255,.35);margin:0;">Your store, rewards & subscriptions</p>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:8px 14px;">
-              <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;">
+        <div class="atelier-scroll" id="atelier-scroll-outer" style="flex:1;overflow-y:auto;scroll-behavior:smooth;">
+          <!-- Discord-style Banner -->
+          <div class="atelier-banner">
+            <img src="/Onyx banner.png" class="atelier-banner-img" alt="">
+            <div class="atelier-banner-fade"></div>
+          </div>
+          <!-- Header below banner -->
+          <div style="padding:0 28px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
               <div>
-                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">0</div>
-                <div style="font-size:9px;color:rgba(255,255,255,.25);margin-top:1px;">Onyx</div>
+                <h2 style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.02em;">Atelier</h2>
+                <p style="font-size:12.5px;color:rgba(255,255,255,.3);margin:0;">Your store, rewards & subscriptions</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px 16px;backdrop-filter:blur(8px);">
+                <img src="/Onyx.png" style="width:18px;height:18px;object-fit:contain;">
+                <div>
+                  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">0</div>
+                  <div style="font-size:9px;color:rgba(255,255,255,.2);margin-top:1px;">Onyx</div>
+                </div>
               </div>
             </div>
-          </div>
-          <!-- Tabs -->
-          <div class="atelier-tabs" style="padding:0;margin-bottom:20px;">
-            <button class="disc-tab active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">Overview</button>
-            <button class="disc-tab" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">Radiance</button>
-            <button class="disc-tab" id="atnav-quests" onclick="switchAtelierTab('quests',this)">Quests</button>
-            <button class="disc-tab" id="atnav-shop" onclick="switchAtelierTab('shop',this)">Shop</button>
+            <!-- Tabs -->
+            <div class="atelier-tabs" style="padding:0;margin-bottom:22px;">
+              <button class="disc-tab active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">Overview</button>
+              <button class="disc-tab" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">Radiance</button>
+              <button class="disc-tab" id="atnav-quests" onclick="switchAtelierTab('quests',this)">Quests</button>
+              <button class="disc-tab" id="atnav-shop" onclick="switchAtelierTab('shop',this)">Shop</button>
+            </div>
           </div>
           <!-- Dynamic content -->
-          <div id="atelier-content">
+          <div id="atelier-content" style="padding:0 28px 48px;">
             <!-- Loaded dynamically by switchAtelierTab() -->
           </div>
         </div>
@@ -4027,7 +4049,7 @@ function updateUserbar() {
     if (CU.activeDecoration) {
       ua.style.position='relative'; ua.style.overflow='visible';
       const decoSrc = getDecorationSrc(CU.activeDecoration);
-      if (decoSrc) ua.insertAdjacentHTML('beforeend', `<img src="${decoSrc}" class="profile-decoration-overlay-sm" style="inset:-3px;width:calc(100% + 6px);height:calc(100% + 6px);" onerror="this.style.display='none'">`);
+      if (decoSrc) ua.insertAdjacentHTML('beforeend', `<img src="${decoSrc}" class="profile-decoration-overlay-sm" onerror="this.style.display='none'">`);
     }
     if (!ua.querySelector('#ua-status-dot')) {
       const d = document.createElement('span');
@@ -11668,20 +11690,20 @@ function buildEmojiPicker() {
   const customEmojis = curBastion !== null ? (CU?.bastions?.[curBastion]?.customEmojis||[]) : [];
 
   panel.innerHTML = `
-    <div class="chat-picker-header" style="padding:12px 16px 10px;">
+    <div class="chat-picker-header" style="padding:12px 14px 10px;">
       <span class="cph-title">Emoji</span>
       <span class="cph-badge">Fortized</span>
     </div>
-    <div style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;">
-      <input class="epp-search-inp" placeholder="Search emoji…" style="width:100%;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);border-radius:12px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 14px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.2)';this.style.boxShadow='0 0 0 3px rgba(255,249,62,.05)'" onblur="this.style.borderColor='rgba(255,255,255,.06)';this.style.boxShadow='none'" oninput="searchEmojis(this.value)">
+    <div style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0;">
+      <input class="epp-search-inp" placeholder="Search emoji…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;padding:8px 12px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.boxShadow='none'" oninput="searchEmojis(this.value)">
     </div>
-    <div class="spp-tabs" style="padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.04);">
+    <div class="spp-tabs" style="padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.03);">
       ${buildEmojiTabBar()}
     </div>
-    <div id="epp-grid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(8,1fr);gap:3px;max-height:280px;"></div>
-    <div style="padding:7px 12px;border-top:1px solid rgba(255,255,255,.04);font-size:10px;color:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div id="epp-grid" style="flex:1;overflow-y:auto;padding:6px 8px;display:grid;grid-template-columns:repeat(8,1fr);gap:1px;max-height:280px;"></div>
+    <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);font-size:10px;color:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
       <span id="epp-hover-label">Select an emoji</span>
-      <button onclick="_showEmojiInfo()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:12px;padding:2px;" title="Emoji Info">ℹ</button>
+      <button onclick="_showEmojiInfo()" style="background:none;border:none;color:rgba(255,255,255,.15);cursor:pointer;font-size:12px;padding:2px;" title="Emoji Info">ℹ</button>
     </div>
   `;
   renderEmojiTab(_emojiPickerTab);
@@ -19788,7 +19810,7 @@ function openGiphyPicker(inputId) {
   const picker = document.createElement('div');
   picker.id = 'giphy-picker';
   picker.className = 'chat-picker-base';
-  picker.style.cssText = `right:${rightOffset}px;bottom:${window.innerHeight-rect.top+8}px;width:480px;max-height:560px;`;
+  picker.style.cssText = `right:${rightOffset}px;bottom:${window.innerHeight-rect.top+8}px;width:440px;max-height:520px;`;
 
   const esc = escapeHTML(_giphyInput);
   picker.innerHTML = `
@@ -19796,12 +19818,12 @@ function openGiphyPicker(inputId) {
       <span class="cph-title">GIFs</span>
       <span class="cph-badge">GIPHY</span>
     </div>
-    <div style="padding:12px 16px 0;flex-shrink:0;">
+    <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="giphy-search-input" placeholder="Search for GIFs" style="width:100%;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.07);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 14px 10px 38px;outline:none;box-sizing:border-box;transition:all .2s cubic-bezier(.22,1,.36,1);" onfocus="this.style.borderColor='rgba(255,249,62,.25)';this.style.background='rgba(255,255,255,.07)';this.style.boxShadow='0 0 0 3px rgba(255,249,62,.06)'" onblur="this.style.borderColor='rgba(255,255,255,.07)';this.style.background='rgba(255,255,255,.05)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="giphy-search-input" placeholder="Search for GIFs" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
       </div>
-      <div class="spp-tabs" style="padding:10px 0;border:none;" id="gif-category-chips">
+      <div class="spp-tabs" style="padding:8px 0;border:none;" id="gif-category-chips">
         <button class="spp-tab active" onclick="_gifChip(this,'trending','${esc}')">Trending</button>
         <button class="spp-tab" onclick="_gifChip(this,'reactions','${esc}')">Reactions</button>
         <button class="spp-tab" onclick="_gifChip(this,'gaming','${esc}')">Gaming</button>
@@ -19810,7 +19832,7 @@ function openGiphyPicker(inputId) {
         <button class="spp-tab" onclick="switchGiphyTab('favourites','${esc}');_gifChipActivate(this)">Saved</button>
       </div>
     </div>
-    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:10px 12px;columns:2;column-gap:8px;scrollbar-width:thin;"></div>
+    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;"></div>
   `;
 
   document.body.appendChild(picker);
@@ -22606,71 +22628,74 @@ function renderAtelierTab(tab) {
     const balHeader = document.getElementById('atelier-balance');
     if (balHeader) balHeader.textContent = bal;
 
-    el.style.padding = '0';
     el.innerHTML = `
       <!-- Radiance status pill -->
-      ${hasPlus?`<div style="display:flex;align-items:center;gap:8px;background:rgba(255,220,62,.08);border:1px solid rgba(255,220,62,.2);border-radius:14px;padding:10px 16px;margin-bottom:24px;">
-        <img src="/fortized badges/radiance+.png" style="width:18px;height:18px;object-fit:contain;"><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ffd93e;">Radiance+ Active · ${daysPlus} days left</span>
-        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:none;border:1px solid rgba(255,220,62,.2);border-radius:8px;color:#ffd93e;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">Manage</button>
-      </div>`:hasRad?`<div style="display:flex;align-items:center;gap:8px;background:rgba(255,160,62,.08);border:1px solid rgba(255,160,62,.2);border-radius:14px;padding:10px 16px;margin-bottom:24px;">
-        <img src="/fortized badges/basic radiance.png" style="width:18px;height:18px;object-fit:contain;"><span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ff9d3e;">Radiance Active · ${daysRad} days left</span>
-        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:none;border:1px solid rgba(255,160,62,.2);border-radius:8px;color:#ff9d3e;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">Manage</button>
+      ${hasPlus?`<div style="display:flex;align-items:center;gap:10px;background:rgba(255,220,62,.06);border:1px solid rgba(255,220,62,.12);border-radius:14px;padding:12px 18px;margin-bottom:22px;">
+        <img src="/fortized badges/radiance+.png" style="width:20px;height:20px;object-fit:contain;"><span style="font-size:12.5px;font-weight:700;color:#ffd93e;">Radiance+ Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysPlus} days left</span>
+        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:rgba(255,220,62,.08);border:1px solid rgba(255,220,62,.15);border-radius:10px;color:#ffd93e;font-size:11px;font-weight:600;padding:6px 14px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,220,62,.14)'" onmouseout="this.style.background='rgba(255,220,62,.08)'">Manage</button>
+      </div>`:hasRad?`<div style="display:flex;align-items:center;gap:10px;background:rgba(255,160,62,.06);border:1px solid rgba(255,160,62,.12);border-radius:14px;padding:12px 18px;margin-bottom:22px;">
+        <img src="/fortized badges/basic radiance.png" style="width:20px;height:20px;object-fit:contain;"><span style="font-size:12.5px;font-weight:700;color:#ff9d3e;">Radiance Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysRad} days left</span>
+        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:rgba(255,160,62,.08);border:1px solid rgba(255,160,62,.15);border-radius:10px;color:#ff9d3e;font-size:11px;font-weight:600;padding:6px 14px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,160,62,.14)'" onmouseout="this.style.background='rgba(255,160,62,.08)'">Manage</button>
       </div>`:''}
 
-      <div style="display:flex;flex-direction:column;gap:var(--space-2xl);padding-bottom:60px;">
+      <div style="display:flex;flex-direction:column;gap:28px;padding-bottom:60px;">
 
-        <!-- Radiance Perks — horizontal scroll row -->
+        <!-- Radiance Perks — card grid -->
         <div>
           <div class="atel-section-hdr">Radiance Perks</div>
-          <div style="display:flex;gap:var(--space-sm);overflow-x:auto;padding-bottom:6px;scrollbar-width:none;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
             ${PERKS.map(p => {
               const unlocked = p.plus ? hasPlus : hasRad;
-              return `<div style="min-width:145px;background:${unlocked?`rgba(${p.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',')}, 0.06)`:'rgba(255,255,255,.025)'};border:1px solid ${unlocked?p.color+'28':'rgba(255,255,255,.05)'};border-radius:18px;padding:18px 16px;flex-shrink:0;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);${!unlocked?'opacity:.45':''}" ${unlocked?`onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px ${p.color}15'" onmouseout="this.style.transform='';this.style.boxShadow='none'"`:''}>
-                ${unlocked?`<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${p.color},transparent);opacity:.5;"></div>`:''}
-                <div style="font-size:28px;margin-bottom:12px;">${p.icon}</div>
-                <div style="font-size:12.5px;font-weight:700;color:#fff;margin-bottom:4px;">${p.name}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.4;">${p.desc}</div>
-                ${p.plus?`<div style="position:absolute;top:10px;right:10px;font-size:9px;font-weight:800;color:#ffd93e;background:rgba(255,220,62,.12);border:1px solid rgba(255,220,62,.2);padding:2px 7px;border-radius:100px;">+</div>`:''}
-                ${!unlocked?`<div style="position:absolute;bottom:12px;right:12px;opacity:.35;">${ftzIcon('lock','14')}</div>`:`<div style="position:absolute;bottom:12px;right:12px;color:${p.color};"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg></div>`}
+              return `<div style="background:${unlocked?`rgba(${p.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',')}, 0.04)`:'rgba(255,255,255,.02)'};border:1px solid ${unlocked?p.color+'20':'rgba(255,255,255,.04)'};border-radius:14px;padding:16px;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);${!unlocked?'opacity:.4':''}" ${unlocked?`onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px ${p.color}10'" onmouseout="this.style.transform='';this.style.boxShadow='none'"`:''}>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                  <div style="color:${unlocked?p.color:'rgba(255,255,255,.3)'};">${p.icon}</div>
+                  <div style="font-size:12.5px;font-weight:700;color:${unlocked?'#fff':'rgba(255,255,255,.4)'};">${p.name}</div>
+                  ${p.plus?`<span style="margin-left:auto;font-size:8px;font-weight:800;color:#ffd93e;background:rgba(255,220,62,.1);padding:2px 6px;border-radius:100px;">+</span>`:''}
+                </div>
+                <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.4;">${p.desc}</div>
+                ${unlocked?`<div style="position:absolute;top:0;left:0;right:0;height:1.5px;background:${p.color};opacity:.3;"></div>`:''}
               </div>`;
             }).join('')}
-            ${!hasRad?`<div style="min-width:135px;background:rgba(255,249,62,.04);border:1.5px dashed rgba(255,249,62,.12);border-radius:18px;padding:18px 16px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" onmouseover="this.style.background='rgba(255,249,62,.07)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255,249,62,.04)';this.style.transform=''">
-              <div style="font-size:24px;margin-bottom:10px;color:var(--accent);">${ftzIcon('star','24')}</div>
-              <div style="font-size:12px;font-weight:700;color:var(--accent);">Get Radiance</div>
-              <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:4px;">Unlock all perks</div>
-            </div>`:''}
           </div>
+          ${!hasRad?`<div style="margin-top:12px;background:rgba(255,249,62,.03);border:1.5px dashed rgba(255,249,62,.1);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" onmouseover="this.style.background='rgba(255,249,62,.06)'" onmouseout="this.style.background='rgba(255,249,62,.03)'">
+            <div style="color:var(--accent);">${ftzIcon('star','22')}</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--accent);">Unlock Radiance</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:2px;">Get access to all perks and customization</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="margin-left:auto;opacity:.5;"><path d="m9 18 6-6-6-6"/></svg>
+          </div>`:''}
         </div>
 
-        <!-- Completed Quests — 2-col grid -->
+        <!-- Active Quests -->
         <div>
           <div class="atel-section-hdr" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>Completed Quests</span>
-            <span style="cursor:pointer;color:rgba(255,249,62,.5);font-size:11px;font-weight:700;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.5)'" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">See All →</span>
+            <span>Quests</span>
+            <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">View All</span>
           </div>
           ${doneQ.length ? `
-          <div class="ftz-grid cols-2">
-            ${doneQ.slice(0,4).map(q=>`
-              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(62,207,110,.035);border:1px solid rgba(62,207,110,.08);border-radius:16px;transition:all .18s;" onmouseover="this.style.background='rgba(62,207,110,.06)';this.style.borderColor='rgba(62,207,110,.15)'" onmouseout="this.style.background='rgba(62,207,110,.035)';this.style.borderColor='rgba(62,207,110,.08)'">
-                <div style="width:36px;height:36px;border-radius:12px;background:rgba(62,207,110,.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${q.icon}</div>
-                <div style="min-width:0;flex:1;">
-                  <div style="font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${q.title}</div>
-                  <div style="font-size:11px;color:var(--green);">+${q.reward}</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            ${doneQ.slice(0,3).map(q=>`
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(62,207,110,.025);border:1px solid rgba(62,207,110,.06);border-radius:12px;transition:all .15s;" onmouseover="this.style.background='rgba(62,207,110,.045)'" onmouseout="this.style.background='rgba(62,207,110,.025)'">
+                <div style="width:32px;height:32px;border-radius:10px;background:rgba(62,207,110,.06);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${q.icon}</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);">${q.title}</div>
                 </div>
+                <div style="font-size:11px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:3px;">+${q.reward} <img src="/Onyx.png" style="width:11px;height:11px;object-fit:contain;"></div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               </div>`).join('')}
-          </div>` : `<div style="font-size:13px;color:rgba(255,255,255,.25);text-align:center;padding:22px;background:rgba(255,255,255,.02);border-radius:16px;border:1px solid rgba(255,255,255,.04);">No quests completed yet — <span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">start one!</span></div>`}
+          </div>` : `<div style="font-size:12.5px;color:rgba(255,255,255,.2);text-align:center;padding:20px;background:rgba(255,255,255,.015);border-radius:12px;border:1px solid rgba(255,255,255,.03);">No quests completed yet — <span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">start one!</span></div>`}
         </div>
 
         <!-- Shop teaser -->
         <div>
           <div class="atel-section-hdr">Shop Preview</div>
-          <div class="ftz-grid cols-3">
-            ${['Avatar Frames','Profile Effects','Name Colors'].map((name,i)=>`
-              <div style="background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.06);border-radius:18px;padding:22px;text-align:center;cursor:pointer;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" onmouseover="this.style.borderColor='rgba(255,255,255,.12)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.transform=''">
-                <div style="font-size:34px;margin-bottom:12px;opacity:.3;">${['🖼️','✨','🎨'][i]}</div>
-                <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.4);">${name}</div>
-                <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Coming Soon</div>
-                <div style="position:absolute;top:10px;right:10px;font-size:12px;opacity:.25;">🔒</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            ${[{name:'Avatar Frames',icon:ftzIcon('image','22'),color:'#a78bfa'},{name:'Profile Effects',icon:ftzIcon('star','22'),color:'#60a5fa'},{name:'Name Colors',icon:ftzIcon('letters','22'),color:'#fb923c'}].map(it=>`
+              <div style="background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" onmouseover="this.style.borderColor='${it.color}30';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.04)';this.style.transform=''">
+                <div style="color:${it.color};opacity:.4;margin-bottom:10px;">${it.icon}</div>
+                <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.35);">${it.name}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,.15);margin-top:4px;">Coming Soon</div>
               </div>`).join('')}
           </div>
         </div>
@@ -25403,7 +25428,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <div class="mpp-av-row">
       <div style="position:relative;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
         <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 68)}</div>
-        ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" style="inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);" onerror="this.style.display='none'">` : ''}
+        ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
         <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="position:absolute;bottom:2px;right:2px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;box-shadow:0 0 8px ${sc}55;"></span>
       </div>
       <div style="min-width:0;padding-bottom:6px;">

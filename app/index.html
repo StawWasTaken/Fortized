@@ -20501,7 +20501,7 @@ function openForumChannel(chIdx) {
   let postsHTML = posts.length ? posts.slice().reverse().map(function(p,ri){
     const pi = posts.length-1-ri;
     return renderForumPostCard(p, chIdx, pi);
-  }).join('') : '<div style="text-align:center;padding:60px 20px;color:var(--muted);"><div style="font-size:32px;margin-bottom:12px;opacity:.5;">${ftzIcon('chat','32')}</div><div style="font-size:14px;font-weight:600;margin-bottom:4px;">No posts yet</div><div style="font-size:12.5px;">Be the first to start a conversation!</div></div>';
+  }).join('') : '<div style="text-align:center;padding:60px 20px;color:var(--muted);"><div style="font-size:32px;margin-bottom:12px;opacity:.5;">'+ftzIcon('chat','32')+'</div><div style="font-size:14px;font-weight:600;margin-bottom:4px;">No posts yet</div><div style="font-size:12.5px;">Be the first to start a conversation!</div></div>';
   wrap.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">'
     +'<div style="padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--panel);">'
     +'<div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:16px;">💬</div><div><div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;">'+escapeHTML(ch.name)+'</div><div style="font-size:11.5px;color:var(--muted);">'+posts.length+' post'+(posts.length!==1?'s':'')+(ch.description?' · '+escapeHTML(ch.description):'')+'</div></div></div>'

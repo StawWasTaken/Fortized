@@ -36,7 +36,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 @keyframes msgFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .embed-link-card,.embed-x-card,.embed-invite-card,.embed-spotify-card{content-visibility:auto;contain-intrinsic-size:auto 120px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
-.sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:68px;align-items:center;border-right:none;}
+.sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:56px;align-items:center;border-right:none;}
 .sidebar-logo{width:100%;padding:12px 0 8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 .sidebar-logo-icon{width:48px;height:48px;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;transition:transform .2s cubic-bezier(.22,1,.36,1),filter .2s;flex-shrink:0;}
 .sidebar-logo:hover .sidebar-logo-icon{transform:scale(1.06);}
@@ -298,8 +298,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .notif-panel-header{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;}
 .notif-mark-read-btn{font-size:11px;padding:4px 10px;}
 /* Userbar — spans both sidebars */
-.userbar{background:var(--sidebar-ctx);border:1px solid rgba(255,255,255,.06);border-radius:12px;display:flex;flex-direction:column;padding:0;gap:0;flex-shrink:0;box-sizing:border-box;transition:all .2s cubic-bezier(.22,1,.36,1);position:fixed;bottom:0;left:0;z-index:15;width:calc(72px - 12px);margin:4px 6px 6px;box-shadow:0 2px 12px rgba(0,0,0,.2);overflow:hidden;}
-.userbar:hover{border-color:rgba(255,255,255,.1);box-shadow:0 4px 20px rgba(0,0,0,.35);}
+.userbar{background:var(--sidebar-ctx);border-top:1px solid rgba(255,255,255,.05);border-radius:0;display:flex;flex-direction:column;padding:0;gap:0;flex-shrink:0;box-sizing:border-box;transition:all .15s;position:fixed;bottom:0;left:0;z-index:15;width:72px;margin:0;overflow:hidden;}
 .ub-activity-row{display:none;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.06);transition:background .15s;}
 .ub-activity-row:hover{background:rgba(255,255,255,.03);}
 .ub-activity-row.active{display:flex;background:rgba(62,207,110,.04);border-bottom-color:rgba(62,207,110,.12);}
@@ -311,24 +310,24 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ub-activity-time{font-size:9.5px;color:var(--muted);font-weight:500;line-height:1;}
 .ub-activity-action{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;margin-left:auto;}
 .ub-activity-action:hover{background:rgba(255,255,255,.06);color:#fff;}
-.ub-user-row{display:flex;align-items:center;padding:6px 6px;gap:4px;}
-.ua-clickable{display:flex;align-items:center;justify-content:center;gap:0;flex:none;min-width:0;padding:3px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:all .16s cubic-bezier(.22,1,.36,1);}
-.ua-clickable:hover{background:rgba(255,255,255,.04);}
-.ua{width:34px;height:34px;border-radius:50%;background:var(--panel);font-size:13px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 2px 10px rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.06);}
+.ub-user-row{display:flex;align-items:center;padding:6px 8px;gap:4px;}
+.ua-clickable{display:flex;align-items:center;justify-content:center;gap:0;flex:none;min-width:0;padding:4px;border-radius:6px;background:transparent;border:none;cursor:pointer;transition:background .12s;}
+.ua-clickable:hover{background:rgba(255,255,255,.05);}
+.ua{width:32px;height:32px;border-radius:50%;background:var(--panel);font-size:13px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 1px 6px rgba(0,0,0,.3);}
 .ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
-.ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;border-radius:50%;border:2.5px solid var(--sidebar-ctx);flex-shrink:0;box-shadow:0 0 6px rgba(0,0,0,.5);}
+.ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2.5px solid var(--sidebar-ctx);flex-shrink:0;}
 .ua-info{display:none;}
 .ua-name{font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;font-family:'Syne',sans-serif;}
-.ua-status-text{font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;font-weight:500;letter-spacing:.02em;}
-.ua-btns{display:none;gap:3px;flex-shrink:0;}
-.ua-btns button{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .14s cubic-bezier(.22,1,.36,1);}
-.ua-btns button:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#fff;transform:scale(1.05);}
-.ua-btns button.active{color:var(--red);background:rgba(248,113,113,.07);border-color:rgba(248,113,113,.12);}
-.ua-btns button.active:hover{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.2);}
+.ua-status-text{font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;font-weight:500;}
+.ua-btns{display:none;gap:2px;flex-shrink:0;}
+.ua-btns button{width:28px;height:28px;border-radius:6px;background:transparent;border:none;color:rgba(255,255,255,.35);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.ua-btns button:hover{background:rgba(255,255,255,.06);color:#fff;}
+.ua-btns button.active{color:var(--red);background:rgba(248,113,113,.08);}
+.ua-btns button.active:hover{background:rgba(248,113,113,.12);}
 /* Userbar expanded state (secondary sidebar visible) */
-.userbar.expanded{width:calc(72px + 380px - 12px);}
+.userbar.expanded{width:calc(72px + 380px);}
 .userbar.expanded .ub-activity-row.active{display:flex;}
-.userbar.expanded .ub-user-row{padding:6px 8px 8px;}
+.userbar.expanded .ub-user-row{padding:6px 10px 8px;}
 .userbar.expanded .ua-clickable{gap:8px;flex:1;min-width:0;justify-content:flex-start;}
 .userbar.expanded .ua-info{display:block;}
 .userbar.expanded .ua-btns{display:flex;}
@@ -720,11 +719,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .drop-overlay.active{display:flex;}
 .drop-overlay .doi{font-size:28px;opacity:.6;}
 .drop-overlay .dot{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);}
-/* Global drop overlay — covers main chat area only, not sidebar */
-.drop-overlay.global-drop{position:fixed;top:0;bottom:0;right:0;left:72px;border-radius:0;background:rgba(255,249,62,.04);border:none;z-index:50;pointer-events:none;backdrop-filter:blur(2px);}
-.drop-overlay.global-drop .doi{font-size:36px;opacity:.5;animation:dropBounce .6s ease infinite alternate;}
-.drop-overlay.global-drop .dot{font-size:16px;opacity:.7;}
-@keyframes dropBounce{from{transform:translateY(0);}to{transform:translateY(-6px);}}
+/* Global drop overlay — hidden, drag only works on chatbar */
+.drop-overlay.global-drop{display:none!important;}
 /* Image crop modal */
 .crop-modal-overlay{position:fixed;inset:0;background:rgba(4,6,10,.96);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;}
 .crop-box{background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:500px;width:100%;overflow:hidden;}
@@ -1251,12 +1247,13 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ftz-panel-head h3{font-family:'Syne',sans-serif;font-size:var(--font-md);font-weight:800;margin:0;color:rgba(255,255,255,.75);}
 .ftz-panel-body{padding:var(--space-lg);}
 .ftz-section-hdr{font-size:var(--font-hdr);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:var(--space-lg);color:rgba(255,255,255,.3);}
-.ftz-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--radius-pill);font-size:var(--font-xs);font-weight:700;line-height:1.3;}
-.ftz-badge.success{background:var(--state-success-dim);color:var(--state-success);border:1px solid rgba(62,207,110,.18);}
-.ftz-badge.danger{background:var(--state-danger-dim);color:var(--state-danger);border:1px solid rgba(248,113,113,.18);}
-.ftz-badge.warning{background:var(--state-warning-dim);color:var(--state-warning);border:1px solid rgba(245,158,11,.18);}
-.ftz-badge.info{background:var(--state-info-dim);color:var(--state-info);border:1px solid rgba(96,165,250,.18);}
-.ftz-badge.neutral{background:var(--surface-1);color:var(--muted-light);border:1px solid var(--surface-border);}
+/* Utility tag badges (not used with profile badge system) */
+.ftz-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--radius-pill);font-size:var(--font-xs);font-weight:700;line-height:1.3;}
+.ftz-tag.success{background:var(--state-success-dim);color:var(--state-success);border:1px solid rgba(62,207,110,.18);}
+.ftz-tag.danger{background:var(--state-danger-dim);color:var(--state-danger);border:1px solid rgba(248,113,113,.18);}
+.ftz-tag.warning{background:var(--state-warning-dim);color:var(--state-warning);border:1px solid rgba(245,158,11,.18);}
+.ftz-tag.info{background:var(--state-info-dim);color:var(--state-info);border:1px solid rgba(96,165,250,.18);}
+.ftz-tag.neutral{background:var(--surface-1);color:var(--muted-light);border:1px solid var(--surface-border);}
 .ftz-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 16px;border-radius:var(--radius-pill);font-size:var(--font-sm);font-weight:600;cursor:pointer;border:1.5px solid transparent;color:rgba(255,255,255,.4);transition:all .2s var(--ease-out);background:var(--surface-1);}
 .ftz-chip:hover{background:var(--surface-2);color:rgba(255,255,255,.8);border-color:var(--surface-border-hover);}
 .ftz-chip.active{background:var(--accent-dim);border-color:rgba(255,249,62,.25);color:var(--accent);box-shadow:0 2px 12px rgba(255,249,62,.08);}
@@ -2261,6 +2258,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   <div style="flex:1;"></div>
   <!-- Userbar -->
   <div class="userbar">
+    <!-- Activity Row (Playing X) -->
     <div class="ub-activity-row" id="ub-activity-row" style="display:none;">
       <div class="ub-activity-icon" id="ub-activity-icon"></div>
       <div class="ub-activity-info" id="ub-activity-info">
@@ -2268,15 +2266,16 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         <span class="ub-activity-name" id="ub-activity-name">—</span>
       </div>
       <button class="ub-activity-action" id="ub-activity-action" onclick="event.stopPropagation();openActivityDetector()" title="Detect Activity">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
     </div>
-    <!-- Custom Status Speech Bubble (cloud chat bubble — PFP talks!) -->
+    <!-- Custom Status -->
     <div id="ua-custom-status" class="ua-custom-status-bubble"></div>
+    <!-- User Row -->
     <div class="ub-user-row">
       <div class="ua-clickable" id="ua-clickable" onclick="toggleOwnProfilePanel()">
         <div class="ua" id="ua">
-          <span id="ua-status-dot" class="ua-status-dot" style="background:#3ecf6e;" title="Online" aria-label="Online status"></span>
+          <span id="ua-status-dot" class="ua-status-dot" style="background:#3ecf6e;" title="Online"></span>
         </div>
         <div class="ua-info">
           <div class="ua-name" id="ua-name">Loading…</div>
@@ -2284,14 +2283,17 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         </div>
       </div>
       <div class="ua-btns">
-        <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute" aria-label="Mute or unmute microphone">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
         </button>
-        <button onclick="toggleDeafen()" id="deafen-btn" title="Deafen/Undeafen" aria-label="Deafen or undeafen">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
+        <button onclick="toggleDeafen()" id="deafen-btn" title="Deafen/Undeafen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
         </button>
-        <button onclick="showView('profile')" title="Settings" aria-label="Open settings">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <button onclick="toggleAccountSwitcher(event)" id="acct-switch-btn" title="Account Switcher">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button onclick="showView('profile')" title="Settings">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         </button>
       </div>
     </div>
@@ -7025,6 +7027,17 @@ function deleteMsg(msgId, context) {
         // Capture message data for undo
         let msgSnapshot = null;
         try { const snap = await ref.get(); if (snap.exists()) msgSnapshot = snap.val(); } catch {}
+
+        // Delete from Firebase FIRST, then animate UI
+        try {
+          await ref.remove();
+        } catch(delErr) {
+          console.error('Firebase delete failed:', delErr);
+          toast('Failed to delete message', 'error');
+          return;
+        }
+
+        // UI removal after successful Firebase deletion
         if (row) {
           if (row.classList.contains('msg-first')) {
             let next = row.nextElementSibling;
@@ -7052,8 +7065,6 @@ function deleteMsg(msgId, context) {
           setTimeout(() => { row.style.maxHeight = '0'; row.style.padding = '0'; row.style.margin = '0'; }, 80);
           setTimeout(() => row.remove(), 300);
         }
-        // Delete from Firebase immediately for reliability
-        ref.remove().catch(e => console.warn('Firebase delete error:', e));
         // Show undo toast (stores snapshot to restore if needed)
         _showUndoDelete(ref, msgSnapshot, msgId, ctx, _curDM, _curGC, _curBastion, _curChannel);
       } else {
@@ -7263,8 +7274,6 @@ async function renderMemberList() {
   const guaranteed = [b.owner, CU.username].filter(Boolean);
   guaranteed.forEach(u => { if (!members.includes(u)) members.push(u); });
   if (!members.length) members = guaranteed;
-  // Only add memberRoles users who are actually in the fetched members list
-  // (prevents ghost entries from users who left but weren't cleaned from memberRoles)
   const fetchedSet = new Set(members);
   const extraFromRoles = Object.keys(b.memberRoles||{}).filter(u => fetchedSet.has(u));
   extraFromRoles.forEach(u => { if (!members.includes(u)) members.push(u); });
@@ -7274,6 +7283,16 @@ async function renderMemberList() {
   const memberRoles = b.memberRoles || {};
   const deployedBots = b.deployedBots || [];
   const totalCount = members.length + deployedBots.length;
+
+  // Fetch statuses for all members to sort by online/offline
+  const statusMap = {};
+  statusMap[CU.username] = CU.status || 'online';
+  const statusPromises = members.filter(u => u !== CU.username).map(u =>
+    FortizedSocial.getStatus(u).then(st => { statusMap[u] = st || 'offline'; }).catch(() => { statusMap[u] = 'offline'; })
+  );
+  await Promise.allSettled(statusPromises);
+
+  const isOnlineStatus = (st) => st === 'online' || st === 'away' || st === 'dnd';
 
   // Group members by their highest role
   const ownerList = members.filter(u => u === b.owner);
@@ -7290,31 +7309,58 @@ async function renderMemberList() {
     }
   });
 
-  let html = '';
-  // Header with search
-  html += `<div class="ml-header"><span class="ml-header-title">Members</span><span class="ml-header-count">${totalCount}</span></div>`;
-  html += `<div class="ml-search"><svg class="ml-search-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search members..." oninput="_filterMemberList(this.value)"></div>`;
+  // Sort each group: online first (online > away > dnd > offline)
+  const statusOrder = (u) => { const s = statusMap[u]; return s==='online'?0:s==='away'?1:s==='dnd'?2:3; };
+  const sortByStatus = (arr) => arr.sort((a,b) => statusOrder(a) - statusOrder(b));
+  sortByStatus(ownerList);
+  Object.values(roleGroups).forEach(g => sortByStatus(g.members));
+  sortByStatus(noRole);
 
-  // Owner section
-  if (ownerList.length) {
+  // Count online/offline
+  const onlineCount = members.filter(u => isOnlineStatus(statusMap[u])).length;
+  const offlineCount = members.length - onlineCount;
+
+  let html = '';
+  html += `<div class="ml-header"><span class="ml-header-title">Members</span><span class="ml-header-count">${onlineCount} online · ${totalCount}</span></div>`;
+  html += `<div class="ml-search"><svg class="ml-search-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search members..." oninput="_filterMemberList(this.value)"></div>`;
+
+  // --- ONLINE SECTION ---
+  // Owner section (online only)
+  const ownerOnline = ownerList.filter(u => isOnlineStatus(statusMap[u]));
+  const ownerOffline = ownerList.filter(u => !isOnlineStatus(statusMap[u]));
+  if (ownerOnline.length) {
     html += `<div class="ml-role-header"><span style="font-size:12px;opacity:.6;">👑</span> Owner</div>`;
-    ownerList.forEach(u => html += buildMemberEntry(u, roles, memberRoles));
+    ownerOnline.forEach(u => html += buildMemberEntry(u, roles, memberRoles, statusMap[u]));
   }
-  // Role-grouped sections (sorted by role position)
+  // Role-grouped sections (online members)
   const sortedGroups = Object.values(roleGroups).sort((a,b) => {
     const aIdx = roles.indexOf(a.role);
     const bIdx = roles.indexOf(b.role);
     return aIdx - bIdx;
   });
   sortedGroups.forEach(g => {
-    html += `<div class="ml-role-header"><span style="width:6px;height:6px;border-radius:50%;background:${g.role.color||'var(--muted)'};flex-shrink:0;"></span> ${escapeHTML(g.role.name)} <span class="ml-role-count">— ${g.members.length}</span></div>`;
-    g.members.forEach(u => html += buildMemberEntry(u, roles, memberRoles));
+    const online = g.members.filter(u => isOnlineStatus(statusMap[u]));
+    if (online.length) {
+      html += `<div class="ml-role-header"><span style="width:6px;height:6px;border-radius:50%;background:${g.role.color||'var(--muted)'};flex-shrink:0;"></span> ${escapeHTML(g.role.name)} <span class="ml-role-count">— ${online.length}</span></div>`;
+      online.forEach(u => html += buildMemberEntry(u, roles, memberRoles, statusMap[u]));
+    }
   });
-  // Members without roles
-  if (noRole.length) {
-    html += `<div class="ml-role-header">Members <span class="ml-role-count">— ${noRole.length}</span></div>`;
-    noRole.forEach(u => html += buildMemberEntry(u, roles, memberRoles));
+  // No-role online members
+  const noRoleOnline = noRole.filter(u => isOnlineStatus(statusMap[u]));
+  if (noRoleOnline.length) {
+    html += `<div class="ml-role-header">Online <span class="ml-role-count">— ${noRoleOnline.length}</span></div>`;
+    noRoleOnline.forEach(u => html += buildMemberEntry(u, roles, memberRoles, statusMap[u]));
   }
+
+  // --- OFFLINE SECTION ---
+  const allOffline = [...ownerOffline];
+  sortedGroups.forEach(g => { allOffline.push(...g.members.filter(u => !isOnlineStatus(statusMap[u]))); });
+  allOffline.push(...noRole.filter(u => !isOnlineStatus(statusMap[u])));
+  if (allOffline.length) {
+    html += `<div class="ml-role-header" style="margin-top:8px;opacity:.5;">Offline <span class="ml-role-count">— ${allOffline.length}</span></div>`;
+    allOffline.forEach(u => html += buildMemberEntry(u, roles, memberRoles, statusMap[u], true));
+  }
+
   // Bots section
   if (deployedBots.length) {
     html += `<div class="ml-role-header"><img src="/fortized badges/bot.png" style="width:12px;height:12px;object-fit:contain;opacity:.5;"> Bots <span class="ml-role-count">— ${deployedBots.length}</span></div>`;
@@ -7330,13 +7376,13 @@ function _filterMemberList(query) {
   });
 }
 
-function buildMemberEntry(u, roles, memberRoles) {
+function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
   const rids = memberRoles[u] || [];
   const primaryRole = roles.find(r => rids.includes(r.id));
   const isMe = u === CU.username;
   const displayN = isMe ? (CU.displayName||CU.username) : u;
   const pfpSrc = isMe ? CU.pfp : (_pfpCache[u] || null);
-  const status = isMe ? (CU.status||'online') : 'online';
+  const status = knownStatus || (isMe ? (CU.status||'online') : 'online');
   // Deferred fetch for profile/status data
   if (!isMe) {
     setTimeout(() => {
@@ -7351,19 +7397,16 @@ function buildMemberEntry(u, roles, memberRoles) {
         if (!entry) return;
         const nameEl = entry.querySelector('.ml-name');
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
-        // Update avatar
         const avWrap = entry.querySelector('.ml-av-wrap');
         if (ud.pfp && avWrap) {
           const existingImg = avWrap.querySelector('img:not(.profile-status-dot)');
           if (!existingImg) avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(status)};border:2.5px solid rgba(12,14,24,.98);"></span>`;
         }
-        // Show badges
         const badgesEl = entry.querySelector('.ml-badges');
         if (badgesEl && typeof getUserBadges === 'function') {
           const badges = getUserBadges(ud).slice(0, 3);
           if (badges.length) badgesEl.innerHTML = badges.map(b => `<img src="${b.img}" title="${escapeHTML(b.tooltip||'')}" style="width:14px;height:14px;object-fit:contain;">`).join('');
         }
-        // Show custom status
         const csEl = entry.querySelector('.ml-custom-status');
         if (csEl && ud.customStatus) csEl.textContent = typeof ud.customStatus === 'object' ? (ud.customStatus.emoji||'') + ' ' + (ud.customStatus.text||'') : ud.customStatus;
       }).catch(()=>{});
@@ -7371,8 +7414,9 @@ function buildMemberEntry(u, roles, memberRoles) {
   }
   const staffRole = getStaffRole(u);
   const staffBadge = staffRole ? `<img src="/fortized badges/${staffRole === 'superadmin' ? 'superadmin' : staffRole === 'admin' ? 'admin' : 'moderator'}.png" style="width:14px;height:14px;object-fit:contain;" title="${staffRole}">` : '';
+  const dimStyle = isOffline ? 'opacity:.4;' : '';
 
-  return `<div class="ml-entry" data-member="${escapeHTML(u)}" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)">
+  return `<div class="ml-entry" data-member="${escapeHTML(u)}" data-status="${status}" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)" style="${dimStyle}">
     <div class="ml-av-wrap" style="position:relative;display:inline-flex;flex-shrink:0;">
       ${buildAvatarHTML(pfpSrc, displayN, 34)}
       <span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(status)};border:2.5px solid rgba(12,14,24,.98);"></span>
@@ -24493,46 +24537,17 @@ setTimeout(_hookLivePreviewOnInput, 800);
 // DRAG & DROP + PASTE UPLOAD
 // ════════════════════════════════════════════════════════
 function initDragDrop() {
-  // Global drag-drop overlay
-  const overlay = document.createElement('div');
-  overlay.className = 'drop-overlay global-drop';
-  overlay.innerHTML = '<div class="doi">📁</div><div class="dot">Drop files to upload</div>';
-  document.body.appendChild(overlay);
-
-  let _dragCounter = 0;
-  document.addEventListener('dragenter', e => {
-    e.preventDefault();
-    _dragCounter++;
-    // Only show if a chat is active
-    const inputId = curDM ? 'dm-input' : curGC ? 'gc-input' : curChannel !== null ? 'ch-input' : null;
-    if (inputId) overlay.classList.add('active');
-  });
-  document.addEventListener('dragover', e => {
-    e.preventDefault();
-  });
-  document.addEventListener('dragleave', e => {
-    _dragCounter--;
-    if (_dragCounter <= 0) {
-      _dragCounter = 0;
-      overlay.classList.remove('active');
-    }
-  });
-  document.addEventListener('drop', e => {
-    e.preventDefault();
-    _dragCounter = 0;
-    overlay.classList.remove('active');
-    const files = [...e.dataTransfer.files];
-    if (!files.length) return;
-    // Figure out current active input
-    const inputId = curDM ? 'dm-input' : curGC ? 'gc-input' : curChannel !== null ? 'ch-input' : null;
-    if (!inputId) { toast('Open a chat first', 'error'); return; }
-    processUploadedFile(files[0], inputId);
-  });
+  // Prevent default browser drag behavior globally (so files don't open in browser)
+  document.addEventListener('dragover', e => e.preventDefault());
+  document.addEventListener('drop', e => e.preventDefault());
+  // Drag-drop is handled per chat-input-outer via inline handlers (ondragover/ondrop)
 }
 
 function handleDropOnInput(e, inputId) {
   e.preventDefault();
-  document.querySelector('.drop-overlay')?.classList.remove('active');
+  e.stopPropagation();
+  const outer = document.getElementById(inputId + '-outer');
+  if (outer) { const ov = outer.querySelector('.drop-overlay'); if (ov) ov.classList.remove('active'); }
   const files = [...e.dataTransfer.files];
   if (!files.length) return;
   processUploadedFile(files[0], inputId);

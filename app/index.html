@@ -24,7 +24,7 @@
 <!-- NSFW scanning removed — TensorFlow/NSFWJS no longer loaded -->
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <style>
-:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.22);--bg:#0a0d14;--rail:#060810;--sidebar:#13161d;--sidebar-ctx:#0f1218;--channel:#0f1219;--panel:#161a23;--panel2:#1a1f29;--panel3:#1e2430;--border:#252d3d;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-xs:4px;--space-sm:8px;--space-md:14px;--space-lg:20px;--space-xl:28px;--space-2xl:40px;--space-3xl:56px;--font-ui:'DM Sans',sans-serif;--font-display:'Syne',sans-serif;--font-xs:10.5px;--font-sm:12px;--font-md:13.5px;--font-lg:16px;--font-xl:20px;--font-2xl:28px;--font-hdr:10px;--surface-1:rgba(255,255,255,.03);--surface-2:rgba(255,255,255,.06);--surface-3:rgba(255,255,255,.1);--surface-4:rgba(255,255,255,.15);--surface-border:rgba(255,255,255,.06);--surface-border-hover:rgba(255,255,255,.12);--state-success:var(--green);--state-danger:var(--red);--state-warning:var(--yellow);--state-info:var(--blue);--state-success-dim:rgba(62,207,110,.1);--state-danger-dim:rgba(248,113,113,.1);--state-warning-dim:rgba(245,158,11,.1);--state-info-dim:rgba(96,165,250,.1);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:22px;--radius-pill:100px;--elev-1:0 2px 8px rgba(0,0,0,.25);--elev-2:0 8px 24px rgba(0,0,0,.35);--elev-3:0 16px 42px rgba(0,0,0,.55);--ease-out:cubic-bezier(.22,1,.36,1);--shadow-sm:0 2px 8px rgba(0,0,0,.2);--shadow-md:0 8px 24px rgba(0,0,0,.3);--shadow-lg:0 16px 48px rgba(0,0,0,.45);}
+:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.08);--accent-mid:rgba(255,249,62,.18);--bg:#0c0f16;--rail:#080a12;--sidebar:#111318;--sidebar-ctx:#0e1016;--channel:#0e1017;--panel:#14171e;--panel2:#181c24;--panel3:#1c2028;--border:#1e2433;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-xs:4px;--space-sm:8px;--space-md:14px;--space-lg:20px;--space-xl:28px;--space-2xl:40px;--space-3xl:56px;--font-ui:'DM Sans',sans-serif;--font-display:'Syne',sans-serif;--font-xs:10.5px;--font-sm:12px;--font-md:13.5px;--font-lg:16px;--font-xl:20px;--font-2xl:28px;--font-hdr:10px;--surface-1:rgba(255,255,255,.03);--surface-2:rgba(255,255,255,.05);--surface-3:rgba(255,255,255,.08);--surface-4:rgba(255,255,255,.12);--surface-border:rgba(255,255,255,.05);--surface-border-hover:rgba(255,255,255,.1);--state-success:var(--green);--state-danger:var(--red);--state-warning:var(--yellow);--state-info:var(--blue);--state-success-dim:rgba(62,207,110,.08);--state-danger-dim:rgba(248,113,113,.08);--state-warning-dim:rgba(245,158,11,.08);--state-info-dim:rgba(96,165,250,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:22px;--radius-pill:100px;--elev-1:0 1px 4px rgba(0,0,0,.2);--elev-2:0 4px 16px rgba(0,0,0,.25);--elev-3:0 8px 32px rgba(0,0,0,.4);--ease-out:cubic-bezier(.22,1,.36,1);--shadow-sm:0 1px 4px rgba(0,0,0,.15);--shadow-md:0 4px 16px rgba(0,0,0,.2);--shadow-lg:0 8px 32px rgba(0,0,0,.35);}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;overflow:hidden;}
 body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:row;}
 ::selection{background:rgba(255,249,62,.2);}
@@ -36,13 +36,13 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 @keyframes msgFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .embed-link-card,.embed-x-card,.embed-invite-card,.embed-spotify-card{content-visibility:auto;contain-intrinsic-size:auto 120px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
-.sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:68px;align-items:center;}
+.sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:68px;align-items:center;border-right:none;}
 .sidebar-logo{width:100%;padding:12px 0 8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 .sidebar-logo-icon{width:48px;height:48px;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;transition:transform .2s cubic-bezier(.22,1,.36,1),filter .2s;flex-shrink:0;}
-.sidebar-logo:hover .sidebar-logo-icon{transform:scale(1.08);filter:drop-shadow(0 4px 12px rgba(255,249,62,.25));}
+.sidebar-logo:hover .sidebar-logo-icon{transform:scale(1.06);}
 .sidebar-logo-icon img{width:48px;height:48px;object-fit:contain;border-radius:0;}
 .sidebar-logo-text{display:none;}
-.sidebar-logo.active .sidebar-logo-icon{filter:drop-shadow(0 0 8px rgba(255,249,62,.3));}
+.sidebar-logo.active .sidebar-logo-icon{}
 .sidebar-nav{padding:6px 0;display:flex;flex-direction:column;gap:2px;flex-shrink:0;align-items:center;width:100%;}
 .rail-sep{height:2px;width:32px;background:rgba(255,255,255,.06);margin:6px auto;flex-shrink:0;border-radius:1px;}
 .rail-btn{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .16s cubic-bezier(.22,1,.36,1);position:relative;flex-shrink:0;font-size:0;font-weight:600;color:rgba(255,255,255,.45);}
@@ -257,10 +257,10 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 @keyframes vcPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.7);}}
 @keyframes voicePanelBg{0%{background-position:0 0;}100%{background-position:28px 28px;}}
 /* ── Secondary Sidebar (context panel) ────────────── */
-.sidebar-ctx{width:380px;min-width:380px;background:var(--sidebar-ctx);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid var(--border);}
+.sidebar-ctx{width:380px;min-width:380px;background:var(--sidebar-ctx);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid rgba(255,255,255,.04);}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
-.topbar{height:52px;background:var(--sidebar);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(20px);box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.topbar{height:52px;background:var(--sidebar);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;border-bottom:none;}
 .topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap;color:#fff;letter-spacing:-.01em;}
 .sidebar-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0;scroll-behavior:smooth;scrollbar-width:thin;}
 .sec-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 14px 5px;display:flex;align-items:center;justify-content:space-between;}
@@ -335,7 +335,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* Own profile mini panel — redesigned */
 .own-profile-panel{position:fixed;bottom:72px;left:76px;width:320px;background:var(--panel);border:1px solid var(--border);border-radius:14px;z-index:3000;box-shadow:0 24px 80px rgba(0,0,0,.9),0 0 1px rgba(255,255,255,.06);overflow:hidden;animation:ownPanelIn .2s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(24px);}
 @keyframes ownPanelIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
-.main{flex:1;min-width:0;display:flex;flex-direction:row;background:var(--bg);border-top-left-radius:14px;overflow:hidden;border-top:1px solid rgba(255,255,255,.05);border-left:1px solid rgba(255,255,255,.05);}
+.main{flex:1;min-width:0;display:flex;flex-direction:row;background:var(--bg);border-top-left-radius:16px;overflow:hidden;}
 .tb-sep{width:1px;height:18px;background:var(--border);margin:0 2px;}
 .tb-desc{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
 .tb-actions{margin-left:auto;display:flex;align-items:center;gap:6px;}
@@ -760,7 +760,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ml-badges{display:flex;align-items:center;gap:3px;margin-top:1px;}
 .ml-badges img{width:14px;height:14px;object-fit:contain;}
 .ml-custom-status{font-size:10px;color:rgba(255,255,255,.18);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;}
-.discover-scroll{flex:1;overflow-y:auto;padding:32px;scroll-behavior:smooth;}
+.discover-scroll{flex:1;overflow-y:auto;padding:28px;scroll-behavior:smooth;}
 .disc-hero{background:linear-gradient(135deg,rgba(14,18,30,.95),rgba(10,13,22,.98));border:1px solid rgba(255,249,62,.08);border-radius:16px;padding:36px 36px;margin-bottom:28px;position:relative;overflow:hidden;}
 .disc-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(255,249,62,.05),transparent 50%),radial-gradient(ellipse at 85% 80%,rgba(62,207,110,.03),transparent 45%);pointer-events:none;}
 .disc-hero h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;position:relative;display:flex;align-items:center;gap:10px;}
@@ -779,25 +779,25 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .disc-stats{display:flex;gap:20px;margin-top:14px;position:relative;}
 .disc-stat{font-size:12px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:5px;}
 .disc-stat strong{color:var(--accent);font-size:14px;font-weight:800;}
-.bastion-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
-.bc{background:linear-gradient(160deg,rgba(14,18,28,.92),rgba(10,13,20,.96));border:1px solid rgba(255,255,255,.06);border-radius:18px;overflow:hidden;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);position:relative;backdrop-filter:blur(16px);}
-.bc::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,249,62,.04),transparent 60%);opacity:0;transition:opacity .25s;pointer-events:none;z-index:1;}
-.bc:hover{border-color:rgba(255,249,62,.18);transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.4),0 0 20px rgba(255,249,62,.04);}
-.bc:hover::before{opacity:1;}
-.bc-banner{height:110px;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(62,207,110,.03),rgba(18,22,40,.9));display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;position:relative;}
-.bc-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(10,13,20,.85));pointer-events:none;}
+.bastion-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.bc{background:var(--panel);border:1px solid rgba(255,255,255,.05);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);position:relative;}
+.bc::before{display:none;}
+.bc:hover{border-color:rgba(255,255,255,.1);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.25);}
+.bc:hover::before{display:none;}
+.bc-banner{height:100px;background:linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.01));display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;position:relative;}
+.bc-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,var(--panel));pointer-events:none;}
 .bc-banner img{width:100%;height:100%;object-fit:cover;}
-.bc-body{padding:16px 18px 18px;}
-.bc-meta{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.bc-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--panel2),rgba(14,18,28,.95));border:3px solid rgba(10,13,20,.95);font-size:20px;display:flex;align-items:center;justify-content:center;margin-top:-32px;position:relative;z-index:2;flex-shrink:0;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.5);}
-.bc-icon img{width:100%;height:100%;object-fit:cover;border-radius:11px;}
-.bc-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:-.02em;line-height:1.2;}
-.bc-desc{font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-family:'DM Sans',sans-serif;}
-.bc-footer{display:flex;align-items:center;gap:8px;margin-top:6px;}
-.bc-footer .bc-members{font-size:11px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:5px;font-weight:500;}
-.bc-footer .bc-members svg{width:13px;height:13px;opacity:.45;}
-.bc-footer .bc-category{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);opacity:.5;margin-left:auto;}
-.bc-footer .bc-tag{display:inline-flex;padding:3px 10px;border-radius:100px;font-size:9px;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.4);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);}
+.bc-body{padding:14px 16px 16px;}
+.bc-meta{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.bc-icon{width:44px;height:44px;border-radius:12px;background:var(--panel2);border:3px solid var(--panel);font-size:18px;display:flex;align-items:center;justify-content:center;margin-top:-28px;position:relative;z-index:2;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+.bc-icon img{width:100%;height:100%;object-fit:cover;border-radius:9px;}
+.bc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:-.01em;line-height:1.2;}
+.bc-desc{font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-family:'DM Sans',sans-serif;}
+.bc-footer{display:flex;align-items:center;gap:8px;margin-top:4px;}
+.bc-footer .bc-members{font-size:10.5px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:4px;font-weight:500;}
+.bc-footer .bc-members svg{width:12px;height:12px;opacity:.4;}
+.bc-footer .bc-category{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-left:auto;}
+.bc-footer .bc-tag{display:inline-flex;padding:2px 8px;border-radius:100px;font-size:8.5px;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.35);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);}
 /* ── Bastion Mood 2027 ──────────────────────────── */
 .bastion-mood-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:2px 10px 4px;border-radius:14px;cursor:default;transition:all .3s cubic-bezier(.22,1,.36,1);font-size:11.5px;font-weight:600;position:relative;overflow:hidden;backdrop-filter:blur(8px);}
 .bastion-mood-bar:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.15);}
@@ -844,7 +844,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ci-preview .ci-mention{color:#60a5fa;font-weight:600;}
 .ci-preview .ci-room-ref{color:#a78bfa;font-weight:600;}
 /* ── Atelier ─────────────────────────────────────── */
-.atelier-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden;background:linear-gradient(180deg,#0c0f17,#0a0c14);}
+.atelier-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden;background:var(--bg);}
 .atelier-nav{display:none;}
 .atelier-nav-scroll{display:none;}
 .atelier-nav-section{display:none;}
@@ -947,36 +947,36 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .hq-quick-btn{padding:7px var(--space-md);border-radius:var(--radius-sm);border:1px solid var(--surface-border);background:var(--surface-1);color:rgba(255,255,255,.5);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
 .hq-quick-btn:hover{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);}
 @media(max-width:768px){.admin-nav{width:56px;min-width:56px;}.adm-tab span:last-child,.adm-sec-label{display:none;}.adm-tab{justify-content:center;padding:10px;}}
-.profile-wrap{flex:1;display:flex;overflow:hidden;background:linear-gradient(165deg,#0c0f18,#090c14);}
-/* Settings sidebar — Guilded/Fortized style */
-.profile-nav{width:240px;min-width:240px;background:linear-gradient(180deg,#0a0d14,#0b0e16);display:flex;flex-direction:column;padding:16px 0 16px;overflow-y:auto;border-right:1px solid rgba(254,248,61,.04);}
-.profile-nav-section{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(254,248,61,.35);padding:18px 22px 6px;}
-.profile-nav-item{display:flex;align-items:center;gap:11px;padding:9px 18px 9px 22px;cursor:pointer;font-size:13.5px;color:rgba(255,255,255,.45);transition:all .18s cubic-bezier(.22,1,.36,1);position:relative;border-radius:0;margin:1px 8px;border-radius:10px;}
-.profile-nav-item:hover{background:rgba(255,249,62,.04);color:rgba(255,255,255,.85);}
-.profile-nav-item.active{color:#fff;background:rgba(255,249,62,.06);}
-.profile-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:55%;background:var(--accent);border-radius:0 3px 3px 0;box-shadow:0 0 10px rgba(255,249,62,.5);}
-.profile-nav-item .pni-icon{font-size:15px;opacity:.5;flex-shrink:0;transition:opacity .15s;display:flex;align-items:center;justify-content:center;width:18px;height:18px;}
+.profile-wrap{flex:1;display:flex;overflow:hidden;background:var(--bg);}
+/* Settings sidebar — Discord-style clean nav */
+.profile-nav{width:232px;min-width:232px;background:var(--sidebar-ctx);display:flex;flex-direction:column;padding:12px 8px 12px;overflow-y:auto;border-right:1px solid rgba(255,255,255,.04);}
+.profile-nav-section{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);padding:16px 14px 5px;}
+.profile-nav-item{display:flex;align-items:center;gap:10px;padding:7px 14px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.45);transition:all .12s;position:relative;margin:1px 0;border-radius:6px;font-weight:500;}
+.profile-nav-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.85);}
+.profile-nav-item.active{color:#fff;background:rgba(255,255,255,.06);font-weight:600;}
+.profile-nav-item.active::before{display:none;}
+.profile-nav-item .pni-icon{opacity:.5;flex-shrink:0;transition:opacity .12s;display:flex;align-items:center;justify-content:center;width:18px;height:18px;}
 .profile-nav-item.active .pni-icon{opacity:1;}
-.profile-nav-item:hover .pni-icon{opacity:.8;}
-.profile-nav-sep{height:1px;background:rgba(255,249,62,.04);margin:10px 22px;}
+.profile-nav-item:hover .pni-icon{opacity:.75;}
+.profile-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 14px;}
 /* Main settings area */
-.profile-main{flex:1;overflow-y:auto;background:linear-gradient(165deg,#11141d,#0d1018);scroll-behavior:smooth;}
-.settings-panel{max-width:750px;padding:0 44px 60px;margin:0 auto;}
-.settings-section-title{font-size:var(--font-hdr);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(254,248,61,.4);margin-bottom:18px;padding-bottom:var(--space-sm);border-bottom:1px solid rgba(254,248,61,.06);}
-.settings-row{display:flex;align-items:flex-start;gap:18px;padding:18px;border:1px solid transparent;border-radius:var(--radius-lg);margin-bottom:var(--space-xs);transition:all .18s var(--ease-out);}
-.settings-row:hover{background:rgba(254,248,61,.015);border-color:rgba(254,248,61,.04);}
-.settings-row-label{width:165px;flex-shrink:0;}
-.settings-row-label .srl-name{font-size:13.5px;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:3px;}
-.settings-row-label .srl-desc{font-size:11.5px;color:rgba(255,255,255,.3);line-height:1.45;}
+.profile-main{flex:1;overflow-y:auto;background:var(--bg);scroll-behavior:smooth;}
+.settings-panel{max-width:720px;padding:0 40px 60px;margin:0 auto;}
+.settings-section-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.04);}
+.settings-row{display:flex;align-items:flex-start;gap:16px;padding:14px;border:1px solid transparent;border-radius:12px;margin-bottom:2px;transition:all .12s;}
+.settings-row:hover{background:rgba(255,255,255,.02);}
+.settings-row-label{width:160px;flex-shrink:0;}
+.settings-row-label .srl-name{font-size:13px;font-weight:600;color:rgba(255,255,255,.75);margin-bottom:2px;}
+.settings-row-label .srl-desc{font-size:11px;color:rgba(255,255,255,.3);line-height:1.4;}
 .settings-row-content{flex:1;min-width:0;}
 /* Refined input */
-.settings-input{width:100%;padding:11px 16px;background:var(--surface-1);border:1.5px solid var(--surface-border);border-radius:var(--radius-md);color:#fff;font-family:'DM Sans',sans-serif;font-size:var(--font-md);outline:none;transition:all .2s var(--ease-out);box-sizing:border-box;}
-.settings-input:focus{border-color:rgba(254,248,61,.3);box-shadow:0 0 0 3px rgba(254,248,61,.05);background:rgba(255,255,255,.04);}
-.settings-input::placeholder{color:rgba(255,255,255,.18);}
+.settings-input{width:100%;padding:10px 14px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .15s;box-sizing:border-box;}
+.settings-input:focus{border-color:rgba(254,248,61,.25);}
+.settings-input::placeholder{color:rgba(255,255,255,.15);}
 .settings-input:disabled{opacity:.35;cursor:not-allowed;}
-/* Pill save button */
-.settings-save-btn{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#fef83d,#e6e034);color:#060810;border:none;border-radius:var(--radius-md);padding:10px 22px;font-family:'Syne',sans-serif;font-size:var(--font-sm);font-weight:800;cursor:pointer;transition:all .2s var(--ease-out);box-shadow:0 2px 12px rgba(254,248,61,.2);}
-.settings-save-btn:hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:var(--shadow-md);}
+/* Save button */
+.settings-save-btn{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#060810;border:none;border-radius:8px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;}
+.settings-save-btn:hover{filter:brightness(1.06);transform:translateY(-1px);}
 .settings-save-btn:active{transform:translateY(0);}
 .settings-save-btn-ghost{display:inline-flex;align-items:center;gap:5px;background:transparent;color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:5px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
 .settings-save-btn-ghost:hover{border-color:rgba(255,255,255,.25);color:#fff;}
@@ -1368,19 +1368,19 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .emoji-tooltip .et-cat{font-size:10.5px;color:rgba(255,249,62,.45);font-weight:600;margin-top:6px;}
 .msg-emoji,.msg-emoji-native{cursor:pointer;transition:transform .1s;border-radius:3px;}
 .msg-emoji:hover,.msg-emoji-native:hover{transform:scale(1.2);background:rgba(255,255,255,.06);}
-.cloud-status-bubble{position:relative;display:inline-flex;align-items:center;gap:6px;padding:var(--space-sm) var(--space-md);background:var(--surface-2);border:1.5px solid var(--surface-border-hover);border-radius:18px 18px 18px 4px;font-size:var(--font-sm);color:rgba(255,255,255,.55);max-width:260px;box-shadow:var(--shadow-sm);backdrop-filter:blur(8px);transition:border-color .2s var(--ease-out),box-shadow .2s var(--ease-out);}
+.cloud-status-bubble{position:relative;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:11px;color:rgba(255,255,255,.5);max-width:260px;transition:background .15s,border-color .15s;}
 /* Userbar custom status speech bubble — looks like the PFP is talking */
-.ua-custom-status-bubble{display:none;align-items:center;gap:5px;padding:5px 10px;margin:6px 8px 2px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px 12px 12px 4px;font-size:10.5px;color:rgba(255,255,255,.55);position:relative;backdrop-filter:blur(8px);max-width:calc(100% - 16px);box-sizing:border-box;overflow:visible;}
+.ua-custom-status-bubble{display:none;align-items:center;gap:5px;padding:4px 10px;margin:6px 8px 2px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:10.5px;color:rgba(255,255,255,.5);position:relative;max-width:calc(100% - 16px);box-sizing:border-box;overflow:hidden;}
 .ua-custom-status-bubble.active{display:inline-flex;animation:csb-pop .25s cubic-bezier(.22,1,.36,1);}
-.ua-custom-status-bubble::after{content:'';position:absolute;bottom:-5px;left:14px;width:8px;height:8px;background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.08);border-left:1px solid rgba(255,255,255,.08);border-radius:0 0 0 3px;transform:skewY(-15deg);}
+.ua-custom-status-bubble::after{display:none;}
 .ua-custom-status-bubble .csb-emoji{flex-shrink:0;}
 .ua-custom-status-bubble .csb-emoji img{width:13px;height:13px;object-fit:contain;}
 .ua-custom-status-bubble .csb-text{font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 @keyframes csb-pop{0%{opacity:0;transform:scale(.9) translateY(4px);}100%{opacity:1;transform:scale(1) translateY(0);}}
-.cloud-status-bubble:hover{border-color:rgba(255,249,62,.15);box-shadow:0 6px 20px rgba(0,0,0,.2);}
-.cloud-status-bubble::after{content:'';position:absolute;bottom:-6px;left:12px;width:10px;height:10px;background:var(--surface-2);border-bottom:1.5px solid var(--surface-border-hover);border-left:1.5px solid var(--surface-border-hover);border-radius:0 0 0 4px;transform:skewY(-15deg);}
-.cloud-status-bubble .csb-emoji{font-size:var(--font-lg);flex-shrink:0;}
-.cloud-status-bubble .csb-emoji img{width:18px;height:18px;object-fit:contain;}
+.cloud-status-bubble:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);}
+.cloud-status-bubble::after{display:none;}
+.cloud-status-bubble .csb-emoji{font-size:13px;flex-shrink:0;}
+.cloud-status-bubble .csb-emoji img{width:14px;height:14px;object-fit:contain;}
 .cloud-status-bubble .csb-text{font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 /* Mobile bottom-sheet context menu */
 @media(max-width:768px){
@@ -1895,32 +1895,32 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* Mini profile preview (first click on avatar in chat) */
 /* ── MINI PROFILE PREVIEW — redesigned ────────────── */
 /* ── Mini Profile Preview (popup card) ── */
-.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:20px;z-index:4000;box-shadow:0 32px 80px rgba(0,0,0,.9),0 12px 32px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.03);overflow:hidden;overflow-y:auto;max-height:calc(100vh - 32px);animation:mppSlideIn .26s cubic-bezier(.22,1,.36,1);width:350px;backdrop-filter:blur(24px);}
-@keyframes mppSlideIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
-.mpp-banner{height:100px;position:relative;overflow:hidden;}
-.mpp-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,rgba(11,13,23,.35) 55%,transparent 100%);}
-.mpp-av-row{display:flex;align-items:flex-end;gap:12px;padding:0 18px;margin-top:-36px;position:relative;z-index:2;}
-.mpp-av{width:76px;height:76px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:var(--panel2);flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,.7);transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s;}
-.mpp-av:hover{transform:scale(1.06);box-shadow:0 8px 28px rgba(0,0,0,.8);}
+.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:16px;z-index:4000;box-shadow:0 16px 48px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.3);overflow:hidden;overflow-y:auto;max-height:calc(100vh - 32px);animation:mppSlideIn .2s cubic-bezier(.22,1,.36,1);width:340px;}
+@keyframes mppSlideIn{from{opacity:0;transform:scale(.97) translateY(6px)}to{opacity:1;transform:none}}
+.mpp-banner{height:90px;position:relative;overflow:hidden;}
+.mpp-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,rgba(11,13,23,.3) 50%,transparent 100%);}
+.mpp-av-row{display:flex;align-items:flex-end;gap:12px;padding:0 16px;margin-top:-32px;position:relative;z-index:2;}
+.mpp-av{width:68px;height:68px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:var(--panel2);flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.4);transition:transform .15s cubic-bezier(.22,1,.36,1);}
+.mpp-av:hover{transform:scale(1.04);}
 .mpp-badges{display:flex;flex-wrap:wrap;gap:1px;padding-bottom:8px;justify-content:flex-end;flex:1;min-width:0;}
 .mini-profile-preview .mpp-name-block{padding:8px 20px 0;}
-.mini-profile-preview .mpp-displayname{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;cursor:pointer;transition:color .14s,text-shadow .14s;line-height:1.2;display:flex;align-items:center;gap:6px;}
-.mini-profile-preview .mpp-displayname:hover{color:var(--accent);text-shadow:0 0 20px rgba(255,249,62,.15);}
+.mini-profile-preview .mpp-displayname{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;cursor:pointer;transition:color .12s;line-height:1.2;display:flex;align-items:center;gap:6px;}
+.mini-profile-preview .mpp-displayname:hover{color:var(--accent);}
 .mini-profile-preview .mpp-username{font-size:12px;color:rgba(255,255,255,.25);font-weight:500;margin-top:3px;letter-spacing:.01em;}
 .mini-profile-preview .mpp-status-row{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;}
 .mini-profile-preview .mpp-status-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.04);border-radius:100px;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);backdrop-filter:blur(8px);}
 .mini-profile-preview .mpp-status-pill .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.mini-profile-preview .mpp-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);margin:12px 20px;}
-.mini-profile-preview .mpp-section{padding:6px 20px;}
-.mini-profile-preview .mpp-section-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.18);margin-bottom:6px;}
-.mini-profile-preview .mpp-section-body{font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.6;}
-.mini-profile-preview .mpp-note{font-size:12px;color:rgba(255,255,255,.35);font-style:italic;padding:6px 20px;}
-.mini-profile-preview .mpp-actions{padding:14px 20px;display:flex;gap:7px;}
-.mini-profile-preview .mpp-btn-primary{flex:1;padding:11px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 8px rgba(255,249,62,.12);}
-.mini-profile-preview .mpp-btn-primary:hover{filter:brightness(1.12);transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,249,62,.3);}
-.mini-profile-preview .mpp-btn-primary:active{transform:translateY(0);box-shadow:0 2px 6px rgba(255,249,62,.15);}
-.mini-profile-preview .mpp-btn-secondary{flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;color:rgba(255,255,255,.6);font-size:12px;font-weight:600;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;gap:6px;}
-.mini-profile-preview .mpp-btn-secondary:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);transform:translateY(-2px);color:rgba(255,255,255,.85);}
+.mini-profile-preview .mpp-divider{height:1px;background:rgba(255,255,255,.05);margin:10px 16px;}
+.mini-profile-preview .mpp-section{padding:4px 16px;}
+.mini-profile-preview .mpp-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:5px;}
+.mini-profile-preview .mpp-section-body{font-size:12px;color:rgba(255,255,255,.5);line-height:1.55;}
+.mini-profile-preview .mpp-note{font-size:11.5px;color:rgba(255,255,255,.3);font-style:italic;padding:4px 16px;}
+.mini-profile-preview .mpp-actions{padding:12px 16px;display:flex;gap:6px;}
+.mini-profile-preview .mpp-btn-primary{flex:1;padding:9px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11.5px;font-weight:800;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.mini-profile-preview .mpp-btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);}
+.mini-profile-preview .mpp-btn-primary:active{transform:translateY(0);}
+.mini-profile-preview .mpp-btn-secondary{flex:1;padding:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.55);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.mini-profile-preview .mpp-btn-secondary:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.8);}
 .mini-profile-preview .mpp-btn-secondary:active{transform:translateY(0);}
 .mini-profile-preview .mpp-mutual-av{width:28px;height:28px;border-radius:50%;overflow:hidden;border:2.5px solid var(--panel);margin-left:-6px;transition:transform .15s,box-shadow .15s;cursor:pointer;}
 .mini-profile-preview .mpp-mutual-av:first-child{margin-left:0;}
@@ -2329,7 +2329,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
       <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;">Onyx</span>
     </div>
     <div class="tb-search">
-      <span>🔍</span>
+      <span style="display:flex;align-items:center;color:var(--muted);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
       <input type="text" placeholder="Search bastions, friends…" id="search-input" oninput="handleSearch(this.value)" aria-label="Search bastions and friends">
     </div>
   </div>
@@ -2345,7 +2345,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <div class="sidebar-scroll" id="sidebar-scroll"></div>
     <div class="voice-connected-bar" id="voice-connected-bar">
       <div class="vcb-top">
-        <span class="vcb-name" id="vcb-channel-name">🎙 Connected</span>
+        <span class="vcb-name" id="vcb-channel-name"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Connected</span>
         <button class="vcb-disc" onclick="disconnectVoice()">Disconnect</button>
       </div>
       <div class="vcb-participants" id="vcb-participants"></div>
@@ -2424,43 +2424,29 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
       <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
         <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
           <div style="max-width:900px;">
-            <!-- Unified header with multi-stat bar -->
-            <div class="uv-header" style="border-color:rgba(254,248,61,.1);min-height:200px;">
-              <img src="/Fortized banner4.png" class="uv-header-bg" onerror="this.style.display='none'">
-              <div class="uv-header-grad"></div>
-              <div class="uv-header-glow"></div>
-              <div class="uv-header-content" style="flex-direction:column;align-items:flex-start;gap:14px;min-height:200px;padding-bottom:24px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-                  <div class="uv-header-left">
-                    <div class="uv-header-icon" style="background:rgba(254,248,61,.1);border-color:rgba(254,248,61,.18);">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </div>
-                    <div>
-                      <div class="uv-header-title" style="font-size:24px;">Friends</div>
-                      <div class="uv-header-sub">Conversations, friends & connections</div>
-                    </div>
-                  </div>
-                  <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 18px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
-                </div>
-                <!-- Multi-stat bar -->
-                <div id="dm-stat-bar" style="display:flex;gap:20px;margin-top:auto;">
-                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.35);"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(62,207,110,.4);"></span> <span id="dm-stat-online" style="font-weight:700;color:var(--green);">0</span> Online</div>
-                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.35);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> <span id="dm-stat-total" style="font-weight:700;color:rgba(255,255,255,.6);">0</span> Total</div>
-                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.35);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> <span id="dm-stat-bastions" style="font-weight:700;color:rgba(255,255,255,.6);">0</span> Bastions</div>
+            <!-- Clean friends header -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+              <div>
+                <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;">Friends</h2>
+                <div id="dm-stat-bar" style="display:flex;gap:16px;margin-top:4px;">
+                  <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,.35);"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span> <span id="dm-stat-online" style="font-weight:700;color:var(--green);">0</span> Online</span>
+                  <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,.3);"><span id="dm-stat-total" style="font-weight:600;">0</span> Total</span>
+                  <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,.3);"><span id="dm-stat-bastions" style="font-weight:600;">0</span> Bastions</span>
                 </div>
               </div>
+              <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:10px;display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
             </div>
-            <!-- Tabs + Search flush row -->
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-              <div id="dm-friends-tabs" style="display:flex;gap:5px;">
+            <!-- Tabs + Search -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
+              <div id="dm-friends-tabs" style="display:flex;gap:4px;">
                 <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">Online</button>
                 <button class="disc-tab" onclick="dmFriendsFilter('all',this)">All</button>
                 <button class="disc-tab" onclick="dmFriendsFilter('pending',this)">Pending</button>
               </div>
               <div style="flex:1;"></div>
-              <div style="position:relative;width:200px;">
-                <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);pointer-events:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-                <input type="text" id="dm-friends-search" placeholder="Search..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:7px 12px 7px 32px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:all .15s;" onfocus="this.style.borderColor='rgba(254,248,61,.2)';this.style.background='rgba(255,255,255,.05)'" onblur="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'">
+              <div style="position:relative;width:180px;">
+                <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);pointer-events:none;display:flex;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+                <input type="text" id="dm-friends-search" placeholder="Search..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:7px 10px 7px 30px;border-radius:8px;border:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.15);color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='rgba(254,248,61,.2)'" onblur="this.style.borderColor='rgba(255,255,255,.05)'">
               </div>
             </div>
             <div id="dm-friends-list"></div>
@@ -2479,9 +2465,9 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <div class="view" id="view-friends">
       <div style="flex:1;overflow-y:auto;padding:28px;">
         <div style="max-width:700px;">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;">
-            <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;">Friends</h2>
-            <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:13px;padding:8px 16px;">+ Add Friend</button>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;">
+            <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;">Friends</h2>
+            <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:7px 14px;border-radius:8px;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Friend</button>
           </div>
           <div id="friends-tabs" style="display:flex;gap:5px;margin-bottom:20px;">
             <button class="disc-tab active" onclick="filterFriends('all',this)">All</button>
@@ -2497,7 +2483,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <div class="view" id="view-bastion">
       <div class="chat-wrap" id="bastion-chat-wrap">
         <div class="empty-state">
-          <div class="ei">🏰</div>
+          <div class="ei" style="font-size:48px;color:rgba(255,255,255,.15);"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l3-4 3 4v14"/><path d="M13 21V7l3-4 3 4v14"/><rect x="9" y="17" width="2" height="4"/><rect x="4" y="10" width="2" height="3"/><rect x="14" y="10" width="2" height="3"/></svg></div>
           <h3>Select a channel</h3>
           <p>Pick a text channel from the sidebar to start chatting.</p>
         </div>
@@ -2508,40 +2494,31 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <!-- DISCOVER VIEW -->
     <div class="view" id="view-discover">
       <div class="discover-scroll">
-        <!-- Unified header -->
-        <div class="uv-header">
-          <img src="/Fortized banner2.png" class="uv-header-bg" onerror="this.style.display='none'">
-          <div class="uv-header-grad"></div>
-          <div class="uv-header-glow"></div>
-          <div class="uv-header-content" style="flex-direction:column;align-items:flex-start;gap:16px;">
+        <!-- Clean header -->
+        <div style="margin-bottom:24px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <div>
-              <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
-                <div class="uv-header-icon" style="background:rgba(254,248,61,.12);border-color:rgba(254,248,61,.2);">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
-                </div>
-                <div>
-                  <div class="uv-header-title">Discover Bastions</div>
-                  <div class="uv-header-sub">Explore communities, find your people, join the conversation.</div>
-                </div>
-              </div>
+              <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;">Discover</h2>
+              <p style="font-size:13px;color:rgba(255,255,255,.35);margin:0;">Find communities to join and explore</p>
             </div>
-            <div class="disc-search" style="max-width:460px;width:100%;">
-              <span class="si"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-              <input type="text" placeholder="Search public bastions..." id="disc-search-input" oninput="filterDiscover(this.value)">
+            <div class="disc-search" style="width:280px;">
+              <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+              <input type="text" placeholder="Search bastions..." id="disc-search-input" oninput="filterDiscover(this.value)">
             </div>
           </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <button class="disc-tab active" onclick="setDiscoverTab('all',this)">All</button>
+            <button class="disc-tab" onclick="setDiscoverTab('gaming',this)">Gaming</button>
+            <button class="disc-tab" onclick="setDiscoverTab('art',this)">Art</button>
+            <button class="disc-tab" onclick="setDiscoverTab('tech',this)">Tech</button>
+            <button class="disc-tab" onclick="setDiscoverTab('social',this)">Social</button>
+            <button class="disc-tab" onclick="setDiscoverTab('music',this)">Music</button>
+            <button class="disc-tab" onclick="setDiscoverTab('education',this)">Education</button>
+            <div style="flex:1;"></div>
+            <div class="disc-stats" id="disc-stats" style="display:flex;gap:12px;"></div>
+          </div>
         </div>
-        <div class="disc-tabs" style="margin-bottom:20px;display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="disc-tab active" onclick="setDiscoverTab('all',this)">All</button>
-          <button class="disc-tab" onclick="setDiscoverTab('gaming',this)">Gaming</button>
-          <button class="disc-tab" onclick="setDiscoverTab('art',this)">Art</button>
-          <button class="disc-tab" onclick="setDiscoverTab('tech',this)">Tech</button>
-          <button class="disc-tab" onclick="setDiscoverTab('social',this)">Social</button>
-          <button class="disc-tab" onclick="setDiscoverTab('music',this)">Music</button>
-          <button class="disc-tab" onclick="setDiscoverTab('education',this)">Education</button>
-        </div>
-        <div class="disc-stats" id="disc-stats" style="margin-bottom:20px;"></div>
-        <div id="disc-featured" style="margin-bottom:24px;"></div>
+        <div id="disc-featured" style="margin-bottom:20px;"></div>
         <div class="bastion-grid" id="discover-grid"></div>
       </div>
     </div>
@@ -2550,34 +2527,22 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <div class="view" id="view-atelier">
       <div class="atelier-wrap">
         <div class="atelier-scroll" id="atelier-scroll-outer" style="flex:1;overflow-y:auto;padding:28px;scroll-behavior:smooth;">
-          <!-- Unified header -->
-          <div class="uv-header" style="border-color:rgba(254,248,61,.1);">
-            <img src="/Onyx banner.png" class="uv-header-bg" onerror="this.style.display='none'">
-            <div class="uv-header-grad"></div>
-            <div class="uv-header-glow"></div>
-            <div class="uv-header-content">
-              <div class="uv-header-left">
-                <div class="uv-header-icon" style="background:rgba(254,248,61,.1);border-color:rgba(254,248,61,.18);">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                </div>
-                <div>
-                  <div class="uv-header-title">Atelier</div>
-                  <div class="uv-header-sub">Your Fortized store & rewards</div>
-                </div>
-              </div>
-              <div class="uv-header-actions">
-                <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.4);border:1px solid rgba(254,248,61,.12);border-radius:16px;padding:10px 16px;backdrop-filter:blur(12px);">
-                  <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;">
-                  <div>
-                    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">0</div>
-                    <div style="font-size:9.5px;color:rgba(255,255,255,.3);margin-top:2px;">Onyx</div>
-                  </div>
-                </div>
+          <!-- Clean header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div>
+              <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;">Atelier</h2>
+              <p style="font-size:13px;color:rgba(255,255,255,.35);margin:0;">Your store, rewards & subscriptions</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:8px 14px;">
+              <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;">
+              <div>
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">0</div>
+                <div style="font-size:9px;color:rgba(255,255,255,.25);margin-top:1px;">Onyx</div>
               </div>
             </div>
           </div>
           <!-- Tabs -->
-          <div class="atelier-tabs" style="padding:0;margin-bottom:24px;">
+          <div class="atelier-tabs" style="padding:0;margin-bottom:20px;">
             <button class="disc-tab active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">Overview</button>
             <button class="disc-tab" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">Radiance</button>
             <button class="disc-tab" id="atnav-quests" onclick="switchAtelierTab('quests',this)">Quests</button>
@@ -2701,22 +2666,22 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Choose a template</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;" id="template-grid">
           <div class="tmpl-card" id="tmpl-gaming" onclick="selectBastionTemplate('gaming','🎮','Game Hall')">
-            <div class="tmpl-emoji">🎮</div><div class="tmpl-name">Game Hall</div><div class="tmpl-desc">Play together</div>
+            <div class="tmpl-emoji" style="font-size:28px;color:rgba(255,255,255,.7);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4"/><path d="M8 10v4"/><circle cx="17" cy="10" r="1"/><circle cx="15" cy="13" r="1"/></svg></div><div class="tmpl-name">Game Hall</div><div class="tmpl-desc">Play together</div>
           </div>
           <div class="tmpl-card" id="tmpl-fellowship" onclick="selectBastionTemplate('fellowship','🤝','Fellowship')">
-            <div class="tmpl-emoji">🤝</div><div class="tmpl-name">Fellowship</div><div class="tmpl-desc">Friends &amp; community</div>
+            <div class="tmpl-emoji" style="font-size:28px;color:rgba(255,255,255,.7);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="tmpl-name">Fellowship</div><div class="tmpl-desc">Friends &amp; community</div>
           </div>
           <div class="tmpl-card" id="tmpl-guild" onclick="selectBastionTemplate('guild','⚔️','Guild')">
-            <div class="tmpl-emoji">⚔️</div><div class="tmpl-name">Guild</div><div class="tmpl-desc">Team &amp; coordination</div>
+            <div class="tmpl-emoji" style="font-size:28px;color:rgba(255,255,255,.7);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="m16 16 3.5 3.5"/><path d="m19 19 2 2"/></svg></div><div class="tmpl-name">Guild</div><div class="tmpl-desc">Team &amp; coordination</div>
           </div>
           <div class="tmpl-card" id="tmpl-study" onclick="selectBastionTemplate('study','📚','Study Circle')">
-            <div class="tmpl-emoji">📚</div><div class="tmpl-name">Study Circle</div><div class="tmpl-desc">Learn together</div>
+            <div class="tmpl-emoji" style="font-size:28px;color:rgba(255,255,255,.7);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="tmpl-name">Study Circle</div><div class="tmpl-desc">Learn together</div>
           </div>
           <div class="tmpl-card" id="tmpl-artisan" onclick="selectBastionTemplate('artisan','🎨','Artisans')">
-            <div class="tmpl-emoji">🎨</div><div class="tmpl-name">Artisans</div><div class="tmpl-desc">Create &amp; showcase</div>
+            <div class="tmpl-emoji" style="font-size:28px;color:rgba(255,255,255,.7);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg></div><div class="tmpl-name">Artisans</div><div class="tmpl-desc">Create &amp; showcase</div>
           </div>
           <div class="tmpl-card" id="tmpl-academy" onclick="selectBastionTemplate('academy','🎓','Academy')">
-            <div class="tmpl-emoji">🎓</div><div class="tmpl-name">Academy</div><div class="tmpl-desc">Teaching &amp; courses</div>
+            <div class="tmpl-emoji" style="font-size:28px;color:rgba(255,255,255,.7);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 10 5-10 5L2 8z"/><path d="M19.5 12v5.5L12 21l-7.5-3.5V12"/><path d="M22 8v5"/></svg></div><div class="tmpl-name">Academy</div><div class="tmpl-desc">Teaching &amp; courses</div>
           </div>
         </div>
         <div class="modal-actions">
@@ -2741,10 +2706,10 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         </div>
         <div class="vis-toggle" style="margin-bottom:12px;">
           <div class="vis-opt active" id="vis-public" onclick="setCBVis('public')">
-            <div style="font-size:20px;">🌍</div><div style="font-size:12px;font-weight:700;">Public</div>
+            <div style="font-size:20px;color:rgba(255,255,255,.6);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div style="font-size:12px;font-weight:700;">Public</div>
           </div>
           <div class="vis-opt" id="vis-private" onclick="setCBVis('private')">
-            <div style="font-size:20px;">🔒</div><div style="font-size:12px;font-weight:700;">Private</div>
+            <div style="font-size:20px;color:rgba(255,255,255,.6);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div style="font-size:12px;font-weight:700;">Private</div>
           </div>
         </div>
         <div style="margin-bottom:12px;">
@@ -2767,7 +2732,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   <div class="modal" style="max-width:480px;width:100%;">
     <div class="modal-bar"></div>
     <div class="modal-body">
-      <div class="modal-title">💬 New Message</div>
+      <div class="modal-title" style="display:flex;align-items:center;gap:8px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> New Message</div>
       <div class="modal-sub">Start a direct message or create a group chat</div>
       <!-- Tabs -->
       <div style="display:flex;gap:6px;margin-bottom:16px;background:var(--panel2);border-radius:12px;padding:4px;">
@@ -2920,12 +2885,60 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
 <!-- UNSAVED CHANGES BAR -->
 <div class="unsaved-bar" id="unsaved-bar">
-  <div class="unsaved-bar-msg">⚠️ <strong>Careful!</strong> You have unsaved changes.</div>
+  <div class="unsaved-bar-msg"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> <strong>Careful!</strong> You have unsaved changes.</div>
   <button class="unsaved-bar-reset" onclick="resetSettingsChanges()">Reset</button>
   <button class="unsaved-bar-save" onclick="saveAllSettings()">Save Changes</button>
 </div>
 
 <script>
+
+// ══════════════════════════════════════════════════════════
+// SVG ICON SYSTEM  (replaces emoji icons throughout the UI)
+// ══════════════════════════════════════════════════════════
+const _svgIcons = {
+  castle:     `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l3-4 3 4v14"/><path d="M13 21V7l3-4 3 4v14"/><rect x="9" y="17" width="2" height="4"/><rect x="4" y="10" width="2" height="3"/><rect x="14" y="10" width="2" height="3"/></svg>`,
+  chat:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+  users:      `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  sword:      `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="m16 16 3.5 3.5"/><path d="m19 19 2 2"/></svg>`,
+  gamepad:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4"/><path d="M8 10v4"/><circle cx="17" cy="10" r="1"/><circle cx="15" cy="13" r="1"/></svg>`,
+  palette:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"/><circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"/><circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"/><circle cx="6.5" cy="12" r="0.5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>`,
+  shield:     `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  image:      `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+  gem:        `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M2 9h20"/><path d="m10 3 2 6"/><path d="m14 3-2 6"/><path d="m6 3 6 6 6-6"/></svg>`,
+  gift:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>`,
+  bell:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+  bellOff:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`,
+  warning:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  clip:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>`,
+  pencil:     `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  trash:      `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+  star:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  globe:      `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  lock:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  plus:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  clipboard:  `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>`,
+  handshake:  `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 3-3 2 2 4-4 6 6-5 5"/><path d="M14 4l3 3"/><path d="M7 4l-3 3"/><path d="m2 12 3-3"/><path d="m19 12 3-3"/></svg>`,
+  book:       `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+  gradcap:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 10 5-10 5L2 8z"/><path d="M19.5 12v5.5L12 21l-7.5-3.5V12"/><path d="M22 8v5"/></svg>`,
+  mic:        `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
+  megaphone:  `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>`,
+  ballot:     `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>`,
+  muted:      `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`,
+  speaker:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`,
+  chartUp:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+  letters:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18V6l4 12 4-12v12"/><path d="M17 6h4m-2 0v12"/></svg>`,
+  plane:      `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
+  dumbbell:   `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>`,
+  addUser:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>`,
+  construction:`<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/></svg>`,
+};
+
+function ftzIcon(name, size) {
+  const svg = _svgIcons[name];
+  if (!svg) return '';
+  if (!size) return svg;
+  return svg.replace(/width="1em"/, `width="${size}"`).replace(/height="1em"/, `height="${size}"`);
+}
 
 // ══════════════════════════════════════════════════════════
 // COMPANION BRIDGE  (localhost process scanner)
@@ -3935,32 +3948,32 @@ function updateSidebar(v) {
     if (hdr) hdr.style.display = '';
     if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
     if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New DM">✏️</button>
-      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="Add Friend">➕</button>`;
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="New DM" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="Add Friend" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>`;
     renderDMSidebar(scroll);
   } else if (v==='dms' || v==='friends') {
     if (hdr) hdr.style.display = '';
     if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
     if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New DM">✏️</button>
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('gc')" style="background:transparent;border:none;color:var(--muted);font-size:14px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New Group Chat">👥</button>
-      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="Add Friend">➕</button>`;
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="New DM" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('gc')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="New Group Chat" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="Add Friend" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>`;
     renderDMSidebar(scroll);
     if (v==='friends') { setTimeout(() => renderFriendsList('all'), 0); }
   } else if (v==='discover') {
     if (hdr) hdr.style.display = '';
     if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
     if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New DM">✏️</button>
-      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="Add Friend">➕</button>`;
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="New DM" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">${ftzIcon('pencil','14')}</button>
+      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="Add Friend" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">${ftzIcon('addUser','14')}</button>`;
     renderDMSidebar(scroll);
     loadDiscover();
   } else if (v==='atelier') {
     if (hdr) hdr.style.display = '';
     if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
     if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="New DM">✏️</button>
-      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;" title="Add Friend">➕</button>`;
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="New DM" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">${ftzIcon('pencil','14')}</button>
+      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="Add Friend" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">${ftzIcon('addUser','14')}</button>`;
     renderDMSidebar(scroll);
     const ab = document.getElementById('atelier-balance');
     if (ab) ab.textContent = CU?.onyx||0;
@@ -4071,7 +4084,7 @@ function _updateUserbarActivity() {
     row.classList.add('active');
     row.style.display = '';
     nameEl.textContent = _gameActivity.name;
-    if (iconEl) iconEl.innerHTML = '<span style="font-size:15px;">' + (_gameActivity.icon || '🎮') + '</span>';
+    if (iconEl) iconEl.innerHTML = '<span style="font-size:15px;">' + (_gameActivity.icon || ftzIcon('gamepad','15')) + '</span>';
     if (actionBtn) {
       actionBtn.title = 'Stop Activity';
       actionBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
@@ -4432,7 +4445,7 @@ function renderHomePanel() {
     } else {
       realmB.innerHTML = `
         <div class="realm-card" onclick="openModal('modal-create-bastion')" style="border-style:dashed;border-color:rgba(255,249,62,.12);min-width:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;">
-          <div style="font-size:28px;margin-bottom:10px;">🏰</div>
+          <div style="font-size:28px;margin-bottom:10px;color:var(--accent);">${ftzIcon('castle','28')}</div>
           <div class="rc-name" style="color:var(--accent);">Create Your First Bastion</div>
           <div class="rc-meta">Build your fortress, invite your allies</div>
         </div>
@@ -6121,10 +6134,10 @@ function renderBastionSidebar(scroll) {
     const fu = getChannelUnread(curBastion, ri);
     const fuClass = fu.count > 0 && curChannel !== ri ? ' unread' : '';
     forumHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${fuClass}" id="ch-sb-${ri}" onclick="openForumChannel(${ri})">
-      <span class="ch-hash">💬</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+      <span class="ch-hash">${ftzIcon('chat','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
-  if (forumHTML||canManageChannels) html+=catWrap('forum','💬','FORUM ROOMS','forum',forumHTML);
+  if (forumHTML||canManageChannels) html+=catWrap('forum',ftzIcon('chat','12'),'FORUM ROOMS','forum',forumHTML);
 
   // Voice
   let voiceHTML='';
@@ -6132,11 +6145,11 @@ function renderBastionSidebar(scroll) {
     if (ch.type!=='voice') return;
     const live=voiceConnected&&voiceChannel===i;
     voiceHTML+=`<div class="vc-item-2027 ${live?'active-vc':''}" onclick="selectChannel(${i})">
-      <span class="vc-icon">🎙</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+      <span class="vc-icon">${ftzIcon('mic','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
       ${live?'<span class="vc-live">LIVE</span>':''}
     </div>`;
   });
-  if (voiceHTML||canManageChannels) html+=catWrap('voice','🎉','PARTY ROOMS','voice',voiceHTML);
+  if (voiceHTML||canManageChannels) html+=catWrap('voice',ftzIcon('mic','12'),'PARTY ROOMS','voice',voiceHTML);
 
   // Announcements
   let announceHTML='';
@@ -6145,10 +6158,10 @@ function renderBastionSidebar(scroll) {
     const au = getChannelUnread(curBastion, ri);
     const auClass = au.count > 0 && curChannel !== ri ? ' unread' : '';
     announceHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${auClass}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
-      <span class="ch-hash">📢</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+      <span class="ch-hash">${ftzIcon('megaphone','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
-  if (announceHTML||canManageChannels) html+=catWrap('announcement','📢','ANNOUNCEMENT ROOMS','announcement',announceHTML);
+  if (announceHTML||canManageChannels) html+=catWrap('announcement',ftzIcon('megaphone','12'),'ANNOUNCEMENT ROOMS','announcement',announceHTML);
 
   // Polls
   let pollHTML='';
@@ -6157,7 +6170,7 @@ function renderBastionSidebar(scroll) {
     const pu = getChannelUnread(curBastion, ri);
     const puClass = pu.count > 0 && curChannel !== ri ? ' unread' : '';
     pollHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${puClass}" id="ch-sb-${ri}" onclick="openPollChannel(${ri})">
-      <span class="ch-hash">🗳</span><span class="ch-name">${escapeHTML(ch.name)}</span>
+      <span class="ch-hash">${ftzIcon('ballot','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
   if (pollHTML||canManageChannels) html+=catWrap('poll','🗳','POLL ROOMS','poll',pollHTML);
@@ -6169,7 +6182,7 @@ function renderBastionSidebar(scroll) {
     vcb.classList.add('show');
     const vcn=document.getElementById('vcb-channel-name');
     const vcp=document.getElementById('vcb-participants');
-    if (vcn) vcn.textContent='🎙 '+(chs[voiceChannel]?.name||'Voice');
+    if (vcn) vcn.innerHTML=ftzIcon('mic','14')+' '+(escapeHTML(chs[voiceChannel]?.name||'Voice'));
     if (vcp) vcp.innerHTML=voiceParticipants.map(p=>`<div class="vcb-part">${buildAvatarHTML(p.pfp,p.name,18)} ${escapeHTML(p.name)}</div>`).join('');
   } else if (vcb) vcb.classList.remove('show');
   scroll.innerHTML=html;
@@ -6293,7 +6306,7 @@ function selectChannel(idx) {
   if (!wrap) return;
   const access=checkNSFWAccess(ch);
   if (access===false) {
-    wrap.innerHTML=`<div class="empty-state" style="margin:20px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.2);border-radius:18px;padding:40px;"><div class="ei" style="font-size:48px;">🔒</div><h3 style="color:var(--red);">Age-Restricted Channel</h3><p>This channel is restricted for your age group.</p></div>`;
+    wrap.innerHTML=`<div class="empty-state" style="margin:20px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.2);border-radius:18px;padding:40px;"><div class="ei" style="font-size:48px;color:rgba(255,255,255,.15);">${ftzIcon('lock','48')}</div><h3 style="color:var(--red);">Age-Restricted Channel</h3><p>This channel is restricted for your age group.</p></div>`;
     return;
   }
   if (access===null) {
@@ -6343,7 +6356,7 @@ function loadChatChannel(idx) {
   setTopbarChannelActions();
   const bastionBanner = b?.banner || '';
   const bannerSafe = bastionBanner ? escapeHTML(bastionBanner) : '';
-  const chTypeIcon = ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':'#';
+  const chTypeIcon = ch.type==='voice'?ftzIcon('mic','14'):ch.type==='forum'?ftzIcon('chat','14'):ch.type==='announcement'?ftzIcon('megaphone','14'):ch.type==='poll'?ftzIcon('ballot','14'):'#';
   wrap.innerHTML=`
     <div class="chat-wrap">
       <div class="room-topbar">
@@ -7074,7 +7087,7 @@ function forwardMsg(text) {
   const targets=document.getElementById('forward-targets');
   if (targets) targets.innerHTML=(CU?.friends||[]).map(f=>`
     <div class="ch-item" style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:4px;cursor:pointer;" onclick="forwardToDM('${escapeHTML(f)}');closeModal('modal-forward');">
-      💬 ${escapeHTML(f)}
+      ${ftzIcon('chat','14')} ${escapeHTML(f)}
     </div>`).join('')||'<div style="color:var(--muted);font-size:13px;">No friends to forward to</div>';
   openModal('modal-forward');
 }
@@ -7512,7 +7525,7 @@ function disconnectVoice(){
   if(vcb)vcb.classList.remove('show');
   document.getElementById('vc-ch-extra')?.remove();
   const wrap=document.getElementById('bastion-chat-wrap');
-  if(wrap)wrap.innerHTML=`<div class="empty-state"><div class="ei">🏰</div><h3>Select a channel</h3></div>`;
+  if(wrap)wrap.innerHTML=`<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('castle','48')}</div><h3>Select a channel</h3></div>`;
   toast('Left party room','info');
   showFeedbackToast('a voice chat', 'voice_call');
 }
@@ -8304,7 +8317,7 @@ function renderBastionTemplateGrid() {
     {id:'artisan',emoji:'🎨',name:'Artisans',desc:'Create & showcase'},
     {id:'academy',emoji:'🎓',name:'Academy',desc:'Teaching & courses'},
   ];
-  const chIcon={text:'#',voice:'🎙',forum:'💬',announcement:'📢',poll:'🗳'};
+  const chIcon={text:'#',voice:ftzIcon('mic','10'),forum:ftzIcon('chat','10'),announcement:ftzIcon('megaphone','10'),poll:ftzIcon('ballot','10')};
   grid.innerHTML = templates.map(t => {
     const tmpl=BASTION_TEMPLATES[t.id];
     const previewChs=(tmpl?.channels||[]).slice(0,5).map(c=>`<div style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--muted-light);padding:2px 0;"><span style="font-size:10px;opacity:.7;">${chIcon[c.type]||'#'}</span>${c.name}</div>`).join('');
@@ -8677,7 +8690,7 @@ async function importDiscordTemplate() {
     };
 
     // Show preview
-    const chIcon = {text:'#',voice:'🎙',forum:'💬',announcement:'📢',poll:'🗳'};
+    const chIcon = {text:'#',voice:ftzIcon('mic','12'),forum:ftzIcon('chat','12'),announcement:ftzIcon('megaphone','12'),poll:ftzIcon('ballot','12')};
     const previewChs = channels.slice(0,8).map(c=>`<div class="tp-ch"><span class="tp-ch-icon">${chIcon[c.type]||'#'}</span>${escapeHTML(c.name)}</div>`).join('');
     const previewRoles = roles.slice(0,5).map(r=>`<span class="tp-role-pill" style="color:${r.color};background:${r.color}15;border:1px solid ${r.color}33;">${escapeHTML(r.name)}</span>`).join('');
     previewEl.innerHTML = `<div class="tmpl-preview">
@@ -8745,7 +8758,7 @@ async function importFortizedTemplate() {
       banner: tmplData.banner || null,
     };
 
-    const chIcon = {text:'#',voice:'🎙',forum:'💬',announcement:'📢',poll:'🗳'};
+    const chIcon = {text:'#',voice:ftzIcon('mic','12'),forum:ftzIcon('chat','12'),announcement:ftzIcon('megaphone','12'),poll:ftzIcon('ballot','12')};
     const previewChs = _importedTemplateData.channels.slice(0,8).map(c=>`<div class="tp-ch"><span class="tp-ch-icon">${chIcon[c.type]||'#'}</span>${escapeHTML(c.name)}</div>`).join('');
     const previewRoles = _importedTemplateData.roles.slice(0,5).map(r=>`<span class="tp-role-pill" style="color:${r.color};background:${r.color}15;border:1px solid ${r.color}33;">${escapeHTML(r.name)}</span>`).join('');
     previewEl.innerHTML = `<div class="tmpl-preview">
@@ -9092,7 +9105,7 @@ function _crmSelectType(el, type) {
   const overlay = el.closest('.input-dialog-overlay');
   if (!overlay) return;
   overlay._selectedType = type;
-  const prefixes = { text:'#', voice:'🎙', forum:'💬', announcement:'📢', poll:'🗳' };
+  const prefixes = { text:'#', voice:ftzIcon('mic','12'), forum:ftzIcon('chat','12'), announcement:ftzIcon('megaphone','12'), poll:ftzIcon('ballot','12') };
   const prefix = overlay.querySelector('#crm-prefix');
   if (prefix) prefix.textContent = prefixes[type] || '#';
   overlay.querySelectorAll('.crm-type-opt').forEach(opt => {
@@ -9426,7 +9439,7 @@ function renderOverviewRoom() {
 
   // Rooms quick-access
   if (showRooms && chs.length > 0) {
-    const roomIcons = {text:'#',voice:'🎉',forum:'💬',announcement:'📢',poll:'🗳'};
+    const roomIcons = {text:'#',voice:ftzIcon('mic','12'),forum:ftzIcon('chat','12'),announcement:ftzIcon('megaphone','12'),poll:ftzIcon('ballot','12')};
     const roomLimit = chs.slice(0, 8);
     html += `<div class="ov-section">
       <div class="ov-section-header">
@@ -9474,7 +9487,7 @@ function renderOverviewRoom() {
         ${forumChs.map(ch => {
           const ri = chs.indexOf(ch);
           return `<div class="ov-ann-card" onclick="openForumChannel(${ri})">
-            <div class="ov-ac-title">💬 ${escapeHTML(ch.name)}</div>
+            <div class="ov-ac-title">${ftzIcon('chat','14')} ${escapeHTML(ch.name)}</div>
             <div class="ov-ac-meta"><span>Forum room</span></div>
           </div>`;
         }).join('')}
@@ -9665,35 +9678,35 @@ function renderBSettingsNav(activeTab) {
   const nav = document.getElementById('bsettings-nav');
   const b = CU.bastions[curBastion];
   if (!nav||!b) return;
-  document.getElementById('sidebar-title').textContent = '⚙️ '+b.name;
+  document.getElementById('sidebar-title').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> '+escapeHTML(b.name);
   const sections = [
     {label:'Bastion'},
     {id:'overview',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',label:'Overview'},
     {id:'channels',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',label:'Rooms Management'},
     {id:'roles',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',label:'Roles'},
-    {id:'emojis',icon:'😊',label:'Custom Emojis'},
+    {id:'emojis',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',label:'Custom Emojis'},
     {label:'Moderation'},
-    {id:'automod',icon:'🛡️',label:'AutoMod'},
+    {id:'automod',icon:ftzIcon('shield','14'),label:'AutoMod'},
     {id:'bots',icon:'<img src="/Fortized Bot.png" style="width:14px;height:14px;">',label:'Bots'},
     {id:'invites',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',label:'Invites'},
     {id:'members',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',label:'Members'},
-    {id:'bans',icon:'🔨',label:'Bans'},
+    {id:'bans',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',label:'Bans'},
     {label:'Community'},
-    {id:'welcome_msg',icon:'👋',label:'Welcome Message'},
-    {id:'rules',icon:'📜',label:'Server Rules'},
-    {id:'announcements',icon:'📣',label:'Announcements'},
-    {id:'insights',icon:'📊',label:'Insights'},
-    {id:'starboard',icon:'⭐',label:'Starboard'},
-    {id:'events',icon:'📅',label:'Events'},
-    {id:'slowmode',icon:'🐌',label:'Slow Mode'},
+    {id:'welcome_msg',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',label:'Welcome Message'},
+    {id:'rules',icon:ftzIcon('clipboard','14'),label:'Server Rules'},
+    {id:'announcements',icon:ftzIcon('megaphone','14'),label:'Announcements'},
+    {id:'insights',icon:ftzIcon('chartUp','14'),label:'Insights'},
+    {id:'starboard',icon:ftzIcon('star','14'),label:'Starboard'},
+    {id:'events',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',label:'Events'},
+    {id:'slowmode',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',label:'Slow Mode'},
     {label:'Living Bastion'},
-    {id:'mood',icon:'🏰',label:'Bastion Mood'},
-    {id:'reputation',icon:'🛡️',label:'Reputation'},
+    {id:'mood',icon:ftzIcon('castle','14'),label:'Bastion Mood'},
+    {id:'reputation',icon:ftzIcon('shield','14'),label:'Reputation'},
     {label:'Perks'},
-    {id:'boost',icon:'⚡',label:'Boost'},
-    {id:'templates',icon:'📋',label:'Templates'},
+    {id:'boost',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',label:'Boost'},
+    {id:'templates',icon:ftzIcon('clipboard','14'),label:'Templates'},
     {label:'Danger'},
-    {id:'danger',icon:'⚠️',label:'Danger Zone'},
+    {id:'danger',icon:ftzIcon('warning','14'),label:'Danger Zone'},
   ];
   nav.innerHTML = sections.map(s=>{
     if(!s.id) return `<div class="bsettings-nav-section">${s.label}</div>`;
@@ -9772,7 +9785,7 @@ function renderBSettingsMain(tab) {
         </div>
         ${catChs.map((ch,i)=>{const realIdx=(b.channels||[]).indexOf(ch);return `
           <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;margin-left:12px;">
-            <span style="color:var(--muted);">${ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':'#'}</span>
+            <span style="color:var(--muted);">${ch.type==='voice'?ftzIcon('mic','12'):ch.type==='forum'?ftzIcon('chat','12'):ch.type==='announcement'?ftzIcon('megaphone','12'):ch.type==='poll'?ftzIcon('ballot','12'):'#'}</span>
             <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
             ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
             ${ch.nsfw?'<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
@@ -9784,7 +9797,7 @@ function renderBSettingsMain(tab) {
     }).join('');
     const uncatHTML = uncatChs.map(ch=>{const realIdx=(b.channels||[]).indexOf(ch);return `
       <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;">
-        <span style="color:var(--muted);">${ch.type==='voice'?'🎙':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':'#'}</span>
+        <span style="color:var(--muted);">${ch.type==='voice'?ftzIcon('mic','12'):ch.type==='forum'?ftzIcon('chat','12'):ch.type==='announcement'?ftzIcon('megaphone','12'):ch.type==='poll'?ftzIcon('ballot','12'):'#'}</span>
         <span style="flex:1;font-size:13.5px;font-weight:600;">${escapeHTML(ch.name)}</span>
         ${ch.focusMode?'<span class="focus-mode-badge">🧭 FOCUS</span>':''}
         ${ch.nsfw?'<span style="font-size:9px;background:rgba(248,113,113,.15);color:var(--red);padding:2px 6px;border-radius:4px;">NSFW</span>':''}
@@ -10293,7 +10306,7 @@ function renderBSettingsMain(tab) {
   }
   else if (tab==='danger') {
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">⚠️ Danger Zone</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;display:flex;align-items:center;gap:8px;">${ftzIcon('warning','20')} Danger Zone</div>
       ${b.owner===CU.username?`<div style="padding:16px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:16px;margin-bottom:14px;">
         <div style="font-weight:700;margin-bottom:6px;">Transfer Ownership</div>
         <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">Transfer this bastion to another member. You will lose owner privileges.</div>
@@ -10342,7 +10355,7 @@ function renderBSettingsMain(tab) {
   else if (tab==='templates') {
     const isOwner = b.owner===CU.username;
     const hasLink = !!b.templateLink;
-    const chIcon = {text:'#',voice:'🎙',forum:'💬',announcement:'📢',poll:'🗳'};
+    const chIcon = {text:'#',voice:ftzIcon('mic','12'),forum:ftzIcon('chat','12'),announcement:ftzIcon('megaphone','12'),poll:ftzIcon('ballot','12')};
     const previewChs = (b.channels||[]).slice(0,6).map(c=>`<div style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,.5);padding:2px 0;"><span style="font-size:11px;opacity:.6;">${chIcon[c.type]||'#'}</span>${escapeHTML(c.name)}</div>`).join('');
     const previewRoles = (b.roles||[]).slice(0,5).map(r=>`<span style="font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:100px;color:${r.color};background:${r.color}15;border:1px solid ${r.color}33;">${escapeHTML(r.name)}</span>`).join(' ');
     main.innerHTML = `
@@ -10398,7 +10411,7 @@ function renderBSettingsMain(tab) {
       </div>`;
   }
   else {
-    main.innerHTML = `<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3><p>This section is in development.</p></div>`;
+    main.innerHTML = `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('construction','48')}</div><h3>Coming Soon</h3><p>This section is in development.</p></div>`;
   }
 }
 
@@ -10921,40 +10934,40 @@ async function deleteCustomEmoji(i) {
 // ════════════════════════════════════════════
 
 const BOT_PERMISSIONS = [
-  {key:'read_messages', label:'Read Messages', icon:'👁️', desc:'View channel messages'},
-  {key:'send_messages', label:'Send Messages', icon:'💬', desc:'Post messages in channels'},
-  {key:'manage_roles', label:'Manage Roles', icon:'🛡️', desc:'Assign/remove roles'},
-  {key:'moderate', label:'Moderate Content', icon:'🔨', desc:'Delete messages, timeout users'},
-  {key:'manage_channels', label:'Manage Channels', icon:'📝', desc:'Create/edit/delete channels'},
-  {key:'manage_events', label:'Manage Events', icon:'🎮', desc:'Create and manage events'},
-  {key:'add_reactions', label:'Add Reactions', icon:'😊', desc:'React to messages'},
-  {key:'manage_onyx', label:'Manage Onyx', icon:'💎', desc:'Grant/deduct Onyx'},
+  {key:'read_messages', label:'Read Messages', icon:ftzIcon('star','14'), desc:'View channel messages'},
+  {key:'send_messages', label:'Send Messages', icon:ftzIcon('chat','14'), desc:'Post messages in channels'},
+  {key:'manage_roles', label:'Manage Roles', icon:ftzIcon('shield','14'), desc:'Assign/remove roles'},
+  {key:'moderate', label:'Moderate Content', icon:ftzIcon('warning','14'), desc:'Delete messages, timeout users'},
+  {key:'manage_channels', label:'Manage Channels', icon:ftzIcon('pencil','14'), desc:'Create/edit/delete channels'},
+  {key:'manage_events', label:'Manage Events', icon:ftzIcon('gamepad','14'), desc:'Create and manage events'},
+  {key:'add_reactions', label:'Add Reactions', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>', desc:'React to messages'},
+  {key:'manage_onyx', label:'Manage Onyx', icon:ftzIcon('gem','14'), desc:'Grant/deduct Onyx'},
 ];
 
 const BLOCK_TRIGGERS = [
-  {id:'on_message', label:'Message Sent', icon:'💬', desc:'When a message is sent in a channel'},
-  {id:'on_join', label:'User Joins', icon:'👋', desc:'When a new member joins the bastion'},
-  {id:'on_leave', label:'User Leaves', icon:'🚪', desc:'When a member leaves'},
-  {id:'on_role_assign', label:'Role Assigned', icon:'🛡️', desc:'When a role is given to a user'},
-  {id:'on_command', label:'Bot Command', icon:'⌨️', desc:'When a !command is used'},
-  {id:'on_reaction', label:'Reaction Added', icon:'😊', desc:'When a user reacts to a message'},
+  {id:'on_message', label:'Message Sent', icon:ftzIcon('chat','14'), desc:'When a message is sent in a channel'},
+  {id:'on_join', label:'User Joins', icon:ftzIcon('addUser','14'), desc:'When a new member joins the bastion'},
+  {id:'on_leave', label:'User Leaves', icon:ftzIcon('users','14'), desc:'When a member leaves'},
+  {id:'on_role_assign', label:'Role Assigned', icon:ftzIcon('shield','14'), desc:'When a role is given to a user'},
+  {id:'on_command', label:'Bot Command', icon:ftzIcon('letters','14'), desc:'When a !command is used'},
+  {id:'on_reaction', label:'Reaction Added', icon:ftzIcon('star','14'), desc:'When a user reacts to a message'},
 ];
 
 const BLOCK_ACTIONS = [
-  {id:'send_message', label:'Send Message', icon:'💬', color:'#3ecf6e'},
-  {id:'assign_role', label:'Assign Role', icon:'🛡️', color:'#60a5fa'},
-  {id:'remove_role', label:'Remove Role', icon:'🔓', color:'#f59e0b'},
-  {id:'add_onyx', label:'Add Onyx', icon:'💎', color:'#fbbf24'},
-  {id:'delete_message', label:'Delete Message', icon:'🗑️', color:'#f87171'},
-  {id:'timeout_user', label:'Timeout User', icon:'⏰', color:'#f87171'},
-  {id:'trigger_quest', label:'Trigger Quest', icon:'⚔️', color:'#a78bfa'},
+  {id:'send_message', label:'Send Message', icon:ftzIcon('chat','14'), color:'#3ecf6e'},
+  {id:'assign_role', label:'Assign Role', icon:ftzIcon('shield','14'), color:'#60a5fa'},
+  {id:'remove_role', label:'Remove Role', icon:ftzIcon('lock','14'), color:'#f59e0b'},
+  {id:'add_onyx', label:'Add Onyx', icon:ftzIcon('gem','14'), color:'#fbbf24'},
+  {id:'delete_message', label:'Delete Message', icon:ftzIcon('trash','14'), color:'#f87171'},
+  {id:'timeout_user', label:'Timeout User', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', color:'#f87171'},
+  {id:'trigger_quest', label:'Trigger Quest', icon:ftzIcon('sword','14'), color:'#a78bfa'},
 ];
 
 const BLOCK_CONDITIONS = [
-  {id:'if_has_role', label:'User Has Role', icon:'🛡️'},
-  {id:'if_contains', label:'Message Contains', icon:'🔍'},
-  {id:'if_cooldown', label:'Cooldown Timer', icon:'⏱️'},
-  {id:'if_random', label:'Random Chance', icon:'🎲'},
+  {id:'if_has_role', label:'User Has Role', icon:ftzIcon('shield','14')},
+  {id:'if_contains', label:'Message Contains', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'},
+  {id:'if_cooldown', label:'Cooldown Timer', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'},
+  {id:'if_random', label:'Random Chance', icon:ftzIcon('star','14')},
   {id:'if_channel', label:'In Specific Channel', icon:'#'},
 ];
 
@@ -12002,12 +12015,22 @@ function buildProfileNav(scroll) {
     {type:'item', id:'safety', icon:_svgIcons.safety, label:'Safety'},
     {type:'sep'},
   ];
+  // User card at top (Discord-style)
+  const _navPfp = CU?.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--accent);">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</span>`;
   scroll.innerHTML = `
-    <div style="padding:12px 20px 16px;display:flex;align-items:center;gap:10px;">
-      <div style="width:32px;height:32px;border-radius:10px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:0 4px 4px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);">
+      <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_navPfp}</div>
+      <div style="min-width:0;flex:1;">
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(CU?.displayName||CU?.username||'User')}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:500;">Edit Profiles</div>
       </div>
-      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">Settings</div>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </div>
+    <div style="padding:4px 6px 8px;">
+      <div style="position:relative;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);display:flex;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+        <input type="text" placeholder="Search" style="width:100%;padding:7px 10px 7px 30px;border-radius:6px;border:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.15);color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='rgba(254,248,61,.2)'" onblur="this.style.borderColor='rgba(255,255,255,.05)'" oninput="(function(v,items){items.forEach(function(el){var t=el.textContent.toLowerCase();el.style.display=t.includes(v)?'':'none';});el.closest('.profile-nav')?.querySelectorAll('.profile-nav-section,.profile-nav-sep').forEach(function(s){s.style.display=v?'none':'';});}.call(null,this.value.toLowerCase(),this.closest('.profile-nav')?.querySelectorAll('.profile-nav-item')||[]))">
+      </div>
     </div>
     ${sections.map(s => {
       if (s.type === 'section') return `<div class="profile-nav-section">${s.label}</div>`;
@@ -12019,7 +12042,7 @@ function buildProfileNav(scroll) {
     }).join('')}
     <div style="flex:1;"></div>
     <div class="profile-nav-sep"></div>
-    <div class="profile-nav-item" onclick="doLogout()" style="color:rgba(248,113,113,.7);">
+    <div class="profile-nav-item" onclick="doLogout()" style="color:rgba(248,113,113,.6);">
       <span class="pni-icon">${_svgIcons.logout}</span>
       <span>Log Out</span>
     </div>`;
@@ -12045,17 +12068,9 @@ function buildProfileView(tab) {
         <div style="overflow-y:auto;padding:0 36px 60px;border-right:1px solid rgba(255,255,255,.05);">
 
           <!-- Page Hero -->
-          <div style="position:relative;border-radius:0 0 22px 22px;overflow:hidden;margin:0 -36px 28px;padding:36px 36px 28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border-bottom:1.5px solid rgba(254,248,61,.08);">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 30%,rgba(254,248,61,.05),transparent 60%);pointer-events:none;"></div>
-            <div style="position:relative;display:flex;align-items:center;gap:14px;">
-              <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              </div>
-              <div>
-                <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;line-height:1;">My Profile</div>
-                <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Customize how others see you on Fortized</div>
-              </div>
-            </div>
+          <div style="margin:0 -36px 28px;padding:32px 36px 20px;border-bottom:1px solid rgba(255,255,255,.05);">
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">My Profile</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize how others see you on Fortized</div>
           </div>
 
           <!-- SECTION: Profile -->
@@ -12093,7 +12108,7 @@ function buildProfileView(tab) {
                   ${CU.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(CU.displayName||CU.username)}'">` : `<img src="${_defaultPfpUrl(CU.displayName||CU.username)}" style="width:100%;height:100%;object-fit:cover;">`}
                 </div>
                 <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
-                  <span style="font-size:18px;">📷</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                 </div>
                 <input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event);markSettingsDirty()">
               </label>
@@ -12232,7 +12247,7 @@ function buildProfileView(tab) {
               <!-- Game Collection -->
               ${(CU.gameCollection && CU.gameCollection.length) ? `<div style="margin-bottom:14px;">
                 <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:6px;">Games</div>
-                <div style="display:flex;gap:4px;flex-wrap:wrap;">${CU.gameCollection.map(g=>`<div style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:14px;" title="${escapeHTML(g.name||'')}">${g.icon||'🎮'}</div>`).join('')}</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;">${CU.gameCollection.map(g=>`<div style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:14px;" title="${escapeHTML(g.name||'')}">${g.icon||ftzIcon('gamepad','14')}</div>`).join('')}</div>
               </div>` : ''}
               <!-- Connections block -->
               ${(()=>{
@@ -12288,17 +12303,9 @@ function buildProfileView(tab) {
     main.innerHTML = `
       <div class="settings-panel">
         <!-- Page Hero -->
-        <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 30%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
-          <div style="position:relative;display:flex;align-items:center;gap:14px;">
-            <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            </div>
-            <div>
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Account Information</div>
-              <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">View and manage your account details</div>
-            </div>
-          </div>
+        <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Account Information</div>
+          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">View and manage your account details</div>
         </div>
         <div class="settings-section-title">ACCOUNT DETAILS</div>
         <div class="settings-row">
@@ -12322,17 +12329,9 @@ function buildProfileView(tab) {
   else if (tab === 'account_security') {
     main.innerHTML = `
       <div class="settings-panel">
-        <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 40% 30%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
-          <div style="position:relative;display:flex;align-items:center;gap:14px;">
-            <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-            </div>
-            <div>
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Account Security</div>
-              <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Manage passwords and security settings</div>
-            </div>
-          </div>
+        <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Account Security</div>
+          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Manage passwords and security settings</div>
         </div>
         <div class="settings-section-title">PASSWORD</div>
         <div class="settings-row">
@@ -12355,17 +12354,9 @@ function buildProfileView(tab) {
     main.innerHTML = `
       <div class="settings-panel">
         <!-- Page Hero -->
-        <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 60%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
-          <div style="position:relative;display:flex;align-items:center;gap:14px;">
-            <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-            </div>
-            <div>
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Messages</div>
-              <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Control message notification preferences</div>
-            </div>
-          </div>
+        <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Messages</div>
+          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Control message notification preferences</div>
         </div>
         <div class="settings-section-title">MESSAGE NOTIFICATIONS</div>
         ${[
@@ -12396,17 +12387,9 @@ function buildProfileView(tab) {
   else if (tab === 'notif_social') {
     main.innerHTML = `
       <div class="settings-panel">
-        <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
-          <div style="position:relative;display:flex;align-items:center;gap:14px;">
-            <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-            </div>
-            <div>
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Social Activity</div>
-              <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Friend requests, reactions, and social events</div>
-            </div>
-          </div>
+        <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Social Activity</div>
+          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Friend requests, reactions, and social events</div>
         </div>
         <div class="settings-section-title">SOCIAL NOTIFICATIONS</div>
         ${[
@@ -12425,17 +12408,9 @@ function buildProfileView(tab) {
   else if (tab === 'notif_system') {
     main.innerHTML = `
       <div class="settings-panel">
-        <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 60% 50%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
-          <div style="position:relative;display:flex;align-items:center;gap:14px;">
-            <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-            </div>
-            <div>
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">System</div>
-              <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Sounds and system-level notifications</div>
-            </div>
-          </div>
+        <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">System</div>
+          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Sounds and system-level notifications</div>
         </div>
         <div class="settings-section-title">SYSTEM NOTIFICATIONS</div>
         ${[
@@ -12463,23 +12438,15 @@ function buildProfileView(tab) {
   else if (tab === 'help_center' || tab === 'quick_support') {
     main.innerHTML = `<div class="settings-panel">
       <!-- Page Hero -->
-      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:32px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%,rgba(254,248,61,.06),transparent 60%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:center;gap:14px;">
-          <div style="width:48px;height:48px;border-radius:16px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;">Quick Support</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.4);margin-top:4px;">Get help and find answers fast</div>
-          </div>
-        </div>
+      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Quick Support</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Get help and find answers fast</div>
       </div>
 
       <!-- Quick actions -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;">
         <a href="/support" target="_blank" rel="noopener noreferrer" style="text-decoration:none;padding:20px;background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(96,165,250,.02));border:1.5px solid rgba(96,165,250,.12);border-radius:18px;transition:all .2s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(96,165,250,.3)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(96,165,250,.08)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)';this.style.transform='';this.style.boxShadow=''">
-          <div style="font-size:28px;margin-bottom:10px;">🆘</div>
+          <div style="font-size:28px;margin-bottom:10px;color:rgba(96,165,250,.7);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
           <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Get Help</div>
           <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;">Account issues, bastions, Radiance, and more</div>
         </a>
@@ -12505,17 +12472,9 @@ function buildProfileView(tab) {
 
   else if (tab === 'policies') {
     main.innerHTML = `<div class="settings-panel">
-      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:center;gap:14px;">
-          <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Policies</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Legal documents and guidelines</div>
-          </div>
-        </div>
+      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Policies</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Legal documents and guidelines</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         ${[
@@ -12536,17 +12495,9 @@ function buildProfileView(tab) {
 
   else if (tab === 'safety') {
     main.innerHTML = `<div class="settings-panel">
-      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:center;gap:14px;">
-          <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Safety</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Manage blocked and ignored users</div>
-          </div>
-        </div>
+      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Safety</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Manage blocked and ignored users</div>
       </div>
       <div class="settings-section-title">BLOCKED USERS</div>
       <div id="safety-blocked-list" style="margin-bottom:24px;">
@@ -12569,17 +12520,9 @@ function buildProfileView(tab) {
 
   else if (tab === 'my_data') {
     main.innerHTML = `<div class="settings-panel">
-      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 60% 40%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:center;gap:14px;">
-          <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">My Data</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Download or manage your personal data</div>
-          </div>
-        </div>
+      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">My Data</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Download or manage your personal data</div>
       </div>
       <div class="settings-section-title">YOUR DATA</div>
       <div style="padding:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;margin-bottom:16px;">
@@ -12598,17 +12541,9 @@ function buildProfileView(tab) {
   else if (tab === 'interface_density') {
     const currentDensity = localStorage.getItem('ftz_density') || 'default';
     main.innerHTML = `<div class="settings-panel">
-      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 40% 40%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:center;gap:14px;">
-          <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-          </div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Interface Density</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Adjust spacing between elements</div>
-          </div>
-        </div>
+      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Interface Density</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Adjust spacing between elements</div>
       </div>
       <div class="settings-section-title">DENSITY</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
@@ -12629,17 +12564,9 @@ function buildProfileView(tab) {
   else if (tab === 'interface_scaling') {
     const currentScale = parseFloat(localStorage.getItem('ftz_scale') || '1');
     main.innerHTML = `<div class="settings-panel">
-      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 60% 50%,rgba(254,248,61,.04),transparent 60%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:center;gap:14px;">
-          <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-          </div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Interface Scaling</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Adjust the overall size of the interface</div>
-          </div>
-        </div>
+      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Interface Scaling</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Adjust the overall size of the interface</div>
       </div>
       <div class="settings-section-title">SCALING</div>
       <div style="padding:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;">
@@ -12802,17 +12729,9 @@ function buildProfileView(tab) {
 
     main.innerHTML = `<div class="settings-panel">
       <!-- Page Hero -->
-      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(254,248,61,.05),transparent 60%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:center;gap:14px;">
-          <div style="width:42px;height:42px;border-radius:14px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
-          </div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Appearance</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Your client, your look — choose how Fortized feels</div>
-          </div>
-        </div>
+      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Appearance</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Your client, your look — choose how Fortized feels</div>
       </div>
 
       <!-- Live Preview: Current vs Selected -->
@@ -12869,17 +12788,9 @@ function buildProfileView(tab) {
     const hasPlus = CU?.radiancePlus && new Date(CU.radiancePlus) > new Date();
     const pt = CU?.profileTheme || { color1: '#a855f7', color2: '#3b82f6' };
     const ptHero = `
-      <div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(254,248,61,.08);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 40% 40%,rgba(167,139,250,.06),transparent 60%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:center;gap:14px;">
-          <div style="width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(59,130,246,.12));border:1px solid rgba(168,85,247,.2);display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
-          </div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Profile Theme</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Customize your profile card gradient</div>
-          </div>
-        </div>
+      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Profile Theme</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize your profile card gradient</div>
       </div>`;
     if (!hasPlus) {
       main.innerHTML = `<div class="settings-panel">
@@ -12932,7 +12843,7 @@ function buildProfileView(tab) {
     renderArsenalView(main);
   }
   else {
-    main.innerHTML = `<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3><p>These settings are on the way!</p></div>`;
+    main.innerHTML = `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('construction','48')}</div><h3>Coming Soon</h3><p>These settings are on the way!</p></div>`;
   }
 }
 async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}CU.displayName=dn;await saveUser();document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');toast('Display name updated!','success');showFeedbackToast('editing your profile','profile_edit');}
@@ -13167,18 +13078,18 @@ async function viewUserProfile(username) {
   // Build right-panel tab content
   const _aboutContent = [];
   if (u.bio) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Bio</div><div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.65;">${escapeHTML(u.bio.slice(0,400))}${u.bio.length>400?'…':''}</div></div>`);
-  if (u.gameActivity?.name) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Playing a Game</div><div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:12px;"><div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${u.gameActivity.icon||'🎮'}</div><div style="min-width:0;"><div style="font-size:13px;font-weight:700;color:#fff;">${escapeHTML(u.gameActivity.name)}</div>${u.gameActivity.details?`<div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:2px;">${escapeHTML(u.gameActivity.details)}</div>`:''}</div></div></div>`);
+  if (u.gameActivity?.name) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Playing a Game</div><div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:12px;"><div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${u.gameActivity.icon||ftzIcon('gamepad','18')}</div><div style="min-width:0;"><div style="font-size:13px;font-weight:700;color:#fff;">${escapeHTML(u.gameActivity.name)}</div>${u.gameActivity.details?`<div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:2px;">${escapeHTML(u.gameActivity.details)}</div>`:''}</div></div></div>`);
   if (_mutualFriends.length) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;">${_mutualFriends.slice(0,10).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>10?`<div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.4);margin-left:-5px;border:2.5px solid var(--panel);font-weight:700;">+${_mutualFriends.length-10}</div>`:''}</div></div>`);
   if (Object.values(socials).some(Boolean)) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Connections</div><div style="display:flex;flex-direction:column;gap:5px;">${[{k:'youtube',l:'YouTube',c:'#ff4444',i:'▶'},{k:'roblox',l:'Roblox',c:'#00b2ff',i:'◆'},{k:'spotify',l:'Spotify',c:'#1db954',i:'♫'},{k:'twitter',l:'X',c:'#1d9bf0',i:'✕'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" class="up-social-link" style="background:${p.c}08;color:${p.c};border-color:${p.c}18;"><span style="font-size:9px;">${p.i}</span> ${p.l}</a>`).join('')}</div></div>`);
   if (_userNote) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Your Note</div><div style="font-size:12px;color:rgba(255,255,255,.4);font-style:italic;line-height:1.5;">${escapeHTML(_userNote.slice(0,200))}</div></div>`);
-  if (games.length) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Games</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${games.slice(0,8).map(g=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;font-size:12px;color:rgba(255,255,255,.5);"><span style="font-size:14px;">${g.icon||'🎮'}</span>${escapeHTML(g.name)}</div>`).join('')}</div></div>`);
+  if (games.length) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Games</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${games.slice(0,8).map(g=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;font-size:12px;color:rgba(255,255,255,.5);"><span style="font-size:14px;">${g.icon||ftzIcon('gamepad','14')}</span>${escapeHTML(g.name)}</div>`).join('')}</div></div>`);
   if (!_aboutContent.length) _aboutContent.push(`<div style="text-align:center;padding:40px 20px;color:rgba(255,255,255,.15);font-size:13px;">No info yet</div>`);
 
   modalEl.innerHTML = `
     <div style="${themeBorder}">
     <div class="up-card" style="position:relative;${profileTheme ? `background:linear-gradient(135deg,${profileTheme.color1}0a,var(--panel) 40%,${profileTheme.color2}08);` : ''}">
     ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
-      <div class="pbo-icon">🚫</div>
+      <div class="pbo-icon" style="font-size:32px;color:rgba(248,113,113,.5);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
       <div class="pbo-text">You blocked ${escapeHTML(username)}</div>
       <div class="pbo-sub">Their profile is hidden</div>
       <button class="pbo-reveal" onclick="document.getElementById('profile-blocked-overlay').style.display='none'">Show Profile</button>
@@ -13259,7 +13170,7 @@ async function viewUserProfile(username) {
           <div class="up-right-section">
             <div class="up-right-section-title">Game Collection</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;">
-              ${games.map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;min-width:120px;"><span style="font-size:18px;">${g.icon||'🎮'}</span><span style="font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;">${escapeHTML(g.name)}</span></div>`).join('')}
+              ${games.map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;min-width:120px;"><span style="font-size:18px;">${g.icon||ftzIcon('gamepad','14')}</span><span style="font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;">${escapeHTML(g.name)}</span></div>`).join('')}
             </div>
           </div>
         </div>` : ''}
@@ -14508,7 +14419,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <!-- Report header bar -->
         <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;background:${isPend?'rgba(248,113,113,.04)':'rgba(255,255,255,.02)'};border-bottom:1px solid rgba(255,255,255,.04);">
           <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${_statusBg(r)};color:${_statusColor(r)};text-transform:uppercase;letter-spacing:.5px;">${r.status||'pending'}</span>
-          <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;background:${r.type==='message'?'rgba(96,165,250,.1)':'rgba(168,85,247,.1)'};color:${r.type==='message'?'#60a5fa':'#a855f7'};">${r.type==='message'?'💬 Message':'👤 User'}</span>
+          <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;background:${r.type==='message'?'rgba(96,165,250,.1)':'rgba(168,85,247,.1)'};color:${r.type==='message'?'#60a5fa':'#a855f7'};">${r.type==='message'?ftzIcon('chat','10')+' Message':ftzIcon('users','10')+' User'}</span>
           <div style="flex:1;"></div>
           <span style="font-size:10.5px;color:rgba(255,255,255,.25);font-family:monospace;" title="${escapeHTML(timeFull)}">${escapeHTML(timeAgo)}</span>
           <span style="font-size:10px;color:rgba(255,255,255,.15);font-family:monospace;">${escapeHTML(r.id||'')}</span>
@@ -18277,7 +18188,7 @@ function parseMD(s) {
       </div>
       <div style="font-size:12.5px;color:var(--muted-light);line-height:1.55;">View post on 𝕏</div>
       <div style="display:flex;align-items:center;gap:16px;margin-top:10px;font-size:10.5px;color:var(--muted);border-top:1px solid rgba(29,155,240,.08);padding-top:10px;">
-        <span style="display:flex;align-items:center;gap:4px;">❤️ Likes</span><span style="display:flex;align-items:center;gap:4px;">🔁 Reposts</span><span style="display:flex;align-items:center;gap:4px;">💬 Replies</span>
+        <span style="display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Likes</span><span style="display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Reposts</span><span style="display:flex;align-items:center;gap:4px;">${ftzIcon('chat','12')} Replies</span>
       </div>
     </div>`;
   });
@@ -18509,7 +18420,7 @@ function _showUserMentionPreview(e, el, username) {
         </div>
       </div>
       <div class="mp-body">
-        <button class="mp-btn" onclick="event.stopPropagation();_hidePreview();openDMChat('${escapeHTML(username)}')">💬 Message</button>
+        <button class="mp-btn" onclick="event.stopPropagation();_hidePreview();openDMChat('${escapeHTML(username)}')" style="display:inline-flex;align-items:center;gap:6px;">${ftzIcon('chat','14')} Message</button>
       </div>`;
     document.body.appendChild(panel);
     // Fetch real data
@@ -18571,7 +18482,7 @@ function _showRoomPreview(e, el, roomName) {
     const ch = (b.channels||[]).find(c => c.name === roomName);
     if (!ch) return;
     const typeLabel = {text:'Text Room',voice:'Party Room',forum:'Forum Room',announcement:'Announcement Room',poll:'Poll Room'}[ch.type]||'Room';
-    const typeIcon = {text:'#',voice:'🎉',forum:'💬',announcement:'📢',poll:'🗳'}[ch.type]||'#';
+    const typeIcon = {text:'#',voice:ftzIcon('mic','12'),forum:ftzIcon('chat','12'),announcement:ftzIcon('megaphone','12'),poll:ftzIcon('ballot','12')}[ch.type]||'#';
     const panel = document.createElement('div');
     panel.className = 'mention-preview';
     panel.id = 'mention-preview-panel';
@@ -18620,7 +18531,7 @@ function _showCatPreview(e, el, catId) {
       </div>
       <div class="mp-body">
         ${rooms.length ? rooms.slice(0,6).map(ch => {
-          const icon = {text:'#',voice:'🎉',forum:'💬',announcement:'📢',poll:'🗳'}[ch.type]||'#';
+          const icon = {text:'#',voice:ftzIcon('mic','12'),forum:ftzIcon('chat','12'),announcement:ftzIcon('megaphone','12'),poll:ftzIcon('ballot','12')}[ch.type]||'#';
           return `<div style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:11.5px;color:rgba(255,255,255,.4);"><span style="opacity:.5;">${icon}</span> ${escapeHTML(ch.name)}</div>`;
         }).join('') : '<div style="font-size:11px;color:var(--muted);">No rooms in this category</div>'}
       </div>`;
@@ -19644,7 +19555,7 @@ async function openAddGameModal() {
   try {
     const online = await companionPing();
     if (!online) {
-      listEl.innerHTML = '<div style="text-align:center;padding:30px;"><div style="font-size:28px;margin-bottom:8px;">⚠️</div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">Game detection not available</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">The companion service needs to be running to detect apps.</div></div>';
+      listEl.innerHTML = '<div style="text-align:center;padding:30px;"><div style="font-size:28px;margin-bottom:8px;color:rgba(255,255,255,.3);">'+ftzIcon('warning','28')+'</div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">Game detection not available</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">The companion service needs to be running to detect apps.</div></div>';
       return;
     }
     const procs = await companionGetProcesses();
@@ -20406,16 +20317,12 @@ function openStatusPicker() {
   }).join('');
 
   overlay.innerHTML = `
-    <div class="sp-card" style="max-width:460px;width:100%;border-radius:24px;border:1.5px solid rgba(254,248,61,.08);background:linear-gradient(165deg,#0f1219,#0a0d14);box-shadow:0 24px 80px rgba(0,0,0,.7);overflow:hidden;">
-      <!-- Header with cloud motif -->
-      <div style="background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(96,165,250,.03));padding:24px 28px 20px;border-bottom:1px solid rgba(255,255,255,.04);">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
-          <div style="width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg,rgba(254,248,61,.1),rgba(96,165,250,.08));border:1px solid rgba(254,248,61,.12);display:flex;align-items:center;justify-content:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>
-          </div>
+    <div class="sp-card" style="max-width:420px;width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.06);background:var(--panel);box-shadow:0 16px 48px rgba(0,0,0,.5);overflow:hidden;">
+      <!-- Header -->
+      <div style="padding:18px 22px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
           <div>
-            <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;">Custom Status</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.35);">Let others know what you're up to</div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">Set a custom status</div>
           </div>
           <button onclick="_closeStatusPicker()" style="margin-left:auto;width:32px;height:32px;border-radius:10px;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.4)'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
@@ -20594,7 +20501,7 @@ function openForumChannel(chIdx) {
   let postsHTML = posts.length ? posts.slice().reverse().map(function(p,ri){
     const pi = posts.length-1-ri;
     return renderForumPostCard(p, chIdx, pi);
-  }).join('') : '<div style="text-align:center;padding:60px 20px;color:var(--muted);"><div style="font-size:32px;margin-bottom:12px;opacity:.5;">💬</div><div style="font-size:14px;font-weight:600;margin-bottom:4px;">No posts yet</div><div style="font-size:12.5px;">Be the first to start a conversation!</div></div>';
+  }).join('') : '<div style="text-align:center;padding:60px 20px;color:var(--muted);"><div style="font-size:32px;margin-bottom:12px;opacity:.5;">${ftzIcon('chat','32')}</div><div style="font-size:14px;font-weight:600;margin-bottom:4px;">No posts yet</div><div style="font-size:12.5px;">Be the first to start a conversation!</div></div>';
   wrap.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">'
     +'<div style="padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--panel);">'
     +'<div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:16px;">💬</div><div><div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;">'+escapeHTML(ch.name)+'</div><div style="font-size:11.5px;color:var(--muted);">'+posts.length+' post'+(posts.length!==1?'s':'')+(ch.description?' · '+escapeHTML(ch.description):'')+'</div></div></div>'
@@ -22293,7 +22200,7 @@ async function openGameActivityPicker() {
   try {
     const online = await companionPing();
     if (!online) {
-      listEl.innerHTML = '<div style="text-align:center;padding:24px;"><div style="font-size:28px;margin-bottom:8px;">⚠️</div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">Companion not running</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Start the companion service to detect running apps.</div></div>';
+      listEl.innerHTML = '<div style="text-align:center;padding:24px;"><div style="font-size:28px;margin-bottom:8px;color:rgba(255,255,255,.3);">'+ftzIcon('warning','28')+'</div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">Companion not running</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Start the companion service to detect running apps.</div></div>';
       return;
     }
     const procs = await companionGetProcesses();
@@ -22678,20 +22585,20 @@ function renderAtelierTab(tab) {
   // ── OVERVIEW ──────────────────────────────────────────────
   if (tab === 'overview') {
     const PERKS = [
-      {icon:'🌟',name:'Profile Glow',desc:'Animated glow on avatar',color:'#ffd93e',plus:false},
-      {icon:'🖼️',name:'Custom Banner',desc:'Full profile banner',color:'#60a5fa',plus:false},
-      {icon:'📎',name:'45MB Uploads',desc:'Bigger attachments',color:'#3ecf6e',plus:false},
-      {icon:'💎',name:'Radiance Badge',desc:'Exclusive badge',color:'#a78bfa',plus:false},
-      {icon:'🔤',name:'Custom Font',desc:'Change your font',color:'#fb923c',plus:true},
-      {icon:'🎁',name:'Gift Radiance',desc:'Gift friends',color:'#f472b6',plus:true},
+      {icon:ftzIcon('star','28'),name:'Profile Glow',desc:'Animated glow on avatar',color:'#ffd93e',plus:false},
+      {icon:ftzIcon('image','28'),name:'Custom Banner',desc:'Full profile banner',color:'#60a5fa',plus:false},
+      {icon:ftzIcon('clip','28'),name:'45MB Uploads',desc:'Bigger attachments',color:'#3ecf6e',plus:false},
+      {icon:ftzIcon('gem','28'),name:'Radiance Badge',desc:'Exclusive badge',color:'#a78bfa',plus:false},
+      {icon:ftzIcon('letters','28'),name:'Custom Font',desc:'Change your font',color:'#fb923c',plus:true},
+      {icon:ftzIcon('gift','28'),name:'Gift Radiance',desc:'Gift friends',color:'#f472b6',plus:true},
     ];
     const doneQuests = (CU?.completedQuests||[]);
     const allQ = [
-      {id:'daily_claim',icon:'🎁',title:'Daily Claim',reward:'50 Onyx'},
-      {id:'invite',icon:'🔗',title:'Invite a Friend',reward:'+9 Onyx/friend'},
-      {id:'join_bastion',icon:'🏰',title:'Join a Bastion',reward:'25 Onyx'},
-      {id:'add_friend',icon:'👥',title:'Add First Friend',reward:'15 Onyx'},
-      {id:'set_pfp',icon:'🖼️',title:'Set Avatar',reward:'20 Onyx'},
+      {id:'daily_claim',icon:ftzIcon('gift','18'),title:'Daily Claim',reward:'50 Onyx'},
+      {id:'invite',icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',title:'Invite a Friend',reward:'+9 Onyx/friend'},
+      {id:'join_bastion',icon:ftzIcon('castle','18'),title:'Join a Bastion',reward:'25 Onyx'},
+      {id:'add_friend',icon:ftzIcon('users','18'),title:'Add First Friend',reward:'15 Onyx'},
+      {id:'set_pfp',icon:ftzIcon('image','18'),title:'Set Avatar',reward:'20 Onyx'},
     ];
     const doneQ = allQ.filter(q => doneQuests.includes(q.id) || (q.id==='join_bastion'&&(CU?.bastions||[]).length>0) || (q.id==='add_friend'&&(CU?.friends||[]).length>0) || (q.id==='set_pfp'&&CU?.pfp) || (q.id==='daily_claim'&&dailyDone));
 
@@ -22724,11 +22631,11 @@ function renderAtelierTab(tab) {
                 <div style="font-size:12.5px;font-weight:700;color:#fff;margin-bottom:4px;">${p.name}</div>
                 <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.4;">${p.desc}</div>
                 ${p.plus?`<div style="position:absolute;top:10px;right:10px;font-size:9px;font-weight:800;color:#ffd93e;background:rgba(255,220,62,.12);border:1px solid rgba(255,220,62,.2);padding:2px 7px;border-radius:100px;">+</div>`:''}
-                ${!unlocked?`<div style="position:absolute;bottom:12px;right:12px;font-size:14px;opacity:.35;">🔒</div>`:`<div style="position:absolute;bottom:12px;right:12px;font-size:12px;color:${p.color};">✓</div>`}
+                ${!unlocked?`<div style="position:absolute;bottom:12px;right:12px;opacity:.35;">${ftzIcon('lock','14')}</div>`:`<div style="position:absolute;bottom:12px;right:12px;color:${p.color};"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg></div>`}
               </div>`;
             }).join('')}
             ${!hasRad?`<div style="min-width:135px;background:rgba(255,249,62,.04);border:1.5px dashed rgba(255,249,62,.12);border-radius:18px;padding:18px 16px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" onmouseover="this.style.background='rgba(255,249,62,.07)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255,249,62,.04)';this.style.transform=''">
-              <div style="font-size:24px;margin-bottom:10px;">✨</div>
+              <div style="font-size:24px;margin-bottom:10px;color:var(--accent);">${ftzIcon('star','24')}</div>
               <div style="font-size:12px;font-weight:700;color:var(--accent);">Get Radiance</div>
               <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:4px;">Unlock all perks</div>
             </div>`:''}
@@ -23307,7 +23214,7 @@ function renderAtelierTab(tab) {
   }
 
   else {
-    el.innerHTML = `<div class="empty-state"><div class="ei">🚧</div><h3>Coming Soon</h3></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('construction','48')}</div><h3>Coming Soon</h3></div>`;
   }
 }
 
@@ -25408,7 +25315,7 @@ function toggleOwnProfilePanel() {
     <!-- Custom Status -->
     <div style="height:1px;background:rgba(255,255,255,.06);margin:4px 16px;"></div>
     <div onclick="openStatusPicker();closeOwnProfilePanel()" style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:2px 8px;border-radius:10px;cursor:pointer;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='transparent'">
-      <span style="font-size:12px;">✏️</span>
+      <span style="font-size:12px;display:flex;">${ftzIcon('pencil','14')}</span>
       <span style="font-size:13px;color:rgba(255,255,255,.5);font-weight:500;">${cs?.text?'Edit Custom Status':'Set Custom Status'}</span>
     </div>
     <!-- Actions -->
@@ -25473,12 +25380,12 @@ async function showMiniProfilePreview(username, anchorEl) {
   panel.setAttribute('aria-label', 'Profile preview for ' + (u.displayName || u.username));
   if (profileTheme) {
     panel.style.borderColor = 'transparent';
-    panel.style.backgroundImage = `linear-gradient(135deg,${profileTheme.color1}0a,var(--panel) 40%,${profileTheme.color2}08),linear-gradient(135deg,${profileTheme.color1},${profileTheme.color2})`;
+    panel.style.backgroundImage = `linear-gradient(160deg,${profileTheme.color1}08,var(--panel) 35%,var(--panel) 65%,${profileTheme.color2}06),linear-gradient(135deg,${profileTheme.color1}40,${profileTheme.color2}40)`;
     panel.style.backgroundOrigin = 'border-box';
     panel.style.backgroundClip = 'padding-box,border-box';
-    panel.style.borderWidth = '2px';
+    panel.style.borderWidth = '1.5px';
     panel.style.borderStyle = 'solid';
-    panel.style.boxShadow = `0 32px 80px rgba(0,0,0,.9),0 12px 32px rgba(0,0,0,.5),0 0 24px ${profileTheme.color1}18`;
+    panel.style.boxShadow = `0 16px 48px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.3)`;
   }
   const bannerBg = u.banner ? `url('${u.banner}') center/cover no-repeat` : `linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#1a1a2e'},${profileTheme?profileTheme.color2+'33':'#0f3460'})`;
   const _previewGames = u.gameCollection || u.registeredGames || [];
@@ -25535,7 +25442,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     </div>` : ''}
     ${_previewGames.length ? `<div class="mpp-section">
       <div class="mpp-section-title">Games</div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;">${_previewGames.slice(0,5).map(g=>`<span style="font-size:15px;padding:4px 6px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid rgba(255,255,255,.04);" title="${escapeHTML(g.name)}">${g.icon||'🎮'}</span>`).join('')}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">${_previewGames.slice(0,5).map(g=>`<span style="font-size:15px;padding:4px 6px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid rgba(255,255,255,.04);" title="${escapeHTML(g.name)}">${g.icon||ftzIcon('gamepad','14')}</span>`).join('')}</div>
     </div>` : ''}
     <!-- Action buttons -->
     <div class="mpp-actions">
@@ -26662,7 +26569,7 @@ async function renderFriendsSorted(mode) {
     html += `<div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Pending — ${pending.length}</div>`;
     pending.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong> sent you a friend request</p></div><div style="display:flex;gap:6px;"><button class="rn-accept" onclick="acceptFriend('${escapeHTML(f)}')">✓</button><button class="rn-decline" onclick="declineFriend('${escapeHTML(f)}')">✕</button></div></div>`; });
   }
-  if (!friends.length) { list.innerHTML = html || `<div class="empty-state"><div class="ei">👥</div><h3>No friends yet</h3><p>Add friends by username!</p><button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button></div>`; return; }
+  if (!friends.length) { list.innerHTML = html || `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('users','48')}</div><h3>No friends yet</h3><p>Add friends by username!</p><button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button></div>`; return; }
   // Fetch statuses
   let statuses = {};
   try { const snap = await firebase.database().ref('statuses').get(); if (snap.exists()) statuses = snap.val(); } catch {}
@@ -26681,7 +26588,7 @@ async function renderFriendsSorted(mode) {
   sorted.forEach(f => {
     const st = statuses[f] || 'offline';
     const stColor = st==='online'?'#3ecf6e':st==='away'?'#f59e0b':st==='dnd'?'#f87171':'#4a4a5a';
-    html += `<div class="activity-item"><div class="act-icon" style="position:relative;">${buildAvatarHTML(null,f,40)}<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${stColor};border:2px solid var(--panel);"></div></div><div class="act-text"><p style="font-weight:600;">${escapeHTML(f)}</p><span style="font-size:10px;color:${stColor};">${st}</span></div><div style="display:flex;gap:6px;"><button class="btn-g" style="padding:6px 12px;font-size:12px;" onclick="openDMView('${escapeHTML(f)}')">💬</button><button class="btn-d" style="padding:6px 12px;font-size:12px;" onclick="removeFriend('${escapeHTML(f)}')">Remove</button></div></div>`;
+    html += `<div class="activity-item"><div class="act-icon" style="position:relative;">${buildAvatarHTML(null,f,40)}<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${stColor};border:2px solid var(--panel);"></div></div><div class="act-text"><p style="font-weight:600;">${escapeHTML(f)}</p><span style="font-size:10px;color:${stColor};">${st}</span></div><div style="display:flex;gap:6px;"><button class="btn-g" style="padding:6px 12px;font-size:12px;" onclick="openDMView('${escapeHTML(f)}')" style="display:inline-flex;align-items:center;">${ftzIcon('chat','14')}</button><button class="btn-d" style="padding:6px 12px;font-size:12px;" onclick="removeFriend('${escapeHTML(f)}')">Remove</button></div></div>`;
   });
   list.innerHTML = html;
 }
@@ -26710,7 +26617,7 @@ function _renderFavourites() {
     if (nav) nav.parentElement.insertBefore(section, nav.nextElementSibling);
     else return;
   }
-  section.innerHTML = `<div class="fav-header">⭐ Quick Access</div>` +
+  section.innerHTML = `<div class="fav-header">${ftzIcon('star','12')} Quick Access</div>` +
     favs.slice(0,5).map(f => `<div class="fav-item" onclick="_openFavourite('${f.type}','${escapeHTML(f.id)}')"><span class="fav-star">★</span>${escapeHTML(f.label||f.id)}</div>`).join('');
 }
 function _openFavourite(type, id) {
@@ -26737,9 +26644,9 @@ function _showChannelNotifSettings(channelKey, channelName) {
   el.className = 'notif-settings-modal';
   el.onclick = e => { if (e.target === el) el.remove(); };
   const modes = [
-    { id:'all', icon:'🔔', label:'All Messages', desc:'Get notified for every message' },
+    { id:'all', icon:ftzIcon('bell','16'), label:'All Messages', desc:'Get notified for every message' },
     { id:'mentions', icon:'@', label:'Mentions Only', desc:'Only when you are mentioned' },
-    { id:'muted', icon:'🔇', label:'Muted', desc:'No notifications from this channel' },
+    { id:'muted', icon:ftzIcon('bellOff','16'), label:'Muted', desc:'No notifications from this channel' },
   ];
   el.innerHTML = `<div class="ns-card">
     <h3>Notifications — ${escapeHTML(channelName||'Channel')}</h3>

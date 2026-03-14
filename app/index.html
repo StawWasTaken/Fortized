@@ -325,6 +325,15 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ua-btns button:hover{background:rgba(255,255,255,.06);color:#fff;}
 .ua-btns button.active{color:var(--red);background:rgba(248,113,113,.08);}
 .ua-btns button.active:hover{background:rgba(248,113,113,.12);}
+/* ── Rail Userbar (compact userbar in fortized sidebar) ── */
+.rail-userbar{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0 10px;flex-shrink:0;width:100%;}
+.rail-ub-avatar{width:36px;height:36px;border-radius:50%;background:var(--panel);cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:visible;position:relative;transition:all .18s cubic-bezier(.22,1,.36,1);border:2px solid rgba(255,255,255,.08);box-shadow:0 2px 8px rgba(0,0,0,.3);}
+.rail-ub-avatar:hover{border-color:rgba(255,249,62,.2);transform:scale(1.08);}
+.rail-ub-avatar img,.rail-ub-avatar>div{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.rail-ub-avatar .ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2.5px solid var(--sidebar);}
+.rail-ub-btn{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.rail-ub-btn:hover{background:rgba(255,255,255,.06);color:#fff;}
+.rail-ub-btn.active{color:var(--red);background:rgba(248,113,113,.08);}
 /* Own profile mini panel — redesigned */
 .own-profile-panel{position:fixed;bottom:70px;left:80px;width:320px;background:var(--panel);border:1px solid var(--border);border-radius:14px;z-index:3000;box-shadow:0 24px 80px rgba(0,0,0,.9),0 0 1px rgba(255,255,255,.06);overflow:hidden;animation:ownPanelIn .2s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(24px);}
 @keyframes ownPanelIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
@@ -907,10 +916,10 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .atelier-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:22px;margin-bottom:12px;transition:all .14s;}
 .atelier-card:hover{border-color:rgba(255,255,255,.1);}
 .admin-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
-.admin-header-bar{height:52px;min-height:52px;background:linear-gradient(90deg,var(--rail),var(--panel),var(--rail));border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;position:relative;overflow:hidden;}
+.admin-header-bar{height:52px;min-height:52px;background:linear-gradient(90deg,var(--sidebar),var(--panel),var(--sidebar));border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;position:relative;overflow:hidden;}
 .admin-header-bar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent-mid),var(--accent-dim),transparent);}
 .admin-body{display:flex;flex:1;overflow:hidden;}
-.admin-nav{width:230px;min-width:230px;background:linear-gradient(180deg,var(--rail),var(--bg));border-right:1px solid var(--border);overflow-y:auto;padding:var(--space-sm);display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
+.admin-nav{width:230px;min-width:230px;background:linear-gradient(180deg,var(--sidebar),var(--bg));border-right:1px solid var(--border);overflow-y:auto;padding:var(--space-sm);display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
 .admin-nav::-webkit-scrollbar{width:3px;}.admin-nav::-webkit-scrollbar-thumb{background:var(--accent-dim);border-radius:4px;}
 .admin-main{flex:1;overflow-y:auto;background:linear-gradient(165deg,var(--bg),var(--panel));}
 .admin-main::-webkit-scrollbar{width:5px;}.admin-main::-webkit-scrollbar-thumb{background:var(--accent-dim);border-radius:4px;}
@@ -1030,9 +1039,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;}
 .toggle.on::after{transform:translateX(18px);}
 .radiance-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,160,62,.12),rgba(255,180,62,.12));border:1px solid rgba(255,160,62,.25);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:#ff9d3e;margin-top:5px;}
-.bsettings-wrap{flex:1;display:flex;overflow:hidden;}
-.bsettings-nav{width:220px;min-width:220px;border-right:1px solid rgba(255,255,255,.04);background:linear-gradient(180deg,rgba(12,14,24,.98),rgba(10,12,20,.99));overflow-y:auto;padding:8px 0;}
-.bsettings-main{flex:1;overflow-y:auto;padding:32px;background:rgba(10,12,20,.6);}
+.bsettings-wrap{flex:1;display:flex;overflow:hidden;background:var(--bg);}
+.bsettings-nav{width:220px;min-width:220px;border-right:1px solid var(--border);background:linear-gradient(180deg,var(--sidebar),var(--bg));overflow-y:auto;padding:8px 0;}
+.bsettings-main{flex:1;overflow-y:auto;padding:32px;background:linear-gradient(165deg,var(--bg),var(--panel));}
 .bsettings-nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;margin:1px 6px;border-radius:8px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.45);transition:all .12s;}
 .bsettings-nav-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.85);}
 .bsettings-nav-item.active{background:rgba(255,249,62,.07);color:var(--accent);}
@@ -2267,8 +2276,19 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     </div>
   </div>
   <div style="flex:1;"></div>
+  <!-- Rail Userbar (compact version matching chatbar height) -->
+  <div class="rail-userbar" id="rail-userbar">
+    <div class="rail-ub-avatar" id="rail-ub-avatar" onclick="toggleOwnProfilePanel()" title="Your Profile">
+      <span id="rail-ub-status-dot" class="ua-status-dot" style="background:#3ecf6e;"></span>
+    </div>
+    <button class="rail-ub-btn" onclick="toggleMic()" id="rail-mic-btn" title="Mute/Unmute">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+    </button>
+    <button class="rail-ub-btn" onclick="showView('profile')" title="Settings">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+  </div>
 </div>
-<!-- Userbar is now inside sidebar-ctx -->
 <!-- ACCOUNT SWITCHER PANEL -->
 <div id="account-switcher-panel" style="display:none;" class="account-switcher">
   <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:4px 12px 8px;">Accounts</div>
@@ -4058,6 +4078,19 @@ function updateUserbar() {
   _updateUserbarActivity();
   updateOnyxDisplay();
   refreshCustomStatusBubble();
+  // Sync rail userbar (compact avatar in fortized sidebar)
+  const railUbAvatar = document.getElementById('rail-ub-avatar');
+  if (railUbAvatar) {
+    const _defPfpRail = _defaultPfpUrl(CU.displayName||CU.username);
+    const railInner = CU.pfp
+      ? `<img src="${CU.pfp}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.src='${_defPfpRail}'">`
+      : `<img src="${_defPfpRail}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    railUbAvatar.innerHTML = railInner;
+    const railDot = document.createElement('span');
+    railDot.id = 'rail-ub-status-dot'; railDot.className = 'ua-status-dot';
+    railDot.style.background = FtzStatus.color(st);
+    railUbAvatar.appendChild(railDot);
+  }
 }
 function _isMobile() { return window.innerWidth <= 768; }
 function _isTablet() { return window.innerWidth <= 1024 && window.innerWidth > 768; }
@@ -9719,7 +9752,7 @@ function renderBSettingsNav(activeTab) {
     {id:'overview',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',label:'Overview'},
     {id:'channels',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',label:'Rooms Management'},
     {id:'roles',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',label:'Roles'},
-    {id:'emojis',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',label:'Custom Emojis'},
+    {id:'emojis',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',label:'Bastion Identity'},
     {label:'Moderation'},
     {id:'automod',icon:ftzIcon('shield','14'),label:'AutoMod'},
     {id:'bots',icon:'<img src="/Fortized Bot.png" style="width:14px;height:14px;">',label:'Bots'},
@@ -9892,26 +9925,65 @@ function renderBSettingsMain(tab) {
     const slotsByLevel = [15,25,35,50];
     const limit = slotsByLevel[b.boostLevel||0] || 15;
     const emojis = b.customEmojis || [];
-    const slots = Array.from({length:limit}).map((_,i)=>{
+    const stickers = b.stickers || b.customStickers || [];
+    const stickerLimit = slotsByLevel[b.boostLevel||0] || 15;
+    const emojiSlots = Array.from({length:limit}).map((_,i)=>{
       const e = emojis[i];
       return e ? `<div class="emoji-slot filled"><img src="${e.data}" alt="${escapeHTML(e.name)}"><div class="es-name">:${escapeHTML(e.name)}:</div><div class="es-del" onclick="event.stopPropagation();deleteCustomEmoji(${i})">✕</div></div>`
         : `<div class="emoji-slot" onclick="uploadCustomEmoji()">+</div>`;
     }).join('');
+    const stickerSlots = Array.from({length:stickerLimit}).map((_,i)=>{
+      const s = stickers[i];
+      return s ? `<div class="emoji-slot filled" style="width:72px;height:72px;"><img src="${escapeHTML(s.url||s.data||'')}" alt="${escapeHTML(s.name||'')}" style="width:64px;height:64px;object-fit:contain;"><div class="es-name">${escapeHTML(s.name||'sticker')}</div><div class="es-del" onclick="event.stopPropagation();deleteCustomSticker(${i})">✕</div></div>`
+        : `<div class="emoji-slot" style="width:72px;height:72px;" onclick="uploadCustomSticker()">+</div>`;
+    }).join('');
     const nextLimit = slotsByLevel[Math.min((b.boostLevel||0)+1,3)];
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">😊 Custom Emoji Manager</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:4px;">${emojis.length}/${limit} slots used</div>
-      <div style="width:100%;height:6px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-bottom:6px;">
-        <div style="height:100%;width:${Math.min(100,(emojis.length/limit)*100)}%;background:linear-gradient(90deg,var(--accent),var(--accent-mid));border-radius:3px;transition:width .3s;"></div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px;">🏰 Bastion Identity</div>
+      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Manage your bastion's custom emojis and stickers. These are available to all members.</div>
+
+      <!-- Sub-tabs for Emoji vs Stickers -->
+      <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
+        <button id="bi-tab-emojis" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:#060810;border:none;" onclick="_switchBITab('emojis')">Custom Emojis</button>
+        <button id="bi-tab-stickers" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBITab('stickers')">Stickers</button>
       </div>
-      ${(b.boostLevel||0)<3?`<div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Boost to Level ${(b.boostLevel||0)+1} for ${nextLimit} slots · <span style="color:var(--accent);cursor:pointer;" onclick="renderBSettingsMain('boost')">Boost →</span></div>`
-      :`<div style="font-size:11px;color:var(--green);margin-bottom:16px;">Maximum emoji slots unlocked!</div>`}
-      <div style="display:flex;gap:8px;margin-bottom:16px;">
-        <button class="btn-a" style="font-size:13px;" onclick="uploadCustomEmoji()">Upload Emoji</button>
-        <input id="emoji-file-input" type="file" accept="image/*,image/gif" style="display:none;" onchange="processEmojiUpload(event)">
+
+      <!-- Emoji Section -->
+      <div id="bi-section-emojis">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-size:13px;font-weight:700;">Custom Emojis</div>
+          <div style="font-size:11px;color:var(--muted);">${emojis.length}/${limit} slots</div>
+        </div>
+        <div style="width:100%;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-bottom:6px;">
+          <div style="height:100%;width:${Math.min(100,(emojis.length/limit)*100)}%;background:linear-gradient(90deg,var(--accent),var(--accent-mid));border-radius:3px;transition:width .3s;"></div>
+        </div>
+        ${(b.boostLevel||0)<3?`<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Boost to Level ${(b.boostLevel||0)+1} for ${nextLimit} slots · <span style="color:var(--accent);cursor:pointer;" onclick="renderBSettingsMain('boost')">Boost →</span></div>`
+        :`<div style="font-size:11px;color:var(--green);margin-bottom:14px;">Maximum slots unlocked!</div>`}
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button class="btn-a" style="font-size:13px;" onclick="uploadCustomEmoji()">Upload Emoji</button>
+          <input id="emoji-file-input" type="file" accept="image/*,image/gif" style="display:none;" onchange="processEmojiUpload(event)">
+        </div>
+        <div class="emoji-upload-grid">${emojiSlots}</div>
+        ${emojis.length?`<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;">Quick Reference</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${emojis.map(e=>`<div style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:var(--panel);border:1px solid var(--border);border-radius:8px;font-size:11px;"><img src="${e.data}" style="width:16px;height:16px;border-radius:3px;"><code style="color:var(--muted-light);">:${escapeHTML(e.name)}:</code></div>`).join('')}</div></div>`:''}
       </div>
-      <div class="emoji-upload-grid">${slots}</div>
-      ${emojis.length?`<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;">Quick Reference</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${emojis.map(e=>`<div style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:var(--panel);border:1px solid var(--border);border-radius:8px;font-size:11px;"><img src="${e.data}" style="width:16px;height:16px;border-radius:3px;"><code style="color:var(--muted-light);">:${escapeHTML(e.name)}:</code></div>`).join('')}</div></div>`:''}`;
+
+      <!-- Sticker Section -->
+      <div id="bi-section-stickers" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-size:13px;font-weight:700;">Custom Stickers</div>
+          <div style="font-size:11px;color:var(--muted);">${stickers.length}/${stickerLimit} slots</div>
+        </div>
+        <div style="width:100%;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-bottom:6px;">
+          <div style="height:100%;width:${Math.min(100,(stickers.length/stickerLimit)*100)}%;background:linear-gradient(90deg,#a78bfa,rgba(167,139,250,.3));border-radius:3px;transition:width .3s;"></div>
+        </div>
+        <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Stickers are larger expressions your members can send in chat. Supported formats: PNG, GIF, WebP (max 512KB, recommended 128x128).</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button class="btn-a" style="font-size:13px;background:linear-gradient(135deg,#a78bfa,#7c3aed);" onclick="uploadCustomSticker()">Upload Sticker</button>
+          <input id="sticker-file-input" type="file" accept="image/png,image/gif,image/webp" style="display:none;" onchange="processCustomStickerUpload(event)">
+        </div>
+        <div class="emoji-upload-grid" style="grid-template-columns:repeat(auto-fill,minmax(72px,1fr));">${stickerSlots}</div>
+        ${stickers.length?`<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;">Sticker Preview</div><div style="display:flex;flex-wrap:wrap;gap:10px;">${stickers.map(s=>`<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;background:var(--panel);border:1px solid var(--border);border-radius:10px;"><img src="${escapeHTML(s.url||s.data||'')}" style="width:48px;height:48px;object-fit:contain;"><div style="font-size:10px;color:var(--muted-light);">${escapeHTML(s.name||'sticker')}</div></div>`).join('')}</div></div>`:''}
+      </div>`;
   }
   else if (tab==='automod') {
     const am = b.automod || {};
@@ -10961,6 +11033,57 @@ async function deleteCustomEmoji(i) {
   showCustomConfirm('Delete this custom emoji?',async()=>{
     CU.bastions[curBastion].customEmojis.splice(i,1);
     await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('emojis'); toast('Emoji removed','info');
+  });
+}
+
+// ── Bastion Identity: Sub-tab switching ──
+function _switchBITab(tab) {
+  const emojiSection = document.getElementById('bi-section-emojis');
+  const stickerSection = document.getElementById('bi-section-stickers');
+  const emojiTab = document.getElementById('bi-tab-emojis');
+  const stickerTab = document.getElementById('bi-tab-stickers');
+  if (tab === 'emojis') {
+    if (emojiSection) emojiSection.style.display = '';
+    if (stickerSection) stickerSection.style.display = 'none';
+    if (emojiTab) { emojiTab.style.background = 'var(--accent)'; emojiTab.style.color = '#060810'; emojiTab.style.fontWeight = '700'; }
+    if (stickerTab) { stickerTab.style.background = 'transparent'; stickerTab.style.color = 'var(--muted-light)'; stickerTab.style.fontWeight = '600'; }
+  } else {
+    if (emojiSection) emojiSection.style.display = 'none';
+    if (stickerSection) stickerSection.style.display = '';
+    if (stickerTab) { stickerTab.style.background = 'var(--accent)'; stickerTab.style.color = '#060810'; stickerTab.style.fontWeight = '700'; }
+    if (emojiTab) { emojiTab.style.background = 'transparent'; emojiTab.style.color = 'var(--muted-light)'; emojiTab.style.fontWeight = '600'; }
+  }
+}
+
+// ── Bastion Identity: Sticker upload/delete ──
+function uploadCustomSticker() {
+  const inp = document.getElementById('sticker-file-input');
+  if (inp) inp.click();
+}
+async function processCustomStickerUpload(e) {
+  const file = e.target.files[0]; if (!file) return;
+  if (file.size > 512*1024) { toast('Max 512KB per sticker','error'); return; }
+  if (!/^image\/(png|gif|webp)$/.test(file.type)) { toast('Only PNG, GIF, WebP supported','error'); return; }
+  showCustomInput('Sticker Name','Enter a name for this sticker:',async(name)=>{
+    if (!name?.trim()) { toast('Name required','error'); return; }
+    const cleanName = name.trim().toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+    const r = new FileReader();
+    r.onload = async ev => {
+      const b = CU.bastions[curBastion];
+      if (!b.stickers) b.stickers = [];
+      b.stickers.push({name:cleanName, url:ev.target.result, data:ev.target.result, type:'sticker'});
+      await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('emojis'); toast('Sticker "'+cleanName+'" added!','success');
+    };
+    r.readAsDataURL(file);
+  });
+}
+async function deleteCustomSticker(i) {
+  showCustomConfirm('Delete this sticker?',async()=>{
+    const b = CU.bastions[curBastion];
+    const arr = b.stickers || b.customStickers || [];
+    arr.splice(i,1);
+    b.stickers = arr;
+    await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('emojis'); toast('Sticker removed','info');
   });
 }
 
@@ -19803,7 +19926,10 @@ function removeFavGif(id) {
 function renderFavGifs(targetInput) {
   const favs = getFavGifs();
   const grid = document.getElementById('giphy-grid');
+  const browser = document.getElementById('gif-category-browser');
   if (!grid) return;
+  if (browser) browser.style.display = 'none';
+  grid.style.display = '';
   if (!favs.length) {
     grid.innerHTML = '<div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px;gap:8px;">'
       + '<div style="font-size:28px;">⭐</div>'
@@ -19812,11 +19938,19 @@ function renderFavGifs(targetInput) {
   }
   grid.innerHTML = favs.map(gif => {
     const url = gif.url || ('https://media.giphy.com/media/' + gif.id + '/giphy.gif');
-    return `<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;cursor:pointer;background:var(--panel2);" onclick="insertGifById('${gif.id}','${escapeHTML(targetInput)}')">
-      <img src="${escapeHTML(url)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
-      <button onclick="event.stopPropagation();removeFavGif('${gif.id}');renderFavGifs('${escapeHTML(targetInput)}')" title="Remove" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);border:none;color:#fff;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    return `<div class="gif-card" data-id="${gif.id}" data-url="${escapeHTML(url)}" data-input="${escapeHTML(targetInput)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);break-inside:avoid;margin-bottom:8px;transition:all .2s cubic-bezier(.22,1,.36,1);">
+      <img src="${escapeHTML(url)}" style="width:100%;display:block;border-radius:9px;" loading="lazy" draggable="false">
+      <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.18s;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 45%);display:flex;align-items:flex-end;justify-content:space-between;padding:10px;pointer-events:none;border-radius:10px;"></div>
+      <button onclick="event.stopPropagation();removeFavGif('${gif.id}');renderFavGifs('${escapeHTML(targetInput)}')" title="Remove" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);color:#ff6b6b;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">✕</button>
     </div>`;
   }).join('');
+  grid.querySelectorAll('.gif-card').forEach(card => {
+    const ov = card.querySelector('.gif-hover-overlay');
+    const del = card.querySelector('button');
+    card.addEventListener('mouseenter', () => { card.style.transform='scale(1.03) translateY(-2px)'; card.style.boxShadow='0 8px 24px rgba(0,0,0,.35)'; card.style.borderColor='rgba(255,249,62,.12)'; if(ov)ov.style.opacity='1'; if(del)del.style.opacity='1'; });
+    card.addEventListener('mouseleave', () => { card.style.transform=''; card.style.boxShadow=''; card.style.borderColor='rgba(255,255,255,.05)'; if(ov)ov.style.opacity='0'; if(del)del.style.opacity='0'; });
+    card.addEventListener('click', () => sendGifDirectly(card.dataset.id, card.dataset.input, card.dataset.url));
+  });
 }
 
 // ════════════════════════════════════════════
@@ -19838,31 +19972,81 @@ function openGiphyPicker(inputId) {
   const picker = document.createElement('div');
   picker.id = 'giphy-picker';
   picker.className = 'chat-picker-base';
-  picker.style.cssText = `right:${rightOffset}px;bottom:${window.innerHeight-rect.top+8}px;width:440px;max-height:520px;`;
+  picker.style.cssText = `right:${rightOffset}px;bottom:${window.innerHeight-rect.top+8}px;width:460px;max-height:560px;`;
 
   const esc = escapeHTML(_giphyInput);
+  const favCount = getFavGifs().length;
+  const categories = [
+    {id:'trending',label:'Trending',emoji:'🔥'},
+    {id:'reactions',label:'Reactions',emoji:'😂'},
+    {id:'love',label:'Love',emoji:'❤️'},
+    {id:'gaming',label:'Gaming',emoji:'🎮'},
+    {id:'laughing',label:'Laughing',emoji:'🤣'},
+    {id:'sad',label:'Sad',emoji:'😢'},
+    {id:'excited',label:'Excited',emoji:'🎉'},
+    {id:'angry',label:'Angry',emoji:'😡'},
+    {id:'dance',label:'Dance',emoji:'💃'},
+    {id:'thumbs up',label:'Approve',emoji:'👍'},
+    {id:'thinking',label:'Thinking',emoji:'🤔'},
+    {id:'anime',label:'Anime',emoji:'🎌'},
+    {id:'animals',label:'Animals',emoji:'🐱'},
+    {id:'sports',label:'Sports',emoji:'⚽'},
+    {id:'food',label:'Food',emoji:'🍕'},
+    {id:'nature',label:'Nature',emoji:'🌿'},
+  ];
+
   picker.innerHTML = `
     ${_pickerTopTabs('gif')}
     <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="giphy-search-input" placeholder="Search for GIFs" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
+        <input id="giphy-search-input" placeholder="Search GIFs…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
       </div>
-      <div class="spp-tabs" style="padding:8px 0;border:none;" id="gif-category-chips">
-        <button class="spp-tab active" onclick="_gifChip(this,'trending','${esc}')">Trending</button>
-        <button class="spp-tab" onclick="_gifChip(this,'reactions','${esc}')">Reactions</button>
-        <button class="spp-tab" onclick="_gifChip(this,'gaming','${esc}')">Gaming</button>
-        <button class="spp-tab" onclick="_gifChip(this,'laughing','${esc}')">Laughing</button>
-        <button class="spp-tab" onclick="_gifChip(this,'sad','${esc}')">Sad</button>
-        <button class="spp-tab" onclick="switchGiphyTab('favourites','${esc}');_gifChipActivate(this)">Saved</button>
+      <!-- Navigation row: quick access tabs -->
+      <div style="display:flex;align-items:center;gap:4px;padding:8px 0 4px;border-bottom:1px solid rgba(255,255,255,.04);overflow-x:auto;scrollbar-width:none;" id="gif-nav-row">
+        <button class="spp-tab active" onclick="_gifChip(this,'trending','${esc}')" style="flex-shrink:0;">🔥 Trending</button>
+        <button class="spp-tab" onclick="switchGiphyTab('favourites','${esc}');_gifChipActivate(this)" style="flex-shrink:0;">⭐ Saved${favCount?' ('+favCount+')':''}</button>
+        <button class="spp-tab" onclick="_gifShowCategories('${esc}');_gifChipActivate(this)" style="flex-shrink:0;">📂 Categories</button>
       </div>
     </div>
     <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;"></div>
+    <!-- Category browser (hidden by default) -->
+    <div id="gif-category-browser" style="display:none;flex:1;overflow-y:auto;padding:10px;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+        ${categories.map(c => `
+          <div class="gif-category-tile" onclick="_gifSelectCategory('${c.id}','${esc}')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px 6px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;cursor:pointer;transition:all .15s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.background='rgba(255,249,62,.06)';this.style.borderColor='rgba(255,249,62,.15)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255,255,255,.03)';this.style.borderColor='rgba(255,255,255,.06)';this.style.transform=''">
+            <div style="font-size:22px;">${c.emoji}</div>
+            <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.5);">${c.label}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
   `;
 
   document.body.appendChild(picker);
   document.addEventListener('mousedown', _giphyOutsideClose, {once:true, capture:true});
   loadGiphyTrending(_giphyInput);
+}
+
+function _gifShowCategories(inputId) {
+  const grid = document.getElementById('giphy-grid');
+  const browser = document.getElementById('gif-category-browser');
+  if (grid) grid.style.display = 'none';
+  if (browser) browser.style.display = '';
+}
+
+function _gifSelectCategory(category, inputId) {
+  const grid = document.getElementById('giphy-grid');
+  const browser = document.getElementById('gif-category-browser');
+  if (grid) grid.style.display = '';
+  if (browser) browser.style.display = 'none';
+  // Update search input
+  const searchInput = document.getElementById('giphy-search-input');
+  if (searchInput) searchInput.value = category;
+  // Activate the trending tab since we're doing a search
+  const navRow = document.getElementById('gif-nav-row');
+  if (navRow) navRow.querySelectorAll('.spp-tab').forEach((b,i) => b.classList.toggle('active', i===0));
+  searchGifs(category, inputId);
 }
 function _gifChip(btn, category, inputId) {
   _gifChipActivate(btn);
@@ -19894,19 +20078,27 @@ function switchGiphyTab(tab, inputId) {
 }
 
 function handleGiphySearch(q, inputId) {
+  // Hide category browser when typing
+  const browser = document.getElementById('gif-category-browser');
+  const grid = document.getElementById('giphy-grid');
+  if (browser) browser.style.display = 'none';
+  if (grid) grid.style.display = '';
   clearTimeout(window._giphySearchTimer);
   window._giphySearchTimer = setTimeout(() => {
     if (!q.trim()) { _giphyTab = 'trending'; loadGiphyTrending(inputId); return; }
     searchGifs(q, inputId);
-  }, 350);
+  }, 300);
 }
 
 async function loadGiphyTrending(inputId) {
   const grid = document.getElementById('giphy-grid');
+  const browser = document.getElementById('gif-category-browser');
   if (!grid) return;
+  if (browser) browser.style.display = 'none';
+  grid.style.display = '';
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Loading…</div>';
   try {
-    const res = await fetch('https://api.giphy.com/v1/gifs/trending?api_key=8tjnuv9jBeGxVGmRLkrV2nhuvhKXTvDY&limit=18&rating=pg-13');
+    const res = await fetch('https://api.giphy.com/v1/gifs/trending?api_key=8tjnuv9jBeGxVGmRLkrV2nhuvhKXTvDY&limit=30&rating=pg-13');
     const data = await res.json();
     renderGiphyResults(data.data, inputId);
   } catch { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Failed to load</div>'; }
@@ -19914,10 +20106,13 @@ async function loadGiphyTrending(inputId) {
 
 async function searchGifs(q, inputId) {
   const grid = document.getElementById('giphy-grid');
+  const browser = document.getElementById('gif-category-browser');
   if (!grid) return;
+  if (browser) browser.style.display = 'none';
+  grid.style.display = '';
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Searching…</div>';
   try {
-    const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=8tjnuv9jBeGxVGmRLkrV2nhuvhKXTvDY&q=${encodeURIComponent(q)}&limit=18&rating=pg-13`);
+    const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=8tjnuv9jBeGxVGmRLkrV2nhuvhKXTvDY&q=${encodeURIComponent(q)}&limit=30&rating=pg-13`);
     const data = await res.json();
     renderGiphyResults(data.data, inputId);
   } catch { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Search failed</div>'; }
@@ -26218,6 +26413,7 @@ function listenChannelTyping(bid, chName) {
 // ADVANCED SEARCH
 // ════════════════════════════════════════════
 let _advSearchFilter = 'all';
+let _advSearchSort = 'recent'; // 'recent' | 'oldest' | 'relevant'
 function openAdvancedSearch() {
   document.getElementById('adv-search-panel')?.remove();
   document.getElementById('adv-search-overlay')?.remove();
@@ -26229,6 +26425,10 @@ function openAdvancedSearch() {
   const panel = document.createElement('div');
   panel.className = 'adv-search-panel';
   panel.id = 'adv-search-panel';
+  // Build search scope label
+  let scopeLabel = 'Everywhere';
+  if (curBastion !== null) { const b = CU.bastions?.[curBastion]; scopeLabel = b?.name || 'Current Bastion'; }
+  else if (curDM) scopeLabel = 'DM with ' + curDM;
   panel.innerHTML = `
     <div class="adv-search-header">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -26238,19 +26438,42 @@ function openAdvancedSearch() {
           <button onclick="_closeEl('adv-search-panel');_closeEl('adv-search-overlay')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='var(--muted)'">✕</button>
         </div>
       </div>
-      <input id="adv-search-input" placeholder="Search messages, members…" oninput="_runAdvSearch(this.value)" autofocus>
+      <input id="adv-search-input" placeholder="Search messages, members, files…" oninput="_runAdvSearch(this.value)" autofocus>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+        <div style="font-size:10px;color:rgba(255,255,255,.2);">Scope:</div>
+        <div style="font-size:10px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-mid);padding:2px 8px;border-radius:6px;font-weight:600;">${escapeHTML(scopeLabel)}</div>
+        <div style="flex:1;"></div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div style="font-size:10px;color:rgba(255,255,255,.2);">Sort:</div>
+          <select id="adv-search-sort" onchange="_advSearchSort=this.value;_runAdvSearch(document.getElementById('adv-search-input')?.value||'')" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:rgba(255,255,255,.6);font-size:10px;font-family:'DM Sans',sans-serif;padding:2px 6px;outline:none;cursor:pointer;">
+            <option value="recent" selected>Most Recent</option>
+            <option value="oldest">Oldest First</option>
+            <option value="relevant">Most Relevant</option>
+          </select>
+        </div>
+      </div>
     </div>
     <div class="adv-search-filters">
       <div class="asf-chip active" onclick="_setSearchFilter('all',this)">All</div>
       <div class="asf-chip" onclick="_setSearchFilter('members',this)">Members</div>
       <div class="asf-chip" onclick="_setSearchFilter('has:image',this)">Has Image</div>
+      <div class="asf-chip" onclick="_setSearchFilter('has:video',this)">Has Video</div>
+      <div class="asf-chip" onclick="_setSearchFilter('has:file',this)">Has File</div>
       <div class="asf-chip" onclick="_setSearchFilter('has:link',this)">Has Link</div>
+      <div class="asf-chip" onclick="_setSearchFilter('has:emoji',this)">Has Emoji</div>
+      <div class="asf-chip" onclick="_setSearchFilter('recent',this)">Last 24h</div>
     </div>
     <div class="adv-search-results" id="adv-search-results">
       <div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">
         <div style="font-size:24px;margin-bottom:10px;opacity:.3;">🔍</div>
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:rgba(255,255,255,.3);margin-bottom:4px;">Deep Search</div>
-        <div style="font-size:12px;">Search messages and members across all channels</div>
+        <div style="font-size:12px;">Search messages, members, files and links across all channels</div>
+        <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
+          <div style="font-size:10px;color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);padding:3px 10px;border-radius:6px;">from:username</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);padding:3px 10px;border-radius:6px;">in:channel</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);padding:3px 10px;border-radius:6px;">has:image</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);padding:3px 10px;border-radius:6px;">before:date</div>
+        </div>
       </div>
     </div>`;
   document.body.appendChild(panel);
@@ -26271,24 +26494,37 @@ function _runAdvSearch(q) {
     if (!q.trim()) { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">Type to search</div>'; return; }
     results.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Searching…</div>';
 
+    // Parse advanced query operators: from:user, in:channel, before:date, after:date
+    let searchQ = q;
+    let filterFrom = null, filterIn = null, filterBefore = null, filterAfter = null;
+    const opRegex = /(from|in|before|after):(\S+)/gi;
+    let match;
+    while ((match = opRegex.exec(q)) !== null) {
+      const op = match[1].toLowerCase(), val = match[2];
+      if (op === 'from') filterFrom = val.toLowerCase();
+      else if (op === 'in') filterIn = val.toLowerCase();
+      else if (op === 'before') filterBefore = new Date(val);
+      else if (op === 'after') filterAfter = new Date(val);
+      searchQ = searchQ.replace(match[0], '');
+    }
+    searchQ = searchQ.trim();
+
     // Member search
     if (_advSearchFilter === 'members' || _advSearchFilter === 'all') {
       const memberResults = [];
       try {
-        // Search bastion members
         if (curBastion !== null) {
           const b = CU.bastions?.[curBastion];
           if (b?.members) {
             for (const m of b.members) {
-              if (m.toLowerCase().includes(q.toLowerCase())) memberResults.push(m);
+              if (m.toLowerCase().includes((searchQ||q).toLowerCase())) memberResults.push(m);
             }
           }
         }
-        // Search friends
         if (CU.friends) {
           for (const f of CU.friends) {
             const fn = typeof f === 'string' ? f : (f.username||f.name||'');
-            if (fn && fn.toLowerCase().includes(q.toLowerCase()) && !memberResults.includes(fn)) memberResults.push(fn);
+            if (fn && fn.toLowerCase().includes((searchQ||q).toLowerCase()) && !memberResults.includes(fn)) memberResults.push(fn);
           }
         }
       } catch {}
@@ -26347,11 +26583,38 @@ function _runAdvSearch(q) {
           } catch {}
         }
       }
+      // Search all bastions (not just current)
+      if (CU?.bastions) {
+        for (const [idx, b] of Object.entries(CU.bastions)) {
+          if (Number(idx) === curBastion) continue;
+          const bid = b?.globalId||b?.name;
+          if (bid && b?.channels) {
+            for (const ch of b.channels.slice(0, 5)) {
+              const chName = ch.name||'general';
+              try {
+                const snap = await firebase.database().ref(`bastionMsgs/${bid}/${chName}`).limitToLast(30).get();
+                if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'ch'; v._loc = chName; v._bastion = b.name; allMsgs.push(v); });
+              } catch {}
+            }
+          }
+        }
+      }
     } catch {}
     let filtered = allMsgs.filter(m => m.text && m.from !== '__system__');
-    if (q.trim()) filtered = filtered.filter(m => (m.text||'').toLowerCase().includes(q.toLowerCase()));
+    // Apply text search
+    if (searchQ) filtered = filtered.filter(m => (m.text||'').toLowerCase().includes(searchQ.toLowerCase()));
+    // Apply advanced operators
+    if (filterFrom) filtered = filtered.filter(m => (m.from||'').toLowerCase().includes(filterFrom));
+    if (filterIn) filtered = filtered.filter(m => (m._loc||'').toLowerCase().includes(filterIn));
+    if (filterBefore && !isNaN(filterBefore)) filtered = filtered.filter(m => m.timestamp && new Date(m.timestamp) < filterBefore);
+    if (filterAfter && !isNaN(filterAfter)) filtered = filtered.filter(m => m.timestamp && new Date(m.timestamp) > filterAfter);
+    // Apply filter chips
     if (_advSearchFilter === 'has:image') filtered = filtered.filter(m => /\.(png|jpg|jpeg|gif|webp)/i.test(m.text||''));
+    else if (_advSearchFilter === 'has:video') filtered = filtered.filter(m => /\.(mp4|webm|mov|avi)/i.test(m.text||'') || /youtube\.com|youtu\.be|vimeo\.com/i.test(m.text||''));
+    else if (_advSearchFilter === 'has:file') filtered = filtered.filter(m => /\.(pdf|zip|rar|doc|docx|xls|xlsx|ppt|txt|csv|json|xml)/i.test(m.text||'') || /\[FTZFILE/i.test(m.text||''));
     else if (_advSearchFilter === 'has:link') filtered = filtered.filter(m => /https?:\/\//.test(m.text||''));
+    else if (_advSearchFilter === 'has:emoji') filtered = filtered.filter(m => /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]|:[a-zA-Z0-9_]+:/u.test(m.text||''));
+    else if (_advSearchFilter === 'recent') { const day = Date.now() - 86400000; filtered = filtered.filter(m => m.timestamp && new Date(m.timestamp).getTime() > day); }
 
     // If "all" mode, prepend member results
     let memberHtml = '';
@@ -26360,12 +26623,12 @@ function _runAdvSearch(q) {
       try {
         if (curBastion !== null) {
           const b = CU.bastions?.[curBastion];
-          if (b?.members) for (const m of b.members) { if (m.toLowerCase().includes(q.toLowerCase())) memberResults.push(m); }
+          if (b?.members) for (const m of b.members) { if (m.toLowerCase().includes((searchQ||q).toLowerCase())) memberResults.push(m); }
         }
         if (CU.friends) {
           for (const f of CU.friends) {
             const fn = typeof f === 'string' ? f : (f.username||f.name||'');
-            if (fn && fn.toLowerCase().includes(q.toLowerCase()) && !memberResults.includes(fn)) memberResults.push(fn);
+            if (fn && fn.toLowerCase().includes((searchQ||q).toLowerCase()) && !memberResults.includes(fn)) memberResults.push(fn);
           }
         }
       } catch {}
@@ -26380,19 +26643,49 @@ function _runAdvSearch(q) {
       }
     }
 
-    filtered.sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0));
+    // Sort results
+    if (_advSearchSort === 'recent') filtered.sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0));
+    else if (_advSearchSort === 'oldest') filtered.sort((a,b) => new Date(a.timestamp||0) - new Date(b.timestamp||0));
+    else if (_advSearchSort === 'relevant') {
+      const sq = (searchQ||q).toLowerCase();
+      filtered.sort((a,b) => {
+        const at = (a.text||'').toLowerCase(), bt = (b.text||'').toLowerCase();
+        const aStarts = at.startsWith(sq) ? 1 : 0, bStarts = bt.startsWith(sq) ? 1 : 0;
+        if (aStarts !== bStarts) return bStarts - aStarts;
+        const aCount = (at.match(new RegExp(sq.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'))||[]).length;
+        const bCount = (bt.match(new RegExp(sq.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'))||[]).length;
+        return bCount - aCount;
+      });
+    }
+
     if (!filtered.length && !memberHtml) { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">No results found</div>'; return; }
     let msgHtml = '';
+    const totalCount = filtered.length;
     if (filtered.length) {
-      msgHtml = `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);padding:8px 14px 4px;">Messages</div>`;
-      msgHtml += filtered.slice(0,50).map(m => {
-        const hl = q.trim() ? (m.text||'').replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>') : escapeHTML((m.text||'').slice(0,120));
+      msgHtml = `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);padding:8px 14px 4px;display:flex;align-items:center;justify-content:space-between;">
+        <span>Messages</span><span style="font-weight:500;letter-spacing:0;text-transform:none;">${totalCount} result${totalCount!==1?'s':''}</span>
+      </div>`;
+      msgHtml += filtered.slice(0,80).map(m => {
+        const hl = (searchQ||q).trim() ? (m.text||'').replace(new RegExp('('+((searchQ||q)).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>') : escapeHTML((m.text||'').slice(0,120));
         const loc = m._ctx === 'dm' ? m._loc : (m._loc ? '# ' + m._loc : '');
-        return `<div class="asr-item"><div class="asr-av">${buildAvatarHTML(null,m.from||'?',32)}</div><div class="asr-body"><div class="asr-meta"><span class="asr-from">${escapeHTML(m.from||'')}</span>${loc?`<span class="asr-channel">${escapeHTML(loc)}</span>`:''}<span class="asr-time">${m.timestamp?new Date(m.timestamp).toLocaleDateString():''}</span></div><div class="asr-text">${hl}</div></div></div>`;
+        const bastionTag = m._bastion ? `<span style="font-size:9px;color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);padding:1px 5px;border-radius:4px;margin-left:4px;">${escapeHTML(m._bastion)}</span>` : '';
+        const timeStr = m.timestamp ? _formatSearchTime(m.timestamp) : '';
+        return `<div class="asr-item"><div class="asr-av">${buildAvatarHTML(null,m.from||'?',32)}</div><div class="asr-body"><div class="asr-meta"><span class="asr-from">${escapeHTML(m.from||'')}</span>${loc?`<span class="asr-channel">${escapeHTML(loc)}</span>`:''}${bastionTag}<span class="asr-time">${timeStr}</span></div><div class="asr-text">${hl}</div></div></div>`;
       }).join('');
     }
     results.innerHTML = memberHtml + msgHtml;
-  }, 350);
+  }, 300);
+}
+
+function _formatSearchTime(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'Just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+  if (diff < 604800000) return Math.floor(diff/86400000) + 'd ago';
+  return d.toLocaleDateString();
 }
 
 // ════════════════════════════════════════════

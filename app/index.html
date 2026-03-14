@@ -273,11 +273,12 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .topbar{height:44px;background:var(--sidebar);display:flex;align-items:center;padding:0 18px;gap:18px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;}
 .topbar button,.topbar input,.topbar .tb-actions,.topbar .tb-onyx-pill,.topbar .tb-search,.topbar .tb-notif-btn,.topbar .tb-win-controls{-webkit-app-region:no-drag;}
 /* Electron window controls */
-.tb-win-controls{display:none;align-items:center;gap:0;margin-left:4px;flex-shrink:0;}
+.tb-win-controls{display:none;align-items:center;gap:0;margin-left:auto;flex-shrink:0;}
 body.is-desktop-app .tb-win-controls{display:flex;}
-.tb-win-btn{width:46px;height:34px;background:transparent;border:none;color:rgba(255,255,255,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s;-webkit-app-region:no-drag;}
-.tb-win-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);}
-.tb-win-btn.tb-win-close:hover{background:rgba(232,17,35,.9);color:#fff;}
+.tb-win-btn{width:46px;height:32px;background:transparent;border:none;color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s;-webkit-app-region:no-drag;border-radius:0;}
+.tb-win-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);}
+.tb-win-btn.tb-win-close:hover{background:rgba(232,17,35,.85);color:#fff;}
+body.is-desktop-app .topbar{padding-right:0;}
 .topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap;color:#fff;letter-spacing:-.01em;}
 .sidebar-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0;scroll-behavior:smooth;scrollbar-width:thin;}
 .sec-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 14px 5px;display:flex;align-items:center;justify-content:space-between;}
@@ -485,7 +486,8 @@ body.is-desktop-app .tb-win-controls{display:flex;}
 @keyframes joysterBubblePulse{0%,100%{box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 30px rgba(255,249,62,.08);}50%{box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 40px rgba(255,249,62,.12);}}
 .joyster-bubble.show{animation:joysterBubblePulse 3s ease-in-out infinite;}
 /* Knight background ghost */
-.hero-knight-bg{position:absolute;right:-30px;bottom:-20px;height:280px;opacity:.06;filter:blur(1.5px) grayscale(.4);pointer-events:none;z-index:0;}
+.hero-knight-bg{position:absolute;right:-30px;bottom:-20px;height:280px;max-height:280px;max-width:300px;opacity:.06;filter:blur(1.5px) grayscale(.4);pointer-events:none;z-index:0;object-fit:contain;overflow:hidden;}
+body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bottom:-10px;}
 /* ── Ambient glow — makes the platform feel alive ── */
 @keyframes ambientPulse{0%,100%{opacity:.6;}50%{opacity:1;}}
 @keyframes subtleFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
@@ -747,6 +749,10 @@ body.is-desktop-app .tb-win-controls{display:flex;}
 .media-lightbox-close{position:absolute;top:20px;right:24px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:50%;width:36px;height:36px;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .media-lightbox-close:hover{background:rgba(255,255,255,.12);color:#fff;}
 .media-lightbox-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+/* GIF favourite button in chat messages */
+.chat-gif-fav-btn{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s,transform .15s;z-index:2;line-height:1;}
+.chat-gif-wrap:hover .chat-gif-fav-btn{opacity:1;}
+.chat-gif-fav-btn:hover{transform:scale(1.15);background:rgba(0,0,0,.7);}
 /* Drag-drop overlay — scoped to chatbar */
 .drop-overlay{position:absolute;inset:0;background:rgba(255,249,62,.06);border:2px dashed var(--accent);border-radius:12px;z-index:30;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none;}
 .drop-overlay.active{display:flex;}
@@ -1207,8 +1213,17 @@ body.is-desktop-app .tb-win-controls{display:flex;}
 .vc-btn.muted-btn.active{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);}
 .vc-btn.disc-btn{background:var(--red);color:#fff;}
 /* ── Emoji Picker 3.0 ─────────────────────────── */
-.emoji-picker-panel{position:fixed;width:420px;max-height:520px;background:rgba(16,18,28,.96);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:0;z-index:9000;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02);display:none;flex-direction:column;overflow:hidden;font-family:'DM Sans',sans-serif;backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);animation:pickerSlideIn .2s cubic-bezier(.22,1,.36,1);}
+.emoji-picker-panel{position:fixed;width:460px;max-height:520px;background:rgba(16,18,28,.96);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:0;z-index:9000;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02);display:none;flex-direction:row;overflow:hidden;font-family:'DM Sans',sans-serif;backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);animation:pickerSlideIn .2s cubic-bezier(.22,1,.36,1);}
 .emoji-picker-panel.show{display:flex;}
+/* Emoji picker sidebar */
+.epp-sidebar{width:44px;background:rgba(0,0,0,.2);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px;overflow-y:auto;scrollbar-width:none;flex-shrink:0;}
+.epp-sidebar::-webkit-scrollbar{display:none;}
+.epp-sidebar-btn{width:34px;height:34px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:transparent;color:rgba(255,255,255,.4);transition:all .12s;flex-shrink:0;padding:0;}
+.epp-sidebar-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);}
+.epp-sidebar-btn.active{background:rgba(255,249,62,.12);color:var(--accent);}
+.epp-sidebar-btn img{width:22px;height:22px;border-radius:6px;object-fit:cover;}
+.epp-sidebar-sep{width:24px;height:1px;background:rgba(255,255,255,.06);margin:4px 0;flex-shrink:0;}
+.epp-main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 @keyframes emojiPanelIn{from{opacity:0;transform:translateY(8px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
 /* Emoji autocomplete dropdown */
 .emoji-autocomplete{position:fixed;background:rgba(16,18,28,.96);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:6px;z-index:9500;box-shadow:0 12px 36px rgba(0,0,0,.5);max-width:380px;display:none;backdrop-filter:blur(20px);}
@@ -1430,7 +1445,8 @@ body.is-desktop-app .sys-announce-bar{padding-right:160px;}
 .notif-panel{position:fixed;top:0;right:0;width:400px;height:100vh;max-height:100vh;background:rgba(14,17,24,.97);border-left:1px solid rgba(255,255,255,.04);border-radius:0;box-shadow:-20px 0 80px rgba(0,0,0,.8);z-index:500;transform:translateX(100%);transition:transform .22s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;backdrop-filter:blur(24px) saturate(140%);}
 .notif-panel.open{transform:translateX(0);}
 .np-header{padding:22px 22px 18px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,rgba(239,68,68,.04),transparent);}
-body.is-desktop-app .np-header{padding-top:40px;}
+body.is-desktop-app .np-header{padding-top:46px;}
+body.is-desktop-app .notif-panel{top:0;}
 .np-header h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex:1;letter-spacing:-.02em;color:#fff;}
 .np-list{flex:1;overflow-y:auto;padding:8px 10px;}
 .np-item{display:flex;gap:14px;padding:14px 16px;border-radius:14px;cursor:pointer;margin-bottom:4px;position:relative;transition:all .15s;border:1px solid transparent;}
@@ -2059,12 +2075,13 @@ body.is-desktop-app .np-header{padding-top:40px;}
 .pw-bastion-meta{font-size:10.5px;color:rgba(255,255,255,.3);margin-top:1px;}
 .pw-join-btn{padding:6px 14px;border-radius:8px;background:var(--accent);color:#000;font-size:11px;font-weight:700;border:none;cursor:pointer;transition:all .14s;font-family:'Syne',sans-serif;flex-shrink:0;}
 .pw-join-btn:hover{filter:brightness(1.1);transform:scale(1.04);}
-.pw-gc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:6px;}
-.pw-gc-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.04);transition:all .14s;cursor:default;}
-.pw-gc-item:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.08);}
-.pw-gc-icon{font-size:20px;line-height:1;}
-.pw-gc-icon img{width:28px;height:28px;border-radius:6px;object-fit:cover;}
-.pw-gc-name{font-size:8px;color:rgba(255,255,255,.35);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:600;}
+.pw-gc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;}
+.pw-gc-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0;border-radius:10px;background:transparent;border:none;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:default;position:relative;overflow:hidden;}
+.pw-gc-item:hover{transform:translateY(-2px);}
+.pw-gc-icon{width:100%;aspect-ratio:3/4;border-radius:10px;overflow:hidden;font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);position:relative;}
+.pw-gc-icon img{width:100%;height:100%;border-radius:10px;object-fit:cover;transition:transform .2s;}
+.pw-gc-item:hover .pw-gc-icon img{transform:scale(1.05);}
+.pw-gc-name{font-size:9px;color:rgba(255,255,255,.45);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:600;padding:0 2px;}
 /* Widget config in settings */
 .pw-config-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;transition:all .14s;cursor:grab;}
 .pw-config-item:hover{background:rgba(255,255,255,.04);}
@@ -12085,20 +12102,37 @@ let _recentEmojis = JSON.parse(localStorage.getItem('ftz_recent_emojis')||'[]');
 let _emojiPickerTab = 'smileys';
 
 
+function buildEmojiSidebar() {
+  // Build sidebar with: Fortized icon, separator, bastion icons, separator, category icons
+  const bastions = CU?.bastions || [];
+  let html = '';
+  // Fortized global emojis
+  html += `<button class="epp-sidebar-btn${_emojiPickerTab==='ftz'?' active':''}" id="etab-ftz" title="Fortized Guide" onclick="setEmojiTab('ftz')"><img src="/Fortized icon.png" width="22" height="22" style="object-fit:contain;" onerror="this.outerHTML='🏰'"></button>`;
+  // Frequently used
+  html += `<button class="epp-sidebar-btn${_emojiPickerTab==='frequent'?' active':''}" id="etab-frequent" title="Frequently used" onclick="setEmojiTab('frequent')"><span style="font-size:16px;">🔥</span></button>`;
+  // Personal emojis
+  html += `<button class="epp-sidebar-btn${_emojiPickerTab==='personal'?' active':''}" id="etab-personal" title="My Emojis" onclick="setEmojiTab('personal')"><span style="font-size:16px;">⭐</span></button>`;
+  // Separator before bastions
+  if (bastions.length) {
+    html += '<div class="epp-sidebar-sep"></div>';
+    bastions.forEach((b, i) => {
+      const active = _emojiPickerTab === 'bastion-' + i;
+      const emblem = b.emblem ? `<img src="${escapeHTML(b.emblem)}" alt="${escapeHTML(b.name||'')}">` : `<span style="font-size:12px;font-weight:700;">${escapeHTML((b.name||'B').slice(0,2).toUpperCase())}</span>`;
+      html += `<button class="epp-sidebar-btn${active?' active':''}" id="etab-bastion-${i}" title="${escapeHTML(b.name||'Bastion')}" onclick="setEmojiTab('bastion-${i}')">${emblem}</button>`;
+    });
+  }
+  // Separator before unicode categories
+  html += '<div class="epp-sidebar-sep"></div>';
+  const cats = [{id:'smileys',icon:'😀'},{id:'people',icon:'👋'},{id:'nature',icon:'🌿'},{id:'food',icon:'🍔'},{id:'travel',icon:'✈️'},{id:'activities',icon:'🎮'},{id:'hearts',icon:'❤️'},{id:'symbols',icon:'⚡'}];
+  cats.forEach(c => {
+    html += `<button class="epp-sidebar-btn${_emojiPickerTab===c.id?' active':''}" id="etab-${c.id}" title="${c.id}" onclick="setEmojiTab('${c.id}')"><span style="font-size:16px;">${c.icon}</span></button>`;
+  });
+  return html;
+}
+
 function buildEmojiTabBar() {
-  const tabs = [{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:null,label:'Fortized'},{id:'personal',icon:'⭐',label:'My Emojis'},...EMOJI_PICKER_TABS.slice(2)];
-  return tabs.map(t => {
-    const active = _emojiPickerTab === t.id;
-    const baseStyle = 'border:none;cursor:pointer;flex-shrink:0;line-height:1;transition:all .1s;border-radius:8px;padding:5px 7px;';
-    const activeStyle = active ? 'background:rgba(255,249,62,.15);color:var(--accent);' : 'background:transparent;color:rgba(255,255,255,.45);';
-    let inner;
-    if (t.id === 'ftz') {
-      inner = '<img src="/Fortized icon.png" width="20" height="20" style="object-fit:contain;vertical-align:middle;display:block;" onerror="this.style.opacity=0">';
-    } else {
-      inner = '<span style="font-size:18px;">' + t.icon + '</span>';
-    }
-    return '<button id="etab-' + t.id + '" title="' + t.label + '" onclick="setEmojiTab(\'' + t.id + '\')" style="' + baseStyle + activeStyle + '">' + inner + '</button>';
-  }).join('');
+  // Legacy — now uses sidebar instead
+  return '';
 }
 function toggleEmojiPicker(targetId) {
   activeEmojiTarget = targetId;
@@ -12114,8 +12148,8 @@ function toggleEmojiPicker(targetId) {
   panel.classList.add('show');
 
   requestAnimationFrame(() => {
-    const PW = panel.offsetWidth || 380;
-    const PH = panel.offsetHeight || 440;
+    const PW = panel.offsetWidth || 460;
+    const PH = panel.offsetHeight || 480;
     const btnId = 'emoji-btn-' + (targetId.includes('dm')?'dm':targetId.includes('gc')?'gc':'ch');
     const btn = document.getElementById(btnId);
     const WW = window.innerWidth, WH = window.innerHeight;
@@ -12166,20 +12200,24 @@ function _switchPickerTab(tab) {
 function buildEmojiPicker() {
   const panel = document.getElementById('emoji-picker');
   if (!panel) return;
-  const customEmojis = curBastion !== null ? (CU?.bastions?.[curBastion]?.customEmojis||[]) : [];
 
   panel.innerHTML = `
-    ${_pickerTopTabs('emoji')}
-    <div style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0;">
-      <input class="epp-search-inp" placeholder="Search emoji…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;padding:8px 12px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.boxShadow='none'" oninput="searchEmojis(this.value)">
+    <div class="epp-sidebar" id="epp-sidebar">
+      ${buildEmojiSidebar()}
     </div>
-    <div class="spp-tabs" style="padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.03);">
-      ${buildEmojiTabBar()}
-    </div>
-    <div id="epp-grid" style="flex:1;overflow-y:auto;padding:6px 8px;display:grid;grid-template-columns:repeat(8,1fr);gap:1px;max-height:280px;"></div>
-    <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);font-size:10px;color:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-      <span id="epp-hover-label">Select an emoji</span>
-      <button onclick="_showEmojiInfo()" style="background:none;border:none;color:rgba(255,255,255,.15);cursor:pointer;font-size:12px;padding:2px;" title="Emoji Info">ℹ</button>
+    <div class="epp-main">
+      ${_pickerTopTabs('emoji')}
+      <div style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0;">
+        <div style="position:relative;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="epp-search-inp" placeholder="Search" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;padding:8px 12px 8px 32px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.boxShadow='none'" oninput="searchEmojis(this.value)">
+        </div>
+      </div>
+      <div id="epp-grid" style="flex:1;overflow-y:auto;padding:6px 8px;display:grid;grid-template-columns:repeat(8,1fr);gap:1px;max-height:340px;"></div>
+      <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);font-size:10px;color:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <span id="epp-hover-label">Select an emoji</span>
+        <button onclick="_showEmojiInfo()" style="background:none;border:none;color:rgba(255,255,255,.15);cursor:pointer;font-size:12px;padding:2px;" title="Emoji Info">ℹ</button>
+      </div>
     </div>
   `;
   renderEmojiTab(_emojiPickerTab);
@@ -12187,7 +12225,13 @@ function buildEmojiPicker() {
 
 function setEmojiTab(tabId) {
   _emojiPickerTab = tabId;
+  // Update sidebar active state
+  document.querySelectorAll('.epp-sidebar-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById('etab-' + tabId);
+  if (activeBtn) activeBtn.classList.add('active');
+  // Legacy tab bar support
   document.querySelectorAll('[id^=etab-]').forEach(b => {
+    if (b.classList.contains('epp-sidebar-btn')) return;
     const active = b.id === 'etab-' + tabId;
     b.style.background = active ? 'rgba(255,249,62,.15)' : 'transparent';
     b.style.color = active ? 'var(--accent)' : 'rgba(255,255,255,.5)';
@@ -12198,7 +12242,7 @@ function setEmojiTab(tabId) {
 function renderEmojiTab(tabId) {
   const grid = document.getElementById('epp-grid');
   if (!grid) return;
-  
+
   if (tabId === 'recent') {
     if (!_recentEmojis.length) {
       grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">No recent emojis yet!</div>';
@@ -12206,6 +12250,54 @@ function renderEmojiTab(tabId) {
     }
     grid.innerHTML = _recentEmojis.map(e => renderEmojiCell(e)).join('');
     wireEmojiHover(grid);
+    return;
+  }
+
+  // Frequently used — combines recent emojis with usage frequency
+  if (tabId === 'frequent') {
+    grid.style.gridTemplateColumns = 'repeat(8,1fr)';
+    const freqData = JSON.parse(localStorage.getItem('ftz_emoji_freq')||'{}');
+    const freqList = Object.entries(freqData).sort((a,b) => b[1]-a[1]).slice(0,48);
+    if (!freqList.length && !_recentEmojis.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">Use some emojis and they\'ll show up here!</div>';
+      return;
+    }
+    let html = '<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">Frequently used</div>';
+    if (freqList.length) {
+      html += freqList.map(([emoji]) => {
+        if (FORTIZED_EMOJI_MAP[emoji]) {
+          return `<div onclick="insertFortizedEmoji('${escapeHTML(emoji)}','${escapeHTML(FORTIZED_EMOJI_MAP[emoji])}')" title=":${escapeHTML(emoji)}:" style="width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:3px;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'" onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(emoji)}:'"><img src="${escapeHTML(FORTIZED_EMOJI_MAP[emoji])}" style="width:100%;height:100%;object-fit:contain;"></div>`;
+        }
+        return renderEmojiCell(emoji);
+      }).join('');
+    } else {
+      html += _recentEmojis.slice(0,24).map(e => renderEmojiCell(e)).join('');
+    }
+    grid.innerHTML = html;
+    return;
+  }
+
+  // Bastion-specific emoji tab
+  if (tabId.startsWith('bastion-')) {
+    const bi = parseInt(tabId.split('-')[1]);
+    const b = CU?.bastions?.[bi];
+    if (!b) return;
+    const bastionEmojis = b.customEmojis || [];
+    grid.style.gridTemplateColumns = 'repeat(6,1fr)';
+    let html = `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">${escapeHTML(b.name||'Bastion')}</div>`;
+    if (bastionEmojis.length) {
+      html += bastionEmojis.map(ce => `
+        <div onclick="insertFortizedEmoji('${escapeHTML(ce.name)}','${escapeHTML(ce.data)}')"
+             onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:'"
+             title=":${escapeHTML(ce.name)}:"
+             style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
+             onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+          <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
+        </div>`).join('');
+    } else {
+      html += '<div style="grid-column:1/-1;font-size:11.5px;color:rgba(255,255,255,.25);padding:4px;">No custom emojis in this bastion</div>';
+    }
+    grid.innerHTML = html;
     return;
   }
   
@@ -12265,7 +12357,7 @@ function renderEmojiTab(tabId) {
            onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
         <img src="${escapeHTML(e.url)}" alt=":${escapeHTML(e.name)}:"
              style="width:100%;height:100%;object-fit:contain;"
-             onerror="this.parentElement.innerHTML='<span style=\'font-size:9px;color:rgba(255,255,255,.2);text-align:center;word-break:break-all;padding:2px;\'>${escapeHTML(e.name.replace('knight_','').replace('joyster_',''))}</span>'">
+             onerror="this.parentElement.innerHTML='<span style=\'font-size:9px;color:rgba(255,255,255,.2);text-align:center;word-break:break-all;padding:2px;\'>${escapeHTML(e.name.replace('knight_','').replace('joyster_','').replace('leafen_',''))}</span>'">
       </div>`).join('');
 
     // Section: Per-Bastion Custom Emojis
@@ -12485,7 +12577,17 @@ function searchEmojis(q) {
   FORTIZED_EMOJIS.forEach(name => {
     if (name.includes(ql)) matches.push({type:'ftz',name,url:FORTIZED_EMOJI_MAP[name]});
   });
-  
+  // Search bastion custom emojis
+  (CU?.bastions||[]).forEach((b, bi) => {
+    (b.customEmojis||[]).forEach(ce => {
+      if (ce.name && ce.name.toLowerCase().includes(ql)) matches.push({type:'ftz',name:ce.name,url:ce.data});
+    });
+  });
+  // Search personal emojis
+  (CU?.personalEmojis||[]).forEach(pe => {
+    if (pe.name && pe.name.toLowerCase().includes(ql)) matches.push({type:'ftz',name:pe.name,url:pe.data});
+  });
+
   if (!matches.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);">No results for "'+escapeHTML(q)+'"</div>'; return; }
   grid.style.gridTemplateColumns = 'repeat(8,1fr)';
   grid.innerHTML = matches.slice(0,64).map(m => {
@@ -12507,6 +12609,8 @@ function insertEmoji(emoji) {
   // Add to recent
   _recentEmojis = [emoji, ..._recentEmojis.filter(e=>e!==emoji)].slice(0,24);
   localStorage.setItem('ftz_recent_emojis', JSON.stringify(_recentEmojis));
+  // Track frequency
+  _trackEmojiFrequency(emoji);
 }
 
 // ═══ Radiance helper ═══
@@ -12593,6 +12697,18 @@ function insertFortizedEmoji(name, url) {
   ta.selectionStart = ta.selectionEnd = pos + token.length;
   ta.focus();
   document.getElementById('emoji-picker').classList.remove('show');
+  // Track frequency
+  _trackEmojiFrequency(name);
+}
+
+function _trackEmojiFrequency(emoji) {
+  try {
+    const freq = JSON.parse(localStorage.getItem('ftz_emoji_freq')||'{}');
+    freq[emoji] = (freq[emoji]||0) + 1;
+    // Keep only top 100 entries
+    const sorted = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,100);
+    localStorage.setItem('ftz_emoji_freq', JSON.stringify(Object.fromEntries(sorted)));
+  } catch {}
 }
 
 // Emoji info popover — right-click an emoji to see details
@@ -18707,10 +18823,10 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
           <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
           <div class="chat-input-actions">
             <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF" data-tooltip="GIFs">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10.5 9.5H8.5a1 1 0 00-1 1v3a1 1 0 001 1h2a1 1 0 001-1v-1.5h-1.5"/><line x1="14" y1="9.5" x2="14" y2="14.5"/><path d="M17 9.5h2.5M17 12h2M17 14.5h2.5"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><text x="12" y="15" text-anchor="middle" fill="currentColor" stroke="none" font-size="8" font-weight="800" font-family="sans-serif">GIF</text></svg>
             </button>
             <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" title="Stickers">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><path d="M14 20l8-8" opacity=".4"/><path d="M14 20v-6a2 2 0 012-2h6"/><circle cx="8.5" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="13" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M7.5 14.5s1.2 2 4 2 4-2 4-2"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="14 3 14 9 21 9"/><circle cx="9" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1" fill="currentColor" stroke="none"/><path d="M9 17c1 1 2 1.5 3 1.5s2-.5 3-1.5"/></svg>
             </button>
             <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" title="Emoji" data-tooltip="Emoji">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5"/><circle cx="9" cy="9.5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1" fill="currentColor" stroke="none"/></svg>
@@ -18792,7 +18908,8 @@ function parseMD(s) {
   // 0. GIF token from sendGifDirectly
   s = s.replace(/\[FTZGIF:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);
-    return `<div style="margin:6px 0;max-width:320px;border-radius:12px;overflow:hidden;display:inline-block;cursor:pointer;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:260px;object-fit:contain;border-radius:12px;display:block;" loading="lazy"></div>`;
+    const gifId = url.split('/media/')[1]?.split('/')[0] || ('custom-' + Math.random().toString(36).slice(2,8));
+    return `<div class="chat-gif-wrap" style="margin:6px 0;max-width:320px;border-radius:12px;overflow:hidden;display:inline-block;cursor:pointer;position:relative;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:260px;object-fit:contain;border-radius:12px;display:block;" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Save to favourites">⭐</button></div>`;
   });
   // 0a. Sticker token from sticker picker
   s = s.replace(/\[FTZSTICKER:([^\]]+)\]/g, (_, url) => {
@@ -18814,19 +18931,17 @@ function parseMD(s) {
     const personalEmojis = CU?.personalEmojis || [];
     const pe = personalEmojis.find(e => e.name === name);
     if (pe) return `<img src="${escapeHTML(pe.data)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="personal" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
-    // Check bastion custom emojis
-    const isRadiance = _hasActiveRadiance();
-    // Search current bastion first
+    // Check bastion custom emojis — search current bastion first, then ALL bastions
+    // All users can VIEW emojis from any bastion they're in (Radiance only gates USING them in picker)
     if (curBastion !== null) {
       const ce = (CU?.bastions?.[curBastion]?.customEmojis||[]).find(e => e.name === name);
       if (ce) return `<img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="bastion" data-bastion-idx="${curBastion}" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
     }
-    // Radiance users: search ALL bastions for the emoji
-    if (isRadiance) {
-      for (let bi = 0; bi < (CU?.bastions||[]).length; bi++) {
-        const ce = (CU.bastions[bi]?.customEmojis||[]).find(e => e.name === name);
-        if (ce) return `<img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="bastion" data-bastion-idx="${bi}" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
-      }
+    // Search ALL bastions the user is in for the emoji (so cross-bastion emojis render for everyone)
+    for (let bi = 0; bi < (CU?.bastions||[]).length; bi++) {
+      if (bi === curBastion) continue; // already checked
+      const ce = (CU.bastions[bi]?.customEmojis||[]).find(e => e.name === name);
+      if (ce) return `<img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="bastion" data-bastion-idx="${bi}" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
     }
     return match; // keep original if unknown
   });
@@ -18840,7 +18955,7 @@ function parseMD(s) {
   s = s.replace(/\[FTZIMG:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
     return '<div style="margin:5px 0;">'
       + '<img src="' + data + '" style="max-width:360px;max-height:300px;border-radius:10px;display:block;cursor:pointer;" loading="lazy" onclick="_openMediaLightbox(this.src)">'
-      + '<a href="' + data + '" download="' + escapeHTML(name) + '" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-top:3px;text-decoration:none;">⬇ ' + escapeHTML(name) + '</a></div>';
+      + '</div>';
   });
   // 0b. Video attachments
   s = s.replace(/\[FTZVID:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
@@ -18862,7 +18977,6 @@ function parseMD(s) {
       +'<span style="font-size:11px;color:var(--muted);">/</span>'
       +'<span id="'+vid2+'-dur" style="font-size:11px;color:var(--muted);">--:--</span>'
       +'</div>'
-      +'<a href="'+data+'" download="'+escapeHTML(name)+'" style="font-size:10.5px;color:var(--muted);text-decoration:none;">⬇ '+escapeHTML(name)+'</a>'
       +'</div></div></div>';
   });
   // 0c. Audio attachments
@@ -18881,7 +18995,6 @@ function parseMD(s) {
       +'<span id="'+aid+'-dur" style="font-size:10px;color:var(--muted);">--:--</span>'
       +'</div></div></div>'
       +'<audio id="'+aid+'" src="'+data+'" style="display:none;" ontimeupdate="ftzAudioTick(\''+aid+'\')" onloadedmetadata="ftzAudioMeta(\''+aid+'\')" onended="ftzAudioEnd(\''+aid+'\')"></audio>'
-      +'<a href="'+data+'" download="'+escapeHTML(name)+'" style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--muted);text-decoration:none;">⬇ Download</a>'
       +'</div>';
   });
   // 0d. Generic file attachments
@@ -20397,11 +20510,16 @@ function renderProfileWidgetsOnCard(u, containerEl) {
     if (w.id === 'game_collection' && games.length) {
       const max = w.config?.maxShow || 6;
       html += `<div class="pw-widget">
-        <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> Game Collection</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <div class="pw-widget-title" style="margin-bottom:2px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> Games I like</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.15);">${Math.min(games.length,max)} of ${games.length} games</div>
+          </div>
+        </div>
         <div class="pw-gc-grid">${games.slice(0,max).map(g => `<div class="pw-gc-item" title="${escapeHTML(g.name)}">
-          <div class="pw-gc-icon">${g.coverUrl ? `<img src="${escapeHTML(g.coverUrl)}" alt="${escapeHTML(g.name)}">` : (g.icon||'🎮')}</div>
+          <div class="pw-gc-icon">${g.coverUrl ? `<img src="${escapeHTML(g.coverUrl)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02));">${g.icon||'🎮'}</div>`}</div>
           <div class="pw-gc-name">${escapeHTML(g.name)}</div>
-        </div>`).join('')}${games.length > max ? `<div class="pw-gc-item" style="opacity:.5;"><div class="pw-gc-icon" style="font-size:14px;">+${games.length-max}</div><div class="pw-gc-name">more</div></div>` : ''}</div>
+        </div>`).join('')}${games.length > max ? `<div class="pw-gc-item" style="opacity:.5;"><div class="pw-gc-icon" style="font-size:14px;background:rgba(255,255,255,.03);">+${games.length-max}</div><div class="pw-gc-name">more</div></div>` : ''}</div>
       </div>`;
     }
 
@@ -21318,13 +21436,11 @@ function openStickerPicker(inputId) {
   if (CU?.bastions) {
     Object.entries(CU.bastions).forEach(([idx, b]) => {
       const stickers = b.stickers || b.customStickers || [];
-      // Current bastion: always show. Other bastions: Radiance only.
-      if (parseInt(idx) === curBastion || isRadiance) {
-        stickers.forEach(s => {
-          allStickers.push({...s, bastionName: b.name || 'Unknown', bastionIdx: idx});
-        });
-        if (stickers.length) bastionNames[idx] = b.name || 'Unknown';
-      }
+      // Show stickers from ALL bastions the user is in
+      stickers.forEach(s => {
+        allStickers.push({...s, bastionName: b.name || 'Unknown', bastionIdx: idx});
+      });
+      if (stickers.length) bastionNames[idx] = b.name || 'Unknown';
     });
   }
 
@@ -23790,6 +23906,25 @@ function _showWatchInRoom(vid) {
 // ════════════════════════════════════════════
 // LIVE MESSAGE UPDATES (edit/delete/forward)
 // ════════════════════════════════════════════
+// Wire up Socket.io message:edited listener for real-time edits from other users
+(function _wireSocketEditListener() {
+  const _checkSocket = setInterval(() => {
+    const sock = typeof FortizedSocial !== 'undefined' && FortizedSocial.getSocket ? FortizedSocial.getSocket() : null;
+    if (!sock) return;
+    clearInterval(_checkSocket);
+    sock.on('message:edited', data => {
+      if (!data || !data.messageId) return;
+      const row = document.querySelector(`[data-msgid="${CSS.escape(data.messageId)}"]`);
+      if (!row) return;
+      const textEl = row.querySelector('.msg-text');
+      if (textEl && data.newText !== undefined) {
+        row.dataset.text = data.newText;
+        textEl.innerHTML = parseMD(escapeHTML(data.newText)) + '<span class="msg-edited">(edited)</span>';
+      }
+    });
+  }, 2000);
+})();
+
 function _liveUpdateMessage(snap, context) {
   const msg = snap.val();
   if (!msg) return;

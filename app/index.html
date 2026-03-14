@@ -1960,7 +1960,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .up-left::-webkit-scrollbar{width:4px;}.up-left::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px;}
 .up-left-banner{height:150px;position:relative;overflow:hidden;flex-shrink:0;}
 .up-left-banner img{width:100%;height:100%;object-fit:cover;}
-.up-left-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:70px;background:rgba(10,12,20,.85);}
+.up-left-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:70px;background:linear-gradient(transparent,rgba(10,12,20,.9));}
 .up-left-av-area{padding:0 22px;margin-top:-44px;position:relative;z-index:2;display:flex;align-items:flex-end;gap:14px;flex-shrink:0;}
 .up-left-av{width:88px;height:88px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);background:var(--panel2);box-shadow:0 8px 28px rgba(0,0,0,.65);flex-shrink:0;transition:transform .2s cubic-bezier(.22,1,.36,1);cursor:pointer;}
 .up-left-av:hover{transform:scale(1.04);}
@@ -2858,18 +2858,28 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
 <!-- ADD FRIEND -->
 <div class="modal-overlay" role="dialog" id="modal-add-friend">
-  <div class="modal">
+  <div class="modal" style="max-width:440px;">
     <div class="modal-bar"></div>
     <div class="modal-body">
-      <div class="modal-title">👥 Add Friend</div>
-      <div class="modal-sub">Send a friend request by username</div>
-      <input class="modal-input" id="friend-target" placeholder="Username…" autocomplete="off" spellcheck="false" oninput="checkFriendTarget(this.value)" onkeydown="if(event.key==='Enter')sendFriendRequest()">
-      <div id="friend-target-hint" style="font-size:11.5px;min-height:16px;margin-top:4px;transition:color .15s;"></div>
+      <div class="modal-title" style="display:flex;align-items:center;gap:10px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        Add Friend
+      </div>
+      <div class="modal-sub">You can add friends by entering their username below.</div>
+      <div style="position:relative;">
+        <input class="modal-input" id="friend-target" placeholder="Enter a username…" autocomplete="off" spellcheck="false" oninput="checkFriendTarget(this.value)" onkeydown="if(event.key==='Enter')sendFriendRequest()" style="padding-left:14px;">
+      </div>
+      <!-- User preview card -->
+      <div id="friend-target-preview" style="display:none;margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;"></div>
+      <div id="friend-target-hint" style="font-size:11.5px;min-height:16px;margin-top:6px;transition:color .15s;"></div>
       <div class="modal-error" id="friend-error"></div>
       <div class="modal-success" id="friend-success"></div>
       <div class="modal-actions">
-        <button class="btn-g" onclick="closeModal('modal-add-friend')">Close</button>
-        <button class="btn-a" onclick="sendFriendRequest()">Send Request</button>
+        <button class="btn-g" onclick="closeModal('modal-add-friend')">Cancel</button>
+        <button class="btn-a" id="friend-send-btn" onclick="sendFriendRequest()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send Request
+        </button>
       </div>
     </div>
   </div>
@@ -5413,8 +5423,8 @@ function openDMView(username) {
       <div class="chat-msgs" id="dm-msgs">
         <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')">Return to Present</button></div>
         <div class="chat-welcome">
-          <div class="w-av">${buildAvatarHTML(null,username,60)}</div>
-          <h3>${escapeHTML(username)}</h3>
+          <div class="w-av" id="dm-welcome-av">${buildAvatarHTML(null,username,60)}</div>
+          <h3 id="dm-welcome-name">${escapeHTML(username)}</h3>
           <p>Beginning of your conversation with <strong>${escapeHTML(username)}</strong>.</p>
         </div>
       </div>
@@ -5487,42 +5497,8 @@ async function sendDM() {
   if (!text && !window._pendingAttachment) return;
   // Safety pre-check
   if (text) { const sw = contentSafetyCheck(text); if (sw) showContentWarning(sw); }
-  // Mutual friend check — both users must have each other friended
-  const myFriends = CU?.friends||[];
-  const iHaveThem = myFriends.includes(curDM);
-  let theyHaveMe = false;
-  if (iHaveThem && curDM !== CU?.username) {
-    try {
-      const theirData = await firebase.database().ref('users/' + curDM + '/friends').get().then(s=>s.val());
-      const theirFriends = theirData ? (Array.isArray(theirData) ? theirData : Object.values(theirData)) : [];
-      theyHaveMe = theirFriends.includes(CU.username);
-    } catch { theyHaveMe = false; }
-  }
-  const mutualFriends = iHaveThem && theyHaveMe;
-  if (!mutualFriends && curDM !== CU?.username) {
-    // Show inline friend request prompt
-    const existing = document.getElementById('dm-not-friends-bar');
-    if (!existing) {
-      const bar = document.createElement('div');
-      bar.id = 'dm-not-friends-bar';
-      bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:rgba(248,113,113,.08);border-top:1px solid rgba(248,113,113,.2);font-size:12.5px;flex-shrink:0;';
-      const msg = !iHaveThem
-        ? '🔒 You need to be mutual friends to message. Send a friend request?'
-        : '🔒 This person hasn\'t added you back yet. Wait for them to accept.';
-      bar.innerHTML = '<span style="color:var(--muted-light);">'+msg+'</span>'
-        +(!iHaveThem ? '<button class="btn-a" style="font-size:12px;padding:6px 14px;flex-shrink:0;" id="dm-send-fr-btn">+ Add Friend</button>' : '');
-      const inputWrap = inp.closest('.chat-input-wrap');
-      if (inputWrap) inputWrap.parentNode.insertBefore(bar, inputWrap);
-      if (!iHaveThem) {
-        document.getElementById('dm-send-fr-btn')?.addEventListener('click', async () => {
-          bar.remove();
-          const r = await FortizedSocial.sendFriendRequest(CU.username, curDM).catch(()=>({ok:false,msg:'Error'}));
-          toast(r.msg, r.ok?'success':'error');
-        });
-      }
-    }
-    return;
-  }
+  // Remove any old friend-gate bar if present
+  document.getElementById('dm-not-friends-bar')?.remove();
   if (!text) return;
   clearChatInput(inp);
   const rep=replyingTo;
@@ -12314,39 +12290,23 @@ function buildProfileNav(scroll) {
     logout: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
   };
   const sections = [
-    {type:'section', label:'PROFILE'},
+    {type:'section', label:'USER SETTINGS'},
     {type:'item', id:'myprofile', icon:_svgIcons.myprofile, label:'My Profile'},
-    {type:'item', id:'profile_widgets', icon:_svgIcons.profile_widgets, label:'Profile Widgets'},
-    {type:'item', id:'profile_theme', icon:_svgIcons.profile_theme, label:'Profile Theme'},
+    {type:'item', id:'account', icon:_svgIcons.account_info, label:'My Account'},
     {type:'sep'},
-    {type:'section', label:'ACCOUNT'},
-    {type:'item', id:'account', icon:_svgIcons.account_info, label:'Account Information'},
-    {type:'item', id:'account_security', icon:_svgIcons.account_security, label:'Account Security'},
-    {type:'sep'},
-    {type:'section', label:'APPS & GAMES'},
+    {type:'section', label:'APP SETTINGS'},
+    {type:'item', id:'appearance', icon:_svgIcons.appearance, label:'Appearance'},
+    {type:'item', id:'notifications', icon:_svgIcons.notif_messages, label:'Notifications'},
     {type:'item', id:'game_collection', icon:_svgIcons.game_collection, label:'Apps & Games'},
-    {type:'item', id:'activity_detection', icon:_svgIcons.activity_detection, label:'Activity Detection'},
     {type:'sep'},
-    {type:'section', label:'NOTIFICATIONS'},
-    {type:'item', id:'notif_messages', icon:_svgIcons.notif_messages, label:'Messages'},
-    {type:'item', id:'notif_social', icon:_svgIcons.notif_social, label:'Social Activity'},
-    {type:'item', id:'notif_system', icon:_svgIcons.notif_system, label:'System'},
-    {type:'sep'},
-    {type:'section', label:'BOTS'},
+    {type:'section', label:'ADVANCED'},
     {type:'item', id:'my_bots', icon:_svgIcons.my_bots, label:'Bots'},
-    {type:'sep'},
-    {type:'section', label:'MY DATA'},
     {type:'item', id:'my_data', icon:_svgIcons.my_data, label:'My Data'},
+    {type:'item', id:'safety', icon:_svgIcons.safety, label:'Safety'},
     {type:'sep'},
-    {type:'section', label:'APPEARANCE'},
-    {type:'item', id:'appearance', icon:_svgIcons.appearance, label:'Theme'},
-    {type:'item', id:'interface_density', icon:_svgIcons.density, label:'Interface Density'},
-    {type:'item', id:'interface_scaling', icon:_svgIcons.scaling, label:'Interface Scaling'},
-    {type:'sep'},
-    {type:'section', label:'HELP CENTER'},
+    {type:'section', label:'SUPPORT'},
     {type:'item', id:'quick_support', icon:_svgIcons.quick_support, label:'Quick Support'},
     {type:'item', id:'policies', icon:_svgIcons.policies, label:'Policies'},
-    {type:'item', id:'safety', icon:_svgIcons.safety, label:'Safety'},
     {type:'sep'},
   ];
   // User card at top (Discord-style)
@@ -12546,8 +12506,8 @@ function buildProfileView(tab) {
           <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:12px;">Live Preview</div>
           <div class="profile-preview-card" style="border-radius:18px;overflow:hidden;border:2px solid ${CU.profileTheme?.color1 ? `transparent;background-image:linear-gradient(135deg,${CU.profileTheme.color1}0a,var(--panel) 40%,${CU.profileTheme.color2}08),linear-gradient(135deg,${CU.profileTheme.color1},${CU.profileTheme.color2||CU.profileTheme.color1});background-origin:border-box;background-clip:padding-box,border-box` : 'var(--border)'};box-shadow:${CU.profileTheme?.color1 ? `0 0 20px ${CU.profileTheme.color1}15` : 'none'};">
             <!-- Banner -->
-            <div style="height:110px;position:relative;background:linear-gradient(135deg,#0f1830,#1a0f30);overflow:hidden;">
-              ${CU.banner ? `<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;filter:brightness(.9) saturate(1.1);">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${CU.profileTheme?.color1||'#1a1f30'},${CU.profileTheme?.color2||'#0f1830'});opacity:.6;"></div>`}
+            <div style="height:110px;position:relative;background:linear-gradient(135deg,#141a2e,#1a1030,#0f1828);overflow:hidden;">
+              ${CU.banner ? `<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${CU.profileTheme?.color1||'#1e2340'}88,${CU.profileTheme?.color2||'#1a1535'}66);"></div>`}
               ${CU.profileTheme?.color1 ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${CU.profileTheme.color1},${CU.profileTheme.color2});opacity:.6;z-index:1;"></div>` : ''}
             </div>
             <div style="padding:0 18px 20px;">
@@ -12640,14 +12600,14 @@ function buildProfileView(tab) {
     }, 0);
   }
 
-  else if (tab === 'account') {
+  else if (tab === 'account' || tab === 'account_security') {
     main.innerHTML = `
       <div class="settings-panel">
-        <!-- Page Hero -->
         <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Account Information</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">View and manage your account details</div>
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">My Account</div>
+          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Manage your account details and security</div>
         </div>
+
         <div class="settings-section-title">ACCOUNT DETAILS</div>
         <div class="settings-row">
           <div class="settings-row-label"><div class="srl-name">Username</div><div class="srl-desc">Cannot be changed</div></div>
@@ -12664,17 +12624,8 @@ function buildProfileView(tab) {
           <div class="settings-row-label"><div class="srl-name">Member Since</div></div>
           <div class="settings-row-content"><div style="font-size:13px;color:rgba(255,255,255,.5);">${CU.createdAt ? new Date(CU.createdAt).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'Unknown'}</div></div>
         </div>
-      </div>`;
-  }
 
-  else if (tab === 'account_security') {
-    main.innerHTML = `
-      <div class="settings-panel">
-        <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Account Security</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Manage passwords and security settings</div>
-        </div>
-        <div class="settings-section-title">PASSWORD</div>
+        <div class="settings-section-title" style="margin-top:32px;">PASSWORD & SECURITY</div>
         <div class="settings-row">
           <div class="settings-row-label"><div class="srl-name">Change Password</div><div class="srl-desc">Update your account password</div></div>
           <div class="settings-row-content" style="display:flex;flex-direction:column;gap:8px;">
@@ -12686,22 +12637,23 @@ function buildProfileView(tab) {
             </div>
           </div>
         </div>
+
         <div class="danger-section-title" style="margin-top:36px;">DANGER ZONE</div>
         <button class="danger-btn" onclick="showCustomConfirm('Delete your account permanently? This cannot be undone.',doLogout)">Delete Account</button>
       </div>`;
   }
 
-  else if (tab === 'notifs_settings' || tab === 'notif_messages') {
+  else if (tab === 'notifications' || tab === 'notifs_settings' || tab === 'notif_messages' || tab === 'notif_social' || tab === 'notif_system') {
     main.innerHTML = `
       <div class="settings-panel">
-        <!-- Page Hero -->
         <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Messages</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Control message notification preferences</div>
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Notifications</div>
+          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Control how and when you receive notifications</div>
         </div>
-        <div class="settings-section-title">MESSAGE NOTIFICATIONS</div>
+
+        <div class="settings-section-title">MESSAGES</div>
         ${[
-          ['messages','Direct Messages','New DM notifications'],
+          ['messages','Direct Messages','Notify for new DMs'],
           ['bastionActivity','Bastion Messages','Messages in your Bastions'],
           ['mentions','Mentions','When someone @mentions you'],
         ].map(([k,label,desc]) => `
@@ -12711,28 +12663,8 @@ function buildProfileView(tab) {
               <div class="toggle ${notifSettings[k]?'on':''}" onclick="toggleNotifSetting('${k}',this);markSettingsDirty()"></div>
             </div>
           </div>`).join('')}
-        <div class="settings-section-title" style="margin-top:24px;">TEXT & EMOJI</div>
-        <div class="settings-row">
-          <div class="settings-row-label">
-            <div class="srl-name">Emoticon Conversion</div>
-            <div class="srl-desc">Converts :) to emoji, &lt;3 to heart, etc.</div>
-          </div>
-          <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
-            <div class="toggle ${!_globalSettings?.disableEmoticonConversion?'on':''}" onclick="toggleEmoticonConversion(this)"></div>
-          </div>
-        </div>
-        <button class="settings-save-btn" onclick="saveNotifSettings();clearSettingsDirty()" style="margin-top:20px;">Save Settings</button>
-      </div>`;
-  }
 
-  else if (tab === 'notif_social') {
-    main.innerHTML = `
-      <div class="settings-panel">
-        <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Social Activity</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Friend requests, reactions, and social events</div>
-        </div>
-        <div class="settings-section-title">SOCIAL NOTIFICATIONS</div>
+        <div class="settings-section-title" style="margin-top:28px;">SOCIAL</div>
         ${[
           ['friendRequests','Friend Requests','When someone sends you a friend request'],
         ].map(([k,label,desc]) => `
@@ -12742,18 +12674,8 @@ function buildProfileView(tab) {
               <div class="toggle ${notifSettings[k]?'on':''}" onclick="toggleNotifSetting('${k}',this);markSettingsDirty()"></div>
             </div>
           </div>`).join('')}
-        <button class="settings-save-btn" onclick="saveNotifSettings();clearSettingsDirty()" style="margin-top:20px;">Save Settings</button>
-      </div>`;
-  }
 
-  else if (tab === 'notif_system') {
-    main.innerHTML = `
-      <div class="settings-panel">
-        <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">System</div>
-          <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Sounds and system-level notifications</div>
-        </div>
-        <div class="settings-section-title">SYSTEM NOTIFICATIONS</div>
+        <div class="settings-section-title" style="margin-top:28px;">SYSTEM</div>
         ${[
           ['sounds','Notification Sounds','Play sound effects for notifications'],
         ].map(([k,label,desc]) => `
@@ -12763,7 +12685,19 @@ function buildProfileView(tab) {
               <div class="toggle ${notifSettings[k]?'on':''}" onclick="toggleNotifSetting('${k}',this);markSettingsDirty()"></div>
             </div>
           </div>`).join('')}
-        <button class="settings-save-btn" onclick="saveNotifSettings();clearSettingsDirty()" style="margin-top:20px;">Save Settings</button>
+
+        <div class="settings-section-title" style="margin-top:28px;">TEXT & EMOJI</div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <div class="srl-name">Emoticon Conversion</div>
+            <div class="srl-desc">Converts :) to emoji, &lt;3 to heart, etc.</div>
+          </div>
+          <div class="settings-row-content" style="display:flex;justify-content:flex-end;align-items:center;">
+            <div class="toggle ${!_globalSettings?.disableEmoticonConversion?'on':''}" onclick="toggleEmoticonConversion(this)"></div>
+          </div>
+        </div>
+
+        <button class="settings-save-btn" onclick="saveNotifSettings();clearSettingsDirty()" style="margin-top:24px;">Save Changes</button>
       </div>`;
   }
 
@@ -12879,50 +12813,6 @@ function buildProfileView(tab) {
         <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px;">Local Storage</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:16px;">Clear locally cached data. This will not affect your account data stored on our servers.</div>
         <button style="padding:8px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:10px;color:#f87171;font-size:12px;font-weight:600;cursor:pointer;" onclick="showCustomConfirm('Clear all local cache? You will need to re-login.',()=>{localStorage.clear();location.reload();})">Clear Local Cache</button>
-      </div>
-    </div>`;
-  }
-
-  else if (tab === 'interface_density') {
-    const currentDensity = localStorage.getItem('ftz_density') || 'default';
-    main.innerHTML = `<div class="settings-panel">
-      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Interface Density</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Adjust spacing between elements</div>
-      </div>
-      <div class="settings-section-title">DENSITY</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        ${['default','compact','cozy'].map(d => `
-          <div onclick="localStorage.setItem('ftz_density','${d}');document.documentElement.dataset.density='${d}';buildProfileView('interface_density')" style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:${currentDensity===d?'rgba(254,248,61,.04)':'rgba(255,255,255,.02)'};border:1.5px solid ${currentDensity===d?'rgba(254,248,61,.15)':'rgba(255,255,255,.06)'};border-radius:14px;cursor:pointer;transition:all .15s;" onmouseenter="this.style.borderColor='rgba(255,255,255,.12)'" onmouseleave="this.style.borderColor='${currentDensity===d?'rgba(254,248,61,.15)':'rgba(255,255,255,.06)'}'">
-            <div style="width:16px;height:16px;border-radius:50%;border:2px solid ${currentDensity===d?'var(--accent)':'rgba(255,255,255,.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              ${currentDensity===d?'<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);"></div>':''}
-            </div>
-            <div>
-              <div style="font-size:14px;font-weight:700;color:#fff;">${d.charAt(0).toUpperCase()+d.slice(1)}</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">${d==='default'?'Standard spacing between elements':d==='compact'?'Reduced spacing for more content':d==='cozy'?'More breathing room between elements':''}</div>
-            </div>
-          </div>`).join('')}
-      </div>
-    </div>`;
-  }
-
-  else if (tab === 'interface_scaling') {
-    const currentScale = parseFloat(localStorage.getItem('ftz_scale') || '1');
-    main.innerHTML = `<div class="settings-panel">
-      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Interface Scaling</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Adjust the overall size of the interface</div>
-      </div>
-      <div class="settings-section-title">SCALING</div>
-      <div style="padding:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-          <span style="font-size:13px;color:rgba(255,255,255,.5);">Font Size</span>
-          <span id="scale-value" style="font-size:13px;font-weight:700;color:var(--accent);">${Math.round(currentScale*100)}%</span>
-        </div>
-        <input type="range" min="80" max="120" step="5" value="${Math.round(currentScale*100)}" style="width:100%;accent-color:var(--accent);" oninput="const s=this.value/100;document.getElementById('scale-value').textContent=this.value+'%';document.documentElement.style.fontSize=s+'rem';localStorage.setItem('ftz_scale',s)">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.25);margin-top:8px;">
-          <span>80%</span><span>100%</span><span>120%</span>
-        </div>
       </div>
     </div>`;
   }
@@ -13126,7 +13016,52 @@ function buildProfileView(tab) {
           ${lockedThemes.map(t => buildAppearanceCard(t)).join('')}
         </div>
       ` : ''}
+
+      <!-- Interface Density -->
+      <div class="settings-section-title" style="margin-top:36px;">INTERFACE DENSITY</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:32px;">
+        ${(()=>{
+          const currentDensity = localStorage.getItem('ftz_density') || 'default';
+          return ['default','compact','cozy'].map(d => `
+          <div onclick="localStorage.setItem('ftz_density','${d}');document.documentElement.dataset.density='${d}';buildProfileView('appearance')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;cursor:pointer;transition:all .15s;border:1.5px solid ${currentDensity===d?'rgba(254,248,61,.2)':'rgba(255,255,255,.04)'};background:${currentDensity===d?'rgba(254,248,61,.04)':'rgba(255,255,255,.015)'};">
+            <div style="width:16px;height:16px;border-radius:50%;border:2px solid ${currentDensity===d?'var(--accent)':'rgba(255,255,255,.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              ${currentDensity===d?'<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);"></div>':''}
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#fff;">${d.charAt(0).toUpperCase()+d.slice(1)}</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">${d==='default'?'Standard spacing between elements':d==='compact'?'Reduced spacing for more content':d==='cozy'?'More breathing room between elements':''}</div>
+            </div>
+          </div>`).join('');
+        })()}
+      </div>
+
+      <!-- Interface Scaling -->
+      <div class="settings-section-title">INTERFACE SCALING</div>
+      <div style="padding:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;">
+        ${(()=>{
+          const currentScale = parseFloat(localStorage.getItem('ftz_scale') || '1');
+          return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <span style="font-size:13px;color:rgba(255,255,255,.5);">Font Size</span>
+            <span id="scale-value" style="font-size:13px;font-weight:700;color:var(--accent);">${Math.round(currentScale*100)}%</span>
+          </div>
+          <input type="range" min="80" max="120" step="5" value="${Math.round(currentScale*100)}" style="width:100%;accent-color:var(--accent);" oninput="const s=this.value/100;document.getElementById('scale-value').textContent=this.value+'%';document.documentElement.style.fontSize=s+'rem';localStorage.setItem('ftz_scale',s)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.25);margin-top:8px;">
+            <span>80%</span><span>100%</span><span>120%</span>
+          </div>`;
+        })()}
+      </div>
     </div>`;
+  }
+
+  // Redirect old tabs to merged pages
+  else if (tab === 'interface_density' || tab === 'interface_scaling') {
+    buildProfileView('appearance'); return;
+  }
+  else if (tab === 'account_security') {
+    buildProfileView('account'); return;
+  }
+  else if (tab === 'notif_messages' || tab === 'notif_social' || tab === 'notif_system') {
+    buildProfileView('notifications'); return;
   }
 
   else if (tab === 'profile_theme') {
@@ -13349,6 +13284,13 @@ async function buildNotifList() {
     friend_request:'#60a5fa', friend_accept:'#3ecf6e', dm:'#a78bfa',
     mention:'#ffd93e', bastion:'var(--accent)', call:'#3ecf6e', support_ticket:'#38bdf8',
   };
+  // Pre-fetch user pfps for notifications that have a 'from' user
+  const _notifUsers = {};
+  const _notifUsernames = [...new Set(notifs.slice(0,25).filter(n=>n.from && n.type!=='support_ticket').map(n=>n.from))];
+  await Promise.allSettled(_notifUsernames.map(async uname => {
+    try { const u = await FortizedSocial.getUserByName(uname); if (u) _notifUsers[uname] = u; } catch {}
+  }));
+
   list.innerHTML = notifs.slice(0,25).map(n => {
     const svg = svgs[n.type] || svgs.bastion;
     const col = colors[n.type] || 'var(--accent)';
@@ -13363,11 +13305,23 @@ async function buildNotifList() {
       text='<strong>Support Ticket</strong>: '+escapeHTML((n.data?.subject||'').slice(0,50))+' — '+st;
     }
     else text='New notification';
-    const actions = n.type==='friend_request'
-      ? '<div class="np-actions"><button class="np-accept" onclick="acceptFriend(\''+n.from+'\');buildNotifList()">Accept</button><button class="np-decline" onclick="declineFriend(\''+n.from+'\');buildNotifList()">Decline</button></div>'
-      : '';
-    return '<div class="np-item '+(n.read?'':'unread')+'" onclick="'+(n.type==='dm'?"openDMChat('"+escapeHTML(n.from)+"');toggleNotifPanel()":'')+'">'
-      +'<div class="np-icon" style="color:'+col+';background:'+col+'1a;border-color:'+col+'33;">'+svg+'</div>'
+    const _alreadyFriends = n.type==='friend_request' && (CU?.friends||[]).includes(n.from);
+    const _stillPending = n.type==='friend_request' && !_alreadyFriends && (CU?.friendRequestsReceived||[]).includes(n.from);
+    const actions = _stillPending
+      ? '<div class="np-actions"><button class="np-accept" onclick="event.stopPropagation();acceptFriend(\''+n.from+'\');buildNotifList()">Accept</button></div>'
+      : (n.type==='friend_request' && _alreadyFriends
+        ? '<div class="np-actions"><span style="font-size:11px;color:#3ecf6e;font-weight:600;">Friends</span></div>'
+        : '');
+    // Use user's actual profile picture for personal notifications
+    const _nu = _notifUsers[n.from];
+    const useAvatar = n.from && n.type !== 'support_ticket' && _nu;
+    const iconHtml = useAvatar
+      ? '<div class="np-icon" style="padding:0;border:none;background:none;overflow:hidden;">'+buildAvatarHTML(_nu.pfp||null, _nu.displayName||n.from, 36)+'</div>'
+      : '<div class="np-icon" style="color:'+col+';background:'+col+'1a;border-color:'+col+'33;">'+svg+'</div>';
+    const clickAction = n.type==='dm' ? "openDMChat('"+escapeHTML(n.from)+"');toggleNotifPanel()"
+      : (n.type==='friend_request'||n.type==='friend_accept') ? "viewUserProfile('"+escapeHTML(n.from)+"');toggleNotifPanel()" : '';
+    return '<div class="np-item '+(n.read?'':'unread')+'" onclick="'+clickAction+'" style="cursor:'+(clickAction?'pointer':'default')+';">'
+      +iconHtml
       +'<div class="np-text"><p>'+text+'</p>'
       +'<div class="np-time">'+formatTimeAgo(n.time)+'</div>'+actions+'</div></div>';
   }).join('');
@@ -13406,11 +13360,10 @@ async function viewUserProfile(username) {
   const themeBorder = profileTheme
     ? `background:linear-gradient(135deg,${profileTheme.color1},${profileTheme.color2});padding:3px;border-radius:20px;`
     : '';
-  // Only show custom banner if user has Radiance, otherwise default
+  // Show custom banner if user has Radiance + banner, otherwise a nice gradient
   const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
-  const bannerFallback = `url('/Profile Banner.png') center/cover no-repeat, linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#0f1830'},${profileTheme?profileTheme.color2+'33':'#1a0f30'})`;
-  const bannerBg = userBanner ? 'transparent' : bannerFallback;
+  const bannerBg = userBanner ? 'transparent' : `linear-gradient(135deg,${profileTheme?profileTheme.color1+'88':'#141a2e'},${profileTheme?profileTheme.color2+'66':'#1a1030'},${profileTheme?profileTheme.color1+'44':'#0f1828'})`;
 
   const modalEl = document.getElementById('user-modal-body');
   if (!modalEl) { openModal('modal-user'); return; }
@@ -13501,14 +13454,15 @@ async function viewUserProfile(username) {
     <div class="up-right">
       <div class="up-right-tabs">
         <div class="up-right-tab active" onclick="_upSwitchTab(this,'up-tab-activity')">Activity</div>
-        ${(u.profileWidgets||[]).some(w=>w.enabled) ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-widgets')">Widgets</div>` : ''}
+        ${(isOwn || (u.profileWidgets||[]).some(w=>w.enabled)) ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-widgets')">Widgets</div>` : ''}
         ${games.length ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-games')">Games</div>` : ''}
         ${!isOwn && _mutualFriends.length ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-mutuals')">Mutuals</div>` : ''}
       </div>
       <div class="up-right-content">
         <div id="up-tab-activity">${_activityContent.join('')}</div>
-        ${(u.profileWidgets||[]).some(w=>w.enabled) ? `<div id="up-tab-widgets" style="display:none;">
+        ${(isOwn || (u.profileWidgets||[]).some(w=>w.enabled)) ? `<div id="up-tab-widgets" style="display:none;">
           <div class="up-right-section" id="up-widgets-container"></div>
+          ${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;"></div>` : ''}
         </div>` : ''}
         ${games.length ? `<div id="up-tab-games" style="display:none;">
           <div class="up-right-section">
@@ -13535,6 +13489,11 @@ async function viewUserProfile(username) {
   // Render profile widgets if the user has any enabled
   const widgetsContainer = document.getElementById('up-widgets-container');
   if (widgetsContainer) renderProfileWidgetsOnCard(u, widgetsContainer);
+  // Render widget manager for own profile
+  if (isOwn) {
+    const mgr = document.getElementById('up-widget-manager');
+    if (mgr) _renderProfileWidgetManager(mgr);
+  }
 }
 
 function _upSwitchTab(tabEl, panelId) {
@@ -19895,6 +19854,87 @@ function renderProfileWidgetsOnCard(u, containerEl) {
   containerEl.innerHTML = html;
 }
 
+function _renderProfileWidgetManager(mgr) {
+  if (!mgr) return;
+  const widgets = _getProfileWidgets();
+  const games = CU.gameCollection || [];
+  const bastions = CU.bastions || [];
+
+  let html = '<div style="border-top:1px solid rgba(255,255,255,.06);padding-top:12px;">';
+  html += '<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:10px;">Manage Widgets</div>';
+
+  PROFILE_WIDGET_DEFS.forEach(def => {
+    const wState = widgets.find(w => w.id === def.id) || {id:def.id,enabled:false,config:{}};
+    const isOn = wState.enabled;
+    let configHtml = '';
+
+    if (def.id === 'favourite_game' && isOn) {
+      const favGame = wState.config?.gameName || '';
+      configHtml = `<select class="settings-input" style="padding:5px 8px;font-size:11px;margin-top:6px;width:100%;border-radius:8px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);color:var(--text);" onchange="_updateWidgetFromProfile('favourite_game',{gameName:this.value})">
+        <option value="">Select game…</option>
+        ${games.map(g => `<option value="${escapeHTML(g.name)}" ${favGame===g.name?'selected':''}>${escapeHTML(g.name)}</option>`).join('')}
+      </select>`;
+    }
+
+    if (def.id === 'primary_bastion' && isOn) {
+      const selBastion = wState.config?.bastionIdx ?? '';
+      configHtml = `<select class="settings-input" style="padding:5px 8px;font-size:11px;margin-top:6px;width:100%;border-radius:8px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);color:var(--text);" onchange="_updateWidgetFromProfile('primary_bastion',{bastionIdx:parseInt(this.value)||0,bastionName:this.options[this.selectedIndex].text})">
+        ${bastions.length ? bastions.map((b,i) => `<option value="${i}" ${selBastion===i?'selected':''}>${escapeHTML(b.name||'Bastion '+(i+1))}</option>`).join('') : '<option value="">No bastions</option>'}
+      </select>`;
+    }
+
+    if (def.id === 'game_collection' && isOn) {
+      const maxShow = wState.config?.maxShow || 6;
+      configHtml = `<div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+        <span style="font-size:10px;color:rgba(255,255,255,.3);">Show</span>
+        <input type="range" min="3" max="12" value="${maxShow}" style="flex:1;height:4px;" onchange="_updateWidgetFromProfile('game_collection',{maxShow:parseInt(this.value)})">
+        <span style="font-size:10px;color:rgba(255,255,255,.4);font-weight:700;min-width:14px;">${maxShow}</span>
+      </div>`;
+    }
+
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;margin-bottom:6px;${isOn?'':'opacity:.6;'}">
+      <span style="font-size:14px;flex-shrink:0;">${def.icon}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11.5px;font-weight:600;color:rgba(255,255,255,.7);">${def.label}</div>
+        ${configHtml}
+      </div>
+      <button onclick="_toggleWidgetFromProfile('${def.id}')" style="width:34px;height:18px;border-radius:9px;border:none;cursor:pointer;position:relative;transition:background .2s;background:${isOn?'var(--accent)':'rgba(255,255,255,.1)'};">
+        <span style="position:absolute;top:2px;${isOn?'right:2px':'left:2px'};width:14px;height:14px;border-radius:50%;background:${isOn?'#060810':'rgba(255,255,255,.4)'};transition:all .2s;"></span>
+      </button>
+    </div>`;
+  });
+
+  html += '</div>';
+  mgr.innerHTML = html;
+}
+
+async function _toggleWidgetFromProfile(widgetId) {
+  const widgets = _getProfileWidgets();
+  let w = widgets.find(w => w.id === widgetId);
+  if (!w) { w = {id:widgetId,enabled:false,config:{}}; widgets.push(w); }
+  w.enabled = !w.enabled;
+  _setProfileWidgets(widgets);
+  await saveUser();
+  // Re-render widgets on card
+  const wc = document.getElementById('up-widgets-container');
+  if (wc) renderProfileWidgetsOnCard(CU, wc);
+  const mgr = document.getElementById('up-widget-manager');
+  if (mgr) _renderProfileWidgetManager(mgr);
+  toast(w.enabled ? 'Widget enabled' : 'Widget disabled', 'success');
+}
+
+async function _updateWidgetFromProfile(widgetId, configPatch) {
+  const widgets = _getProfileWidgets();
+  let w = widgets.find(w => w.id === widgetId);
+  if (!w) { w = {id:widgetId,enabled:true,config:{}}; widgets.push(w); }
+  Object.assign(w.config, configPatch);
+  _setProfileWidgets(widgets);
+  await saveUser();
+  const wc = document.getElementById('up-widgets-container');
+  if (wc) renderProfileWidgetsOnCard(CU, wc);
+  toast('Widget updated', 'success');
+}
+
 async function joinBastionFromWidget(bastionName, bIdx) {
   toast('Looking for ' + bastionName + '...', 'info');
   // Try to find the bastion in globalBastions and join
@@ -20297,6 +20337,11 @@ async function showDMUserPanel(username) {
   let u = null;
   try { u = await FortizedSocial.getUserByName(username); } catch {}
   if (!u) u = { username, displayName: username };
+  // Update DM welcome area with actual pfp
+  const _wAv = document.getElementById('dm-welcome-av');
+  if (_wAv) _wAv.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||username, 60);
+  const _wName = document.getElementById('dm-welcome-name');
+  if (_wName) _wName.textContent = u.displayName || username;
   let status = 'offline';
   try { status = await FortizedSocial.getStatus(username); } catch {}
   const sc = FtzStatus.color(status);
@@ -20315,7 +20360,7 @@ async function showDMUserPanel(username) {
   const userBanner = (u.banner && hasR) ? u.banner : null;
   const bannerBg = userBanner
     ? "url('" + userBanner + "') center/cover no-repeat"
-    : 'linear-gradient(135deg,' + (profileTheme?profileTheme.color1+'44':'#0f1830') + ',' + (profileTheme?profileTheme.color2+'33':'#1a0f30') + ')';
+    : 'linear-gradient(135deg,' + (profileTheme?profileTheme.color1+'88':'#141a2e') + ',' + (profileTheme?profileTheme.color2+'66':'#1a1030') + ',' + (profileTheme?profileTheme.color1+'44':'#0f1828') + ')';
   panel.innerHTML =
     // Banner
     '<div style="position:relative;height:120px;background:'+bannerBg+';overflow:hidden;">'
@@ -23177,34 +23222,55 @@ function _attachChLiveEdits(bastionId, channelName) {
 let _friendCheckTimer = null;
 async function checkFriendTarget(val) {
   const hint = document.getElementById('friend-target-hint');
+  const preview = document.getElementById('friend-target-preview');
   if (!hint) return;
   clearTimeout(_friendCheckTimer);
   const q = (val || '').trim().toLowerCase();
-  if (!q) { hint.textContent = ''; return; }
-  if (q === CU.username) { hint.style.color = 'var(--red)'; hint.textContent = "That's you!"; return; }
+  if (!q) { hint.textContent = ''; if(preview) preview.style.display='none'; return; }
+  if (q === CU.username) { hint.style.color = 'var(--red)'; hint.textContent = "That's you!"; if(preview) preview.style.display='none'; return; }
   hint.style.color = 'var(--muted)';
   hint.textContent = 'Searching…';
+  if(preview) preview.style.display='none';
   _friendCheckTimer = setTimeout(async () => {
     try {
       const u = await FortizedSocial.getUserByName(q);
       if (u) {
         const isFriend = (CU.friends||[]).includes(q);
         const hasPending = (CU.friendRequestsSent||[]).includes(q);
+        // Show user preview card
+        if (preview) {
+          let statusLabel = '';
+          if (isFriend) statusLabel = '<span style="font-size:10.5px;color:#3ecf6e;font-weight:700;padding:2px 8px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.15);border-radius:6px;">Already Friends</span>';
+          else if (hasPending) statusLabel = '<span style="font-size:10.5px;color:var(--accent);font-weight:700;padding:2px 8px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);border-radius:6px;">Pending</span>';
+          preview.innerHTML = '<div style="display:flex;align-items:center;gap:12px;">'
+            + '<div style="flex-shrink:0;">'+buildAvatarHTML(u.pfp||null, u.displayName||u.username, 44)+'</div>'
+            + '<div style="flex:1;min-width:0;">'
+            + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+            + '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:14px;color:#fff;">'+escapeHTML(u.displayName||u.username)+'</span>'
+            + statusLabel
+            + '</div>'
+            + '<div style="font-size:11.5px;color:rgba(255,255,255,.3);margin-top:2px;">@'+escapeHTML(u.username)+'</div>'
+            + '</div>'
+            + '<div style="flex-shrink:0;cursor:pointer;opacity:.5;transition:opacity .15s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.5" onclick="closeModal(\'modal-add-friend\');viewUserProfile(\''+escapeHTML(u.username)+'\')" title="View Profile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>'
+            + '</div>';
+          preview.style.display = 'block';
+        }
         if (isFriend) {
           hint.style.color = 'var(--muted)';
-          hint.textContent = '✓ Already friends with ' + escapeHTML(u.displayName||u.username);
+          hint.textContent = '';
         } else if (hasPending) {
           hint.style.color = 'var(--accent)';
-          hint.textContent = '⏳ Request already sent to ' + escapeHTML(u.displayName||u.username);
+          hint.textContent = '';
         } else {
           hint.style.color = '#3ecf6e';
-          hint.textContent = '✓ Found: ' + escapeHTML(u.displayName||u.username) + ' (@' + escapeHTML(u.username) + ')';
+          hint.textContent = 'Ready to send friend request!';
         }
       } else {
         hint.style.color = 'var(--red)';
-        hint.textContent = '✗ No user found with that username';
+        hint.textContent = 'No user found with that username';
+        if(preview) preview.style.display='none';
       }
-    } catch { hint.textContent = ''; }
+    } catch { hint.textContent = ''; if(preview) preview.style.display='none'; }
   }, 350);
 }
 

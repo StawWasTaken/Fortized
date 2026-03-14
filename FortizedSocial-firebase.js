@@ -534,6 +534,9 @@ const FortizedSocial = (() => {
       _socket.on('reaction:update', function(data) {
         if (_socketCallbacks.onReaction) _socketCallbacks.onReaction(data);
       });
+      _socket.on('message:deleted', function(data) {
+        if (_socketCallbacks.onMessageDeleted) _socketCallbacks.onMessageDeleted(data);
+      });
     } catch (e) {
       console.warn('[Fortized] Socket.io init failed, Firebase only', e);
       _socket = null;

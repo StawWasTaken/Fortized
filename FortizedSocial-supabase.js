@@ -640,6 +640,9 @@ const FortizedSocial = (() => {
       _socket.on('message:edited', function(data) {
         if (_socketCallbacks.onMessageEdited) _socketCallbacks.onMessageEdited(data);
       });
+      _socket.on('message:deleted', function(data) {
+        if (_socketCallbacks.onMessageDeleted) _socketCallbacks.onMessageDeleted(data);
+      });
     } catch (e) {
       console.warn('[Fortized] Socket.io init failed', e);
       _socket = null;
@@ -769,6 +772,28 @@ const FortizedSocial = (() => {
           callback?.({ id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, reactions: r.reactions });
         }
       })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'bastion_msgs',
+        filter: 'bastion_id=eq.' + bastionId,
+      }, payload => {
+        const r = payload.new;
+        if (r && r.channel_id === channelId) {
+          callback?.({ id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, reactions: r.reactions, _event: 'update' });
+        }
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'bastion_msgs',
+        filter: 'bastion_id=eq.' + bastionId,
+      }, payload => {
+        const r = payload.old;
+        if (r && r.id) {
+          callback?.({ id: r.id, _event: 'delete' });
+        }
+      })
       .subscribe();
     return () => {
       sb.removeChannel(sub);
@@ -788,6 +813,24 @@ const FortizedSocial = (() => {
       }, payload => {
         const r = payload.new;
         if (r) callback?.(_dmFromRow(r));
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'dms',
+        filter: 'dm_key=eq.' + key,
+      }, payload => {
+        const r = payload.new;
+        if (r) { const m = _dmFromRow(r); m._event = 'update'; callback?.(m); }
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'dms',
+        filter: 'dm_key=eq.' + key,
+      }, payload => {
+        const r = payload.old;
+        if (r && r.id) callback?.({ id: r.id, _event: 'delete' });
       })
       .subscribe();
     return () => {

@@ -5601,6 +5601,9 @@ async function loadDMMessages(username) {
     _attachDMLiveEdits(CU.username, username);
     _dmListener = FortizedSocial.listenDM(CU.username, username, msg => {
       if (curDM!==username) return;
+      // Handle edit/delete events from Supabase real-time
+      if (msg._event === 'delete') { _liveRemoveMessage({ key: msg.id }); return; }
+      if (msg._event === 'update') { _liveUpdateMessage({ key: msg.id, val: () => msg }, 'dm'); return; }
       const el=document.getElementById('dm-msgs');
       if (el) {
         const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
@@ -5645,8 +5648,10 @@ async function sendDM() {
     appendMessage(msgsEl,msg,'dm',lastAuthor);
     scrollBottom('dm-msgs');
   }
-  try { await FortizedSocial.sendDMMessage(CU.username, curDM, text); }
-  catch { toast('Failed to send','error'); }
+  try {
+    await FortizedSocial.sendDMMessage(CU.username, curDM, text);
+    FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: msg });
+  } catch { toast('Failed to send','error'); }
 }
 
 // ════════════════════════════════════════════════════
@@ -6639,6 +6644,9 @@ async function loadChannelMessages(idx) {
     listenChannelTyping(b.globalId||b.name, ch.name);
     _chListener=FortizedSocial.listenBastionChannel(b.globalId||b.name,ch.name,msg=>{
       if (curChannel!==idx) return;
+      // Handle edit/delete events from Supabase real-time
+      if (msg._event === 'delete') { _liveRemoveMessage({ key: msg.id }); return; }
+      if (msg._event === 'update') { _liveUpdateMessage({ key: msg.id, val: () => msg }, 'ch'); return; }
       const el=document.getElementById('ch-msgs-'+idx);
       if (el){
         const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
@@ -6701,6 +6709,9 @@ async function _loadAnnouncementRoom(wrap, b, ch, idx) {
   if (_annListener) { try { _annListener(); } catch {} _annListener = null; }
   _annListener = FortizedSocial.listenBastionChannel(b.globalId||b.name, ch.name, msg => {
     if (curChannel !== idx) return;
+    // Handle edit/delete events
+    if (msg._event === 'delete') { const annEl = document.querySelector(`[data-ann-id="${CSS.escape(msg.id)}"]`); if (annEl) { annEl.style.transition='opacity .2s'; annEl.style.opacity='0'; setTimeout(()=>annEl.remove(),200); } return; }
+    if (msg._event === 'update') return; // Announcements don't inline-edit
     const el = document.getElementById('ann-feed-'+idx);
     if (!el) return;
     const mid = msg.id || (msg.from + msg.timestamp);
@@ -6832,8 +6843,10 @@ async function sendChannelMsg(idx) {
   }
   // Award message reputation
   awardMessageRep(b.globalId||b.name, CU.username);
-  try { await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text); }
-  catch { toast('Failed to send','error'); }
+  try {
+    await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text);
+    FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: msg });
+  } catch { toast('Failed to send','error'); }
   // Joyster: react to messages & detect emoji spam
   // Bot command handling — trigger deployed bots with ! prefix
   if (text.startsWith('!')) {
@@ -7263,6 +7276,15 @@ function deleteMsg(msgId, context) {
         console.error('Delete failed:', delErr);
         toast('Failed to delete message: ' + (delErr.message||'unknown error'), 'error');
         return;
+      }
+
+      // Broadcast deletion to other users via Socket.io
+      {
+        let _dType = ctx, _dId1, _dId2;
+        if (ctx === 'dm' && _curDM) { _dId1 = CU.username; _dId2 = _curDM; }
+        else if (ctx === 'gc' && _curGC) { _dType = 'gc'; _dId1 = _curGC; }
+        else { const _db = CU.bastions?.[_curBastion]; const _dch = _db?.channels?.[_curChannel]; _dType = 'bastion'; _dId1 = _db?.globalId||_db?.name; _dId2 = _dch?.name||'general'; }
+        FortizedSocial.socketEmit('message:delete', { type: _dType, id1: _dId1, id2: _dId2, messageId: msgId });
       }
 
       // UI removal after successful deletion
@@ -23833,12 +23855,32 @@ function _showWatchInRoom(vid) {
 // ════════════════════════════════════════════
 // LIVE MESSAGE UPDATES (edit/delete/forward)
 // ════════════════════════════════════════════
-// Wire up Socket.io message:edited listener for real-time edits from other users
-(function _wireSocketEditListener() {
+// Wire up Socket.io real-time message listeners (new/edit/delete) for other users
+(function _wireSocketMessageListeners() {
   const _checkSocket = setInterval(() => {
     const sock = typeof FortizedSocial !== 'undefined' && FortizedSocial.getSocket ? FortizedSocial.getSocket() : null;
     if (!sock) return;
     clearInterval(_checkSocket);
+    // Real-time new messages from other users via Socket.io relay
+    sock.on('message:new', data => {
+      if (!data || !data.message) return;
+      const msg = data.message;
+      if (msg.from === CU?.username) return; // Skip own echo
+      // Find the appropriate message container and append
+      const mid = msg.id || (msg.from + msg.timestamp);
+      // Check all visible message containers for duplicate
+      if (document.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return;
+      // Determine context from room key
+      const room = data.room || '';
+      if (room.startsWith('dm:')) {
+        const el = document.getElementById('dm-msgs');
+        if (el && curDM) { appendMessage(el, msg, 'dm', null); _notifyNewMsg('dm-msgs'); if (!isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message'); }
+      } else if (room.startsWith('bastion:')) {
+        const chIdx = curChannel;
+        const el = document.getElementById('ch-msgs-' + chIdx);
+        if (el) { appendMessage(el, msg, 'ch', null); _notifyNewMsg('ch-msgs-' + chIdx); if (!isUserBlocked(msg.from) && !isUserIgnored(msg.from)) { const isMention = (msg.text||'').includes('@'+CU.username); playNotifSound(isMention ? 'mention' : 'message'); } }
+      }
+    });
     sock.on('message:edited', data => {
       if (!data || !data.messageId) return;
       const row = document.querySelector(`[data-msgid="${CSS.escape(data.messageId)}"]`);
@@ -23848,6 +23890,11 @@ function _showWatchInRoom(vid) {
         row.dataset.text = data.newText;
         textEl.innerHTML = parseMD(escapeHTML(data.newText)) + '<span class="msg-edited">(edited)</span>';
       }
+    });
+    // Real-time message deletion from other users
+    sock.on('message:deleted', data => {
+      if (!data || !data.messageId) return;
+      _liveRemoveMessage({ key: data.messageId });
     });
   }, 2000);
 })();
@@ -26875,7 +26922,12 @@ async function showMiniProfilePreview(username, anchorEl) {
     ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${parseMD(escapeHTML(u.bio.slice(0,150)))}${u.bio.length>150?'…':''}</div></div>` : ''}
     ${_memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
     <!-- Roles -->
-    ${_currentView === 'bastion' && curBastion !== null ? `<div class="mpp-divider"></div><div class="mpp-roles-row">${renderUserRoleTags(username)}</div>` : ''}
+    ${_currentView === 'bastion' && curBastion !== null ? (() => {
+      const _canManageRoles = hasPerm('manage_roles') || (CU?.bastions?.[curBastion]?.owner === CU?.username);
+      const _roleTags = renderUserRoleTags(username);
+      const _addBtn = _canManageRoles && !isOwn ? `<button class="mpp-role-add-btn" onclick="_mppToggleRolePicker('${escapeHTML(username)}')" title="Manage Roles" style="width:22px;height:22px;border-radius:6px;border:1px dashed rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;margin-top:4px;" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='rgba(255,255,255,.3)'">+</button>` : '';
+      return `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title" style="display:flex;align-items:center;justify-content:space-between;">Roles</div><div class="mpp-roles-row" id="mpp-roles-container">${_roleTags}${_addBtn}</div><div id="mpp-role-picker" style="display:none;"></div></div>`;
+    })() : ''}
     <!-- Games -->
     ${_previewGames.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Games</div><div class="mpp-game-row">${_previewGames.slice(0,4).map(g=>`<div class="mpp-game-chip">${g.coverUrl ? `<img src="${escapeHTML(g.coverUrl)}" style="width:14px;height:18px;border-radius:2px;object-fit:cover;">` : (g.icon||ftzIcon('gamepad','12'))} ${escapeHTML(g.name)}</div>`).join('')}${_previewGames.length>4?`<div class="mpp-game-chip">+${_previewGames.length-4} more</div>`:''}</div></div>` : ''}
     <!-- Widgets -->
@@ -26929,6 +26981,60 @@ async function showMiniProfilePreview(username, anchorEl) {
     document.addEventListener('mousedown', _closeMouse);
     document.addEventListener('keydown', _closeKey);
   }, 100);
+}
+
+// Inline role picker for mini profile preview
+function _mppToggleRolePicker(username) {
+  const picker = document.getElementById('mpp-role-picker');
+  if (!picker) return;
+  if (picker.style.display !== 'none') { picker.style.display = 'none'; return; }
+  const b = CU?.bastions?.[curBastion];
+  if (!b || !b.roles?.length) { toast('No roles configured', 'info'); return; }
+  const memberRoles = (b.memberRoles || {})[username] || [];
+  picker.innerHTML = b.roles.map(r => {
+    const has = memberRoles.includes(r.id);
+    return `<div class="mpp-role-pick-item" data-rid="${escapeHTML(r.id)}" onclick="_mppToggleRole('${escapeHTML(username)}','${escapeHTML(r.id)}',this)" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;cursor:pointer;transition:background .12s;${has?'background:rgba(255,255,255,.06);':'background:transparent;'}" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='${has?"rgba(255,255,255,.06)":"transparent"}'">
+      <span style="width:10px;height:10px;border-radius:50%;background:${r.color||'#60a5fa'};flex-shrink:0;"></span>
+      <span style="flex:1;font-size:12px;font-weight:600;color:rgba(255,255,255,.7);">${escapeHTML(r.name)}</span>
+      <span style="font-size:14px;color:${has?'#3ecf6e':'rgba(255,255,255,.15)'};">${has?'✓':'○'}</span>
+    </div>`;
+  }).join('');
+  picker.style.display = 'block';
+  picker.style.cssText += 'margin-top:6px;padding:4px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:10px;';
+}
+
+async function _mppToggleRole(username, roleId, el) {
+  const b = CU?.bastions?.[curBastion];
+  if (!b) return;
+  if (!b.memberRoles) b.memberRoles = {};
+  if (!b.memberRoles[username]) b.memberRoles[username] = [];
+  const roles = b.memberRoles[username];
+  const has = roles.includes(roleId);
+  if (has) {
+    b.memberRoles[username] = roles.filter(r => r !== roleId);
+  } else {
+    b.memberRoles[username] = [...roles, roleId];
+  }
+  const nowHas = b.memberRoles[username].includes(roleId);
+  // Update toggle indicator
+  const indicator = el.querySelector('span:last-child');
+  if (indicator) { indicator.textContent = nowHas ? '✓' : '○'; indicator.style.color = nowHas ? '#3ecf6e' : 'rgba(255,255,255,.15)'; }
+  el.style.background = nowHas ? 'rgba(255,255,255,.06)' : 'transparent';
+  el.onmouseout = function() { this.style.background = nowHas ? 'rgba(255,255,255,.06)' : 'transparent'; };
+  // Update role tags display
+  const container = document.getElementById('mpp-roles-container');
+  if (container) {
+    const addBtn = container.querySelector('.mpp-role-add-btn');
+    const tagsHtml = renderUserRoleTags(username);
+    container.innerHTML = tagsHtml + (addBtn ? addBtn.outerHTML : '');
+  }
+  // Save and sync
+  try {
+    await saveUser();
+    _syncBastionToGlobal(curBastion);
+  } catch(e) { console.warn('Role save failed:', e); }
+  // Refresh member list
+  try { renderMemberList(); } catch {}
 }
 
 

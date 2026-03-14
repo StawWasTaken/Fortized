@@ -5,6 +5,7 @@
 // Handles live, low-latency events: messages, typing,
 // presence, status changes, and activity broadcasting.
 
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');

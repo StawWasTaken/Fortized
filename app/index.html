@@ -270,7 +270,14 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .sidebar-ctx{width:380px;min-width:380px;background:var(--sidebar-ctx);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid rgba(255,255,255,.04);}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
-.topbar{height:44px;background:var(--sidebar);display:flex;align-items:center;padding:0 100px 0 18px;gap:18px;flex-shrink:0;border-bottom:none;}
+.topbar{height:44px;background:var(--sidebar);display:flex;align-items:center;padding:0 18px;gap:18px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;}
+.topbar button,.topbar input,.topbar .tb-actions,.topbar .tb-onyx-pill,.topbar .tb-search,.topbar .tb-notif-btn,.topbar .tb-win-controls{-webkit-app-region:no-drag;}
+/* Electron window controls */
+.tb-win-controls{display:none;align-items:center;gap:0;margin-left:4px;flex-shrink:0;}
+body.is-desktop-app .tb-win-controls{display:flex;}
+.tb-win-btn{width:46px;height:34px;background:transparent;border:none;color:rgba(255,255,255,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s;-webkit-app-region:no-drag;}
+.tb-win-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);}
+.tb-win-btn.tb-win-close:hover{background:rgba(232,17,35,.9);color:#fff;}
 .topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap;color:#fff;letter-spacing:-.01em;}
 .sidebar-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0;scroll-behavior:smooth;scrollbar-width:thin;}
 .sec-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 14px 5px;display:flex;align-items:center;justify-content:space-between;}
@@ -1307,7 +1314,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ctx-menu{position:fixed;z-index:9999;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-md);padding:6px 0;min-width:220px;max-width:280px;box-shadow:var(--shadow-lg),0 0 0 1px rgba(255,255,255,.03);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);animation:ctxIn .14s var(--ease-out);display:none;overflow:hidden;}
 .ctx-menu.ctx-visible{display:block;}
 /* ── System Announcement Banner ─────────────────── */
-.sys-announce-bar{position:fixed;top:0;left:0;right:0;z-index:8000;background:linear-gradient(90deg,rgba(255,249,62,.14),rgba(255,200,62,.08),rgba(255,249,62,.14));border-bottom:1px solid rgba(255,249,62,.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;gap:14px;padding:12px 24px;animation:announceDrop .35s cubic-bezier(.22,1,.36,1);transform-origin:top;box-shadow:0 4px 24px rgba(0,0,0,.3),0 0 40px rgba(255,249,62,.03);}
+.sys-announce-bar{position:fixed;top:0;left:72px;right:0;z-index:8000;background:linear-gradient(90deg,rgba(255,249,62,.14),rgba(255,200,62,.08),rgba(255,249,62,.14));border-bottom:1px solid rgba(255,249,62,.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;gap:14px;padding:12px 24px;animation:announceDrop .35s cubic-bezier(.22,1,.36,1);transform-origin:top;box-shadow:0 4px 24px rgba(0,0,0,.3),0 0 40px rgba(255,249,62,.03);}
+body.is-desktop-app .sys-announce-bar{padding-right:160px;}
 .sys-announce-bar::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,249,62,.03),transparent);animation:announceShimmer 4s ease infinite;pointer-events:none;}
 @keyframes announceShimmer{0%,100%{opacity:0}50%{opacity:1}}
 @keyframes announceDrop{from{opacity:0;transform:translateY(-100%);}to{opacity:1;transform:none;}}
@@ -1422,6 +1430,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .notif-panel{position:fixed;top:0;right:0;width:400px;height:100vh;max-height:100vh;background:rgba(14,17,24,.97);border-left:1px solid rgba(255,255,255,.04);border-radius:0;box-shadow:-20px 0 80px rgba(0,0,0,.8);z-index:500;transform:translateX(100%);transition:transform .22s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;backdrop-filter:blur(24px) saturate(140%);}
 .notif-panel.open{transform:translateX(0);}
 .np-header{padding:22px 22px 18px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,rgba(239,68,68,.04),transparent);}
+body.is-desktop-app .np-header{padding-top:40px;}
 .np-header h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex:1;letter-spacing:-.02em;color:#fff;}
 .np-list{flex:1;overflow-y:auto;padding:8px 10px;}
 .np-item{display:flex;gap:14px;padding:14px 16px;border-radius:14px;cursor:pointer;margin-bottom:4px;position:relative;transition:all .15s;border:1px solid transparent;}
@@ -2308,9 +2317,6 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
     <h3 style="margin:0;">Notifications</h3>
     <button onclick="markAllRead()" style="margin-left:auto;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Mark all read</button>
-    <button onclick="toggleNotifPanel()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'" aria-label="Close">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
   </div>
   <div class="np-list" id="np-list"><div style="padding:16px;display:flex;flex-direction:column;gap:10px;">${[1,2,3].map(()=>'<div style="display:flex;gap:10px;align-items:center;"><div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.04);animation:skeletonPulse 1.5s infinite;flex-shrink:0;"></div><div style="flex:1;display:flex;flex-direction:column;gap:5px;"><div style="height:10px;width:70%;background:rgba(255,255,255,.04);border-radius:4px;animation:skeletonPulse 1.5s infinite;"></div><div style="height:8px;width:40%;background:rgba(255,255,255,.03);border-radius:4px;animation:skeletonPulse 1.5s infinite .2s;"></div></div></div>').join('')}</div></div>
 </div>
@@ -2422,6 +2428,18 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <div class="tb-search">
       <span style="display:flex;align-items:center;color:var(--muted);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
       <input type="text" placeholder="Search…" id="search-input" onclick="openAdvancedSearch()" readonly style="cursor:pointer;" aria-label="Deep Search">
+    </div>
+    <!-- Electron window controls (Discord-style) -->
+    <div class="tb-win-controls" id="tb-win-controls">
+      <button class="tb-win-btn" onclick="window.fortizedDesktop?.minimizeWindow()" title="Minimize">
+        <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="5.5" width="10" height="1" fill="currentColor"/></svg>
+      </button>
+      <button class="tb-win-btn" onclick="window.fortizedDesktop?.maximizeWindow()" title="Maximize">
+        <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+      </button>
+      <button class="tb-win-btn tb-win-close" onclick="window.fortizedDesktop?.closeWindow()" title="Close">
+        <svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.3"/></svg>
+      </button>
     </div>
   </div>
   <!-- Main content area (rounded top-left corner) -->
@@ -5423,6 +5441,8 @@ let _dmListener = null;
 function openDMView(username) {
   if (!username) return;
   username = (username||"").trim().toLowerCase();
+  // Auto-clear DM notifications from this user (Discord-style)
+  try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', username).then(()=>updateNotifBadge()).catch(()=>{}); } catch {}
   // Auto-unhide conversation when opening it
   unhideDMConversation('dm_' + username);
   curDM = username;
@@ -6403,6 +6423,8 @@ function selectChannel(idx) {
   curChannel=idx;
   // Clear unread for this channel
   if (curBastion !== null) clearChannelUnread(curBastion, idx);
+  // Auto-clear mention notifications for this channel (Discord-style)
+  try { FortizedSocial.markNotificationReadBySource(CU.username, 'mention', null).then(()=>updateNotifBadge()).catch(()=>{}); } catch {}
   if (typeof closeMobileCtxSidebar === 'function') closeMobileCtxSidebar();
   // Remember last channel for this bastion
   if (curBastion !== null && CU.bastions?.[curBastion]) {
@@ -8189,6 +8211,11 @@ function initFortizedUXResilience() {
   const _st=setTimeout(()=>{if(_sl)_sl.style.display='none';},8000);
   try{
   if (document.readyState==='loading') await new Promise(r=>document.addEventListener('DOMContentLoaded',r));
+
+  // Detect Electron desktop app and add body class for CSS
+  if (window.fortizedDesktop?.isDesktopApp) {
+    document.body.classList.add('is-desktop-app');
+  }
 
   // Get username — FortizedSocial stores plain string
   let username=localStorage.getItem('ftz_current')||localStorage.getItem('fortized_current_user');
@@ -13504,7 +13531,7 @@ async function toggleNotifPanel() {
   notifPanelOpen=!notifPanelOpen;
   const panel=document.getElementById('notif-panel');
   panel.classList.toggle('open',notifPanelOpen);
-  if(notifPanelOpen){await buildNotifList();try{await FortizedSocial.markNotificationsRead(CU.username);await updateNotifBadge();}catch{}}
+  if(notifPanelOpen){await buildNotifList();}
 }
 
 async function buildNotifList() {
@@ -13586,7 +13613,7 @@ async function buildNotifList() {
       ? '<div class="np-icon" style="padding:0;border:none;background:none;overflow:hidden;">'+buildAvatarHTML(_nu.pfp||null, _nu.displayName||n.from, 36)+'</div>'
       : '<div class="np-icon" style="color:'+col+';background:'+col+'1a;border-color:'+col+'33;">'+svg+'</div>';
     const clickAction = n.type==='dm' ? "openDMChat('"+escapeHTML(n.from)+"');toggleNotifPanel()"
-      : (n.type==='friend_request'||n.type==='friend_accept') ? "viewUserProfile('"+escapeHTML(n.from)+"');toggleNotifPanel()" : '';
+      : (n.type==='friend_request'||n.type==='friend_accept') ? "FortizedSocial.markNotificationReadBySource(CU.username,'"+n.type+"','"+escapeHTML(n.from)+"').then(()=>updateNotifBadge()).catch(()=>{});viewUserProfile('"+escapeHTML(n.from)+"');toggleNotifPanel()" : '';
     return '<div class="np-item '+(n.read?'':'unread')+'" onclick="'+clickAction+'" style="cursor:'+(clickAction?'pointer':'default')+';">'
       +iconHtml
       +'<div class="np-text"><p>'+text+'</p>'

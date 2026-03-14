@@ -202,6 +202,19 @@ const FortizedSocial = (() => {
     await dbUpdate(P.notifs(norm(username)), updates);
   }
 
+  async function markNotificationReadBySource(username, type, from) {
+    const data = await dbGet(P.notifs(norm(username)));
+    if (!data) return;
+    const updates = {};
+    Object.entries(data).forEach(([k, v]) => {
+      if (v.read) return;
+      if (type && v.type !== type) return;
+      if (from && (v.from||'').toLowerCase() !== (from||'').toLowerCase()) return;
+      updates[`${k}/read`] = true;
+    });
+    if (Object.keys(updates).length) await dbUpdate(P.notifs(norm(username)), updates);
+  }
+
   async function getUnreadCount(username) {
     const notifs = await getNotifications(username);
     return notifs.filter(n => !n.read).length;
@@ -671,7 +684,7 @@ const FortizedSocial = (() => {
     getUsers, getAllUsers: async () => (await db.ref('users').get()).val() || {},
     getUserByName, saveUserObject,
     getStatus, setStatus,
-    getNotifications, addNotification, markNotificationsRead, getUnreadCount,
+    getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,
     getDMMessages, sendDMMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction,

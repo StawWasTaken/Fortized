@@ -266,6 +266,13 @@ const FortizedSocial = (() => {
     await sb.from('notifications').update({ read: true }).eq('username', norm(username));
   }
 
+  async function markNotificationReadBySource(username, type, from) {
+    let q = sb.from('notifications').update({ read: true }).eq('username', norm(username)).eq('read', false);
+    if (type) q = q.eq('type', type);
+    if (from) q = q.eq('from', norm(from));
+    await q;
+  }
+
   async function getUnreadCount(username) {
     const { count } = await sb.from('notifications').select('*', { count: 'exact', head: true }).eq('username', norm(username)).eq('read', false);
     return count || 0;
@@ -814,7 +821,7 @@ const FortizedSocial = (() => {
     },
     getUserByName, saveUserObject,
     getStatus, setStatus,
-    getNotifications, addNotification, markNotificationsRead, getUnreadCount,
+    getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,
     getDMMessages, sendDMMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction,

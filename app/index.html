@@ -36,7 +36,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 @keyframes msgFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .embed-link-card,.embed-x-card,.embed-invite-card,.embed-spotify-card{content-visibility:auto;contain-intrinsic-size:auto 120px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
-.sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:56px;align-items:center;border-right:none;}
+.sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:0;align-items:center;border-right:none;}
 .sidebar-logo{width:100%;padding:12px 0 8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 .sidebar-logo-icon{width:48px;height:48px;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;transition:transform .2s cubic-bezier(.22,1,.36,1),filter .2s;flex-shrink:0;}
 .sidebar-logo:hover .sidebar-logo-icon{transform:scale(1.06);}
@@ -297,43 +297,44 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ui-popover{border-radius:var(--radius-lg);border:1px solid rgba(255,255,255,.08);box-shadow:var(--elev-2);backdrop-filter:blur(16px);}
 .notif-panel-header{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;}
 .notif-mark-read-btn{font-size:11px;padding:4px 10px;}
-/* Userbar — spans both sidebars */
-/* Userbar — horizontal bottom bar (Guilded-style) */
-.userbar{background:var(--sidebar-ctx);border-top:1px solid rgba(255,255,255,.05);border-radius:0;display:flex;flex-direction:row;align-items:center;padding:0;gap:0;flex-shrink:0;box-sizing:border-box;transition:all .15s;position:fixed;bottom:0;left:0;z-index:15;width:72px;margin:0;overflow:hidden;height:52px;}
-.ub-activity-row{display:none;align-items:center;gap:6px;padding:4px 10px;border-right:1px solid rgba(255,255,255,.06);transition:background .15s;height:100%;flex-shrink:0;}
-.ub-activity-row:hover{background:rgba(255,255,255,.03);}
-.ub-activity-row.active{display:flex;background:rgba(62,207,110,.04);}
+/* ── Unified Bottom Bar (Guilded-style: userbar + chatbar on same row) ── */
+.userbar{background:transparent;display:flex;flex-direction:row;align-items:stretch;padding:0 12px 10px 12px;gap:8px;flex-shrink:0;box-sizing:border-box;position:relative;z-index:15;width:100%;}
+.ub-activity-row{display:none;align-items:center;gap:6px;padding:0 12px;flex-shrink:0;}
+.ub-activity-row.active{display:flex;}
 .ub-activity-icon{width:24px;height:24px;border-radius:6px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.18);flex-shrink:0;font-size:13px;display:flex;align-items:center;justify-content:center;color:#3ecf6e;}
 .ub-activity-icon img{width:100%;height:100%;border-radius:6px;object-fit:cover;}
 .ub-activity-info{display:flex;flex-direction:column;gap:0;flex:1;min-width:0;}
-.ub-activity-label{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#3ecf6e;line-height:1;}
-.ub-activity-name{font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Syne',sans-serif;letter-spacing:-.01em;line-height:1.3;}
+.ub-activity-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#3ecf6e;line-height:1;}
+.ub-activity-name{font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Syne',sans-serif;letter-spacing:-.01em;line-height:1.3;}
 .ub-activity-time{font-size:9px;color:var(--muted);font-weight:500;line-height:1;}
-.ub-activity-action{width:24px;height:24px;border-radius:6px;background:transparent;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
-.ub-activity-action:hover{background:rgba(255,255,255,.06);color:#fff;}
-.ub-user-row{display:flex;align-items:center;padding:4px 8px;gap:4px;flex:1;min-width:0;height:100%;}
-.ua-clickable{display:flex;align-items:center;justify-content:center;gap:0;flex:none;min-width:0;padding:4px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:background .12s;}
+.ub-activity-action{display:none;}
+/* Left container: user identity */
+.ub-left{display:flex;align-items:center;gap:0;background:var(--sidebar-ctx);border:1.5px solid rgba(255,255,255,.07);border-radius:12px;padding:0;flex-shrink:0;min-width:0;overflow:hidden;height:46px;}
+.ub-user-row{display:flex;align-items:center;padding:4px 6px;gap:4px;flex:1;min-width:0;height:100%;}
+.ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:3px 4px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:background .12s;justify-content:flex-start;}
 .ua-clickable:hover{background:rgba(255,255,255,.05);}
-.ua{width:32px;height:32px;border-radius:50%;background:var(--panel);font-size:13px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 1px 6px rgba(0,0,0,.3);}
+.ua{width:30px;height:30px;border-radius:50%;background:var(--panel);font-size:12px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.3);}
 .ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
-.ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2.5px solid var(--sidebar-ctx);flex-shrink:0;}
-.ua-info{display:none;}
-.ua-name{font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;font-family:'Syne',sans-serif;}
-.ua-status-text{font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;font-weight:500;}
-.ua-btns{display:none;gap:2px;flex-shrink:0;}
-.ua-btns button{width:28px;height:28px;border-radius:6px;background:transparent;border:none;color:rgba(255,255,255,.35);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--sidebar-ctx);flex-shrink:0;}
+.ua-info{display:block;min-width:0;flex:1;}
+.ua-name{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;font-family:'Syne',sans-serif;line-height:1.2;}
+.ua-status-text{font-size:9.5px;color:rgba(255,255,255,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;line-height:1.2;}
+.ua-btns{display:flex;gap:1px;flex-shrink:0;padding-right:2px;}
+.ua-btns button{width:26px;height:26px;border-radius:6px;background:transparent;border:none;color:rgba(255,255,255,.3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
 .ua-btns button:hover{background:rgba(255,255,255,.06);color:#fff;}
 .ua-btns button.active{color:var(--red);background:rgba(248,113,113,.08);}
 .ua-btns button.active:hover{background:rgba(248,113,113,.12);}
-/* Userbar expanded state (secondary sidebar visible) */
-.userbar.expanded{width:calc(72px + 380px);}
+/* Right container: chat input (matched style) */
+.ub-right{flex:1;min-width:0;}
+.ub-right .chat-input-wrap{padding:0;}
+.ub-right .chat-input-outer{border-radius:12px;height:46px;border:1.5px solid rgba(255,255,255,.07);box-shadow:none;}
+.ub-right .chat-input-outer:focus-within{border-color:rgba(255,249,62,.18);box-shadow:0 0 0 2px rgba(255,249,62,.04);}
+.ub-right .chat-input-row{padding:5px 8px 5px 6px;gap:4px;height:100%;}
+.ub-right .chat-input-row textarea{font-size:13px;min-height:20px;max-height:20px;padding:3px 4px;line-height:1.4;}
+/* Expanded userbar not needed — always visible */
 .userbar.expanded .ub-activity-row.active{display:flex;}
-.userbar.expanded .ub-user-row{padding:4px 10px;}
-.userbar.expanded .ua-clickable{gap:8px;flex:1;min-width:0;justify-content:flex-start;}
-.userbar.expanded .ua-info{display:block;}
-.userbar.expanded .ua-btns{display:flex;}
 /* Own profile mini panel — redesigned */
-.own-profile-panel{position:fixed;bottom:56px;left:76px;width:320px;background:var(--panel);border:1px solid var(--border);border-radius:14px;z-index:3000;box-shadow:0 24px 80px rgba(0,0,0,.9),0 0 1px rgba(255,255,255,.06);overflow:hidden;animation:ownPanelIn .2s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(24px);}
+.own-profile-panel{position:fixed;bottom:70px;left:80px;width:320px;background:var(--panel);border:1px solid var(--border);border-radius:14px;z-index:3000;box-shadow:0 24px 80px rgba(0,0,0,.9),0 0 1px rgba(255,255,255,.06);overflow:hidden;animation:ownPanelIn .2s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(24px);}
 @keyframes ownPanelIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
 .main{flex:1;min-width:0;display:flex;flex-direction:row;background:var(--bg);border-top-left-radius:16px;overflow:hidden;}
 .tb-sep{width:1px;height:18px;background:var(--border);margin:0 2px;}
@@ -601,7 +602,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .reply-bar-text strong{color:var(--accent);}
 .reply-bar button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}
 /* Chat input */
-.chat-input-wrap{padding:8px 16px 14px;flex-shrink:0;}
+.chat-input-wrap{padding:0;flex-shrink:0;}
 /* Typing indicator — minimal redesign */
 .typing-indicator{display:flex;align-items:center;gap:8px;padding:4px 20px 6px;min-height:20px;font-size:11px;color:rgba(255,255,255,.3);transition:opacity .25s;letter-spacing:.01em;}
 .typing-dots{display:flex;gap:3px;align-items:center;}
@@ -628,8 +629,9 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ci-preview-wrap textarea{width:100%;}
 .chat-input-row textarea::placeholder{color:rgba(255,255,255,.2);}
 .chat-input-actions{display:flex;align-items:center;gap:4px;flex-shrink:0;padding:0 4px;}
-.chat-send-btn{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#e6e034);border:none;color:#060810;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 12px rgba(255,249,62,.2);}
-.chat-send-btn:hover{filter:brightness(1.08);transform:scale(1.05) translateY(-1px);box-shadow:0 6px 24px rgba(255,249,62,.3);}
+.chat-send-btn{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#e6e034);border:none;color:#060810;cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 8px rgba(255,249,62,.15);}
+.chat-send-btn.visible{display:flex;}
+.chat-send-btn:hover{filter:brightness(1.08);transform:scale(1.05);box-shadow:0 4px 16px rgba(255,249,62,.25);}
 .chat-send-btn:active{transform:scale(.9);transition:transform .08s ease-out;}
 /* Attach button (left side of input) */
 .cit-attach{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .16s cubic-bezier(.22,1,.36,1);font-size:18px;font-weight:300;}
@@ -1904,90 +1906,95 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ftz-notif-close{background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:16px;padding:0;line-height:1;flex-shrink:0;margin-top:-2px;}
 .ftz-notif-close:hover{color:#fff;}
 
-/* ── Mini Profile Preview — Guilded-inspired side panel ── */
-.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:14px;z-index:4000;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);overflow:hidden;overflow-y:auto;max-height:calc(100vh - 32px);animation:mppSlideIn .2s cubic-bezier(.22,1,.36,1);width:300px;}
-@keyframes mppSlideIn{from{opacity:0;transform:scale(.97) translateY(6px)}to{opacity:1;transform:none}}
-.mpp-banner{height:90px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a1a2e,#0f3460);}
+/* ── Mini Profile Preview — Guilded-inspired popup card ── */
+.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.05);border-radius:16px;z-index:4000;box-shadow:0 24px 80px rgba(0,0,0,.7),0 8px 32px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.02);overflow:hidden;overflow-y:auto;max-height:calc(100vh - 32px);animation:mppSlideIn .22s cubic-bezier(.16,1,.3,1);width:340px;}
+@keyframes mppSlideIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
+.mpp-banner{height:105px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a1a2e,#0f3460);}
 .mpp-banner img{width:100%;height:100%;object-fit:cover;}
-.mpp-av-area{padding:0 16px;margin-top:-32px;position:relative;z-index:2;display:flex;align-items:flex-end;gap:10px;}
-.mpp-av{width:64px;height:64px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:var(--panel2);flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:transform .16s cubic-bezier(.22,1,.36,1);}
-.mpp-av:hover{transform:scale(1.06);}
+.mpp-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to top,var(--panel),transparent);pointer-events:none;}
+.mpp-av-area{padding:0 18px;margin-top:-36px;position:relative;z-index:2;display:flex;align-items:flex-end;gap:12px;}
+.mpp-av{width:72px;height:72px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:var(--panel2);flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,.55);transition:transform .18s cubic-bezier(.22,1,.36,1);}
+.mpp-av:hover{transform:scale(1.05);}
 .mpp-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
-.mpp-identity{padding:8px 16px 0;}
-.mpp-displayname{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;cursor:pointer;transition:color .12s;line-height:1.2;display:flex;align-items:center;gap:5px;}
+.mpp-identity{padding:10px 18px 0;}
+.mpp-displayname{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;cursor:pointer;transition:color .12s;line-height:1.2;display:flex;align-items:center;gap:6px;}
 .mpp-displayname:hover{color:var(--accent);}
-.mpp-username{font-size:11px;color:rgba(255,255,255,.2);font-weight:500;margin-top:2px;}
-.mpp-status-row{display:flex;align-items:center;gap:5px;padding:8px 16px 0;flex-wrap:wrap;}
-.mpp-status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:100px;font-size:10px;font-weight:600;color:rgba(255,255,255,.45);}
-.mpp-status-pill .sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.mpp-badges-row{display:flex;flex-wrap:wrap;gap:2px;padding:6px 16px 0;}
-.mpp-divider{height:1px;background:rgba(255,255,255,.04);margin:10px 16px;}
-.mpp-section{padding:2px 16px 4px;}
-.mpp-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.18);margin-bottom:4px;}
-.mpp-section-body{font-size:12px;color:rgba(255,255,255,.45);line-height:1.5;}
-.mpp-roles-row{display:flex;flex-wrap:wrap;gap:4px;padding:2px 16px 4px;}
-.mpp-role-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.45);transition:all .12s;}
-.mpp-role-chip:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.65);}
-.mpp-role-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.mpp-actions{padding:8px 16px 12px;display:flex;gap:5px;}
-.mpp-btn-primary{flex:1;padding:9px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}
-.mpp-btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 4px 14px rgba(255,249,62,.15);}
-.mpp-btn-secondary{padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.5);font-size:11px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center;gap:4px;}
-.mpp-btn-secondary:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.75);}
-.mpp-mutual-av{width:24px;height:24px;border-radius:50%;overflow:hidden;border:2px solid var(--panel);margin-left:-5px;transition:transform .15s;cursor:pointer;}
+.mpp-username{font-size:11.5px;color:rgba(255,255,255,.22);font-weight:500;margin-top:3px;}
+.mpp-status-row{display:flex;align-items:center;gap:6px;padding:10px 18px 0;flex-wrap:wrap;}
+.mpp-status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);}
+.mpp-status-pill .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.mpp-badges-row{display:flex;flex-wrap:wrap;gap:3px;padding:8px 18px 0;}
+.mpp-divider{height:1px;background:rgba(255,255,255,.05);margin:12px 18px;}
+.mpp-section{padding:3px 18px 5px;}
+.mpp-section-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.2);margin-bottom:5px;}
+.mpp-section-body{font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.55;}
+.mpp-roles-row{display:flex;flex-wrap:wrap;gap:5px;padding:3px 18px 5px;}
+.mpp-role-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:10.5px;font-weight:600;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.5);transition:all .12s;}
+.mpp-role-chip:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);}
+.mpp-role-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.mpp-actions{padding:10px 18px 14px;display:flex;gap:6px;}
+.mpp-btn-primary{flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11.5px;font-weight:800;cursor:pointer;transition:all .16s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;gap:6px;}
+.mpp-btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,249,62,.18);}
+.mpp-btn-secondary{padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:10px;color:rgba(255,255,255,.55);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.mpp-btn-secondary:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.8);}
+.mpp-mutual-av{width:26px;height:26px;border-radius:50%;overflow:hidden;border:2px solid var(--panel);margin-left:-6px;transition:transform .15s;cursor:pointer;}
 .mpp-mutual-av:first-child{margin-left:0;}
 .mpp-mutual-av:hover{transform:scale(1.15);z-index:2;}
 .mpp-game-row{display:flex;gap:5px;flex-wrap:wrap;}
-.mpp-game-chip{padding:4px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:8px;font-size:10px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:4px;}
+.mpp-game-chip{padding:5px 10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:8px;font-size:10.5px;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:5px;}
 /* ── Full Profile Modal — Guilded-inspired two-column ── */
-.up-card{display:flex;min-height:480px;max-height:85vh;border-radius:16px;overflow:hidden;background:var(--panel);box-shadow:0 32px 80px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04);}
-.up-left{width:300px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;position:relative;overflow-y:auto;overflow-x:hidden;background:rgba(0,0,0,.08);}
-.up-left-banner{height:140px;position:relative;overflow:hidden;flex-shrink:0;}
+.up-card{display:flex;min-height:500px;max-height:85vh;border-radius:18px;overflow:hidden;background:var(--panel);box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.03);}
+.up-left{width:320px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;position:relative;overflow-y:auto;overflow-x:hidden;background:rgba(0,0,0,.1);}
+.up-left::-webkit-scrollbar{width:4px;}.up-left::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px;}
+.up-left-banner{height:150px;position:relative;overflow:hidden;flex-shrink:0;}
 .up-left-banner img{width:100%;height:100%;object-fit:cover;}
-.up-left-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to bottom,transparent,rgba(10,12,20,.95));}
-.up-left-av-area{padding:0 20px;margin-top:-40px;position:relative;z-index:2;display:flex;align-items:flex-end;gap:12px;flex-shrink:0;}
-.up-left-av{width:80px;height:80px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);background:var(--panel2);box-shadow:0 6px 20px rgba(0,0,0,.6);flex-shrink:0;transition:transform .2s cubic-bezier(.22,1,.36,1);cursor:pointer;}
-.up-left-av:hover{transform:scale(1.05);}
-.up-left-info{padding:10px 20px 0;flex-shrink:0;}
-.up-left-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;line-height:1.15;word-break:break-word;letter-spacing:-.02em;}
-.up-left-uname{font-size:11.5px;color:rgba(255,255,255,.2);font-weight:500;margin-top:3px;}
-.up-left-badges{display:flex;flex-wrap:wrap;gap:2px;padding:8px 20px 0;flex-shrink:0;}
-.up-left-status{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 20px 0;flex-shrink:0;}
-.up-left-section{padding:10px 20px 0;flex-shrink:0;}
-.up-left-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.16);margin-bottom:5px;}
-.up-left-section-body{font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.6;}
-.up-left-actions{padding:14px 20px;margin-top:auto;flex-shrink:0;}
-.up-right{flex:1;min-width:0;display:flex;flex-direction:column;background:rgba(255,255,255,.01);}
-.up-right-tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.04);padding:0 20px;flex-shrink:0;}
-.up-right-tab{padding:14px 16px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.25);cursor:pointer;border-bottom:2px solid transparent;transition:all .14s;white-space:nowrap;}
-.up-right-tab:hover{color:rgba(255,255,255,.55);background:rgba(255,255,255,.015);}
-.up-right-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.015);}
-.up-right-content{flex:1;overflow-y:auto;padding:16px 20px;}
-.up-right-section{margin-bottom:14px;padding:12px 14px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.03);border-radius:12px;}
-.up-right-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.16);margin-bottom:8px;}
-/* Hover-based CSS classes for profile buttons (replaces inline onmouseover/onmouseout) */
-.up-action-msg{flex:1;padding:11px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;min-width:80px;transition:all .16s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 8px rgba(255,249,62,.1);}
-.up-action-msg:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,249,62,.25);}
+.up-left-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:70px;background:linear-gradient(to bottom,transparent,rgba(10,12,20,.97));}
+.up-left-av-area{padding:0 22px;margin-top:-44px;position:relative;z-index:2;display:flex;align-items:flex-end;gap:14px;flex-shrink:0;}
+.up-left-av{width:88px;height:88px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);background:var(--panel2);box-shadow:0 8px 28px rgba(0,0,0,.65);flex-shrink:0;transition:transform .2s cubic-bezier(.22,1,.36,1);cursor:pointer;}
+.up-left-av:hover{transform:scale(1.04);}
+.up-left-info{padding:12px 22px 0;flex-shrink:0;}
+.up-left-name{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;color:#fff;line-height:1.15;word-break:break-word;letter-spacing:-.02em;}
+.up-left-uname{font-size:12px;color:rgba(255,255,255,.22);font-weight:500;margin-top:4px;}
+.up-left-badges{display:flex;flex-wrap:wrap;gap:3px;padding:10px 22px 0;flex-shrink:0;}
+.up-left-status{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:12px 22px 0;flex-shrink:0;}
+.up-left-section{padding:12px 22px 0;flex-shrink:0;}
+.up-left-section-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.18);margin-bottom:6px;}
+.up-left-section-body{font-size:13px;color:rgba(255,255,255,.55);line-height:1.65;}
+.up-left-divider{height:1px;background:rgba(255,255,255,.05);margin:14px 22px;}
+.up-left-actions{padding:16px 22px;margin-top:auto;flex-shrink:0;}
+.up-right{flex:1;min-width:0;display:flex;flex-direction:column;background:rgba(255,255,255,.012);}
+.up-right-tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.05);padding:0 22px;flex-shrink:0;background:rgba(0,0,0,.04);}
+.up-right-tab{padding:15px 18px;font-size:13px;font-weight:600;color:rgba(255,255,255,.28);cursor:pointer;border-bottom:2px solid transparent;transition:all .14s;white-space:nowrap;}
+.up-right-tab:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.02);}
+.up-right-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.02);}
+.up-right-content{flex:1;overflow-y:auto;padding:18px 22px;}
+.up-right-content::-webkit-scrollbar{width:4px;}.up-right-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px;}
+.up-right-section{margin-bottom:16px;padding:14px 16px;background:rgba(255,255,255,.018);border:1px solid rgba(255,255,255,.04);border-radius:14px;}
+.up-right-section-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.18);margin-bottom:10px;}
+/* Profile action buttons */
+.up-action-msg{flex:1;padding:11px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;min-width:80px;transition:all .16s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 2px 10px rgba(255,249,62,.12);}
+.up-action-msg:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,249,62,.2);}
 .up-action-msg:active{transform:translateY(0);}
-.up-action-edit{width:100%;padding:11px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;transition:all .16s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 2px 8px rgba(255,249,62,.1);}
-.up-action-edit:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,249,62,.25);}
+.up-action-edit{width:100%;padding:11px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .16s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 2px 10px rgba(255,249,62,.12);}
+.up-action-edit:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,249,62,.2);}
 .up-action-edit:active{transform:translateY(0);}
-.up-action-add{padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#fff;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .16s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:5px;}
-.up-action-add:hover{background:rgba(255,255,255,.09);transform:translateY(-1px);border-color:rgba(255,255,255,.14);}
-.up-action-unfriend{padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:#f87171;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .16s;}
+.up-action-add{padding:10px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .16s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:6px;}
+.up-action-add:hover{background:rgba(255,255,255,.1);transform:translateY(-1px);border-color:rgba(255,255,255,.15);}
+.up-action-unfriend{padding:10px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:#f87171;font-size:12px;font-weight:600;cursor:pointer;transition:all .16s;}
 .up-action-unfriend:hover{background:rgba(248,113,113,.12);}
-.up-action-util{flex:1;padding:9px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);color:rgba(255,255,255,.35);font-size:11px;cursor:pointer;transition:all .14s;}
-.up-action-util:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);}
+.up-action-util{flex:1;padding:9px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);color:rgba(255,255,255,.4);font-size:11.5px;cursor:pointer;transition:all .14s;font-weight:500;}
+.up-action-util:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);}
 .up-action-util.blocked{border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.06);color:var(--red);}
 .up-action-util.blocked:hover{background:rgba(248,113,113,.12);}
 .up-action-util.ignored{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06);color:#f59e0b;}
-.up-mutual-av{width:34px;height:34px;border-radius:50%;overflow:hidden;border:2.5px solid var(--panel);margin-left:-5px;cursor:pointer;transition:transform .16s,box-shadow .16s;}
+.up-mutual-av{width:36px;height:36px;border-radius:50%;overflow:hidden;border:2.5px solid var(--panel);margin-left:-6px;cursor:pointer;transition:transform .16s,box-shadow .16s;}
 .up-mutual-av:first-child{margin-left:0;}
 .up-mutual-av:hover{transform:scale(1.15) translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.5);z-index:2;}
-.up-social-link{display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:10px;font-size:12px;font-weight:600;text-decoration:none;transition:all .16s;border:1px solid transparent;}
+.up-social-link{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;font-size:12.5px;font-weight:600;text-decoration:none;transition:all .16s;border:1px solid transparent;}
 .up-social-link:hover{transform:translateY(-1px);filter:brightness(1.15);}
+.up-mutual-row{border-radius:8px;transition:background .12s;}
 .up-mutual-row:hover{background:rgba(255,255,255,.04);}
-/* Focus-visible states for keyboard navigation */
+/* Focus-visible states */
 .up-action-msg:focus-visible,.up-action-edit:focus-visible,.up-action-add:focus-visible,.up-action-unfriend:focus-visible,.up-action-util:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .up-right-tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:4px;}
 .mpp-btn-primary:focus-visible,.mpp-btn-secondary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
@@ -2266,46 +2273,43 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     </div>
   </div>
   <div style="flex:1;"></div>
-  <!-- Userbar -->
-  <div class="userbar">
-    <!-- Activity Row (Playing X) -->
-    <div class="ub-activity-row" id="ub-activity-row" style="display:none;">
-      <div class="ub-activity-icon" id="ub-activity-icon"></div>
-      <div class="ub-activity-info" id="ub-activity-info">
-        <span class="ub-activity-label">Playing</span>
-        <span class="ub-activity-name" id="ub-activity-name">—</span>
-      </div>
-      <button class="ub-activity-action" id="ub-activity-action" onclick="event.stopPropagation();openActivityDetector()" title="Detect Activity">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      </button>
+</div>
+<!-- Userbar (moved outside sidebar, will be injected into bottom bar via JS) -->
+<div id="userbar-source" style="display:none;">
+  <!-- Activity Row (Playing X) -->
+  <div class="ub-activity-row" id="ub-activity-row" style="display:none;">
+    <div class="ub-activity-icon" id="ub-activity-icon"></div>
+    <div class="ub-activity-info" id="ub-activity-info">
+      <span class="ub-activity-label">Playing</span>
+      <span class="ub-activity-name" id="ub-activity-name">—</span>
     </div>
-    <!-- Custom Status -->
-    <div id="ua-custom-status" class="ua-custom-status-bubble"></div>
-    <!-- User Row -->
-    <div class="ub-user-row">
-      <div class="ua-clickable" id="ua-clickable" onclick="toggleOwnProfilePanel()">
-        <div class="ua" id="ua">
-          <span id="ua-status-dot" class="ua-status-dot" style="background:#3ecf6e;" title="Online"></span>
-        </div>
-        <div class="ua-info">
-          <div class="ua-name" id="ua-name">Loading…</div>
-          <div class="ua-status-text" id="ua-status-text">Online</div>
-        </div>
+  </div>
+  <!-- Custom Status -->
+  <div id="ua-custom-status" class="ua-custom-status-bubble"></div>
+  <!-- User Row -->
+  <div class="ub-user-row">
+    <div class="ua-clickable" id="ua-clickable" onclick="toggleOwnProfilePanel()">
+      <div class="ua" id="ua">
+        <span id="ua-status-dot" class="ua-status-dot" style="background:#3ecf6e;" title="Online"></span>
       </div>
-      <div class="ua-btns">
-        <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-        </button>
-        <button onclick="toggleDeafen()" id="deafen-btn" title="Deafen/Undeafen">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
-        </button>
-        <button onclick="toggleAccountSwitcher(event)" id="acct-switch-btn" title="Account Switcher">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <button onclick="showView('profile')" title="Settings">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        </button>
+      <div class="ua-info">
+        <div class="ua-name" id="ua-name">Loading…</div>
+        <div class="ua-status-text" id="ua-status-text">Online</div>
       </div>
+    </div>
+    <div class="ua-btns">
+      <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+      </button>
+      <button onclick="toggleDeafen()" id="deafen-btn" title="Deafen/Undeafen">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
+      </button>
+      <button onclick="toggleAccountSwitcher(event)" id="acct-switch-btn" title="Account Switcher">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <button onclick="showView('profile')" title="Settings">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
     </div>
   </div>
 </div>
@@ -3646,6 +3650,12 @@ function autoResize(el) {
   if (el._previewEl) {
     el._previewEl.style.height = el.style.height;
   }
+  // Show/hide send button based on content
+  const outer = el.closest('.chat-input-outer');
+  if (outer) {
+    const sendBtn = outer.querySelector('.chat-send-btn');
+    if (sendBtn) sendBtn.classList.toggle('visible', el.value.trim().length > 0);
+  }
 }
 // Clear chat input properly — resets value, height, and live preview overlay
 function clearChatInput(inp) {
@@ -3894,7 +3904,7 @@ function showView(v) {
   if (v === 'atelier') setTimeout(() => { updateAtelierSidebar(); renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }, 0);
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
-  if (v === 'dms') setTimeout(() => { showDMFriendsHome(); }, 50);
+  if (v === 'dms' && !curDM && !curGC) setTimeout(() => { showDMFriendsHome(); }, 50);
 
   updateTopbar(v);
   updateSidebar(v);
@@ -4058,19 +4068,7 @@ function updateUserbar() {
 function _isMobile() { return window.innerWidth <= 768; }
 function _isTablet() { return window.innerWidth <= 1024 && window.innerWidth > 768; }
 function updateUserbarWidth() {
-  const ub = document.querySelector('.userbar');
-  if (!ub) return;
-  if (_isMobile()) { ub.style.width = ''; ub.classList.remove('expanded'); return; }
-  if (_isTablet()) { ub.style.width = ''; ub.classList.remove('expanded'); return; }
-  const ctx = document.getElementById('sidebar-ctx');
-  const ctxVisible = ctx && ctx.style.display !== 'none';
-  if (ctxVisible) {
-    ub.classList.add('expanded');
-    ub.style.width = '';
-  } else {
-    ub.classList.remove('expanded');
-    ub.style.width = '';
-  }
+  // Unified bottom bar doesn't need width adjustments — it flows with content
   _updateUserbarActivity();
 }
 function _updateUserbarActivity() {
@@ -5207,6 +5205,8 @@ async function renderActiveNowSidebar(containerId) {
 }
 
 function showDMFriendsHome() {
+  curDM = null;
+  curGC = null;
   const wrap = document.getElementById('dm-chat-wrap');
   if (!wrap) return;
   // Hide user panel when returning to friends home
@@ -13132,7 +13132,7 @@ async function viewUserProfile(username) {
 
   modalEl.innerHTML = `
     <div style="${themeBorder}">
-    <div class="up-card" style="position:relative;${profileTheme ? `background:linear-gradient(135deg,${profileTheme.color1}0a,var(--panel) 40%,${profileTheme.color2}08);` : ''}">
+    <div class="up-card" style="position:relative;${profileTheme ? `background:linear-gradient(150deg,${profileTheme.color1}0c,var(--panel) 35%,var(--panel) 65%,${profileTheme.color2}0a);` : ''}">
     ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
       <div class="pbo-icon" style="font-size:32px;color:rgba(248,113,113,.5);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
       <div class="pbo-text">You blocked ${escapeHTML(username)}</div>
@@ -13149,9 +13149,9 @@ async function viewUserProfile(username) {
       <!-- Avatar -->
       <div class="up-left-av-area">
         <div class="profile-decoration-wrap" style="position:relative;">
-          <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 80)}</div>
+          <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 88)}</div>
           ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay-lg" onerror="this.style.display='none'">` : ''}
-          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;"></span>
+          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:3px;right:3px;width:20px;height:20px;border-radius:50%;background:${sc};border:3.5px solid var(--panel);z-index:3;"></span>
         </div>
       </div>
       <!-- Name -->
@@ -13163,35 +13163,36 @@ async function viewUserProfile(username) {
       </div>
       <!-- Status -->
       <div class="up-left-status">
-        <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.03);border-radius:100px;">
-          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:7px;height:7px;border-radius:50%;background:${sc};box-shadow:0 0 6px ${sc}55;"></span>
-          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:11px;color:rgba(255,255,255,.45);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;">
+          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:8px;height:8px;border-radius:50%;background:${sc};box-shadow:0 0 8px ${sc}55;"></span>
+          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
         </div>
-        ${customStatus?.text ? `<div style="font-size:10px;padding:3px 9px;display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:100px;color:rgba(255,255,255,.35);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:12px;height:12px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text)}</div>` : `<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></div>`}
+        ${customStatus?.text ? `<div style="font-size:10.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;color:rgba(255,255,255,.4);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text)}</div>` : `<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></div>`}
       </div>
       <!-- Badges -->
       <div class="up-left-badges">${renderBadgesHTML(u)}</div>
+      <div class="up-left-divider"></div>
       <!-- Bio -->
       ${u.bio ? `<div class="up-left-section"><div class="up-left-section-title">About Me</div><div class="up-left-section-body">${escapeHTML(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div></div>` : ''}
       <!-- Member Since -->
-      ${_memberSince ? `<div class="up-left-section"><div class="up-left-section-title">Member Since</div><div style="font-size:12px;color:rgba(255,255,255,.4);font-weight:500;">${_memberSince}</div></div>` : ''}
+      ${_memberSince ? `<div class="up-left-section"><div class="up-left-section-title">Member Since</div><div style="font-size:12.5px;color:rgba(255,255,255,.45);font-weight:500;">${_memberSince}</div></div>` : ''}
       <!-- Roles -->
-      ${curBastion !== null ? `<div class="up-left-section"><div class="up-left-section-title">Roles</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${renderUserRoleTags(username)}</div></div>` : ''}
+      ${curBastion !== null ? `<div class="up-left-divider"></div><div class="up-left-section"><div class="up-left-section-title">Roles</div><div style="display:flex;flex-wrap:wrap;gap:5px;">${renderUserRoleTags(username)}</div></div>` : ''}
       <!-- Connections -->
-      ${Object.values(socials).some(Boolean) ? `<div class="up-left-section"><div class="up-left-section-title">Connections</div><div style="display:flex;flex-direction:column;gap:4px;">${[{k:'youtube',l:'YouTube',c:'#ff4444',i:'▶'},{k:'roblox',l:'Roblox',c:'#00b2ff',i:'◆'},{k:'spotify',l:'Spotify',c:'#1db954',i:'♫'},{k:'twitter',l:'X',c:'#1d9bf0',i:'✕'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" class="up-social-link" style="background:${p.c}08;color:${p.c};border-color:${p.c}15;padding:6px 12px;font-size:11px;"><span style="font-size:8px;">${p.i}</span> ${p.l}</a>`).join('')}</div></div>` : ''}
+      ${Object.values(socials).some(Boolean) ? `<div class="up-left-divider"></div><div class="up-left-section"><div class="up-left-section-title">Connections</div><div style="display:flex;flex-direction:column;gap:5px;">${[{k:'youtube',l:'YouTube',c:'#ff4444',i:'▶'},{k:'roblox',l:'Roblox',c:'#00b2ff',i:'◆'},{k:'spotify',l:'Spotify',c:'#1db954',i:'♫'},{k:'twitter',l:'X',c:'#1d9bf0',i:'✕'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" class="up-social-link" style="background:${p.c}0a;color:${p.c};border-color:${p.c}18;padding:7px 14px;font-size:11.5px;"><span style="font-size:9px;">${p.i}</span> ${p.l}</a>`).join('')}</div></div>` : ''}
       <!-- Note -->
-      ${_userNote ? `<div class="up-left-section"><div class="up-left-section-title">Note</div><div style="font-size:11.5px;color:rgba(255,255,255,.3);font-style:italic;line-height:1.5;">${escapeHTML(_userNote.slice(0,200))}</div></div>` : ''}
+      ${_userNote ? `<div class="up-left-section"><div class="up-left-section-title">Note</div><div style="font-size:12px;color:rgba(255,255,255,.32);font-style:italic;line-height:1.55;">${escapeHTML(_userNote.slice(0,200))}</div></div>` : ''}
       <!-- Actions at bottom -->
       <div class="up-left-actions">
-        ${isOwn ? `<button class="up-action-edit" onclick="closeModal('modal-user');showView('profile')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
-         `<div style="display:flex;gap:7px;flex-wrap:wrap;">
-            ${isBlocked ? '' : `<button class="up-action-msg" onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
+        ${isOwn ? `<button class="up-action-edit" onclick="closeModal('modal-user');showView('profile')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
+         `<div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${isBlocked ? '' : `<button class="up-action-msg" onclick="closeModal('modal-user');openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
             ${isBlocked ? '' :
               isFriend ? `<button class="up-action-unfriend" onclick="closeModal('modal-user');removeFriend('${escapeHTML(username)}')">Unfriend</button>` :
-              hasPending ? `<button disabled style="padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;color:rgba(255,255,255,.25);font-size:11.5px;">Pending…</button>` :
-              `<button class="up-action-add" onclick="quickAddFriend('${escapeHTML(username)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add</button>`}
+              hasPending ? `<button disabled style="padding:10px 16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:12px;color:rgba(255,255,255,.25);font-size:12px;">Pending…</button>` :
+              `<button class="up-action-add" onclick="quickAddFriend('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add</button>`}
           </div>
-          <div style="display:flex;gap:5px;margin-top:8px;">
+          <div style="display:flex;gap:6px;margin-top:10px;">
             <button class="up-action-util ${isBlocked?'blocked':''}" onclick="toggleBlockUser('${escapeHTML(username)}')">${isBlocked?'Unblock':'Block'}</button>
             ${!isBlocked ? (ignored
               ? `<button class="up-action-util ignored" onclick="unignoreUser('${escapeHTML(username)}')">Unignore</button>`
@@ -13213,8 +13214,8 @@ async function viewUserProfile(username) {
         ${games.length ? `<div id="up-tab-games" style="display:none;">
           <div class="up-right-section">
             <div class="up-right-section-title">Game Collection</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">
-              ${games.map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;cursor:default;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='rgba(255,255,255,.02)'"><span style="font-size:16px;">${g.icon||ftzIcon('gamepad','14')}</span><span style="font-size:12px;color:rgba(255,255,255,.5);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</span></div>`).join('')}
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;">
+              ${games.map(g=>`<div style="display:flex;align-items:center;gap:9px;padding:11px 13px;background:rgba(255,255,255,.022);border:1px solid rgba(255,255,255,.04);border-radius:11px;cursor:default;transition:all .14s;" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.borderColor='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.022)';this.style.borderColor='rgba(255,255,255,.04)'"><span style="font-size:17px;">${g.icon||ftzIcon('gamepad','15')}</span><span style="font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</span></div>`).join('')}
             </div>
           </div>
         </div>` : ''}
@@ -13222,7 +13223,7 @@ async function viewUserProfile(username) {
           <div class="up-right-section">
             <div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div>
             <div style="display:flex;flex-direction:column;gap:4px;">
-              ${_mutualFriends.slice(0,20).map(f => `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .12s;" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')" class="up-mutual-row"><div style="width:30px;height:30px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,f,28)}</div><div style="font-size:12.5px;color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(f)}</div></div>`).join('')}
+              ${_mutualFriends.slice(0,20).map(f => `<div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .14s;" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')" class="up-mutual-row"><div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,f,30)}</div><div style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(f)}</div></div>`).join('')}
             </div>
           </div>
         </div>` : ''}
@@ -17955,48 +17956,50 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
     : `if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();if(event.altKey){_outlineMode=true;}handleChatSend('ch',${chIdx??'curChannel'});}`;
 
   const emojiCtx = inputId==='dm-input'?'dm':inputId==='gc-input'?'gc':'ch';
+  // Unified bottom bar: userbar (left) + chat input (right) on same row
+  const ubSource = document.getElementById('userbar-source');
+  const ubHTML = ubSource ? ubSource.innerHTML : '';
   return `
-    <div class="chat-input-wrap">
-      <div class="chat-input-outer" id="${inputId}-outer"
-        ondragover="event.preventDefault();this.querySelector('.drop-overlay').classList.add('active')"
-        ondragleave="if(!this.contains(event.relatedTarget))this.querySelector('.drop-overlay').classList.remove('active')"
-        ondrop="this.querySelector('.drop-overlay').classList.remove('active');handleDropOnInput(event,'${inputId}')">
-        <div class="drop-overlay"><span class="doi">📎</span><span class="dot" style="font-size:12px;font-weight:700;color:var(--accent);">Drop to upload</span></div>
-        <div class="chat-input-row" id="${inputId}-reply-bar" style="display:none;padding:5px 12px 0;border-bottom:1px solid rgba(255,255,255,.05);">
-          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;font-size:12px;color:rgba(255,255,255,.5);">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
-            <span>Replying to <strong id="${inputId}-reply-name" style="color:var(--accent);"></strong></span>
-          </div>
-          <button onclick="cancelReply('${context}')" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</button>
-        </div>
-        <div class="chat-input-row">
-          <button class="cit-attach" onclick="openFileUpload('${inputId}')" title="Attach File">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-          </button>
-          <textarea id="${inputId}" placeholder="${placeholder}" rows="1"
-            onkeydown="${keydown}"
-            oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}')"
-            onpaste="handlePaste(event,'${inputId}')"></textarea>
-          <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
-          <div class="chat-input-actions">
-            <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF" data-tooltip="GIFs">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10.5 9.5H8.5a1 1 0 00-1 1v3a1 1 0 001 1h2a1 1 0 001-1v-1.5h-1.5"/><line x1="14" y1="9.5" x2="14" y2="14.5"/><path d="M17 9.5h2.5M17 12h2M17 14.5h2.5"/></svg>
-            </button>
-            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" title="Emoji" data-tooltip="Emoji">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5"/><circle cx="9" cy="9.5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1" fill="currentColor" stroke="none"/></svg>
-            </button>
-            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" title="Stickers">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><path d="M14 20l8-8" opacity=".4"/><path d="M14 20v-6a2 2 0 012-2h6"/><circle cx="8.5" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="13" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M7.5 14.5s1.2 2 4 2 4-2 4-2"/></svg>
-            </button>
-            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" title="Bot Commands" id="botcmd-btn-${emojiCtx}">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3"/><line x1="13" y1="15" x2="17" y2="15"/></svg>
-            </button>
-          </div>
-          <div style="position:relative;flex-shrink:0;">
-            <button class="chat-send-btn" onclick="${sendCall}" onmousedown="_silentSendStart(this)" onmouseup="_silentSendEnd(this)" onmouseleave="_silentSendEnd(this)" title="Send (hold for silent)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#060810" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
-            <div class="silent-send-tip" id="${inputId}-silent-tip">Send silently</div>
+    <div class="userbar" id="unified-bottom-bar">
+      <div class="ub-left">${ubHTML}</div>
+      <div class="ub-right">
+        <div class="chat-input-wrap">
+          <div class="chat-input-outer" id="${inputId}-outer"
+            ondragover="event.preventDefault();this.querySelector('.drop-overlay').classList.add('active')"
+            ondragleave="if(!this.contains(event.relatedTarget))this.querySelector('.drop-overlay').classList.remove('active')"
+            ondrop="this.querySelector('.drop-overlay').classList.remove('active');handleDropOnInput(event,'${inputId}')">
+            <div class="drop-overlay"><span class="doi">📎</span><span class="dot" style="font-size:12px;font-weight:700;color:var(--accent);">Drop to upload</span></div>
+            <div class="chat-input-row" id="${inputId}-reply-bar" style="display:none;padding:5px 12px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+              <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;font-size:12px;color:rgba(255,255,255,.5);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
+                <span>Replying to <strong id="${inputId}-reply-name" style="color:var(--accent);"></strong></span>
+              </div>
+              <button onclick="cancelReply('${context}')" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</button>
+            </div>
+            <div class="chat-input-row">
+              <button class="cit-attach" onclick="openFileUpload('${inputId}')" title="Attach File">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <textarea id="${inputId}" placeholder="${placeholder}" rows="1"
+                onkeydown="${keydown}"
+                oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}')"
+                onpaste="handlePaste(event,'${inputId}')"></textarea>
+              <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
+              <div class="chat-input-actions">
+                <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF" data-tooltip="GIFs">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10.5 9.5H8.5a1 1 0 00-1 1v3a1 1 0 001 1h2a1 1 0 001-1v-1.5h-1.5"/><line x1="14" y1="9.5" x2="14" y2="14.5"/><path d="M17 9.5h2.5M17 12h2M17 14.5h2.5"/></svg>
+                </button>
+                <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" title="Stickers">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><path d="M14 20l8-8" opacity=".4"/><path d="M14 20v-6a2 2 0 012-2h6"/><circle cx="8.5" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="13" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M7.5 14.5s1.2 2 4 2 4-2 4-2"/></svg>
+                </button>
+                <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" title="Emoji" data-tooltip="Emoji">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5"/><circle cx="9" cy="9.5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1" fill="currentColor" stroke="none"/></svg>
+                </button>
+                <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" title="Bot Commands" id="botcmd-btn-${emojiCtx}">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3"/><line x1="13" y1="15" x2="17" y2="15"/></svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -25300,57 +25303,57 @@ function toggleOwnProfilePanel() {
   panel.className = 'own-profile-panel';
   panel.innerHTML = `
     <!-- Banner -->
-    <div style="height:90px;position:relative;background:${CU?.banner?`url('${CU.banner}') center/cover no-repeat`:'linear-gradient(135deg,#161a2e 0%,#0d1a3a 50%,#1a1030 100%)'};cursor:pointer;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')">
-      <div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,rgba(12,14,24,.5) 50%,transparent 100%);"></div>
+    <div style="height:100px;position:relative;background:${CU?.banner?`url('${CU.banner}') center/cover no-repeat`:'linear-gradient(135deg,#161a2e 0%,#0d1a3a 50%,#1a1030 100%)'};cursor:pointer;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')">
+      <div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,rgba(12,14,24,.4) 55%,transparent 100%);"></div>
     </div>
     <!-- Avatar row -->
-    <div style="display:flex;align-items:flex-end;gap:10px;padding:0 16px;margin-top:-30px;position:relative;z-index:2;">
-      <div style="width:60px;height:60px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:#161a28;box-shadow:0 4px 16px rgba(0,0,0,.6);flex-shrink:0;transition:transform .2s cubic-bezier(.22,1,.36,1);" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='none'">
+    <div style="display:flex;align-items:flex-end;gap:11px;padding:0 18px;margin-top:-32px;position:relative;z-index:2;">
+      <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:#161a28;box-shadow:0 6px 20px rgba(0,0,0,.6);flex-shrink:0;transition:transform .18s cubic-bezier(.22,1,.36,1);" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='none'">
         ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(CU?.displayName||CU?.username||'')}'">` : `<img src="${_defaultPfpUrl(CU?.displayName||CU?.username||'')}" style="width:100%;height:100%;object-fit:cover;">`}
       </div>
-      <div style="display:flex;align-items:center;gap:6px;padding-bottom:6px;">
-        <span style="width:10px;height:10px;border-radius:50%;background:${{online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280'}[st]||'#3ecf6e'};box-shadow:0 0 6px ${{online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280'}[st]||'#3ecf6e'}66;flex-shrink:0;"></span>
-        <span style="font-size:12px;color:rgba(255,255,255,.45);font-weight:500;">${{online:'Online',away:'Idle',dnd:'Do Not Disturb',invisible:'Invisible'}[st]||'Online'}</span>
+      <div style="display:flex;align-items:center;gap:7px;padding-bottom:7px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:${{online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280'}[st]||'#3ecf6e'};box-shadow:0 0 8px ${{online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280'}[st]||'#3ecf6e'}55;flex-shrink:0;"></span>
+        <span style="font-size:12px;color:rgba(255,255,255,.5);font-weight:500;">${{online:'Online',away:'Idle',dnd:'Do Not Disturb',invisible:'Invisible'}[st]||'Online'}</span>
       </div>
     </div>
     <!-- Name block -->
-    <div style="padding:10px 16px 0;">
-      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;cursor:pointer;line-height:1.2;transition:color .12s;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')" onmouseover="this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.color='#fff'">${escapeHTML(CU?.displayName||CU?.username||'')}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">@${escapeHTML(CU?.username||'')}</div>
-      ${cs?.text?`<div style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:5px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:12px;color:rgba(255,255,255,.55);">${cs.emoji||''} ${escapeHTML(cs.text)}</div>`:''}
+    <div style="padding:10px 18px 0;">
+      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;cursor:pointer;line-height:1.2;transition:color .12s;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='#fff'">${escapeHTML(CU?.displayName||CU?.username||'')}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.28);margin-top:3px;">@${escapeHTML(CU?.username||'')}</div>
+      ${cs?.text?`<div style="display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:5px 13px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:12px;color:rgba(255,255,255,.5);">${cs.emoji||''} ${escapeHTML(cs.text)}</div>`:''}
     </div>
     <!-- Divider -->
-    <div style="height:1px;background:rgba(255,255,255,.06);margin:12px 16px 6px;"></div>
+    <div style="height:1px;background:rgba(255,255,255,.06);margin:13px 18px 7px;"></div>
     <!-- Status options -->
-    <div style="padding:2px 8px;">
+    <div style="padding:2px 10px;">
       ${[
         {id:'online',    label:'Online',           color:'#3ecf6e', desc:null},
         {id:'away',      label:'Idle',             color:'#f59e0b', desc:null},
         {id:'dnd',       label:'Do Not Disturb',   color:'#f87171', desc:'You will not receive desktop notifications'},
         {id:'invisible', label:'Invisible',        color:'#6b7280', desc:'You will appear offline'},
       ].map(s=>`
-        <div onclick="setMyStatus('${s.id}');closeOwnProfilePanel()" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s;${st===s.id?'background:rgba(255,255,255,.06);':''}" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='${st===s.id?'rgba(255,255,255,.06)':'transparent'}'">
-          <span style="width:12px;height:12px;border-radius:50%;background:${s.color};flex-shrink:0;${st===s.id?'box-shadow:0 0 8px '+s.color+'66;':''}"></span>
+        <div onclick="setMyStatus('${s.id}');closeOwnProfilePanel()" style="display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;cursor:pointer;transition:all .14s;${st===s.id?'background:rgba(255,255,255,.06);':''}" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='${st===s.id?'rgba(255,255,255,.06)':'transparent'}'">
+          <span style="width:12px;height:12px;border-radius:50%;background:${s.color};flex-shrink:0;${st===s.id?'box-shadow:0 0 10px '+s.color+'55;':''}"></span>
           <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:${st===s.id?'700':'500'};color:${st===s.id?'#fff':'rgba(255,255,255,.65)'};">${s.label}</div>
-            ${s.desc?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:1px;">${s.desc}</div>`:''}
+            <div style="font-size:13px;font-weight:${st===s.id?'700':'500'};color:${st===s.id?'#fff':'rgba(255,255,255,.6)'};">${s.label}</div>
+            ${s.desc?`<div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:2px;">${s.desc}</div>`:''}
           </div>
-          ${st===s.id?'<svg style="flex-shrink:0;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>':''}
+          ${st===s.id?'<svg style="flex-shrink:0;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>':''}
         </div>`).join('')}
     </div>
     <!-- Custom Status -->
-    <div style="height:1px;background:rgba(255,255,255,.06);margin:4px 16px;"></div>
-    <div onclick="openStatusPicker();closeOwnProfilePanel()" style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:2px 8px;border-radius:10px;cursor:pointer;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='transparent'">
-      <span style="font-size:12px;display:flex;">${ftzIcon('pencil','14')}</span>
+    <div style="height:1px;background:rgba(255,255,255,.06);margin:5px 18px;"></div>
+    <div onclick="openStatusPicker();closeOwnProfilePanel()" style="display:flex;align-items:center;gap:11px;padding:9px 11px;margin:3px 10px;border-radius:10px;cursor:pointer;transition:all .14s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='transparent'">
+      <span style="font-size:13px;display:flex;">${ftzIcon('pencil','14')}</span>
       <span style="font-size:13px;color:rgba(255,255,255,.5);font-weight:500;">${cs?.text?'Edit Custom Status':'Set Custom Status'}</span>
     </div>
     <!-- Actions -->
-    <div style="padding:6px 8px 10px;display:flex;gap:6px;">
-      <button onclick="closeOwnProfilePanel();showView('profile')" style="flex:1;padding:7px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.6);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .14s;" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.85)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.6)'">
+    <div style="padding:7px 10px 12px;display:flex;gap:7px;">
+      <button onclick="closeOwnProfilePanel();showView('profile')" style="flex:1;padding:8px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;color:rgba(255,255,255,.55);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .14s;" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.85)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.55)'">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
         Edit Profile
       </button>
-      <button onclick="closeOwnProfilePanel();toggleAccountSwitcher()" style="flex:1;padding:7px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.6);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .14s;white-space:nowrap;" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.85)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.6)'">
+      <button onclick="closeOwnProfilePanel();toggleAccountSwitcher()" style="flex:1;padding:8px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;color:rgba(255,255,255,.55);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .14s;white-space:nowrap;" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.85)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.55)'">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
         Switch
       </button>
@@ -25406,12 +25409,12 @@ async function showMiniProfilePreview(username, anchorEl) {
   panel.setAttribute('aria-label', 'Profile preview for ' + (u.displayName || u.username));
   if (profileTheme) {
     panel.style.borderColor = 'transparent';
-    panel.style.backgroundImage = `linear-gradient(160deg,${profileTheme.color1}08,var(--panel) 35%,var(--panel) 65%,${profileTheme.color2}06),linear-gradient(135deg,${profileTheme.color1}40,${profileTheme.color2}40)`;
+    panel.style.backgroundImage = `linear-gradient(160deg,${profileTheme.color1}0a,var(--panel) 30%,var(--panel) 70%,${profileTheme.color2}08),linear-gradient(135deg,${profileTheme.color1}40,${profileTheme.color2}40)`;
     panel.style.backgroundOrigin = 'border-box';
     panel.style.backgroundClip = 'padding-box,border-box';
     panel.style.borderWidth = '1.5px';
     panel.style.borderStyle = 'solid';
-    panel.style.boxShadow = `0 16px 48px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.3)`;
+    panel.style.boxShadow = `0 20px 60px rgba(0,0,0,.6),0 4px 20px rgba(0,0,0,.35)`;
   }
   const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
@@ -25429,12 +25432,12 @@ async function showMiniProfilePreview(username, anchorEl) {
       ${bannerBg}
       ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.7;z-index:3;"></div>` : ''}
     </div>
-    <!-- Avatar + Name row (Guilded-style left-aligned) -->
+    <!-- Avatar -->
     <div class="mpp-av-area">
       <div class="profile-decoration-wrap" style="flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
-        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 64)}</div>
+        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 72)}</div>
         ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
-        <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;"></span>
+        <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="position:absolute;bottom:2px;right:2px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;"></span>
       </div>
     </div>
     <!-- Identity -->
@@ -25442,31 +25445,31 @@ async function showMiniProfilePreview(username, anchorEl) {
       <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" ${u.displayFont&&u.displayFont!=='default'?`style="font-family:${getDisplayFont(u)};"`:''}>${escapeHTML(u.displayName||u.username)}</div>
       <div class="mpp-username">@${escapeHTML(u.username)}</div>
     </div>
-    <!-- Status row -->
+    <!-- Status -->
     <div class="mpp-status-row">
       <div class="mpp-status-pill">
-        <span class="sdot profile-status-dot" data-for="${escapeHTML(username)}" style="background:${sc};box-shadow:0 0 6px ${sc}55;"></span>
+        <span class="sdot profile-status-dot" data-for="${escapeHTML(username)}" style="background:${sc};box-shadow:0 0 8px ${sc}55;"></span>
         <span class="profile-status-label" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
       </div>
-      ${customStatus?.text ? `<div style="font-size:10px;padding:3px 9px;display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:100px;color:rgba(255,255,255,.4);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:12px;height:12px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text).slice(0,30)}</div>` : ''}
+      ${customStatus?.text ? `<div style="font-size:10.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;color:rgba(255,255,255,.45);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text).slice(0,30)}</div>` : ''}
     </div>
     <!-- Badges -->
     <div class="mpp-badges-row">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
-    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${escapeHTML(u.bio.slice(0,120))}${u.bio.length>120?'…':''}</div></div>` : ''}
+    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${escapeHTML(u.bio.slice(0,150))}${u.bio.length>150?'…':''}</div></div>` : ''}
     ${_memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
     <!-- Roles -->
     ${curBastion !== null ? `<div class="mpp-divider"></div><div class="mpp-roles-row">${renderUserRoleTags(username)}</div>` : ''}
     <!-- Games -->
-    ${_previewGames.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Games</div><div class="mpp-game-row">${_previewGames.slice(0,4).map(g=>`<div class="mpp-game-chip">${g.icon||ftzIcon('gamepad','11')} ${escapeHTML(g.name)}</div>`).join('')}${_previewGames.length>4?`<div class="mpp-game-chip">+${_previewGames.length-4} more</div>`:''}</div></div>` : ''}
+    ${_previewGames.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Games</div><div class="mpp-game-row">${_previewGames.slice(0,4).map(g=>`<div class="mpp-game-chip">${g.icon||ftzIcon('gamepad','12')} ${escapeHTML(g.name)}</div>`).join('')}${_previewGames.length>4?`<div class="mpp-game-chip">+${_previewGames.length-4} more</div>`:''}</div></div>` : ''}
     <!-- Mutuals -->
-    ${_previewMutuals.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Mutual Friends</div><div style="display:flex;align-items:center;">${_previewMutuals.slice(0,6).map(f => `<div class="mpp-mutual-av" title="${escapeHTML(f)}" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,20)}</div>`).join('')}${_previewMutuals.length>6?`<span style="font-size:10px;color:rgba(255,255,255,.25);margin-left:4px;">+${_previewMutuals.length-6}</span>`:''}</div></div>` : ''}
+    ${_previewMutuals.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Mutual Friends</div><div style="display:flex;align-items:center;">${_previewMutuals.slice(0,6).map(f => `<div class="mpp-mutual-av" title="${escapeHTML(f)}" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,22)}</div>`).join('')}${_previewMutuals.length>6?`<span style="font-size:10.5px;color:rgba(255,255,255,.28);margin-left:5px;">+${_previewMutuals.length-6}</span>`:''}</div></div>` : ''}
     <div class="mpp-divider"></div>
     <!-- Actions -->
     <div class="mpp-actions">
-      ${isOwn ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
-      `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
-      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
-      ${!isOwn && !_isFriend && !_hasPending ? `<button class="mpp-btn-secondary" title="Add Friend" onclick="quickAddFriend('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>` : ''}
+      ${isOwn ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
+      `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
+      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
+      ${!isOwn && !_isFriend && !_hasPending ? `<button class="mpp-btn-secondary" title="Add Friend" onclick="quickAddFriend('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>` : ''}
     </div>`;
 
   // Position near the anchor element

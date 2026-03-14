@@ -37,6 +37,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .embed-link-card,.embed-x-card,.embed-invite-card,.embed-spotify-card{content-visibility:auto;contain-intrinsic-size:auto 120px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
 .sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:0;align-items:center;border-right:none;}
+.sidebar-ctx{padding-bottom:0!important;}
 .sidebar-logo{width:100%;padding:12px 0 8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 .sidebar-logo-icon{width:48px;height:48px;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;transition:transform .2s cubic-bezier(.22,1,.36,1),filter .2s;flex-shrink:0;}
 .sidebar-logo:hover .sidebar-logo-icon{transform:scale(1.06);}
@@ -297,20 +298,20 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ui-popover{border-radius:var(--radius-lg);border:1px solid rgba(255,255,255,.08);box-shadow:var(--elev-2);backdrop-filter:blur(16px);}
 .notif-panel-header{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;}
 .notif-mark-read-btn{font-size:11px;padding:4px 10px;}
-/* ── Unified Bottom Bar (Guilded-style: userbar + chatbar on same row) ── */
-.userbar{background:transparent;display:flex;flex-direction:row;align-items:stretch;padding:0 12px 10px 12px;gap:8px;flex-shrink:0;box-sizing:border-box;position:relative;z-index:15;width:100%;}
-.ub-activity-row{display:none;align-items:center;gap:6px;padding:0 12px;flex-shrink:0;}
+/* ── Userbar (bottom of sidebar-ctx, parallel with chatbar) ── */
+.userbar{display:flex;flex-direction:column;flex-shrink:0;padding:0 8px 8px;gap:0;box-sizing:border-box;z-index:15;width:100%;}
+.ub-activity-row{display:none;align-items:center;gap:7px;padding:6px 10px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.08);border-radius:10px 10px 0 0;margin:0 2px;}
 .ub-activity-row.active{display:flex;}
-.ub-activity-icon{width:24px;height:24px;border-radius:6px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.18);flex-shrink:0;font-size:13px;display:flex;align-items:center;justify-content:center;color:#3ecf6e;}
-.ub-activity-icon img{width:100%;height:100%;border-radius:6px;object-fit:cover;}
-.ub-activity-info{display:flex;flex-direction:column;gap:0;flex:1;min-width:0;}
+.ub-activity-icon{width:26px;height:26px;border-radius:7px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.18);flex-shrink:0;font-size:14px;display:flex;align-items:center;justify-content:center;color:#3ecf6e;}
+.ub-activity-icon img{width:100%;height:100%;border-radius:7px;object-fit:cover;}
+.ub-activity-info{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;}
 .ub-activity-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#3ecf6e;line-height:1;}
 .ub-activity-name{font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Syne',sans-serif;letter-spacing:-.01em;line-height:1.3;}
 .ub-activity-time{font-size:9px;color:var(--muted);font-weight:500;line-height:1;}
 .ub-activity-action{display:none;}
-/* Left container: user identity */
-.ub-left{display:flex;align-items:center;gap:0;background:var(--sidebar-ctx);border:1.5px solid rgba(255,255,255,.07);border-radius:12px;padding:0;flex-shrink:0;min-width:0;overflow:hidden;height:46px;}
-.ub-user-row{display:flex;align-items:center;padding:4px 6px;gap:4px;flex:1;min-width:0;height:100%;}
+/* User row container — rounded to match chatbar */
+.ub-user-container{display:flex;align-items:center;background:var(--sidebar-ctx);border:1.5px solid rgba(255,255,255,.07);border-radius:12px;height:46px;overflow:hidden;}
+.ub-user-row{display:flex;align-items:center;padding:4px 4px 4px 8px;gap:4px;flex:1;min-width:0;height:100%;}
 .ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:3px 4px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:background .12s;justify-content:flex-start;}
 .ua-clickable:hover{background:rgba(255,255,255,.05);}
 .ua{width:30px;height:30px;border-radius:50%;background:var(--panel);font-size:12px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.3);}
@@ -319,20 +320,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ua-info{display:block;min-width:0;flex:1;}
 .ua-name{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;font-family:'Syne',sans-serif;line-height:1.2;}
 .ua-status-text{font-size:9.5px;color:rgba(255,255,255,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;line-height:1.2;}
-.ua-btns{display:flex;gap:1px;flex-shrink:0;padding-right:2px;}
+.ua-btns{display:flex;gap:1px;flex-shrink:0;padding-right:4px;}
 .ua-btns button{width:26px;height:26px;border-radius:6px;background:transparent;border:none;color:rgba(255,255,255,.3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
 .ua-btns button:hover{background:rgba(255,255,255,.06);color:#fff;}
 .ua-btns button.active{color:var(--red);background:rgba(248,113,113,.08);}
 .ua-btns button.active:hover{background:rgba(248,113,113,.12);}
-/* Right container: chat input (matched style) */
-.ub-right{flex:1;min-width:0;}
-.ub-right .chat-input-wrap{padding:0;}
-.ub-right .chat-input-outer{border-radius:12px;height:46px;border:1.5px solid rgba(255,255,255,.07);box-shadow:none;}
-.ub-right .chat-input-outer:focus-within{border-color:rgba(255,249,62,.18);box-shadow:0 0 0 2px rgba(255,249,62,.04);}
-.ub-right .chat-input-row{padding:5px 8px 5px 6px;gap:4px;height:100%;}
-.ub-right .chat-input-row textarea{font-size:13px;min-height:20px;max-height:20px;padding:3px 4px;line-height:1.4;}
-/* Expanded userbar not needed — always visible */
-.userbar.expanded .ub-activity-row.active{display:flex;}
 /* Own profile mini panel — redesigned */
 .own-profile-panel{position:fixed;bottom:70px;left:80px;width:320px;background:var(--panel);border:1px solid var(--border);border-radius:14px;z-index:3000;box-shadow:0 24px 80px rgba(0,0,0,.9),0 0 1px rgba(255,255,255,.06);overflow:hidden;animation:ownPanelIn .2s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(24px);}
 @keyframes ownPanelIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
@@ -602,7 +594,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .reply-bar-text strong{color:var(--accent);}
 .reply-bar button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}
 /* Chat input */
-.chat-input-wrap{padding:0;flex-shrink:0;}
+.chat-input-wrap{padding:0 12px 10px;flex-shrink:0;}
 /* Typing indicator — minimal redesign */
 .typing-indicator{display:flex;align-items:center;gap:8px;padding:4px 20px 6px;min-height:20px;font-size:11px;color:rgba(255,255,255,.3);transition:opacity .25s;letter-spacing:.01em;}
 .typing-dots{display:flex;gap:3px;align-items:center;}
@@ -657,6 +649,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .chat-picker-search input:focus{border-color:rgba(255,249,62,.25);background:rgba(255,255,255,.07);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
 .chat-picker-search input::placeholder{color:rgba(255,255,255,.22);}
 .chat-picker-search svg{position:absolute;left:28px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,.25);}
+/* Unified picker top tabs (GIFs | Stickers | Emoji) */
+.picker-top-tabs{display:flex;gap:0;padding:0;flex-shrink:0;background:rgba(0,0,0,.15);border-bottom:1px solid rgba(255,255,255,.05);}
+.picker-top-tab{flex:1;padding:11px 0;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.35);cursor:pointer;text-align:center;border:none;background:transparent;transition:all .14s;border-bottom:2px solid transparent;}
+.picker-top-tab:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.02);}
+.picker-top-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.03);}
 /* Sticker picker panel */
 .sticker-picker-panel{width:440px;max-height:560px;}
 .sticker-picker-panel .spp-header{padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent);}
@@ -2274,45 +2271,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   </div>
   <div style="flex:1;"></div>
 </div>
-<!-- Userbar (moved outside sidebar, will be injected into bottom bar via JS) -->
-<div id="userbar-source" style="display:none;">
-  <!-- Activity Row (Playing X) -->
-  <div class="ub-activity-row" id="ub-activity-row" style="display:none;">
-    <div class="ub-activity-icon" id="ub-activity-icon"></div>
-    <div class="ub-activity-info" id="ub-activity-info">
-      <span class="ub-activity-label">Playing</span>
-      <span class="ub-activity-name" id="ub-activity-name">—</span>
-    </div>
-  </div>
-  <!-- Custom Status -->
-  <div id="ua-custom-status" class="ua-custom-status-bubble"></div>
-  <!-- User Row -->
-  <div class="ub-user-row">
-    <div class="ua-clickable" id="ua-clickable" onclick="toggleOwnProfilePanel()">
-      <div class="ua" id="ua">
-        <span id="ua-status-dot" class="ua-status-dot" style="background:#3ecf6e;" title="Online"></span>
-      </div>
-      <div class="ua-info">
-        <div class="ua-name" id="ua-name">Loading…</div>
-        <div class="ua-status-text" id="ua-status-text">Online</div>
-      </div>
-    </div>
-    <div class="ua-btns">
-      <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-      </button>
-      <button onclick="toggleDeafen()" id="deafen-btn" title="Deafen/Undeafen">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
-      </button>
-      <button onclick="toggleAccountSwitcher(event)" id="acct-switch-btn" title="Account Switcher">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <button onclick="showView('profile')" title="Settings">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      </button>
-    </div>
-  </div>
-</div>
+<!-- Userbar is now inside sidebar-ctx -->
 <!-- ACCOUNT SWITCHER PANEL -->
 <div id="account-switcher-panel" style="display:none;" class="account-switcher">
   <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:4px 12px 8px;">Accounts</div>
@@ -2371,6 +2330,44 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         <button class="vcb-disc" onclick="disconnectVoice()">Disconnect</button>
       </div>
       <div class="vcb-participants" id="vcb-participants"></div>
+    </div>
+    <!-- Userbar at bottom of sidebar-ctx -->
+    <div class="userbar" id="userbar">
+      <div class="ub-activity-row" id="ub-activity-row" style="display:none;">
+        <div class="ub-activity-icon" id="ub-activity-icon"></div>
+        <div class="ub-activity-info" id="ub-activity-info">
+          <span class="ub-activity-label">Playing</span>
+          <span class="ub-activity-name" id="ub-activity-name">—</span>
+        </div>
+      </div>
+      <div id="ua-custom-status" class="ua-custom-status-bubble"></div>
+      <div class="ub-user-container">
+        <div class="ub-user-row">
+          <div class="ua-clickable" id="ua-clickable" onclick="toggleOwnProfilePanel()">
+            <div class="ua" id="ua">
+              <span id="ua-status-dot" class="ua-status-dot" style="background:#3ecf6e;" title="Online"></span>
+            </div>
+            <div class="ua-info">
+              <div class="ua-name" id="ua-name">Loading…</div>
+              <div class="ua-status-text" id="ua-status-text">Online</div>
+            </div>
+          </div>
+          <div class="ua-btns">
+            <button onclick="toggleMic()" id="mic-btn" title="Mute/Unmute">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            </button>
+            <button onclick="toggleDeafen()" id="deafen-btn" title="Deafen/Undeafen">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zm-18 0a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
+            </button>
+            <button onclick="toggleAccountSwitcher(event)" id="acct-switch-btn" title="Account Switcher">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <button onclick="showView('profile')" title="Settings">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -5216,26 +5213,17 @@ function showDMFriendsHome() {
   const anSidebar = document.getElementById('dm-active-now');
   if (anSidebar) anSidebar.style.display = '';
   wrap.innerHTML = `
-    <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
-      <div style="max-width:900px;">
-        <div class="uv-header" style="border-color:rgba(254,248,61,.1);">
-          <img src="/Fortized banner5.png" class="uv-header-bg" onerror="this.style.display='none'">
-          <div class="uv-header-grad"></div>
-          <div class="uv-header-glow"></div>
-          <div class="uv-header-content">
-            <div class="uv-header-left">
-              <div class="uv-header-icon" style="background:rgba(254,248,61,.1);border-color:rgba(254,248,61,.18);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </div>
-              <div>
-                <div class="uv-header-title">Friends</div>
-                <div class="uv-header-sub">Your conversations & friends</div>
-              </div>
-            </div>
-            <div class="uv-header-actions">
-              <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
-            </div>
+    <div id="dm-friends-home" style="flex:1;overflow-y:auto;">
+      <div class="page-banner" style="margin-bottom:0;">
+        <img src="/Fortized banner5.png" class="page-banner-img" alt="" onerror="this.style.display='none'">
+      </div>
+      <div style="padding:0 28px 28px;max-width:900px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+          <div>
+            <h2 style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.02em;">Friends</h2>
+            <p style="font-size:12.5px;color:rgba(255,255,255,.3);margin:0;">Your conversations & friends</p>
           </div>
+          <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
         </div>
         <!-- Search bar -->
         <div style="margin-bottom:20px;position:relative;">
@@ -11712,16 +11700,33 @@ function toggleEmojiPicker(targetId) {
   });
 }
 
+function _pickerTopTabs(active) {
+  return `<div class="picker-top-tabs">
+    <button class="picker-top-tab${active==='gif'?' active':''}" onclick="_switchPickerTab('gif')">GIFs</button>
+    <button class="picker-top-tab${active==='sticker'?' active':''}" onclick="_switchPickerTab('sticker')">Stickers</button>
+    <button class="picker-top-tab${active==='emoji'?' active':''}" onclick="_switchPickerTab('emoji')">Emoji</button>
+  </div>`;
+}
+function _switchPickerTab(tab) {
+  const target = activeEmojiTarget || _giphyInput || _stickerInput || 'ch-input';
+  if (tab === 'gif') { document.getElementById('emoji-picker')?.classList.remove('show'); document.getElementById('sticker-picker')?.remove(); openGiphyPicker(target); }
+  else if (tab === 'sticker') { document.getElementById('emoji-picker')?.classList.remove('show'); document.getElementById('giphy-picker')?.remove(); openStickerPicker(target); }
+  else {
+    document.getElementById('giphy-picker')?.remove(); document.getElementById('sticker-picker')?.remove();
+    // Force-open emoji picker (don't toggle off)
+    activeEmojiTarget = target;
+    const panel = document.getElementById('emoji-picker');
+    if (panel && !panel.classList.contains('show')) { toggleEmojiPicker(target); }
+  }
+}
+
 function buildEmojiPicker() {
   const panel = document.getElementById('emoji-picker');
   if (!panel) return;
   const customEmojis = curBastion !== null ? (CU?.bastions?.[curBastion]?.customEmojis||[]) : [];
 
   panel.innerHTML = `
-    <div class="chat-picker-header" style="padding:12px 14px 10px;">
-      <span class="cph-title">Emoji</span>
-      <span class="cph-badge">Fortized</span>
-    </div>
+    ${_pickerTopTabs('emoji')}
     <div style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0;">
       <input class="epp-search-inp" placeholder="Search emoji…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;padding:8px 12px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.boxShadow='none'" oninput="searchEmojis(this.value)">
     </div>
@@ -13128,7 +13133,7 @@ async function viewUserProfile(username) {
   const _activityContent = [];
   if (u.gameActivity?.name) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Currently Playing</div><div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.1);border-radius:10px;"><div style="width:36px;height:36px;border-radius:8px;background:rgba(62,207,110,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${u.gameActivity.icon||ftzIcon('gamepad','16')}</div><div style="min-width:0;"><div style="font-size:12.5px;font-weight:700;color:#fff;">${escapeHTML(u.gameActivity.name)}</div>${u.gameActivity.details?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:1px;">${escapeHTML(u.gameActivity.details)}</div>`:''}</div></div></div>`);
   if (_mutualFriends.length) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${_mutualFriends.slice(0,12).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>12?`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.3);margin-left:-5px;border:2px solid var(--panel);font-weight:700;">+${_mutualFriends.length-12}</div>`:''}</div></div>`);
-  if (!_activityContent.length) _activityContent.push(`<div style="text-align:center;padding:30px 16px;color:rgba(255,255,255,.12);font-size:12px;">No recent activity</div>`);
+  if (!_activityContent.length) _activityContent.push(`<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">🎮</div><div style="color:rgba(255,255,255,.15);font-size:12.5px;font-weight:500;">No recent activity</div></div>`);
 
   modalEl.innerHTML = `
     <div style="${themeBorder}">
@@ -17956,50 +17961,43 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
     : `if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();if(event.altKey){_outlineMode=true;}handleChatSend('ch',${chIdx??'curChannel'});}`;
 
   const emojiCtx = inputId==='dm-input'?'dm':inputId==='gc-input'?'gc':'ch';
-  // Unified bottom bar: userbar (left) + chat input (right) on same row
-  const ubSource = document.getElementById('userbar-source');
-  const ubHTML = ubSource ? ubSource.innerHTML : '';
+  // Chat input bar — styled to match the userbar (parallel position, same border-radius/height)
   return `
-    <div class="userbar" id="unified-bottom-bar">
-      <div class="ub-left">${ubHTML}</div>
-      <div class="ub-right">
-        <div class="chat-input-wrap">
-          <div class="chat-input-outer" id="${inputId}-outer"
-            ondragover="event.preventDefault();this.querySelector('.drop-overlay').classList.add('active')"
-            ondragleave="if(!this.contains(event.relatedTarget))this.querySelector('.drop-overlay').classList.remove('active')"
-            ondrop="this.querySelector('.drop-overlay').classList.remove('active');handleDropOnInput(event,'${inputId}')">
-            <div class="drop-overlay"><span class="doi">📎</span><span class="dot" style="font-size:12px;font-weight:700;color:var(--accent);">Drop to upload</span></div>
-            <div class="chat-input-row" id="${inputId}-reply-bar" style="display:none;padding:5px 12px 0;border-bottom:1px solid rgba(255,255,255,.05);">
-              <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;font-size:12px;color:rgba(255,255,255,.5);">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
-                <span>Replying to <strong id="${inputId}-reply-name" style="color:var(--accent);"></strong></span>
-              </div>
-              <button onclick="cancelReply('${context}')" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</button>
-            </div>
-            <div class="chat-input-row">
-              <button class="cit-attach" onclick="openFileUpload('${inputId}')" title="Attach File">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </button>
-              <textarea id="${inputId}" placeholder="${placeholder}" rows="1"
-                onkeydown="${keydown}"
-                oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}')"
-                onpaste="handlePaste(event,'${inputId}')"></textarea>
-              <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
-              <div class="chat-input-actions">
-                <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF" data-tooltip="GIFs">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10.5 9.5H8.5a1 1 0 00-1 1v3a1 1 0 001 1h2a1 1 0 001-1v-1.5h-1.5"/><line x1="14" y1="9.5" x2="14" y2="14.5"/><path d="M17 9.5h2.5M17 12h2M17 14.5h2.5"/></svg>
-                </button>
-                <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" title="Stickers">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><path d="M14 20l8-8" opacity=".4"/><path d="M14 20v-6a2 2 0 012-2h6"/><circle cx="8.5" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="13" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M7.5 14.5s1.2 2 4 2 4-2 4-2"/></svg>
-                </button>
-                <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" title="Emoji" data-tooltip="Emoji">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5"/><circle cx="9" cy="9.5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1" fill="currentColor" stroke="none"/></svg>
-                </button>
-                <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" title="Bot Commands" id="botcmd-btn-${emojiCtx}">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3"/><line x1="13" y1="15" x2="17" y2="15"/></svg>
-                </button>
-              </div>
-            </div>
+    <div class="chat-input-wrap">
+      <div class="chat-input-outer" id="${inputId}-outer"
+        ondragover="event.preventDefault();this.querySelector('.drop-overlay').classList.add('active')"
+        ondragleave="if(!this.contains(event.relatedTarget))this.querySelector('.drop-overlay').classList.remove('active')"
+        ondrop="this.querySelector('.drop-overlay').classList.remove('active');handleDropOnInput(event,'${inputId}')">
+        <div class="drop-overlay"><span class="doi">📎</span><span class="dot" style="font-size:12px;font-weight:700;color:var(--accent);">Drop to upload</span></div>
+        <div class="chat-input-row" id="${inputId}-reply-bar" style="display:none;padding:5px 12px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;font-size:12px;color:rgba(255,255,255,.5);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
+            <span>Replying to <strong id="${inputId}-reply-name" style="color:var(--accent);"></strong></span>
+          </div>
+          <button onclick="cancelReply('${context}')" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</button>
+        </div>
+        <div class="chat-input-row">
+          <button class="cit-attach" onclick="openFileUpload('${inputId}')" title="Attach File">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <textarea id="${inputId}" placeholder="${placeholder}" rows="1"
+            onkeydown="${keydown}"
+            oninput="autoResize(this);${context==='dm'?'broadcastTyping()':context==='gc'?'broadcastGCTyping()':context==='ch'?'broadcastChannelTyping()':''}updateCharCount('${inputId}')"
+            onpaste="handlePaste(event,'${inputId}')"></textarea>
+          <span id="${inputId}-charcount" style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;display:none;"></span>
+          <div class="chat-input-actions">
+            <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF" data-tooltip="GIFs">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10.5 9.5H8.5a1 1 0 00-1 1v3a1 1 0 001 1h2a1 1 0 001-1v-1.5h-1.5"/><line x1="14" y1="9.5" x2="14" y2="14.5"/><path d="M17 9.5h2.5M17 12h2M17 14.5h2.5"/></svg>
+            </button>
+            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" title="Stickers">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><path d="M14 20l8-8" opacity=".4"/><path d="M14 20v-6a2 2 0 012-2h6"/><circle cx="8.5" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="13" cy="10" r="1.2" fill="currentColor" stroke="none"/><path d="M7.5 14.5s1.2 2 4 2 4-2 4-2"/></svg>
+            </button>
+            <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" title="Emoji" data-tooltip="Emoji">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5"/><circle cx="9" cy="9.5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1" fill="currentColor" stroke="none"/></svg>
+            </button>
+            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" title="Bot Commands" id="botcmd-btn-${emojiCtx}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3"/><line x1="13" y1="15" x2="17" y2="15"/></svg>
+            </button>
           </div>
         </div>
       </div>
@@ -19847,10 +19845,7 @@ function openGiphyPicker(inputId) {
 
   const esc = escapeHTML(_giphyInput);
   picker.innerHTML = `
-    <div class="chat-picker-header">
-      <span class="cph-title">GIFs</span>
-      <span class="cph-badge">GIPHY</span>
-    </div>
+    ${_pickerTopTabs('gif')}
     <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -20034,10 +20029,7 @@ function openStickerPicker(inputId) {
   ).join('');
 
   picker.innerHTML = `
-    <div class="chat-picker-header">
-      <span class="cph-title">Stickers</span>
-      <span class="cph-badge">${allStickers.length} sticker${allStickers.length!==1?'s':''}</span>
-    </div>
+    ${_pickerTopTabs('sticker')}
     <div class="chat-picker-search" style="position:relative;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="sticker-search-input" placeholder="Search stickers…" oninput="_searchStickers(this.value)">

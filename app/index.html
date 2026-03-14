@@ -39,36 +39,45 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:0;align-items:center;border-right:none;}
 .sidebar-ctx{padding-bottom:0!important;}
 .sidebar-logo{width:100%;padding:12px 0 8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
-.sidebar-logo-icon{width:48px;height:48px;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;transition:transform .2s cubic-bezier(.22,1,.36,1),filter .2s;flex-shrink:0;}
+.sidebar-logo-icon{width:48px;height:48px;border-radius:16px;background:transparent;display:flex;align-items:center;justify-content:center;transition:transform .2s cubic-bezier(.22,1,.36,1),filter .2s,border-radius .2s;flex-shrink:0;}
 .sidebar-logo:hover .sidebar-logo-icon{transform:scale(1.06);}
-.sidebar-logo-icon img{width:48px;height:48px;object-fit:contain;border-radius:0;}
+.sidebar-logo-icon img{width:48px;height:48px;object-fit:contain;border-radius:16px;}
 .sidebar-logo-text{display:none;}
 .sidebar-logo.active .sidebar-logo-icon{}
 .sidebar-nav{padding:6px 0;display:flex;flex-direction:column;gap:2px;flex-shrink:0;align-items:center;width:100%;}
 .rail-sep{height:2px;width:32px;background:rgba(255,255,255,.06);margin:6px auto;flex-shrink:0;border-radius:1px;}
-.rail-btn{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .16s cubic-bezier(.22,1,.36,1);position:relative;flex-shrink:0;font-size:0;font-weight:600;color:rgba(255,255,255,.45);}
+.rail-btn{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;flex-shrink:0;font-size:0;font-weight:600;color:rgba(255,255,255,.45);}
 .rail-btn span{display:none;}
 .rail-btn svg{width:20px;height:20px;flex-shrink:0;transition:transform .16s cubic-bezier(.22,1,.36,1);}
-.rail-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border-radius:16px;}
+.rail-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border-radius:12px;}
 .rail-btn:hover svg{transform:scale(1.06);}
-.rail-btn.active{background:var(--accent);color:#060810;box-shadow:0 2px 12px rgba(255,249,62,.18);border-radius:16px;}
+.rail-btn.active{background:var(--accent);color:#060810;box-shadow:0 2px 12px rgba(255,249,62,.18);border-radius:12px;}
 .rail-btn.active svg{color:#060810;}
 .rail-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .rail-btn.active::before,.rail-btn:hover::before{display:none;}
+/* Selected indicator pill on left side */
+.rail-btn::after{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:4px;height:0;background:#fff;border-radius:0 4px 4px 0;transition:height .2s cubic-bezier(.22,1,.36,1);opacity:0;}
+.rail-btn:hover::after{height:20px;opacity:.5;}
+.rail-btn.active::after{height:36px;opacity:1;background:var(--accent);box-shadow:0 0 8px rgba(255,249,62,.3);}
 .nav-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--sidebar);}
 .rail-btn[data-tip]:hover::after{display:none;}
 /* Bastion items - draggable */
-.rail-bastion{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0;font-weight:600;color:rgba(255,255,255,.5);transition:all .16s cubic-bezier(.22,1,.36,1);position:relative;overflow:visible;flex-shrink:0;user-select:none;}
-.rail-bastion:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border-radius:16px;}
-.rail-bastion.active{background:rgba(255,249,62,.1);color:var(--accent);border-radius:16px;}
-.rail-bastion.active::before{content:'';position:absolute;left:-4px;top:50%;transform:translateY(-50%);width:4px;height:40%;background:var(--accent);border-radius:0 4px 4px 0;box-shadow:0 0 8px rgba(255,249,62,.25);}
+.rail-bastion{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0;font-weight:600;color:rgba(255,255,255,.5);transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;overflow:visible;flex-shrink:0;user-select:none;}
+.rail-bastion:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border-radius:12px;}
+.rail-bastion.active{background:rgba(255,249,62,.1);color:var(--accent);border-radius:12px;}
+/* Selected indicator pill on left side (Discord-style) */
+.rail-bastion::after{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:4px;height:0;background:#fff;border-radius:0 4px 4px 0;transition:height .2s cubic-bezier(.22,1,.36,1);opacity:0;}
+.rail-bastion:hover::after{height:20px;opacity:.5;}
+.rail-bastion.active::after{height:36px;opacity:1;background:var(--accent);box-shadow:0 0 8px rgba(255,249,62,.3);}
+.rail-bastion.active::before{display:none;}
 .rail-bastion:hover::before{display:none;}
-.rail-bastion.active:hover::before{display:block;}
-.rail-bastion[data-tip]:hover::after{display:none;}
+.rail-bastion.active:hover::before{display:none;}
+.rail-bastion[data-tip]:hover::after{height:20px;opacity:.5;}
+.rail-bastion.active[data-tip]:hover::after{height:36px;opacity:1;}
 .rail-bastion .bastion-icon{width:48px;height:48px;border-radius:inherit;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:20px;background:transparent;transition:transform .16s cubic-bezier(.22,1,.36,1);}
 .rail-bastion:hover .bastion-icon{transform:scale(1.05);}
 .rail-bastion .bastion-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
-.rail-notif-badge{position:absolute;top:0;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 3px;z-index:2;}
+.rail-notif-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 3px;z-index:2;}
 /* Bastion drag-drop */
 .rail-bastion.dragging{opacity:.5;transform:scale(.95);}
 .rail-bastion.drag-over{border-top:2px solid var(--accent);margin-top:-2px;}
@@ -1077,11 +1086,12 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ov-banner{position:relative;width:100%;height:220px;overflow:visible;flex-shrink:0;border-bottom:1.5px solid var(--border);}
 .ov-banner img{width:100%;height:100%;object-fit:cover;filter:brightness(.85) saturate(1.15);}
 .ov-banner .ov-gradient{display:none;}
-.ov-emblem{position:absolute;bottom:-36px;left:50%;transform:translateX(-50%);z-index:3;}
-.ov-emblem .ov-icon{width:80px;height:80px;border-radius:22px;background:var(--panel);border:4px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.6);}
-.ov-emblem .ov-icon img{width:100%;height:100%;object-fit:cover;border-radius:18px;}
-.ov-identity{text-align:center;padding:44px 24px 12px;position:relative;z-index:2;}
-.ov-identity .ov-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;}
+.ov-emblem{position:absolute;bottom:-56px;left:50%;transform:translateX(-50%);z-index:3;}
+.ov-emblem .ov-icon{width:128px;height:128px;border-radius:28px;background:var(--panel);border:5px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:56px;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);transition:transform .2s cubic-bezier(.22,1,.36,1);}
+.ov-emblem .ov-icon:hover{transform:scale(1.04);}
+.ov-emblem .ov-icon img{width:100%;height:100%;object-fit:cover;border-radius:23px;}
+.ov-identity{text-align:center;padding:66px 24px 12px;position:relative;z-index:2;}
+.ov-identity .ov-name{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;letter-spacing:-.03em;}
 .ov-identity .ov-tagline{font-size:13px;color:var(--muted-light);margin-top:4px;line-height:1.45;max-width:480px;margin-left:auto;margin-right:auto;}
 .ov-badges{display:flex;justify-content:center;gap:6px;padding:8px 0 4px;}
 .ov-badges .ov-badge{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted-light);padding:4px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:100px;}
@@ -1409,24 +1419,29 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ctx-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;animation:fadeIn .15s;backdrop-filter:blur(3px);}
 }
 @keyframes ctxSlideUp{from{opacity:0;transform:translateY(100%);}to{opacity:1;transform:translateY(0);}}
-.notif-panel{position:fixed;top:0;right:0;width:380px;height:100vh;max-height:100vh;background:var(--panel);border-left:1px solid var(--border);border-radius:0;box-shadow:-16px 0 60px rgba(0,0,0,.7);z-index:500;transform:translateX(100%);transition:transform .22s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;backdrop-filter:blur(20px);}
+.notif-panel{position:fixed;top:0;right:0;width:400px;height:100vh;max-height:100vh;background:rgba(14,17,24,.97);border-left:1px solid rgba(255,255,255,.04);border-radius:0;box-shadow:-20px 0 80px rgba(0,0,0,.8);z-index:500;transform:translateX(100%);transition:transform .22s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;backdrop-filter:blur(24px) saturate(140%);}
 .notif-panel.open{transform:translateX(0);}
-.np-header{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,249,62,.02),transparent);}
-.np-header h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;flex:1;letter-spacing:-.01em;}
-.np-list{flex:1;overflow-y:auto;padding:6px 8px;}
-.np-item{display:flex;gap:12px;padding:12px 14px;border-radius:10px;cursor:pointer;margin-bottom:2px;position:relative;transition:background .12s;}
-.np-item:hover{background:rgba(255,255,255,.035);}
-.np-item.unread{background:rgba(255,249,62,.035);border:1px solid rgba(255,249,62,.06);}
-.np-item.unread::before{content:"";position:absolute;left:4px;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px rgba(255,249,62,.4);}
-.np-icon{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.np-text{flex:1;}
-.np-text p{font-size:12.5px;color:var(--text);line-height:1.5;}
-.np-time{font-size:10px;color:rgba(255,255,255,.2);margin-top:3px;}
-.np-actions{display:flex;gap:6px;margin-top:8px;}
-.np-accept{background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:var(--green);font-size:11px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;transition:all .12s;}
-.np-accept:hover{background:rgba(62,207,110,.18);}
-.np-decline{background:transparent;border:1px solid rgba(255,255,255,.06);color:var(--muted-light);font-size:11px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;transition:all .12s;}
-.np-decline:hover{background:rgba(255,255,255,.04);}
+.np-header{padding:22px 22px 18px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,rgba(239,68,68,.04),transparent);}
+.np-header h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex:1;letter-spacing:-.02em;color:#fff;}
+.np-list{flex:1;overflow-y:auto;padding:8px 10px;}
+.np-item{display:flex;gap:14px;padding:14px 16px;border-radius:14px;cursor:pointer;margin-bottom:4px;position:relative;transition:all .15s;border:1px solid transparent;}
+.np-item:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.05);}
+.np-item.unread{background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.1);}
+.np-item.unread::before{content:"";position:absolute;left:6px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.5),0 0 16px rgba(239,68,68,.2);}
+.np-icon{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.04);border:2.5px solid rgba(239,68,68,.35);font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;transition:all .15s;}
+.np-item.unread .np-icon{border-color:rgba(239,68,68,.6);box-shadow:0 0 0 3px rgba(239,68,68,.12),0 0 12px rgba(239,68,68,.15);}
+@keyframes notifRingPulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.3);}70%{box-shadow:0 0 0 6px rgba(239,68,68,0);}100%{box-shadow:0 0 0 0 rgba(239,68,68,0);}}
+@keyframes notifBadgePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+.np-item.unread .np-icon{animation:notifRingPulse 2s ease-out infinite;}
+.np-text{flex:1;min-width:0;}
+.np-text p{font-size:13px;color:var(--text);line-height:1.55;}
+.np-text p strong{color:#fff;}
+.np-time{font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;font-weight:500;}
+.np-actions{display:flex;gap:8px;margin-top:10px;}
+.np-accept{background:rgba(62,207,110,.12);border:1px solid rgba(62,207,110,.25);color:var(--green);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:10px;cursor:pointer;transition:all .15s;}
+.np-accept:hover{background:rgba(62,207,110,.22);transform:translateY(-1px);}
+.np-decline{background:transparent;border:1px solid rgba(255,255,255,.08);color:var(--muted-light);font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:10px;cursor:pointer;transition:all .15s;}
+.np-decline:hover{background:rgba(255,255,255,.05);}
 .empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:rgba(255,255,255,.25);text-align:center;padding:40px;}
 .empty-state .ei{font-size:44px;opacity:.25;}
 .empty-state h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:rgba(255,255,255,.4);}
@@ -1838,12 +1853,16 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .sp-mode-dot { width:12px;height:12px;border-radius:50%; }
 
 /* ── GAME DETECTION ENHANCED ──────────────────────── */
-.detected-app-item { display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;transition:border-color .15s; }
-.detected-app-item:hover { border-color:rgba(255,249,62,.2); }
-.dai-icon { width:36px;height:36px;border-radius:10px;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+.detected-app-item { display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;transition:all .15s; }
+.detected-app-item:hover { border-color:rgba(62,207,110,.2);background:rgba(62,207,110,.02); }
+.dai-icon { width:48px;height:64px;border-radius:10px;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0; }
+.dai-icon img { width:100%;height:100%;object-fit:cover;border-radius:10px; }
 .dai-info { flex:1;min-width:0; }
-.dai-name { font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-.dai-sub { font-size:11px;color:var(--muted); }
+.dai-name { font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff; }
+.dai-sub { font-size:11.5px;color:var(--muted);margin-top:2px; }
+.dai-genre { font-size:10.5px;color:rgba(255,255,255,.2);margin-top:1px; }
+/* Desktop app indicator */
+.desktop-app-badge { display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:rgba(62,207,110,.6);background:rgba(62,207,110,.06);border:1px solid rgba(62,207,110,.12);border-radius:100px;padding:2px 8px;margin-top:4px; }
 
 /* ── BASTION TEMPLATE CARD ────────────────────────── */
 .bastion-template-card { border:1.5px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .15s; }
@@ -1907,16 +1926,16 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .unsaved-bar-save:hover{filter:brightness(1.08);}
 
 /* Discord-style notification toasts */
-.ftz-notif-toast{position:fixed;bottom:24px;right:24px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:flex-start;gap:12px;max-width:340px;z-index:9800;box-shadow:0 8px 24px rgba(0,0,0,.6);animation:notifSlideIn .3s cubic-bezier(.22,1,.36,1);cursor:pointer;}
-.ftz-notif-toast:hover{background:var(--panel2);}
-@keyframes notifSlideIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:none}}
-@keyframes notifSlideOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(100%)}}
-.ftz-notif-av{width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:16px;position:relative;}
+.ftz-notif-toast{position:fixed;bottom:24px;right:24px;background:rgba(14,17,24,.97);border:1px solid rgba(239,68,68,.12);border-radius:16px;padding:14px 18px;display:flex;align-items:flex-start;gap:14px;max-width:360px;z-index:9800;box-shadow:0 12px 40px rgba(0,0,0,.7),0 0 0 1px rgba(239,68,68,.06);animation:notifSlideIn .3s cubic-bezier(.22,1,.36,1);cursor:pointer;backdrop-filter:blur(20px);}
+.ftz-notif-toast:hover{background:rgba(20,23,30,.98);border-color:rgba(239,68,68,.2);}
+@keyframes notifSlideIn{from{opacity:0;transform:translateX(100%) scale(.95)}to{opacity:1;transform:none}}
+@keyframes notifSlideOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(100%) scale(.95)}}
+.ftz-notif-av{width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:17px;position:relative;border:2.5px solid rgba(239,68,68,.3);box-shadow:0 0 0 3px rgba(239,68,68,.08);}
 .ftz-notif-body{flex:1;min-width:0;}
-.ftz-notif-title{font-size:13.5px;font-weight:700;color:#fff;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ftz-notif-text{font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.ftz-notif-close{background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:16px;padding:0;line-height:1;flex-shrink:0;margin-top:-2px;}
-.ftz-notif-close:hover{color:#fff;}
+.ftz-notif-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ftz-notif-text{font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ftz-notif-close{background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:16px;padding:2px;line-height:1;flex-shrink:0;margin-top:-2px;border-radius:6px;transition:all .12s;}
+.ftz-notif-close:hover{color:#fff;background:rgba(255,255,255,.06);}
 
 /* ── Mini Profile Preview — Guilded-inspired popup card ── */
 .mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.05);border-radius:16px;z-index:4000;box-shadow:0 24px 80px rgba(0,0,0,.7),0 8px 32px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.02);overflow:hidden;overflow-y:auto;max-height:calc(100vh - 32px);animation:mppSlideIn .22s cubic-bezier(.16,1,.3,1);width:310px;}
@@ -2393,7 +2412,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <!-- Notification bell -->
     <button onclick="toggleNotifPanel()" class="tb-notif-btn" id="tb-notif-btn" title="Notifications" style="position:relative;background:none;border:none;color:#b3b2b4;cursor:pointer;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;" onmouseover="this.style.background='rgba(255,255,255,.06)';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='#b3b2b4'">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-      <span id="tb-notif-badge" style="display:none;position:absolute;top:2px;right:2px;min-width:16px;height:16px;border-radius:100px;background:#ef4444;color:#fff;font-size:9px;font-weight:800;font-family:'Syne',sans-serif;padding:0 4px;line-height:16px;text-align:center;box-shadow:0 2px 6px rgba(239,68,68,.4);"></span>
+      <span id="tb-notif-badge" style="display:none;position:absolute;top:1px;right:1px;min-width:18px;height:18px;border-radius:100px;background:#ef4444;color:#fff;font-size:9px;font-weight:800;font-family:'Syne',sans-serif;padding:0 4px;line-height:18px;text-align:center;box-shadow:0 2px 8px rgba(239,68,68,.5),0 0 0 2.5px var(--panel);animation:notifBadgePulse 2s ease-in-out infinite;"></span>
     </button>
     <div class="tb-onyx-pill" id="onyx-display" onclick="showView('atelier')" title="Your Onyx Balance">
       <img src="/Onyx.png" style="width:15px;height:15px;object-fit:contain;">
@@ -3889,6 +3908,15 @@ function formatTimeAgo(iso) {
   if (diff < 3600) return Math.floor(diff/60) + 'm ago';
   if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
   return Math.floor(diff/86400) + 'd ago';
+}
+function _formatElapsed(startIso) {
+  if (!startIso) return '';
+  const diff = (Date.now() - new Date(startIso).getTime()) / 1000;
+  if (diff < 60) return 'a few seconds';
+  if (diff < 3600) return Math.floor(diff/60) + ' min';
+  const h = Math.floor(diff/3600);
+  const m = Math.floor((diff%3600)/60);
+  return h + 'h ' + (m > 0 ? m + 'm' : '');
 }
 function handleSearch(q) {}
 function attachFile(inputId) { openFileUpload(inputId || 'ch-input'); }
@@ -10515,31 +10543,100 @@ function renderBSettingsMain(tab) {
   }
   else if (tab==='bots') {
     const bots = (b.deployedBots||[]);
-    const availBots = (CU.bots||[]).filter(bot=>!bots.find(db=>db.id===bot.id));
+    const myBots = (CU.bots||[]);
+    const availBots = myBots.filter(bot=>!bots.find(db=>db.id===bot.id));
     main.innerHTML = `
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"> Bastion Bots</div>
-      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Manage bots deployed to this bastion. Bots can automate tasks, moderate, and respond to commands.</div>
-      <div style="display:flex;gap:8px;margin-bottom:20px;">
-        <button class="btn-a" onclick="openDeployBotPicker()" style="font-size:12.5px;">+ Deploy Bot</button>
-        <button class="btn-g" onclick="buildProfileView('my_bots')" style="font-size:12.5px;">Manage My Bots →</button>
+      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Manage bots deployed to this bastion, create your own, or browse the Bot Marketplace.</div>
+
+      <!-- Sub-tabs: Deployed / My Bots / Marketplace -->
+      <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
+        <button id="bots-tab-deployed" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:#060810;border:none;" onclick="_switchBotsSubTab('deployed')">Deployed</button>
+        <button id="bots-tab-mybots" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBotsSubTab('mybots')">My Bots</button>
+        <button id="bots-tab-marketplace" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBotsSubTab('marketplace')">Marketplace</button>
       </div>
-      <div id="bastion-bots-list">
-        ${bots.length ? bots.map(bot => `
-          <div class="bot-card" style="margin-bottom:8px;">
+
+      <!-- Deployed Bots Section -->
+      <div id="bots-section-deployed">
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <button class="btn-a" onclick="openDeployBotPicker()" style="font-size:12.5px;">+ Deploy Bot</button>
+        </div>
+        <div id="bastion-bots-list">
+          ${bots.length ? bots.map(bot => `
+            <div class="bot-card" style="margin-bottom:8px;">
+              <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
+              <div class="bot-meta">
+                <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+                <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
+                <div class="bot-stats"><span>Owner: @${escapeHTML(bot.owner||CU.username)}</span><span>•</span><span>${(bot.commands||[]).length} commands</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+                <button class="btn-g" style="font-size:11px;padding:4px 10px;" onclick="toggleBastionBot('${escapeHTML(bot.id)}')">
+                  ${bot.enabled!==false?'Disable':'Enable'}
+                </button>
+                <button class="btn-g" style="font-size:11px;padding:4px 10px;color:var(--red);" onclick="removeBastionBot('${escapeHTML(bot.id)}')">Remove</button>
+              </div>
+            </div>
+          `).join('') : '<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No bots deployed yet. Click "Deploy Bot" to add one.</div>'}
+        </div>
+      </div>
+
+      <!-- My Bots Section (moved from user settings) -->
+      <div id="bots-section-mybots" style="display:none;">
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <button class="btn-a" onclick="openCreateBotModal()" style="font-size:12.5px;">+ Create Bot</button>
+        </div>
+        ${myBots.length ? myBots.map((bot,i) => `
+          <div class="bot-card" style="margin-bottom:8px;cursor:pointer;" onclick="openBotEditor(${i})">
             <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
             <div class="bot-meta">
-              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+              <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot</span></span>
+                ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">● Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">○ Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">🔒 Private</span>'}
+              </div>
               <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
-              <div class="bot-stats"><span>Owner: @${escapeHTML(bot.owner||CU.username)}</span><span>•</span><span>${(bot.commands||[]).length} commands</span></div>
+              <div class="bot-stats">
+                <span>${(bot.commands||[]).length} commands</span><span>•</span>
+                <span>${(bot.scripts||[]).length} scripts</span><span>•</span>
+                <span>Created ${new Date(bot.createdAt||Date.now()).toLocaleDateString()}</span>
+              </div>
             </div>
             <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
-              <button class="btn-g" style="font-size:11px;padding:4px 10px;" onclick="toggleBastionBot('${escapeHTML(bot.id)}')">
-                ${bot.enabled!==false?'Disable':'Enable'}
-              </button>
-              <button class="btn-g" style="font-size:11px;padding:4px 10px;color:var(--red);" onclick="removeBastionBot('${escapeHTML(bot.id)}')">Remove</button>
+              ${!bots.find(db=>db.id===bot.id)?`<button class="btn-a" style="font-size:11px;padding:4px 10px;" onclick="event.stopPropagation();deployBotToBastion('${escapeHTML(bot.id)}')">Deploy Here</button>`:`<span style="font-size:10px;color:var(--green);font-weight:600;">Deployed</span>`}
             </div>
           </div>
-        `).join('') : '<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No bots deployed yet. Click "Deploy Bot" to add one.</div>'}
+        `).join('') : `
+          <div style="text-align:center;padding:40px 20px;">
+            <div style="font-size:36px;margin-bottom:12px;"><img src="/Fortized Bot.png" style="width:36px;height:36px;"></div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;">No Bots Yet</div>
+            <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:16px;">Create your first bot to start automating your Bastions.</div>
+            <button class="btn-a" onclick="openCreateBotModal()">Create Bot</button>
+          </div>
+        `}
+      </div>
+
+      <!-- Bot Marketplace Section -->
+      <div id="bots-section-marketplace" style="display:none;">
+        <div style="font-size:13px;color:var(--muted-light);margin-bottom:16px;">Browse and install community bots for your bastion.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          ${(typeof ARSENAL_BOTS!=='undefined'?ARSENAL_BOTS:[]).map(bot => `
+            <div class="bot-card" style="flex-direction:column;gap:10px;cursor:default;">
+              <div style="display:flex;gap:12px;align-items:center;">
+                <div class="bot-av" style="width:48px;height:48px;font-size:22px;">${bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
+                <div style="flex:1;min-width:0;">
+                  <div class="bot-name">${escapeHTML(bot.name)}</div>
+                  <div style="font-size:10.5px;color:var(--muted);">by ${escapeHTML(bot.owner||'Fortized')} · ${bot.category||'General'}</div>
+                </div>
+              </div>
+              <div class="bot-desc" style="white-space:normal;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;">${escapeHTML(bot.bio||'')}</div>
+              <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;">
+                <div class="bot-stats"><span>⭐ ${bot.rating||'—'}</span><span>•</span><span>${(bot.commands||[]).length} cmds</span></div>
+                <button class="btn-a" style="font-size:11px;padding:5px 12px;" onclick="installArsenalBot('${escapeHTML(bot.id)}')">
+                  ${bots.find(db=>db.id===bot.id)?'Installed':'Install'}
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
       </div>`;
   }
   else if (tab==='templates') {
@@ -11136,6 +11233,44 @@ function _switchBITab(tab) {
     if (stickerTab) { stickerTab.style.background = 'var(--accent)'; stickerTab.style.color = '#060810'; stickerTab.style.fontWeight = '700'; }
     if (emojiTab) { emojiTab.style.background = 'transparent'; emojiTab.style.color = 'var(--muted-light)'; emojiTab.style.fontWeight = '600'; }
   }
+}
+
+// ── Bots sub-tab switching (bastion settings) ──
+function _switchBotsSubTab(tab) {
+  const tabs = ['deployed','mybots','marketplace'];
+  tabs.forEach(t => {
+    const section = document.getElementById('bots-section-'+t);
+    const btn = document.getElementById('bots-tab-'+t);
+    if (section) section.style.display = (t===tab)?'':'none';
+    if (btn) {
+      if (t===tab) { btn.style.background='var(--accent)'; btn.style.color='#060810'; btn.style.fontWeight='700'; }
+      else { btn.style.background='transparent'; btn.style.color='var(--muted-light)'; btn.style.fontWeight='600'; }
+    }
+  });
+}
+
+function deployBotToBastion(botId) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const bot = (CU.bots||[]).find(bo=>bo.id===botId); if (!bot) return;
+  if (!b.deployedBots) b.deployedBots = [];
+  if (b.deployedBots.find(db=>db.id===botId)) { toast('Bot already deployed','info'); return; }
+  b.deployedBots.push({...bot, enabled:true});
+  saveUser();
+  _syncBastionToGlobal(curBastion);
+  toast(bot.name+' deployed to bastion!','success');
+  renderBSettingsMain('bots');
+}
+
+function installArsenalBot(botId) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const bot = (typeof ARSENAL_BOTS!=='undefined'?ARSENAL_BOTS:[]).find(ab=>ab.id===botId); if (!bot) return;
+  if (!b.deployedBots) b.deployedBots = [];
+  if (b.deployedBots.find(db=>db.id===botId)) { toast('Bot already installed','info'); return; }
+  b.deployedBots.push({...bot, enabled:true, owner:bot.owner||'Fortized'});
+  saveUser();
+  _syncBastionToGlobal(curBastion);
+  toast(bot.name+' installed!','success');
+  renderBSettingsMain('bots');
 }
 
 // ── Bastion Identity: Sticker upload/delete ──
@@ -11848,7 +11983,7 @@ let _emojiPickerTab = 'smileys';
 
 
 function buildEmojiTabBar() {
-  const tabs = [{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:null,label:'Fortized'},...EMOJI_PICKER_TABS.slice(2)];
+  const tabs = [{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:null,label:'Fortized'},{id:'personal',icon:'⭐',label:'My Emojis'},...EMOJI_PICKER_TABS.slice(2)];
   return tabs.map(t => {
     const active = _emojiPickerTab === t.id;
     const baseStyle = 'border:none;cursor:pointer;flex-shrink:0;line-height:1;transition:all .1s;border-radius:8px;padding:5px 7px;';
@@ -11971,14 +12106,52 @@ function renderEmojiTab(tabId) {
     return;
   }
   
+  if (tabId === 'personal') {
+    grid.style.gridTemplateColumns = 'repeat(6,1fr)';
+    const personalEmojis = CU?.personalEmojis || [];
+    const personalStickers = CU?.personalStickers || [];
+    let html = '';
+    html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">My Custom Emojis (${personalEmojis.length}/${PERSONAL_EMOJI_LIMIT})</div>`;
+    if (personalEmojis.length) {
+      html += personalEmojis.map((e,i) => `
+        <div onclick="insertFortizedEmoji('${escapeHTML(e.name)}','${escapeHTML(e.data)}')"
+             onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(e.name)}:'"
+             oncontextmenu="event.preventDefault();if(confirm('Delete :${escapeHTML(e.name)}:?'))deletePersonalEmoji(${i})"
+             title=":${escapeHTML(e.name)}:"
+             style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;position:relative;"
+             onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+          <img src="${escapeHTML(e.data)}" alt=":${escapeHTML(e.name)}:" style="width:100%;height:100%;object-fit:contain;">
+        </div>`).join('');
+    }
+    if (personalEmojis.length < PERSONAL_EMOJI_LIMIT) {
+      html += `<div onclick="openPersonalEmojiUpload()" style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;color:rgba(255,255,255,.3);border:1.5px dashed rgba(255,255,255,.1);transition:all .12s;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.3)'">+</div>`;
+    }
+    if (!_hasActiveRadiance()) {
+      html += `<div style="grid-column:1/-1;font-size:10.5px;color:rgba(255,255,255,.25);padding:6px 4px;">Get <span style="color:var(--accent);font-weight:700;">Radiance</span> to upload animated GIF emojis.</div>`;
+    }
+    grid.innerHTML = html;
+    return;
+  }
+
   if (tabId === 'ftz') {
     const bastionCustom = curBastion !== null ? (CU?.bastions?.[curBastion]?.customEmojis||[]) : [];
+    // For radiance users, also gather emojis from all other bastions
+    const isRadiance = _hasActiveRadiance();
+    const otherBastionEmojis = [];
+    if (isRadiance) {
+      (CU?.bastions||[]).forEach((b, bi) => {
+        if (bi === curBastion) return;
+        (b.customEmojis||[]).forEach(ce => {
+          otherBastionEmojis.push({...ce, bastionName: b.name, bastionIdx: bi});
+        });
+      });
+    }
     const ftzEmojis = FORTIZED_EMOJIS.map(name => ({type:'ftz', name, url:FORTIZED_EMOJI_MAP[name]}));
-    
+
     grid.style.gridTemplateColumns = 'repeat(6,1fr)';
-    
+
     let html = '';
-    
+
     // Section: Fortized Global Emojis
     html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">Fortized Guide</div>`;
     html += ftzEmojis.map(e => `
@@ -12008,6 +12181,26 @@ function renderEmojiTab(tabId) {
       } else {
         html += `<div style="grid-column:1/-1;font-size:11.5px;color:rgba(255,255,255,.25);padding:4px;">No custom emojis — add them in Bastion Settings → Emojis</div>`;
       }
+    }
+
+    // Radiance users: show emojis from other bastions they're in
+    if (isRadiance && otherBastionEmojis.length) {
+      const grouped = {};
+      otherBastionEmojis.forEach(e => {
+        if (!grouped[e.bastionName]) grouped[e.bastionName] = [];
+        grouped[e.bastionName].push(e);
+      });
+      Object.entries(grouped).forEach(([bName, emojis]) => {
+        html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(167,139,250,.4);padding:10px 4px 4px;">✨ ${escapeHTML(bName)}</div>`;
+        html += emojis.map(ce => `
+          <div onclick="insertFortizedEmoji('${escapeHTML(ce.name)}','${escapeHTML(ce.data)}')"
+               onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:'"
+               title=":${escapeHTML(ce.name)}:"
+               style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
+               onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+            <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
+          </div>`).join('');
+      });
     }
 
     grid.innerHTML = html;
@@ -12213,6 +12406,81 @@ function insertEmoji(emoji) {
   localStorage.setItem('ftz_recent_emojis', JSON.stringify(_recentEmojis));
 }
 
+// ═══ Radiance helper ═══
+function _hasActiveRadiance() {
+  return (CU?.radianceUntil && new Date(CU.radianceUntil) > new Date()) ||
+         (CU?.radiancePlus && new Date(CU.radiancePlus) > new Date());
+}
+
+// ═══ Personal Custom Emojis & Stickers ═══
+// Users can upload up to 5 custom emojis and 5 custom stickers for themselves (usable everywhere).
+// Non-radiance users cannot upload GIF emojis/stickers.
+const PERSONAL_EMOJI_LIMIT = 5;
+const PERSONAL_STICKER_LIMIT = 5;
+
+function openPersonalEmojiUpload() {
+  const current = CU.personalEmojis || [];
+  if (current.length >= PERSONAL_EMOJI_LIMIT) { toast('You\'ve reached the max of '+PERSONAL_EMOJI_LIMIT+' personal emojis.','error'); return; }
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = _hasActiveRadiance() ? 'image/*,image/gif' : 'image/png,image/jpeg,image/webp';
+  inp.onchange = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    if (!_hasActiveRadiance() && file.type === 'image/gif') { toast('Radiance required to upload animated (GIF) emojis.','error'); return; }
+    if (file.size > 256*1024) { toast('Max 256KB per emoji.','error'); return; }
+    const name = prompt('Emoji name (letters, numbers, underscores):');
+    if (!name || !/^[a-zA-Z0-9_]+$/.test(name)) { toast('Invalid name. Use only letters, numbers, underscores.','error'); return; }
+    if (current.find(em=>em.name===name)) { toast('Name already used.','error'); return; }
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      CU.personalEmojis = CU.personalEmojis || [];
+      CU.personalEmojis.push({ name, data: ev.target.result, type: file.type, uploadedAt: new Date().toISOString() });
+      await saveUser();
+      toast('Personal emoji :'+name+': added!','success');
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
+
+function deletePersonalEmoji(idx) {
+  if (!CU.personalEmojis?.[idx]) return;
+  CU.personalEmojis.splice(idx, 1);
+  saveUser();
+  toast('Personal emoji removed.','success');
+}
+
+function openPersonalStickerUpload() {
+  const current = CU.personalStickers || [];
+  if (current.length >= PERSONAL_STICKER_LIMIT) { toast('You\'ve reached the max of '+PERSONAL_STICKER_LIMIT+' personal stickers.','error'); return; }
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = _hasActiveRadiance() ? 'image/png,image/gif,image/webp' : 'image/png,image/webp';
+  inp.onchange = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    if (!_hasActiveRadiance() && file.type === 'image/gif') { toast('Radiance required to upload animated (GIF) stickers.','error'); return; }
+    if (file.size > 512*1024) { toast('Max 512KB per sticker.','error'); return; }
+    const name = prompt('Sticker name:');
+    if (!name || !name.trim()) { toast('Name required.','error'); return; }
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      CU.personalStickers = CU.personalStickers || [];
+      CU.personalStickers.push({ name: name.trim(), url: ev.target.result, data: ev.target.result, type: file.type, uploadedAt: new Date().toISOString() });
+      await saveUser();
+      toast('Personal sticker added!','success');
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
+
+function deletePersonalSticker(idx) {
+  if (!CU.personalStickers?.[idx]) return;
+  CU.personalStickers.splice(idx, 1);
+  saveUser();
+  toast('Personal sticker removed.','success');
+}
+
 function insertFortizedEmoji(name, url) {
   const ta = document.getElementById(activeEmojiTarget);
   if (!ta) return;
@@ -12300,7 +12568,6 @@ function buildProfileNav(scroll) {
     {type:'item', id:'game_collection', icon:_svgIcons.game_collection, label:'Apps & Games'},
     {type:'sep'},
     {type:'section', label:'ADVANCED'},
-    {type:'item', id:'my_bots', icon:_svgIcons.my_bots, label:'Bots'},
     {type:'item', id:'my_data', icon:_svgIcons.my_data, label:'My Data'},
     {type:'item', id:'safety', icon:_svgIcons.safety, label:'Safety'},
     {type:'sep'},
@@ -13374,7 +13641,14 @@ async function viewUserProfile(username) {
 
   // Build right-panel tab content (Activity tab — current activity, game activity, mutual friends)
   const _activityContent = [];
-  if (u.gameActivity?.name) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Currently Playing</div><div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.1);border-radius:10px;"><div style="width:36px;height:36px;border-radius:8px;background:rgba(62,207,110,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${u.gameActivity.icon||ftzIcon('gamepad','16')}</div><div style="min-width:0;"><div style="font-size:12.5px;font-weight:700;color:#fff;">${escapeHTML(u.gameActivity.name)}</div>${u.gameActivity.details?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:1px;">${escapeHTML(u.gameActivity.details)}</div>`:''}</div></div></div>`);
+  if (u.gameActivity?.name) {
+    const ga = u.gameActivity;
+    const coverHTML = ga.coverThumb
+      ? `<img src="${escapeHTML(ga.coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`
+      : `<span style="font-size:18px;">${ga.icon||'🎮'}</span>`;
+    const elapsedHTML = ga.startedAt ? `<div style="font-size:10px;color:rgba(62,207,110,.5);margin-top:2px;">for ${_formatElapsed(ga.startedAt)}</div>` : '';
+    _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Currently Playing</div><div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.1);border-radius:12px;"><div style="width:48px;height:64px;border-radius:8px;background:rgba(62,207,110,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">${coverHTML}</div><div style="min-width:0;flex:1;"><div style="font-size:13.5px;font-weight:700;color:#fff;">${escapeHTML(ga.name)}</div>${ga.genre?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">${escapeHTML(ga.genre)}</div>`:''}${ga.details?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:1px;">${escapeHTML(ga.details)}</div>`:''}${elapsedHTML}</div></div></div>`);
+  }
   if (_mutualFriends.length) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${_mutualFriends.slice(0,12).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>12?`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.3);margin-left:-5px;border:2px solid var(--panel);font-weight:700;">+${_mutualFriends.length-12}</div>`:''}</div></div>`);
   if (!_activityContent.length) _activityContent.push(`<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">🎮</div><div style="color:rgba(255,255,255,.15);font-size:12.5px;font-weight:500;">No recent activity</div></div>`);
 
@@ -13421,7 +13695,7 @@ async function viewUserProfile(username) {
       <div class="up-left-badges">${renderBadgesHTML(u)}</div>
       <div class="up-left-divider"></div>
       <!-- Bio -->
-      ${u.bio ? `<div class="up-left-section"><div class="up-left-section-title">About Me</div><div class="up-left-section-body">${escapeHTML(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div></div>` : ''}
+      ${u.bio ? `<div class="up-left-section"><div class="up-left-section-title">About Me</div><div class="up-left-section-body">${parseMD(escapeHTML(u.bio.slice(0,300)))}${u.bio.length>300?'…':''}</div></div>` : ''}
       <!-- Member Since -->
       ${_memberSince ? `<div class="up-left-section"><div class="up-left-section-title">Member Since</div><div style="font-size:12.5px;color:rgba(255,255,255,.45);font-weight:500;">${_memberSince}</div></div>` : ''}
       <!-- Roles -->
@@ -18335,17 +18609,34 @@ function parseMD(s) {
     const safe = escapeHTML(url);
     return `<div style="margin:6px 0;max-width:180px;display:inline-block;cursor:pointer;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:180px;object-fit:contain;display:block;" loading="lazy" draggable="false"></div>`;
   });
-  // 0aa. :emoji_name: shortcodes → actual emoji / Fortized emoji / bastion custom emoji
+  // 0aa. :emoji_name: shortcodes → actual emoji / Fortized emoji / bastion custom emoji / personal emoji
+  // Permission rules:
+  // - Fortized Guide emojis: available everywhere
+  // - Bastion emojis: usable by everyone within that bastion, everywhere only by Radiance users
+  // - Personal custom emojis (max 5): usable everywhere by their owner
   s = s.replace(/:([a-zA-Z0-9_]+):/g, (match, name) => {
     const unicode = EMOJI_SHORTCODES[name];
     if (unicode) return unicode;
-    // Check global Fortized emojis
+    // Check global Fortized emojis (always available)
     const ftz = FORTIZED_EMOJI_MAP[name];
     if (ftz) return `<img src="${escapeHTML(ftz)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="ftz" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
+    // Check user's personal custom emojis (always available for the owner)
+    const personalEmojis = CU?.personalEmojis || [];
+    const pe = personalEmojis.find(e => e.name === name);
+    if (pe) return `<img src="${escapeHTML(pe.data)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="personal" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
     // Check bastion custom emojis
+    const isRadiance = _hasActiveRadiance();
+    // Search current bastion first
     if (curBastion !== null) {
       const ce = (CU?.bastions?.[curBastion]?.customEmojis||[]).find(e => e.name === name);
       if (ce) return `<img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="bastion" data-bastion-idx="${curBastion}" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
+    }
+    // Radiance users: search ALL bastions for the emoji
+    if (isRadiance) {
+      for (let bi = 0; bi < (CU?.bastions||[]).length; bi++) {
+        const ce = (CU.bastions[bi]?.customEmojis||[]).find(e => e.name === name);
+        if (ce) return `<img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(name)}:" title=":${escapeHTML(name)}:" class="emoji msg-emoji" data-emoji="${escapeHTML(name)}" data-emoji-type="bastion" data-bastion-idx="${bi}" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-0.15em;display:inline-block;">`;
+      }
     }
     return match; // keep original if unknown
   });
@@ -18970,8 +19261,120 @@ function applyRadianceFont() {
 // ════════════════════════════════════════════
 // REGISTERED GAMES - detect running processes
 // ════════════════════════════════════════════
+
+// Desktop app game detection (Electron)
+let _desktopGameDetectionActive = false;
+let _currentDetectedGame = null;
+
+function initDesktopGameDetection() {
+  if (!window.fortizedDesktop?.isDesktopApp) return;
+  if (_desktopGameDetectionActive) return;
+  _desktopGameDetectionActive = true;
+
+  // Start periodic detection
+  window.fortizedDesktop.startGameDetection();
+
+  // Listen for updates from the main process
+  window.fortizedDesktop.onGameDetectionUpdate(async (games) => {
+    if (games.length > 0) {
+      const game = games[0]; // Primary game (first detected)
+      if (_currentDetectedGame?.name !== game.name) {
+        _currentDetectedGame = game;
+        // Enrich with IGDB data if available
+        const enriched = await _enrichDetectedGameIGDB(game);
+        _setGameActivity(enriched);
+      }
+    } else if (_currentDetectedGame) {
+      _currentDetectedGame = null;
+      _clearGameActivity();
+    }
+  });
+
+  // Initial detection
+  window.fortizedDesktop.detectGames().then(async (games) => {
+    if (games.length > 0) {
+      const enriched = await _enrichDetectedGameIGDB(games[0]);
+      _currentDetectedGame = games[0];
+      _setGameActivity(enriched);
+    }
+  });
+}
+
+async function _enrichDetectedGameIGDB(game) {
+  try {
+    const igdbOk = await _checkIGDB();
+    if (!igdbOk) return game;
+    const results = await _searchIGDB(game.name);
+    if (results.length > 0) {
+      const match = results[0];
+      return {
+        ...game,
+        genre: match.genre || game.genre || 'Game',
+        coverUrl: match.coverUrl || game.coverUrl || null,
+        coverThumb: match.coverThumb || game.coverThumb || null,
+        summary: match.summary || game.summary || null,
+        year: match.year || game.year || null,
+        _igdbEnriched: true,
+      };
+    }
+  } catch {}
+  return game;
+}
+
+function _setGameActivity(game) {
+  // Update the userbar activity display
+  const actRow = document.getElementById('rail-ub-activity-row');
+  const actIcon = document.getElementById('rail-ub-activity-icon');
+  const actName = document.getElementById('rail-ub-activity-name');
+  if (actRow) actRow.style.display = 'flex';
+  if (actIcon) {
+    if (game.coverThumb) {
+      actIcon.innerHTML = `<img src="${game.coverThumb}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">`;
+    } else {
+      actIcon.textContent = game.icon || '🎮';
+    }
+  }
+  if (actName) actName.textContent = game.name;
+
+  // Broadcast via Socket.io
+  if (typeof _socket !== 'undefined' && _socket?.connected) {
+    _socket.emit('activity:set', {
+      activity: {
+        name: game.name,
+        icon: game.icon,
+        coverThumb: game.coverThumb || null,
+        coverUrl: game.coverUrl || null,
+        genre: game.genre || null,
+        startedAt: game.detectedAt || new Date().toISOString(),
+      }
+    });
+  }
+}
+
+function _clearGameActivity() {
+  const actRow = document.getElementById('rail-ub-activity-row');
+  if (actRow) actRow.style.display = 'none';
+  if (typeof _socket !== 'undefined' && _socket?.connected) {
+    _socket.emit('activity:set', { activity: null });
+  }
+}
+
+// Initialize game detection when app loads (if desktop)
+if (typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    setTimeout(initDesktopGameDetection, 3000);
+  });
+}
+
 async function detectRunningApps() {
-  // Build list: user's saved game collection + popular apps
+  // If running in Electron desktop app, use native detection
+  if (window.fortizedDesktop?.isDesktopApp) {
+    try {
+      const games = await window.fortizedDesktop.detectGames();
+      if (games.length) return games;
+    } catch {}
+  }
+  // Fallback: Build list from user's saved game collection + popular apps
   const userGames = (CU?.gameCollection||[]).map(g=>({ name:g.name, icon:g.icon||'🎮', fromCollection:true }));
   const popularApps = [
     { name:'Minecraft', icon:'⛏️' },{ name:'Roblox', icon:'🎮' },{ name:'Fortnite', icon:'🎯' },
@@ -18982,7 +19385,6 @@ async function detectRunningApps() {
     { name:'Unity', icon:'🕹️' },{ name:'Twitch', icon:'📺' },{ name:'YouTube', icon:'▶️' },
     { name:'Photoshop', icon:'🖼️' },{ name:'After Effects', icon:'✨' },
   ];
-  // Merge: user games first, then popular (deduplicate)
   const seen = new Set(userGames.map(g=>g.name.toLowerCase()));
   const merged = [...userGames, ...popularApps.filter(a=>!seen.has(a.name.toLowerCase()))];
   return merged;
@@ -20711,29 +21113,28 @@ function openStickerPicker(inputId) {
   picker.className = 'chat-picker-base sticker-picker-panel';
   picker.style.cssText = `right:${rightOffset}px;bottom:${window.innerHeight-rect.top+6}px;`;
 
-  // Gather stickers from all bastions the user is in
+  // Gather stickers: personal + current bastion + other bastions (Radiance only)
   const allStickers = [];
   const bastionNames = {};
+  const isRadiance = _hasActiveRadiance();
+
+  // Personal stickers first (always available)
+  const personalStickers = CU?.personalStickers || [];
+  personalStickers.forEach(s => {
+    allStickers.push({...s, bastionName: 'My Stickers', bastionIdx: 'personal'});
+  });
+  if (personalStickers.length) bastionNames['personal'] = 'My Stickers';
+
   if (CU?.bastions) {
     Object.entries(CU.bastions).forEach(([idx, b]) => {
       const stickers = b.stickers || b.customStickers || [];
-      stickers.forEach(s => {
-        allStickers.push({...s, bastionName: b.name || 'Unknown', bastionIdx: idx});
-      });
-      if (stickers.length) bastionNames[idx] = b.name || 'Unknown';
-    });
-  }
-
-  // Also gather from global bastion data
-  if (typeof bastions !== 'undefined' && bastions) {
-    bastions.forEach((b, idx) => {
-      const stickers = b.stickers || b.customStickers || [];
-      stickers.forEach(s => {
-        if (!allStickers.find(ex => ex.url === s.url)) {
+      // Current bastion: always show. Other bastions: Radiance only.
+      if (parseInt(idx) === curBastion || isRadiance) {
+        stickers.forEach(s => {
           allStickers.push({...s, bastionName: b.name || 'Unknown', bastionIdx: idx});
-          bastionNames[idx] = b.name || 'Unknown';
-        }
-      });
+        });
+        if (stickers.length) bastionNames[idx] = b.name || 'Unknown';
+      }
     });
   }
 
@@ -20749,6 +21150,10 @@ function openStickerPicker(inputId) {
     </div>
     ${bastionTabsHTML ? `<div class="spp-tabs"><button class="spp-tab active" onclick="_filterStickerBastion('all', event)">All</button>${bastionTabsHTML}</div>` : ''}
     <div class="spp-grid" id="sticker-grid"></div>
+    <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+      <span style="font-size:10px;color:rgba(255,255,255,.15);">${personalStickers.length}/${PERSONAL_STICKER_LIMIT} personal stickers</span>
+      <button onclick="openPersonalStickerUpload()" style="background:none;border:1px solid rgba(255,255,255,.08);border-radius:6px;color:rgba(255,255,255,.35);cursor:pointer;font-size:10px;padding:3px 8px;transition:all .12s;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.35)'">+ Upload</button>
+    </div>
   `;
 
   document.body.appendChild(picker);
@@ -26181,7 +26586,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     </div>
     <!-- Badges -->
     <div class="mpp-badges-row">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
-    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${escapeHTML(u.bio.slice(0,150))}${u.bio.length>150?'…':''}</div></div>` : ''}
+    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${parseMD(escapeHTML(u.bio.slice(0,150)))}${u.bio.length>150?'…':''}</div></div>` : ''}
     ${_memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
     <!-- Roles -->
     ${_currentView === 'bastion' && curBastion !== null ? `<div class="mpp-divider"></div><div class="mpp-roles-row">${renderUserRoleTags(username)}</div>` : ''}

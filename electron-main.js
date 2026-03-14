@@ -209,6 +209,11 @@ function setupIPC() {
   });
   ipcMain.on('window:close', () => mainWindow?.close());
 
+  // Get raw process list (for renderer-side matching)
+  ipcMain.handle('get-processes', async () => {
+    return await getRunningProcesses();
+  });
+
   // Start periodic game detection
   ipcMain.on('game-detection:start', () => {
     if (gameDetectionInterval) clearInterval(gameDetectionInterval);

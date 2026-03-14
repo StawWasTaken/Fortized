@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('fortizedDesktop', {
 
   // ── Game Detection ──
   detectGames: () => ipcRenderer.invoke('detect-games'),
+  getProcesses: () => ipcRenderer.invoke('get-processes'),
   startGameDetection: () => ipcRenderer.send('game-detection:start'),
   stopGameDetection: () => ipcRenderer.send('game-detection:stop'),
   onGameDetectionUpdate: (callback) => {

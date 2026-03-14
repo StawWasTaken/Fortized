@@ -470,7 +470,16 @@ async function doSignup() {
       reader.onerror = () => cacheAndRedirect(result.user);
       reader.readAsDataURL(file);
     } else {
-      cacheAndRedirect(result.user);
+      // Assign a deterministic default profile picture
+      const _hash = (result.user.username||'').split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+      const defaultPfpUrl = _hash % 2 === 0 ? '/default%20pfp.png' : '/default%20pfp2.png';
+      try {
+        const updatedUser = { ...result.user, pfp: defaultPfpUrl };
+        await FortizedSocial.saveUserObject(updatedUser);
+        cacheAndRedirect(updatedUser);
+      } catch {
+        cacheAndRedirect(result.user);
+      }
     }
 
   } catch (err) {

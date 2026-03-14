@@ -620,6 +620,9 @@ const FortizedSocial = (() => {
       _socket.on('reaction:update', function(data) {
         if (_socketCallbacks.onReaction) _socketCallbacks.onReaction(data);
       });
+      _socket.on('message:edited', function(data) {
+        if (_socketCallbacks.onMessageEdited) _socketCallbacks.onMessageEdited(data);
+      });
     } catch (e) {
       console.warn('[Fortized] Socket.io init failed', e);
       _socket = null;

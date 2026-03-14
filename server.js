@@ -224,6 +224,18 @@ io.on('connection', (socket) => {
     socket.to(key).emit('typing:update', { room: key, users: [...(typingState.get(key) || [])] });
   });
 
+  // ── Message Edit (live broadcast) ──
+  socket.on('message:edit', (data) => {
+    if (!username) return;
+    const key = roomKey(data.type, data.id1, data.id2);
+    socket.to(key).emit('message:edited', {
+      room: key,
+      messageId: data.messageId,
+      newText: data.newText,
+      editedBy: username,
+    });
+  });
+
   // ── Reactions (live broadcast) ──
   socket.on('reaction:toggle', (data) => {
     if (!username) return;

@@ -59,7 +59,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rail-btn::after{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:4px;height:0;background:#fff;border-radius:0 4px 4px 0;transition:height .2s cubic-bezier(.22,1,.36,1);opacity:0;}
 .rail-btn:hover::after{height:20px;opacity:.5;}
 .rail-btn.active::after{height:36px;opacity:1;background:var(--accent);box-shadow:0 0 8px rgba(255,249,62,.3);}
-.nav-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--sidebar);}
+.nav-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:#ef4444;color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--sidebar);box-shadow:0 2px 8px rgba(239,68,68,.5);animation:notifBadgePulse 2s ease-in-out infinite;}
 .rail-btn[data-tip]:hover::after{display:none;}
 /* Bastion items - draggable */
 .rail-bastion{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0;font-weight:600;color:rgba(255,255,255,.5);transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;overflow:visible;flex-shrink:0;user-select:none;}
@@ -77,7 +77,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rail-bastion .bastion-icon{width:48px;height:48px;border-radius:inherit;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:20px;background:transparent;transition:transform .16s cubic-bezier(.22,1,.36,1);}
 .rail-bastion:hover .bastion-icon{transform:scale(1.05);}
 .rail-bastion .bastion-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
-.rail-notif-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 3px;z-index:2;}
+.rail-notif-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:8px;background:#ef4444;color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--sidebar);padding:0 3px;z-index:2;box-shadow:0 2px 8px rgba(239,68,68,.5);animation:notifBadgePulse 2s ease-in-out infinite;}
 /* Bastion drag-drop */
 .rail-bastion.dragging{opacity:.5;transform:scale(.95);}
 .rail-bastion.drag-over{border-top:2px solid var(--accent);margin-top:-2px;}
@@ -1951,7 +1951,7 @@ body.is-desktop-app .np-header{padding-top:40px;}
 @keyframes mppSlideIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
 .mpp-banner{height:90px;position:relative;overflow:hidden;background:#142744;}
 .mpp-banner img{width:100%;height:100%;object-fit:cover;}
-.mpp-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:rgba(14,17,28,.8);pointer-events:none;}
+.mpp-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to top,var(--panel),transparent);pointer-events:none;}
 .mpp-av-area{padding:0 16px;margin-top:-32px;position:relative;z-index:2;display:flex;align-items:flex-end;gap:10px;}
 .mpp-av{width:64px;height:64px;border-radius:50%;overflow:hidden;border:3.5px solid var(--panel);cursor:pointer;background:var(--panel2);flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,.55);transition:transform .18s cubic-bezier(.22,1,.36,1);}
 .mpp-av:hover{transform:scale(1.05);}
@@ -4254,7 +4254,13 @@ function _updateUserbarActivity() {
     row.classList.add('active');
     row.style.display = '';
     nameEl.textContent = _gameActivity.name;
-    if (iconEl) iconEl.innerHTML = '<span style="font-size:15px;">' + (_gameActivity.icon || ftzIcon('gamepad','15')) + '</span>';
+    if (iconEl) {
+      if (_gameActivity.coverThumb) {
+        iconEl.innerHTML = '<img src="'+escapeHTML(_gameActivity.coverThumb)+'" style="width:24px;height:32px;border-radius:4px;object-fit:cover;" onerror="this.outerHTML=\'<span style=font-size:15px>'+(_gameActivity.icon||'🎮')+'</span>\'">';
+      } else {
+        iconEl.innerHTML = '<span style="font-size:15px;">' + (_gameActivity.icon || ftzIcon('gamepad','15')) + '</span>';
+      }
+    }
     if (actionBtn) {
       actionBtn.title = 'Stop Activity';
       actionBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
@@ -7111,14 +7117,24 @@ async function saveEdit(msgId) {
   if (textEl) textEl.innerHTML=parseMD(escapeHTML(newText))+'<span class="msg-edited">(edited)</span>';
   // Persist to Firebase
   try {
+    const editData = {text:newText, edited:true, editedAt:new Date().toISOString()};
     if (curDM) {
-      await firebase.database().ref(`dms/${[CU.username,curDM].sort().join('__')}/${msgId}`).update({text:newText,edited:true});
+      await firebase.database().ref(`dms/${[CU.username,curDM].sort().join('__')}/${msgId}`).update(editData);
     } else {
       const b=CU.bastions?.[curBastion]; const ch=b?.channels?.[curChannel];
       const bid=b?.globalId||b?.name; const chName=ch?.name||'general';
-      await firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`).update({text:newText,edited:true});
+      await firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`).update(editData);
     }
   } catch(e){ console.warn('Edit persist error',e); }
+  // Broadcast edit via Socket.io so others see it in real-time
+  {
+    const editType = curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : 'bastion';
+    let id1, id2;
+    if (editType === 'dm') { id1 = CU.username; id2 = curDM; }
+    else if (editType === 'gc') { id1 = curGC; }
+    else { const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel]; id1 = b?.globalId||b?.name; id2 = ch?.name||'general'; }
+    FortizedSocial.socketEmit('message:edit', { type: editType, id1, id2, messageId: msgId, newText });
+  }
   toast('Message edited','success');
 }
 let _undoDeleteTimer = null;
@@ -7275,8 +7291,56 @@ function addReactionUI(eOrMsgId, msgIdOrCtx, contextOrNone) {
     x = window.innerWidth / 2 - 100; y = window.innerHeight / 2 - 100;
     msgId = eOrMsgId; context = msgIdOrCtx;
   }
-  const emojis=['👍','❤️','😂','😮','😢','🔥','✨','👀','🎉','💯','😍','💀','🤣','😭','🥺','💜'];
-  showCtxMenu(x, y, [{ label: 'React', items: emojis.map(em=>({icon:em,label:em,action:()=>toggleReaction(msgId,em,context)})) }]);
+  // Show full emoji reaction picker panel
+  _openReactionEmojiPicker(x, y, msgId, context);
+}
+function _openReactionEmojiPicker(x, y, msgId, context) {
+  document.getElementById('reaction-emoji-picker')?.remove();
+  const panel = document.createElement('div');
+  panel.id = 'reaction-emoji-picker';
+  panel.style.cssText = 'position:fixed;z-index:9500;width:380px;max-height:400px;background:rgba(16,18,28,.97);border:1px solid rgba(255,255,255,.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(40px) saturate(150%);animation:pickerSlideIn .2s cubic-bezier(.22,1,.36,1);';
+  // Quick reactions row
+  const quickEmojis = ['👍','❤️','😂','😮','😢','🔥','✨','👀','🎉','💯','😍','💀','🤣','😭','🥺','💜','👏','🤔','😤','🥳'];
+  let html = '<div style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.06);"><div style="display:flex;flex-wrap:wrap;gap:2px;">';
+  quickEmojis.forEach(em => {
+    html += `<button style="width:32px;height:32px;border:none;background:transparent;border-radius:8px;font-size:18px;cursor:pointer;transition:all .1s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.transform='scale(1.2)'" onmouseout="this.style.background='transparent';this.style.transform=''" onclick="toggleReaction('${escapeHTML(msgId)}','${em}','${context}');document.getElementById('reaction-emoji-picker')?.remove()">${em}</button>`;
+  });
+  html += '</div></div>';
+  // Search
+  html += '<div style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.04);"><input id="reaction-emoji-search" placeholder="Search emojis…" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:6px 10px;color:#fff;font-family:DM Sans,sans-serif;font-size:12px;outline:none;box-sizing:border-box;" oninput="_filterReactionEmojis(this.value)"></div>';
+  // Categories
+  html += '<div id="reaction-emoji-grid" style="flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-wrap:wrap;gap:2px;align-content:flex-start;">';
+  const allEmojis = EMOJI_PICKER_TABS.filter(t => t.emojis).flatMap(t => t.emojis);
+  allEmojis.forEach(em => {
+    html += `<button class="reaction-em-btn" data-emoji="${em}" style="width:32px;height:32px;border:none;background:transparent;border-radius:8px;font-size:18px;cursor:pointer;transition:all .1s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.transform='scale(1.2)'" onmouseout="this.style.background='transparent';this.style.transform=''" onclick="toggleReaction('${escapeHTML(msgId)}','${em}','${context}');document.getElementById('reaction-emoji-picker')?.remove()">${em}</button>`;
+  });
+  html += '</div>';
+  panel.innerHTML = html;
+  document.body.appendChild(panel);
+  // Position
+  const PW = 380, PH = 400;
+  let left = x, top = y - PH - 8;
+  if (top < 8) top = y + 8;
+  if (left + PW > window.innerWidth - 8) left = window.innerWidth - PW - 8;
+  if (top + PH > window.innerHeight - 8) top = window.innerHeight - PH - 8;
+  panel.style.left = Math.max(8, left) + 'px';
+  panel.style.top = Math.max(8, top) + 'px';
+  // Focus search
+  setTimeout(() => document.getElementById('reaction-emoji-search')?.focus(), 50);
+  // Close on outside click
+  setTimeout(() => {
+    function _close(e) { if (!panel.contains(e.target)) { panel.remove(); document.removeEventListener('mousedown', _close); } }
+    document.addEventListener('mousedown', _close);
+  }, 10);
+}
+function _filterReactionEmojis(query) {
+  const grid = document.getElementById('reaction-emoji-grid');
+  if (!grid) return;
+  const btns = grid.querySelectorAll('.reaction-em-btn');
+  const q = query.toLowerCase().trim();
+  btns.forEach(btn => {
+    btn.style.display = (!q || btn.dataset.emoji.includes(q)) ? '' : 'none';
+  });
 }
 async function toggleReaction(msgId, emoji, context) {
   if (!CU?.username) return;
@@ -7318,6 +7382,13 @@ async function toggleReaction(msgId, emoji, context) {
     }
     // Update the UI locally
     updateReactionUI(msgId, emoji, users, context);
+    // Broadcast reaction via Socket.io for real-time sync
+    const rType = context === 'dm' ? 'dm' : context === 'gc' ? 'gc' : 'bastion';
+    let rid1, rid2;
+    if (rType === 'dm') { rid1 = me; rid2 = curDM; }
+    else if (rType === 'gc') { rid1 = curGC; }
+    else { const rb = CU.bastions?.[curBastion]; const rch = rb?.channels?.[curChannel]; rid1 = rb?.globalId||rb?.name; rid2 = rch?.name||'general'; }
+    FortizedSocial.socketEmit('reaction:toggle', { type: rType, id1: rid1, id2: rid2, messageId: msgId, emoji });
   } catch (err) {
     console.error('Reaction error:', err);
     toast('Failed to react', 'error');
@@ -10240,7 +10311,7 @@ function renderBSettingsMain(tab) {
     const tiers = [
       {name:'Reinforced',perks:['25 custom emoji slots','Animated bastion icon','Custom invite background','128kbps voice quality'],color:'#60a5fa'},
       {name:'Fortified',perks:['35 custom emoji slots','HD banner (1920×480)','256kbps HD voice quality','15 minute voice message limit','Custom role icons'],color:'#a78bfa'},
-      {name:'Sovereign',perks:['50 custom emoji slots','Vanity invite URL','384kbps voice quality','Custom bastion splash screen','Priority support badge'],color:'#fbbf24'},
+      {name:'Sovereign',perks:['50 custom emoji slots','384kbps voice quality','Custom bastion splash screen','Priority support badge'],color:'#fbbf24'},
     ];
     const tierCards = tiers.map((t,i)=>{
       const lv=i+1;
@@ -10273,14 +10344,6 @@ function renderBSettingsMain(tab) {
       ${level>=3?`<div style="text-align:center;margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:14px;">
         <span style="font-size:22px;">👑</span>
         <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fbbf24;margin-top:6px;">Sovereign Level — Maximum Boost!</div>
-        <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(251,191,36,.1);">
-          <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:rgba(255,255,255,.6);">Vanity Invite URL</div>
-          <div style="display:flex;gap:6px;">
-            <span style="padding:7px 12px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:8px;font-size:12px;color:var(--muted);">fortized.com/</span>
-            <input class="settings-input" id="vanity-url-input" value="${escapeHTML(b.vanityUrl||'')}" placeholder="your-bastion" style="flex:1;font-size:12px;">
-            <button class="btn-a" style="padding:6px 14px;font-size:11px;" onclick="_saveVanityUrl()">Save</button>
-          </div>
-        </div>
         <div style="margin-top:12px;">
           <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:rgba(255,255,255,.6);">Upload Limit</div>
           <div style="font-size:13px;color:#fbbf24;font-weight:700;">50 MB per file (up from 8 MB)</div>
@@ -10291,7 +10354,7 @@ function renderBSettingsMain(tab) {
         <div style="font-size:12px;color:var(--muted-light);line-height:1.7;">
           ${level>=1?'✅ 25+ emoji slots<br>✅ Animated icon<br>✅ 128kbps voice<br>':''}
           ${level>=2?'✅ 35+ emoji slots<br>✅ HD banner<br>✅ 256kbps voice<br>✅ Custom role icons<br>':''}
-          ${level>=3?'✅ 50 emoji slots<br>✅ Vanity URL<br>✅ 384kbps voice<br>✅ Splash screen<br>':''}
+          ${level>=3?'✅ 50 emoji slots<br>✅ 384kbps voice<br>✅ Splash screen<br>':''}
         </div>
       </div>`:''}`;
   }
@@ -13754,32 +13817,32 @@ async function viewUserProfile(username) {
     <!-- RIGHT PANEL -->
     <div class="up-right">
       <div class="up-right-tabs">
-        <div class="up-right-tab active" onclick="_upSwitchTab(this,'up-tab-activity')">Activity</div>
-        ${(isOwn || (u.profileWidgets||[]).some(w=>w.enabled)) ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-widgets')">Widgets</div>` : ''}
-        ${games.length ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-games')">Games</div>` : ''}
-        ${!isOwn && _mutualFriends.length ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-mutuals')">Mutuals</div>` : ''}
+        <div class="up-right-tab active" onclick="_upSwitchTab(this,'up-tab-activity')">Board</div>
+        <div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-activity-detail')">Activity</div>
+        ${!isOwn ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-mutuals')">Mutual Friends</div>` : ''}
       </div>
       <div class="up-right-content">
-        <div id="up-tab-activity">${_activityContent.join('')}</div>
-        ${(isOwn || (u.profileWidgets||[]).some(w=>w.enabled)) ? `<div id="up-tab-widgets" style="display:none;">
-          <div class="up-right-section" id="up-widgets-container"></div>
-          ${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;"></div>` : ''}
-        </div>` : ''}
-        ${games.length ? `<div id="up-tab-games" style="display:none;">
-          <div class="up-right-section">
+        <!-- Board tab: widgets, games, general info -->
+        <div id="up-tab-activity">
+          ${(isOwn || (u.profileWidgets||[]).some(w=>w.enabled)) ? `<div class="up-right-section" id="up-widgets-container"></div>${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;"></div>` : ''}` : ''}
+          ${games.length ? `<div class="up-right-section">
             <div class="up-right-section-title">Game Collection</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;">
               ${games.map(g=>`<div style="display:flex;align-items:center;gap:9px;padding:11px 13px;background:rgba(255,255,255,.022);border:1px solid rgba(255,255,255,.04);border-radius:11px;cursor:default;transition:all .14s;" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.borderColor='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.022)';this.style.borderColor='rgba(255,255,255,.04)'"><span style="font-size:17px;">${g.coverUrl ? `<img src='${escapeHTML(g.coverUrl)}' style='width:24px;height:32px;border-radius:4px;object-fit:cover;'>` : (g.icon||ftzIcon('gamepad','15'))}</span><span style="font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</span></div>`).join('')}
             </div>
-          </div>
-        </div>` : ''}
-        ${!isOwn && _mutualFriends.length ? `<div id="up-tab-mutuals" style="display:none;">
-          <div class="up-right-section">
+          </div>` : ''}
+          ${!games.length && !(isOwn || (u.profileWidgets||[]).some(w=>w.enabled)) ? `<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">📋</div><div style="color:rgba(255,255,255,.15);font-size:12.5px;font-weight:500;">Nothing on the board yet</div></div>` : ''}
+        </div>
+        <!-- Activity tab: current game activity -->
+        <div id="up-tab-activity-detail" style="display:none;">${_activityContent.join('')}</div>
+        <!-- Mutual Friends tab -->
+        ${!isOwn ? `<div id="up-tab-mutuals" style="display:none;">
+          ${_mutualFriends.length ? `<div class="up-right-section">
             <div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div>
             <div style="display:flex;flex-direction:column;gap:4px;">
               ${_mutualFriends.slice(0,20).map(f => `<div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .14s;" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')" class="up-mutual-row"><div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,f,30)}</div><div style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(f)}</div></div>`).join('')}
             </div>
-          </div>
+          </div>` : `<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">👥</div><div style="color:rgba(255,255,255,.15);font-size:12.5px;font-weight:500;">No mutual friends</div></div>`}
         </div>` : ''}
       </div>
     </div>
@@ -14038,6 +14101,7 @@ function handleContextMenu(e) {
 
   // ── 1) User context menu (clicking on author name) ──
   if (isAuthor && !isSystemMsg) {
+    e.preventDefault();
     const username = isAuthor.dataset.author || isAuthor.textContent.trim();
     const isMe = username === CU?.username;
     const inBastion = curBastion !== null;
@@ -14084,6 +14148,7 @@ function handleContextMenu(e) {
 
   // ── 2) Message context menu ──
   if (msgRow && !isSystemMsg) {
+    e.preventDefault();
     const msgId = msgRow.dataset.msgid;
     const text = msgRow.dataset.text || '';
     const isOwn = msgRow.dataset.from === CU?.username;
@@ -14131,6 +14196,7 @@ function handleContextMenu(e) {
 
   // ── 3) System message — limited actions ──
   if (isSystemMsg) {
+    e.preventDefault();
     const text = msgRow?.dataset?.text || msgRow?.textContent?.trim() || '';
     const msgId = msgRow.dataset.msgid;
     const inBastion = curBastion !== null;
@@ -14145,8 +14211,90 @@ function handleContextMenu(e) {
     return;
   }
 
+  // ── 3.5) Friend list item context menu ──
+  const friendItem = target.closest('.friend-item');
+  if (friendItem && !msgRow) {
+    e.preventDefault();
+    const friendName = friendItem.dataset?.username || friendItem.querySelector('.friend-name')?.textContent?.trim() || '';
+    if (friendName) {
+      const isFriend = (CU?.friends||[]).includes(friendName);
+      showCtxMenu(e.clientX, e.clientY, [
+        { label: friendName, items: [
+          { icon: _ctxSvg('message'), label: 'Message', action: () => openDMView(friendName) },
+          { icon: _ctxSvg('profile'), label: 'View Profile', action: () => viewUserProfile(friendName) },
+          { icon: _ctxSvg('markRead'), label: 'Mark as Read', action: () => toast('Marked as read!', 'success') },
+        ]},
+        { items: [
+          { icon: _ctxSvg('copy'), label: 'Copy Username', action: () => navigator.clipboard.writeText(friendName), copyFeedback: true },
+          { icon: _ctxSvg('mention'), label: 'Mention in Chat', action: () => { const ta = document.querySelector('.chat-input-row textarea'); if (ta) { ta.value += `@${friendName} `; ta.focus(); } } },
+        ]},
+        ...(isFriend ? [{ items: [
+          { icon: _ctxSvg('kick'), label: 'Remove Friend', danger: true, action: () => showCustomConfirm('Remove ' + friendName + ' from friends?', () => removeFriend(friendName)) },
+        ]}] : []),
+      ]);
+      return;
+    }
+  }
+
+  // ── 3.6) Member list item context menu ──
+  const memberItem = target.closest('.member-row') || target.closest('[data-member]');
+  if (memberItem && !msgRow) {
+    e.preventDefault();
+    const memberName = memberItem.dataset?.member || memberItem.dataset?.username || memberItem.querySelector('.member-name')?.textContent?.trim() || '';
+    if (memberName) {
+      const isMe = memberName === CU?.username;
+      const inBastion = curBastion !== null;
+      const b = inBastion ? CU.bastions?.[curBastion] : null;
+      const isOwner = b?.owner === CU?.username;
+      const groups = [
+        { label: memberName, items: [
+          { icon: _ctxSvg('profile'), label: 'View Profile', action: () => viewUserProfile(memberName) },
+          ...(!isMe ? [{ icon: _ctxSvg('message'), label: 'Message', action: () => openDMView(memberName) }] : []),
+          { icon: _ctxSvg('mention'), label: 'Mention', action: () => { const ta = document.querySelector('.chat-input-row textarea'); if (ta) { ta.value += `@${memberName} `; ta.focus(); } } },
+          { icon: _ctxSvg('copy'), label: 'Copy Username', action: () => navigator.clipboard.writeText(memberName), copyFeedback: true },
+        ]},
+      ];
+      if (!isMe && inBastion && isOwner) {
+        groups.push({ label: 'Moderation', items: [
+          { icon: _ctxSvg('mute'), label: 'Mute', action: () => toast('User muted', 'success') },
+          { icon: _ctxSvg('kick'), label: 'Kick', danger: true, action: () => toast('User kicked', 'success') },
+          { icon: _ctxSvg('ban'), label: 'Ban', danger: true, action: () => toast('User banned', 'success') },
+        ]});
+      }
+      showCtxMenu(e.clientX, e.clientY, groups);
+      return;
+    }
+  }
+
+  // ── 3.7) Image/attachment context menu ──
+  const imgEl = target.closest('img:not(.msg-av-inner img)');
+  if (imgEl && imgEl.src && !isInput && !isSidebar) {
+    e.preventDefault();
+    showCtxMenu(e.clientX, e.clientY, [
+      { items: [
+        { icon: _ctxSvg('copy'), label: 'Copy Image Link', action: () => navigator.clipboard.writeText(imgEl.src), copyFeedback: true },
+        { icon: _ctxSvg('globe'), label: 'Open in Browser', action: () => window.open(imgEl.src, '_blank') },
+      ]}
+    ]);
+    return;
+  }
+
+  // ── 3.8) Link context menu ──
+  const linkEl = target.closest('a[href]');
+  if (linkEl && !isInput && !isSidebar) {
+    e.preventDefault();
+    showCtxMenu(e.clientX, e.clientY, [
+      { items: [
+        { icon: _ctxSvg('globe'), label: 'Open Link', action: () => window.open(linkEl.href, '_blank') },
+        { icon: _ctxSvg('copy'), label: 'Copy Link', action: () => navigator.clipboard.writeText(linkEl.href), copyFeedback: true },
+      ]}
+    ]);
+    return;
+  }
+
   // ── 4) Input field context menu ──
   if (isInput) {
+    e.preventDefault();
     showCtxMenu(e.clientX, e.clientY, [
       { items: [
         { icon: _ctxSvg('paste'), label: 'Paste', action: async () => { const t = await navigator.clipboard.readText(); target.value += t; } },
@@ -14159,6 +14307,7 @@ function handleContextMenu(e) {
 
   // ── 5) Sidebar logo / blank area context menu ──
   if (isSidebarLogo || isSidebarBlank) {
+    e.preventDefault();
     const groups = [
       { items: [
         { icon: _ctxSvg('home'), label: 'Go Home', action: () => showView('home') },
@@ -14176,6 +14325,7 @@ function handleContextMenu(e) {
 
   // ── 6) Empty chat space context menu ──
   if (isChatArea) {
+    e.preventDefault();
     const inBastion = curBastion !== null;
     const b = inBastion ? CU.bastions?.[curBastion] : null;
     const isOwner = b?.owner === CU?.username;
@@ -23342,10 +23492,40 @@ function setGameActivity(name, icon) {
     saveUser().catch(()=>{});
     if (_gameActivity) {
       firebase.database().ref('users/'+CU.username+'/gameActivity').set(_gameActivity).catch(()=>{});
+      // Enrich with IGDB data (cover art, genre) — like Discord's rich presence
+      if (!_gameActivity._igdbEnriched) {
+        _enrichActivityWithIGDB(_gameActivity).catch(()=>{});
+      }
     } else {
       firebase.database().ref('users/'+CU.username+'/gameActivity').remove().catch(()=>{});
     }
   }
+}
+async function _enrichActivityWithIGDB(activity) {
+  try {
+    const igdbOk = await _checkIGDB();
+    if (!igdbOk) return;
+    const results = await _searchIGDB(activity.name);
+    if (results.length > 0) {
+      const match = results[0];
+      activity.genre = match.genre || activity.genre || null;
+      activity.coverUrl = match.coverUrl || activity.coverUrl || null;
+      activity.coverThumb = match.coverThumb || activity.coverThumb || null;
+      activity.summary = match.summary || activity.summary || null;
+      activity.year = match.year || activity.year || null;
+      activity._igdbEnriched = true;
+      // Update the UI with enriched data
+      refreshGameActivityBar();
+      _updateUserbarActivity();
+      // Persist enriched data
+      if (CU) {
+        CU.gameActivity = activity;
+        firebase.database().ref('users/'+CU.username+'/gameActivity').set(activity).catch(()=>{});
+        // Broadcast enriched activity via Socket.io
+        FortizedSocial.socketEmit('activity:set', { activity });
+      }
+    }
+  } catch(e) { console.warn('[IGDB] Activity enrichment failed:', e); }
 }
 
 function refreshGameActivityBar() {
@@ -23353,8 +23533,12 @@ function refreshGameActivityBar() {
   if (!bar) return;
   if (_gameActivity) {
     bar.style.display = 'flex';
-    bar.innerHTML = '<span style="font-size:13px;">' + (_gameActivity.icon||'🎮') + '</span>'
-      +'<span style="font-size:11px;font-weight:700;color:var(--text);">'+escapeHTML(_gameActivity.name)+'</span>'
+    const coverHtml = _gameActivity.coverThumb
+      ? '<img src="'+escapeHTML(_gameActivity.coverThumb)+'" style="width:24px;height:32px;border-radius:4px;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML=\'<span style=font-size:13px>'+(_gameActivity.icon||'🎮')+'</span>\'">'
+      : '<span style="font-size:13px;">' + (_gameActivity.icon||'🎮') + '</span>';
+    const genreHtml = _gameActivity.genre ? '<span style="font-size:9px;color:rgba(255,255,255,.25);margin-left:4px;">'+escapeHTML(_gameActivity.genre)+'</span>' : '';
+    bar.innerHTML = coverHtml
+      +'<span style="font-size:11px;font-weight:700;color:var(--text);">'+escapeHTML(_gameActivity.name)+genreHtml+'</span>'
       +'<span style="font-size:10px;color:var(--muted);">Playing</span>'
       +'<button onclick="setGameActivity(null)" title="Stop" style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;">✕</button>';
   } else {
@@ -28135,22 +28319,6 @@ function _showQuickModal(id, html) {
   document.body.appendChild(el);
 }
 function _closeEl(id) { const el = document.getElementById(id); if (el) { el.style.opacity='0'; el.style.transition='opacity .15s'; setTimeout(()=>el.remove(),150); } }
-
-// ════════════════════════════════════════════
-// VANITY URL for Sovereign Bastions
-// ════════════════════════════════════════════
-async function _saveVanityUrl() {
-  if (curBastion === null) return;
-  const b = CU.bastions[curBastion];
-  const bid = b?.globalId||b?.name;
-  const url = document.getElementById('vanity-url-input')?.value?.trim()?.toLowerCase()?.replace(/[^a-z0-9-]/g,'');
-  if (!url) { toast('Enter a vanity URL','error'); return; }
-  if (url.length < 3 || url.length > 32) { toast('Must be 3-32 characters','error'); return; }
-  b.vanityUrl = url;
-  await saveUser();
-  try { await firebase.database().ref('bastions/' + bid + '/vanityUrl').set(url); } catch {}
-  toast('Vanity URL saved: fortized.com/' + url, 'success');
-}
 
 // ════════════════════════════════════════════
 // LAST SEEN TRACKING

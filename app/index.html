@@ -275,7 +275,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .sidebar-ctx{width:380px;min-width:380px;background:var(--sidebar-ctx);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid rgba(255,255,255,.04);}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
-.topbar{height:44px;background:var(--sidebar);display:flex;align-items:center;padding:0 18px;gap:18px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;}
+.topbar{height:44px;background:var(--sidebar);display:flex;align-items:center;padding:0 191px 0 18px;gap:18px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;}
 .topbar button,.topbar input,.topbar .tb-actions,.topbar .tb-onyx-pill,.topbar .tb-search,.topbar .tb-notif-btn,.topbar .tb-win-controls{-webkit-app-region:no-drag;}
 /* Electron window controls */
 .tb-win-controls{display:none;align-items:center;gap:0;margin-left:auto;flex-shrink:0;}
@@ -5156,7 +5156,7 @@ function renderDMSidebar(scroll) {
     Friends</div>`;
 
   // ── Section label: Direct Messages ──────────────────
-  html += '<div class="sec-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;">Direct Messages <button onclick="openModal(\'modal-new-dm\');switchNewDMTab(\'dm\')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;" title="New DM">✏️</button></div>';
+  html += '<div class="sec-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:10px;" oncontextmenu="event.preventDefault();showDMSectionCtxMenu(event)">Direct Messages <button onclick="openModal(\'modal-new-dm\');switchNewDMTab(\'dm\')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;" title="New DM">✏️</button></div>';
 
   // Build a unified list of all conversations (DMs + GCs), will be sorted chronologically
   const _dmEntries = [];
@@ -18130,6 +18130,16 @@ function showDMCtxMenu(e, username) {
     { items: [
       { icon: _ctxSvg('leave'), label: 'Close DM', action: () => { hideDMConversation('dm_' + username); toast('Conversation hidden — find them in Friends', 'info'); } },
       { icon: _ctxSvg('kick'), label: 'Remove Friend', danger: true, action: () => showCustomConfirm('Remove ' + username + ' from friends?', () => { removeFriend(username); }) },
+    ]},
+  ];
+  showCtxMenu(e.clientX, e.clientY, groups);
+}
+
+function showDMSectionCtxMenu(e) {
+  e.preventDefault();
+  const groups = [
+    { items: [
+      { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => { document.querySelectorAll('.friend-item').forEach(fi => { fi.style.fontWeight=''; fi.classList.remove('dm-unread'); const badge = fi.querySelector('.dm-unread-badge'); if(badge) badge.remove(); }); toast('All conversations marked as read!', 'success'); } },
     ]},
   ];
   showCtxMenu(e.clientX, e.clientY, groups);

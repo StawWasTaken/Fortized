@@ -18912,7 +18912,7 @@ function parseMD(s) {
   s = s.replace(/\[FTZGIF:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);
     const gifId = url.split('/media/')[1]?.split('/')[0] || ('custom-' + Math.random().toString(36).slice(2,8));
-    return `<div class="chat-gif-wrap" style="margin:6px 0;max-width:320px;border-radius:12px;overflow:hidden;display:inline-block;cursor:pointer;position:relative;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:260px;object-fit:contain;border-radius:12px;display:block;" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Save to favourites">⭐</button></div>`;
+    return `<div class="chat-gif-wrap" style="margin:6px 0;max-width:480px;border-radius:12px;overflow:hidden;display:inline-block;cursor:pointer;position:relative;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:400px;object-fit:contain;border-radius:12px;display:block;" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Save to favourites">⭐</button></div>`;
   });
   // 0a. Sticker token from sticker picker
   s = s.replace(/\[FTZSTICKER:([^\]]+)\]/g, (_, url) => {
@@ -21360,13 +21360,14 @@ function renderGiphyResults(gifs, inputId) {
     return;
   }
   grid.innerHTML = gifs.map(g => {
-    const url = g.images?.fixed_height_small?.url || g.images?.fixed_height?.url || g.images?.original?.url || '';
-    return `<div class="gif-card" data-id="${g.id}" data-url="${escapeHTML(url)}" data-input="${escapeHTML(inputId)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);break-inside:avoid;margin-bottom:8px;transition:all .2s cubic-bezier(.22,1,.36,1);">
-      <img src="${escapeHTML(url)}" style="width:100%;display:block;border-radius:9px;" loading="lazy" draggable="false">
+    const thumb = g.images?.fixed_height_small?.url || g.images?.fixed_height?.url || g.images?.original?.url || '';
+    const fullUrl = g.images?.original?.url || g.images?.fixed_height?.url || thumb;
+    return `<div class="gif-card" data-id="${g.id}" data-url="${escapeHTML(fullUrl)}" data-input="${escapeHTML(inputId)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);break-inside:avoid;margin-bottom:8px;transition:all .2s cubic-bezier(.22,1,.36,1);">
+      <img src="${escapeHTML(thumb)}" style="width:100%;display:block;border-radius:9px;" loading="lazy" draggable="false">
       <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.18s;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 45%);display:flex;align-items:flex-end;justify-content:space-between;padding:10px;pointer-events:none;border-radius:10px;">
         <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,.6);max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(g.title||'')}</div>
       </div>
-      <button class="gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${g.id}',url:'${escapeHTML(url)}'})" title="Save" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);color:#ffd93e;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">★</button>
+      <button class="gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${g.id}',url:'${escapeHTML(fullUrl)}'})" title="Save" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);color:#ffd93e;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">★</button>
     </div>`;
   }).join('');
   grid.querySelectorAll('.gif-card').forEach(card => {

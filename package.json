@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "desktop": "electron electron-main.js",
+    "desktop:dev": "node server.js & electron electron-main.js"
   },
   "repository": {
     "type": "git",
@@ -18,5 +20,8 @@
     "@supabase/supabase-js": "^2.99.1",
     "express": "^5.2.1",
     "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
   }
 }

@@ -8491,6 +8491,74 @@ function initFortizedUXResilience() {
   try { updateUserbar(); } catch(e) { console.warn('[init] updateUserbar:', e); }
   try { renderRailBastions(); } catch(e) { console.warn('[init] renderRailBastions:', e); }
   try { if(typeof startVCListener==='function') startVCListener(CU.username); } catch(e) { console.warn('[init] startVCListener:', e); }
+  // ── Initialize Socket.io for real-time events ──
+  try {
+    FortizedSocial.initSocket(CU.username, {
+      initialStatus: CU.status || 'online',
+      initialGameActivity: CU.gameActivity || null,
+      onStatusChange: function(data) {
+        // Update status dots in member lists and profiles
+        document.querySelectorAll('.profile-status-dot[data-for="'+data.username+'"]').forEach(el => {
+          const sc = data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#f87171':'rgba(255,255,255,.15)';
+          el.style.background = sc;
+          el.style.boxShadow = '0 0 8px '+sc+'55';
+        });
+        document.querySelectorAll('.profile-status-label[data-for="'+data.username+'"]').forEach(el => {
+          el.textContent = typeof FtzStatus !== 'undefined' ? FtzStatus.publicLabel(data.status) : data.status;
+        });
+      },
+      onMessage: function(room, msg) {
+        // Message received in room — handled by Supabase real-time listeners
+      },
+      onReaction: function(data) {
+        // Reaction update — handled by Supabase real-time listeners
+      },
+      onPollUpdate: function(data) {
+        // Re-fetch polls if viewing the same bastion poll channel
+        if (typeof curBastion !== 'undefined' && curBastion !== null) {
+          const b = CU?.bastions?.[curBastion];
+          if (b && (b.globalId||b.name) === data.bastionId) {
+            const ch = b.channels?.[curChannel];
+            if (ch && ch.type === 'poll' && ch.name === data.channelName) {
+              openPollChannel(curChannel);
+            }
+          }
+        }
+      },
+      onAnnouncementNew: function(data) {
+        // Trigger the announcement banner
+        if (data.text) {
+          const existing = document.getElementById('sys-announce-bar');
+          if (existing) existing.remove();
+          _dismissedAnnouncement = null;
+          _listenAnnouncement();
+        }
+      },
+      onAnnouncementCleared: function() {
+        const bar = document.getElementById('sys-announce-bar');
+        if (bar) { bar.style.opacity='0'; bar.style.transform='translateY(-100%)'; setTimeout(()=>bar.remove(),300); }
+      },
+      onBastionUpdate: function(data) {
+        // Re-sync bastion data when roles or member roles change
+        if (!CU?.bastions) return;
+        CU.bastions.forEach((b, idx) => {
+          if ((b.globalId||b.name) === data.bastionId) {
+            FortizedSocial.getGlobalBastion(data.bastionId).then(fresh => {
+              if (!fresh) return;
+              const syncFields = ['roles','memberRoles','channels','name','members','memberCount'];
+              syncFields.forEach(f => { if (fresh[f] !== undefined) b[f] = fresh[f]; });
+              saveLocal();
+              if (curBastion === idx) {
+                renderRailBastions();
+                if (typeof renderMemberList === 'function') renderMemberList();
+              }
+            }).catch(()=>{});
+          }
+        });
+      },
+    });
+    FortizedSocial.startPolling(CU.username, {});
+  } catch(e) { console.warn('[init] Socket.io/polling init:', e); }
   setTimeout(initCrossDeviceSync, 800);
   setTimeout(initNotifToasts, 1200);
   // Sync blocked list from Firebase
@@ -11341,13 +11409,17 @@ async function saveRole() {
     delete currentRoleEditing._idx;
     b.roles[idx]=currentRoleEditing;
   } else { b.roles=[...(b.roles||[]),currentRoleEditing]; }
-  await saveUser(); _syncBastionToGlobal(curBastion); closeModal('modal-role-editor'); renderBSettingsMain('roles'); toast('Role saved!','success');
+  await saveUser(); _syncBastionToGlobal(curBastion); closeModal('modal-role-editor'); renderBSettingsMain('roles');
+  FortizedSocial.socketEmit('bastion:update', { bastionId: CU.bastions[curBastion]?.globalId, field: 'roles' });
+  toast('Role saved!','success');
 }
 async function deleteCurrentRole() {
   if(!('_idx' in currentRoleEditing)) return;
   showCustomConfirm('Delete this role?', async ()=>{
     CU.bastions[curBastion].roles.splice(currentRoleEditing._idx,1);
-    await saveUser(); _syncBastionToGlobal(curBastion); closeModal('modal-role-editor'); renderBSettingsMain('roles'); toast('Role deleted','info');
+    await saveUser(); _syncBastionToGlobal(curBastion); closeModal('modal-role-editor'); renderBSettingsMain('roles');
+    FortizedSocial.socketEmit('bastion:update', { bastionId: CU.bastions[curBastion]?.globalId, field: 'roles' });
+    toast('Role deleted','info');
   });
 }
 
@@ -11389,7 +11461,12 @@ function toggleMemberRole(roleId, el) {
   else b.memberRoles[assignRoleMember]=[...roles,roleId];
   el.classList.toggle('on',b.memberRoles[assignRoleMember].includes(roleId));
 }
-async function saveAssignedRoles() { await saveUser(); _syncBastionToGlobal(assignRoleBastionIdx!=null?assignRoleBastionIdx:curBastion); closeModal('modal-assign-role'); toast('Roles updated!','success'); }
+async function saveAssignedRoles() {
+  const bIdx = assignRoleBastionIdx!=null?assignRoleBastionIdx:curBastion;
+  await saveUser(); _syncBastionToGlobal(bIdx); closeModal('modal-assign-role');
+  FortizedSocial.socketEmit('bastion:update', { bastionId: CU.bastions[bIdx]?.globalId, field: 'memberRoles' });
+  toast('Roles updated!','success');
+}
 
 // ════════════════════════════════════════════
 // CUSTOM EMOJIS
@@ -16453,6 +16530,7 @@ async function _broadcastAnnouncement() {
   if (!msg) { toast('Enter a message first','error'); return; }
   try {
     await firebase.database().ref('admin/global_settings/announcement').set(msg);
+    FortizedSocial.socketEmit('announcement:broadcast', { text: msg });
     // Also update localStorage so the broadcast center shows current state
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
     gs.announcement = msg;
@@ -16466,6 +16544,7 @@ async function _broadcastAnnouncement() {
 async function _clearAnnouncement() {
   try {
     await firebase.database().ref('admin/global_settings/announcement').remove();
+    FortizedSocial.socketEmit('announcement:clear', {});
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
     delete gs.announcement;
     localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
@@ -20208,36 +20287,175 @@ const GAME_CATALOG = [
 function renderGameCollectionTab(main) {
   if (!main) return;
   const games = CU.gameCollection || [];
-  let gHtml = '';
+  const currentGame = _gameActivity;
+  const activityEnabled = localStorage.getItem('ftz_activity_detection') !== 'false';
+  const isDesktop = !!window.fortizedDesktop?.isDesktopApp;
+
+  // ── Current Game section ──
+  let currentGameHtml = '';
+  if (currentGame) {
+    currentGameHtml = '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:12px;">Current Game</div>'
+      + '<div style="padding:16px 20px;background:linear-gradient(135deg,rgba(30,100,50,.35),rgba(20,80,40,.25));border:1.5px solid rgba(62,207,110,.3);border-radius:14px;margin-bottom:24px;display:flex;align-items:center;gap:14px;">'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+      + '<span style="font-size:15px;font-weight:700;color:#fff;">' + escapeHTML(currentGame.name) + '</span>'
+      + (currentGame._igdbEnriched ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#60a5fa" style="flex-shrink:0;"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>' : '')
+      + '</div>'
+      + '<div style="font-size:12px;color:rgba(62,207,110,.7);font-weight:600;">Now playing!</div>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;">'
+      + '<button onclick="setGameActivity(null);renderGameCollectionTab(this.closest(\'.settings-main\'))" title="Stop showing" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(248,113,113,.3)\';this.style.color=\'var(--red)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.1)\';this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  // ── Add Game inline dropdown ──
+  let addGameHtml = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:24px;">'
+    + '<span style="font-size:13px;color:var(--muted);">Not seeing your game?</span>'
+    + '<span style="font-size:13px;color:var(--accent);cursor:pointer;text-decoration:underline;font-weight:600;" onclick="_toggleInlineGamePicker()">Add it!</span>'
+    + '</div>'
+    + '<div id="inline-game-picker" style="display:none;margin-bottom:24px;">'
+    + '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">'
+    + '<div style="position:relative;flex:1;">'
+    + '<select id="inline-game-select" class="settings-input" style="width:100%;padding:10px 14px;font-size:13px;appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:32px;">'
+    + '<option value="">Select</option>'
+    + '</select>'
+    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);"><polyline points="6 9 12 15 18 9"/></svg>'
+    + '</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    + '<button class="btn-g" onclick="document.getElementById(\'inline-game-picker\').style.display=\'none\'" style="font-size:12px;padding:8px 16px;">Cancel</button>'
+    + '<button class="btn-a" onclick="_addGameFromInlinePicker()" style="font-size:12px;padding:8px 16px;">Add Game</button>'
+    + '</div>'
+    + '</div>';
+
+  // ── Added Games section (list style) ──
+  let gamesListHtml = '';
   if (games.length) {
-    gHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:16px;">';
+    gamesListHtml = '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Added Games</div>'
+      + '<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Some information about games (such as genre or cover art) is provided by <a href="https://www.igdb.com" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;font-weight:600;">IGDB</a>.</div>'
+      + '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
     games.forEach((g, i) => {
-      const hasCover = g.coverUrl || g.coverThumb;
-      gHtml += '<div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:relative;">'
-        + (hasCover
-          ? '<div style="width:100%;height:80px;overflow:hidden;"><img src="' + escapeHTML(g.coverUrl||g.coverThumb) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML=\'<div style=font-size:30px;padding:14px;text-align:center>' + (g.icon||'🎮') + '</div>\'"></div>'
-          : '<div style="font-size:30px;padding:14px 14px 8px;text-align:center;">' + (g.icon||'\uD83C\uDFAE') + '</div>')
-        + '<div style="padding:8px 14px 14px;text-align:center;">'
-        + '<div style="font-weight:700;font-size:12.5px;margin-bottom:2px;">' + escapeHTML(g.name) + '</div>'
-        + '<div style="font-size:10px;color:var(--muted);">' + escapeHTML(g.genre||'Game') + '</div>'
+      const isPlaying = currentGame?.name === g.name;
+      const lastPlayedStr = isPlaying ? 'Now playing!' : (g.lastPlayed ? _formatLastPlayed(g.lastPlayed) : null);
+      const isVerified = g._igdb || g.coverUrl || g.coverThumb;
+      gamesListHtml += '<div style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:' + (isPlaying ? 'rgba(62,207,110,.04)' : 'var(--panel)') + ';border:1px solid ' + (isPlaying ? 'rgba(62,207,110,.15)' : 'var(--border)') + ';border-radius:12px;transition:all .15s;">'
+        + '<div style="flex:1;min-width:0;">'
+        + '<div style="display:flex;align-items:center;gap:6px;">'
+        + '<span style="font-size:14px;font-weight:700;color:#fff;">' + escapeHTML(g.name) + '</span>'
+        + (isVerified ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="#60a5fa" style="flex-shrink:0;"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>' : '')
         + '</div>'
-        + '<button onclick="removeGameFromCollection(' + i + ')" style="position:absolute;top:5px;right:6px;background:rgba(0,0,0,.5);border:none;color:#fff;cursor:pointer;font-size:14px;line-height:1;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;">\xd7</button>'
+        + (lastPlayedStr ? '<div style="font-size:11.5px;color:' + (isPlaying ? 'rgba(62,207,110,.7)' : 'var(--muted)') + ';margin-top:3px;">' + (isPlaying ? 'Now playing!' : 'Last played <strong>' + lastPlayedStr + '</strong>') + '</div>' : '')
+        + '</div>'
+        + '<div style="display:flex;align-items:center;gap:6px;">'
+        + '<button onclick="_toggleGameVisibility(' + i + ',this)" title="Toggle profile visibility" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:' + (g.hidden ? 'rgba(255,255,255,.2)' : 'var(--muted)') + ';width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(255,255,255,.15)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.06)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + (g.hidden ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>') + '</svg></button>'
+        + '<button onclick="removeGameFromCollection(' + i + ')" title="Remove game" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:var(--muted);width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(248,113,113,.2)\';this.style.color=\'var(--red)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.06)\';this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></button>'
+        + '</div>'
         + '</div>';
     });
-    gHtml += '</div>';
+    gamesListHtml += '</div>';
   } else {
-    gHtml = '<div style="text-align:center;padding:40px;">'
+    gamesListHtml = '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Added Games</div>'
+      + '<div style="text-align:center;padding:40px;">'
       + '<div style="font-size:48px;margin-bottom:14px;">\uD83C\uDFAE</div>'
       + '<div style="font-family:Syne,sans-serif;font-weight:800;font-size:16px;margin-bottom:8px;">No games yet</div>'
       + '<div style="font-size:13px;color:var(--muted);">Add games you love to show them on your public profile.</div>'
       + '</div>';
   }
-  main.innerHTML = '<div style="padding:24px;">'
-    + '<div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;">Apps & Games</div>'
-    + '<div style="font-size:13px;color:var(--muted-light);margin-bottom:20px;">Add games you play — publicly shown on your profile card.</div>'
-    + gHtml
-    + '<button class="btn-a" onclick="openGameCollectionPicker()" style="font-size:13px;padding:10px 22px;">+ Add Game</button>'
+
+  // ── Activity Detection toggle ──
+  let activityToggleHtml = '<div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+    + '<div>'
+    + '<div style="font-size:14px;font-weight:700;color:#fff;">Activity Detection</div>'
+    + '<div style="font-size:12px;color:var(--muted);margin-top:2px;">Automatically detect games and show as your status' + (isDesktop ? '' : ' (requires desktop app)') + '</div>'
+    + '</div>'
+    + '<div class="toggle ' + (activityEnabled ? 'on' : '') + '" onclick="toggleActivityDetection(this)"></div>'
+    + '</div>'
     + '</div>';
+
+  main.innerHTML = '<div class="settings-panel" style="padding:24px;">'
+    + currentGameHtml
+    + addGameHtml
+    + gamesListHtml
+    + '<button class="btn-a" onclick="openGameCollectionPicker()" style="font-size:13px;padding:10px 22px;margin-bottom:16px;">+ Add Game</button>'
+    + activityToggleHtml
+    + '</div>';
+}
+
+function _formatLastPlayed(dateStr) {
+  if (!dateStr) return null;
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + ' minute' + (mins !== 1 ? 's' : '') + ' ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + ' hour' + (hrs !== 1 ? 's' : '') + ' ago';
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'a day ago';
+  if (days < 30) return days + ' days ago';
+  return new Date(dateStr).toLocaleDateString();
+}
+
+function _toggleInlineGamePicker() {
+  const picker = document.getElementById('inline-game-picker');
+  if (!picker) return;
+  const isHidden = picker.style.display === 'none';
+  picker.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) {
+    _populateInlineGameSelect();
+  }
+}
+
+async function _populateInlineGameSelect() {
+  const sel = document.getElementById('inline-game-select');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Select</option>';
+  // Add KNOWN_GAMES + running processes
+  const owned = new Set((CU.gameCollection||[]).map(g => g.name.toLowerCase()));
+  // Add detected apps from Electron
+  if (window.fortizedDesktop?.isDesktopApp) {
+    try {
+      const procs = await window.fortizedDesktop.getProcesses();
+      if (procs) {
+        const apps = _matchAllRunningApps(procs);
+        apps.forEach(a => {
+          if (!owned.has(a.name.toLowerCase())) {
+            const opt = document.createElement('option');
+            opt.value = a.name;
+            opt.textContent = a.name;
+            sel.appendChild(opt);
+          }
+        });
+      }
+    } catch {}
+  }
+  // Add catalog games not already in collection
+  GAME_CATALOG.forEach(g => {
+    if (!owned.has(g.name.toLowerCase())) {
+      const opt = document.createElement('option');
+      opt.value = g.name;
+      opt.textContent = g.name;
+      sel.appendChild(opt);
+    }
+  });
+}
+
+function _addGameFromInlinePicker() {
+  const sel = document.getElementById('inline-game-select');
+  if (!sel || !sel.value) { toast('Select a game first', 'error'); return; }
+  const name = sel.value;
+  const catalogEntry = GAME_CATALOG.find(g => g.name === name);
+  addGameToCollection(name, catalogEntry?.icon || '\uD83C\uDFAE', catalogEntry?.genre || 'Game', catalogEntry?.coverUrl || null, catalogEntry?.coverThumb || null);
+  document.getElementById('inline-game-picker').style.display = 'none';
+}
+
+function _toggleGameVisibility(idx, el) {
+  const games = CU.gameCollection || [];
+  if (!games[idx]) return;
+  games[idx].hidden = !games[idx].hidden;
+  saveUser().catch(()=>{});
+  buildProfileView('game_collection');
 }
 
 let _gcTimer = null;
@@ -20402,7 +20620,7 @@ async function addGameToCollection(name, icon, genre, coverUrl, coverThumb) {
   if (coverThumb) entry.coverThumb = coverThumb;
   CU.gameCollection.push(entry);
   await saveUser();
-  renderGCGrid(GAME_CATALOG);
+  try { renderGCGrid(GAME_CATALOG); } catch {}
   buildProfileView('game_collection');
   toast(name + ' added!', 'success');
 }
@@ -22321,6 +22539,8 @@ async function _votePoll(pollKey, optionIdx, chIdx) {
   const path = _getPollDbPath(bastionId, ch.name) + '/' + pollKey + '/voters/' + CU.username;
   try {
     await firebase.database().ref(path).set(optionIdx);
+    // Broadcast poll update for real-time sync
+    FortizedSocial.socketEmit('poll:update', { bastionId, channelName: ch.name, channelId: ch.name, action: 'vote', pollKey });
   } catch { toast('Vote failed', 'error'); }
 }
 
@@ -22332,6 +22552,7 @@ async function _unvotePoll(pollKey, chIdx) {
   const path = _getPollDbPath(bastionId, ch.name) + '/' + pollKey + '/voters/' + CU.username;
   try {
     await firebase.database().ref(path).remove();
+    FortizedSocial.socketEmit('poll:update', { bastionId, channelName: ch.name, channelId: ch.name, action: 'unvote', pollKey });
   } catch { toast('Failed', 'error'); }
 }
 
@@ -22343,6 +22564,7 @@ async function _deletePoll(pollKey, chIdx) {
   const bastionId = b.globalId || b.name;
   try {
     await firebase.database().ref(_getPollDbPath(bastionId, ch.name) + '/' + pollKey).remove();
+    FortizedSocial.socketEmit('poll:update', { bastionId, channelName: ch.name, channelId: ch.name, action: 'delete', pollKey });
     toast('Poll deleted', 'success');
   } catch { toast('Failed', 'error'); }
 }
@@ -22431,6 +22653,7 @@ async function _submitNewPoll(chIdx) {
 
   try {
     await firebase.database().ref(_getPollDbPath(bastionId, ch.name)).push(pollData);
+    FortizedSocial.socketEmit('poll:update', { bastionId, channelName: ch.name, channelId: ch.name, action: 'create' });
     document.querySelector('.ftz-poll-create-overlay')?.remove();
     toast('Poll created!', 'success');
     openPollChannel(chIdx);
@@ -23562,21 +23785,24 @@ async function openActivityDetector() {
 }
 
 function setGameActivity(name, icon) {
+  const prevGame = _gameActivity?.name;
   _gameActivity = name ? {name, icon: icon||'🎮', since: new Date().toISOString()} : null;
   refreshGameActivityBar();
   _updateUserbarActivity();
+  // Track lastPlayed on the game collection entry
+  if (prevGame && prevGame !== name && CU?.gameCollection) {
+    const entry = CU.gameCollection.find(g => g.name === prevGame);
+    if (entry) { entry.lastPlayed = new Date().toISOString(); }
+  }
   // Save to user profile
   if (CU) {
     CU.gameActivity = _gameActivity;
     saveUser().catch(()=>{});
-    if (_gameActivity) {
-      firebase.database().ref('users/'+CU.username+'/gameActivity').set(_gameActivity).catch(()=>{});
-      // Enrich with IGDB data (cover art, genre) — like Discord's rich presence
-      if (!_gameActivity._igdbEnriched) {
-        _enrichActivityWithIGDB(_gameActivity).catch(()=>{});
-      }
-    } else {
-      firebase.database().ref('users/'+CU.username+'/gameActivity').remove().catch(()=>{});
+    firebase.database().ref('users/'+CU.username+'/gameActivity').set(_gameActivity).catch(()=>{});
+    // Broadcast activity change via Socket.io for instant updates
+    FortizedSocial.socketEmit('activity:set', { activity: _gameActivity });
+    if (_gameActivity && !_gameActivity._igdbEnriched) {
+      _enrichActivityWithIGDB(_gameActivity).catch(()=>{});
     }
   }
 }

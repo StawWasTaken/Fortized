@@ -274,6 +274,48 @@ io.on('connection', (socket) => {
     io.to(`user:${data.to}`).emit('friend:accepted', { from: username });
   });
 
+  // ── Poll Events (real-time broadcast) ──
+  socket.on('poll:update', (data) => {
+    if (!data.bastionId) return;
+    const key = roomKey('bastion', data.bastionId, data.channelId || '__polls');
+    io.to(key).emit('poll:updated', {
+      bastionId: data.bastionId,
+      channelName: data.channelName,
+      action: data.action, // 'create', 'vote', 'unvote', 'delete'
+      pollKey: data.pollKey,
+      username,
+    });
+    // Also broadcast to all bastion rooms for sidebar updates
+    io.emit('poll:updated', {
+      bastionId: data.bastionId,
+      channelName: data.channelName,
+      action: data.action,
+      pollKey: data.pollKey,
+      username,
+    });
+  });
+
+  // ── Announcement Events (real-time broadcast) ──
+  socket.on('announcement:broadcast', (data) => {
+    io.emit('announcement:new', {
+      text: data.text,
+      from: username,
+    });
+  });
+  socket.on('announcement:clear', () => {
+    io.emit('announcement:cleared', { from: username });
+  });
+
+  // ── Role / Bastion Update Events (real-time broadcast) ──
+  socket.on('bastion:update', (data) => {
+    if (!data.bastionId) return;
+    io.emit('bastion:updated', {
+      bastionId: data.bastionId,
+      field: data.field, // 'roles', 'memberRoles', 'channels', 'name', etc.
+      username,
+    });
+  });
+
   // ── Disconnect ──
   socket.on('disconnect', () => {
     if (!username) return;

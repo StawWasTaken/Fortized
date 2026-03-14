@@ -1430,12 +1430,20 @@
       'bastionMsgs': 'bastion_msgs',
       'globalBastions': 'global_bastions',
       'bastionMembers': 'bastion_members',
+      'bastionPolls': 'polls',
       'groupChats': null, // depends on subpath
+      'groupDMs': 'group_chat_meta',
       'admin': null, // depends on subpath
       'reports': 'reports',
+      'invites': 'invites',
       'voiceChannels': 'voice_channels',
       'vcSignal': 'vc_signal',
       'typing': 'typing',
+      'threads': 'threads',
+      'events': 'events',
+      'bastionSettings': 'bastion_settings',
+      'bastionTemplates': 'bastion_templates',
+      'feedback': 'feedback',
     };
     if (parts[0] === 'groupChats') {
       if (parts.length >= 3 && parts[2] === 'messages') return 'group_chat_messages';
@@ -1450,6 +1458,9 @@
         'force_refresh': 'admin_force_refresh',
         'clear_sessions': 'admin_clear_sessions',
         'staff_revoked': 'admin_staff_revoked',
+        'audit_log': 'admin_audit_log',
+        'nsfw_queue': 'admin_nsfw_queue',
+        'scheduled_actions': 'admin_scheduled_actions',
       };
       return adminMap[parts[1]] || null;
     }
@@ -1466,6 +1477,14 @@
     if (table === 'group_chat_messages' && parts.length >= 2) return 'gc_id=eq.' + parts[1];
     if (table === 'voice_channels' && parts.length >= 2) return 'bastion_id=eq.' + parts[1];
     if (table === 'users' && parts.length >= 2) return 'username=eq.' + parts[1];
+    if (table === 'polls' && parts.length >= 2) return 'bastion_id=eq.' + parts[1];
+    if (table === 'global_bastions' && parts.length >= 2) return 'id=eq.' + parts[1];
+    if (table === 'bastion_members' && parts.length >= 2) return 'bastion_id=eq.' + parts[1];
+    if (table === 'group_chat_meta' && parts.length >= 2) return 'id=eq.' + parts[1];
+    if (table === 'threads' && parts.length >= 2) return 'bastion_id=eq.' + parts[1];
+    if (table === 'events' && parts.length >= 2) return 'bastion_id=eq.' + parts[1];
+    if (table === 'bastion_settings' && parts.length >= 2) return 'bastion_id=eq.' + parts[1];
+    if (table === 'invites' && parts.length >= 2) return 'code=eq.' + parts[1];
     return null;
   }
 
@@ -1475,8 +1494,12 @@
     if (table === 'dms') return { id: row.id, from: row.from, text: row.text, time: row.time, timestamp: row.timestamp, edited: row.edited };
     if (table === 'bastion_msgs') return { id: row.id, from: row.from, text: row.text, time: row.time, timestamp: row.timestamp, edited: row.edited, reactions: row.reactions };
     if (table === 'group_chat_messages') return { id: row.id, from: row.from, text: row.text, time: row.time, timestamp: row.timestamp, ...(row.data || {}) };
+    if (table === 'polls') return row.data || row;
     if (table === 'statuses') return row.status;
     if (table === 'users') return FortizedSocial._userFromRow(row);
+    if (table === 'global_bastions') return row.data || row;
+    if (table === 'invites') return row.data || row;
+    if (table === 'events') return row.data || row;
     return row.data || row;
   }
 

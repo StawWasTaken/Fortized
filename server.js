@@ -236,6 +236,17 @@ io.on('connection', (socket) => {
     });
   });
 
+  // ── Message Delete (live broadcast) ──
+  socket.on('message:delete', (data) => {
+    if (!username) return;
+    const key = roomKey(data.type, data.id1, data.id2);
+    socket.to(key).emit('message:deleted', {
+      room: key,
+      messageId: data.messageId,
+      deletedBy: username,
+    });
+  });
+
   // ── Reactions (live broadcast) ──
   socket.on('reaction:toggle', (data) => {
     if (!username) return;

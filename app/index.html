@@ -310,11 +310,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ub-activity-time{font-size:9px;color:var(--muted);font-weight:500;line-height:1;}
 .ub-activity-action{display:none;}
 /* User row container — rounded to match chatbar */
-.ub-user-container{display:flex;align-items:center;background:var(--sidebar-ctx);border:1.5px solid rgba(255,255,255,.07);border-radius:12px;height:46px;overflow:hidden;}
+.ub-user-container{display:flex;align-items:center;background:var(--sidebar-ctx);border:1.5px solid rgba(255,255,255,.07);border-radius:12px;height:54px;overflow:hidden;}
 .ub-user-row{display:flex;align-items:center;padding:4px 4px 4px 8px;gap:4px;flex:1;min-width:0;height:100%;}
 .ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:3px 4px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:background .12s;justify-content:flex-start;}
 .ua-clickable:hover{background:rgba(255,255,255,.05);}
-.ua{width:30px;height:30px;border-radius:50%;background:var(--panel);font-size:12px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.ua{width:34px;height:34px;border-radius:50%;background:var(--panel);font-size:12px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.3);}
 .ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
 .ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--sidebar-ctx);flex-shrink:0;}
 .ua-info{display:block;min-width:0;flex:1;}
@@ -329,11 +329,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rail-userbar{display:flex;flex-direction:column;flex-shrink:0;padding:0 6px 8px;gap:0;box-sizing:border-box;z-index:15;width:100%;}
 .rail-ub-activity-row{display:none;align-items:center;gap:6px;padding:5px 8px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.08);border-radius:9px 9px 0 0;margin:0 2px;}
 .rail-ub-activity-row.active{display:flex;}
-.rail-ub-container{display:flex;align-items:center;background:var(--sidebar);border:1.5px solid rgba(255,255,255,.07);border-radius:12px;height:44px;overflow:hidden;}
+.rail-ub-container{display:flex;align-items:center;background:var(--sidebar);border:1.5px solid rgba(255,255,255,.07);border-radius:12px;height:54px;overflow:hidden;}
 .rail-ub-user-row{display:flex;align-items:center;padding:4px 4px 4px 8px;gap:4px;flex:1;min-width:0;height:100%;}
 .rail-ub-clickable{display:flex;align-items:center;gap:7px;flex:1;min-width:0;padding:3px 4px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:background .12s;justify-content:flex-start;}
 .rail-ub-clickable:hover{background:rgba(255,255,255,.05);}
-.rail-ub-avatar{width:28px;height:28px;border-radius:50%;background:var(--panel);cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:visible;position:relative;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.rail-ub-avatar{width:34px;height:34px;border-radius:50%;background:var(--panel);cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:visible;position:relative;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.3);}
 .rail-ub-avatar img,.rail-ub-avatar>div{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .rail-ub-avatar .ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--sidebar);}
 .rail-ub-info{display:block;min-width:0;flex:1;}
@@ -634,12 +634,12 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .cit-gif:hover{background:rgba(255,249,62,.1);color:var(--accent);transform:scale(1.08);}
 .cit-gif::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%) scale(.9);background:var(--panel2);color:rgba(255,255,255,.7);font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;border:1px solid var(--border);}
 .cit-gif:hover::after{opacity:1;transform:translateX(-50%) scale(1);}
-.chat-input-row{display:flex;align-items:flex-end;padding:8px 10px 8px 8px;gap:5px;}
-.chat-input-row textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;resize:none;max-height:140px;min-height:24px;line-height:1.55;padding:5px 4px;position:relative;z-index:2;}
+.chat-input-row{display:flex;align-items:flex-end;padding:10px 12px 10px 10px;gap:5px;}
+.chat-input-row textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14.5px;resize:none;max-height:160px;min-height:28px;line-height:1.55;padding:6px 4px;position:relative;z-index:2;}
 .ci-preview-wrap textarea{width:100%;}
 .chat-input-row textarea::placeholder{color:rgba(255,255,255,.2);}
 .chat-input-actions{display:flex;align-items:center;gap:4px;flex-shrink:0;padding:0 4px;}
-.chat-send-btn{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#e6e034);border:none;color:#060810;cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 8px rgba(255,249,62,.15);}
+.chat-send-btn{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#e6e034);border:none;color:#060810;cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 8px rgba(255,249,62,.15);}
 .chat-send-btn.visible{display:flex;}
 .chat-send-btn:hover{filter:brightness(1.08);transform:scale(1.05);box-shadow:0 4px 16px rgba(255,249,62,.25);}
 .chat-send-btn:active{transform:scale(.9);transition:transform .08s ease-out;}
@@ -3433,12 +3433,12 @@ const PERMISSIONS = [
 const PERM_GROUPS = ['General','Text','Voice/Party','Automation','Moderation','Boost'];
 let activeEmojiCat = 0;
 const EMOJI_CATEGORIES = [
-  {icon:'😊', label:'Smileys', emojis:['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🥴','😴','🤤','😪','😵','🤯','🤠','🥳','😎','🤓','🧐']},
-  {icon:'👍', label:'Gestures', emojis:['👍','👎','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👋','🤚','🖐️','✋','🖖','💪','🦾','🙌','👐','🤲','🫶','🙏','✍️','💅']},
-  {icon:'❤️', label:'Hearts', emojis:['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✨','💫','⭐','🌟','💥','🔥','🎉','🎊','🎈']},
-  {icon:'🐶', label:'Animals', emojis:['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦆','🦅','🦉','🦇','🐺','🐗','🦄','🐝','🪲','🦋','🐛','🐌']},
-  {icon:'🍕', label:'Food', emojis:['🍕','🍔','🍟','🌭','🍿','🧂','🥓','🥚','🍳','🧇','🥞','🧈','🍞','🥐','🥖','🫓','🥨','🧀','🥗','🥙','🌮','🌯','🫔','🥫','🍝','🍜','🍲','🍛','🍣','🍱']},
-  {icon:'⚡', label:'Symbols', emojis:['⚡','🔥','❄️','🌊','🌪️','🌈','⭐','💫','✨','🎯','🏆','🥇','🎮','🎲','🃏','🎭','🎨','🎵','🎶','🎸','🎹','🎤','🎧','📱','💻','🖥️','⌨️','🖱️','📷','🎬']},
+  {icon:'😀', label:'Faces', emojis:['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🥴','😴','🤤','😪','😵','🤯','🤠','🥳','😎','🤓','🧐']},
+  {icon:'👋', label:'People', emojis:['👋','👍','👎','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','🤚','🖐️','✋','🖖','💪','🦾','🙌','👐','🤲','🫶','🙏','✍️','💅']},
+  {icon:'❤️', label:'Hearts', emojis:['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','❤️‍🔥','🩷','🩵','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','💌','💍','💐','🌹','😍','🥰','💑']},
+  {icon:'🌿', label:'Nature', emojis:['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦆','🦅','🦉','🦇','🐺','🐗','🦄','🐝','🪲','🦋','🐛','🐌']},
+  {icon:'🍔', label:'Food', emojis:['🍕','🍔','🍟','🌭','🍿','🌮','🌯','🥙','🍣','🍱','🍦','🍩','🍪','🎂','🍰','🧁','🍫','🍬','☕','🧋','🍺','🥂','🍷','🍹','🍎','🍊','🍋','🍉','🍇','🍓']},
+  {icon:'🎮', label:'Fun', emojis:['🎮','🕹️','🎲','🎯','🎳','🏆','🥇','🎭','🎨','🎵','🎶','🎸','🎹','🎤','🎧','📱','💻','🖥️','⌨️','📷','🎬','⚽','🏀','🎾','🏈','⚡','🔥','❄️','🌊','✨']},
 ];
 
 // ════════════════════════════════════════════════════════════
@@ -4181,7 +4181,10 @@ function updateUserbar() {
 function _isMobile() { return window.innerWidth <= 768; }
 function _isTablet() { return window.innerWidth <= 1024 && window.innerWidth > 768; }
 function updateUserbarWidth() {
-  // Unified bottom bar doesn't need width adjustments — it flows with content
+  // Hide rail-userbar when sidebar-ctx is visible to avoid duplicate userbars
+  const ctx = document.getElementById('sidebar-ctx');
+  const railUb = document.getElementById('rail-userbar');
+  if (railUb) railUb.style.display = (ctx && ctx.style.display !== 'none') ? 'none' : '';
   _updateUserbarActivity();
 }
 function _updateUserbarActivity() {
@@ -11854,12 +11857,14 @@ function adminConvertToBot() {
 const EMOJI_PICKER_TABS = [
   {id:'recent', icon:'🕐', label:'Recent'},
   {id:'ftz',    icon:'🏰', label:'Fortized'},
-  {id:'smileys',icon:'😊', label:'Smileys', emojis:['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🥴','😴','🤤','😪','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖']},
-  {id:'gestures',icon:'👍', label:'Gestures', emojis:['👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🫀','🫁','🧠','🦷','🦴','👀','👁️','👅','👄','💋','🩸']},
-  {id:'animals', icon:'🐶', label:'Animals', emojis:['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐽','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🪱','🐛','🦋','🐌','🐞','🐜','🪲','🦟','🦗','🕷️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🦣','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🦬','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈','🐓','🦃','🦤','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦫','🦦','🦥','🐁','🐀','🐿️','🦔']},
-  {id:'food',    icon:'🍕', label:'Food', emojis:['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🧄','🧅','🥔','🌽','🥕','🫛','🧆','🥜','🫘','🌰','🍞','🥐','🥖','🫓','🥨','🥯','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🌭','🍔','🍟','🍕','🫔','🌮','🌯','🥙','🧆','🥚','🍳','🥘','🍲','🫕','🥣','🥗','🍿','🧂','🥫','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍣','🍤','🍥','🥮','🍡','🥟','🥠','🥡','🍦','🍧','🍨','🍩','🍪','🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯','🍼','🥛','☕','🫖','🍵','🧃','🥤','🧋','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧊']},
-  {id:'travel',  icon:'🌍', label:'Travel', emojis:['🌍','🌎','🌏','🌐','🗺️','🧭','🏔️','⛰️','🌋','🗻','🏕️','🏖️','🏜️','🏝️','🏞️','🏟️','🏛️','🏗️','🧱','🪨','🪵','🛖','🏘️','🏚️','🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗼','🗽','⛪','🕌','🛕','🕍','⛩️','🕋','⛲','⛺','🌁','🌃','🏙️','🌄','🌅','🌆','🌇','🌉','🎠','🎡','🎢','💈','🎪','🚂','🚃','🚄','🚅','🚆','🚇','🚈','🚉','🚊','🚝','🚞','🚋','🚌','🚍','🚎','🚐','🚑','🚒','🚓','🚔','🚕','🚖','🚗','🚘','🚙','🛻','🚚','🚛','🚜','🏎️','🏍️','🛵','🦽','🦼','🛺','🚲','🛴','🛹','🛼','🚏','🛣️','🛤️','⛽','🚧','⚓','🪝','⛵','🛶','🚤','🛳️','⛴️','🛥️','🚢','✈️','🛩️','🛫','🛬','🪂','💺','🚁','🛸','🚀','🛶','🚁','🚂']},
-  {id:'symbols', icon:'⚡', label:'Symbols', emojis:['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','🔅','🔆','〽️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🈷️','✨','🎦','🔣','ℹ️','🔤','🔡','🔠','🎵','🎶','🔔','🔕','📣','📢','🔊','🔉','🔈','🔇','📱','☎️','📞','📟','📠','🔋','🪫','🔌','💡','🔦','🕯️','🧯','🗑️','💰','💴','💵','💶','💷','💸','💳','🪙','💹','📈','📉','📊','📋','🗒️','📅','📆','🗓️','📇','🗃️','🗂️','🗄️','📁','📂','🗑️','🖊️','✒️','✏️','📝','🔍','🔎','🔏','🔐','🔒','🔓','❤️‍🔥','❤️‍🩹','🩷','🩵','🩶']},
+  {id:'smileys',icon:'😀', label:'Faces & Expressions', emojis:['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🥴','😴','🤤','😪','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖']},
+  {id:'people', icon:'👋', label:'People & Hands', emojis:['👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🫀','🫁','🧠','🦷','🦴','👀','👁️','👅','👄','💋','🩸']},
+  {id:'nature', icon:'🌿', label:'Nature & Animals', emojis:['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐽','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🪱','🐛','🦋','🐌','🐞','🐜','🪲','🦟','🦗','🕷️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🦣','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🦬','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈','🐓','🦃','🦤','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦫','🦦','🦥','🐁','🐀','🐿️','🦔','🌸','🌺','🌻','🌹','🌷','🌼','🍀','🌱','🌲','🌳','🌴','🌵','🍁','🍂','🍃']},
+  {id:'food',   icon:'🍔', label:'Food & Drinks', emojis:['🍕','🍔','🍟','🌭','🍿','🌮','🌯','🥙','🧆','🥘','🍲','🥗','🍱','🍣','🍤','🍜','🍝','🍛','🍙','🍚','🥟','🥡','🍦','🍧','🍨','🍩','🍪','🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯','🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🧄','🧅','🥔','🌽','🥕','🍞','🥐','🥖','🥨','🥯','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','☕','🫖','🍵','🧃','🥤','🧋','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🍾','🧊','🥛','🍼']},
+  {id:'travel', icon:'✈️', label:'Travel & Places', emojis:['🌍','🌎','🌏','🗺️','🏔️','⛰️','🌋','🏕️','🏖️','🏜️','🏝️','🏙️','🌃','🌄','🌅','🌆','🌇','🌉','🏠','🏡','🏢','🏰','🏯','🗼','🗽','⛪','🕌','⛩️','⛲','🎠','🎡','🎢','🎪','🚂','🚄','🚅','🚆','🚇','🚌','🚎','🚐','🚑','🚒','🚓','🚕','🚗','🚙','🛻','🚚','🏎️','🏍️','🛵','🚲','🛴','🛹','⛽','🚧','⚓','⛵','🚤','🛳️','🚢','✈️','🛩️','🛫','🛬','🪂','🚁','🛸','🚀']},
+  {id:'activities',icon:'🎮', label:'Fun & Activities', emojis:['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🥅','⛳','🪃','🏹','🎣','🤿','🥊','🥋','🎿','⛷️','🏂','🪂','🏋️','🤸','🤼','🤽','🤾','🤺','🏄','🏊','🚴','🏇','🎮','🕹️','🎲','🎯','🎳','🎰','🧩','🎭','🎨','🎬','🎤','🎧','🎵','🎶','🎸','🎹','🥁','🎺','🎻','🪕','🎪','🎁','🎀','🎊','🎉','🎈','🏆','🥇','🥈','🥉','🏅','🎖️','🎗️'],},
+  {id:'hearts', icon:'❤️', label:'Hearts & Love', emojis:['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','❤️‍🔥','❤️‍🩹','🩷','🩵','🩶','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','💌','💐','🌹','🥰','😍','😘','😻','💑','💏','👩‍❤️‍👨','💒','💍']},
+  {id:'symbols',icon:'⚡', label:'Symbols & Signs', emojis:['⚡','🔥','❄️','🌊','🌪️','🌈','⭐','💫','✨','💥','💯','💢','💤','🔔','🔕','🎵','🎶','❗','❕','❓','❔','‼️','⁉️','⚠️','✅','❌','⭕','🛑','⛔','🚫','📛','♻️','🔰','⚜️','🔱','📣','📢','🔊','🔇','💡','🔦','🔋','🔌','💻','📱','⌨️','🖥️','📷','🎬','💰','💳','💵','📈','📉','📊','🔒','🔓','🔑','🔍','📝','✏️','📌','📎','✂️','🗑️','📅','📋','📁','🔗','⚙️','🔧','🔨','⚔️','🛡️','☮️','☯️','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🏳️','🏴','🏁','🏳️‍🌈','🚩']},
 ];
 
 let _recentEmojis = JSON.parse(localStorage.getItem('ftz_recent_emojis')||'[]');
@@ -11867,7 +11872,7 @@ let _emojiPickerTab = 'smileys';
 
 
 function buildEmojiTabBar() {
-  const tabs = [{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:null,label:'Fortized Guide'},...EMOJI_PICKER_TABS.slice(2)];
+  const tabs = [{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:null,label:'Fortized'},...EMOJI_PICKER_TABS.slice(2)];
   return tabs.map(t => {
     const active = _emojiPickerTab === t.id;
     const baseStyle = 'border:none;cursor:pointer;flex-shrink:0;line-height:1;transition:all .1s;border-radius:8px;padding:5px 7px;';

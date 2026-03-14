@@ -298,20 +298,21 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .notif-panel-header{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;}
 .notif-mark-read-btn{font-size:11px;padding:4px 10px;}
 /* Userbar — spans both sidebars */
-.userbar{background:var(--sidebar-ctx);border-top:1px solid rgba(255,255,255,.05);border-radius:0;display:flex;flex-direction:column;padding:0;gap:0;flex-shrink:0;box-sizing:border-box;transition:all .15s;position:fixed;bottom:0;left:0;z-index:15;width:72px;margin:0;overflow:hidden;}
-.ub-activity-row{display:none;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.06);transition:background .15s;}
+/* Userbar — horizontal bottom bar (Guilded-style) */
+.userbar{background:var(--sidebar-ctx);border-top:1px solid rgba(255,255,255,.05);border-radius:0;display:flex;flex-direction:row;align-items:center;padding:0;gap:0;flex-shrink:0;box-sizing:border-box;transition:all .15s;position:fixed;bottom:0;left:0;z-index:15;width:72px;margin:0;overflow:hidden;height:52px;}
+.ub-activity-row{display:none;align-items:center;gap:6px;padding:4px 10px;border-right:1px solid rgba(255,255,255,.06);transition:background .15s;height:100%;flex-shrink:0;}
 .ub-activity-row:hover{background:rgba(255,255,255,.03);}
-.ub-activity-row.active{display:flex;background:rgba(62,207,110,.04);border-bottom-color:rgba(62,207,110,.12);}
-.ub-activity-icon{width:28px;height:28px;border-radius:8px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.18);flex-shrink:0;font-size:15px;display:flex;align-items:center;justify-content:center;color:#3ecf6e;}
-.ub-activity-icon img{width:100%;height:100%;border-radius:8px;object-fit:cover;}
-.ub-activity-info{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;}
-.ub-activity-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#3ecf6e;line-height:1;}
-.ub-activity-name{font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Syne',sans-serif;letter-spacing:-.01em;line-height:1.3;}
-.ub-activity-time{font-size:9.5px;color:var(--muted);font-weight:500;line-height:1;}
-.ub-activity-action{width:28px;height:28px;border-radius:8px;background:transparent;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;margin-left:auto;}
+.ub-activity-row.active{display:flex;background:rgba(62,207,110,.04);}
+.ub-activity-icon{width:24px;height:24px;border-radius:6px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.18);flex-shrink:0;font-size:13px;display:flex;align-items:center;justify-content:center;color:#3ecf6e;}
+.ub-activity-icon img{width:100%;height:100%;border-radius:6px;object-fit:cover;}
+.ub-activity-info{display:flex;flex-direction:column;gap:0;flex:1;min-width:0;}
+.ub-activity-label{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#3ecf6e;line-height:1;}
+.ub-activity-name{font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Syne',sans-serif;letter-spacing:-.01em;line-height:1.3;}
+.ub-activity-time{font-size:9px;color:var(--muted);font-weight:500;line-height:1;}
+.ub-activity-action{width:24px;height:24px;border-radius:6px;background:transparent;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
 .ub-activity-action:hover{background:rgba(255,255,255,.06);color:#fff;}
-.ub-user-row{display:flex;align-items:center;padding:6px 8px;gap:4px;}
-.ua-clickable{display:flex;align-items:center;justify-content:center;gap:0;flex:none;min-width:0;padding:4px;border-radius:6px;background:transparent;border:none;cursor:pointer;transition:background .12s;}
+.ub-user-row{display:flex;align-items:center;padding:4px 8px;gap:4px;flex:1;min-width:0;height:100%;}
+.ua-clickable{display:flex;align-items:center;justify-content:center;gap:0;flex:none;min-width:0;padding:4px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:background .12s;}
 .ua-clickable:hover{background:rgba(255,255,255,.05);}
 .ua{width:32px;height:32px;border-radius:50%;background:var(--panel);font-size:13px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 1px 6px rgba(0,0,0,.3);}
 .ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
@@ -327,12 +328,12 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* Userbar expanded state (secondary sidebar visible) */
 .userbar.expanded{width:calc(72px + 380px);}
 .userbar.expanded .ub-activity-row.active{display:flex;}
-.userbar.expanded .ub-user-row{padding:6px 10px 8px;}
+.userbar.expanded .ub-user-row{padding:4px 10px;}
 .userbar.expanded .ua-clickable{gap:8px;flex:1;min-width:0;justify-content:flex-start;}
 .userbar.expanded .ua-info{display:block;}
 .userbar.expanded .ua-btns{display:flex;}
 /* Own profile mini panel — redesigned */
-.own-profile-panel{position:fixed;bottom:72px;left:76px;width:320px;background:var(--panel);border:1px solid var(--border);border-radius:14px;z-index:3000;box-shadow:0 24px 80px rgba(0,0,0,.9),0 0 1px rgba(255,255,255,.06);overflow:hidden;animation:ownPanelIn .2s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(24px);}
+.own-profile-panel{position:fixed;bottom:56px;left:76px;width:320px;background:var(--panel);border:1px solid var(--border);border-radius:14px;z-index:3000;box-shadow:0 24px 80px rgba(0,0,0,.9),0 0 1px rgba(255,255,255,.06);overflow:hidden;animation:ownPanelIn .2s cubic-bezier(.22,1,.36,1);backdrop-filter:blur(24px);}
 @keyframes ownPanelIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
 .main{flex:1;min-width:0;display:flex;flex-direction:row;background:var(--bg);border-top-left-radius:16px;overflow:hidden;}
 .tb-sep{width:1px;height:18px;background:var(--border);margin:0 2px;}
@@ -421,8 +422,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 
 /* ── HERO 2.0 ──────────────────────────────────── */
 .home-hero{width:100%;min-height:260px;background:transparent;position:relative;overflow:hidden;flex-shrink:0;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 36px;border-bottom:1px solid rgba(255,249,62,.06);}
-.home-hero::before{content:"";position:absolute;inset:0;background:url("/fortized banner v2.png") center/cover no-repeat;opacity:.3;pointer-events:none;}
-.home-hero::after{content:"";position:absolute;bottom:0;left:0;right:0;height:110px;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none;z-index:1;}
+.home-hero::before{content:"";position:absolute;inset:0;background:url("/Fortized banner.png") center/cover no-repeat;opacity:.3;pointer-events:none;}
 /* Sparkle particles container */
 .hero-sparkles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
 .hero-sparkle{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,249,62,.7);box-shadow:0 0 6px rgba(255,249,62,.4);animation:sparkleDrift 6s ease-in-out infinite;opacity:0;}
@@ -759,8 +759,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .discover-scroll{flex:1;overflow-y:auto;padding:28px;scroll-behavior:smooth;}
 .page-banner{position:relative;width:100%;height:200px;overflow:hidden;flex-shrink:0;margin-bottom:0;}
 .page-banner-img{width:100%;height:100%;object-fit:cover;display:block;}
-.page-banner-fade{position:absolute;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none;}
-.page-banner::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.35);pointer-events:none;}
+.page-banner-fade{display:none;}
 .disc-hero{background:linear-gradient(135deg,rgba(14,18,30,.95),rgba(10,13,22,.98));border:1px solid rgba(255,249,62,.08);border-radius:16px;padding:36px 36px;margin-bottom:28px;position:relative;overflow:hidden;}
 .disc-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(255,249,62,.05),transparent 50%),radial-gradient(ellipse at 85% 80%,rgba(62,207,110,.03),transparent 45%);pointer-events:none;}
 .disc-hero h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;position:relative;display:flex;align-items:center;gap:10px;}
@@ -847,8 +846,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .atelier-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden;background:var(--bg);}
 .atelier-banner{position:relative;width:100%;height:200px;overflow:hidden;flex-shrink:0;}
 .atelier-banner-img{width:100%;height:100%;object-fit:cover;display:block;}
-.atelier-banner-fade{position:absolute;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none;}
-.atelier-banner::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.35);pointer-events:none;}
+.atelier-banner-fade{display:none;}
 .atelier-nav{display:none;}
 .atelier-nav-scroll{display:none;}
 .atelier-nav-section{display:none;}
@@ -1011,9 +1009,10 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .profile-av-big img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 /* Profile Decorations */
 .profile-decoration-wrap{position:relative;display:inline-block;}
-.profile-decoration-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% + 16px);height:calc(100% + 16px);pointer-events:none;z-index:2;object-fit:contain;}
-.profile-decoration-overlay-sm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% + 14px);height:calc(100% + 14px);pointer-events:none;z-index:2;object-fit:contain;}
-.profile-decoration-overlay-lg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% + 24px);height:calc(100% + 24px);pointer-events:none;z-index:2;object-fit:contain;}
+.profile-decoration-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% + 22px);height:calc(100% + 22px);pointer-events:none;z-index:2;object-fit:contain;}
+.profile-decoration-overlay-sm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% + 22px);height:calc(100% + 22px);pointer-events:none;z-index:2;object-fit:contain;}
+.profile-decoration-overlay-lg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% + 30px);height:calc(100% + 30px);pointer-events:none;z-index:2;object-fit:contain;}
+.profile-decoration-overlay-ml{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% + 18px);height:calc(100% + 18px);pointer-events:none;z-index:2;object-fit:contain;}
 .profile-display-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:2px;display:flex;align-items:center;gap:6px;}
 .profile-username{font-size:13px;color:rgba(255,255,255,.3);}
 .profile-content{padding:0 28px 36px;}
@@ -1905,74 +1904,67 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .ftz-notif-close{background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:16px;padding:0;line-height:1;flex-shrink:0;margin-top:-2px;}
 .ftz-notif-close:hover{color:#fff;}
 
-/* Mini profile preview (first click on avatar in chat) */
-/* ── MINI PROFILE PREVIEW — redesigned ────────────── */
-/* ── Mini Profile Preview (popup card) ── */
-.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:18px;z-index:4000;box-shadow:0 20px 60px rgba(0,0,0,.55),0 6px 20px rgba(0,0,0,.35);overflow:hidden;overflow-y:auto;max-height:calc(100vh - 32px);animation:mppSlideIn .22s cubic-bezier(.22,1,.36,1);width:320px;}
-@keyframes mppSlideIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
-.mpp-banner{height:100px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a1a2e,#0f3460);}
-.mpp-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,rgba(11,13,23,.4) 55%,transparent 100%);}
-.mpp-av-row{display:flex;align-items:center;gap:0;padding:0 18px;margin-top:-38px;position:relative;z-index:2;flex-direction:column;align-items:center;}
-.mpp-av{width:76px;height:76px;border-radius:50%;overflow:hidden;border:4.5px solid var(--panel);cursor:pointer;background:var(--panel2);flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,.5);transition:transform .18s cubic-bezier(.22,1,.36,1);}
-.mpp-av:hover{transform:scale(1.05);}
-.mpp-badges{display:flex;flex-wrap:wrap;gap:1px;padding-bottom:0;justify-content:center;flex:unset;min-width:0;margin-top:6px;}
-.mini-profile-preview .mpp-name-block{padding:6px 20px 0;text-align:center;}
-.mini-profile-preview .mpp-displayname{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;cursor:pointer;transition:color .12s;line-height:1.2;display:flex;align-items:center;justify-content:center;gap:6px;}
-.mini-profile-preview .mpp-displayname:hover{color:var(--accent);}
-.mini-profile-preview .mpp-username{font-size:11.5px;color:rgba(255,255,255,.22);font-weight:500;margin-top:3px;letter-spacing:.01em;text-align:center;}
-.mini-profile-preview .mpp-status-row{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center;}
-.mini-profile-preview .mpp-status-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.04);border-radius:100px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);backdrop-filter:blur(8px);}
-.mini-profile-preview .mpp-status-pill .sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.mini-profile-preview .mpp-divider{height:1px;background:rgba(255,255,255,.05);margin:10px 18px;}
-.mini-profile-preview .mpp-section{padding:4px 18px;}
-.mini-profile-preview .mpp-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:5px;}
-.mini-profile-preview .mpp-section-body{font-size:12px;color:rgba(255,255,255,.5);line-height:1.55;}
-.mini-profile-preview .mpp-note{font-size:11.5px;color:rgba(255,255,255,.3);font-style:italic;padding:4px 18px;}
-.mini-profile-preview .mpp-roles-row{display:flex;flex-wrap:wrap;gap:5px;padding:4px 18px 2px;}
-.mini-profile-preview .mpp-role-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:10.5px;font-weight:600;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.5);transition:all .12s;}
-.mini-profile-preview .mpp-role-chip:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);}
-.mini-profile-preview .mpp-role-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.mini-profile-preview .mpp-game-collection{display:flex;align-items:center;gap:4px;padding:2px 18px 4px;}
-.mini-profile-preview .mpp-game-icon-sm{width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;overflow:hidden;}
-.mini-profile-preview .mpp-game-icon-sm img{width:100%;height:100%;object-fit:cover;border-radius:6px;}
-.mini-profile-preview .mpp-game-more{width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.3);font-weight:700;}
-.mini-profile-preview .mpp-actions{padding:10px 18px 14px;display:flex;gap:6px;}
-.mini-profile-preview .mpp-btn-primary{flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:11.5px;font-weight:800;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}
-.mini-profile-preview .mpp-btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,249,62,.15);}
-.mini-profile-preview .mpp-btn-primary:active{transform:translateY(0);}
-.mini-profile-preview .mpp-btn-secondary{flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:11px;color:rgba(255,255,255,.55);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}
-.mini-profile-preview .mpp-btn-secondary:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.8);}
-.mini-profile-preview .mpp-btn-secondary:active{transform:translateY(0);}
-.mini-profile-preview .mpp-mutual-av{width:28px;height:28px;border-radius:50%;overflow:hidden;border:2.5px solid var(--panel);margin-left:-6px;transition:transform .15s,box-shadow .15s;cursor:pointer;}
-.mini-profile-preview .mpp-mutual-av:first-child{margin-left:0;}
-.mini-profile-preview .mpp-mutual-av:hover{transform:scale(1.18) translateY(-2px);z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.5);}
-.mini-profile-preview .mpp-game-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;}
-.mini-profile-preview .mpp-game-icon{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-/* ── Full Profile Modal — two-column layout ── */
-.up-card{display:flex;min-height:440px;border-radius:22px;overflow:hidden;background:var(--panel);box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04);}
-.up-left{width:360px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;position:relative;overflow:hidden;background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,.06) 100%);}
-.up-left-banner{height:160px;position:relative;overflow:hidden;}
-.up-left-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,rgba(12,14,24,.5) 40%,transparent 100%);}
-.up-left-av-area{padding:0 26px;margin-top:-50px;position:relative;z-index:2;display:flex;align-items:flex-end;gap:14px;}
-.up-left-av{width:100px;height:100px;border-radius:50%;overflow:hidden;border:5px solid var(--panel);background:var(--panel2);box-shadow:0 8px 28px rgba(0,0,0,.7);flex-shrink:0;transition:transform .22s cubic-bezier(.22,1,.36,1),box-shadow .22s;cursor:pointer;}
-.up-left-av:hover{transform:scale(1.05);box-shadow:0 10px 36px rgba(0,0,0,.8);}
-.up-left-info{padding:12px 26px 0;flex:1;min-width:0;}
-.up-left-name{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;line-height:1.15;word-break:break-word;letter-spacing:-.02em;}
-.up-left-uname{font-size:12.5px;color:rgba(255,255,255,.22);font-weight:500;margin-top:4px;letter-spacing:.01em;}
-.up-left-badges{display:flex;flex-wrap:wrap;gap:2px;padding:10px 24px 0;}
-.up-left-status{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:12px 24px 0;}
-.up-left-section{padding:14px 24px 0;}
-.up-left-section-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.18);margin-bottom:7px;}
-.up-left-section-body{font-size:13px;color:rgba(255,255,255,.55);line-height:1.65;}
-.up-left-actions{padding:18px 24px;margin-top:auto;}
-.up-right{flex:1;min-width:0;display:flex;flex-direction:column;background:rgba(255,255,255,.012);}
-.up-right-tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.05);padding:0 22px;flex-shrink:0;}
-.up-right-tab{padding:15px 18px;font-size:13px;font-weight:600;color:rgba(255,255,255,.28);cursor:pointer;border-bottom:2px solid transparent;transition:all .16s;white-space:nowrap;letter-spacing:.01em;}
-.up-right-tab:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.015);}
-.up-right-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.02);}
-.up-right-content{flex:1;overflow-y:auto;padding:20px 22px;}
-.up-right-section{margin-bottom:18px;padding:14px 16px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.035);border-radius:14px;}
-.up-right-section-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.18);margin-bottom:10px;}
+/* ── Mini Profile Preview — Guilded-inspired side panel ── */
+.mini-profile-preview{position:fixed;background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:14px;z-index:4000;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03);overflow:hidden;overflow-y:auto;max-height:calc(100vh - 32px);animation:mppSlideIn .2s cubic-bezier(.22,1,.36,1);width:300px;}
+@keyframes mppSlideIn{from{opacity:0;transform:scale(.97) translateY(6px)}to{opacity:1;transform:none}}
+.mpp-banner{height:90px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a1a2e,#0f3460);}
+.mpp-banner img{width:100%;height:100%;object-fit:cover;}
+.mpp-av-area{padding:0 16px;margin-top:-32px;position:relative;z-index:2;display:flex;align-items:flex-end;gap:10px;}
+.mpp-av{width:64px;height:64px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:var(--panel2);flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:transform .16s cubic-bezier(.22,1,.36,1);}
+.mpp-av:hover{transform:scale(1.06);}
+.mpp-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.mpp-identity{padding:8px 16px 0;}
+.mpp-displayname{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;cursor:pointer;transition:color .12s;line-height:1.2;display:flex;align-items:center;gap:5px;}
+.mpp-displayname:hover{color:var(--accent);}
+.mpp-username{font-size:11px;color:rgba(255,255,255,.2);font-weight:500;margin-top:2px;}
+.mpp-status-row{display:flex;align-items:center;gap:5px;padding:8px 16px 0;flex-wrap:wrap;}
+.mpp-status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:100px;font-size:10px;font-weight:600;color:rgba(255,255,255,.45);}
+.mpp-status-pill .sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.mpp-badges-row{display:flex;flex-wrap:wrap;gap:2px;padding:6px 16px 0;}
+.mpp-divider{height:1px;background:rgba(255,255,255,.04);margin:10px 16px;}
+.mpp-section{padding:2px 16px 4px;}
+.mpp-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.18);margin-bottom:4px;}
+.mpp-section-body{font-size:12px;color:rgba(255,255,255,.45);line-height:1.5;}
+.mpp-roles-row{display:flex;flex-wrap:wrap;gap:4px;padding:2px 16px 4px;}
+.mpp-role-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.45);transition:all .12s;}
+.mpp-role-chip:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.65);}
+.mpp-role-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.mpp-actions{padding:8px 16px 12px;display:flex;gap:5px;}
+.mpp-btn-primary{flex:1;padding:9px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.mpp-btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 4px 14px rgba(255,249,62,.15);}
+.mpp-btn-secondary{padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.5);font-size:11px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center;gap:4px;}
+.mpp-btn-secondary:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.75);}
+.mpp-mutual-av{width:24px;height:24px;border-radius:50%;overflow:hidden;border:2px solid var(--panel);margin-left:-5px;transition:transform .15s;cursor:pointer;}
+.mpp-mutual-av:first-child{margin-left:0;}
+.mpp-mutual-av:hover{transform:scale(1.15);z-index:2;}
+.mpp-game-row{display:flex;gap:5px;flex-wrap:wrap;}
+.mpp-game-chip{padding:4px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:8px;font-size:10px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:4px;}
+/* ── Full Profile Modal — Guilded-inspired two-column ── */
+.up-card{display:flex;min-height:480px;max-height:85vh;border-radius:16px;overflow:hidden;background:var(--panel);box-shadow:0 32px 80px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04);}
+.up-left{width:300px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;position:relative;overflow-y:auto;overflow-x:hidden;background:rgba(0,0,0,.08);}
+.up-left-banner{height:140px;position:relative;overflow:hidden;flex-shrink:0;}
+.up-left-banner img{width:100%;height:100%;object-fit:cover;}
+.up-left-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to bottom,transparent,rgba(10,12,20,.95));}
+.up-left-av-area{padding:0 20px;margin-top:-40px;position:relative;z-index:2;display:flex;align-items:flex-end;gap:12px;flex-shrink:0;}
+.up-left-av{width:80px;height:80px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);background:var(--panel2);box-shadow:0 6px 20px rgba(0,0,0,.6);flex-shrink:0;transition:transform .2s cubic-bezier(.22,1,.36,1);cursor:pointer;}
+.up-left-av:hover{transform:scale(1.05);}
+.up-left-info{padding:10px 20px 0;flex-shrink:0;}
+.up-left-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;line-height:1.15;word-break:break-word;letter-spacing:-.02em;}
+.up-left-uname{font-size:11.5px;color:rgba(255,255,255,.2);font-weight:500;margin-top:3px;}
+.up-left-badges{display:flex;flex-wrap:wrap;gap:2px;padding:8px 20px 0;flex-shrink:0;}
+.up-left-status{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 20px 0;flex-shrink:0;}
+.up-left-section{padding:10px 20px 0;flex-shrink:0;}
+.up-left-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.16);margin-bottom:5px;}
+.up-left-section-body{font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.6;}
+.up-left-actions{padding:14px 20px;margin-top:auto;flex-shrink:0;}
+.up-right{flex:1;min-width:0;display:flex;flex-direction:column;background:rgba(255,255,255,.01);}
+.up-right-tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.04);padding:0 20px;flex-shrink:0;}
+.up-right-tab{padding:14px 16px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.25);cursor:pointer;border-bottom:2px solid transparent;transition:all .14s;white-space:nowrap;}
+.up-right-tab:hover{color:rgba(255,255,255,.55);background:rgba(255,255,255,.015);}
+.up-right-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.015);}
+.up-right-content{flex:1;overflow-y:auto;padding:16px 20px;}
+.up-right-section{margin-bottom:14px;padding:12px 14px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.03);border-radius:12px;}
+.up-right-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.16);margin-bottom:8px;}
 /* Hover-based CSS classes for profile buttons (replaces inline onmouseover/onmouseout) */
 .up-action-msg{flex:1;padding:11px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;min-width:80px;transition:all .16s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 8px rgba(255,249,62,.1);}
 .up-action-msg:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,249,62,.25);}
@@ -2356,7 +2348,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     </div>
     <div class="tb-search">
       <span style="display:flex;align-items:center;color:var(--muted);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-      <input type="text" placeholder="Search bastions, friends…" id="search-input" oninput="handleSearch(this.value)" aria-label="Search bastions and friends">
+      <input type="text" placeholder="Search…" id="search-input" onclick="openAdvancedSearch()" readonly style="cursor:pointer;" aria-label="Deep Search">
     </div>
   </div>
   <!-- Main content area (rounded top-left corner) -->
@@ -2448,40 +2440,6 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <!-- DMs VIEW -->
     <div class="view" id="view-dms">
       <div class="chat-wrap" id="dm-chat-wrap" style="flex:1;min-width:0;">
-        <div id="dm-friends-home" style="flex:1;overflow-y:auto;">
-          <div class="page-banner" style="margin-bottom:0;">
-            <img src="/fortized banner v2.png" class="page-banner-img" alt="">
-            <div class="page-banner-fade"></div>
-          </div>
-          <div style="max-width:900px;padding:0 28px 28px;">
-            <!-- Clean friends header -->
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-              <div>
-                <h2 style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.02em;">Friends</h2>
-                <div id="dm-stat-bar" style="display:flex;gap:16px;margin-top:4px;">
-                  <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,.35);"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span> <span id="dm-stat-online" style="font-weight:700;color:var(--green);">0</span> Online</span>
-                  <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,.3);"><span id="dm-stat-total" style="font-weight:600;">0</span> Total</span>
-                  <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,.3);"><span id="dm-stat-bastions" style="font-weight:600;">0</span> Bastions</span>
-                </div>
-              </div>
-              <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:10px;display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
-            </div>
-            <!-- Tabs + Search -->
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
-              <div id="dm-friends-tabs" style="display:flex;gap:4px;">
-                <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">Online</button>
-                <button class="disc-tab" onclick="dmFriendsFilter('all',this)">All</button>
-                <button class="disc-tab" onclick="dmFriendsFilter('pending',this)">Pending</button>
-              </div>
-              <div style="flex:1;"></div>
-              <div style="position:relative;width:180px;">
-                <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);pointer-events:none;display:flex;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-                <input type="text" id="dm-friends-search" placeholder="Search..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:7px 10px 7px 30px;border-radius:8px;border:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.15);color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='rgba(254,248,61,.2)'" onblur="this.style.borderColor='rgba(255,255,255,.05)'">
-              </div>
-            </div>
-            <div id="dm-friends-list"></div>
-          </div>
-        </div>
       </div>
       <!-- Active Now sidebar for DMs -->
       <div class="active-now-sidebar" id="dm-active-now">
@@ -2526,7 +2484,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
       <div class="discover-scroll">
         <!-- Discord-style Banner -->
         <div class="page-banner" style="margin:-28px -28px 0;margin-bottom:0;">
-          <img src="/fortized banner v2.png" class="page-banner-img" alt="">
+          <img src="/Fortized banner.png" class="page-banner-img" alt="">
           <div class="page-banner-fade"></div>
         </div>
         <!-- Header -->
@@ -2564,7 +2522,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         <div class="atelier-scroll" id="atelier-scroll-outer" style="flex:1;overflow-y:auto;scroll-behavior:smooth;">
           <!-- Discord-style Banner -->
           <div class="atelier-banner">
-            <img src="/fortized banner v2.png" class="atelier-banner-img" alt="">
+            <img src="/Onyx banner.png" class="atelier-banner-img" alt="">
             <div class="atelier-banner-fade"></div>
           </div>
           <!-- Header below banner -->
@@ -3936,7 +3894,7 @@ function showView(v) {
   if (v === 'atelier') setTimeout(() => { updateAtelierSidebar(); renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }, 0);
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
-  if (v === 'dms') setTimeout(() => { if (document.getElementById('dm-friends-home')) { renderDMFriendsHome(); renderActiveNowSidebar('dm-active-now-list'); } }, 50);
+  if (v === 'dms') setTimeout(() => { showDMFriendsHome(); }, 50);
 
   updateTopbar(v);
   updateSidebar(v);
@@ -5261,7 +5219,7 @@ function showDMFriendsHome() {
     <div id="dm-friends-home" style="flex:1;overflow-y:auto;padding:28px;">
       <div style="max-width:900px;">
         <div class="uv-header" style="border-color:rgba(254,248,61,.1);">
-          <img src="/fortized banner v2.png" class="uv-header-bg" onerror="this.style.display='none'">
+          <img src="/Fortized banner5.png" class="uv-header-bg" onerror="this.style.display='none'">
           <div class="uv-header-grad"></div>
           <div class="uv-header-glow"></div>
           <div class="uv-header-content">
@@ -7427,6 +7385,13 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
         }
         const csEl = entry.querySelector('.ml-custom-status');
         if (csEl && ud.customStatus) csEl.textContent = typeof ud.customStatus === 'object' ? (ud.customStatus.emoji||'') + ' ' + (ud.customStatus.text||'') : ud.customStatus;
+        // Add profile decoration to member list
+        if (ud.profileDecoration && avWrap && !avWrap.querySelector('.profile-decoration-overlay-ml')) {
+          const decImg = document.createElement('img');
+          decImg.src = ud.profileDecoration;
+          decImg.className = 'profile-decoration-overlay-ml';
+          avWrap.appendChild(decImg);
+        }
       }).catch(()=>{});
     }, 50);
   }
@@ -7435,9 +7400,10 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
   const dimStyle = isOffline ? 'opacity:.4;' : '';
 
   return `<div class="ml-entry" data-member="${escapeHTML(u)}" data-status="${status}" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)" style="${dimStyle}">
-    <div class="ml-av-wrap" style="position:relative;display:inline-flex;flex-shrink:0;">
+    <div class="ml-av-wrap profile-decoration-wrap" style="position:relative;display:inline-flex;flex-shrink:0;">
       ${buildAvatarHTML(pfpSrc, displayN, 34)}
-      <span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(status)};border:2.5px solid rgba(12,14,24,.98);"></span>
+      <span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(status)};border:2.5px solid rgba(12,14,24,.98);z-index:3;"></span>
+      ${isMe && CU.profileDecoration ? `<img src="${escapeHTML(CU.profileDecoration)}" class="profile-decoration-overlay-ml">` : ''}
     </div>
     <div class="ml-info" style="min-width:0;flex:1;">
       <div style="display:flex;align-items:center;gap:4px;">
@@ -11689,7 +11655,7 @@ let _emojiPickerTab = 'smileys';
 
 
 function buildEmojiTabBar() {
-  const tabs = [{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:null,label:'Fortized'},...EMOJI_PICKER_TABS.slice(2)];
+  const tabs = [{id:'recent',icon:'🕐',label:'Recent'},{id:'ftz',icon:null,label:'Fortized Guide'},...EMOJI_PICKER_TABS.slice(2)];
   return tabs.map(t => {
     const active = _emojiPickerTab === t.id;
     const baseStyle = 'border:none;cursor:pointer;flex-shrink:0;line-height:1;transition:all .1s;border-radius:8px;padding:5px 7px;';
@@ -11804,7 +11770,7 @@ function renderEmojiTab(tabId) {
     let html = '';
     
     // Section: Fortized Global Emojis
-    html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">Fortized</div>`;
+    html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">Fortized Guide</div>`;
     html += ftzEmojis.map(e => `
       <div onclick="insertFortizedEmoji('${escapeHTML(e.name)}','${escapeHTML(e.url)}')"
            onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(e.name)}:'"
@@ -12018,7 +11984,7 @@ function _showEmojiInfoPopover(emoji, type, e) {
   const bCustom = curBastion !== null ? (CU?.bastions?.[curBastion]?.customEmojis||[]).find(ce => ce.name === emoji) : null;
   let typeLabel = 'Default Emoji';
   let usageLabel = 'Can be used anywhere on Fortized.';
-  if (isFtz) { typeLabel = 'Official Fortized Emoji'; usageLabel = 'Official Fortized Emoji — available everywhere.'; }
+  if (isFtz) { typeLabel = 'Official Fortized Guide Emoji'; usageLabel = 'Official Fortized Guide Emoji — available everywhere.'; }
   if (bCustom) { typeLabel = 'Bastion Emoji'; usageLabel = 'Available in: ' + escapeHTML(bName); }
   const previewHTML = type === 'unicode'
     ? `<img src="${emojiToTwemojiUrl(emoji)}" style="width:48px;height:48px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:42px\\'>${emoji}</span>'">`
@@ -13148,9 +13114,8 @@ async function viewUserProfile(username) {
   // Only show custom banner if user has Radiance, otherwise default
   const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
-  const bannerBg = userBanner
-    ? `url('${userBanner}') center/cover no-repeat`
-    : `url('/Profile Banner.png') center/cover no-repeat, linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#0f1830'},${profileTheme?profileTheme.color2+'33':'#1a0f30'})`;
+  const bannerFallback = `url('/Profile Banner.png') center/cover no-repeat, linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#0f1830'},${profileTheme?profileTheme.color2+'33':'#1a0f30'})`;
+  const bannerBg = userBanner ? 'transparent' : bannerFallback;
 
   const modalEl = document.getElementById('user-modal-body');
   if (!modalEl) { openModal('modal-user'); return; }
@@ -13159,15 +13124,11 @@ async function viewUserProfile(username) {
   const _memberSince = (u.joinedAt||u.createdAt) ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : null;
   const _userNote = _getUserNote(username);
 
-  // Build right-panel tab content
-  const _aboutContent = [];
-  if (u.bio) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Bio</div><div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.65;">${escapeHTML(u.bio.slice(0,400))}${u.bio.length>400?'…':''}</div></div>`);
-  if (u.gameActivity?.name) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Playing a Game</div><div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:12px;"><div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${u.gameActivity.icon||ftzIcon('gamepad','18')}</div><div style="min-width:0;"><div style="font-size:13px;font-weight:700;color:#fff;">${escapeHTML(u.gameActivity.name)}</div>${u.gameActivity.details?`<div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:2px;">${escapeHTML(u.gameActivity.details)}</div>`:''}</div></div></div>`);
-  if (_mutualFriends.length) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;">${_mutualFriends.slice(0,10).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>10?`<div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.4);margin-left:-5px;border:2.5px solid var(--panel);font-weight:700;">+${_mutualFriends.length-10}</div>`:''}</div></div>`);
-  if (Object.values(socials).some(Boolean)) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Connections</div><div style="display:flex;flex-direction:column;gap:5px;">${[{k:'youtube',l:'YouTube',c:'#ff4444',i:'▶'},{k:'roblox',l:'Roblox',c:'#00b2ff',i:'◆'},{k:'spotify',l:'Spotify',c:'#1db954',i:'♫'},{k:'twitter',l:'X',c:'#1d9bf0',i:'✕'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" class="up-social-link" style="background:${p.c}08;color:${p.c};border-color:${p.c}18;"><span style="font-size:9px;">${p.i}</span> ${p.l}</a>`).join('')}</div></div>`);
-  if (_userNote) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Your Note</div><div style="font-size:12px;color:rgba(255,255,255,.4);font-style:italic;line-height:1.5;">${escapeHTML(_userNote.slice(0,200))}</div></div>`);
-  if (games.length) _aboutContent.push(`<div class="up-right-section"><div class="up-right-section-title">Games</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${games.slice(0,8).map(g=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;font-size:12px;color:rgba(255,255,255,.5);"><span style="font-size:14px;">${g.icon||ftzIcon('gamepad','14')}</span>${escapeHTML(g.name)}</div>`).join('')}</div></div>`);
-  if (!_aboutContent.length) _aboutContent.push(`<div style="text-align:center;padding:40px 20px;color:rgba(255,255,255,.15);font-size:13px;">No info yet</div>`);
+  // Build right-panel tab content (Activity tab — current activity, game activity, mutual friends)
+  const _activityContent = [];
+  if (u.gameActivity?.name) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Currently Playing</div><div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.1);border-radius:10px;"><div style="width:36px;height:36px;border-radius:8px;background:rgba(62,207,110,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${u.gameActivity.icon||ftzIcon('gamepad','16')}</div><div style="min-width:0;"><div style="font-size:12.5px;font-weight:700;color:#fff;">${escapeHTML(u.gameActivity.name)}</div>${u.gameActivity.details?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:1px;">${escapeHTML(u.gameActivity.details)}</div>`:''}</div></div></div>`);
+  if (_mutualFriends.length) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${_mutualFriends.slice(0,12).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>12?`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.3);margin-left:-5px;border:2px solid var(--panel);font-weight:700;">+${_mutualFriends.length-12}</div>`:''}</div></div>`);
+  if (!_activityContent.length) _activityContent.push(`<div style="text-align:center;padding:30px 16px;color:rgba(255,255,255,.12);font-size:12px;">No recent activity</div>`);
 
   modalEl.innerHTML = `
     <div style="${themeBorder}">
@@ -13182,14 +13143,15 @@ async function viewUserProfile(username) {
     <div class="up-left">
       <!-- Banner -->
       <div class="up-left-banner" style="background:${bannerBg};">
+        ${userBanner ? `<img src="${escapeHTML(userBanner)}" style="width:100%;height:100%;object-fit:cover;">` : ''}
         ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.6;z-index:2;"></div>` : ''}
       </div>
       <!-- Avatar -->
       <div class="up-left-av-area">
-        <div style="position:relative;">
-          <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 92)}</div>
+        <div class="profile-decoration-wrap" style="position:relative;">
+          <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 80)}</div>
           ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay-lg" onerror="this.style.display='none'">` : ''}
-          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:2px;right:2px;width:20px;height:20px;border-radius:50%;background:${sc};border:3.5px solid var(--panel);z-index:3;box-shadow:0 0 10px ${sc}66;"></span>
+          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;"></span>
         </div>
       </div>
       <!-- Name -->
@@ -13199,20 +13161,26 @@ async function viewUserProfile(username) {
         </div>
         <div class="up-left-uname">@${escapeHTML(u.username)}</div>
       </div>
-      <!-- Badges -->
-      <div class="up-left-badges">${renderBadgesHTML(u)}</div>
-      <!-- Roles (in current bastion context) -->
-      ${curBastion !== null ? `<div style="padding:4px 24px 0;">${renderUserRoleTags(username)}</div>` : ''}
       <!-- Status -->
       <div class="up-left-status">
-        <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(255,255,255,.03);border-radius:100px;">
-          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:8px;height:8px;border-radius:50%;background:${sc};box-shadow:0 0 8px ${sc}55;"></span>
-          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
+        <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.03);border-radius:100px;">
+          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:7px;height:7px;border-radius:50%;background:${sc};box-shadow:0 0 6px ${sc}55;"></span>
+          <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:11px;color:rgba(255,255,255,.45);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
         </div>
-        ${customStatus?.text ? `<div class="cloud-status-bubble profile-custom-status" data-for="${escapeHTML(u.username)}" style="font-size:10.5px;padding:4px 10px;"><span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text)}</span></div>` : `<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></div>`}
+        ${customStatus?.text ? `<div style="font-size:10px;padding:3px 9px;display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:100px;color:rgba(255,255,255,.35);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:12px;height:12px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text)}</div>` : `<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></div>`}
       </div>
+      <!-- Badges -->
+      <div class="up-left-badges">${renderBadgesHTML(u)}</div>
+      <!-- Bio -->
+      ${u.bio ? `<div class="up-left-section"><div class="up-left-section-title">About Me</div><div class="up-left-section-body">${escapeHTML(u.bio.slice(0,300))}${u.bio.length>300?'…':''}</div></div>` : ''}
       <!-- Member Since -->
-      ${_memberSince ? `<div class="up-left-section"><div class="up-left-section-title">Member Since</div><div style="font-size:12.5px;color:rgba(255,255,255,.45);font-weight:500;">${_memberSince}</div></div>` : ''}
+      ${_memberSince ? `<div class="up-left-section"><div class="up-left-section-title">Member Since</div><div style="font-size:12px;color:rgba(255,255,255,.4);font-weight:500;">${_memberSince}</div></div>` : ''}
+      <!-- Roles -->
+      ${curBastion !== null ? `<div class="up-left-section"><div class="up-left-section-title">Roles</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${renderUserRoleTags(username)}</div></div>` : ''}
+      <!-- Connections -->
+      ${Object.values(socials).some(Boolean) ? `<div class="up-left-section"><div class="up-left-section-title">Connections</div><div style="display:flex;flex-direction:column;gap:4px;">${[{k:'youtube',l:'YouTube',c:'#ff4444',i:'▶'},{k:'roblox',l:'Roblox',c:'#00b2ff',i:'◆'},{k:'spotify',l:'Spotify',c:'#1db954',i:'♫'},{k:'twitter',l:'X',c:'#1d9bf0',i:'✕'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" class="up-social-link" style="background:${p.c}08;color:${p.c};border-color:${p.c}15;padding:6px 12px;font-size:11px;"><span style="font-size:8px;">${p.i}</span> ${p.l}</a>`).join('')}</div></div>` : ''}
+      <!-- Note -->
+      ${_userNote ? `<div class="up-left-section"><div class="up-left-section-title">Note</div><div style="font-size:11.5px;color:rgba(255,255,255,.3);font-style:italic;line-height:1.5;">${escapeHTML(_userNote.slice(0,200))}</div></div>` : ''}
       <!-- Actions at bottom -->
       <div class="up-left-actions">
         ${isOwn ? `<button class="up-action-edit" onclick="closeModal('modal-user');showView('profile')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
@@ -13236,25 +13204,25 @@ async function viewUserProfile(username) {
     <!-- RIGHT PANEL -->
     <div class="up-right">
       <div class="up-right-tabs">
-        <div class="up-right-tab active" onclick="_upSwitchTab(this,'up-tab-about')">About</div>
-        ${!isOwn && _mutualFriends.length ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-mutuals')">Mutuals</div>` : ''}
+        <div class="up-right-tab active" onclick="_upSwitchTab(this,'up-tab-activity')">Activity</div>
         ${games.length ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-games')">Games</div>` : ''}
+        ${!isOwn && _mutualFriends.length ? `<div class="up-right-tab" onclick="_upSwitchTab(this,'up-tab-mutuals')">Mutuals</div>` : ''}
       </div>
       <div class="up-right-content">
-        <div id="up-tab-about">${_aboutContent.join('')}</div>
-        ${!isOwn && _mutualFriends.length ? `<div id="up-tab-mutuals" style="display:none;">
-          <div class="up-right-section">
-            <div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              ${_mutualFriends.slice(0,20).map(f => `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s,transform .12s;" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')" class="up-mutual-row"><div style="width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,f,32)}</div><div style="font-size:13px;color:rgba(255,255,255,.65);font-weight:600;">${escapeHTML(f)}</div></div>`).join('')}
-            </div>
-          </div>
-        </div>` : ''}
+        <div id="up-tab-activity">${_activityContent.join('')}</div>
         ${games.length ? `<div id="up-tab-games" style="display:none;">
           <div class="up-right-section">
             <div class="up-right-section-title">Game Collection</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;">
-              ${games.map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;min-width:120px;"><span style="font-size:18px;">${g.icon||ftzIcon('gamepad','14')}</span><span style="font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;">${escapeHTML(g.name)}</span></div>`).join('')}
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">
+              ${games.map(g=>`<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;cursor:default;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='rgba(255,255,255,.02)'"><span style="font-size:16px;">${g.icon||ftzIcon('gamepad','14')}</span><span style="font-size:12px;color:rgba(255,255,255,.5);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</span></div>`).join('')}
+            </div>
+          </div>
+        </div>` : ''}
+        ${!isOwn && _mutualFriends.length ? `<div id="up-tab-mutuals" style="display:none;">
+          <div class="up-right-section">
+            <div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              ${_mutualFriends.slice(0,20).map(f => `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .12s;" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')" class="up-mutual-row"><div style="width:30px;height:30px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,f,28)}</div><div style="font-size:12.5px;color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(f)}</div></div>`).join('')}
             </div>
           </div>
         </div>` : ''}
@@ -25445,65 +25413,60 @@ async function showMiniProfilePreview(username, anchorEl) {
     panel.style.borderStyle = 'solid';
     panel.style.boxShadow = `0 16px 48px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.3)`;
   }
-  const bannerBg = u.banner ? `url('${u.banner}') center/cover no-repeat` : `linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#1a1a2e'},${profileTheme?profileTheme.color2+'33':'#0f3460'})`;
+  const hasUserRadiance = u.radianceUntil && new Date(u.radianceUntil) > new Date();
+  const userBanner = (u.banner && hasUserRadiance) ? u.banner : null;
+  const bannerBg = userBanner
+    ? `<img src="${escapeHTML(userBanner)}" style="width:100%;height:100%;object-fit:cover;">`
+    : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${profileTheme?profileTheme.color1+'44':'#1a1a2e'},${profileTheme?profileTheme.color2+'33':'#0f3460'});"></div>`;
   const _previewGames = u.gameCollection || u.registeredGames || [];
-  const _isOwnPreview = username === CU?.username;
-  const _previewMutuals = _isOwnPreview ? [] : (CU?.friends||[]).filter(f => f !== CU?.username && f !== username && (u.friends||[]).includes(f));
+  const _previewMutuals = isOwn ? [] : (CU?.friends||[]).filter(f => f !== CU?.username && f !== username && (u.friends||[]).includes(f));
   const _memberSince = u.joinedAt||u.createdAt ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null;
   const _isFriend = (CU?.friends||[]).includes(username);
   const _hasPending = (CU?.friendRequestsSent||[]).includes(username) || (CU?.friendRequestsReceived||[]).includes(username);
   panel.innerHTML = `
     <!-- Banner -->
-    <div class="mpp-banner" style="background:${bannerBg};">
+    <div class="mpp-banner">
+      ${bannerBg}
       ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.7;z-index:3;"></div>` : ''}
     </div>
-    <!-- Avatar centered -->
-    <div class="mpp-av-row">
-      <div style="position:relative;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
-        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 76)}</div>
+    <!-- Avatar + Name row (Guilded-style left-aligned) -->
+    <div class="mpp-av-area">
+      <div class="profile-decoration-wrap" style="flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
+        <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 64)}</div>
         ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
-        <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="position:absolute;bottom:4px;right:4px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;box-shadow:0 0 8px ${sc}55;"></span>
+        <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;"></span>
       </div>
     </div>
-    <!-- Custom status bubble -->
-    ${customStatus?.text ? `<div style="text-align:center;padding:6px 18px 0;"><div class="cloud-status-bubble profile-custom-status" data-for="${escapeHTML(username)}" style="font-size:10.5px;padding:5px 12px;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;"><span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text" style="color:rgba(255,255,255,.45);">${escapeHTML(customStatus.text)}</span></div></div>` : `<div class="profile-custom-status" data-for="${escapeHTML(username)}" style="display:none;"></div>`}
-    <!-- Name centered -->
-    <div class="mpp-name-block">
+    <!-- Identity -->
+    <div class="mpp-identity">
       <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" ${u.displayFont&&u.displayFont!=='default'?`style="font-family:${getDisplayFont(u)};"`:''}>${escapeHTML(u.displayName||u.username)}</div>
       <div class="mpp-username">@${escapeHTML(u.username)}</div>
     </div>
-    <!-- Status + Badges row -->
-    <div style="padding:6px 18px 0;display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center;">
+    <!-- Status row -->
+    <div class="mpp-status-row">
       <div class="mpp-status-pill">
         <span class="sdot profile-status-dot" data-for="${escapeHTML(username)}" style="background:${sc};box-shadow:0 0 6px ${sc}55;"></span>
         <span class="profile-status-label" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
       </div>
-      ${renderBadgesHTML ? renderBadgesHTML(u) : ''}
+      ${customStatus?.text ? `<div style="font-size:10px;padding:3px 9px;display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:100px;color:rgba(255,255,255,.4);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:12px;height:12px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text).slice(0,30)}</div>` : ''}
     </div>
-    <!-- Bio -->
-    ${u.bio?`<div style="padding:8px 18px 0;text-align:center;"><div style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.55;">${escapeHTML(u.bio.slice(0,120))}${u.bio.length>120?'...':''}</div></div>`:''}
-    <!-- Game Collection -->
-    ${_previewGames.length ? `<div style="padding:8px 18px 2px;display:flex;align-items:center;gap:8px;justify-content:center;">
-      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.18);">Game Collection</span>
-      <div style="display:flex;gap:3px;">${_previewGames.slice(0,4).map(g=>`<div class="mpp-game-icon-sm" title="${escapeHTML(g.name)}">${g.icon||ftzIcon('gamepad','13')}</div>`).join('')}${_previewGames.length>4?`<div class="mpp-game-more">+${_previewGames.length-4}</div>`:''}</div>
-    </div>` : ''}
-    <div class="mpp-divider"></div>
+    <!-- Badges -->
+    <div class="mpp-badges-row">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
+    ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${escapeHTML(u.bio.slice(0,120))}${u.bio.length>120?'…':''}</div></div>` : ''}
+    ${_memberSince ? `<div class="mpp-section"><div class="mpp-section-title">Member Since</div><div class="mpp-section-body">${_memberSince}</div></div>` : ''}
     <!-- Roles -->
-    ${curBastion !== null ? `<div class="mpp-roles-row">${renderUserRoleTags(username)}</div>` : ''}
+    ${curBastion !== null ? `<div class="mpp-divider"></div><div class="mpp-roles-row">${renderUserRoleTags(username)}</div>` : ''}
+    <!-- Games -->
+    ${_previewGames.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Games</div><div class="mpp-game-row">${_previewGames.slice(0,4).map(g=>`<div class="mpp-game-chip">${g.icon||ftzIcon('gamepad','11')} ${escapeHTML(g.name)}</div>`).join('')}${_previewGames.length>4?`<div class="mpp-game-chip">+${_previewGames.length-4} more</div>`:''}</div></div>` : ''}
     <!-- Mutuals -->
-    ${_previewMutuals.length ? `<div style="padding:4px 18px;display:flex;align-items:center;gap:6px;">
-      <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.18);">Mutual Friends</span>
-      <div style="display:flex;align-items:center;">
-        ${_previewMutuals.slice(0,5).map(f => `<div class="mpp-mutual-av" title="${escapeHTML(f)}" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,22)}</div>`).join('')}
-        ${_previewMutuals.length>5?`<div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:8px;color:rgba(255,255,255,.35);margin-left:-5px;border:2px solid var(--panel);font-weight:700;">+${_previewMutuals.length-5}</div>`:''}
-      </div>
-    </div>` : ''}
-    <!-- Action buttons -->
+    ${_previewMutuals.length ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">Mutual Friends</div><div style="display:flex;align-items:center;">${_previewMutuals.slice(0,6).map(f => `<div class="mpp-mutual-av" title="${escapeHTML(f)}" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,20)}</div>`).join('')}${_previewMutuals.length>6?`<span style="font-size:10px;color:rgba(255,255,255,.25);margin-left:4px;">+${_previewMutuals.length-6}</span>`:''}</div></div>` : ''}
+    <div class="mpp-divider"></div>
+    <!-- Actions -->
     <div class="mpp-actions">
-      ${isOwn ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
-      `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
-      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
-      ${!isOwn && !_isFriend && !_hasPending ? `<button class="mpp-btn-secondary" style="flex:0;padding:10px 12px;" title="Add Friend" onclick="quickAddFriend('${escapeHTML(username)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>` : ''}
+      ${isOwn ? `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();showView('profile')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
+      `<button class="mpp-btn-primary" onclick="document.getElementById('mini-profile-preview')?.remove();openDMView('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Message</button>`}
+      <button class="mpp-btn-secondary" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
+      ${!isOwn && !_isFriend && !_hasPending ? `<button class="mpp-btn-secondary" title="Add Friend" onclick="quickAddFriend('${escapeHTML(username)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>` : ''}
     </div>`;
 
   // Position near the anchor element
@@ -26278,21 +26241,24 @@ function openAdvancedSearch() {
     <div class="adv-search-header">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <span class="ash-title">Deep Search</span>
-        <button onclick="_closeEl('adv-search-panel');_closeEl('adv-search-overlay')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='var(--muted)'">✕</button>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:rgba(255,255,255,.15);background:rgba(255,255,255,.04);padding:2px 8px;border-radius:6px;font-weight:600;">Ctrl+K</span>
+          <button onclick="_closeEl('adv-search-panel');_closeEl('adv-search-overlay')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='var(--muted)'">✕</button>
+        </div>
       </div>
-      <input id="adv-search-input" placeholder="Search messages…" oninput="_runAdvSearch(this.value)" autofocus>
+      <input id="adv-search-input" placeholder="Search messages, members…" oninput="_runAdvSearch(this.value)" autofocus>
     </div>
     <div class="adv-search-filters">
       <div class="asf-chip active" onclick="_setSearchFilter('all',this)">All</div>
+      <div class="asf-chip" onclick="_setSearchFilter('members',this)">Members</div>
       <div class="asf-chip" onclick="_setSearchFilter('has:image',this)">Has Image</div>
       <div class="asf-chip" onclick="_setSearchFilter('has:link',this)">Has Link</div>
-      <div class="asf-chip" onclick="_setSearchFilter('from:',this)">By User</div>
     </div>
     <div class="adv-search-results" id="adv-search-results">
       <div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">
         <div style="font-size:24px;margin-bottom:10px;opacity:.3;">🔍</div>
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:rgba(255,255,255,.3);margin-bottom:4px;">Deep Search</div>
-        <div style="font-size:12px;">Search through messages in the current channel</div>
+        <div style="font-size:12px;">Search messages and members across all channels</div>
       </div>
     </div>`;
   document.body.appendChild(panel);
@@ -26302,13 +26268,7 @@ function _setSearchFilter(filter, chip) {
   _advSearchFilter = filter;
   document.querySelectorAll('.asf-chip').forEach(c=>c.classList.remove('active'));
   chip.classList.add('active');
-  if (filter === 'from:') {
-    showCustomInput('Search by User','Enter username:', (username) => {
-      if (username) { _advSearchFilter = 'from:' + username; _runAdvSearch(document.getElementById('adv-search-input')?.value || ''); }
-    });
-  } else {
-    _runAdvSearch(document.getElementById('adv-search-input')?.value || '');
-  }
+  _runAdvSearch(document.getElementById('adv-search-input')?.value || '');
 }
 let _advSearchTimeout = null;
 function _runAdvSearch(q) {
@@ -26316,23 +26276,83 @@ function _runAdvSearch(q) {
   _advSearchTimeout = setTimeout(async () => {
     const results = document.getElementById('adv-search-results');
     if (!results) return;
-    if (!q.trim() && _advSearchFilter === 'all') { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">Type to search messages</div>'; return; }
+    if (!q.trim()) { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">Type to search</div>'; return; }
     results.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Searching…</div>';
+
+    // Member search
+    if (_advSearchFilter === 'members' || _advSearchFilter === 'all') {
+      const memberResults = [];
+      try {
+        // Search bastion members
+        if (curBastion !== null) {
+          const b = CU.bastions?.[curBastion];
+          if (b?.members) {
+            for (const m of b.members) {
+              if (m.toLowerCase().includes(q.toLowerCase())) memberResults.push(m);
+            }
+          }
+        }
+        // Search friends
+        if (CU.friends) {
+          for (const f of CU.friends) {
+            const fn = typeof f === 'string' ? f : (f.username||f.name||'');
+            if (fn && fn.toLowerCase().includes(q.toLowerCase()) && !memberResults.includes(fn)) memberResults.push(fn);
+          }
+        }
+      } catch {}
+      if (_advSearchFilter === 'members') {
+        if (!memberResults.length) { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">No members found</div>'; return; }
+        let html = '';
+        for (const uname of memberResults.slice(0, 30)) {
+          let pfp = _pfpCache[uname] || null;
+          let displayName = uname;
+          try {
+            const ud = await FortizedSocial.getUserByName(uname);
+            if (ud) { pfp = ud.pfp || pfp; displayName = ud.displayName || uname; }
+          } catch {}
+          html += `<div class="asr-item" onclick="showMiniProfilePreview('${escapeHTML(uname)}',this)">
+            <div class="asr-av">${pfp ? `<img src="${escapeHTML(pfp)}" onerror="this.src='${_defaultPfpUrl(uname)}'">` : buildAvatarHTML(null,uname,32)}</div>
+            <div class="asr-body"><div class="asr-meta"><span class="asr-from">${escapeHTML(displayName)}</span></div><div class="asr-text" style="font-size:11px;color:var(--muted);">@${escapeHTML(uname)}</div></div>
+          </div>`;
+        }
+        results.innerHTML = html;
+        return;
+      }
+    }
+
+    // Message search
     const allMsgs = [];
     try {
-      // Search DMs
+      // Search current DM
       if (curDM) {
         const dmKey = [CU.username, curDM].sort().join('__');
         const snap = await firebase.database().ref('dms/' + dmKey).limitToLast(200).get();
         if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'dm'; v._loc = curDM; allMsgs.push(v); });
       }
-      // Search current bastion channel
+      // Search ALL bastion channels in current bastion
       if (curBastion !== null) {
-        const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
-        const bid = b?.globalId||b?.name; const chName = ch?.name||'general';
-        if (bid) {
-          const snap = await firebase.database().ref(`bastionMsgs/${bid}/${chName}`).limitToLast(200).get();
-          if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'ch'; v._loc = chName; allMsgs.push(v); });
+        const b = CU.bastions?.[curBastion];
+        const bid = b?.globalId||b?.name;
+        if (bid && b?.channels) {
+          for (const ch of b.channels) {
+            const chName = ch.name||'general';
+            try {
+              const snap = await firebase.database().ref(`bastionMsgs/${bid}/${chName}`).limitToLast(100).get();
+              if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'ch'; v._loc = chName; allMsgs.push(v); });
+            } catch {}
+          }
+        }
+      }
+      // Search other DM conversations
+      if (CU.friends) {
+        for (const f of CU.friends) {
+          const fn = typeof f === 'string' ? f : (f.username||f.name||'');
+          if (!fn || fn === curDM) continue;
+          try {
+            const dmKey = [CU.username, fn].sort().join('__');
+            const snap = await firebase.database().ref('dms/' + dmKey).limitToLast(50).get();
+            if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'dm'; v._loc = fn; allMsgs.push(v); });
+          } catch {}
         }
       }
     } catch {}
@@ -26340,14 +26360,46 @@ function _runAdvSearch(q) {
     if (q.trim()) filtered = filtered.filter(m => (m.text||'').toLowerCase().includes(q.toLowerCase()));
     if (_advSearchFilter === 'has:image') filtered = filtered.filter(m => /\.(png|jpg|jpeg|gif|webp)/i.test(m.text||''));
     else if (_advSearchFilter === 'has:link') filtered = filtered.filter(m => /https?:\/\//.test(m.text||''));
-    else if (_advSearchFilter.startsWith('from:')) { const u = _advSearchFilter.slice(5).toLowerCase(); filtered = filtered.filter(m => (m.from||'').toLowerCase().includes(u)); }
+
+    // If "all" mode, prepend member results
+    let memberHtml = '';
+    if (_advSearchFilter === 'all') {
+      const memberResults = [];
+      try {
+        if (curBastion !== null) {
+          const b = CU.bastions?.[curBastion];
+          if (b?.members) for (const m of b.members) { if (m.toLowerCase().includes(q.toLowerCase())) memberResults.push(m); }
+        }
+        if (CU.friends) {
+          for (const f of CU.friends) {
+            const fn = typeof f === 'string' ? f : (f.username||f.name||'');
+            if (fn && fn.toLowerCase().includes(q.toLowerCase()) && !memberResults.includes(fn)) memberResults.push(fn);
+          }
+        }
+      } catch {}
+      if (memberResults.length) {
+        memberHtml = `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);padding:8px 14px 4px;">Members</div>`;
+        for (const uname of memberResults.slice(0, 5)) {
+          memberHtml += `<div class="asr-item" onclick="showMiniProfilePreview('${escapeHTML(uname)}',this)">
+            <div class="asr-av">${buildAvatarHTML(_pfpCache[uname]||null,uname,32)}</div>
+            <div class="asr-body"><div class="asr-meta"><span class="asr-from">${escapeHTML(uname)}</span></div></div>
+          </div>`;
+        }
+      }
+    }
+
     filtered.sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0));
-    if (!filtered.length) { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">No results found</div>'; return; }
-    results.innerHTML = filtered.slice(0,50).map(m => {
-      const hl = q.trim() ? (m.text||'').replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>') : escapeHTML((m.text||'').slice(0,120));
-      const loc = m._ctx === 'dm' ? m._loc : (m._loc ? '# ' + m._loc : '');
-      return `<div class="asr-item"><div class="asr-av">${buildAvatarHTML(null,m.from||'?',32)}</div><div class="asr-body"><div class="asr-meta"><span class="asr-from">${escapeHTML(m.from||'')}</span>${loc?`<span class="asr-channel">${escapeHTML(loc)}</span>`:''}<span class="asr-time">${m.timestamp?new Date(m.timestamp).toLocaleDateString():''}</span></div><div class="asr-text">${hl}</div></div></div>`;
-    }).join('');
+    if (!filtered.length && !memberHtml) { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">No results found</div>'; return; }
+    let msgHtml = '';
+    if (filtered.length) {
+      msgHtml = `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);padding:8px 14px 4px;">Messages</div>`;
+      msgHtml += filtered.slice(0,50).map(m => {
+        const hl = q.trim() ? (m.text||'').replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>') : escapeHTML((m.text||'').slice(0,120));
+        const loc = m._ctx === 'dm' ? m._loc : (m._loc ? '# ' + m._loc : '');
+        return `<div class="asr-item"><div class="asr-av">${buildAvatarHTML(null,m.from||'?',32)}</div><div class="asr-body"><div class="asr-meta"><span class="asr-from">${escapeHTML(m.from||'')}</span>${loc?`<span class="asr-channel">${escapeHTML(loc)}</span>`:''}<span class="asr-time">${m.timestamp?new Date(m.timestamp).toLocaleDateString():''}</span></div><div class="asr-text">${hl}</div></div></div>`;
+      }).join('');
+    }
+    results.innerHTML = memberHtml + msgHtml;
   }, 350);
 }
 

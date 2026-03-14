@@ -283,6 +283,12 @@ CREATE TABLE IF NOT EXISTS bastion_settings (
   PRIMARY KEY (bastion_id, key)
 );
 
+-- ── Bastions (full bastion data from Firebase bastions node) ──
+CREATE TABLE IF NOT EXISTS bastions (
+  id TEXT PRIMARY KEY,
+  data JSONB NOT NULL
+);
+
 -- ── Events ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS events (
   bastion_id TEXT NOT NULL,
@@ -306,3 +312,4 @@ ALTER PUBLICATION supabase_realtime ADD TABLE admin_staff;
 ALTER PUBLICATION supabase_realtime ADD TABLE admin_staff_revoked;
 ALTER PUBLICATION supabase_realtime ADD TABLE admin_force_refresh;
 ALTER PUBLICATION supabase_realtime ADD TABLE admin_clear_sessions;
+ALTER PUBLICATION supabase_realtime ADD TABLE bastions;

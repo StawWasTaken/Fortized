@@ -432,12 +432,16 @@
       return result;
     }
 
-    // bastions/{globalId} (legacy path, same as globalBastions)
+    // bastions/{id} (separate from globalBastions)
     if (parts[0] === 'bastions') {
       if (parts.length === 1) {
-        return await supaGet('globalBastions');
+        const { data } = await sb.from('bastions').select('*');
+        const result = {};
+        (data || []).forEach(r => { result[r.id] = r.data; });
+        return result;
       }
-      const bastion = await supaGet('globalBastions/' + parts[1]);
+      const { data } = await sb.from('bastions').select('data').eq('id', parts[1]).maybeSingle();
+      const bastion = data?.data || null;
       if (parts.length > 2 && bastion) return getNestedValue(bastion, parts.slice(2));
       return bastion;
     }
@@ -813,9 +817,20 @@
       return;
     }
 
-    // bastions/{id} (legacy path → globalBastions)
+    // bastions/{id} (separate table)
     if (parts[0] === 'bastions') {
-      return supaSet('globalBastions/' + parts.slice(1).join('/'), val);
+      if (parts.length === 2) {
+        await sb.from('bastions').upsert({ id: parts[1], data: val }, { onConflict: 'id' });
+        return;
+      }
+      if (parts.length > 2) {
+        const { data: existing } = await sb.from('bastions').select('data').eq('id', parts[1]).maybeSingle();
+        const bastion = existing?.data || {};
+        setNestedValue(bastion, parts.slice(2), val);
+        await sb.from('bastions').upsert({ id: parts[1], data: bastion }, { onConflict: 'id' });
+        return;
+      }
+      return;
     }
 
     console.warn('[FTZ Shim] Unknown path for SET:', pathStr, val);
@@ -856,7 +871,11 @@
       return supaSet(pathStr, null);
     }
     if (parts[0] === 'bastions' && parts.length >= 2) {
-      return supaRemove('globalBastions/' + parts.slice(1).join('/'));
+      if (parts.length === 2) {
+        await sb.from('bastions').delete().eq('id', parts[1]);
+        return;
+      }
+      return supaSet(pathStr, null);
     }
     if (parts[0] === 'bastionTemplates' && parts.length >= 2) {
       await sb.from('bastion_templates').delete().eq('id', parts[1]);

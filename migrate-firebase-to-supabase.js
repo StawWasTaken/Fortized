@@ -32,27 +32,79 @@ async function main() {
 
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ── Fetch from Firebase REST API ──
-  async function fbGet(path) {
+  // ── Track migration stats ──
+  const stats = { total: 0, success: 0, failed: 0, errors: [] };
+
+  // ── Fetch from Firebase REST API with retry ──
+  async function fbGet(path, retries = 3) {
     const url = `${FIREBASE_DB_URL}/${path}.json`;
     console.log(`  Fetching firebase: ${path}`);
-    const res = await fetch(url);
-    if (!res.ok) {
-      console.warn(`  Warning: Firebase GET ${path} returned ${res.status}`);
-      return null;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.warn(`  Warning: Firebase GET ${path} returned ${res.status} (attempt ${attempt}/${retries})`);
+          if (attempt < retries) {
+            await new Promise(r => setTimeout(r, 2000 * attempt));
+            continue;
+          }
+          return null;
+        }
+        return res.json();
+      } catch (err) {
+        console.warn(`  Network error fetching ${path} (attempt ${attempt}/${retries}):`, err.message);
+        if (attempt < retries) {
+          await new Promise(r => setTimeout(r, 2000 * attempt));
+        }
+      }
     }
-    return res.json();
+    return null;
   }
 
-  // ── Batch upsert helper ──
-  async function batchUpsert(table, rows, batchSize = 500) {
-    if (!rows.length) { console.log(`  ${table}: 0 rows`); return; }
+  // ── Batch upsert helper with proper conflict handling ──
+  async function batchUpsert(table, rows, options = {}) {
+    const { batchSize = 500, conflictColumn } = options;
+    if (!rows.length) { console.log(`  ${table}: 0 rows — skipped`); return 0; }
+
+    let migrated = 0;
     for (let i = 0; i < rows.length; i += batchSize) {
       const batch = rows.slice(i, i + batchSize);
-      const { error } = await sb.from(table).upsert(batch, { onConflict: undefined, ignoreDuplicates: true });
-      if (error) console.error(`  Error in ${table} batch ${i}:`, error.message);
+      const upsertOpts = {};
+      if (conflictColumn) upsertOpts.onConflict = conflictColumn;
+
+      // Try upsert first, fall back to individual inserts on error
+      const { error } = await sb.from(table).upsert(batch, upsertOpts);
+      if (error) {
+        console.warn(`  Batch upsert error in ${table} (batch ${i}–${i + batch.length}): ${error.message}`);
+        console.log(`  Retrying ${table} batch row-by-row...`);
+
+        // Insert one by one to save as many rows as possible
+        for (const row of batch) {
+          const { error: rowErr } = await sb.from(table).upsert(row, upsertOpts);
+          if (rowErr) {
+            stats.errors.push(`${table}: ${rowErr.message} (row: ${JSON.stringify(row).slice(0, 100)})`);
+            stats.failed++;
+          } else {
+            migrated++;
+          }
+        }
+      } else {
+        migrated += batch.length;
+      }
     }
-    console.log(`  ${table}: ${rows.length} rows migrated`);
+    stats.total += rows.length;
+    stats.success += migrated;
+    console.log(`  ${table}: ${migrated}/${rows.length} rows migrated`);
+    return migrated;
+  }
+
+  // ── Verify row counts ──
+  async function verifyCount(table, expected) {
+    const { count } = await sb.from(table).select('*', { count: 'exact', head: true });
+    const actual = count || 0;
+    const status = actual >= expected ? '✓' : '✗ MISMATCH';
+    console.log(`  Verify ${table}: ${actual} rows in Supabase (expected ${expected}) ${status}`);
+    return actual;
   }
 
   console.log('═══════════════════════════════════════');
@@ -60,8 +112,9 @@ async function main() {
   console.log('═══════════════════════════════════════\n');
 
   // ── 1. Users ──
-  console.log('[1/20] Migrating users...');
+  console.log('[1/23] Migrating users...');
   const users = await fbGet('users');
+  let userCount = 0;
   if (users) {
     const rows = Object.entries(users).map(([username, u]) => ({
       username,
@@ -103,19 +156,20 @@ async function main() {
         return Object.keys(extra).length ? extra : null;
       })(),
     }));
-    await batchUpsert('users', rows);
+    userCount = rows.length;
+    await batchUpsert('users', rows, { conflictColumn: 'username' });
   }
 
   // ── 2. Statuses ──
-  console.log('[2/20] Migrating statuses...');
+  console.log('[2/23] Migrating statuses...');
   const statuses = await fbGet('statuses');
   if (statuses) {
     const rows = Object.entries(statuses).map(([username, status]) => ({ username, status: status || 'offline' }));
-    await batchUpsert('statuses', rows);
+    await batchUpsert('statuses', rows, { conflictColumn: 'username' });
   }
 
   // ── 3. Notifications ──
-  console.log('[3/20] Migrating notifications...');
+  console.log('[3/23] Migrating notifications...');
   const notifications = await fbGet('notifications');
   if (notifications) {
     const rows = [];
@@ -132,22 +186,22 @@ async function main() {
         });
       }
     }
-    await batchUpsert('notifications', rows);
+    await batchUpsert('notifications', rows, { conflictColumn: 'username,id' });
   }
 
   // ── 4. DM Index ──
-  console.log('[4/20] Migrating DM index...');
+  console.log('[4/23] Migrating DM index...');
   const dmIndex = await fbGet('dmIndex');
   if (dmIndex) {
     const rows = Object.entries(dmIndex).map(([username, partners]) => ({
       username,
       partners: Array.isArray(partners) ? partners : Object.values(partners || {}),
     }));
-    await batchUpsert('dm_index', rows);
+    await batchUpsert('dm_index', rows, { conflictColumn: 'username' });
   }
 
   // ── 5. DMs ──
-  console.log('[5/20] Migrating DMs...');
+  console.log('[5/23] Migrating DMs...');
   const dms = await fbGet('dms');
   if (dms) {
     const rows = [];
@@ -166,30 +220,38 @@ async function main() {
         });
       }
     }
-    await batchUpsert('dms', rows);
+    await batchUpsert('dms', rows, { conflictColumn: 'dm_key,id' });
   }
 
   // ── 6. Global Bastions ──
-  console.log('[6/20] Migrating global bastions...');
+  console.log('[6/23] Migrating global bastions...');
   const globalBastions = await fbGet('globalBastions');
   if (globalBastions) {
     const rows = Object.entries(globalBastions).map(([id, data]) => ({ id, data }));
-    await batchUpsert('global_bastions', rows);
+    await batchUpsert('global_bastions', rows, { conflictColumn: 'id' });
   }
 
-  // ── 7. Bastion Members ──
-  console.log('[7/20] Migrating bastion members...');
+  // ── 7. Bastions (separate from globalBastions) ──
+  console.log('[7/23] Migrating bastions...');
+  const bastions = await fbGet('bastions');
+  if (bastions) {
+    const rows = Object.entries(bastions).map(([id, data]) => ({ id, data }));
+    await batchUpsert('bastions', rows, { conflictColumn: 'id' });
+  }
+
+  // ── 8. Bastion Members ──
+  console.log('[8/23] Migrating bastion members...');
   const bastionMembers = await fbGet('bastionMembers');
   if (bastionMembers) {
     const rows = Object.entries(bastionMembers).map(([bastion_id, members]) => ({
       bastion_id,
       members: Array.isArray(members) ? members : Object.values(members || {}),
     }));
-    await batchUpsert('bastion_members', rows);
+    await batchUpsert('bastion_members', rows, { conflictColumn: 'bastion_id' });
   }
 
-  // ── 8. Bastion Messages ──
-  console.log('[8/20] Migrating bastion messages...');
+  // ── 9. Bastion Messages ──
+  console.log('[9/23] Migrating bastion messages...');
   const bastionMsgs = await fbGet('bastionMsgs');
   if (bastionMsgs) {
     const rows = [];
@@ -210,27 +272,49 @@ async function main() {
         }
       }
     }
-    await batchUpsert('bastion_msgs', rows);
+    await batchUpsert('bastion_msgs', rows, { conflictColumn: 'bastion_id,channel_id,id' });
   }
 
-  // ── 9. Invites ──
-  console.log('[9/20] Migrating invites...');
+  // ── 10. Bastion Polls ──
+  console.log('[10/23] Migrating bastion polls...');
+  const bastionPolls = await fbGet('bastionPolls');
+  if (bastionPolls) {
+    const rows = [];
+    for (const [bastionId, channels] of Object.entries(bastionPolls)) {
+      if (!channels || typeof channels !== 'object') continue;
+      for (const [channelName, polls] of Object.entries(channels)) {
+        if (!polls || typeof polls !== 'object') continue;
+        for (const [id, pollData] of Object.entries(polls)) {
+          rows.push({
+            bastion_id: bastionId,
+            channel_name: channelName,
+            id,
+            data: pollData,
+          });
+        }
+      }
+    }
+    await batchUpsert('polls', rows, { conflictColumn: 'bastion_id,channel_name,id' });
+  }
+
+  // ── 11. Invites ──
+  console.log('[11/23] Migrating invites...');
   const invites = await fbGet('invites');
   if (invites) {
     const rows = Object.entries(invites).map(([code, data]) => ({ code, data }));
-    await batchUpsert('invites', rows);
+    await batchUpsert('invites', rows, { conflictColumn: 'code' });
   }
 
-  // ── 10. Bastion Templates ──
-  console.log('[10/20] Migrating bastion templates...');
+  // ── 12. Bastion Templates ──
+  console.log('[12/23] Migrating bastion templates...');
   const templates = await fbGet('bastionTemplates');
   if (templates) {
     const rows = Object.entries(templates).map(([id, data]) => ({ id, data }));
-    await batchUpsert('bastion_templates', rows);
+    await batchUpsert('bastion_templates', rows, { conflictColumn: 'id' });
   }
 
-  // ── 11. Group Chats ──
-  console.log('[11/20] Migrating group chats...');
+  // ── 13. Group Chats ──
+  console.log('[13/23] Migrating group chats...');
   const groupChats = await fbGet('groupChats');
   if (groupChats) {
     const metaRows = [];
@@ -251,95 +335,183 @@ async function main() {
         }
       }
     }
-    await batchUpsert('group_chat_meta', metaRows);
-    await batchUpsert('group_chat_messages', msgRows);
+    await batchUpsert('group_chat_meta', metaRows, { conflictColumn: 'id' });
+    await batchUpsert('group_chat_messages', msgRows, { conflictColumn: 'gc_id,id' });
   }
 
-  // ── 12. Admin: Bans ──
-  console.log('[12/20] Migrating admin bans...');
+  // ── 14. VC Signal ──
+  console.log('[14/23] Migrating VC signal data...');
+  const vcSignal = await fbGet('vcSignal');
+  if (vcSignal) {
+    const rows = [];
+    // vcSignal can be nested — flatten to path→data pairs
+    function flattenVcSignal(obj, prefix = '') {
+      for (const [key, val] of Object.entries(obj)) {
+        const path = prefix ? `${prefix}/${key}` : key;
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          // Check if this is a leaf node with signal data (has type/sdp/candidate)
+          if (val.type || val.sdp || val.candidate || val.candidates) {
+            rows.push({ path, data: val });
+          } else {
+            flattenVcSignal(val, path);
+          }
+        } else {
+          rows.push({ path, data: { value: val } });
+        }
+      }
+    }
+    flattenVcSignal(vcSignal);
+    if (rows.length) {
+      await batchUpsert('vc_signal', rows, { conflictColumn: 'path' });
+    } else {
+      // Store the whole thing as a single entry if structure is unclear
+      await batchUpsert('vc_signal', [{ path: '_root', data: vcSignal }], { conflictColumn: 'path' });
+    }
+  }
+
+  // ── 15. Admin: Bans ──
+  console.log('[15/23] Migrating admin bans...');
   const bans = await fbGet('admin/bans');
   if (bans) {
     const rows = Object.entries(bans).map(([username, data]) => ({ username, data }));
-    await batchUpsert('admin_bans', rows);
+    await batchUpsert('admin_bans', rows, { conflictColumn: 'username' });
   }
 
-  // ── 13. Admin: Staff ──
-  console.log('[13/20] Migrating admin staff...');
+  // ── 16. Admin: Staff ──
+  console.log('[16/23] Migrating admin staff...');
   const staff = await fbGet('admin/staff');
   if (staff) {
-    await sb.from('admin_staff').upsert({ id: 1, data: staff });
-    console.log('  admin_staff: migrated');
+    const { error } = await sb.from('admin_staff').upsert({ id: 1, data: staff }, { onConflict: 'id' });
+    if (error) {
+      console.error('  Error migrating admin_staff:', error.message);
+      stats.failed++;
+    } else {
+      stats.success++;
+      console.log('  admin_staff: migrated');
+    }
+    stats.total++;
   }
 
-  // ── 14. Admin: Global Settings ──
-  console.log('[14/20] Migrating admin global settings...');
+  // ── 17. Admin: Global Settings ──
+  console.log('[17/23] Migrating admin global settings...');
   const gs = await fbGet('admin/global_settings');
   if (gs) {
-    await sb.from('admin_global_settings').upsert({ id: 1, data: gs });
-    console.log('  admin_global_settings: migrated');
+    const { error } = await sb.from('admin_global_settings').upsert({ id: 1, data: gs }, { onConflict: 'id' });
+    if (error) {
+      console.error('  Error migrating admin_global_settings:', error.message);
+      stats.failed++;
+    } else {
+      stats.success++;
+      console.log('  admin_global_settings: migrated');
+    }
+    stats.total++;
   }
 
-  // ── 15. Admin: Audit Log ──
-  console.log('[15/20] Migrating admin audit log...');
+  // ── 18. Admin: Audit Log ──
+  console.log('[18/23] Migrating admin audit log...');
   const auditLog = await fbGet('admin/audit_log');
   if (auditLog) {
     const rows = Object.entries(auditLog).map(([id, data]) => ({ id, data }));
-    await batchUpsert('admin_audit_log', rows);
+    await batchUpsert('admin_audit_log', rows, { conflictColumn: 'id' });
   }
 
-  // ── 16. Reports ──
-  console.log('[16/20] Migrating reports...');
+  // ── 19. Reports ──
+  console.log('[19/23] Migrating reports...');
   const reports = await fbGet('reports');
   if (reports) {
     const rows = Object.entries(reports).map(([id, data]) => ({ id, data }));
-    await batchUpsert('reports', rows);
+    await batchUpsert('reports', rows, { conflictColumn: 'id' });
   }
 
-  // ── 17. Support Tickets ──
-  console.log('[17/20] Migrating support tickets...');
+  // ── 20. Support Tickets ──
+  console.log('[20/23] Migrating support tickets...');
   const tickets = await fbGet('support/tickets');
   if (tickets) {
     const rows = Object.entries(tickets).map(([id, data]) => ({ id, username: data.username || null, data }));
-    await batchUpsert('support_tickets', rows);
+    await batchUpsert('support_tickets', rows, { conflictColumn: 'id' });
   }
 
-  // ── 18. Feedback ──
-  console.log('[18/20] Migrating feedback...');
+  // ── 21. Feedback ──
+  console.log('[21/23] Migrating feedback...');
   const feedback = await fbGet('feedback');
   if (feedback) {
     const rows = Object.entries(feedback).map(([id, data]) => ({ id: id.toString(), data }));
-    await batchUpsert('feedback', rows);
+    await batchUpsert('feedback', rows, { conflictColumn: 'id' });
   }
 
-  // ── 19. NSFW Data ──
-  console.log('[19/20] Migrating NSFW data...');
+  // ── 22. NSFW Data ──
+  console.log('[22/23] Migrating NSFW data...');
   const nsfwQueue = await fbGet('admin/nsfw_queue');
   if (nsfwQueue) {
     const rows = Object.entries(nsfwQueue).map(([id, data]) => ({ id, data }));
-    await batchUpsert('admin_nsfw_queue', rows);
+    await batchUpsert('admin_nsfw_queue', rows, { conflictColumn: 'id' });
   }
   const nsfwHashes = await fbGet('admin/nsfw_banned_hashes');
   if (nsfwHashes) {
-    await sb.from('admin_nsfw_banned_hashes').upsert({ id: 1, data: nsfwHashes });
-    console.log('  admin_nsfw_banned_hashes: migrated');
+    const { error } = await sb.from('admin_nsfw_banned_hashes').upsert({ id: 1, data: nsfwHashes }, { onConflict: 'id' });
+    if (error) console.error('  Error migrating nsfw hashes:', error.message);
+    else console.log('  admin_nsfw_banned_hashes: migrated');
   }
 
-  // ── 20. Scheduled Actions ──
-  console.log('[20/20] Migrating scheduled actions...');
+  // ── 23. Scheduled Actions ──
+  console.log('[23/23] Migrating scheduled actions...');
   const scheduled = await fbGet('admin/scheduled_actions');
   if (scheduled) {
     const rows = Object.entries(scheduled).map(([id, data]) => ({ id, data }));
-    await batchUpsert('admin_scheduled_actions', rows);
+    await batchUpsert('admin_scheduled_actions', rows, { conflictColumn: 'id' });
+  }
+
+  // ══════════════════════════════════════════════════
+  // VERIFICATION
+  // ══════════════════════════════════════════════════
+  console.log('\n═══════════════════════════════════════');
+  console.log(' Verifying migration...');
+  console.log('═══════════════════════════════════════\n');
+
+  if (users)           await verifyCount('users',           Object.keys(users).length);
+  if (statuses)        await verifyCount('statuses',        Object.keys(statuses).length);
+  if (dmIndex)         await verifyCount('dm_index',        Object.keys(dmIndex).length);
+  if (globalBastions)  await verifyCount('global_bastions', Object.keys(globalBastions).length);
+  if (bastions)        await verifyCount('bastions',        Object.keys(bastions).length);
+  if (invites)         await verifyCount('invites',         Object.keys(invites).length);
+
+  // Count DM messages
+  if (dms) {
+    let dmMsgCount = 0;
+    for (const msgs of Object.values(dms)) {
+      if (msgs && typeof msgs === 'object') dmMsgCount += Object.keys(msgs).length;
+    }
+    await verifyCount('dms', dmMsgCount);
+  }
+
+  // Count bastion messages
+  if (bastionMsgs) {
+    let bMsgCount = 0;
+    for (const channels of Object.values(bastionMsgs)) {
+      if (!channels || typeof channels !== 'object') continue;
+      for (const msgs of Object.values(channels)) {
+        if (msgs && typeof msgs === 'object') bMsgCount += Object.keys(msgs).length;
+      }
+    }
+    await verifyCount('bastion_msgs', bMsgCount);
   }
 
   console.log('\n═══════════════════════════════════════');
   console.log(' Migration complete!');
+  console.log(`  Total items:  ${stats.total}`);
+  console.log(`  Succeeded:    ${stats.success}`);
+  console.log(`  Failed:       ${stats.failed}`);
+  if (stats.errors.length) {
+    console.log(`\n  Errors (first 20):`);
+    stats.errors.slice(0, 20).forEach(e => console.log(`    - ${e}`));
+  }
   console.log('═══════════════════════════════════════');
   console.log('\nNext steps:');
-  console.log('1. Verify data in Supabase dashboard');
-  console.log('2. Deploy the updated Fortized app');
-  console.log('3. Test login, messaging, bastions');
-  console.log('4. Once confirmed working, remove Firebase SDK references');
+  console.log('1. Review the verification counts above');
+  console.log('2. Run the "bastions" table CREATE in Supabase SQL editor if not already done');
+  console.log('3. Deploy the updated Fortized app');
+  console.log('4. Test login, messaging, bastions');
+  console.log('5. Once confirmed working, remove Firebase SDK references');
 }
 
 main().catch(err => {

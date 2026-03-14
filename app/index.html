@@ -1417,8 +1417,8 @@ body.is-desktop-app .sys-announce-bar{padding-right:160px;}
 .emoji-tooltip .et-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;}
 .emoji-tooltip .et-code{font-size:11px;color:rgba(255,255,255,.3);font-family:'SF Mono','Cascadia Code',monospace;margin-top:2px;}
 .emoji-tooltip .et-cat{font-size:10.5px;color:rgba(255,249,62,.45);font-weight:600;margin-top:6px;}
-.msg-emoji,.msg-emoji-native{cursor:pointer;transition:transform .1s;border-radius:3px;}
-.msg-emoji:hover,.msg-emoji-native:hover{transform:scale(1.2);background:rgba(255,255,255,.06);}
+.msg-text .msg-emoji,.msg-text .msg-emoji-native,.msg-reply-ref .msg-emoji,.up-left-section-body .msg-emoji,.ann-body .msg-emoji,.forum-detail-content .msg-emoji,.frc-body .msg-emoji{cursor:pointer;transition:transform .1s;border-radius:3px;}
+.msg-text .msg-emoji:hover,.msg-text .msg-emoji-native:hover,.msg-reply-ref .msg-emoji:hover,.up-left-section-body .msg-emoji:hover,.ann-body .msg-emoji:hover,.forum-detail-content .msg-emoji:hover,.frc-body .msg-emoji:hover{transform:scale(1.2);background:rgba(255,255,255,.06);}
 .cloud-status-bubble{position:relative;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:11px;color:rgba(255,255,255,.5);max-width:260px;transition:background .15s,border-color .15s;}
 /* Userbar custom status speech bubble — looks like the PFP is talking */
 .ua-custom-status-bubble{display:none;align-items:center;gap:5px;padding:4px 10px;margin:6px 8px 2px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:10.5px;color:rgba(255,255,255,.5);position:relative;max-width:calc(100% - 16px);box-sizing:border-box;overflow:hidden;}
@@ -12534,9 +12534,12 @@ function _showEmojiTooltip(emoji, el) {
 }
 
 // Event delegation: left-click any emoji in chat → show tooltip
+// Only for user-input emojis (messages, about me, forum posts) — not platform/UI emojis
 document.addEventListener('click', function(e) {
   const img = e.target.closest('.msg-emoji, .msg-emoji-native, .emoji');
   if (!img) return;
+  // Only show tooltip for emojis inside user-generated content areas
+  if (!img.closest('.msg-text, .msg-reply-ref, .up-left-section-body, .ann-body, .forum-detail-content, .frc-body')) return;
   const emoji = img.dataset?.emoji || img.alt || img.textContent?.trim();
   if (emoji) { e.stopPropagation(); _showEmojiTooltip(emoji, img); }
 });

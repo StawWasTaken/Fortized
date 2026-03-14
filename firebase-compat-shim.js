@@ -881,6 +881,11 @@
       await sb.from('bastion_templates').delete().eq('id', parts[1]);
       return;
     }
+    // dms/{key}/{msgId} — delete single DM message
+    if (parts[0] === 'dms' && parts.length >= 3) {
+      await sb.from('dms').delete().eq('dm_key', parts[1]).eq('id', parts[2]);
+      return;
+    }
     if (parts[0] === 'groupChats' && parts.length >= 2) {
       if (parts.length === 2) {
         // Delete entire group chat
@@ -888,11 +893,22 @@
         await sb.from('group_chat_messages').delete().eq('gc_id', parts[1]);
         return;
       }
+      // groupChats/{gcId}/messages/{msgId} — delete single GC message
+      if (parts[2] === 'messages' && parts.length >= 4) {
+        await sb.from('group_chat_messages').delete().eq('gc_id', parts[1]).eq('id', parts[3]);
+        return;
+      }
       if (parts[2] === 'typing' && parts.length >= 4) {
         const tPath = parts.slice(0, 3).join('/');
         await sb.from('typing').delete().eq('path', tPath).eq('username', parts[3]);
         return;
       }
+    }
+    // bastionMsgs/{bastionId}/{channelId}/{msgId} — delete single bastion message
+    if (parts[0] === 'bastionMsgs' && parts.length >= 4) {
+      await sb.from('bastion_msgs').delete()
+        .eq('bastion_id', parts[1]).eq('channel_id', parts[2]).eq('id', parts[3]);
+      return;
     }
     if (parts[0] === 'reports' && parts.length >= 2) {
       await sb.from('reports').delete().eq('id', parts[1]);

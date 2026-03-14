@@ -155,7 +155,6 @@ function createWindow() {
     title: 'Fortized',
     icon: path.join(__dirname, 'Fortized icon.png'),
     frame: false,
-    titleBarStyle: 'hidden',
     backgroundColor: '#0c0f16',
     webPreferences: {
       preload: path.join(__dirname, 'electron-preload.js'),

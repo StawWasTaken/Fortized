@@ -2099,6 +2099,134 @@ body.is-desktop-app .notif-panel{top:0;}
 .pw-toggle.on{background:var(--accent);}
 .pw-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);}
 .pw-toggle.on::after{transform:translateX(16px);}
+
+/* ── Profile Widget Redesign (Discord-style) ── */
+.pw-add-widget-modal-overlay{position:fixed;inset:0;background:rgba(4,6,10,.75);backdrop-filter:blur(8px);z-index:9500;display:flex;align-items:center;justify-content:center;animation:fadeIn .15s;}
+.pw-add-widget-modal{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:18px;width:520px;max-width:90vw;max-height:75vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:mppSlideIn .2s cubic-bezier(.22,1,.36,1);}
+.pw-add-widget-modal .pwm-header{padding:20px 22px 14px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;}
+.pw-add-widget-modal .pwm-header h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;margin-bottom:4px;}
+.pw-add-widget-modal .pwm-header p{font-size:12px;color:rgba(255,255,255,.3);}
+.pw-add-widget-modal .pwm-search{width:100%;margin-top:10px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .15s;}
+.pw-add-widget-modal .pwm-search:focus{border-color:rgba(255,249,62,.25);}
+.pw-add-widget-modal .pwm-list{flex:1;overflow-y:auto;padding:10px 14px;}
+.pw-widget-option{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;cursor:pointer;transition:all .15s;margin-bottom:6px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);}
+.pw-widget-option:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.2);}
+.pw-widget-option .pwo-preview{width:64px;height:48px;border-radius:10px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02));display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid rgba(255,255,255,.06);}
+.pw-widget-option .pwo-preview img{width:100%;height:100%;object-fit:cover;}
+.pw-widget-option .pwo-info{flex:1;min-width:0;}
+.pw-widget-option .pwo-name{font-size:13.5px;font-weight:700;color:#fff;}
+.pw-widget-option .pwo-desc{font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;}
+.pw-widget-option .pwo-add-btn{width:32px;height:32px;border-radius:50%;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);color:#3ecf6e;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.pw-widget-option .pwo-add-btn:hover{background:rgba(62,207,110,.2);transform:scale(1.1);}
+.pw-widget-option .pwo-added{width:32px;height:32px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-mid);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.pw-widget-option.active{border-color:var(--accent-mid);background:var(--accent-dim);}
+/* Games I Like grid on profile card */
+.pw-gc-masonry{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.pw-gc-masonry .pw-gc-card{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:3/4;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);}
+.pw-gc-masonry .pw-gc-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.35);border-color:rgba(255,255,255,.12);}
+.pw-gc-masonry .pw-gc-card img{width:100%;height:100%;object-fit:cover;}
+.pw-gc-masonry .pw-gc-card .gc-hover-name{position:absolute;bottom:0;left:0;right:0;padding:6px 8px;background:linear-gradient(transparent,rgba(0,0,0,.85));font-size:9px;font-weight:700;color:#fff;opacity:0;transition:opacity .18s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pw-gc-masonry .pw-gc-card:hover .gc-hover-name{opacity:1;}
+.pw-gc-masonry .pw-gc-card .gc-delete-btn{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(248,113,113,.9);border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;box-shadow:0 2px 8px rgba(0,0,0,.4);}
+.pw-gc-masonry .pw-gc-card:hover .gc-delete-btn{opacity:1;}
+.pw-gc-add-card{aspect-ratio:3/4;border-radius:10px;border:2px dashed rgba(255,255,255,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all .15s;background:transparent;color:rgba(255,255,255,.25);font-size:10px;font-weight:600;}
+.pw-gc-add-card:hover{border-color:rgba(255,249,62,.3);color:var(--accent);background:rgba(255,249,62,.03);}
+.pw-gc-add-card svg{width:18px;height:18px;}
+/* Favourite game large card */
+.pw-fav-large-card{display:flex;gap:14px;padding:12px;background:linear-gradient(135deg,rgba(245,158,11,.06),rgba(245,158,11,.02));border:1px solid rgba(245,158,11,.12);border-radius:14px;transition:all .18s;cursor:default;}
+.pw-fav-large-card:hover{border-color:rgba(245,158,11,.25);box-shadow:0 4px 16px rgba(245,158,11,.08);}
+.pw-fav-large-card .pfl-cover{width:72px;height:96px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--panel2);border:1px solid rgba(255,255,255,.06);}
+.pw-fav-large-card .pfl-cover img{width:100%;height:100%;object-fit:cover;}
+.pw-fav-large-card .pfl-info{flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+.pw-fav-large-card .pfl-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;}
+.pw-fav-large-card .pfl-genre{font-size:11px;color:rgba(255,255,255,.35);}
+.pw-fav-large-card .pfl-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#f59e0b;background:rgba(245,158,11,.1);padding:3px 8px;border-radius:6px;margin-top:4px;width:fit-content;}
+/* Games in rotation carousel */
+.pw-rotation-carousel{display:flex;gap:10px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none;}
+.pw-rotation-carousel::-webkit-scrollbar{display:none;}
+.pw-rotation-card{min-width:100px;max-width:120px;flex-shrink:0;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);transition:all .2s;cursor:pointer;}
+.pw-rotation-card:hover{border-color:rgba(96,165,250,.2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.25);}
+.pw-rotation-card img{width:100%;aspect-ratio:3/4;object-fit:cover;}
+.pw-rotation-card .prc-name{padding:6px 8px;font-size:9.5px;font-weight:600;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
+
+/* ── Sidebar Tooltip Enhancement ── */
+.rail-nav-tooltip{position:fixed;left:0;top:0;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:6px 12px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:9999;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.45);font-size:12px;font-weight:600;color:rgba(255,255,255,.9);display:flex;align-items:center;gap:6px;}
+.rail-nav-tooltip.visible{opacity:1;}
+.rail-nav-tooltip .rnt-hint{font-size:9px;color:rgba(255,255,255,.25);font-weight:500;padding:1px 5px;background:rgba(255,255,255,.04);border-radius:4px;border:1px solid rgba(255,255,255,.06);margin-left:4px;}
+
+/* ── Redesigned Notification Panel ── */
+.notif-panel-v2{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:580px;max-width:90vw;max-height:75vh;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:18px;z-index:7000;display:flex;flex-direction:column;animation:mppSlideIn .2s cubic-bezier(.22,1,.36,1);box-shadow:0 24px 64px rgba(0,0,0,.6);}
+.notif-panel-v2-overlay{position:fixed;inset:0;background:rgba(4,6,10,.7);backdrop-filter:blur(6px);z-index:6999;animation:fadeIn .15s;}
+.notif-panel-v2 .npv-header{padding:20px 22px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.notif-panel-v2 .npv-header h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex:1;color:#fff;}
+.notif-panel-v2 .npv-tabs{padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:4px;flex-shrink:0;}
+.notif-panel-v2 .npv-tab{padding:6px 14px;border-radius:100px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,.4);cursor:pointer;transition:all .12s;background:transparent;border:none;}
+.notif-panel-v2 .npv-tab:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);}
+.notif-panel-v2 .npv-tab.active{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-mid);}
+.notif-panel-v2 .npv-list{flex:1;overflow-y:auto;padding:8px 10px;}
+
+/* ── Redesigned Pinned Messages Panel ── */
+.pins-panel-v2{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:520px;max-width:90vw;max-height:70vh;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:18px;z-index:7000;display:flex;flex-direction:column;animation:mppSlideIn .2s cubic-bezier(.22,1,.36,1);box-shadow:0 24px 64px rgba(0,0,0,.6);}
+.pins-panel-v2-overlay{position:fixed;inset:0;background:rgba(4,6,10,.7);backdrop-filter:blur(6px);z-index:6999;animation:fadeIn .15s;}
+
+/* ── Redesigned Thread Panel ── */
+.thread-panel-v2{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:560px;max-width:90vw;max-height:80vh;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:18px;z-index:7000;display:flex;flex-direction:column;animation:mppSlideIn .2s cubic-bezier(.22,1,.36,1);box-shadow:0 24px 64px rgba(0,0,0,.6);}
+.thread-panel-v2-overlay{position:fixed;inset:0;background:rgba(4,6,10,.7);backdrop-filter:blur(6px);z-index:6999;animation:fadeIn .15s;}
+
+/* ── Deep Search Media Previews ── */
+.asr-media-preview{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;}
+.asr-media-preview img,.asr-media-preview video{max-width:120px;max-height:80px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:all .15s;}
+.asr-media-preview img:hover,.asr-media-preview video:hover{border-color:rgba(255,249,62,.2);transform:scale(1.03);}
+.asr-file-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;font-size:11px;color:rgba(255,255,255,.5);margin-top:6px;font-weight:600;}
+.asr-file-badge svg{opacity:.4;}
+
+/* ── Redesigned Reaction Panel ── */
+.reaction-picker-v2{position:fixed;z-index:9500;width:420px;max-height:440px;background:rgba(14,17,24,.98);border:1px solid rgba(255,255,255,.06);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(40px) saturate(150%);animation:pickerSlideIn .2s cubic-bezier(.22,1,.36,1);}
+.reaction-picker-v2 .rpv-quick{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;flex-wrap:wrap;gap:2px;}
+.reaction-picker-v2 .rpv-quick-btn{width:36px;height:36px;border:none;background:transparent;border-radius:10px;font-size:20px;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;}
+.reaction-picker-v2 .rpv-quick-btn:hover{background:rgba(255,255,255,.1);transform:scale(1.15);}
+.reaction-picker-v2 .rpv-search-wrap{padding:6px 14px;border-bottom:1px solid rgba(255,255,255,.04);}
+.reaction-picker-v2 .rpv-search{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 12px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;outline:none;box-sizing:border-box;transition:border-color .15s;}
+.reaction-picker-v2 .rpv-search:focus{border-color:rgba(255,249,62,.2);}
+.reaction-picker-v2 .rpv-categories{padding:6px 14px 4px;display:flex;gap:2px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0;}
+.reaction-picker-v2 .rpv-cat-btn{width:30px;height:30px;border:none;background:transparent;border-radius:8px;font-size:14px;cursor:pointer;transition:all .1s;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.35);}
+.reaction-picker-v2 .rpv-cat-btn:hover,.reaction-picker-v2 .rpv-cat-btn.active{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);}
+.reaction-picker-v2 .rpv-grid{flex:1;overflow-y:auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:2px;align-content:flex-start;}
+.reaction-picker-v2 .rpv-emoji-btn{width:36px;height:36px;border:none;background:transparent;border-radius:10px;font-size:20px;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;}
+.reaction-picker-v2 .rpv-emoji-btn:hover{background:rgba(255,255,255,.1);transform:scale(1.15);}
+.reaction-picker-v2 .rpv-preview{padding:8px 14px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:40px;}
+.reaction-picker-v2 .rpv-preview-emoji{font-size:28px;}
+.reaction-picker-v2 .rpv-preview-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.5);}
+/* Reworked reaction pills */
+.r-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:4px 10px 4px 7px;font-size:13px;cursor:pointer;transition:all .15s;user-select:none;}
+.r-pill:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.r-pill .r-emoji{font-size:16px;line-height:1;}
+.r-pill .r-count{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);min-width:8px;text-align:center;}
+.r-pill.mine{background:var(--accent-dim);border-color:var(--accent-mid);}
+.r-pill.mine .r-count{color:var(--accent);}
+.r-pill .r-add-btn{width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;font-size:14px;margin-left:2px;}
+.r-pill .r-add-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);}
+
+/* ── Keyboard Shortcuts Settings ── */
+.kbd-settings-grid{display:flex;flex-direction:column;gap:4px;}
+.kbd-setting-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:12px;transition:all .12s;}
+.kbd-setting-row:hover{background:rgba(255,255,255,.04);}
+.kbd-setting-row .ksr-action{flex:1;min-width:0;}
+.kbd-setting-row .ksr-action-name{font-size:13px;font-weight:600;color:rgba(255,255,255,.75);}
+.kbd-setting-row .ksr-action-desc{font-size:10.5px;color:rgba(255,255,255,.25);margin-top:1px;}
+.kbd-setting-row .ksr-keys{display:flex;gap:4px;align-items:center;}
+.kbd-setting-row .ksr-key{padding:4px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:6px;font-size:11px;font-weight:700;font-family:monospace;color:rgba(255,255,255,.55);min-width:28px;text-align:center;transition:all .12s;}
+.kbd-setting-row .ksr-edit-btn{padding:5px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;flex-shrink:0;}
+.kbd-setting-row .ksr-edit-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);}
+.kbd-capture-overlay{position:fixed;inset:0;background:rgba(4,6,10,.85);backdrop-filter:blur(12px);z-index:9600;display:flex;align-items:center;justify-content:center;animation:fadeIn .15s;}
+.kbd-capture-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:32px;max-width:400px;width:90%;text-align:center;box-shadow:var(--elev-3);}
+.kbd-capture-card h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:6px;color:#fff;}
+.kbd-capture-card .kcc-desc{font-size:12px;color:rgba(255,255,255,.35);margin-bottom:20px;}
+.kbd-capture-card .kcc-keys{display:flex;gap:6px;justify-content:center;align-items:center;min-height:40px;padding:12px;background:rgba(255,255,255,.03);border:2px dashed rgba(255,249,62,.2);border-radius:12px;margin-bottom:16px;}
+.kbd-capture-card .kcc-key{padding:6px 14px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:8px;font-size:14px;font-weight:700;font-family:monospace;color:var(--accent);}
+.kbd-capture-card .kcc-hint{font-size:11px;color:rgba(255,255,255,.2);margin-bottom:16px;}
+.kbd-capture-card .kcc-actions{display:flex;gap:8px;justify-content:center;}
+
 @media(max-width:768px){
   .up-card{flex-direction:column;min-height:auto;}
   .up-left{width:100%;border-right:none;border-bottom:1px solid rgba(255,255,255,.05);}
@@ -2356,16 +2484,16 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   </div>
   <!-- Navigation -->
   <div class="sidebar-nav" id="rail">
-    <div class="rail-btn" id="rb-dms" onclick="showView('dms')" title="Direct Messages" aria-label="Direct Messages">
+    <div class="rail-btn" id="rb-dms" onclick="showView('dms')" data-nav-tip="Direct Messages" data-nav-ctx="Mark all read,Open DM list" aria-label="Direct Messages" oncontextmenu="_railNavCtxMenu(event,'dms')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       <span>Direct Messages</span>
       <span id="notif-badge" class="nav-badge" style="display:none;">0</span>
     </div>
-    <div class="rail-btn" id="rb-discover" onclick="showView('discover')" title="Discover" aria-label="Discover">
+    <div class="rail-btn" id="rb-discover" onclick="showView('discover')" data-nav-tip="Discover" data-nav-ctx="Browse bastions,Trending" aria-label="Discover" oncontextmenu="_railNavCtxMenu(event,'discover')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <span>Discover</span>
     </div>
-    <div class="rail-btn" id="rb-atelier" onclick="showView('atelier')" title="Atelier" aria-label="Atelier">
+    <div class="rail-btn" id="rb-atelier" onclick="showView('atelier')" data-nav-tip="Atelier" data-nav-ctx="Shop,My items" aria-label="Atelier" oncontextmenu="_railNavCtxMenu(event,'atelier')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       <span>Atelier</span>
     </div>
@@ -2373,7 +2501,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <!-- Bastions -->
     <div style="display:none;"></div>
     <div id="rail-bastions"></div>
-    <div class="rail-btn" onclick="openModal('modal-create-bastion')" style="margin-top:4px;background:rgba(62,207,110,.08);color:var(--green);" title="Create Bastion">
+    <div class="rail-btn" onclick="openModal('modal-create-bastion')" style="margin-top:4px;background:rgba(62,207,110,.08);color:var(--green);" data-nav-tip="Create Bastion">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
   </div>
@@ -4484,6 +4612,7 @@ function renderRailBastions() {
   cont.innerHTML = html;
   _initBastionDrag();
   _initRailTooltips();
+  _initRailNavTooltips();
 }
 
 function _renderRailBastion(b, i) {
@@ -4584,6 +4713,72 @@ function _showRailTip(e) {
 }
 function _hideRailTip() {
   if (_railTipEl) { _railTipEl.remove(); _railTipEl = null; }
+}
+
+// Sidebar nav button tooltips (DMs, Discover, Atelier, Create Bastion)
+let _railNavTipEl = null;
+function _initRailNavTooltips() {
+  document.querySelectorAll('.rail-btn[data-nav-tip],.sidebar-logo').forEach(el => {
+    el.addEventListener('mouseenter', _showRailNavTip);
+    el.addEventListener('mouseleave', _hideRailNavTip);
+  });
+}
+function _showRailNavTip(e) {
+  const el = e.currentTarget;
+  const name = el.dataset.navTip || (el.classList.contains('sidebar-logo') ? 'Home' : '');
+  if (!name) return;
+  _hideRailNavTip();
+  const tip = document.createElement('div');
+  tip.className = 'rail-nav-tooltip';
+  const hasCtx = el.dataset.navCtx;
+  tip.innerHTML = `<span>${escapeHTML(name)}</span>${hasCtx ? '<span class="rnt-hint">Right-click for more</span>' : ''}`;
+  document.body.appendChild(tip);
+  _railNavTipEl = tip;
+  const rect = el.getBoundingClientRect();
+  tip.style.left = (rect.right + 12) + 'px';
+  tip.style.top = (rect.top + rect.height / 2) + 'px';
+  tip.style.transform = 'translateY(-50%) scale(.92)';
+  requestAnimationFrame(() => {
+    tip.classList.add('visible');
+    tip.style.transform = 'translateY(-50%) scale(1)';
+  });
+}
+function _hideRailNavTip() {
+  if (_railNavTipEl) { _railNavTipEl.remove(); _railNavTipEl = null; }
+}
+function _railNavCtxMenu(e, viewId) {
+  e.preventDefault();
+  _hideRailNavTip();
+  const items = [];
+  if (viewId === 'dms') {
+    items.push({label:'Open Direct Messages', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', action:"showView('dms')"});
+    items.push({label:'Mark All Read', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>', action:"markAllRead()"});
+  } else if (viewId === 'discover') {
+    items.push({label:'Browse Bastions', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>', action:"showView('discover')"});
+  } else if (viewId === 'atelier') {
+    items.push({label:'Open Atelier', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>', action:"showView('atelier')"});
+  }
+  if (!items.length) return;
+  const menu = document.getElementById('ctx-menu');
+  if (!menu) return;
+  let html = '<div class="ctx-group">';
+  items.forEach(it => {
+    html += `<div class="ctx-item" onclick="${it.action};_closeCtx()"><span style="display:flex;align-items:center;opacity:.5;flex-shrink:0;">${it.icon}</span>${it.label}</div>`;
+  });
+  html += '</div>';
+  menu.innerHTML = html;
+  menu.style.display = 'block';
+  menu.style.left = (e.clientX) + 'px';
+  menu.style.top = (e.clientY) + 'px';
+  menu.style.animation = 'ctxIn .12s cubic-bezier(.22,1,.36,1)';
+  const ctxOverlay = document.getElementById('ctx-overlay');
+  if (ctxOverlay) { ctxOverlay.style.display = 'block'; ctxOverlay.onclick = () => _closeCtx(); }
+}
+function _closeCtx() {
+  const menu = document.getElementById('ctx-menu');
+  const overlay = document.getElementById('ctx-overlay');
+  if (menu) menu.style.display = 'none';
+  if (overlay) overlay.style.display = 'none';
 }
 
 function _toggleBastionGroup(header) {
@@ -7027,8 +7222,11 @@ function appendMessage(container, msg, context, prevAuthor) {
   const editTag=msg.edited?`<span class="msg-edited" title="Edited${msg.editedAt ? ' at '+new Date(msg.editedAt).toLocaleString() : ''}">(edited)</span>`:'';
   const reactHTML=msg.reactions?Object.entries(msg.reactions).map(([emoji,users])=>{
     const arr=Array.isArray(users)?users:Object.values(users);
-    return `<span class="r-pill${arr.includes(CU?.username)?' mine':''}" onclick="toggleReaction('${escapeHTML(id)}','${emoji}','${context}')" onmousedown="_reactionIntensityStart(this,'${escapeHTML(id)}','${emoji}','${context}')" onmouseup="_reactionIntensityEnd()" onmouseleave="_reactionIntensityEnd()">${emoji} ${arr.length}</span>`;
-  }).join(''):'';
+    if (!arr.length) return '';
+    const isMine = arr.includes(CU?.username);
+    const tooltip = arr.slice(0,5).join(', ') + (arr.length > 5 ? ` +${arr.length-5} more` : '');
+    return `<span class="r-pill${isMine?' mine':''}" onclick="toggleReaction('${escapeHTML(id)}','${emoji}','${context}')" onmousedown="_reactionIntensityStart(this,'${escapeHTML(id)}','${emoji}','${context}')" onmouseup="_reactionIntensityEnd()" onmouseleave="_reactionIntensityEnd()" title="${escapeHTML(tooltip)}"><span class="r-emoji">${emoji}</span><span class="r-count">${arr.length}</span></span>`;
+  }).join('')+`<span class="r-pill r-add-btn" onclick="addReactionUI(event,'${escapeHTML(id)}','${context}')" title="Add Reaction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></span>`:'';
 
   const safeId=escapeHTML(id);
   const safeText=escapeHTML((msg.text||'').slice(0,100).replace(/'/g,' '));
@@ -7402,27 +7600,37 @@ function _openReactionEmojiPicker(x, y, msgId, context) {
   document.getElementById('reaction-emoji-picker')?.remove();
   const panel = document.createElement('div');
   panel.id = 'reaction-emoji-picker';
-  panel.style.cssText = 'position:fixed;z-index:9500;width:380px;max-height:400px;background:rgba(16,18,28,.97);border:1px solid rgba(255,255,255,.06);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(40px) saturate(150%);animation:pickerSlideIn .2s cubic-bezier(.22,1,.36,1);';
+  panel.className = 'reaction-picker-v2';
   // Quick reactions row
-  const quickEmojis = ['👍','❤️','😂','😮','😢','🔥','✨','👀','🎉','💯','😍','💀','🤣','😭','🥺','💜','👏','🤔','😤','🥳'];
-  let html = '<div style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.06);"><div style="display:flex;flex-wrap:wrap;gap:2px;">';
+  const quickEmojis = ['👍','❤️','😂','😮','😢','🔥','✨','👀','🎉','💯'];
+  let html = '<div class="rpv-quick">';
   quickEmojis.forEach(em => {
-    html += `<button style="width:32px;height:32px;border:none;background:transparent;border-radius:8px;font-size:18px;cursor:pointer;transition:all .1s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.transform='scale(1.2)'" onmouseout="this.style.background='transparent';this.style.transform=''" onclick="toggleReaction('${escapeHTML(msgId)}','${em}','${context}');document.getElementById('reaction-emoji-picker')?.remove()">${em}</button>`;
-  });
-  html += '</div></div>';
-  // Search
-  html += '<div style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.04);"><input id="reaction-emoji-search" placeholder="Search emojis…" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:6px 10px;color:#fff;font-family:DM Sans,sans-serif;font-size:12px;outline:none;box-sizing:border-box;" oninput="_filterReactionEmojis(this.value)"></div>';
-  // Categories
-  html += '<div id="reaction-emoji-grid" style="flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-wrap:wrap;gap:2px;align-content:flex-start;">';
-  const allEmojis = EMOJI_PICKER_TABS.filter(t => t.emojis).flatMap(t => t.emojis);
-  allEmojis.forEach(em => {
-    html += `<button class="reaction-em-btn" data-emoji="${em}" style="width:32px;height:32px;border:none;background:transparent;border-radius:8px;font-size:18px;cursor:pointer;transition:all .1s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.transform='scale(1.2)'" onmouseout="this.style.background='transparent';this.style.transform=''" onclick="toggleReaction('${escapeHTML(msgId)}','${em}','${context}');document.getElementById('reaction-emoji-picker')?.remove()">${em}</button>`;
+    html += `<button class="rpv-quick-btn" onclick="toggleReaction('${escapeHTML(msgId)}','${em}','${context}');document.getElementById('reaction-emoji-picker')?.remove()">${em}</button>`;
   });
   html += '</div>';
+  // Search
+  html += '<div class="rpv-search-wrap"><input class="rpv-search" id="reaction-emoji-search" placeholder="Search emojis…" oninput="_filterReactionEmojis(this.value)"></div>';
+  // Category tabs
+  const cats = EMOJI_PICKER_TABS.filter(t => t.emojis && t.emojis.length);
+  html += '<div class="rpv-categories">';
+  cats.forEach((cat, i) => {
+    html += `<button class="rpv-cat-btn ${i===0?'active':''}" data-cat-idx="${i}" onclick="_scrollReactionCat(${i},this)" title="${escapeHTML(cat.label||'')}">${cat.emojis[0]||'😀'}</button>`;
+  });
+  html += '</div>';
+  // Emoji grid
+  html += '<div id="reaction-emoji-grid" class="rpv-grid">';
+  cats.forEach((cat, catIdx) => {
+    cat.emojis.forEach(em => {
+      html += `<button class="rpv-emoji-btn reaction-em-btn" data-emoji="${em}" data-cat="${catIdx}" onclick="toggleReaction('${escapeHTML(msgId)}','${em}','${context}');document.getElementById('reaction-emoji-picker')?.remove()" onmouseenter="_previewReactionEmoji(this,'${em}')">${em}</button>`;
+    });
+  });
+  html += '</div>';
+  // Preview bar
+  html += '<div class="rpv-preview" id="rpv-preview"><span class="rpv-preview-emoji">😀</span><span class="rpv-preview-name">Hover an emoji to preview</span></div>';
   panel.innerHTML = html;
   document.body.appendChild(panel);
   // Position
-  const PW = 380, PH = 400;
+  const PW = 420, PH = 440;
   let left = x, top = y - PH - 8;
   if (top < 8) top = y + 8;
   if (left + PW > window.innerWidth - 8) left = window.innerWidth - PW - 8;
@@ -7436,6 +7644,20 @@ function _openReactionEmojiPicker(x, y, msgId, context) {
     function _close(e) { if (!panel.contains(e.target)) { panel.remove(); document.removeEventListener('mousedown', _close); } }
     document.addEventListener('mousedown', _close);
   }, 10);
+}
+function _previewReactionEmoji(btn, emoji) {
+  const preview = document.getElementById('rpv-preview');
+  if (!preview) return;
+  preview.querySelector('.rpv-preview-emoji').textContent = emoji;
+  preview.querySelector('.rpv-preview-name').textContent = emoji;
+}
+function _scrollReactionCat(catIdx, btn) {
+  document.querySelectorAll('.rpv-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const grid = document.getElementById('reaction-emoji-grid');
+  if (!grid) return;
+  const firstInCat = grid.querySelector(`[data-cat="${catIdx}"]`);
+  if (firstInCat) firstInCat.scrollIntoView({block:'start',behavior:'smooth'});
 }
 function _filterReactionEmojis(query) {
   const grid = document.getElementById('reaction-emoji-grid');
@@ -7522,7 +7744,9 @@ function updateReactionUI(msgId, emoji, users, context) {
     container.appendChild(pill);
   }
   pill.className = 'r-pill' + (isMine ? ' mine' : '');
-  pill.innerHTML = emoji + ' ' + users.length;
+  const tooltip = users.slice(0,5).join(', ') + (users.length > 5 ? ` +${users.length-5} more` : '');
+  pill.title = tooltip;
+  pill.innerHTML = `<span class="r-emoji">${emoji}</span><span class="r-count">${users.length}</span>`;
   // Super reaction animation (Radiance / Radiance+ users)
   const tier = CU?.radianceTier || CU?.subscription || '';
   if (isMine && (tier === 'radiance' || tier === 'radiance_plus' || tier === 'radiance+')) {
@@ -12950,6 +13174,7 @@ function buildProfileNav(scroll) {
     {type:'item', id:'appearance', icon:_svgIcons.appearance, label:'Appearance'},
     {type:'item', id:'notifications', icon:_svgIcons.notif_messages, label:'Notifications'},
     {type:'item', id:'game_collection', icon:_svgIcons.game_collection, label:'Apps & Games'},
+    {type:'item', id:'keybinds', icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8.01"/><line x1="10" y1="8" x2="10" y2="8.01"/><line x1="14" y1="8" x2="14" y2="8.01"/><line x1="18" y1="8" x2="18" y2="8.01"/><line x1="6" y1="12" x2="6" y2="12.01"/><line x1="18" y1="12" x2="18" y2="12.01"/><line x1="8" y1="16" x2="16" y2="16"/></svg>', label:'Keyboard Shortcuts'},
     {type:'sep'},
     {type:'section', label:'ADVANCED'},
     {type:'item', id:'my_data', icon:_svgIcons.my_data, label:'My Data'},
@@ -13773,6 +13998,9 @@ function buildProfileView(tab) {
   else if (tab === 'arsenal') {
     renderArsenalView(main);
   }
+  else if (tab === 'keybinds') {
+    _renderKeybindsSettings(main);
+  }
   else {
     main.innerHTML = `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('construction','48')}</div><h3>Coming Soon</h3><p>These settings are on the way!</p></div>`;
   }
@@ -13885,10 +14113,45 @@ async function updateNotifBadge() {
 }
 
 async function toggleNotifPanel() {
-  notifPanelOpen=!notifPanelOpen;
-  const panel=document.getElementById('notif-panel');
-  panel.classList.toggle('open',notifPanelOpen);
-  if(notifPanelOpen){await buildNotifList();}
+  // Use new centered modal style (matching deep search)
+  const existing = document.getElementById('notif-panel-v2');
+  if (existing) {
+    _closeEl('notif-panel-v2'); _closeEl('notif-panel-v2-overlay');
+    notifPanelOpen = false;
+    return;
+  }
+  notifPanelOpen = true;
+  const overlay = document.createElement('div');
+  overlay.className = 'notif-panel-v2-overlay';
+  overlay.id = 'notif-panel-v2-overlay';
+  overlay.onclick = () => { _closeEl('notif-panel-v2'); _closeEl('notif-panel-v2-overlay'); notifPanelOpen=false; };
+  document.body.appendChild(overlay);
+  const panel = document.createElement('div');
+  panel.className = 'notif-panel-v2';
+  panel.id = 'notif-panel-v2';
+  panel.innerHTML = `
+    <div class="npv-header">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <h3>Inbox</h3>
+      <button onclick="markAllRead();buildNotifList()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Mark all read</button>
+      <button onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
+    </div>
+    <div class="npv-tabs" id="npv-tabs">
+      <button class="npv-tab active" onclick="_setNotifTab('all',this)">All</button>
+      <button class="npv-tab" onclick="_setNotifTab('unread',this)">Unread</button>
+      <button class="npv-tab" onclick="_setNotifTab('mentions',this)">Mentions</button>
+      <button class="npv-tab" onclick="_setNotifTab('friends',this)">Friends</button>
+    </div>
+    <div class="npv-list" id="np-list"><div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">Loading...</div></div>`;
+  document.body.appendChild(panel);
+  await buildNotifList();
+}
+let _notifTabFilter = 'all';
+function _setNotifTab(tab, btn) {
+  _notifTabFilter = tab;
+  document.querySelectorAll('.npv-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  buildNotifList();
 }
 
 async function buildNotifList() {
@@ -13915,6 +14178,11 @@ async function buildNotifList() {
 
   // Sort by time descending
   notifs.sort((a,b) => new Date(b.time||0) - new Date(a.time||0));
+
+  // Apply tab filter
+  if (_notifTabFilter === 'unread') notifs = notifs.filter(n => !n.read);
+  else if (_notifTabFilter === 'mentions') notifs = notifs.filter(n => n.type === 'mention');
+  else if (_notifTabFilter === 'friends') notifs = notifs.filter(n => n.type === 'friend_request' || n.type === 'friend_accept');
 
   if(!notifs.length){
     list.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;">'
@@ -20657,9 +20925,10 @@ function addCustomGameFromSearch() {
 // ════════════════════════════════════════════
 
 const PROFILE_WIDGET_DEFS = [
-  {id:'game_collection',label:'Game Collection',desc:'Show your game library on your profile',icon:'🎮',color:'#3ecf6e'},
-  {id:'favourite_game',label:'Favourite Game',desc:'Highlight your all-time favourite game',icon:'⭐',color:'#f59e0b'},
-  {id:'primary_bastion',label:'Primary Bastion',desc:'Feature a public bastion with a join button',icon:'🏰',color:'#60a5fa'},
+  {id:'game_collection',label:'Games I Like',desc:'Show your favourite games in a masonry grid',icon:'🎮',color:'#3ecf6e',preview:'grid'},
+  {id:'favourite_game',label:'Favourite Game',desc:'Feature one game as a large showcase card',icon:'⭐',color:'#f59e0b',preview:'card'},
+  {id:'games_rotation',label:'Games in Rotation',desc:'Scrollable carousel of games you currently play',icon:'🔄',color:'#60a5fa',preview:'carousel'},
+  {id:'primary_bastion',label:'Primary Bastion',desc:'Feature a public bastion with a join button',icon:'🏰',color:'#a78bfa',preview:'bastion'},
 ];
 
 function _getProfileWidgets() {
@@ -20674,73 +20943,135 @@ function renderProfileWidgetsTab(main) {
   const widgets = _getProfileWidgets();
   const games = CU.gameCollection || [];
   const bastions = CU.bastions || [];
+  const enabledWidgets = widgets.filter(w => w.enabled);
 
-  let widgetListHtml = '';
-  PROFILE_WIDGET_DEFS.forEach(def => {
-    const wState = widgets.find(w => w.id === def.id) || {id:def.id,enabled:false,config:{}};
-    const isOn = wState.enabled;
+  let activeWidgetsHtml = '';
+  enabledWidgets.forEach(wState => {
+    const def = PROFILE_WIDGET_DEFS.find(d => d.id === wState.id);
+    if (!def) return;
     let configHtml = '';
 
-    if (def.id === 'favourite_game' && isOn) {
+    if (def.id === 'favourite_game') {
       const favGame = wState.config?.gameName || '';
-      configHtml = `<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Select Game</div>
-        <select id="pw-fav-game-select" class="settings-input" style="padding:8px 10px;font-size:12px;" onchange="updateWidgetConfig('favourite_game',{gameName:this.value})">
-          <option value="">— Choose from your collection —</option>
-          ${games.map(g => `<option value="${escapeHTML(g.name)}" ${favGame===g.name?'selected':''}>${escapeHTML(g.name)}</option>`).join('')}
-        </select>
-        ${!games.length ? '<div style="font-size:11px;color:var(--muted);margin-top:6px;">Add games to your collection first</div>' : ''}
-      </div>`;
+      configHtml = `<select class="settings-input" style="padding:8px 10px;font-size:12px;margin-top:8px;" onchange="updateWidgetConfig('favourite_game',{gameName:this.value})">
+        <option value="">— Choose from your collection —</option>
+        ${games.map(g => `<option value="${escapeHTML(g.name)}" ${favGame===g.name?'selected':''}>${escapeHTML(g.name)}</option>`).join('')}
+      </select>`;
     }
-
-    if (def.id === 'primary_bastion' && isOn) {
+    if (def.id === 'primary_bastion') {
       const selBastion = wState.config?.bastionIdx ?? '';
-      configHtml = `<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Select Bastion</div>
-        <select id="pw-bastion-select" class="settings-input" style="padding:8px 10px;font-size:12px;" onchange="updateWidgetConfig('primary_bastion',{bastionIdx:parseInt(this.value)||0,bastionName:this.options[this.selectedIndex].text})">
-          ${bastions.length ? bastions.map((b,i) => `<option value="${i}" ${selBastion===i?'selected':''}>${escapeHTML(b.name||'Bastion '+(i+1))}</option>`).join('') : '<option value="">— No bastions joined —</option>'}
-        </select>
-        <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:6px;">Only works if the bastion is public. Others will see a join invite.</div>
+      configHtml = `<select class="settings-input" style="padding:8px 10px;font-size:12px;margin-top:8px;" onchange="updateWidgetConfig('primary_bastion',{bastionIdx:parseInt(this.value)||0,bastionName:this.options[this.selectedIndex].text})">
+        ${bastions.length ? bastions.map((b,i) => `<option value="${i}" ${selBastion===i?'selected':''}>${escapeHTML(b.name||'Bastion '+(i+1))}</option>`).join('') : '<option value="">— No bastions joined —</option>'}
+      </select>`;
+    }
+    if (def.id === 'game_collection' || def.id === 'games_rotation') {
+      const maxShow = wState.config?.maxShow || 8;
+      configHtml = `<div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+        <span style="font-size:11px;color:rgba(255,255,255,.3);">Show up to</span>
+        <input type="range" min="3" max="12" value="${maxShow}" style="flex:1;" oninput="this.nextElementSibling.textContent=this.value" onchange="updateWidgetConfig('${def.id}',{maxShow:parseInt(this.value)})">
+        <span style="font-size:12px;color:rgba(255,255,255,.5);font-weight:700;min-width:18px;text-align:center;">${maxShow}</span>
+        <span style="font-size:11px;color:rgba(255,255,255,.3);">games</span>
       </div>`;
     }
 
-    if (def.id === 'game_collection' && isOn) {
-      const maxShow = wState.config?.maxShow || 6;
-      configHtml = `<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Max Games Shown</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <input type="range" min="3" max="12" value="${maxShow}" style="flex:1;" oninput="document.getElementById('pw-gc-count').textContent=this.value" onchange="updateWidgetConfig('game_collection',{maxShow:parseInt(this.value)})">
-          <span id="pw-gc-count" style="font-size:12px;color:rgba(255,255,255,.5);font-weight:700;min-width:18px;text-align:center;">${maxShow}</span>
-        </div>
-      </div>`;
-    }
-
-    widgetListHtml += `<div class="pw-config-item" style="margin-bottom:8px;">
+    activeWidgetsHtml += `<div class="pw-config-item" style="margin-bottom:8px;">
       <div class="pw-drag"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="8" y2="6.01"/><line x1="16" y1="6" x2="16" y2="6.01"/><line x1="8" y1="12" x2="8" y2="12.01"/><line x1="16" y1="12" x2="16" y2="12.01"/><line x1="8" y1="18" x2="8" y2="18.01"/><line x1="16" y1="18" x2="16" y2="18.01"/></svg></div>
       <div class="pw-cfg-icon" style="background:${def.color}15;color:${def.color};">${def.icon}</div>
       <div class="pw-cfg-info">
         <div class="pw-cfg-name">${def.label}</div>
         <div class="pw-cfg-desc">${def.desc}</div>
+        ${configHtml}
       </div>
-      <button class="pw-toggle ${isOn?'on':''}" onclick="toggleProfileWidget('${def.id}',this)"></button>
-    </div>
-    ${configHtml}`;
+      <button style="background:none;border:none;color:rgba(248,113,113,.5);cursor:pointer;padding:4px;border-radius:6px;transition:all .12s;display:flex;align-items:center;" title="Remove widget" onclick="toggleProfileWidget('${def.id}',null)" onmouseover="this.style.color='var(--red)';this.style.background='rgba(248,113,113,.1)'" onmouseout="this.style.color='rgba(248,113,113,.5)';this.style.background='none'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg></button>
+    </div>`;
   });
+
+  if (!activeWidgetsHtml) {
+    activeWidgetsHtml = `<div style="text-align:center;padding:30px 20px;color:rgba(255,255,255,.2);">
+      <div style="font-size:28px;margin-bottom:10px;opacity:.3;">📦</div>
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:4px;">No widgets added</div>
+      <div style="font-size:12px;">Click the button below to add your first widget</div>
+    </div>`;
+  }
 
   main.innerHTML = `<div style="padding:24px;">
     <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Profile Widgets</div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Add, remove and customize the widgets shown on your public profile card.</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize your profile with widgets — just like Discord.</div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:0;">
-      ${widgetListHtml}
+    <div style="display:flex;flex-direction:column;gap:0;margin-bottom:16px;">
+      ${activeWidgetsHtml}
     </div>
+    <button onclick="_openAddWidgetModal()" style="width:100%;padding:14px;border-radius:14px;border:2px dashed rgba(255,249,62,.15);background:rgba(255,249,62,.02);color:var(--accent);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.background='rgba(255,249,62,.05)'" onmouseout="this.style.borderColor='rgba(255,249,62,.15)';this.style.background='rgba(255,249,62,.02)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Profile Widget
+    </button>
     <div style="margin-top:20px;padding:14px;background:rgba(254,248,61,.03);border:1px solid rgba(254,248,61,.08);border-radius:12px;">
       <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.6;">
-        <strong style="color:rgba(255,255,255,.5);">Tip:</strong> Widgets appear on your public profile. Others viewing your profile will see the enabled widgets with your configured content. The <strong>Primary Bastion</strong> widget only works if the bastion is public — visitors can click to join directly from your profile.
+        <strong style="color:rgba(255,255,255,.5);">Tip:</strong> Widgets appear on your public profile. Drag to reorder. The <strong>Primary Bastion</strong> widget only works if the bastion is public.
       </div>
     </div>
   </div>`;
+}
+
+function _openAddWidgetModal() {
+  document.querySelector('.pw-add-widget-modal-overlay')?.remove();
+  const widgets = _getProfileWidgets();
+  const games = CU.gameCollection || [];
+  const overlay = document.createElement('div');
+  overlay.className = 'pw-add-widget-modal-overlay';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  let listHtml = '';
+  PROFILE_WIDGET_DEFS.forEach(def => {
+    const wState = widgets.find(w => w.id === def.id);
+    const isOn = wState?.enabled;
+    const previewImg = games.length > 0 && games[0].coverUrl ? `<img src="${escapeHTML(games[0].coverUrl)}">` : `<span style="font-size:22px;">${def.icon}</span>`;
+    listHtml += `<div class="pw-widget-option ${isOn?'active':''}" data-widget-id="${def.id}">
+      <div class="pwo-preview">${previewImg}</div>
+      <div class="pwo-info">
+        <div class="pwo-name">${def.label}</div>
+        <div class="pwo-desc">${def.desc}</div>
+      </div>
+      ${isOn
+        ? `<div class="pwo-added" title="Already added"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg></div>`
+        : `<button class="pwo-add-btn" onclick="event.stopPropagation();_addWidgetFromModal('${def.id}')" title="Add widget">+</button>`
+      }
+    </div>`;
+  });
+  overlay.innerHTML = `<div class="pw-add-widget-modal">
+    <div class="pwm-header">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h3>Add Profile Widget</h3>
+        <button onclick="this.closest('.pw-add-widget-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
+      </div>
+      <p>Choose a widget to customize your profile</p>
+      <input class="pwm-search" placeholder="Search widgets…" oninput="_filterWidgetOptions(this.value)">
+    </div>
+    <div class="pwm-list">${listHtml}</div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function _filterWidgetOptions(q) {
+  const list = document.querySelector('.pw-add-widget-modal .pwm-list');
+  if (!list) return;
+  list.querySelectorAll('.pw-widget-option').forEach(el => {
+    const name = el.querySelector('.pwo-name')?.textContent?.toLowerCase() || '';
+    const desc = el.querySelector('.pwo-desc')?.textContent?.toLowerCase() || '';
+    el.style.display = (!q || name.includes(q.toLowerCase()) || desc.includes(q.toLowerCase())) ? '' : 'none';
+  });
+}
+
+async function _addWidgetFromModal(widgetId) {
+  const widgets = _getProfileWidgets();
+  let w = widgets.find(w => w.id === widgetId);
+  if (!w) { w = {id:widgetId,enabled:false,config:{}}; widgets.push(w); }
+  w.enabled = true;
+  _setProfileWidgets(widgets);
+  await saveUser();
+  document.querySelector('.pw-add-widget-modal-overlay')?.remove();
+  buildProfileView('profile_widgets');
+  toast('Widget added!', 'success');
 }
 
 async function toggleProfileWidget(widgetId, btnEl) {
@@ -20775,18 +21106,18 @@ function renderProfileWidgetsOnCard(u, containerEl) {
     if (!w.enabled) return;
 
     if (w.id === 'game_collection' && games.length) {
-      const max = w.config?.maxShow || 6;
-      html += `<div class="pw-widget">
+      const max = w.config?.maxShow || 8;
+      const isOwnProfile = u.username === CU?.username;
+      html += `<div class="pw-widget" style="padding:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div>
-            <div class="pw-widget-title" style="margin-bottom:2px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> Games I like</div>
-            <div style="font-size:9px;color:rgba(255,255,255,.15);">${Math.min(games.length,max)} of ${games.length} games</div>
-          </div>
+          <div class="pw-widget-title" style="margin-bottom:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> Games I Like</div>
+          <span style="font-size:9px;color:rgba(255,255,255,.15);font-weight:600;">${Math.min(games.length,max)} of ${games.length}</span>
         </div>
-        <div class="pw-gc-grid">${games.slice(0,max).map(g => `<div class="pw-gc-item" title="${escapeHTML(g.name)}">
-          <div class="pw-gc-icon">${g.coverUrl ? `<img src="${escapeHTML(g.coverUrl)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02));">${g.icon||'🎮'}</div>`}</div>
-          <div class="pw-gc-name">${escapeHTML(g.name)}</div>
-        </div>`).join('')}${games.length > max ? `<div class="pw-gc-item" style="opacity:.5;"><div class="pw-gc-icon" style="font-size:14px;background:rgba(255,255,255,.03);">+${games.length-max}</div><div class="pw-gc-name">more</div></div>` : ''}</div>
+        <div class="pw-gc-masonry">${games.slice(0,max).map(g => `<div class="pw-gc-card">
+          ${g.coverUrl ? `<img src="${escapeHTML(g.coverUrl)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02));">${g.icon||'🎮'}</div>`}
+          <div class="gc-hover-name">${escapeHTML(g.name)}</div>
+          ${isOwnProfile ? `<button class="gc-delete-btn" onclick="event.stopPropagation();_removeGameFromCollection('${escapeHTML(g.name)}')" title="Remove"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>` : ''}
+        </div>`).join('')}${isOwnProfile ? `<div class="pw-gc-add-card" onclick="showView('profile');setTimeout(()=>buildProfileView('game_collection'),100)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add</div>` : ''}</div>
       </div>`;
     }
 
@@ -20795,15 +21126,28 @@ function renderProfileWidgetsOnCard(u, containerEl) {
       if (fg) {
         html += `<div class="pw-widget">
           <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Favourite Game</div>
-          <div class="pw-game-card">
-            <div class="pw-game-cover">${fg.coverUrl ? `<img src="${escapeHTML(fg.coverUrl)}" alt="${escapeHTML(fg.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.03));">${fg.icon||'⭐'}</div>`}</div>
-            <div class="pw-game-info">
-              <div class="pw-game-name">${escapeHTML(fg.name)}</div>
-              <div class="pw-game-genre">${escapeHTML(fg.genre||'Game')}</div>
+          <div class="pw-fav-large-card">
+            <div class="pfl-cover">${fg.coverUrl ? `<img src="${escapeHTML(fg.coverUrl)}" alt="${escapeHTML(fg.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.03));">${fg.icon||'⭐'}</div>`}</div>
+            <div class="pfl-info">
+              <div class="pfl-name">${escapeHTML(fg.name)}</div>
+              <div class="pfl-genre">${escapeHTML(fg.genre||'Game')}</div>
+              <div class="pfl-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> All-time favourite</div>
             </div>
           </div>
         </div>`;
       }
+    }
+
+    if (w.id === 'games_rotation' && games.length) {
+      const max = w.config?.maxShow || 6;
+      const rotationGames = games.slice(0, max);
+      html += `<div class="pw-widget">
+        <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg> Currently Playing</div>
+        <div class="pw-rotation-carousel">${rotationGames.map(g => `<div class="pw-rotation-card">
+          ${g.coverUrl ? `<img src="${escapeHTML(g.coverUrl)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(96,165,250,.02));">${g.icon||'🎮'}</div>`}
+          <div class="prc-name">${escapeHTML(g.name)}</div>
+        </div>`).join('')}</div>
+      </div>`;
     }
 
     if (w.id === 'primary_bastion' && w.config?.bastionIdx !== undefined) {
@@ -20829,6 +21173,15 @@ function renderProfileWidgetsOnCard(u, containerEl) {
   });
 
   containerEl.innerHTML = html;
+}
+
+async function _removeGameFromCollection(gameName) {
+  if (!CU.gameCollection) return;
+  CU.gameCollection = CU.gameCollection.filter(g => g.name !== gameName);
+  await saveUser();
+  const wc = document.getElementById('up-widgets-container');
+  if (wc) renderProfileWidgetsOnCard(CU, wc);
+  toast('Game removed','info');
 }
 
 function _renderProfileWidgetManager(mgr) {
@@ -20860,11 +21213,11 @@ function _renderProfileWidgetManager(mgr) {
       </select>`;
     }
 
-    if (def.id === 'game_collection' && isOn) {
+    if ((def.id === 'game_collection' || def.id === 'games_rotation') && isOn) {
       const maxShow = wState.config?.maxShow || 6;
       configHtml = `<div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
         <span style="font-size:10px;color:rgba(255,255,255,.3);">Show</span>
-        <input type="range" min="3" max="12" value="${maxShow}" style="flex:1;height:4px;" onchange="_updateWidgetFromProfile('game_collection',{maxShow:parseInt(this.value)})">
+        <input type="range" min="3" max="12" value="${maxShow}" style="flex:1;height:4px;" onchange="_updateWidgetFromProfile('${def.id}',{maxShow:parseInt(this.value)})">
         <span style="font-size:10px;color:rgba(255,255,255,.4);font-weight:700;min-width:14px;">${maxShow}</span>
       </div>`;
     }
@@ -23486,35 +23839,42 @@ function showPinnedMessages() {
   const ctx = curDM?'dm':'ch';
   const pins = getPinnedMessages(ctx);
   document.getElementById('pins-panel')?.remove();
+  document.getElementById('pins-panel-overlay')?.remove();
+  // Centered modal overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'pins-panel-overlay';
+  overlay.className = 'pins-panel-v2-overlay';
+  overlay.onclick = () => { _closeEl('pins-panel'); _closeEl('pins-panel-overlay'); };
+  document.body.appendChild(overlay);
   const panel = document.createElement('div');
   panel.id = 'pins-panel';
-  panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;width:360px;background:var(--panel);border-left:1px solid var(--border);z-index:7000;display:flex;flex-direction:column;animation:slideInRight .2s cubic-bezier(.22,1,.36,1);box-shadow:-12px 0 48px rgba(0,0,0,.5);';
-  panel.innerHTML = '<div style="padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;background:linear-gradient(180deg,rgba(255,249,62,.015),transparent);">'
-    +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg>'
-    +'<div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;flex:1;">Pinned Messages</div>'
-    +'<span style="font-size:10px;color:rgba(255,255,255,.2);background:rgba(255,255,255,.04);padding:2px 8px;border-radius:100px;font-weight:600;">'+pins.length+'</span>'
-    +'<button id="pins-close-btn" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background=\'rgba(255,255,255,.07)\'" onmouseout="this.style.background=\'rgba(255,255,255,.04)\'">'
-    +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
-    +'</div>'
-    +'<div style="flex:1;overflow-y:auto;padding:10px 12px;">'
-    +(pins.length
-      ? pins.map((p,i)=>'<div style="padding:12px 14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.04);border-radius:10px;margin-bottom:6px;transition:background .12s;" onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'rgba(255,255,255,.025)\'">'
-          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-          +'<span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.7);">'+escapeHTML(p.from||'')+'</span>'
-          +'<button data-unpin-idx="'+i+'" data-unpin-id="'+CSS.escape(p.id)+'" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05);border-radius:6px;color:rgba(255,255,255,.3);cursor:pointer;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .12s;" title="Unpin">✕</button>'
-          +'</div>'
-          +'<div style="font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.5;">'+escapeHTML(p.text)+'</div>'
-          +'</div>').join('')
-      : '<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,.2);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:12px;"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;margin-bottom:4px;">No pinned messages</div><div style="font-size:12px;opacity:.6;">Right-click a message to pin it.</div></div>')
-    +'</div>';
+  panel.className = 'pins-panel-v2';
+  panel.innerHTML = `
+    <div style="padding:20px 22px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg>
+      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex:1;color:#fff;">Pinned Messages</div>
+      <span style="font-size:10px;color:rgba(255,255,255,.25);background:rgba(255,255,255,.04);padding:2px 10px;border-radius:100px;font-weight:600;">${pins.length}</span>
+      <button onclick="_closeEl('pins-panel');_closeEl('pins-panel-overlay')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
+    </div>
+    <div id="pins-list-content" style="flex:1;overflow-y:auto;padding:10px 14px;">${pins.length
+      ? pins.map((p,i) => `<div class="asr-item" style="margin-bottom:4px;">
+          <div class="asr-av">${buildAvatarHTML(null, p.from || '', 32)}</div>
+          <div class="asr-body" style="flex:1;min-width:0;">
+            <div class="asr-meta">
+              <span class="asr-from">${escapeHTML(p.from || '')}</span>
+              <span class="asr-time">${p.pinned ? formatTimeAgo(p.pinned) : ''}</span>
+            </div>
+            <div class="asr-text">${escapeHTML(p.text)}</div>
+          </div>
+          <button data-unpin-idx="${i}" data-unpin-id="${CSS.escape(p.id)}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:rgba(255,255,255,.3);cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;" title="Unpin" onmouseover="this.style.color='var(--red)';this.style.background='rgba(248,113,113,.1)'" onmouseout="this.style.color='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.04)'">✕</button>
+        </div>`).join('')
+      : '<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,.2);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:12px;"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;margin-bottom:4px;">No pinned messages</div><div style="font-size:12px;opacity:.6;">Right-click a message to pin it.</div></div>'
+    }</div>`;
   document.body.appendChild(panel);
-  // Wire close button
-  const pinsCloseBtn = document.getElementById('pins-close-btn');
-  if (pinsCloseBtn) pinsCloseBtn.addEventListener('click', ()=>_closeEl('pins-panel'));
   // Wire unpin buttons via delegation
-  panel.querySelector('div[style*="flex:1"]')?.addEventListener('click', e => {
+  panel.querySelector('#pins-list-content')?.addEventListener('click', e => {
     const btn = e.target.closest('[data-unpin-idx]');
-    if (btn) unpinMessage(btn.dataset.unpinId, parseInt(btn.dataset.unpinIdx));
+    if (btn) { unpinMessage(btn.dataset.unpinId, parseInt(btn.dataset.unpinIdx)); }
   });
 }
 function unpinMessage(msgId, idx) {
@@ -27818,27 +28178,37 @@ function openThread(msgId, text, from) {
   if (!bid) return;
   _activeThread = { msgId, text, from, bid, chName };
   document.getElementById('thread-panel')?.remove();
+  document.getElementById('thread-panel-overlay')?.remove();
+  // Overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'thread-panel-overlay';
+  overlay.className = 'thread-panel-v2-overlay';
+  overlay.onclick = () => _closeThread();
+  document.body.appendChild(overlay);
   const panel = document.createElement('div');
-  panel.className = 'thread-panel';
+  panel.className = 'thread-panel-v2';
   panel.id = 'thread-panel';
   panel.innerHTML = `
-    <div class="thread-panel-header">
+    <div class="thread-panel-header" style="padding:18px 22px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <span class="tph-title">Thread</span>
-      <button class="tph-close" onclick="_closeThread()">✕</button>
+      <span style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex:1;color:#fff;">Thread</span>
+      <button onclick="_closeThread()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
     </div>
-    <div class="thread-origin">
-      <div class="to-author">${escapeHTML(from)}</div>
-      <div class="to-text">${escapeHTML(text.slice(0,200))}</div>
+    <div class="thread-origin" style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.015);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        ${buildAvatarHTML(null, from, 24)}
+        <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.7);">${escapeHTML(from)}</span>
+      </div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.5;padding-left:32px;">${escapeHTML(text.slice(0,200))}</div>
     </div>
-    <div class="thread-replies" id="thread-replies"></div>
+    <div class="thread-replies" id="thread-replies" style="flex:1;overflow-y:auto;padding:8px 14px;"></div>
     <div class="typing-indicator" id="thread-typing-bar" style="opacity:0;padding:4px 14px 2px;">
       <div class="typing-dots"><span></span><span></span><span></span></div>
       <span id="thread-typing-text"></span>
     </div>
-    <div class="thread-compose">
-      <textarea id="thread-input" placeholder="Reply to thread…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_sendThreadReply();}" oninput="_broadcastThreadTyping()"></textarea>
-      <button onclick="_sendThreadReply()">Reply</button>
+    <div class="thread-compose" style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.05);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
+      <textarea id="thread-input" placeholder="Reply to thread…" rows="1" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;padding:8px 12px;font-family:inherit;font-size:12.5px;resize:none;min-height:36px;max-height:100px;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_sendThreadReply();}" oninput="_broadcastThreadTyping()"></textarea>
+      <button onclick="_sendThreadReply()" style="padding:8px 14px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .12s;" onmouseover="this.style.background='var(--accent)';this.style.color='#060810'" onmouseout="this.style.background='var(--accent-dim)';this.style.color='var(--accent)'">Reply</button>
     </div>`;
   document.body.appendChild(panel);
   _listenThreadReplies(bid, chName, msgId);
@@ -27849,8 +28219,9 @@ function _closeThread() {
   if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch {} _threadTypingListenerOff = null; }
   if (_threadListener) { _threadListener(); _threadListener = null; }
   _activeThread = null;
+  _closeEl('thread-panel-overlay');
   const p = document.getElementById('thread-panel');
-  if (p) { p.style.opacity='0'; p.style.transform='translateX(100%)'; p.style.transition='all .2s ease'; setTimeout(()=>p.remove(),200); }
+  if (p) { p.style.opacity='0'; p.style.transform='translate(-50%,-50%) scale(.95)'; p.style.transition='all .15s ease'; setTimeout(()=>p.remove(),150); }
 }
 function _listenThreadReplies(bid, chName, msgId) {
   if (_threadListener) _threadListener();
@@ -28279,7 +28650,23 @@ function _runAdvSearch(q) {
         const loc = m._ctx === 'dm' ? m._loc : (m._loc ? '# ' + m._loc : '');
         const bastionTag = m._bastion ? `<span style="font-size:9px;color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);padding:1px 5px;border-radius:4px;margin-left:4px;">${escapeHTML(m._bastion)}</span>` : '';
         const timeStr = m.timestamp ? _formatSearchTime(m.timestamp) : '';
-        return `<div class="asr-item"><div class="asr-av">${buildAvatarHTML(null,m.from||'?',32)}</div><div class="asr-body"><div class="asr-meta"><span class="asr-from">${escapeHTML(m.from||'')}</span>${loc?`<span class="asr-channel">${escapeHTML(loc)}</span>`:''}${bastionTag}<span class="asr-time">${timeStr}</span></div><div class="asr-text">${hl}</div></div></div>`;
+        // Extract and render media previews (images, GIFs, videos, files)
+        let mediaHtml = '';
+        const txt = m.text || '';
+        const imgMatches = txt.match(/https?:\/\/\S+\.(png|jpg|jpeg|gif|webp|bmp|svg)(\?\S*)?/gi);
+        const vidMatches = txt.match(/https?:\/\/\S+\.(mp4|webm|mov)(\?\S*)?/gi);
+        const fileMatches = txt.match(/\[FTZFILE:([^\]]+)\]/gi) || txt.match(/https?:\/\/\S+\.(pdf|zip|rar|doc|docx|xls|xlsx|ppt|txt|csv|json|xml)(\?\S*)?/gi);
+        if (imgMatches || vidMatches || fileMatches) {
+          mediaHtml = '<div class="asr-media-preview">';
+          if (imgMatches) imgMatches.slice(0,4).forEach(url => { mediaHtml += `<img src="${escapeHTML(url)}" loading="lazy" alt="Image" onerror="this.style.display='none'">`; });
+          if (vidMatches) vidMatches.slice(0,2).forEach(url => { mediaHtml += `<video src="${escapeHTML(url)}" muted preload="metadata" style="max-width:120px;max-height:80px;border-radius:8px;border:1px solid rgba(255,255,255,.06);"></video>`; });
+          if (fileMatches) fileMatches.slice(0,3).forEach(f => {
+            const fname = f.replace(/\[FTZFILE:|]/g,'').split('/').pop().split('?')[0] || 'File';
+            mediaHtml += `<div class="asr-file-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${escapeHTML(fname.slice(0,30))}</div>`;
+          });
+          mediaHtml += '</div>';
+        }
+        return `<div class="asr-item"><div class="asr-av">${buildAvatarHTML(null,m.from||'?',32)}</div><div class="asr-body"><div class="asr-meta"><span class="asr-from">${escapeHTML(m.from||'')}</span>${loc?`<span class="asr-channel">${escapeHTML(loc)}</span>`:''}${bastionTag}<span class="asr-time">${timeStr}</span></div><div class="asr-text">${hl}</div>${mediaHtml}</div></div>`;
       }).join('');
     }
     results.innerHTML = memberHtml + msgHtml;
@@ -28298,50 +28685,202 @@ function _formatSearchTime(ts) {
 }
 
 // ════════════════════════════════════════════
-// KEYBOARD SHORTCUTS (PC ONLY)
+// KEYBOARD SHORTCUTS (CONFIGURABLE)
 // ════════════════════════════════════════════
 let _kbdShortcutsActive = false;
+const _defaultKeybinds = [
+  {id:'search',label:'Quick Search',desc:'Open the deep search panel',keys:['Ctrl','K'],section:'Navigation',action:()=>openAdvancedSearch()},
+  {id:'shortcuts',label:'Shortcut List',desc:'Show keyboard shortcuts overlay',keys:['Ctrl','/'],section:'Navigation',action:()=>_showKbdShortcuts()},
+  {id:'mute',label:'Toggle Mute',desc:'Mute/unmute notifications',keys:['Ctrl','Shift','M'],section:'Navigation',action:()=>toast('Notifications toggled','info')},
+  {id:'home',label:'Go Home',desc:'Navigate to the home view',keys:['Ctrl','H'],section:'Navigation',action:()=>showView('home')},
+  {id:'dms',label:'Open DMs',desc:'Navigate to direct messages',keys:['Ctrl','D'],section:'Navigation',action:()=>showView('dms')},
+  {id:'settings',label:'Open Settings',desc:'Navigate to settings',keys:['Ctrl',','],section:'Navigation',action:()=>showView('profile')},
+  {id:'notifications',label:'Toggle Notifications',desc:'Open/close notification panel',keys:['Ctrl','N'],section:'Navigation',action:()=>toggleNotifPanel()},
+  {id:'close',label:'Close Panels',desc:'Close open panels and overlays',keys:['Escape'],section:'General',action:()=>{
+    document.getElementById('thread-panel') && _closeThread();
+    if(document.getElementById('adv-search-panel')){_closeEl('adv-search-panel');_closeEl('adv-search-overlay');}
+    document.getElementById('pins-panel') && _closeEl('pins-panel');
+    _closeEl('pins-panel-overlay');
+    _closeEl('notif-panel-v2'); _closeEl('notif-panel-v2-overlay');
+    document.querySelector('.kbd-overlay')?.remove();
+    document.querySelector('.soundboard-panel')?.remove();
+    document.querySelector('.notif-settings-modal')?.remove();
+    document.querySelector('.pw-add-widget-modal-overlay')?.remove();
+    document.querySelector('.kbd-capture-overlay')?.remove();
+  }},
+];
+function _getKeybinds() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('ftz_keybinds') || 'null');
+    if (saved && Array.isArray(saved)) {
+      return _defaultKeybinds.map(def => {
+        const custom = saved.find(s => s.id === def.id);
+        return custom ? {...def, keys: custom.keys} : def;
+      });
+    }
+  } catch {}
+  return _defaultKeybinds;
+}
+function _saveKeybinds(binds) {
+  localStorage.setItem('ftz_keybinds', JSON.stringify(binds.map(b => ({id:b.id, keys:b.keys}))));
+}
+function _matchKeybind(e, keys) {
+  const needCtrl = keys.includes('Ctrl');
+  const needShift = keys.includes('Shift');
+  const needAlt = keys.includes('Alt');
+  const mainKey = keys.filter(k => !['Ctrl','Shift','Alt','Meta'].includes(k))[0] || '';
+  if (needCtrl !== (e.ctrlKey || e.metaKey)) return false;
+  if (needShift !== e.shiftKey) return false;
+  if (needAlt !== e.altKey) return false;
+  if (mainKey === 'Escape') return e.key === 'Escape';
+  return e.key.toLowerCase() === mainKey.toLowerCase();
+}
 function _initKeyboardShortcuts() {
   document.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
-    // Ctrl+K — Quick search
-    if (e.ctrlKey && e.key === 'k') { e.preventDefault(); openAdvancedSearch(); return; }
-    // Ctrl+/ — Shortcut list
-    if (e.ctrlKey && e.key === '/') { e.preventDefault(); _showKbdShortcuts(); return; }
-    // Ctrl+Shift+M — Toggle mute
-    if (e.ctrlKey && e.shiftKey && e.key === 'M') { e.preventDefault(); toast('Notifications toggled','info'); return; }
-    // Escape — Close panels
-    if (e.key === 'Escape') {
-      document.getElementById('thread-panel') && _closeThread();
-      if(document.getElementById('adv-search-panel')){_closeEl('adv-search-panel');_closeEl('adv-search-overlay');}
-      document.getElementById('pins-panel') && _closeEl('pins-panel');
-      document.querySelector('.kbd-overlay')?.remove();
-      document.querySelector('.soundboard-panel')?.remove();
-      document.querySelector('.notif-settings-modal')?.remove();
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+      // Escape still works in inputs
+      if (e.key === 'Escape') {
+        const closeBind = _getKeybinds().find(b => b.id === 'close');
+        if (closeBind) closeBind.action();
+      }
+      return;
+    }
+    const binds = _getKeybinds();
+    for (const bind of binds) {
+      if (_matchKeybind(e, bind.keys)) {
+        e.preventDefault();
+        bind.action();
+        return;
+      }
     }
   });
 }
 function _showKbdShortcuts() {
   document.querySelector('.kbd-overlay')?.remove();
+  const binds = _getKeybinds();
+  const sections = {};
+  binds.forEach(b => { if (!sections[b.section]) sections[b.section] = []; sections[b.section].push(b); });
   const el = document.createElement('div');
   el.className = 'kbd-overlay';
   el.onclick = e => { if (e.target === el) el.remove(); };
+  let sectionsHtml = '';
+  Object.entries(sections).forEach(([name, items]) => {
+    sectionsHtml += `<div class="kbd-section"><h3>${escapeHTML(name)}</h3>`;
+    items.forEach(b => {
+      sectionsHtml += `<div class="kbd-row"><span class="kr-label">${escapeHTML(b.label)}</span><div class="kr-keys">${b.keys.map(k=>`<span class="kr-key">${escapeHTML(k)}</span>`).join('')}</div></div>`;
+    });
+    sectionsHtml += '</div>';
+  });
   el.innerHTML = `<div class="kbd-card">
     <h2>Keyboard Shortcuts</h2>
-    <div class="kbd-sub">PC-only shortcuts for power users</div>
-    <div class="kbd-section"><h3>Navigation</h3>
-      <div class="kbd-row"><span class="kr-label">Quick Search</span><div class="kr-keys"><span class="kr-key">Ctrl</span><span class="kr-key">K</span></div></div>
-      <div class="kbd-row"><span class="kr-label">Shortcut List</span><div class="kr-keys"><span class="kr-key">Ctrl</span><span class="kr-key">/</span></div></div>
-      <div class="kbd-row"><span class="kr-label">Toggle Mute</span><div class="kr-keys"><span class="kr-key">Ctrl</span><span class="kr-key">Shift</span><span class="kr-key">M</span></div></div>
+    <div class="kbd-sub">Configurable in Settings > Keyboard Shortcuts</div>
+    ${sectionsHtml}
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;">
+      <button class="btn-g" style="padding:8px 20px;font-size:12px;" onclick="this.closest('.kbd-overlay').remove()">Close</button>
+      <button style="padding:8px 20px;font-size:12px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:8px;color:var(--accent);font-weight:700;cursor:pointer;transition:all .12s;" onclick="this.closest('.kbd-overlay').remove();showView('profile');setTimeout(()=>buildProfileView('keybinds'),100)">Customize</button>
     </div>
-    <div class="kbd-section"><h3>Messages</h3>
-      <div class="kbd-row"><span class="kr-label">Send Message</span><div class="kr-keys"><span class="kr-key">Enter</span></div></div>
-      <div class="kbd-row"><span class="kr-label">New Line</span><div class="kr-keys"><span class="kr-key">Shift</span><span class="kr-key">Enter</span></div></div>
-      <div class="kbd-row"><span class="kr-label">Close Panels</span><div class="kr-keys"><span class="kr-key">Esc</span></div></div>
-    </div>
-    <div style="text-align:center;margin-top:12px;"><button class="btn-g" style="padding:8px 20px;font-size:12px;" onclick="this.closest('.kbd-overlay').remove()">Close</button></div>
   </div>`;
   document.body.appendChild(el);
+}
+
+function _renderKeybindsSettings(main) {
+  const binds = _getKeybinds();
+  const sections = {};
+  binds.forEach(b => { if (!sections[b.section]) sections[b.section] = []; sections[b.section].push(b); });
+  let html = `<div style="padding:24px;">
+    <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Keyboard Shortcuts</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize keyboard shortcuts to match your workflow. Click "Edit" to rebind any shortcut.</div>
+    </div>`;
+  Object.entries(sections).forEach(([name, items]) => {
+    html += `<div style="margin-bottom:24px;">
+      <div class="settings-section-title">${escapeHTML(name)}</div>
+      <div class="kbd-settings-grid">`;
+    items.forEach(b => {
+      html += `<div class="kbd-setting-row">
+        <div class="ksr-action">
+          <div class="ksr-action-name">${escapeHTML(b.label)}</div>
+          <div class="ksr-action-desc">${escapeHTML(b.desc)}</div>
+        </div>
+        <div class="ksr-keys">${b.keys.map(k=>`<span class="ksr-key">${escapeHTML(k)}</span>`).join('')}</div>
+        <button class="ksr-edit-btn" onclick="_captureKeybind('${b.id}')">Edit</button>
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+  html += `<div style="display:flex;gap:8px;margin-top:20px;">
+    <button class="settings-save-btn-ghost" onclick="_resetKeybinds()">Reset to Defaults</button>
+  </div>
+  <div style="margin-top:20px;padding:14px;background:rgba(254,248,61,.03);border:1px solid rgba(254,248,61,.08);border-radius:12px;">
+    <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.6;">
+      <strong style="color:rgba(255,255,255,.5);">Tip:</strong> Press <strong>Ctrl+/</strong> anywhere to view all shortcuts quickly. Your custom bindings are saved locally in your browser.
+    </div>
+  </div></div>`;
+  main.innerHTML = html;
+}
+
+function _captureKeybind(bindId) {
+  document.querySelector('.kbd-capture-overlay')?.remove();
+  const bind = _getKeybinds().find(b => b.id === bindId);
+  if (!bind) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'kbd-capture-overlay';
+  overlay.innerHTML = `<div class="kbd-capture-card">
+    <h3>Rebind: ${escapeHTML(bind.label)}</h3>
+    <div class="kcc-desc">${escapeHTML(bind.desc)}</div>
+    <div class="kcc-keys" id="kcc-keys-display">
+      <span style="font-size:12px;color:rgba(255,255,255,.25);">Press your desired key combination...</span>
+    </div>
+    <div class="kcc-hint">Press Escape to cancel</div>
+    <div class="kcc-actions">
+      <button onclick="document.querySelector('.kbd-capture-overlay')?.remove()" style="padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;">Cancel</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  let captured = null;
+  function handleKey(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.key === 'Escape' && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+      document.removeEventListener('keydown', handleKey, true);
+      overlay.remove();
+      return;
+    }
+    const keys = [];
+    if (e.ctrlKey || e.metaKey) keys.push('Ctrl');
+    if (e.shiftKey) keys.push('Shift');
+    if (e.altKey) keys.push('Alt');
+    const mainKey = e.key;
+    if (!['Control','Shift','Alt','Meta'].includes(mainKey)) {
+      keys.push(mainKey.length === 1 ? mainKey.toUpperCase() : mainKey);
+      captured = keys;
+      const display = document.getElementById('kcc-keys-display');
+      if (display) display.innerHTML = keys.map(k => `<span class="kcc-key">${escapeHTML(k)}</span>`).join(' + ');
+      // Auto-save after brief delay
+      setTimeout(() => {
+        document.removeEventListener('keydown', handleKey, true);
+        overlay.remove();
+        _applyKeybind(bindId, captured);
+      }, 400);
+    }
+  }
+  document.addEventListener('keydown', handleKey, true);
+}
+
+function _applyKeybind(bindId, keys) {
+  const binds = _getKeybinds();
+  const bind = binds.find(b => b.id === bindId);
+  if (!bind) return;
+  bind.keys = keys;
+  _saveKeybinds(binds);
+  buildProfileView('keybinds');
+  toast(`Shortcut for "${bind.label}" updated to ${keys.join('+')}`, 'success');
+}
+
+function _resetKeybinds() {
+  localStorage.removeItem('ftz_keybinds');
+  buildProfileView('keybinds');
+  toast('Keyboard shortcuts reset to defaults', 'success');
 }
 
 // ════════════════════════════════════════════
@@ -28768,6 +29307,7 @@ if (typeof window !== 'undefined') setInterval(_updateLastSeen, 120000);
 // ════════════════════════════════════════════
 function _initNewFeatures() {
   _initKeyboardShortcuts();
+  _initRailNavTooltips();
   _renderFavourites();
 }
 // Hook into existing init — call after page loads

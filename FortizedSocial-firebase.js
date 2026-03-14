@@ -519,7 +519,7 @@ const FortizedSocial = (() => {
         if (_socketCallbacks.onTyping) _socketCallbacks.onTyping(data.room, data.users);
       });
       _socket.on('presence:update', function(data) {
-        if (_socketCallbacks.onStatusChange) _socketCallbacks.onStatusChange({ username: data.username, status: data.status });
+        if (_socketCallbacks.onStatusChange) _socketCallbacks.onStatusChange({ username: data.username, status: data.status, gameActivity: data.gameActivity || null });
       });
       _socket.on('notification:new', function(notif) {
         if (_socketCallbacks.onNewNotification) _socketCallbacks.onNewNotification(notif);

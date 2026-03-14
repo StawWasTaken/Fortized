@@ -7679,8 +7679,13 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
         const avWrap = entry.querySelector('.ml-av-wrap');
         if (ud.pfp && avWrap) {
-          const existingImg = avWrap.querySelector('img:not(.profile-status-dot)');
-          if (!existingImg) avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(status)};border:2.5px solid rgba(12,14,24,.98);"></span>`;
+          const existingImg = avWrap.querySelector('img:not(.profile-status-dot):not(.profile-decoration-overlay-ml)');
+          if (existingImg) {
+            existingImg.src = ud.pfp;
+            existingImg.onerror = function() { this.src = _defaultPfpUrl(u); };
+          } else {
+            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(status)};border:2.5px solid rgba(12,14,24,.98);"></span>`;
+          }
         }
         const badgesEl = entry.querySelector('.ml-badges');
         if (badgesEl && typeof getUserBadges === 'function') {
@@ -7688,7 +7693,13 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
           if (badges.length) badgesEl.innerHTML = badges.map(b => `<img src="${b.img}" title="${escapeHTML(b.tooltip||'')}" style="width:14px;height:14px;object-fit:contain;">`).join('');
         }
         const csEl = entry.querySelector('.ml-custom-status');
-        if (csEl && ud.customStatus) csEl.textContent = typeof ud.customStatus === 'object' ? (ud.customStatus.emoji||'') + ' ' + (ud.customStatus.text||'') : ud.customStatus;
+        if (csEl) {
+          if (ud.gameActivity?.name) {
+            csEl.innerHTML = '<span style="opacity:.6;font-size:11px;">🎮 Playing ' + escapeHTML(ud.gameActivity.name) + '</span>';
+          } else if (ud.customStatus) {
+            csEl.textContent = typeof ud.customStatus === 'object' ? (ud.customStatus.emoji||'') + ' ' + (ud.customStatus.text||'') : ud.customStatus;
+          }
+        }
         // Add profile decoration to member list
         if (ud.profileDecoration && avWrap && !avWrap.querySelector('.profile-decoration-overlay-ml')) {
           const decImg = document.createElement('img');
@@ -19638,22 +19649,19 @@ function initDesktopGameDetection() {
       const game = games[0]; // Primary game (first detected)
       if (_currentDetectedGame?.name !== game.name) {
         _currentDetectedGame = game;
-        // Enrich with IGDB data if available
-        const enriched = await _enrichDetectedGameIGDB(game);
-        _setGameActivity(enriched);
+        setGameActivity(game.name, game.icon);
       }
     } else if (_currentDetectedGame) {
       _currentDetectedGame = null;
-      _clearGameActivity();
+      setGameActivity(null);
     }
   });
 
   // Initial detection
   window.fortizedDesktop.detectGames().then(async (games) => {
     if (games.length > 0) {
-      const enriched = await _enrichDetectedGameIGDB(games[0]);
       _currentDetectedGame = games[0];
-      _setGameActivity(enriched);
+      setGameActivity(games[0].name, games[0].icon);
     }
   });
 }
@@ -19679,43 +19687,7 @@ async function _enrichDetectedGameIGDB(game) {
   return game;
 }
 
-function _setGameActivity(game) {
-  // Update the userbar activity display
-  const actRow = document.getElementById('rail-ub-activity-row');
-  const actIcon = document.getElementById('rail-ub-activity-icon');
-  const actName = document.getElementById('rail-ub-activity-name');
-  if (actRow) actRow.style.display = 'flex';
-  if (actIcon) {
-    if (game.coverThumb) {
-      actIcon.innerHTML = `<img src="${game.coverThumb}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">`;
-    } else {
-      actIcon.textContent = game.icon || '🎮';
-    }
-  }
-  if (actName) actName.textContent = game.name;
-
-  // Broadcast via Socket.io
-  if (typeof _socket !== 'undefined' && _socket?.connected) {
-    _socket.emit('activity:set', {
-      activity: {
-        name: game.name,
-        icon: game.icon,
-        coverThumb: game.coverThumb || null,
-        coverUrl: game.coverUrl || null,
-        genre: game.genre || null,
-        startedAt: game.detectedAt || new Date().toISOString(),
-      }
-    });
-  }
-}
-
-function _clearGameActivity() {
-  const actRow = document.getElementById('rail-ub-activity-row');
-  if (actRow) actRow.style.display = 'none';
-  if (typeof _socket !== 'undefined' && _socket?.connected) {
-    _socket.emit('activity:set', { activity: null });
-  }
-}
+// _setGameActivity and _clearGameActivity removed — use setGameActivity() instead
 
 // Initialize game detection when app loads (if desktop)
 if (typeof window !== 'undefined') {

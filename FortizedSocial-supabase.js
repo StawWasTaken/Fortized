@@ -5,7 +5,7 @@
 // existing UI code keeps working without changes.
 
 const SUPABASE_URL  = 'https://ufnjjddqnicbzyjfawrb.supabase.co';
-const SUPABASE_ANON = 'sb_publishable__Iy5M2qrRBe0uT9mItaw_w_PBW-wHZT';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbmpqZGRxbmljYnp5amZhd3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NTkzMjgsImV4cCI6MjA4ODIzNTMyOH0.5Sfc_wQO6T3mQT6lqsPTAntqyxhDZJqTrZ3GNkyQSEk';
 
 const FortizedSocial = (() => {
 

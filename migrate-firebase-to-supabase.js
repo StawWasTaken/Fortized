@@ -17,7 +17,7 @@
 
 const FIREBASE_DB_URL = 'https://fortized-5ffcf-default-rtdb.europe-west1.firebasedatabase.app';
 const SUPABASE_URL    = 'https://ufnjjddqnicbzyjfawrb.supabase.co';
-const SUPABASE_KEY    = 'sb_publishable__Iy5M2qrRBe0uT9mItaw_w_PBW-wHZT';
+const SUPABASE_KEY    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbmpqZGRxbmljYnp5amZhd3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NTkzMjgsImV4cCI6MjA4ODIzNTMyOH0.5Sfc_wQO6T3mQT6lqsPTAntqyxhDZJqTrZ3GNkyQSEk';
 
 async function main() {
   // Dynamic import for ESM-only @supabase/supabase-js

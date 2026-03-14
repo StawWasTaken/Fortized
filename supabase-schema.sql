@@ -298,18 +298,23 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 -- ── Enable Realtime for tables that need live updates ──
-ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE statuses;
-ALTER PUBLICATION supabase_realtime ADD TABLE dms;
-ALTER PUBLICATION supabase_realtime ADD TABLE bastion_msgs;
-ALTER PUBLICATION supabase_realtime ADD TABLE group_chat_messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE typing;
-ALTER PUBLICATION supabase_realtime ADD TABLE vc_signal;
-ALTER PUBLICATION supabase_realtime ADD TABLE voice_channels;
-ALTER PUBLICATION supabase_realtime ADD TABLE admin_bans;
-ALTER PUBLICATION supabase_realtime ADD TABLE admin_global_settings;
-ALTER PUBLICATION supabase_realtime ADD TABLE admin_staff;
-ALTER PUBLICATION supabase_realtime ADD TABLE admin_staff_revoked;
-ALTER PUBLICATION supabase_realtime ADD TABLE admin_force_refresh;
-ALTER PUBLICATION supabase_realtime ADD TABLE admin_clear_sessions;
-ALTER PUBLICATION supabase_realtime ADD TABLE bastions;
+-- Use DO block to safely add tables that may already be members
+DO $$
+DECLARE
+  _tbl TEXT;
+BEGIN
+  FOREACH _tbl IN ARRAY ARRAY[
+    'notifications','statuses','dms','bastion_msgs','group_chat_messages',
+    'typing','vc_signal','voice_channels','admin_bans','admin_global_settings',
+    'admin_staff','admin_staff_revoked','admin_force_refresh',
+    'admin_clear_sessions','bastions'
+  ]
+  LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables
+      WHERE pubname = 'supabase_realtime' AND tablename = _tbl
+    ) THEN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', _tbl);
+    END IF;
+  END LOOP;
+END $$;

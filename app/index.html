@@ -81,6 +81,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* Bastion drag-drop */
 .rail-bastion.dragging{opacity:.5;transform:scale(.95);}
 .rail-bastion.drag-over{border-top:2px solid var(--accent);margin-top:-2px;}
+/* Custom tooltip for rail bastions */
+.rail-tooltip{position:fixed;left:0;top:0;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:6px 12px 6px 8px;display:flex;align-items:center;gap:8px;pointer-events:none;opacity:0;transition:opacity .15s cubic-bezier(.22,1,.36,1),transform .15s cubic-bezier(.22,1,.36,1);z-index:9999;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.45);font-size:13px;font-weight:600;color:rgba(255,255,255,.9);}
+.rail-tooltip.visible{opacity:1;}
+.rail-tooltip-icon{width:22px;height:22px;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(255,255,255,.06);}
+.rail-tooltip-icon img{width:100%;height:100%;object-fit:cover;border-radius:6px;}
 /* Bastion group */
 .bastion-group{background:transparent;border:none;border-radius:0;margin:2px 0;padding:0;display:flex;flex-direction:column;align-items:center;gap:2px;}
 .bastion-group-header{display:none;}
@@ -1417,8 +1422,8 @@ body.is-desktop-app .sys-announce-bar{padding-right:160px;}
 .emoji-tooltip .et-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;}
 .emoji-tooltip .et-code{font-size:11px;color:rgba(255,255,255,.3);font-family:'SF Mono','Cascadia Code',monospace;margin-top:2px;}
 .emoji-tooltip .et-cat{font-size:10.5px;color:rgba(255,249,62,.45);font-weight:600;margin-top:6px;}
-.msg-emoji,.msg-emoji-native{cursor:pointer;transition:transform .1s;border-radius:3px;}
-.msg-emoji:hover,.msg-emoji-native:hover{transform:scale(1.2);background:rgba(255,255,255,.06);}
+.msg-text .msg-emoji,.msg-text .msg-emoji-native,.msg-reply-ref .msg-emoji,.up-left-section-body .msg-emoji,.ann-body .msg-emoji,.forum-detail-content .msg-emoji,.frc-body .msg-emoji{cursor:pointer;transition:transform .1s;border-radius:3px;}
+.msg-text .msg-emoji:hover,.msg-text .msg-emoji-native:hover,.msg-reply-ref .msg-emoji:hover,.up-left-section-body .msg-emoji:hover,.ann-body .msg-emoji:hover,.forum-detail-content .msg-emoji:hover,.frc-body .msg-emoji:hover{transform:scale(1.2);background:rgba(255,255,255,.06);}
 .cloud-status-bubble{position:relative;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:11px;color:rgba(255,255,255,.5);max-width:260px;transition:background .15s,border-color .15s;}
 /* Userbar custom status speech bubble — looks like the PFP is talking */
 .ua-custom-status-bubble{display:none;align-items:center;gap:5px;padding:4px 10px;margin:6px 8px 2px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:10.5px;color:rgba(255,255,255,.5);position:relative;max-width:calc(100% - 16px);box-sizing:border-box;overflow:hidden;}
@@ -4478,6 +4483,7 @@ function renderRailBastions() {
 
   cont.innerHTML = html;
   _initBastionDrag();
+  _initRailTooltips();
 }
 
 function _renderRailBastion(b, i) {
@@ -4485,7 +4491,7 @@ function _renderRailBastion(b, i) {
     draggable="true" data-bastion-idx="${i}" data-bastion-id="${escapeHTML(b.globalId||b.name)}"
     onclick="openBastion(${i})"
     oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})"
-    title="${escapeHTML(b.name)}"
+    data-rail-tip="${escapeHTML(b.name)}" data-rail-icon="${escapeHTML(b.icon||'')}" data-rail-emblem="${escapeHTML(b.emblem||'🏰')}"
     style="margin-bottom:4px;">
     <div class="bastion-icon">${b.icon
       ? `<img src="${b.icon}">`
@@ -4540,6 +4546,44 @@ function _saveBastionOrder() {
   if (!cont) return;
   const order = [...cont.querySelectorAll('.rail-bastion[data-bastion-id]')].map(el => el.dataset.bastionId);
   localStorage.setItem('ftz_bastion_order', JSON.stringify(order));
+}
+
+// Custom tooltip for rail bastions (Discord-style)
+let _railTipEl = null;
+function _initRailTooltips() {
+  const cont = document.getElementById('rail-bastions');
+  if (!cont) return;
+  cont.querySelectorAll('.rail-bastion[data-rail-tip]').forEach(el => {
+    el.addEventListener('mouseenter', _showRailTip);
+    el.addEventListener('mouseleave', _hideRailTip);
+  });
+}
+function _showRailTip(e) {
+  const el = e.currentTarget;
+  const name = el.dataset.railTip;
+  const icon = el.dataset.railIcon;
+  const emblem = el.dataset.railEmblem || '🏰';
+  if (!name) return;
+  _hideRailTip();
+  const tip = document.createElement('div');
+  tip.className = 'rail-tooltip';
+  const iconHtml = icon
+    ? `<div class="rail-tooltip-icon"><img src="${icon}"></div>`
+    : `<div class="rail-tooltip-icon"><span>${emblem}</span></div>`;
+  tip.innerHTML = iconHtml + `<span>${escapeHTML(name)}</span>`;
+  document.body.appendChild(tip);
+  _railTipEl = tip;
+  const rect = el.getBoundingClientRect();
+  tip.style.left = (rect.right + 12) + 'px';
+  tip.style.top = (rect.top + rect.height / 2) + 'px';
+  tip.style.transform = 'translateY(-50%) scale(.92)';
+  requestAnimationFrame(() => {
+    tip.classList.add('visible');
+    tip.style.transform = 'translateY(-50%) scale(1)';
+  });
+}
+function _hideRailTip() {
+  if (_railTipEl) { _railTipEl.remove(); _railTipEl = null; }
 }
 
 function _toggleBastionGroup(header) {
@@ -12534,9 +12578,12 @@ function _showEmojiTooltip(emoji, el) {
 }
 
 // Event delegation: left-click any emoji in chat → show tooltip
+// Only for user-input emojis (messages, about me, forum posts) — not platform/UI emojis
 document.addEventListener('click', function(e) {
   const img = e.target.closest('.msg-emoji, .msg-emoji-native, .emoji');
   if (!img) return;
+  // Only show tooltip for emojis inside user-generated content areas
+  if (!img.closest('.msg-text, .msg-reply-ref, .up-left-section-body, .ann-body, .forum-detail-content, .frc-body')) return;
   const emoji = img.dataset?.emoji || img.alt || img.textContent?.trim();
   if (emoji) { e.stopPropagation(); _showEmojiTooltip(emoji, img); }
 });
@@ -18909,7 +18956,7 @@ function parseMD(s) {
   s = s.replace(/\[FTZGIF:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);
     const gifId = url.split('/media/')[1]?.split('/')[0] || ('custom-' + Math.random().toString(36).slice(2,8));
-    return `<div class="chat-gif-wrap" style="margin:6px 0;max-width:320px;border-radius:12px;overflow:hidden;display:inline-block;cursor:pointer;position:relative;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:260px;object-fit:contain;border-radius:12px;display:block;" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Save to favourites">⭐</button></div>`;
+    return `<div class="chat-gif-wrap" style="margin:6px 0;max-width:480px;border-radius:12px;overflow:hidden;display:inline-block;cursor:pointer;position:relative;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:400px;object-fit:contain;border-radius:12px;display:block;" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Save to favourites">⭐</button></div>`;
   });
   // 0a. Sticker token from sticker picker
   s = s.replace(/\[FTZSTICKER:([^\]]+)\]/g, (_, url) => {
@@ -21357,13 +21404,14 @@ function renderGiphyResults(gifs, inputId) {
     return;
   }
   grid.innerHTML = gifs.map(g => {
-    const url = g.images?.fixed_height_small?.url || g.images?.fixed_height?.url || g.images?.original?.url || '';
-    return `<div class="gif-card" data-id="${g.id}" data-url="${escapeHTML(url)}" data-input="${escapeHTML(inputId)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);break-inside:avoid;margin-bottom:8px;transition:all .2s cubic-bezier(.22,1,.36,1);">
-      <img src="${escapeHTML(url)}" style="width:100%;display:block;border-radius:9px;" loading="lazy" draggable="false">
+    const thumb = g.images?.fixed_height_small?.url || g.images?.fixed_height?.url || g.images?.original?.url || '';
+    const fullUrl = g.images?.original?.url || g.images?.fixed_height?.url || thumb;
+    return `<div class="gif-card" data-id="${g.id}" data-url="${escapeHTML(fullUrl)}" data-input="${escapeHTML(inputId)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);break-inside:avoid;margin-bottom:8px;transition:all .2s cubic-bezier(.22,1,.36,1);">
+      <img src="${escapeHTML(thumb)}" style="width:100%;display:block;border-radius:9px;" loading="lazy" draggable="false">
       <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.18s;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 45%);display:flex;align-items:flex-end;justify-content:space-between;padding:10px;pointer-events:none;border-radius:10px;">
         <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,.6);max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(g.title||'')}</div>
       </div>
-      <button class="gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${g.id}',url:'${escapeHTML(url)}'})" title="Save" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);color:#ffd93e;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">★</button>
+      <button class="gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${g.id}',url:'${escapeHTML(fullUrl)}'})" title="Save" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);color:#ffd93e;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">★</button>
     </div>`;
   }).join('');
   grid.querySelectorAll('.gif-card').forEach(card => {

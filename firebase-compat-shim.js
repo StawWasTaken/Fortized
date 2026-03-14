@@ -883,7 +883,8 @@
     }
     // dms/{key}/{msgId} — delete single DM message
     if (parts[0] === 'dms' && parts.length >= 3) {
-      await sb.from('dms').delete().eq('dm_key', parts[1]).eq('id', parts[2]);
+      const { error } = await sb.from('dms').delete().eq('dm_key', parts[1]).eq('id', parts[2]);
+      if (error) throw new Error('[supaRemove] Delete DM failed: ' + error.message);
       return;
     }
     if (parts[0] === 'groupChats' && parts.length >= 2) {
@@ -895,7 +896,8 @@
       }
       // groupChats/{gcId}/messages/{msgId} — delete single GC message
       if (parts[2] === 'messages' && parts.length >= 4) {
-        await sb.from('group_chat_messages').delete().eq('gc_id', parts[1]).eq('id', parts[3]);
+        const { error } = await sb.from('group_chat_messages').delete().eq('gc_id', parts[1]).eq('id', parts[3]);
+        if (error) throw new Error('Delete GC message failed: ' + error.message);
         return;
       }
       if (parts[2] === 'typing' && parts.length >= 4) {
@@ -906,8 +908,9 @@
     }
     // bastionMsgs/{bastionId}/{channelId}/{msgId} — delete single bastion message
     if (parts[0] === 'bastionMsgs' && parts.length >= 4) {
-      await sb.from('bastion_msgs').delete()
+      const { error } = await sb.from('bastion_msgs').delete()
         .eq('bastion_id', parts[1]).eq('channel_id', parts[2]).eq('id', parts[3]);
+      if (error) throw new Error('Delete bastion message failed: ' + error.message);
       return;
     }
     if (parts[0] === 'reports' && parts.length >= 2) {

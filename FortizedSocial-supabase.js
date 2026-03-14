@@ -417,6 +417,23 @@ const FortizedSocial = (() => {
     return msg;
   }
 
+  // ── Delete Messages ─────────────────────────────────
+  async function deleteMessage(type, opts) {
+    if (type === 'dm') {
+      const key = _dmKey(opts.user1, opts.user2);
+      const { error } = await sb.from('dms').delete().eq('dm_key', key).eq('id', opts.messageId);
+      if (error) throw new Error('Failed to delete DM: ' + error.message);
+    } else if (type === 'gc') {
+      const { error } = await sb.from('group_chat_messages').delete().eq('gc_id', opts.gcId).eq('id', opts.messageId);
+      if (error) throw new Error('Failed to delete GC message: ' + error.message);
+    } else if (type === 'bastion') {
+      const { error } = await sb.from('bastion_msgs').delete().eq('bastion_id', opts.bastionId).eq('channel_id', opts.channelId).eq('id', opts.messageId);
+      if (error) throw new Error('Failed to delete bastion message: ' + error.message);
+    } else {
+      throw new Error('Unknown message type: ' + type);
+    }
+  }
+
   async function _getDMIndex(username) {
     const { data } = await sb.from('dm_index').select('partners').eq('username', norm(username)).maybeSingle();
     return data?.partners || [];
@@ -826,7 +843,7 @@ const FortizedSocial = (() => {
     getStatus, setStatus,
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,
-    getDMMessages, sendDMMessage, getRecentDMPartners,
+    getDMMessages, sendDMMessage, deleteMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction,
     getGlobalBastions, saveGlobalBastion, getGlobalBastion,
     getBastionMembers, addBastionMember, removeBastionMember,

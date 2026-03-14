@@ -7226,67 +7226,75 @@ function deleteMsg(msgId, context) {
       return;
     }
     const ctx = context || (_curDM ? 'dm' : _curGC ? 'gc' : 'ch');
-    let ref = null;
     try {
+      // Build delete options for FortizedSocial.deleteMessage
+      let deleteOpts = null;
+      let ref = null; // For undo restore
       if (ctx==='dm' && _curDM) {
+        deleteOpts = { type: 'dm', opts: { user1: CU.username, user2: _curDM, messageId: msgId } };
         ref = firebase.database().ref(`dms/${[CU.username,_curDM].sort().join('__')}/${msgId}`);
       } else if (ctx==='gc' && _curGC) {
+        deleteOpts = { type: 'gc', opts: { gcId: _curGC, messageId: msgId } };
         ref = firebase.database().ref(`groupChats/${_curGC}/messages/${msgId}`);
       } else {
         const b = CU.bastions?.[_curBastion];
         const ch = b?.channels?.[_curChannel];
         const bid = b?.globalId||b?.name;
         const chName = ch?.name||'general';
-        if (bid && chName) ref = firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`);
+        if (bid && chName) {
+          deleteOpts = { type: 'bastion', opts: { bastionId: bid, channelId: chName, messageId: msgId } };
+          ref = firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`);
+        }
       }
-      if (ref) {
-        const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
-        // Capture message data for undo
-        let msgSnapshot = null;
-        try { const snap = await ref.get(); if (snap.exists()) msgSnapshot = snap.val(); } catch {}
-
-        // Delete from Firebase FIRST, then animate UI
-        try {
-          await ref.remove();
-        } catch(delErr) {
-          console.error('Firebase delete failed:', delErr);
-          toast('Failed to delete message', 'error');
-          return;
-        }
-
-        // UI removal after successful Firebase deletion
-        if (row) {
-          if (row.classList.contains('msg-first')) {
-            let next = row.nextElementSibling;
-            while (next && next.classList.contains('date-div')) next = next.nextElementSibling;
-            if (next && next.classList.contains('msg-cont') && next.dataset.from === row.dataset.from) {
-              next.classList.replace('msg-cont','msg-first');
-              const fromName = next.dataset.from || '';
-              const safeFrom = escapeHTML(fromName);
-              const time = next.querySelector('.msg-time-small')?.textContent || '';
-              const avId = 'av-' + next.dataset.msgid.replace(/[^a-z0-9]/gi,'-');
-              const roleTag = getMsgRoleTag(fromName, ctx);
-              const col = next.querySelector('.msg-content-col');
-              const existingContent = col ? col.innerHTML : '';
-              const avWrap = next.querySelector('.msg-av-wrap');
-              if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
-              if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
-              FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}if(u?.activeDecoration){const el=document.getElementById(avId);if(el){el.style.position='relative';el.style.overflow='visible';el.insertAdjacentHTML('beforeend',buildDecorationOverlay(u.activeDecoration,'profile-decoration-overlay-sm'));}}}).catch(()=>{});
-            }
-          }
-          row.style.transition = 'opacity .2s ease, transform .2s ease, max-height .25s ease';
-          row.style.opacity = '0';
-          row.style.transform = 'translateX(-12px)';
-          row.style.maxHeight = row.offsetHeight + 'px';
-          row.style.overflow = 'hidden';
-          setTimeout(() => { row.style.maxHeight = '0'; row.style.padding = '0'; row.style.margin = '0'; }, 80);
-          setTimeout(() => row.remove(), 300);
-        }
-        // Show undo toast (stores snapshot to restore if needed)
-        _showUndoDelete(ref, msgSnapshot, msgId, ctx, _curDM, _curGC, _curBastion, _curChannel);
-      } else {
+      if (!deleteOpts) {
         toast('Could not determine message location','error');
+        return;
       }
+
+      const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+      // Capture message data for undo
+      let msgSnapshot = null;
+      if (ref) { try { const snap = await ref.get(); if (snap.exists()) msgSnapshot = snap.val(); } catch {} }
+
+      // Delete from Supabase directly
+      try {
+        await FortizedSocial.deleteMessage(deleteOpts.type, deleteOpts.opts);
+      } catch(delErr) {
+        console.error('Delete failed:', delErr);
+        toast('Failed to delete message: ' + (delErr.message||'unknown error'), 'error');
+        return;
+      }
+
+      // UI removal after successful deletion
+      if (row) {
+        if (row.classList.contains('msg-first')) {
+          let next = row.nextElementSibling;
+          while (next && next.classList.contains('date-div')) next = next.nextElementSibling;
+          if (next && next.classList.contains('msg-cont') && next.dataset.from === row.dataset.from) {
+            next.classList.replace('msg-cont','msg-first');
+            const fromName = next.dataset.from || '';
+            const safeFrom = escapeHTML(fromName);
+            const time = next.querySelector('.msg-time-small')?.textContent || '';
+            const avId = 'av-' + next.dataset.msgid.replace(/[^a-z0-9]/gi,'-');
+            const roleTag = getMsgRoleTag(fromName, ctx);
+            const col = next.querySelector('.msg-content-col');
+            const existingContent = col ? col.innerHTML : '';
+            const avWrap = next.querySelector('.msg-av-wrap');
+            if (avWrap) avWrap.innerHTML = `<div class="msg-av-inner" id="${avId}" onclick="showMiniProfilePreview('${safeFrom}',this)" style="cursor:pointer;">${buildAvatarHTML(null,fromName,40)}</div>`;
+            if (col) col.innerHTML = `<div class="msg-header"><span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;" data-author="${safeFrom}">${safeFrom}</span>${roleTag}<span class="msg-timestamp">${time}</span></div>` + existingContent.replace(/<span class="msg-time-small">[^<]*<\/span>/,'');
+            FortizedSocial.getUserByName(fromName).then(u=>{if(u?.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,fromName,40);}if(u?.activeDecoration){const el=document.getElementById(avId);if(el){el.style.position='relative';el.style.overflow='visible';el.insertAdjacentHTML('beforeend',buildDecorationOverlay(u.activeDecoration,'profile-decoration-overlay-sm'));}}}).catch(()=>{});
+          }
+        }
+        row.style.transition = 'opacity .2s ease, transform .2s ease, max-height .25s ease';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-12px)';
+        row.style.maxHeight = row.offsetHeight + 'px';
+        row.style.overflow = 'hidden';
+        setTimeout(() => { row.style.maxHeight = '0'; row.style.padding = '0'; row.style.margin = '0'; }, 80);
+        setTimeout(() => row.remove(), 300);
+      }
+      // Show undo toast (stores snapshot to restore if needed)
+      if (ref) _showUndoDelete(ref, msgSnapshot, msgId, ctx, _curDM, _curGC, _curBastion, _curChannel);
     } catch(e) {
       console.error('Delete error:', e);
       toast('Failed to delete message: ' + (e.message||'unknown error'), 'error');
@@ -19717,27 +19725,17 @@ if (typeof window !== 'undefined') {
 }
 
 async function detectRunningApps() {
-  // If running in Electron desktop app, use native detection
-  if (window.fortizedDesktop?.isDesktopApp) {
-    try {
-      const games = await window.fortizedDesktop.detectGames();
-      if (games.length) return games;
-    } catch {}
-  }
-  // Fallback: Build list from user's saved game collection + popular apps
-  const userGames = (CU?.gameCollection||[]).map(g=>({ name:g.name, icon:g.icon||'🎮', fromCollection:true }));
-  const popularApps = [
-    { name:'Minecraft', icon:'⛏️' },{ name:'Roblox', icon:'🎮' },{ name:'Fortnite', icon:'🎯' },
-    { name:'Valorant', icon:'🔫' },{ name:'League of Legends', icon:'⚔️' },{ name:'Rocket League', icon:'🚀' },
-    { name:'Among Us', icon:'🚀' },{ name:'Apex Legends', icon:'🔫' },{ name:'Genshin Impact', icon:'⚡' },
-    { name:'Steam', icon:'🎮' },{ name:'Discord', icon:'💬' },{ name:'Spotify', icon:'🎵' },
-    { name:'VS Code', icon:'💻' },{ name:'OBS Studio', icon:'🎥' },{ name:'Blender', icon:'🎨' },
-    { name:'Unity', icon:'🕹️' },{ name:'Twitch', icon:'📺' },{ name:'YouTube', icon:'▶️' },
-    { name:'Photoshop', icon:'🖼️' },{ name:'After Effects', icon:'✨' },
-  ];
-  const seen = new Set(userGames.map(g=>g.name.toLowerCase()));
-  const merged = [...userGames, ...popularApps.filter(a=>!seen.has(a.name.toLowerCase()))];
-  return merged;
+  // Only works in Electron desktop app — uses native process detection
+  if (!window.fortizedDesktop?.isDesktopApp) return [];
+  try {
+    const procs = await window.fortizedDesktop.getProcesses();
+    if (procs) return _matchAllRunningApps(procs);
+  } catch {}
+  try {
+    const games = await window.fortizedDesktop.detectGames();
+    if (games.length) return games;
+  } catch {}
+  return [];
 }
 
 function addRegisteredGame() {
@@ -20718,15 +20716,14 @@ async function joinBastionFromWidget(bastionName, bIdx) {
 // ════════════════════════════════════════════
 async function renderActivityDetectionTab(main) {
   if (!main) return;
-  const customApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
   const activityEnabled = localStorage.getItem('ftz_activity_detection') !== 'false';
-  const companionUp = await companionPing();
+  const isDesktop = !!window.fortizedDesktop?.isDesktopApp;
 
-  // ── Detected apps from companion ──
+  // ── Detected apps from Electron native detection ──
   let detectedApps = [];
-  if (companionUp && activityEnabled) {
+  if (isDesktop && activityEnabled) {
     try {
-      const procs = await companionGetProcesses();
+      const procs = await window.fortizedDesktop.getProcesses();
       if (procs) detectedApps = _matchAllRunningApps(procs);
     } catch {}
   }
@@ -20747,31 +20744,29 @@ async function renderActivityDetectionTab(main) {
     currentHtml = '<div style="text-align:center;padding:20px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
       + '<div style="font-size:28px;margin-bottom:6px;">😴</div>'
       + '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">No activity detected</div>'
-      + (companionUp ? '<div style="font-size:12px;color:var(--muted);margin-top:4px;">Open a game or app — it\'ll show up automatically.</div>' : '')
+      + (isDesktop ? '<div style="font-size:12px;color:var(--muted);margin-top:4px;">Open a game or app — it\'ll show up automatically.</div>' : '')
       + '</div>';
   }
 
   // ── Status banner ──
-  let companionHtml = '';
-  if (companionUp) {
-    companionHtml = '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.12);border-radius:12px;margin-bottom:16px;">'
+  let statusHtml = '';
+  if (isDesktop) {
+    statusHtml = '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.12);border-radius:12px;margin-bottom:16px;">'
       + '<div style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;flex-shrink:0;"></div>'
       + '<div style="font-size:12px;color:rgba(62,207,110,.8);font-weight:600;">Game detection active</div>'
       + '<div style="font-size:11px;color:var(--muted);margin-left:auto;">Scanning your apps automatically</div>'
       + '</div>';
   } else {
-    companionHtml = '<div style="padding:20px;background:linear-gradient(135deg,rgba(99,102,241,.04),rgba(62,207,110,.04));border:1px solid rgba(99,102,241,.12);border-radius:14px;margin-bottom:16px;text-align:center;">'
-      + '<div style="font-size:32px;margin-bottom:10px;">🎮</div>'
-      + '<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Setting Up Game Detection</div>'
-      + '<div id="companion-auto-setup" style="margin-top:8px;"><div class="pl-spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto 8px;"></div><div style="font-size:12px;color:var(--muted);">Preparing installer\u2026</div></div>'
+    statusHtml = '<div style="padding:20px;background:linear-gradient(135deg,rgba(99,102,241,.04),rgba(248,113,113,.04));border:1px solid rgba(99,102,241,.12);border-radius:14px;margin-bottom:16px;text-align:center;">'
+      + '<div style="font-size:32px;margin-bottom:10px;">🖥️</div>'
+      + '<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Desktop App Required</div>'
+      + '<div style="font-size:12px;color:var(--muted);line-height:1.5;">Activity detection needs the Fortized desktop app to scan running processes on your device.<br>Download it to automatically show what you\'re playing.</div>'
       + '</div>';
-    // Auto-trigger companion download
-    setTimeout(() => _autoDownloadCompanion(), 600);
   }
 
-  // ── Detected apps (live from companion) ──
+  // ── Detected apps (live from Electron) ──
   let detectedHtml = '';
-  if (companionUp && detectedApps.length) {
+  if (isDesktop && detectedApps.length) {
     detectedHtml = '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
     detectedApps.forEach(app => {
       const enabled = _isAppActivityEnabled(app.name);
@@ -20786,31 +20781,13 @@ async function renderActivityDetectionTab(main) {
         + '</div>';
     });
     detectedHtml += '</div>';
-  } else if (companionUp) {
+  } else if (isDesktop) {
     detectedHtml = '<div style="text-align:center;padding:20px;background:rgba(255,255,255,.015);border:1px dashed rgba(255,255,255,.08);border-radius:14px;margin-bottom:16px;">'
       + '<div style="font-size:28px;margin-bottom:6px;">🔍</div>'
       + '<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">No known apps detected</div>'
       + '<div style="font-size:12px;color:var(--muted);margin-top:4px;">Open a game and it will appear here automatically.</div>'
       + '</div>';
   }
-
-  // ── Custom apps section ──
-  let appListHtml = '';
-  if (customApps.length) {
-    appListHtml = '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
-    customApps.forEach((app, i) => {
-      appListHtml += '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:12px;">'
-        + '<span style="font-size:22px;flex-shrink:0;">' + (app.icon||'\uD83C\uDFAE') + '</span>'
-        + '<div style="flex:1;min-width:0;">'
-        + '<div style="font-size:13px;font-weight:700;color:#fff;">' + escapeHTML(app.name) + '</div>'
-        + '<div style="font-size:10.5px;color:var(--muted);">Custom app</div>'
-        + '</div>'
-        + '<button onclick="removeDetectableApp(' + i + ')" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);color:var(--red);font-size:11px;font-weight:600;padding:5px 12px;border-radius:8px;cursor:pointer;transition:all .12s;" onmouseover="this.style.background=\'rgba(248,113,113,.15)\'" onmouseout="this.style.background=\'rgba(248,113,113,.08)\'">Remove</button>'
-        + '</div>';
-    });
-    appListHtml += '</div>';
-  }
-
 
   main.innerHTML = '<div class="settings-panel">'
     + '<div style="position:relative;border-radius:22px;overflow:hidden;margin-bottom:28px;margin-top:28px;padding:28px;background:linear-gradient(135deg,rgba(18,22,34,.95),rgba(12,15,24,.98));border:1.5px solid rgba(62,207,110,.12);">'
@@ -20823,8 +20800,8 @@ async function renderActivityDetectionTab(main) {
     + '<div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#fff;">Activity Detection</div>'
     + '<div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">Automatically show friends what you\'re playing</div>'
     + '</div></div></div>'
-    // Companion status
-    + companionHtml
+    // Detection status
+    + statusHtml
     // Master toggle
     + '<div class="settings-section-title">ACTIVITY STATUS</div>'
     + '<div class="settings-row">'
@@ -20835,17 +20812,10 @@ async function renderActivityDetectionTab(main) {
     // Current activity
     + '<div class="settings-section-title" style="margin-top:28px;">CURRENT ACTIVITY</div>'
     + currentHtml
-    // Detected apps (from companion)
-    + (companionUp ? '<div class="settings-section-title" style="margin-top:28px;">DETECTED APPS<button onclick="refreshDetectedApps()" style="float:right;background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;">Refresh</button></div>'
+    // Detected apps (from Electron native detection)
+    + (isDesktop ? '<div class="settings-section-title" style="margin-top:28px;">DETECTED APPS<button onclick="refreshDetectedApps()" style="float:right;background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;">Refresh</button></div>'
     + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Apps running on your computer right now. Toggle each to control whether it shows as your status.</div>'
     + '<div id="detected-apps-list">' + detectedHtml + '</div>' : '')
-    // Custom apps
-    + '<div class="settings-section-title" style="margin-top:28px;">REGISTERED GAMES' + (customApps.length ? '' : '') + '</div>'
-    + '<div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Games and apps you\'ve added for activity detection.</div>'
-    + appListHtml
-    + '<button class="btn-a" onclick="openAddGameModal()" style="display:flex;align-items:center;gap:8px;padding:10px 18px;font-size:12.5px;margin-bottom:20px;">'
-    + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-    + 'Add Game</button>'
     + '</div>';
 }
 
@@ -20858,52 +20828,13 @@ function toggleDetectedApp(el, appName) {
   }
 }
 
-let _companionDownloadTriggered = false;
-async function _autoDownloadCompanion() {
-  const el = document.getElementById('companion-auto-setup');
-  if (!el || _companionDownloadTriggered) return;
-  _companionDownloadTriggered = true;
-
-  const os = navigator.platform?.toLowerCase() || '';
-  const isWin = os.includes('win');
-
-  try {
-    // Fetch the correct installer from the server
-    const installerPath = isWin ? '/companion/install-windows.bat' : '/companion/install.sh';
-    const resp = await fetch(installerPath);
-    if (!resp.ok) throw new Error('fetch failed');
-    const blob = await resp.blob();
-    const fileName = isWin ? 'install-windows.bat' : 'install.sh';
-
-    // Auto-trigger the download
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-
-    // Update UI to show run instructions
-    const runHint = isWin
-      ? 'Double-click <b>install-windows.bat</b> from your Downloads'
-      : 'Open Terminal and run <b>chmod +x ~/Downloads/install.sh && ~/Downloads/install.sh</b>';
-    el.innerHTML = '<div style="font-size:12px;color:rgba(62,207,110,.7);font-weight:600;margin-bottom:6px;">Installer downloaded!</div>'
-      + '<div style="font-size:11.5px;color:var(--muted);line-height:1.5;">' + runHint + '</div>'
-      + '<div style="font-size:10.5px;color:var(--muted);margin-top:8px;">It auto-starts on boot after that \u2014 fully automatic from then on.</div>';
-  } catch {
-    el.innerHTML = '<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Could not auto-download the installer.</div>'
-      + '<a href="' + (isWin ? '/companion/install-windows.bat' : '/companion/install.sh') + '" download style="font-size:12px;color:var(--accent);text-decoration:underline;cursor:pointer;">Download manually</a>';
-  }
-}
 
 async function refreshDetectedApps() {
   const container = document.getElementById('detected-apps-list');
-  if (!container) return;
+  if (!container || !window.fortizedDesktop?.isDesktopApp) return;
   container.innerHTML = '<div style="text-align:center;padding:16px;"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto;"></div><div style="font-size:11px;color:var(--muted);margin-top:8px;">Scanning processes\u2026</div></div>';
   try {
-    const procs = await companionGetProcesses();
+    const procs = await window.fortizedDesktop.getProcesses();
     const apps = procs ? _matchAllRunningApps(procs) : [];
     if (apps.length) {
       let html = '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
@@ -20929,7 +20860,7 @@ async function refreshDetectedApps() {
         + '</div>';
     }
   } catch {
-    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">Could not scan apps — game detection may not be set up</div>';
+    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">Could not scan apps</div>';
   }
 }
 
@@ -20995,16 +20926,15 @@ async function openAddGameModal() {
   document.getElementById('agm-close').onclick = () => _closeEl('add-game-modal');
   modal.addEventListener('click', e => { if (e.target === modal) _closeEl('add-game-modal'); });
 
-  // Fetch running processes from companion
+  // Fetch running processes from Electron native detection
   const listEl = document.getElementById('agm-list');
   let processNames = [];
   try {
-    const online = await companionPing();
-    if (!online) {
-      listEl.innerHTML = '<div style="text-align:center;padding:30px;"><div style="font-size:28px;margin-bottom:8px;color:rgba(255,255,255,.3);">'+ftzIcon('warning','28')+'</div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">Game detection not available</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">The companion service needs to be running to detect apps.</div></div>';
+    if (!window.fortizedDesktop?.isDesktopApp) {
+      listEl.innerHTML = '<div style="text-align:center;padding:30px;"><div style="font-size:28px;margin-bottom:8px;color:rgba(255,255,255,.3);">'+ftzIcon('warning','28')+'</div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">Desktop app required</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Game detection requires the Fortized desktop app.</div></div>';
       return;
     }
-    const procs = await companionGetProcesses();
+    const procs = await window.fortizedDesktop.getProcesses();
     if (!procs || !procs.length) {
       listEl.innerHTML = '<div style="text-align:center;padding:30px;"><div style="font-size:28px;margin-bottom:8px;">🔍</div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">No running apps found</div></div>';
       return;
@@ -23573,12 +23503,15 @@ function _matchRunningApp(processList) {
 
 function _startAutoActivityDetection() {
   if (_autoActivityPoller) return;
+  // Only works in Electron desktop app
+  if (!window.fortifiedDesktop?.isDesktopApp && !window.fortizedDesktop?.isDesktopApp) return;
   const activityEnabled = () => localStorage.getItem('ftz_activity_detection') !== 'false';
-  // Poll the companion for running processes
+  const getProcs = () => window.fortizedDesktop?.getProcesses?.() || window.fortifiedDesktop?.getProcesses?.();
+  // Poll Electron for running processes
   _autoActivityPoller = setInterval(async () => {
-    if (!CU?.username || !activityEnabled() || !_companionOnline) return;
+    if (!CU?.username || !activityEnabled()) return;
     try {
-      const procs = await companionGetProcesses();
+      const procs = await getProcs();
       if (!procs) return;
       const detected = _matchRunningApp(procs);
       if (detected) {
@@ -23593,10 +23526,8 @@ function _startAutoActivityDetection() {
   // Run once immediately
   (async () => {
     if (!activityEnabled()) return;
-    const online = await companionPing();
-    if (!online) return;
     try {
-      const procs = await companionGetProcesses();
+      const procs = await getProcs();
       if (!procs) return;
       const detected = _matchRunningApp(procs);
       if (detected) setGameActivity(detected.name, detected.icon);
@@ -23609,39 +23540,16 @@ function _stopAutoActivityDetection() {
 }
 
 async function detectGameActivity() {
-  // Try companion first (instant, no user prompt)
-  if (_companionOnline) {
-    try {
-      const procs = await companionGetProcesses();
-      if (procs) {
-        const detected = _matchRunningApp(procs);
-        if (detected) return detected;
-      }
-    } catch {}
-  }
-  // Fallback: Screen Capture API hack — getDisplayMedia triggers the
-  // browser's window picker. The selected track's label often contains
-  // the window title, which we match against KNOWN_GAMES + user custom apps.
+  // Only works in Electron desktop app — uses native process detection
+  if (!window.fortizedDesktop?.isDesktopApp) return null;
   try {
-    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
-    const track = stream.getVideoTracks()[0];
-    const label = (track?.label || '').toLowerCase();
-    // Stop the stream immediately — we only needed the label
-    stream.getTracks().forEach(t => t.stop());
-    if (!label) return null;
-    const allApps = [...KNOWN_GAMES, ..._userCustomApps.map(a => ({ name: a.name, icon: a.icon || '🎮', keywords: [a.name.toLowerCase()] }))];
-    for (const app of allApps) {
-      const match = app.keywords.some(kw => label.includes(kw)) || label.includes(app.name.toLowerCase());
-      if (match) return { name: app.name, icon: app.icon };
+    const procs = await window.fortizedDesktop.getProcesses();
+    if (procs) {
+      const detected = _matchRunningApp(procs);
+      if (detected) return detected;
     }
-    // No known match — offer the raw label as a custom activity
-    const cleanLabel = track.label.replace(/\s*[-–—]\s*(Google Chrome|Mozilla Firefox|Microsoft Edge|Safari|Opera|Brave).*$/i, '').trim();
-    if (cleanLabel) return { name: cleanLabel, icon: '🖥️' };
-    return null;
-  } catch (e) {
-    // User cancelled the picker or API not supported
-    return null;
-  }
+  } catch {}
+  return null;
 }
 
 async function openActivityDetector() {
@@ -23747,16 +23655,15 @@ async function openGameActivityPicker() {
   modal.addEventListener('click', e => { if (e.target === modal) _closeEl('game-activity-modal'); });
   document.getElementById('ga-stop-btn')?.addEventListener('click', () => { setGameActivity(null); _closeEl('game-activity-modal'); });
 
-  // Fetch running processes
+  // Fetch running processes via Electron native detection
   const listEl = document.getElementById('ga-proc-list');
   let appEntries = [];
   try {
-    const online = await companionPing();
-    if (!online) {
-      listEl.innerHTML = '<div style="text-align:center;padding:24px;"><div style="font-size:28px;margin-bottom:8px;color:rgba(255,255,255,.3);">'+ftzIcon('warning','28')+'</div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">Companion not running</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Start the companion service to detect running apps.</div></div>';
+    if (!window.fortizedDesktop?.isDesktopApp) {
+      listEl.innerHTML = '<div style="text-align:center;padding:24px;"><div style="font-size:28px;margin-bottom:8px;color:rgba(255,255,255,.3);">'+ftzIcon('warning','28')+'</div><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);">Desktop app required</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Game detection requires the Fortized desktop app.</div></div>';
       return;
     }
-    const procs = await companionGetProcesses();
+    const procs = await window.fortizedDesktop.getProcesses();
     if (!procs || !procs.length) {
       listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">No running apps found.</div>';
       return;

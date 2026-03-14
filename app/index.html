@@ -81,6 +81,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* Bastion drag-drop */
 .rail-bastion.dragging{opacity:.5;transform:scale(.95);}
 .rail-bastion.drag-over{border-top:2px solid var(--accent);margin-top:-2px;}
+/* Custom tooltip for rail bastions */
+.rail-tooltip{position:fixed;left:0;top:0;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:6px 12px 6px 8px;display:flex;align-items:center;gap:8px;pointer-events:none;opacity:0;transition:opacity .15s cubic-bezier(.22,1,.36,1),transform .15s cubic-bezier(.22,1,.36,1);z-index:9999;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.45);font-size:13px;font-weight:600;color:rgba(255,255,255,.9);}
+.rail-tooltip.visible{opacity:1;}
+.rail-tooltip-icon{width:22px;height:22px;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(255,255,255,.06);}
+.rail-tooltip-icon img{width:100%;height:100%;object-fit:cover;border-radius:6px;}
 /* Bastion group */
 .bastion-group{background:transparent;border:none;border-radius:0;margin:2px 0;padding:0;display:flex;flex-direction:column;align-items:center;gap:2px;}
 .bastion-group-header{display:none;}
@@ -4478,6 +4483,7 @@ function renderRailBastions() {
 
   cont.innerHTML = html;
   _initBastionDrag();
+  _initRailTooltips();
 }
 
 function _renderRailBastion(b, i) {
@@ -4485,7 +4491,7 @@ function _renderRailBastion(b, i) {
     draggable="true" data-bastion-idx="${i}" data-bastion-id="${escapeHTML(b.globalId||b.name)}"
     onclick="openBastion(${i})"
     oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})"
-    title="${escapeHTML(b.name)}"
+    data-rail-tip="${escapeHTML(b.name)}" data-rail-icon="${escapeHTML(b.icon||'')}" data-rail-emblem="${escapeHTML(b.emblem||'🏰')}"
     style="margin-bottom:4px;">
     <div class="bastion-icon">${b.icon
       ? `<img src="${b.icon}">`
@@ -4540,6 +4546,44 @@ function _saveBastionOrder() {
   if (!cont) return;
   const order = [...cont.querySelectorAll('.rail-bastion[data-bastion-id]')].map(el => el.dataset.bastionId);
   localStorage.setItem('ftz_bastion_order', JSON.stringify(order));
+}
+
+// Custom tooltip for rail bastions (Discord-style)
+let _railTipEl = null;
+function _initRailTooltips() {
+  const cont = document.getElementById('rail-bastions');
+  if (!cont) return;
+  cont.querySelectorAll('.rail-bastion[data-rail-tip]').forEach(el => {
+    el.addEventListener('mouseenter', _showRailTip);
+    el.addEventListener('mouseleave', _hideRailTip);
+  });
+}
+function _showRailTip(e) {
+  const el = e.currentTarget;
+  const name = el.dataset.railTip;
+  const icon = el.dataset.railIcon;
+  const emblem = el.dataset.railEmblem || '🏰';
+  if (!name) return;
+  _hideRailTip();
+  const tip = document.createElement('div');
+  tip.className = 'rail-tooltip';
+  const iconHtml = icon
+    ? `<div class="rail-tooltip-icon"><img src="${icon}"></div>`
+    : `<div class="rail-tooltip-icon"><span>${emblem}</span></div>`;
+  tip.innerHTML = iconHtml + `<span>${escapeHTML(name)}</span>`;
+  document.body.appendChild(tip);
+  _railTipEl = tip;
+  const rect = el.getBoundingClientRect();
+  tip.style.left = (rect.right + 12) + 'px';
+  tip.style.top = (rect.top + rect.height / 2) + 'px';
+  tip.style.transform = 'translateY(-50%) scale(.92)';
+  requestAnimationFrame(() => {
+    tip.classList.add('visible');
+    tip.style.transform = 'translateY(-50%) scale(1)';
+  });
+}
+function _hideRailTip() {
+  if (_railTipEl) { _railTipEl.remove(); _railTipEl = null; }
 }
 
 function _toggleBastionGroup(header) {

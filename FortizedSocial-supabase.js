@@ -643,6 +643,21 @@ const FortizedSocial = (() => {
       _socket.on('message:deleted', function(data) {
         if (_socketCallbacks.onMessageDeleted) _socketCallbacks.onMessageDeleted(data);
       });
+      // ── Real-time poll updates ──
+      _socket.on('poll:updated', function(data) {
+        if (_socketCallbacks.onPollUpdate) _socketCallbacks.onPollUpdate(data);
+      });
+      // ── Real-time announcement updates ──
+      _socket.on('announcement:new', function(data) {
+        if (_socketCallbacks.onAnnouncementNew) _socketCallbacks.onAnnouncementNew(data);
+      });
+      _socket.on('announcement:cleared', function(data) {
+        if (_socketCallbacks.onAnnouncementCleared) _socketCallbacks.onAnnouncementCleared(data);
+      });
+      // ── Real-time bastion/role updates ──
+      _socket.on('bastion:updated', function(data) {
+        if (_socketCallbacks.onBastionUpdate) _socketCallbacks.onBastionUpdate(data);
+      });
     } catch (e) {
       console.warn('[Fortized] Socket.io init failed', e);
       _socket = null;

@@ -775,7 +775,8 @@ const FortizedSocial = (() => {
 
   function listenBastionChannel(bastionId, channelId, callback) {
     joinRoom('bastion', bastionId, channelId);
-    const sub = sb.channel('bastion-' + bastionId + '-' + channelId)
+    const uid = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const sub = sb.channel('bastion-' + bastionId + '-' + channelId + '-' + uid)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',

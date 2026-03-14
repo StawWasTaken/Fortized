@@ -24102,7 +24102,13 @@ function _showWatchInRoom(vid) {
         const el = document.getElementById('dm-msgs');
         if (el && curDM) { appendMessage(el, msg, 'dm', null); _notifyNewMsg('dm-msgs'); if (!isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message'); }
       } else if (room.startsWith('bastion:')) {
+        // Verify the message is for the currently viewed bastion+channel
+        const b = CU.bastions?.[curBastion];
         const chIdx = curChannel;
+        const ch = b?.channels?.[chIdx];
+        if (!b || !ch) return;
+        const expectedRoom = 'bastion:' + (b.globalId || b.name) + ':' + ch.name;
+        if (room !== expectedRoom) return;
         const el = document.getElementById('ch-msgs-' + chIdx);
         if (el) { appendMessage(el, msg, 'ch', null); _notifyNewMsg('ch-msgs-' + chIdx); if (!isUserBlocked(msg.from) && !isUserIgnored(msg.from)) { const isMention = (msg.text||'').includes('@'+CU.username); playNotifSound(isMention ? 'mention' : 'message'); } }
       }

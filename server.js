@@ -20,6 +20,97 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
+// ── JSON body parsing ─────────────────────────────
+app.use(express.json());
+
+// ── IGDB API Proxy ────────────────────────────────
+// Proxies requests to IGDB (via Twitch auth) so the
+// client can fetch game metadata (genre, cover art).
+let _igdbToken = null;
+let _igdbTokenExpiry = 0;
+
+async function getIGDBToken() {
+  if (_igdbToken && Date.now() < _igdbTokenExpiry) return _igdbToken;
+  const clientId = process.env.TWITCH_CLIENT_ID;
+  const clientSecret = process.env.TWITCH_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return null;
+  try {
+    const res = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`, { method: 'POST' });
+    const data = await res.json();
+    if (data.access_token) {
+      _igdbToken = data.access_token;
+      _igdbTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+      return _igdbToken;
+    }
+  } catch (e) { console.error('[IGDB] Token error:', e.message); }
+  return null;
+}
+
+app.post('/api/igdb/search', async (req, res) => {
+  const { query } = req.body;
+  if (!query || typeof query !== 'string') return res.status(400).json({ error: 'query required' });
+  const token = await getIGDBToken();
+  if (!token) return res.status(503).json({ error: 'IGDB not configured' });
+  try {
+    const igdbRes = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: {
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'text/plain',
+      },
+      body: `search "${query.replace(/"/g, '')}"; fields name,genres.name,cover.image_id,summary,first_release_date; limit 10;`,
+    });
+    const games = await igdbRes.json();
+    const results = (games || []).map(g => ({
+      id: g.id,
+      name: g.name,
+      genres: (g.genres || []).map(gn => gn.name),
+      coverUrl: g.cover?.image_id ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${g.cover.image_id}.jpg` : null,
+      coverThumb: g.cover?.image_id ? `https://images.igdb.com/igdb/image/upload/t_cover_small/${g.cover.image_id}.jpg` : null,
+      summary: g.summary ? g.summary.slice(0, 200) : null,
+      year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : null,
+    }));
+    res.json({ results });
+  } catch (e) {
+    console.error('[IGDB] Search error:', e.message);
+    res.status(500).json({ error: 'IGDB request failed' });
+  }
+});
+
+app.post('/api/igdb/lookup', async (req, res) => {
+  const { names } = req.body;
+  if (!Array.isArray(names) || !names.length) return res.status(400).json({ error: 'names array required' });
+  const token = await getIGDBToken();
+  if (!token) return res.status(503).json({ error: 'IGDB not configured' });
+  try {
+    const nameList = names.slice(0, 20).map(n => `"${(n||'').replace(/"/g, '')}"`).join(',');
+    const igdbRes = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: {
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'text/plain',
+      },
+      body: `where name = (${nameList}); fields name,genres.name,cover.image_id,summary; limit 20;`,
+    });
+    const games = await igdbRes.json();
+    const results = {};
+    (games || []).forEach(g => {
+      results[g.name] = {
+        genres: (g.genres || []).map(gn => gn.name),
+        coverUrl: g.cover?.image_id ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${g.cover.image_id}.jpg` : null,
+        coverThumb: g.cover?.image_id ? `https://images.igdb.com/igdb/image/upload/t_cover_small/${g.cover.image_id}.jpg` : null,
+        summary: g.summary ? g.summary.slice(0, 200) : null,
+      };
+    });
+    res.json({ results });
+  } catch (e) {
+    console.error('[IGDB] Lookup error:', e.message);
+    res.status(500).json({ error: 'IGDB request failed' });
+  }
+});
+
 // ── Serve static frontend ──────────────────────────
 app.use(express.static(path.join(__dirname), {
   extensions: ['html'],

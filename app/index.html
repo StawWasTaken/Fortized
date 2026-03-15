@@ -20093,38 +20093,43 @@ function applyRadianceFont() {
 // ════════════════════════════════════════════
 
 // Desktop app game detection (Electron)
+// Uses renderer-side keyword matching via getProcesses() for flexible,
+// user-configurable detection (custom apps, per-app toggles, game collection).
 let _desktopGameDetectionActive = false;
 let _currentDetectedGame = null;
+let _desktopDetectionInterval = null;
 
 function initDesktopGameDetection() {
   if (!window.fortizedDesktop?.isDesktopApp) return;
   if (_desktopGameDetectionActive) return;
   _desktopGameDetectionActive = true;
 
-  // Start periodic detection
-  window.fortizedDesktop.startGameDetection();
+  const activityEnabled = () => localStorage.getItem('ftz_activity_detection') !== 'false';
 
-  // Listen for updates from the main process
-  window.fortizedDesktop.onGameDetectionUpdate(async (games) => {
-    if (games.length > 0) {
-      const game = games[0]; // Primary game (first detected)
-      if (_currentDetectedGame?.name !== game.name) {
-        _currentDetectedGame = game;
-        setGameActivity(game.name, game.icon);
+  async function _pollProcesses() {
+    if (!CU?.username || !activityEnabled()) return;
+    try {
+      const procs = await window.fortizedDesktop.getProcesses();
+      if (!procs || !procs.length) return;
+      const detected = _matchRunningApp(procs);
+      if (detected) {
+        if (!_currentDetectedGame || _currentDetectedGame.name !== detected.name) {
+          _currentDetectedGame = detected;
+          setGameActivity(detected.name, detected.icon);
+        }
+      } else if (_currentDetectedGame) {
+        _currentDetectedGame = null;
+        if (_gameActivity && !_gameActivity._manual) {
+          setGameActivity(null);
+        }
       }
-    } else if (_currentDetectedGame) {
-      _currentDetectedGame = null;
-      setGameActivity(null);
-    }
-  });
+    } catch {}
+  }
 
-  // Initial detection
-  window.fortizedDesktop.detectGames().then(async (games) => {
-    if (games.length > 0) {
-      _currentDetectedGame = games[0];
-      setGameActivity(games[0].name, games[0].icon);
-    }
-  });
+  // Poll every 15s using renderer-side matching
+  _desktopDetectionInterval = setInterval(_pollProcesses, 15000);
+  // Run once immediately
+  _pollProcesses();
 }
 
 async function _enrichDetectedGameIGDB(game) {
@@ -21529,9 +21534,18 @@ function toggleActivityDetection(el) {
   const isOn = el.classList.toggle('on');
   localStorage.setItem('ftz_activity_detection', isOn ? 'true' : 'false');
   if (isOn) {
-    _startAutoActivityDetection();
+    // Restart whichever detection system is appropriate
+    if (window.fortizedDesktop?.isDesktopApp && !_desktopGameDetectionActive) {
+      initDesktopGameDetection();
+    } else if (!_desktopGameDetectionActive) {
+      _startAutoActivityDetection();
+    }
   } else {
     _stopAutoActivityDetection();
+    // Stop desktop detection too
+    if (_desktopDetectionInterval) { clearInterval(_desktopDetectionInterval); _desktopDetectionInterval = null; }
+    _desktopGameDetectionActive = false;
+    _currentDetectedGame = null;
     if (_gameActivity) setGameActivity(null);
   }
   _updateUserbarActivity();
@@ -24083,11 +24097,11 @@ function ftzVideoSeek(id, e) {
 // GAME ACTIVITY / STATUS (Discord-style)
 // ════════════════════════════════════════════
 const KNOWN_GAMES = [
-  {name:'Roblox', icon:'🎮', keywords:['roblox','robloxplayer','roblox player']},
+  {name:'Roblox', icon:'🎮', keywords:['roblox','robloxplayer','robloxplayerbeta']},
   {name:'Minecraft', icon:'⛏️', keywords:['minecraft','javaw','minecraftlauncher','minecraft launcher']},
-  {name:'Fortnite', icon:'🎯', keywords:['fortnite','fortniteclient','epicgameslauncher']},
+  {name:'Fortnite', icon:'🎯', keywords:['fortnite','fortniteclient','fortniteclient-win64-shipping']},
   {name:'Valorant', icon:'🔫', keywords:['valorant','valorant-win64-shipping','riot client']},
-  {name:'League of Legends', icon:'⚔️', keywords:['league of legends','leagueclient','league']},
+  {name:'League of Legends', icon:'⚔️', keywords:['league of legends','leagueclient','leagueoflegends']},
   {name:'Counter-Strike 2', icon:'🔫', keywords:['cs2','counter-strike','csgo']},
   {name:'Apex Legends', icon:'🎯', keywords:['apex legends','r5apex']},
   {name:'Overwatch 2', icon:'🎮', keywords:['overwatch']},
@@ -24097,15 +24111,30 @@ const KNOWN_GAMES = [
   {name:'Call of Duty', icon:'🔫', keywords:['call of duty','cod','modernwarfare','warzone']},
   {name:'GTA V', icon:'🚗', keywords:['gta5','gtav','grand theft auto','playgtav']},
   {name:'Terraria', icon:'⛏️', keywords:['terraria']},
-  {name:'Stardew Valley', icon:'🌾', keywords:['stardew valley','stardew']},
-  {name:'Hollow Knight', icon:'🗡️', keywords:['hollow knight','hollow_knight']},
+  {name:'Stardew Valley', icon:'🌾', keywords:['stardew valley','stardew','stardewvalley']},
+  {name:'Hollow Knight', icon:'🗡️', keywords:['hollow knight','hollow_knight','hollowknight']},
   {name:'Celeste', icon:'🍓', keywords:['celeste']},
+  {name:'Elden Ring', icon:'⚔️', keywords:['eldenring','elden ring']},
+  {name:'Cyberpunk 2077', icon:'🤖', keywords:['cyberpunk2077','cyberpunk']},
+  {name:"Baldur's Gate 3", icon:'⚔️', keywords:['baldursgate3','bg3',"baldur's gate"]},
+  {name:'Destiny 2', icon:'🔫', keywords:['destiny2','destiny']},
+  {name:'Dead by Daylight', icon:'🔪', keywords:['deadbydaylight','dead by daylight']},
+  {name:'Phasmophobia', icon:'👻', keywords:['phasmophobia']},
+  {name:'Lethal Company', icon:'👻', keywords:['lethalcompany','lethal company']},
+  {name:'Palworld', icon:'🎮', keywords:['palworld']},
+  {name:'Helldivers 2', icon:'🔫', keywords:['helldivers']},
+  {name:'Warframe', icon:'⚔️', keywords:['warframe']},
+  {name:'Dota 2', icon:'⚔️', keywords:['dota2','dota']},
+  {name:'Subnautica', icon:'🌊', keywords:['subnautica']},
+  {name:'Skyrim', icon:'⚔️', keywords:['skyrim']},
+  {name:'Dark Souls III', icon:'⚔️', keywords:['darksoulsiii','dark souls']},
   {name:'Spotify', icon:'🎵', keywords:['spotify']},
   {name:'VS Code', icon:'💻', keywords:['visual studio code','code']},
   {name:'OBS Studio', icon:'🎥', keywords:['obs','obs64','obs studio']},
   {name:'Blender', icon:'🎨', keywords:['blender']},
   {name:'Unity', icon:'🕹️', keywords:['unity']},
   {name:'Photoshop', icon:'🖼️', keywords:['photoshop']},
+  {name:'Figma', icon:'🎨', keywords:['figma']},
   {name:'Steam', icon:'🎮', keywords:['steam','steamwebhelper']},
   {name:'Discord', icon:'💬', keywords:['discord']},
 ];
@@ -24176,10 +24205,12 @@ function _matchRunningApp(processList) {
 
 function _startAutoActivityDetection() {
   if (_autoActivityPoller) return;
+  // Skip if desktop detection is already handling this
+  if (_desktopGameDetectionActive) return;
   // Only works in Electron desktop app
-  if (!window.fortifiedDesktop?.isDesktopApp && !window.fortizedDesktop?.isDesktopApp) return;
+  if (!window.fortizedDesktop?.isDesktopApp) return;
   const activityEnabled = () => localStorage.getItem('ftz_activity_detection') !== 'false';
-  const getProcs = () => window.fortizedDesktop?.getProcesses?.() || window.fortifiedDesktop?.getProcesses?.();
+  const getProcs = () => window.fortizedDesktop?.getProcesses?.();
   // Poll Electron for running processes
   _autoActivityPoller = setInterval(async () => {
     if (!CU?.username || !activityEnabled()) return;

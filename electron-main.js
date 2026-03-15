@@ -85,10 +85,35 @@ const KNOWN_GAMES = {
   'clip studio paint.exe': { name: 'Clip Studio Paint', icon: '🎨' },
 };
 
-// Linux process names (without .exe)
-const KNOWN_GAMES_LINUX = {};
+// macOS / Linux process names
+// Start with .exe-stripped Windows names, then add platform-specific overrides
+const KNOWN_GAMES_UNIX = {};
 Object.entries(KNOWN_GAMES).forEach(([key, val]) => {
-  KNOWN_GAMES_LINUX[key.replace('.exe', '')] = val;
+  KNOWN_GAMES_UNIX[key.replace('.exe', '')] = val;
+});
+// macOS-specific process names (often different from Windows)
+Object.assign(KNOWN_GAMES_UNIX, {
+  'robloxplayer':       { name: 'Roblox', icon: '🎮' },
+  'java':              { name: 'Minecraft (Java)', icon: '⛏️' },
+  'riot client':       { name: 'Valorant', icon: '🔫' },
+  'leagueoflegends':   { name: 'League of Legends', icon: '⚔️' },
+  'genshinimpact':     { name: 'Genshin Impact', icon: '⚡' },
+  'spotify':           { name: 'Spotify', icon: '🎵' },
+  'electron':          { name: 'Electron App', icon: '💻', isLauncher: true },
+  'code helper':       { name: 'Visual Studio Code', icon: '💻' },
+  'code helper (renderer)': { name: 'Visual Studio Code', icon: '💻' },
+  'obs':               { name: 'OBS Studio', icon: '🎥' },
+  'figma':             { name: 'Figma', icon: '🎨' },
+  'blender':           { name: 'Blender', icon: '🎨' },
+  'godot':             { name: 'Godot Engine', icon: '🕹️' },
+  'steam_osx':         { name: 'Steam', icon: '🎮', isLauncher: true },
+  'steamwebhelper':    { name: 'Steam', icon: '🎮', isLauncher: true },
+  'subnautica.x86_64': { name: 'Subnautica', icon: '🌊' },
+  'terraria.bin.x86_64': { name: 'Terraria', icon: '⛏️' },
+  'stardewvalley.bin.x86_64': { name: 'Stardew Valley', icon: '🌾' },
+  'hollowknight.x86_64': { name: 'Hollow Knight', icon: '⚔️' },
+  'celeste.bin.x86_64': { name: 'Celeste', icon: '🏔️' },
+  'hades.x86_64':      { name: 'Hades', icon: '⚔️' },
 });
 
 // ── Process Detection ──────────────────────────────
@@ -128,7 +153,7 @@ async function detectRunningGames() {
   const detected = [];
   const seenNames = new Set();
   const platform = process.platform;
-  const knownDB = platform === 'win32' ? KNOWN_GAMES : KNOWN_GAMES_LINUX;
+  const knownDB = platform === 'win32' ? KNOWN_GAMES : KNOWN_GAMES_UNIX;
 
   for (const proc of processes) {
     const match = knownDB[proc];

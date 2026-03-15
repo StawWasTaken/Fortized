@@ -10,6 +10,12 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+
+// ── Supabase (for persisting presence on disconnect) ─────
+const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://ufnjjddqnicbzyjfawrb.supabase.co';
+const SUPABASE_ANON = process.env.SUPABASE_ANON || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbmpqZGRxbmljYnp5amZhd3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NTkzMjgsImV4cCI6MjA4ODIzNTMyOH0.5Sfc_wQO6T3mQT6lqsPTAntqyxhDZJqTrZ3GNkyQSEk';
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 const app = express();
 const server = http.createServer(app);
@@ -143,6 +149,29 @@ app.post('/api/igdb/lookup', async (req, res) => {
   }
 });
 
+// ── Beacon endpoint for reliable tab-close offline ──
+// navigator.sendBeacon fires synchronously on unload, so
+// this guarantees the DB is updated even if the socket
+// hasn't disconnected yet.
+app.post('/api/presence/offline', async (req, res) => {
+  const { username } = req.body || {};
+  if (!username || typeof username !== 'string') return res.status(400).json({ error: 'username required' });
+  const u = username.trim().toLowerCase();
+  if (!u) return res.status(400).json({ error: 'invalid username' });
+
+  // Only mark offline if no active socket exists for this user
+  const hasSocket = onlineUsers.has(u);
+  if (!hasSocket) {
+    const now = new Date().toISOString();
+    await Promise.all([
+      sb.from('statuses').upsert({ username: u, status: 'offline' }, { onConflict: 'username' }),
+      sb.from('users').update({ status: 'offline', last_seen: now, game_activity: null }).eq('username', u),
+    ]).catch(err => console.warn('[Beacon] offline update failed for', u, err.message));
+    io.emit('presence:update', { username: u, status: 'offline', gameActivity: null });
+  }
+  res.status(204).end();
+});
+
 // ── Serve static frontend ──────────────────────────
 app.use(express.static(path.join(__dirname), {
   extensions: ['html'],
@@ -176,18 +205,28 @@ io.on('connection', (socket) => {
   socket.on('identify', (data) => {
     username = (data.username || '').trim().toLowerCase();
     if (!username) return;
+    // Tag socket so multi-tab disconnect check can find it
+    socket.data = socket.data || {};
+    socket.data.username = username;
+
+    const status = data.status || 'online';
+    const gameActivity = data.gameActivity || null;
     onlineUsers.set(username, {
       socketId: socket.id,
-      status: data.status || 'online',
-      gameActivity: data.gameActivity || null,
+      status,
+      gameActivity,
     });
     socket.join(`user:${username}`);
+
+    // Persist online status to DB (user just connected)
+    const visibleStatus = status === 'invisible' ? 'offline' : status;
+    Promise.all([
+      sb.from('statuses').upsert({ username, status: visibleStatus }, { onConflict: 'username' }),
+      sb.from('users').update({ status: visibleStatus }).eq('username', username),
+    ]).catch(err => console.warn('[Presence] DB online update failed for', username, err.message));
+
     // Broadcast presence to everyone
-    io.emit('presence:update', {
-      username,
-      status: data.status || 'online',
-      gameActivity: data.gameActivity || null,
-    });
+    io.emit('presence:update', { username, status, gameActivity });
   });
 
   // ── Status Change ──
@@ -348,11 +387,32 @@ io.on('connection', (socket) => {
   });
 
   // ── Disconnect ──
+  // Discord-style: when the socket drops (tab closed, network lost, etc.)
+  // we persist offline status + last_seen to the database so the user
+  // appears offline to everyone — even those who query the DB directly.
   socket.on('disconnect', () => {
     if (!username) return;
+    const prevEntry = onlineUsers.get(username);
     onlineUsers.delete(username);
-    // Broadcast offline status
-    io.emit('presence:update', { username, status: 'offline', gameActivity: null });
+
+    // Only mark offline if the user doesn't have another active connection
+    // (handles multi-tab: if they still have a tab open, stay online)
+    const stillConnected = [...io.sockets.sockets.values()].some(s => {
+      return s.id !== socket.id && s.data?.username === username;
+    });
+
+    if (!stillConnected) {
+      // Broadcast ephemeral offline to connected clients
+      io.emit('presence:update', { username, status: 'offline', gameActivity: null });
+
+      // Persist to database — user is truly gone
+      const now = new Date().toISOString();
+      Promise.all([
+        sb.from('statuses').upsert({ username, status: 'offline' }, { onConflict: 'username' }),
+        sb.from('users').update({ status: 'offline', last_seen: now, game_activity: null }).eq('username', username),
+      ]).catch(err => console.warn('[Presence] DB offline update failed for', username, err.message));
+    }
+
     // Clean up typing state
     for (const [key, typers] of typingState) {
       if (typers.has(username)) {

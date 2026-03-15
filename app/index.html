@@ -3539,6 +3539,12 @@ const FtzStatus = (() => {
       if (!CU?.username) return;
       _stopCompanionIdlePoll();
       if (typeof _stopAutoActivityDetection === 'function') _stopAutoActivityDetection();
+      // Use sendBeacon for reliable delivery — async fetch may not complete on unload
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/presence/offline',
+          new Blob([JSON.stringify({ username: CU.username })], { type: 'application/json' }));
+      }
+      // Also fire the normal broadcast as a fallback
       _broadcast('offline');
     });
   }

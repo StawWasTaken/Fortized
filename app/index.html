@@ -602,6 +602,8 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .msg-acts button{background:none;border:none;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
 .msg-acts button:hover{background:rgba(255,255,255,.08);color:#fff;}
 .msg-acts button:active{transform:scale(.9);}
+.msg-acts .msg-act-qr{font-size:15px;padding:0;line-height:1;}
+.msg-acts .msg-act-qr:hover{background:rgba(255,255,255,.1);transform:scale(1.15);}
 /* Blocked / Ignored message blur */
 .msg-row.msg-blurred .msg-content-col{filter:blur(6px);user-select:none;pointer-events:none;transition:filter .2s;}
 .msg-row.msg-blurred .msg-acts{display:none!important;}
@@ -2204,8 +2206,8 @@ body.is-desktop-app .notif-panel{top:0;}
 .r-pill .r-count{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);min-width:8px;text-align:center;}
 .r-pill.mine{background:var(--accent-dim);border-color:var(--accent-mid);}
 .r-pill.mine .r-count{color:var(--accent);}
-.r-pill .r-add-btn{width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;font-size:14px;margin-left:2px;}
-.r-pill .r-add-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);}
+.r-pill.r-add-btn{background:transparent;border:1px dashed rgba(255,255,255,.1);border-radius:8px;padding:4px 8px;color:rgba(255,255,255,.3);cursor:pointer;transition:all .12s;font-size:14px;}
+.r-pill.r-add-btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.6);transform:none;box-shadow:none;}
 
 /* ── Keyboard Shortcuts Settings ── */
 .kbd-settings-grid{display:flex;flex-direction:column;gap:4px;}
@@ -4748,37 +4750,26 @@ function _hideRailNavTip() {
 }
 function _railNavCtxMenu(e, viewId) {
   e.preventDefault();
+  e.stopPropagation();
   _hideRailNavTip();
-  const items = [];
+  const groups = [];
   if (viewId === 'dms') {
-    items.push({label:'Open Direct Messages', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', action:"showView('dms')"});
-    items.push({label:'Mark All Read', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>', action:"markAllRead()"});
+    groups.push({ items: [
+      { icon: _ctxSvg('message'), label: 'Open Direct Messages', action: () => showView('dms') },
+      { icon: _ctxSvg('create'), label: 'New DM', action: () => { openModal('modal-new-dm'); switchNewDMTab('dm'); } },
+      { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => { markAllRead(); toast('All read!', 'success'); } },
+    ]});
   } else if (viewId === 'discover') {
-    items.push({label:'Browse Bastions', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>', action:"showView('discover')"});
+    groups.push({ items: [
+      { icon: _ctxSvg('search'), label: 'Browse Bastions', action: () => showView('discover') },
+    ]});
   } else if (viewId === 'atelier') {
-    items.push({label:'Open Atelier', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>', action:"showView('atelier')"});
+    groups.push({ items: [
+      { icon: _ctxSvg('home'), label: 'Open Atelier', action: () => showView('atelier') },
+    ]});
   }
-  if (!items.length) return;
-  const menu = document.getElementById('ctx-menu');
-  if (!menu) return;
-  let html = '<div class="ctx-group">';
-  items.forEach(it => {
-    html += `<div class="ctx-item" onclick="${it.action};_closeCtx()"><span style="display:flex;align-items:center;opacity:.5;flex-shrink:0;">${it.icon}</span>${it.label}</div>`;
-  });
-  html += '</div>';
-  menu.innerHTML = html;
-  menu.style.display = 'block';
-  menu.style.left = (e.clientX) + 'px';
-  menu.style.top = (e.clientY) + 'px';
-  menu.style.animation = 'ctxIn .12s cubic-bezier(.22,1,.36,1)';
-  const ctxOverlay = document.getElementById('ctx-overlay');
-  if (ctxOverlay) { ctxOverlay.style.display = 'block'; ctxOverlay.onclick = () => _closeCtx(); }
-}
-function _closeCtx() {
-  const menu = document.getElementById('ctx-menu');
-  const overlay = document.getElementById('ctx-overlay');
-  if (menu) menu.style.display = 'none';
-  if (overlay) overlay.style.display = 'none';
+  if (!groups.length) return;
+  showCtxMenu(e.clientX, e.clientY, groups);
 }
 
 function _toggleBastionGroup(header) {
@@ -7327,21 +7318,105 @@ function copyMsgLink(msgId) {
   }).catch(() => toast('Could not copy link', 'error'));
 }
 
+// Track last used reaction emojis separately
+let _recentReactionEmojis = JSON.parse(localStorage.getItem('ftz_recent_reaction_emojis')||'[]');
+function _trackReactionEmoji(emoji) {
+  _recentReactionEmojis = [emoji, ..._recentReactionEmojis.filter(e=>e!==emoji)].slice(0,10);
+  localStorage.setItem('ftz_recent_reaction_emojis', JSON.stringify(_recentReactionEmojis));
+  // Also update any visible msg-acts quick reactions
+  document.querySelectorAll('.msg-acts').forEach(el => { el.dataset.stale = '1'; });
+}
+function _getQuickReactionEmojis() {
+  const recent = _recentReactionEmojis.slice(0,3);
+  const defaults = ['👍','❤️','😂'];
+  // Fill with defaults if not enough recent
+  while (recent.length < 3) {
+    const next = defaults.find(d => !recent.includes(d));
+    if (next) recent.push(next); else break;
+  }
+  return recent;
+}
+
+// Shift-key state tracking for message actions toolbar
+let _shiftHeld = false;
+document.addEventListener('keydown', e => { if (e.key === 'Shift' && !_shiftHeld) { _shiftHeld = true; _refreshVisibleMsgActs(); } });
+document.addEventListener('keyup', e => { if (e.key === 'Shift' && _shiftHeld) { _shiftHeld = false; _refreshVisibleMsgActs(); } });
+function _refreshVisibleMsgActs() {
+  document.querySelectorAll('.msg-row:hover .msg-acts, .msg-row .msg-acts[style*="opacity: 1"]').forEach(el => {
+    const row = el.closest('.msg-row');
+    if (!row) return;
+    const msgId = row.dataset.msgid;
+    const from = row.dataset.from || '';
+    const text = (row.dataset.text || '').replace(/'/g, ' ').slice(0,100);
+    // Determine context
+    const context = curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : 'ch';
+    const isOwn = from === CU?.username;
+    const isBastionAdmin = (context==='ch' || context==='channel') && hasPerm('manage_messages');
+    el.innerHTML = _buildMsgActsInner(msgId, from, text, context, isOwn, isBastionAdmin);
+  });
+}
+
 function buildMsgActions(msg, context, id) {
   const isOwn=msg.from===CU?.username;
   const isBastionAdmin = (context==='ch' || context==='channel') && hasPerm('manage_messages');
   const safeId=escapeHTML(id);
   const safeFrom=escapeHTML(msg.from||'');
   const safeText=escapeHTML((msg.text||'').replace(/'/g,' ').slice(0,100));
-  return `<div class="msg-acts">
-    <button onclick="addReactionUI(event,'${safeId}','${context}')" title="React"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
-    <button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg></button>
-    ${(context==='ch'||context==='channel')?`<button onclick="openThread('${safeId}','${safeText}','${safeFrom}')" title="Thread"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>`:''}
-    <button onclick="navigator.clipboard.writeText(document.querySelector('[data-msgid=\\'${safeId}\\']')?.dataset.text||'')" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
-    <button onclick="forwardMsg('${safeText}')" title="Quote"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>
-    ${isOwn?`<button onclick="editMsg('${safeId}')" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`:''}
-    ${(isOwn||isBastionAdmin)?`<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:rgba(248,113,113,.6);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:''}
-  </div>`;
+  return `<div class="msg-acts">${_buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastionAdmin)}</div>`;
+}
+
+function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastionAdmin) {
+  const inBastion = (context==='ch'||context==='channel');
+  const canPin = inBastion && (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username);
+
+  if (_shiftHeld) {
+    // Shift mode: Pin, Thread, Reply, Add Reaction, Edit, Forward, Delete
+    return ''
+      + (canPin ? `<button onclick="pinMessage('${safeId}',document.querySelector('[data-msgid=\\'${safeId}\\']')?.dataset.text||'')" title="Pin Message"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1V2H8v4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24z"/></svg></button>` : '')
+      + (inBastion ? `<button onclick="openThread('${safeId}','${safeText}','${safeFrom}')" title="Create Thread"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>` : '')
+      + `<button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg></button>`
+      + `<button onclick="addReactionUI(event,'${safeId}','${context}')" title="Add Reaction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>`
+      + (isOwn ? `<button onclick="editMsg('${safeId}')" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : '')
+      + `<button onclick="forwardMsg('${safeText}')" title="Forward"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>`
+      + ((isOwn||isBastionAdmin) ? `<button onclick="deleteMsg('${safeId}','${context}')" title="Delete" style="color:rgba(248,113,113,.6);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>` : '');
+  }
+
+  // Default mode: Quick reactions (3), Add Reaction, Reply/Edit, Forward, More
+  const quickEmojis = _getQuickReactionEmojis();
+  let html = '';
+  // Quick reaction emoji buttons
+  quickEmojis.forEach(em => {
+    html += `<button class="msg-act-qr" onclick="event.stopPropagation();toggleReaction('${safeId}','${em}','${context}')" title="React with ${em}">${em}</button>`;
+  });
+  // Add Reaction
+  html += `<button onclick="addReactionUI(event,'${safeId}','${context}')" title="Add Reaction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>`;
+  // Reply or Edit (if own message, show Edit; otherwise Reply)
+  if (isOwn) {
+    html += `<button onclick="editMsg('${safeId}')" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`;
+  } else {
+    html += `<button onclick="replyToMsg('${safeId}','${safeFrom}','${context}')" title="Reply"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg></button>`;
+  }
+  // Forward
+  html += `<button onclick="forwardMsg('${safeText}')" title="Forward"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg></button>`;
+  // More (dropdown)
+  html += `<button onclick="_showMsgMoreMenu(event,'${safeId}','${safeFrom}','${safeText}','${context}',${isOwn},${isBastionAdmin})" title="More"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>`;
+  return html;
+}
+
+function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) {
+  e.stopPropagation();
+  const inBastion = (context==='ch'||context==='channel');
+  const canPin = inBastion && (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username);
+  const items = [];
+  if (!isOwn) items.push({ icon: _ctxSvg('reply'), label: 'Reply', action: () => replyToMsg(msgId, from, context) });
+  if (isOwn) items.push({ icon: _ctxSvg('edit'), label: 'Edit', action: () => editMsg(msgId) });
+  items.push({ icon: _ctxSvg('copy'), label: 'Copy Text', action: () => navigator.clipboard.writeText(document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`)?.dataset.text||''), copyFeedback: true });
+  if (canPin) items.push({ icon: _ctxSvg('pin'), label: 'Pin Message', action: () => pinMessage(msgId, text) });
+  if (inBastion) items.push({ icon: _ctxSvg('thread'), label: 'Create Thread', action: () => openThread(msgId, text, from) });
+  items.push({ icon: _ctxSvg('globe'), label: 'Translate', action: () => { const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`); if (row) _translateMessage(row, row.dataset.text||''); } });
+  items.push({ icon: _ctxSvg('report'), label: 'Report', action: () => reportMessage(msgId, text, from) });
+  if (isOwn || isBastionAdmin) items.push({ icon: _ctxSvg('trash'), label: 'Delete', danger: true, action: () => deleteMsg(msgId, context) });
+  showCtxMenu(e.clientX, e.clientY, [{ items }]);
 }
 
 // ════════════════════════════════════════════
@@ -7670,6 +7745,7 @@ function _filterReactionEmojis(query) {
 }
 async function toggleReaction(msgId, emoji, context) {
   if (!CU?.username) return;
+  _trackReactionEmoji(emoji);
   const me = CU.username.toLowerCase();
   let refPath = '';
   if (context === 'dm' && curDM) {
@@ -14650,7 +14726,7 @@ function showCtxMenu(x, y, groups) {
 function handleContextMenu(e) {
   const target = e.target;
   // Bail out for elements that have their own inline context menu handlers
-  if (target.closest('.rail-bastion')) return;
+  if (target.closest('.rail-bastion') || target.closest('.rail-btn[oncontextmenu]')) return;
   const msgRow = target.closest('.msg-row');
   const isInput = target.tagName === 'TEXTAREA' || target.tagName === 'INPUT';
   const isAuthor = target.closest('.msg-author');
@@ -18383,7 +18459,7 @@ function animateOnyxGain(amount) {
 // ════════════════════════════════════════════
 // ── DM Right-Click Context Menu ──
 function showDMCtxMenu(e, username) {
-  e.preventDefault();
+  e.preventDefault(); e.stopPropagation();
   const groups = [
     { label: username, items: [
       { icon: _ctxSvg('message'), label: 'Open Chat', action: () => openDMView(username) },
@@ -18404,7 +18480,7 @@ function showDMCtxMenu(e, username) {
 }
 
 function showDMSectionCtxMenu(e) {
-  e.preventDefault();
+  e.preventDefault(); e.stopPropagation();
   const groups = [
     { items: [
       { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => { document.querySelectorAll('.friend-item').forEach(fi => { fi.style.fontWeight=''; fi.classList.remove('dm-unread'); const badge = fi.querySelector('.dm-unread-badge'); if(badge) badge.remove(); }); toast('All conversations marked as read!', 'success'); } },
@@ -18414,7 +18490,7 @@ function showDMSectionCtxMenu(e) {
 }
 
 function showRailBastionCtx(e, idx) {
-  e.preventDefault();
+  e.preventDefault(); e.stopPropagation();
   const b = CU.bastions?.[idx];
   if (!b) return;
   const isOwner = b.owner === CU.username;
@@ -20739,13 +20815,17 @@ function _toggleGameVisibility(idx, el) {
 let _gcTimer = null;
 let _igdbSearchTimer = null;
 let _igdbAvailable = null; // null=unknown, true/false
+let _igdbLastCheck = 0;
 
 async function _checkIGDB() {
-  if (_igdbAvailable !== null) return _igdbAvailable;
+  // Re-check every 2 minutes if previously failed, cache success for 10 minutes
+  const cacheTime = _igdbAvailable ? 600000 : 120000;
+  if (_igdbAvailable !== null && Date.now() - _igdbLastCheck < cacheTime) return _igdbAvailable;
   try {
     const r = await fetch('/api/igdb/search', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'test'})});
     _igdbAvailable = r.ok;
-  } catch { _igdbAvailable = false; }
+    _igdbLastCheck = Date.now();
+  } catch { _igdbAvailable = false; _igdbLastCheck = Date.now(); }
   return _igdbAvailable;
 }
 

@@ -34,15 +34,25 @@ async function getIGDBToken() {
   if (_igdbToken && Date.now() < _igdbTokenExpiry) return _igdbToken;
   const clientId = process.env.TWITCH_CLIENT_ID;
   const clientSecret = process.env.TWITCH_CLIENT_SECRET;
-  if (!clientId || !clientSecret) return null;
+  if (!clientId || !clientSecret) {
+    console.warn('[IGDB] Missing TWITCH_CLIENT_ID or TWITCH_CLIENT_SECRET');
+    return null;
+  }
   try {
     const res = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`, { method: 'POST' });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error('[IGDB] Token request failed:', res.status, errText);
+      return null;
+    }
     const data = await res.json();
     if (data.access_token) {
       _igdbToken = data.access_token;
       _igdbTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+      console.log('[IGDB] Token acquired, expires in', data.expires_in, 'seconds');
       return _igdbToken;
     }
+    console.error('[IGDB] Token response missing access_token:', JSON.stringify(data));
   } catch (e) { console.error('[IGDB] Token error:', e.message); }
   return null;
 }
@@ -58,12 +68,23 @@ app.post('/api/igdb/search', async (req, res) => {
       headers: {
         'Client-ID': process.env.TWITCH_CLIENT_ID,
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'text/plain',
+        'Accept': 'application/json',
       },
       body: `search "${query.replace(/"/g, '')}"; fields name,genres.name,cover.image_id,summary,first_release_date; limit 10;`,
     });
+    if (!igdbRes.ok) {
+      const errText = await igdbRes.text().catch(() => '');
+      console.error('[IGDB] Search API error:', igdbRes.status, errText);
+      // Invalidate token on auth errors so next request gets a fresh one
+      if (igdbRes.status === 401 || igdbRes.status === 403) { _igdbToken = null; _igdbTokenExpiry = 0; }
+      return res.status(igdbRes.status).json({ error: 'IGDB API error: ' + igdbRes.status });
+    }
     const games = await igdbRes.json();
-    const results = (games || []).map(g => ({
+    if (!Array.isArray(games)) {
+      console.error('[IGDB] Unexpected response format:', JSON.stringify(games).slice(0, 300));
+      return res.status(500).json({ error: 'IGDB returned unexpected format' });
+    }
+    const results = games.map(g => ({
       id: g.id,
       name: g.name,
       genres: (g.genres || []).map(gn => gn.name),
@@ -91,13 +112,23 @@ app.post('/api/igdb/lookup', async (req, res) => {
       headers: {
         'Client-ID': process.env.TWITCH_CLIENT_ID,
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'text/plain',
+        'Accept': 'application/json',
       },
-      body: `where name = (${nameList}); fields name,genres.name,cover.image_id,summary; limit 20;`,
+      body: `where name ~ (${nameList}); fields name,genres.name,cover.image_id,summary; limit 20;`,
     });
+    if (!igdbRes.ok) {
+      const errText = await igdbRes.text().catch(() => '');
+      console.error('[IGDB] Lookup API error:', igdbRes.status, errText);
+      if (igdbRes.status === 401 || igdbRes.status === 403) { _igdbToken = null; _igdbTokenExpiry = 0; }
+      return res.status(igdbRes.status).json({ error: 'IGDB API error: ' + igdbRes.status });
+    }
     const games = await igdbRes.json();
+    if (!Array.isArray(games)) {
+      console.error('[IGDB] Unexpected lookup response:', JSON.stringify(games).slice(0, 300));
+      return res.status(500).json({ error: 'IGDB returned unexpected format' });
+    }
     const results = {};
-    (games || []).forEach(g => {
+    games.forEach(g => {
       results[g.name] = {
         genres: (g.genres || []).map(gn => gn.name),
         coverUrl: g.cover?.image_id ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${g.cover.image_id}.jpg` : null,

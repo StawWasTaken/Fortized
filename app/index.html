@@ -5817,6 +5817,17 @@ async function renderActiveNowSidebar(containerId) {
     </div>`;
   }).join('');
 }
+let _activeNowRefreshTimer = null;
+function _debouncedActiveNowRefresh() {
+  if (_activeNowRefreshTimer) clearTimeout(_activeNowRefreshTimer);
+  _activeNowRefreshTimer = setTimeout(() => {
+    _activeNowRefreshTimer = null;
+    const h = document.getElementById('home-active-now-list');
+    const d = document.getElementById('dm-active-now-list');
+    if (h) renderActiveNowSidebar('home-active-now-list');
+    if (d) renderActiveNowSidebar('dm-active-now-list');
+  }, 1500);
+}
 
 function showDMFriendsHome() {
   curDM = null;
@@ -9001,6 +9012,8 @@ function initFortizedUXResilience() {
             el.innerHTML = '<span style="opacity:.6;font-size:11px;">🎮 Playing ' + escapeHTML(data.gameActivity.name||'') + '</span>';
           });
         }
+        // Refresh Active Now sidebar when a friend's status changes
+        if ((CU?.friends||[]).includes(data.username)) _debouncedActiveNowRefresh();
       },
       onMessage: function(room, msg) {
         // Message received in room — handled by Supabase real-time listeners
@@ -28645,7 +28658,7 @@ async function showMiniProfilePreview(username, anchorEl) {
         <span class="sdot profile-status-dot" data-for="${escapeHTML(username)}" style="background:${sc};box-shadow:0 0 8px ${sc}55;"></span>
         <span class="profile-status-label" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
       </div>
-      ${customStatus?.text ? `<div style="font-size:10.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;color:rgba(255,255,255,.45);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text).slice(0,30)}</div>` : ''}
+      <div class="profile-custom-status cloud-status-bubble" data-for="${escapeHTML(username)}" style="${customStatus?.text ? 'display:inline-flex;' : 'display:none;'}font-size:10.5px;padding:4px 10px;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;color:rgba(255,255,255,.45);">${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,30)}</span>` : ''}</div>
     </div>
     <!-- Activity Status -->
     ${u.gameActivity?.name ? (() => {

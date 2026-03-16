@@ -28570,16 +28570,6 @@ function _subscribeFriendStatuses() {
   });
 }
 
-let _activeNowRefreshTimer = null;
-function _debouncedActiveNowRefresh() {
-  if (_activeNowRefreshTimer) clearTimeout(_activeNowRefreshTimer);
-  _activeNowRefreshTimer = setTimeout(() => {
-    const anEl = document.getElementById('active-now-list');
-    if (anEl) renderActiveNowSidebar('active-now-list');
-    const homeAnEl = document.getElementById('home-active-now-list');
-    if (homeAnEl) renderActiveNowSidebar('home-active-now-list');
-  }, 1500);
-}
 
 
 // ════════════════════════════════════════════════════════════

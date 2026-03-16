@@ -14267,11 +14267,12 @@ function _setNotifTab(tab, btn) {
 async function buildNotifList() {
   const list=document.getElementById('np-list'); if(!list) return;
   let notifs=[];
-  try{notifs=await FortizedSocial.getNotifications(CU.username)||[];}catch{}
+  try{notifs=await FortizedSocial.getNotifications(CU.username)||[];}catch(e){console.warn('[inbox] notif fetch:',e);}
+  if (!Array.isArray(notifs)) notifs = [];
 
   // Fetch user's support tickets and merge into notifications
   try {
-    const ticketSnap = await firebase.database().ref('support/tickets').orderByChild('username').equalTo(CU.username).once('value');
+    const ticketSnap = await firebase.database().ref('support/tickets').orderByChild('username').equalTo(CU.username).limitToLast(10).once('value');
     if (ticketSnap.exists()) {
       const tickets = ticketSnap.val();
       Object.entries(tickets).forEach(([id, t]) => {
@@ -14284,7 +14285,7 @@ async function buildNotifList() {
         });
       });
     }
-  } catch(e) { console.warn('[inbox] ticket fetch:', e); }
+  } catch(e) { /* index may not exist — silently skip */ }
 
   // Sort by time descending
   notifs.sort((a,b) => new Date(b.time||0) - new Date(a.time||0));
@@ -18414,7 +18415,7 @@ async function adjustOnyx(direction) {
 // ════════════════════════════════════════════
 // INVITE QUEST - Personal invite link
 // ════════════════════════════════════════════
-function _showInviteFriendsPanel() {
+async function _showInviteFriendsPanel() {
   // Generate a personal invite code if not existing
   if (!CU.personalInviteCode) {
     CU.personalInviteCode = CU.username + '-' + Date.now().toString(36).toUpperCase();
@@ -18425,19 +18426,127 @@ function _showInviteFriendsPanel() {
   if (!CU.questsDailyLog) CU.questsDailyLog = {};
   CU.questsDailyLog.invite = new Date().toDateString();
   saveUser().catch(()=>{});
+
+  const friends = CU?.friends || [];
+
   const ov = document.createElement('div');
   ov.className = 'input-dialog-overlay';
-  ov.innerHTML = `<div class="input-dialog" style="max-width:420px;"><h3 style="margin-bottom:12px;">Invite Friends to Fortized</h3>
-    <div style="font-size:12.5px;color:rgba(255,255,255,.5);margin-bottom:16px;line-height:1.5;">Share your personal invite link. You earn <strong style="color:var(--accent);">9 Onyx</strong> for each friend who joins!</div>
-    <div id="invite-link-box" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 16px;font-size:11px;font-family:monospace;color:var(--accent);word-break:break-all;margin-bottom:14px;cursor:pointer;" onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('Copied!','success'))">${link}</div>
-    <div style="display:flex;gap:8px;">
-      <button onclick="navigator.clipboard.writeText(document.getElementById('invite-link-box').textContent).then(()=>toast('Link copied!','success'))" style="flex:1;padding:10px;border-radius:10px;background:var(--accent);color:#060810;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;border:none;cursor:pointer;">Copy Link</button>
-      <button onclick="regeneratePersonalInvite();document.getElementById('invite-link-box').textContent=location.origin+'/app?ref='+CU.personalInviteCode;" style="flex:1;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-size:12px;font-weight:600;cursor:pointer;">Regenerate</button>
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;animation:inviteOverlayIn .3s ease both;';
+
+  ov.innerHTML = `<div style="background:#313338;border-radius:8px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;">
+    <!-- Header -->
+    <div style="padding:16px 16px 0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#f2f3f5;margin:0;">Invite friends to Fortized</h3>
+        <button onclick="this.closest('.input-dialog-overlay').remove()" style="background:none;border:none;color:#b5bac1;cursor:pointer;font-size:20px;line-height:1;padding:4px;">&times;</button>
+      </div>
+      <div style="font-size:11.5px;color:#b5bac1;margin-bottom:12px;">You earn <strong style="color:var(--accent);">9 Onyx</strong> for each friend who joins!</div>
+      <!-- Search -->
+      <div style="position:relative;margin-bottom:12px;">
+        <input type="text" id="invite-friends-search" placeholder="Search" autocomplete="off" style="width:100%;padding:8px 12px;border-radius:4px;background:#1e1f22;border:none;color:#dbdee1;font-size:13px;outline:none;box-sizing:border-box;" oninput="_filterInviteFriends(this.value)">
+      </div>
     </div>
-    <button onclick="this.closest('.input-dialog-overlay').remove()" style="width:100%;margin-top:10px;padding:8px;background:none;border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;">Close</button>
+    <!-- Friends list -->
+    <div id="invite-friends-list" style="flex:1;overflow-y:auto;padding:0 8px 8px;min-height:120px;max-height:340px;">
+      <div style="padding:20px;text-align:center;color:#949ba4;font-size:13px;">Loading friends...</div>
+    </div>
+    <!-- Copy link footer -->
+    <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:11px;font-weight:600;color:#b5bac1;text-transform:uppercase;letter-spacing:.02em;margin-bottom:8px;">Or, send an invite link to a friend</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="invite-link-display" value="${link}" readonly style="flex:1;padding:8px 12px;border-radius:4px;background:#1e1f22;border:none;color:#dbdee1;font-size:12px;font-family:monospace;outline:none;cursor:text;min-width:0;" onclick="this.select()">
+        <button onclick="_copyInviteLink(this)" style="padding:8px 16px;border-radius:4px;background:#5865f2;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;transition:background .15s;">Copy</button>
+      </div>
+    </div>
   </div>`;
+
   document.body.appendChild(ov);
   ov.onclick = e => { if (e.target === ov) ov.remove(); };
+
+  // Load friends list async
+  const listEl = document.getElementById('invite-friends-list');
+  if (!friends.length) {
+    listEl.innerHTML = '<div style="padding:30px 20px;text-align:center;color:#949ba4;font-size:13px;"><div style="font-size:28px;margin-bottom:8px;opacity:.4;">👥</div>No friends yet — add friends to invite them!</div>';
+    return;
+  }
+
+  const friendData = await Promise.all(friends.map(async f => {
+    try {
+      const u = await FortizedSocial.getUserByName(f);
+      const st = FtzStatus.sanitize(u?.status || 'offline');
+      return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st};
+    } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
+  }));
+
+  // Sort: online first
+  const online = friendData.filter(r => FtzStatus.isPresent(r.status));
+  const offline = friendData.filter(r => !FtzStatus.isPresent(r.status));
+  const sorted = [...online, ...offline];
+  window._inviteFriendsSorted = sorted;
+  _renderInviteFriendsList(sorted);
+}
+
+function _renderInviteFriendsList(list) {
+  const el = document.getElementById('invite-friends-list');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:#949ba4;font-size:13px;">No results found</div>';
+    return;
+  }
+  el.innerHTML = list.map(r => {
+    const statusColor = FtzStatus.color(r.status);
+    const isOnline = FtzStatus.isPresent(r.status);
+    return `<div class="invite-friend-row" data-username="${escapeHTML(r.username)}" data-displayname="${escapeHTML(r.displayName.toLowerCase())}" style="display:flex;align-items:center;gap:12px;padding:8px;border-radius:6px;transition:background .1s;cursor:default;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background='transparent'">
+      <div style="position:relative;flex-shrink:0;">
+        <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:#1e1f22;display:flex;align-items:center;justify-content:center;">${buildAvatarHTML(r.pfp,r.displayName,32)}</div>
+        <span style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${statusColor};border:2.5px solid #313338;"></span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:500;color:#f2f3f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(r.displayName)}</div>
+        <div style="font-size:11px;color:#949ba4;">${isOnline ? FtzStatus.publicLabel(r.status) : 'Offline'}</div>
+      </div>
+      <button onclick="_sendInviteDM(this,'${escapeHTML(r.username)}')" style="padding:6px 16px;border-radius:4px;background:transparent;border:1px solid #4e5058;color:#f2f3f5;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;" onmouseenter="if(!this.disabled){this.style.borderColor='#5865f2';this.style.color='#fff';}" onmouseleave="if(!this.disabled){this.style.borderColor='#4e5058';this.style.color='#f2f3f5';}">Invite</button>
+    </div>`;
+  }).join('');
+}
+
+function _filterInviteFriends(query) {
+  const q = (query||'').toLowerCase().trim();
+  const all = window._inviteFriendsSorted || [];
+  if (!q) { _renderInviteFriendsList(all); return; }
+  _renderInviteFriendsList(all.filter(r => r.displayName.toLowerCase().includes(q) || r.username.toLowerCase().includes(q)));
+}
+
+async function _sendInviteDM(btn, username) {
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  btn.style.borderColor = '#4e5058';
+  btn.style.color = '#949ba4';
+  try {
+    const link = location.origin + '/app?ref=' + CU.personalInviteCode;
+    const dmPath = P_dm_path(CU.username, username);
+    const msgRef = firebase.database().ref(dmPath).push();
+    await msgRef.set({id:msgRef.key, from:CU.username, text:'Hey! Join me on Fortized: ' + link, timestamp:Date.now()});
+    btn.textContent = 'Sent';
+    btn.style.background = '#248046';
+    btn.style.borderColor = '#248046';
+    btn.style.color = '#fff';
+  } catch {
+    btn.textContent = 'Failed';
+    btn.disabled = false;
+    setTimeout(()=>{ btn.textContent = 'Invite'; btn.style.borderColor = '#4e5058'; btn.style.color = '#f2f3f5'; }, 2000);
+  }
+}
+
+function _copyInviteLink(btn) {
+  const input = document.getElementById('invite-link-display');
+  if (!input) return;
+  navigator.clipboard.writeText(input.value).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied';
+    btn.style.background = '#248046';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = '#5865f2'; }, 2000);
+  }).catch(() => toast('Failed to copy', 'error'));
 }
 
 function regeneratePersonalInvite() {
@@ -18519,7 +18628,7 @@ function showDMCtxMenu(e, username) {
       { icon: _ctxSvg('message'), label: 'Open Chat', action: () => openDMView(username) },
       { icon: _ctxSvg('profile'), label: 'View Profile', action: () => viewUserProfile(username) },
       { icon: _ctxSvg('markRead'), label: 'Mark as Read', action: () => toast('Marked as read!', 'success') },
-      { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => { document.querySelectorAll('.friend-item').forEach(fi => { fi.style.fontWeight=''; fi.classList.remove('dm-unread'); const badge = fi.querySelector('.dm-unread-badge'); if(badge) badge.remove(); }); toast('All conversations marked as read!', 'success'); } },
+      { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => { document.querySelectorAll('.friend-item').forEach(fi => { fi.style.fontWeight=''; fi.classList.remove('dm-unread'); const badge = fi.querySelector('.dm-unread-badge'); if(badge) badge.remove(); }); markAllRead(); toast('All conversations marked as read!', 'success'); } },
     ]},
     { items: [
       { icon: _ctxSvg('mute'), label: 'Mute Conversation', action: () => toast('Conversation muted', 'info') },
@@ -18537,7 +18646,7 @@ function showDMSectionCtxMenu(e) {
   e.preventDefault(); e.stopPropagation();
   const groups = [
     { items: [
-      { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => { document.querySelectorAll('.friend-item').forEach(fi => { fi.style.fontWeight=''; fi.classList.remove('dm-unread'); const badge = fi.querySelector('.dm-unread-badge'); if(badge) badge.remove(); }); toast('All conversations marked as read!', 'success'); } },
+      { icon: _ctxSvg('markRead'), label: 'Mark All Read', action: () => { document.querySelectorAll('.friend-item').forEach(fi => { fi.style.fontWeight=''; fi.classList.remove('dm-unread'); const badge = fi.querySelector('.dm-unread-badge'); if(badge) badge.remove(); }); markAllRead(); toast('All conversations marked as read!', 'success'); } },
     ]},
   ];
   showCtxMenu(e.clientX, e.clientY, groups);
@@ -19538,19 +19647,19 @@ function parseMD(s) {
     return '<div class="ftz-embed" style="--embed-color:#fef83d;"><div class="ftz-embed-inner">'
       +'<div class="ftz-embed-stripe"></div><div class="ftz-embed-content">'
       +'<div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg> Fortized Video</div>'
-      +'<div class="ftz-embed-media" style="cursor:pointer;" onclick="ftzVideoToggle(\''+vid2+'\')">'
-      +'<video id="'+vid2+'" src="'+data+'" style="max-height:280px;" ontimeupdate="ftzVideoTick(\''+vid2+'\')" onloadedmetadata="ftzVideoMeta(\''+vid2+'\')" onended="ftzVideoEnd(\''+vid2+'\')"></video>'
-      +'<div id="'+vid2+'-overlay" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);">'
-      +'<div style="width:48px;height:48px;border-radius:50%;background:var(--embed-color);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#000;">&#9654;</div>'
+      +'<div class="ftz-embed-media" style="position:relative;background:#000;cursor:pointer;" onclick="ftzVideoToggle(\''+vid2+'\')">'
+      +'<video id="'+vid2+'" src="'+escapeHTML(data)+'" style="width:100%;max-height:300px;display:block;" preload="metadata" ontimeupdate="ftzVideoTick(\''+vid2+'\')" onloadedmetadata="ftzVideoMeta(\''+vid2+'\')" onended="ftzVideoEnd(\''+vid2+'\')"></video>'
+      +'<div id="'+vid2+'-overlay" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);">'
+      +'<div style="width:48px;height:48px;border-radius:50%;background:var(--embed-color);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.4);"><svg width="18" height="18" viewBox="0 0 24 24" fill="#000"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>'
       +'</div></div>'
-      +'<div style="padding:8px 14px 10px;">'
-      +'<div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHTML(name)+'</div>'
-      +'<div style="height:3px;background:rgba(255,255,255,.08);border-radius:2px;cursor:pointer;margin-bottom:6px;" onclick="ftzVideoSeek(\''+vid2+'\',event)">'
-      +'<div id="'+vid2+'-prog" style="height:100%;background:var(--embed-color);border-radius:2px;width:0%;"></div></div>'
-      +'<div style="display:flex;align-items:center;gap:8px;">'
-      +'<button onclick="ftzVideoToggle(\''+vid2+'\')" id="'+vid2+'-btn" style="background:none;border:none;color:var(--embed-color);cursor:pointer;font-size:14px;padding:0;line-height:1;">&#9654;</button>'
+      +'<div style="padding:10px 14px 12px;">'
+      +'<div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHTML(name)+'</div>'
+      +'<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;cursor:pointer;margin-bottom:8px;" onclick="event.stopPropagation();ftzVideoSeek(\''+vid2+'\',event)">'
+      +'<div id="'+vid2+'-prog" style="height:100%;background:var(--embed-color);border-radius:2px;width:0%;transition:width .1s;"></div></div>'
+      +'<div style="display:flex;align-items:center;gap:10px;">'
+      +'<button onclick="event.stopPropagation();ftzVideoToggle(\''+vid2+'\')" id="'+vid2+'-btn" style="background:none;border:none;color:var(--embed-color);cursor:pointer;font-size:16px;padding:0;line-height:1;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>'
       +'<span id="'+vid2+'-cur" style="font-size:10px;color:var(--muted);">0:00</span>'
-      +'<span style="font-size:10px;color:var(--muted);">/</span>'
+      +'<span style="font-size:10px;color:rgba(255,255,255,.15);">/</span>'
       +'<span id="'+vid2+'-dur" style="font-size:10px;color:var(--muted);">--:--</span>'
       +'</div></div></div></div></div>';
   });
@@ -19560,17 +19669,17 @@ function parseMD(s) {
     return '<div class="ftz-embed" style="--embed-color:#fef83d;"><div class="ftz-embed-inner">'
       +'<div class="ftz-embed-stripe"></div><div class="ftz-embed-content">'
       +'<div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> Fortized Audio</div>'
-      +'<div style="padding:8px 14px 12px;display:flex;align-items:center;gap:10px;">'
-      +'<button id="'+aid+'-btn" onclick="ftzAudioToggle(\''+aid+'\')" style="width:36px;height:36px;border-radius:50%;background:var(--embed-color);border:none;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:900;">&#9654;</button>'
+      +'<div style="padding:10px 14px 12px;display:flex;align-items:center;gap:12px;">'
+      +'<button id="'+aid+'-btn" onclick="ftzAudioToggle(\''+aid+'\')" style="width:40px;height:40px;border-radius:50%;background:var(--embed-color);border:none;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 10px rgba(255,249,62,.15);transition:transform .1s;" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="#000"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>'
       +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px;">'+escapeHTML(name)+'</div>'
-      +'<div style="height:3px;background:rgba(255,255,255,.08);border-radius:2px;cursor:pointer;" onclick="ftzAudioSeek(\''+aid+'\',event)">'
+      +'<div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;">'+escapeHTML(name)+'</div>'
+      +'<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;cursor:pointer;" onclick="ftzAudioSeek(\''+aid+'\',event)">'
       +'<div id="'+aid+'-prog" style="height:100%;background:var(--embed-color);border-radius:2px;width:0%;transition:width .1s;"></div></div>'
-      +'<div style="display:flex;justify-content:space-between;margin-top:3px;">'
+      +'<div style="display:flex;justify-content:space-between;margin-top:4px;">'
       +'<span id="'+aid+'-cur" style="font-size:10px;color:var(--muted);">0:00</span>'
       +'<span id="'+aid+'-dur" style="font-size:10px;color:var(--muted);">--:--</span>'
       +'</div></div></div>'
-      +'<audio id="'+aid+'" src="'+data+'" style="display:none;" ontimeupdate="ftzAudioTick(\''+aid+'\')" onloadedmetadata="ftzAudioMeta(\''+aid+'\')" onended="ftzAudioEnd(\''+aid+'\')"></audio>'
+      +'<audio id="'+aid+'" src="'+escapeHTML(data)+'" preload="metadata" style="display:none;" ontimeupdate="ftzAudioTick(\''+aid+'\')" onloadedmetadata="ftzAudioMeta(\''+aid+'\')" onended="ftzAudioEnd(\''+aid+'\')"></audio>'
       +'</div></div></div>';
   });
   // 0d. Generic file attachments — unified embed
@@ -19637,9 +19746,29 @@ function parseMD(s) {
     const invIcon = invBastion?.icon || '';
     const invEmblem = invBastion?.emblem || '🏰';
     const invName = invBastion?.name || 'Fortized Bastion';
+    const invDesc = invBastion?.description || '';
+    const invBanner = invBastion?.banner || '';
     const invMembers = invBastion ? (Object.keys(invBastion.memberRoles||{}).length || (invBastion.members||[]).length || 1) : '';
-    const emblemHTML = invIcon ? `<img src="${escapeHTML(invIcon)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.outerHTML='🏰'">` : invEmblem;
-    return `<div class="ftz-embed" style="--embed-color:#fef83d;" onclick="joinByInvite('${escapeHTML(code)}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Bastion Invite</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="background:linear-gradient(135deg,rgba(255,249,62,.12),rgba(255,249,62,.04));border:1.5px solid rgba(255,249,62,.15);border-radius:14px;font-size:22px;">${emblemHTML}</div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">${escapeHTML(invName)}</div><div style="display:flex;align-items:center;gap:8px;margin-top:3px;">${invMembers?`<span style="font-size:10.5px;color:rgba(255,255,255,.35);font-weight:600;">${invMembers} members</span>`:''}<span style="display:flex;align-items:center;gap:3px;font-size:10px;color:rgba(62,207,110,.5);font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:rgba(62,207,110,.6);display:inline-block;"></span>Online</span></div></div></div><div class="ftz-embed-btn primary" style="background:${alreadyMember?'rgba(255,255,255,.04)':'var(--embed-color)'};color:${alreadyMember?'rgba(255,255,255,.4)':'#060810'};">${alreadyMember?'Already Joined':'Join Bastion'}</div></div></div></div>`;
+    const onlineCount = invBastion ? Math.max(1, Math.floor(invMembers * 0.2)) : 1;
+    const emblemHTML = invIcon ? `<img src="${escapeHTML(invIcon)}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" onerror="this.outerHTML='<span style=font-size:24px>🏰</span>'">` : `<span style="font-size:24px;">${invEmblem}</span>`;
+    const bannerBg = invBanner ? `<img src="${escapeHTML(invBanner)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background='linear-gradient(135deg,rgba(255,249,62,.06),rgba(18,22,34,.95))'">` : '';
+    return `<div style="max-width:430px;margin:8px 0;border-radius:8px;overflow:hidden;background:#2b2d31;cursor:pointer;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;transition:all .2s;" onclick="joinByInvite('${escapeHTML(code)}')" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,.4)'" onmouseout="this.style.boxShadow=''">
+      <div style="height:${invBanner?'70':'0'}px;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(18,22,34,.95));overflow:hidden;">${bannerBg}</div>
+      <div style="padding:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          <div style="width:48px;height:48px;border-radius:16px;background:#1e1f22;border:2px solid #2b2d31;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${!invBanner?'':'margin-top:-36px;box-shadow:0 4px 12px rgba(0,0,0,.4);'}">${emblemHTML}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(invName)}</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
+              <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#b5bac1;"><span style="width:8px;height:8px;border-radius:50%;background:#23a55a;display:inline-block;"></span> ${onlineCount} Online</span>
+              <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#b5bac1;"><span style="width:8px;height:8px;border-radius:50%;background:#80848e;display:inline-block;"></span> ${invMembers} Members</span>
+            </div>
+          </div>
+        </div>
+        ${invDesc?`<div style="font-size:12.5px;color:#b5bac1;line-height:1.45;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHTML(invDesc)}</div>`:''}
+        <button style="width:100%;padding:10px;border-radius:4px;background:${alreadyMember?'#4e5058':'#248046'};color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;border:none;cursor:${alreadyMember?'default':'pointer'};transition:background .15s;"${!alreadyMember?' onmouseover="this.style.background=\'#1a6334\'" onmouseout="this.style.background=\'#248046\'"':''}>${alreadyMember?'Joined':'Join Bastion'}</button>
+      </div>
+    </div>`;
   });
 
   // 5b. X / Twitter post links — unique tweet card (unified embed)
@@ -24051,8 +24180,10 @@ function _ftzFmtTime(s) {
 function ftzAudioToggle(id) {
   const a=document.getElementById(id); if(!a) return;
   const btn=document.getElementById(id+'-btn');
-  if (a.paused) { a.play(); if(btn) btn.textContent='⏸'; }
-  else { a.pause(); if(btn) btn.textContent='▶'; }
+  const playSvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="#000"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+  const pauseSvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="#000"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>';
+  if (a.paused) { a.play(); if(btn) btn.innerHTML=pauseSvg; }
+  else { a.pause(); if(btn) btn.innerHTML=playSvg; }
 }
 function ftzAudioTick(id) {
   const a=document.getElementById(id); if(!a||!a.duration) return;
@@ -24069,7 +24200,7 @@ function ftzAudioMeta(id) {
 function ftzAudioEnd(id) {
   const btn=document.getElementById(id+'-btn');
   const prog=document.getElementById(id+'-prog');
-  if(btn) btn.textContent='▶';
+  if(btn) btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="#000"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
   if(prog) prog.style.width='0%';
 }
 function ftzAudioSeek(id, e) {
@@ -24085,13 +24216,15 @@ function ftzVideoToggle(id) {
   const v=document.getElementById(id); if(!v) return;
   const btn=document.getElementById(id+'-btn');
   const ov=document.getElementById(id+'-overlay');
+  const playSvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+  const pauseSvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>';
   if (v.paused) {
     v.play();
-    if(btn) btn.textContent='⏸';
+    if(btn) btn.innerHTML=pauseSvg;
     if(ov) ov.style.display='none';
   } else {
     v.pause();
-    if(btn) btn.textContent='▶';
+    if(btn) btn.innerHTML=playSvg;
     if(ov) ov.style.display='flex';
   }
 }
@@ -24111,7 +24244,7 @@ function ftzVideoEnd(id) {
   const btn=document.getElementById(id+'-btn');
   const ov=document.getElementById(id+'-overlay');
   const prog=document.getElementById(id+'-prog');
-  if(btn) btn.textContent='▶';
+  if(btn) btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
   if(ov) ov.style.display='flex';
   if(prog) prog.style.width='0%';
 }
@@ -27237,8 +27370,8 @@ async function sendRadianceGiftToUser(friendUsername) {
       await firebase.database().ref('gifts/' + code).set(CU.pendingGifts[code]);
       // Send as DM with gift link
       const link = location.origin + '/app?gift_radiance=' + code;
-      await firebase.database().ref('dms/' + [CU.username, friendUsername].sort().join('_') + '/messages').push({
-        from: CU.username, text: link, time: new Date().toISOString()
+      const _giftMsgRef = firebase.database().ref('dms/' + [CU.username, friendUsername].sort().join('__')).push(); await _giftMsgRef.set({id:_giftMsgRef.key,
+        from: CU.username, text: link, timestamp: new Date().toISOString()
       });
       await firebase.database().ref('notifications/' + friendUsername).push({
         type:'gift', from:CU.username, msg:`${CU.username} sent you a Radiance gift!`, time:new Date().toISOString()
@@ -27309,8 +27442,8 @@ async function sendItemGiftToUser(friendUsername, itemId, itemName, itemCost) {
     try {
       await firebase.database().ref('gifts/' + code).set(CU.pendingGifts[code]);
       const link = location.origin + '/app?gift_item=' + code;
-      await firebase.database().ref('dms/' + [CU.username, friendUsername].sort().join('_') + '/messages').push({
-        from: CU.username, text: link, time: new Date().toISOString()
+      const _giftMsgRef = firebase.database().ref('dms/' + [CU.username, friendUsername].sort().join('__')).push(); await _giftMsgRef.set({id:_giftMsgRef.key,
+        from: CU.username, text: link, timestamp: new Date().toISOString()
       });
       await firebase.database().ref('notifications/' + friendUsername).push({
         type:'gift', from:CU.username, msg:`${CU.username} sent you a gift: ${itemName}!`, time:new Date().toISOString()

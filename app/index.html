@@ -25634,11 +25634,16 @@ function _attachDMLiveEdits(user1, user2) {
   ref.on('child_removed', _dmRemoveHandler);
 }
 
-let _chEditListeners = {};
+let _chEditListenerPath = null;
 function _attachChLiveEdits(bastionId, channelName) {
   const path = 'bastionMsgs/'+bastionId+'/'+channelName;
-  if (_chEditListeners[path]) return; // already attached
-  _chEditListeners[path] = true;
+  // Detach previous listener to prevent memory leaks
+  if (_chEditListenerPath && _chEditListenerPath !== path) {
+    try { firebase.database().ref(_chEditListenerPath).off('child_changed'); } catch{}
+    try { firebase.database().ref(_chEditListenerPath).off('child_removed'); } catch{}
+  }
+  if (_chEditListenerPath === path) return; // already attached
+  _chEditListenerPath = path;
   const ref = firebase.database().ref(path);
   ref.on('child_changed', snap => _liveUpdateMessage(snap, 'ch'));
   ref.on('child_removed', snap => _liveRemoveMessage(snap));

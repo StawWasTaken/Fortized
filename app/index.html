@@ -11584,12 +11584,58 @@ async function banMemberByName() {
   renderMemberList();
   toast(`${username} banned`,'success');
 }
+async function distributeOnyxRevenue(cost) {
+  if (cost <= 0) return;
+  const stawShare = Math.floor(cost * 0.25);
+  const fortizedShare = Math.floor(cost * 0.15);
+  const staffPool = Math.floor(cost * 0.40);
+  // 20% is burned (removed from circulation), plus any rounding remainder
+  // Get all staff members
+  const staff = JSON.parse(localStorage.getItem('ftz_staff') || '{}');
+  const allStaff = [...new Set([...SUPER_ADMINS, ...(staff.admins || []), ...(staff.moderators || [])])];
+  const perStaff = allStaff.length > 0 ? Math.floor(staffPool / allStaff.length) : 0;
+  // Send shares to recipients via Firebase
+  const sends = [];
+  if (stawShare > 0) {
+    sends.push((async () => {
+      try {
+        const u = await FortizedSocial.getUserByName('staw');
+        if (u) await firebase.database().ref('users/staw/onyx').set((u.onyx || 0) + stawShare);
+      } catch {}
+    })());
+  }
+  if (fortizedShare > 0) {
+    sends.push((async () => {
+      try {
+        const u = await FortizedSocial.getUserByName('fortized');
+        if (u) await firebase.database().ref('users/fortized/onyx').set((u.onyx || 0) + fortizedShare);
+      } catch {}
+    })());
+  }
+  if (perStaff > 0) {
+    for (const member of allStaff) {
+      sends.push((async () => {
+        try {
+          const u = await FortizedSocial.getUserByName(member);
+          if (u) await firebase.database().ref('users/' + member + '/onyx').set((u.onyx || 0) + perStaff);
+        } catch {}
+      })());
+    }
+  }
+  await Promise.all(sends);
+  // Refresh current user if they are staff (their onyx may have changed)
+  if (allStaff.includes(CU.username) || CU.username === 'staw' || CU.username === 'fortized') {
+    await refreshCU();
+    updateOnyxDisplay();
+  }
+}
 async function boostBastion(level, cost) {
   if((CU.onyx||0)<cost){toast('Not enough Onyx!','error');return;}
   showCustomConfirm(`Boost to Level ${level} for ${cost} Onyx?`, async ()=>{
     CU.onyx=(CU.onyx||0)-cost;
     CU.bastions[curBastion].boostLevel=level;
     await saveUser(); updateOnyxDisplay(); renderBSettingsMain('boost');
+    distributeOnyxRevenue(cost);
     toast(`⚡ Boosted to Level ${level}!`,'success');
   });
 }
@@ -14191,6 +14237,7 @@ async function buyRadiance(days, cost) {
     const until=new Date(); until.setDate(until.getDate()+days);
     CU.radianceUntil=until.toISOString();
     await saveUser(); updateOnyxDisplay();
+    distributeOnyxRevenue(cost);
     toast(`✨ Radiance active for ${days} days!`,'success');
   });
 }
@@ -14205,6 +14252,7 @@ async function buyRadiancePlus(days, cost) {
     CU.radianceUntil = until.toISOString();
     await saveUser();
     refreshAtelierBalance();
+    distributeOnyxRevenue(cost);
     toast(`🌟 Radiance+ active for ${days} days!`, 'success');
   });
 }
@@ -25857,6 +25905,7 @@ async function buyDecoration(decoId, price) {
     CU.ownedDecorations = [...(CU.ownedDecorations||[]), decoId];
     CU.activeDecoration = decoId;
     await saveUser(); updateOnyxDisplay();
+    distributeOnyxRevenue(price);
     toast(d.name+' unlocked and equipped!','success');
     renderAtelierTab('shop');
   });
@@ -27410,6 +27459,7 @@ async function purchaseRadiance(isPlus, days, cost) {
       else { CU.radianceUntil = until; }
       await saveUser();
       updateOnyxDisplay();
+      distributeOnyxRevenue(cost);
       toast(`✨ ${isPlus ? 'Radiance+' : 'Radiance'} active for ${days} days!`, 'success');
       renderAtelierTab('radiance');
     }
@@ -27474,6 +27524,7 @@ async function giftRadianceTo(friendUsername) {
       } catch {}
       await saveUser();
       updateOnyxDisplay();
+      distributeOnyxRevenue(cost);
       toast(`✨ Gifted Radiance to ${friendUsername}!`, 'success');
       renderAtelierTab('radiance');
     }
@@ -27510,6 +27561,7 @@ async function createRadianceGiftLink() {
     } catch {}
     await saveUser();
     updateOnyxDisplay();
+    distributeOnyxRevenue(cost);
     const link = location.origin + '/app?gift_radiance=' + code;
     navigator.clipboard.writeText(link).then(()=>toast('Gift link copied to clipboard!','success')).catch(()=>toast('Link: '+link,'info'));
     renderAtelierTab('radiance');
@@ -27537,6 +27589,7 @@ async function sendRadianceGiftToUser(friendUsername) {
     } catch {}
     await saveUser();
     updateOnyxDisplay();
+    distributeOnyxRevenue(cost);
     toast(`Radiance gift sent to ${friendUsername}!`, 'success');
     renderAtelierTab('radiance');
   });
@@ -27585,6 +27638,7 @@ async function createItemGiftLink(itemId, itemName, itemCost) {
     } catch {}
     await saveUser();
     updateOnyxDisplay();
+    distributeOnyxRevenue(itemCost);
     const link = location.origin + '/app?gift_item=' + code;
     navigator.clipboard.writeText(link).then(()=>toast('Gift link copied!','success')).catch(()=>toast('Link: '+link,'info'));
   });
@@ -27609,6 +27663,7 @@ async function sendItemGiftToUser(friendUsername, itemId, itemName, itemCost) {
     } catch {}
     await saveUser();
     updateOnyxDisplay();
+    distributeOnyxRevenue(itemCost);
     toast(`Gift sent to ${friendUsername}!`, 'success');
   });
 }
@@ -28705,6 +28760,7 @@ async function buyAppearance(themeId, cost) {
     CU.onyx = bal - cost;
     CU.unlockedAppearances = [...(CU.unlockedAppearances||[]), themeId];
     await saveUser(); updateOnyxDisplay();
+    distributeOnyxRevenue(cost);
     applyAppearance(themeId);
     toast(`✨ ${names[themeId]||themeId} unlocked!`, 'success');
   });
@@ -28732,6 +28788,7 @@ async function buyBundle(bundleId, cost) {
       CU.ownedDecorations = ownedDecos;
     }
     await saveUser(); updateOnyxDisplay();
+    distributeOnyxRevenue(cost);
     toast('Bundle unlocked! Enjoy your new items.','success');
     renderAtelierTab('shop');
   });
@@ -28746,6 +28803,7 @@ async function buyOnyxBadge() {
     CU.onyxBadge = true;
     CU.onyxBadgeSpent = cost;
     await saveUser(); updateOnyxDisplay();
+    distributeOnyxRevenue(cost);
     toast('Onyx Badge unlocked! You are now an Onyx Apprentice.','success');
     renderAtelierTab('shop');
   });
@@ -28760,6 +28818,7 @@ async function upgradeOnyxBadge(amount) {
     CU.onyx = bal - amount;
     CU.onyxBadgeSpent = newSpent;
     await saveUser(); updateOnyxDisplay();
+    distributeOnyxRevenue(amount);
     if (newTier.name !== oldTier.name) {
       toast('Badge evolved! You are now '+newTier.name+'!','success');
     } else {

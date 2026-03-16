@@ -776,8 +776,13 @@ const FortizedSocial = (() => {
 
   function startPolling(username, callbacks) {
     callbacks = callbacks || {};
-    startSupabasePolling(username, callbacks);
-    try { initSocket(username, callbacks); } catch(_) {}
+    // Merge with existing callbacks (e.g. from initSocket called earlier) to avoid overwriting
+    var merged = Object.assign({}, _callbacks, callbacks);
+    startSupabasePolling(username, merged);
+    // Only init socket if not already connected
+    if (!_socket || !_socketReady) {
+      try { initSocket(username, merged); } catch(_) {}
+    }
   }
 
   function stopPolling() {

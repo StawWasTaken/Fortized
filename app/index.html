@@ -1637,6 +1637,31 @@ body.is-desktop-app .notif-panel{top:0;}
 .embed-link-card .elc-url{display:none;}
 .embed-link-card .elc-thumb{display:none;}
 .embed-invite-card{border-radius:14px;overflow:hidden;max-width:440px;margin:8px 0;animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;cursor:pointer;transition:all .2s;position:relative;}
+/* ── Enhanced Bastion Invite Embed (inline chat) ── */
+.bastion-invite-embed{max-width:420px;margin:8px 0;border-radius:16px;overflow:hidden;background:linear-gradient(145deg,rgba(15,18,30,.95),rgba(10,12,22,.98));border:1.5px solid rgba(255,249,62,.08);animation:embedIn .22s cubic-bezier(.22,1,.36,1) both;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;}
+.bastion-invite-embed:hover{border-color:rgba(255,249,62,.18);transform:translateY(-1px);box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.bastion-invite-embed .bie-banner{position:relative;height:80px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(167,139,250,.03));}
+.bastion-invite-embed .bie-banner img{width:100%;height:100%;object-fit:cover;}
+.bastion-invite-embed .bie-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(10,12,22,.95) 100%);}
+.bastion-invite-embed .bie-body{position:relative;padding:0 16px 14px;margin-top:-20px;z-index:1;}
+.bastion-invite-embed .bie-header{display:flex;align-items:flex-end;gap:12px;margin-bottom:10px;}
+.bastion-invite-embed .bie-icon{width:44px;height:44px;border-radius:14px;background:var(--panel);border:2.5px solid rgba(10,12,22,.9);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.4);}
+.bastion-invite-embed .bie-icon img{width:100%;height:100%;object-fit:cover;border-radius:12px;}
+.bastion-invite-embed .bie-icon .bie-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,249,62,.06);font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--accent);}
+.bastion-invite-embed .bie-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px;line-height:1.2;padding-bottom:2px;}
+.bastion-invite-embed .bie-name .bie-verified{width:14px;height:14px;color:var(--accent);flex-shrink:0;}
+.bastion-invite-embed .bie-desc{font-size:11.5px;color:rgba(255,255,255,.35);line-height:1.4;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.bastion-invite-embed .bie-stats{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.bastion-invite-embed .bie-stat{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:rgba(255,255,255,.35);}
+.bastion-invite-embed .bie-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.bastion-invite-embed .bie-dot.online{background:#23a55a;box-shadow:0 0 6px rgba(35,165,90,.5);}
+.bastion-invite-embed .bie-dot.total{background:#80848e;}
+.bastion-invite-embed .bie-join{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:10px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;transition:all .15s;border:none;cursor:pointer;}
+.bastion-invite-embed .bie-join.primary{background:#248046;color:#fff;box-shadow:0 2px 8px rgba(36,128,70,.3);}
+.bastion-invite-embed .bie-join.primary:hover{background:#1a6334;transform:translateY(-1px);}
+.bastion-invite-embed .bie-join.joined{background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:default;border:1px solid rgba(255,255,255,.06);}
+.bastion-invite-embed .bie-label{position:absolute;top:10px;left:14px;z-index:2;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:5px;}
+.bastion-invite-embed .bie-label svg{opacity:.5;}
 /* ── Bastion Invite Dialog (Guilded-style) ─── */
 .invite-overlay{position:fixed;inset:0;background:rgba(4,6,10,.96);backdrop-filter:blur(24px);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;animation:inviteOverlayIn .3s ease both;}
 @keyframes inviteOverlayIn{from{opacity:0}to{opacity:1}}
@@ -2853,9 +2878,9 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
             <!-- Tabs -->
             <div class="atelier-tabs" style="padding:0;margin-bottom:22px;">
               <button class="disc-tab active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">Overview</button>
-              <button class="disc-tab" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">Radiance</button>
-              <button class="disc-tab" id="atnav-quests" onclick="switchAtelierTab('quests',this)">Quests</button>
+              <button class="disc-tab" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">Radiance Dwelling</button>
               <button class="disc-tab" id="atnav-shop" onclick="switchAtelierTab('shop',this)">Shop</button>
+              <button class="disc-tab" id="atnav-quests" onclick="switchAtelierTab('quests',this)">Quests</button>
             </div>
           </div>
           <!-- Dynamic content -->
@@ -3011,7 +3036,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-          <span id="cb-selected-emoji" style="display:none;">🏰</span>
+          <span id="cb-selected-emoji" style="display:none;"></span>
           <div style="font-size:11px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Upload an image or GIF as your bastion emblem</div>
         </div>
         <div class="vis-toggle" style="margin-bottom:12px;">
@@ -3351,7 +3376,7 @@ let currentRoleEditing = null;
 let assignRoleBastion = null;
 let assignRoleMemberName = null;
 let cbVisibility = 'public';
-let cbSelectedEmoji = '🏰';
+let cbSelectedEmoji = null;
 let cbIconData = null;
 let discoverData = [];
 let discoverTab = 'all';
@@ -4657,11 +4682,11 @@ function _renderRailBastion(b, i) {
     draggable="true" data-bastion-idx="${i}" data-bastion-id="${escapeHTML(b.globalId||b.name)}"
     onclick="openBastion(${i})"
     oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})"
-    data-rail-tip="${escapeHTML(b.name)}" data-rail-icon="${escapeHTML(b.icon||'')}" data-rail-emblem="${escapeHTML(b.emblem||'🏰')}"
+    data-rail-tip="${escapeHTML(b.name)}" data-rail-icon="${escapeHTML(b.icon||'')}" data-rail-emblem=""
     style="margin-bottom:4px;">
     <div class="bastion-icon">${b.icon
       ? `<img src="${b.icon}">`
-      : `<span>${b.emblem||'🏰'}</span>`}</div>
+      : `<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}</div>
   </div>`;
 }
 
@@ -4728,14 +4753,14 @@ function _showRailTip(e) {
   const el = e.currentTarget;
   const name = el.dataset.railTip;
   const icon = el.dataset.railIcon;
-  const emblem = el.dataset.railEmblem || '🏰';
+  const emblem = el.dataset.railEmblem || '';
   if (!name) return;
   _hideRailTip();
   const tip = document.createElement('div');
   tip.className = 'rail-tooltip';
   const iconHtml = icon
     ? `<div class="rail-tooltip-icon"><img src="${icon}"></div>`
-    : `<div class="rail-tooltip-icon"><span>${emblem}</span></div>`;
+    : `<div class="rail-tooltip-icon"><span style="font-family:'Syne',sans-serif;font-weight:800;color:var(--accent);">${name ? name[0].toUpperCase() : 'B'}</span></div>`;
   tip.innerHTML = iconHtml + `<span>${escapeHTML(name)}</span>`;
   document.body.appendChild(tip);
   _railTipEl = tip;
@@ -6510,7 +6535,7 @@ function renderBastionSidebar(scroll) {
 
   // ── Banner Hero with centered icon ──
   let html='';
-  const emblemHTML=b.icon?`<img src="${escapeHTML(b.icon)}" onerror="this.outerHTML='🏰'">`:(b.emblem||'🏰');
+  const emblemHTML=b.icon?`<img src="${escapeHTML(b.icon)}" onerror="this.outerHTML='<span style=\\'font-family:Syne,sans-serif;font-weight:800;font-size:32px;color:var(--accent)\\'>${(b.name||'B')[0].toUpperCase()}</span>'">`:`<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:32px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`;
   const memberCount=Object.keys(b.memberRoles||{}).length||(b.members||[]).length||1;
   if (bannerSrc) {
     html+=`<div class="bastion-banner-hero">
@@ -9075,11 +9100,7 @@ function initFortizedUXResilience() {
 
 
 function selectCBEmoji(emoji) {
-  cbSelectedEmoji = emoji;
-  const el = document.getElementById('cb-selected-emoji');
-  if (el) el.textContent = emoji;
-  const prev = document.getElementById('cb-icon-preview');
-  if (prev && !cbIconData) prev.textContent = emoji;
+  // Emoji emblems disabled — bastions use uploaded images or letter fallback only
 }
 
 
@@ -9159,11 +9180,9 @@ function showBastionStep2(type, fromTemplate) {
     if(st) st.style.display='none'; if(sf) sf.style.display='';
     if(_selectedBastionTemplate) {
       const nameInp=document.getElementById('cb-name');
-      const emojiEl=document.getElementById('cb-selected-emoji');
-      const iconPrev=document.getElementById('cb-icon-preview');
       if(nameInp && !nameInp.value) nameInp.value = _selectedBastionTemplate.name;
-      if(emojiEl) emojiEl.textContent = _selectedBastionTemplate.emoji;
-      if(iconPrev) iconPrev.textContent = _selectedBastionTemplate.emoji;
+      const iconPrev=document.getElementById('cb-icon-preview');
+      if(iconPrev) iconPrev.innerHTML = '<span style="font-family:\'Syne\',sans-serif;font-weight:700;font-size:18px;color:var(--accent);">' + (_selectedBastionTemplate.name||'B')[0].toUpperCase() + '</span>';
     }
     _renderCBRoleTemplateRow();
     setTimeout(()=>{document.getElementById('cb-name')?.focus();},80);
@@ -9604,7 +9623,7 @@ function continueFromImportedTemplate() {
   if(nameInp) nameInp.value = _importedTemplateData.name || '';
   if(descInp) descInp.value = _importedTemplateData.desc || '';
   if(_importedTemplateData.emblem && iconPrev) iconPrev.textContent = _importedTemplateData.emblem;
-  cbSelectedEmoji = _importedTemplateData.emblem || '🏰';
+  // Emoji emblems disabled — ignore imported emblem
 
   // Show import info banner
   if(banner) {
@@ -9732,7 +9751,7 @@ async function createBastion() {
   const bastion = {
     name, desc: desc||imported?.desc||tmpl?.description||'',
     tagline: '',
-    emblem: cbSelectedEmoji||(imported?.emblem)||(tmpl?.emoji)||'🏰',
+    emblem: null,
     icon: cbIconData||(imported?.icon)||null,
     banner: imported?.banner||null,
     channels: _chs,
@@ -9765,8 +9784,8 @@ async function createBastion() {
   closeModal('modal-create-bastion');
   renderRailBastions();
   cbIconData = null;
-  cbSelectedEmoji = '🏰';
-  toast(`${bastion.emblem} ${name} created!`, 'success');
+  cbSelectedEmoji = null;
+  toast(`${name} created!`, 'success');
   showFeedbackToast('creating a Bastion', 'bastion_create');
   openBastion(CU.bastions.length - 1);
 }
@@ -10529,7 +10548,7 @@ function renderBSettingsMain(tab) {
       </div>
       <div style="display:flex;gap:14px;margin-bottom:20px;">
         <div style="width:80px;height:80px;border-radius:18px;background:var(--panel2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;overflow:hidden;" onclick="document.getElementById('bs-icon-upload').click()" id="bs-icon-prev">
-          ${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`:(b.emblem||'🏰')}
+          ${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`:`<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}
         </div>
         <input id="bs-icon-upload" type="file" accept="image/*" style="display:none;" onchange="updateBastionIcon(event)">
         <div style="flex:1;">
@@ -14266,10 +14285,21 @@ async function updateNotifBadge() {
   const tbBadge=document.getElementById('tb-notif-badge');
   let notifs=[];
   try { notifs=await FortizedSocial.getNotifications(CU.username)||[]; } catch {}
+  // Normalize: Firebase may return object instead of array
+  if (!Array.isArray(notifs)) {
+    if (notifs && typeof notifs === 'object') notifs = Object.values(notifs);
+    else notifs = [];
+  }
+  // Filter out any null/undefined entries
+  notifs = notifs.filter(n => n && typeof n === 'object');
   const unread=notifs.filter(n=>!n.read).length;
   if(badge){badge.textContent=unread;badge.style.display=unread>0?'flex':'none';}
   if(tbBadge){tbBadge.textContent=unread;tbBadge.style.display=unread>0?'block':'none';}
   setFaviconNotif(unread>0);
+  // Also clear bastion rail notification badges if no unread
+  if (unread === 0) {
+    document.querySelectorAll('.rail-notif-badge').forEach(b=>b.remove());
+  }
 }
 
 async function toggleNotifPanel() {
@@ -14319,11 +14349,13 @@ async function buildNotifList() {
   try {
   let notifs=[];
   try{notifs=await FortizedSocial.getNotifications(CU.username)||[];}catch(e){console.warn('[inbox] notif fetch:',e);}
+  // Robust normalization — handle all possible Firebase return types
   if (!Array.isArray(notifs)) {
-    // Firebase may return an object — convert to array
     if (notifs && typeof notifs === 'object') notifs = Object.values(notifs);
     else notifs = [];
   }
+  // Filter out null/undefined/non-object entries that can cause rendering errors
+  notifs = notifs.filter(n => n && typeof n === 'object' && n.type);
 
   // Fetch user's support tickets and merge into notifications
   try {
@@ -14331,12 +14363,13 @@ async function buildNotifList() {
     if (ticketSnap.exists()) {
       const tickets = ticketSnap.val();
       Object.entries(tickets).forEach(([id, t]) => {
+        if (!t) return;
         notifs.push({
           type: 'support_ticket',
           from: 'Support',
-          time: t.submittedAt || t.createdAt,
+          time: t.submittedAt || t.createdAt || new Date().toISOString(),
           read: t.status === 'closed',
-          data: { subject: t.subject, status: t.status, category: t.category, ticketId: id }
+          data: { subject: t.subject || '', status: t.status || 'open', category: t.category || '', ticketId: id }
         });
       });
     }
@@ -14403,8 +14436,11 @@ async function buildNotifList() {
     const iconHtml = useAvatar
       ? '<div class="np-icon" style="padding:0;border:none;background:none;overflow:hidden;">'+buildAvatarHTML(_nu.pfp||null, _nu.displayName||n.from, 36)+'</div>'
       : '<div class="np-icon" style="color:'+col+';background:'+col+'1a;border-color:'+col+'33;">'+svg+'</div>';
-    const clickAction = n.type==='dm' ? "openDMChat('"+escapeHTML(n.from||'')+"');toggleNotifPanel()"
-      : (n.type==='friend_request'||n.type==='friend_accept') ? "FortizedSocial.markNotificationReadBySource(CU.username,'"+n.type+"','"+escapeHTML(n.from||'')+"').then(()=>updateNotifBadge()).catch(()=>{});viewUserProfile('"+escapeHTML(n.from||'')+"');toggleNotifPanel()" : '';
+    const clickAction = n.type==='dm' ? "FortizedSocial.markNotificationReadBySource(CU.username,'dm','"+escapeHTML(n.from||'')+"').then(()=>updateNotifBadge()).catch(()=>{});openDMChat('"+escapeHTML(n.from||'')+"');toggleNotifPanel()"
+      : (n.type==='friend_request'||n.type==='friend_accept') ? "FortizedSocial.markNotificationReadBySource(CU.username,'"+n.type+"','"+escapeHTML(n.from||'')+"').then(()=>updateNotifBadge()).catch(()=>{});viewUserProfile('"+escapeHTML(n.from||'')+"');toggleNotifPanel()"
+      : (n.type==='mention') ? "FortizedSocial.markNotificationReadBySource(CU.username,'mention','"+escapeHTML(n.from||'')+"').then(()=>updateNotifBadge()).catch(()=>{});toggleNotifPanel()"
+      : (n.type==='call') ? "FortizedSocial.markNotificationReadBySource(CU.username,'call','"+escapeHTML(n.from||'')+"').then(()=>updateNotifBadge()).catch(()=>{});toggleNotifPanel()"
+      : '';
     return '<div class="np-item '+(n.read?'':'unread')+'" onclick="'+clickAction+'" style="cursor:'+(clickAction?'pointer':'default')+';">'
       +iconHtml
       +'<div class="np-text"><p>'+text+'</p>'
@@ -14413,12 +14449,28 @@ async function buildNotifList() {
   } catch(err) {
     console.error('[inbox] buildNotifList error:', err);
     list.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;">'
-      +'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>'
-      +'<div style="font-size:13px;color:var(--muted);text-align:center;">All caught up!<br><span style="font-size:11.5px;opacity:.6;">No new notifications</span></div></div>';
+      +'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(248,113,113,.3)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+      +'<div style="font-size:13px;color:var(--muted);text-align:center;">Something went wrong<br><span style="font-size:11.5px;opacity:.6;">Try closing and reopening your inbox</span></div></div>';
   }
 }
 
-async function markAllRead(){try{await FortizedSocial.markNotificationsRead(CU.username);await updateNotifBadge();await buildNotifList();setFaviconNotif(false);_clearAllDMBadges();}catch{}}
+async function markAllRead(){
+  try{
+    await FortizedSocial.markNotificationsRead(CU.username);
+  }catch(e){console.warn('[inbox] markAllRead:',e);}
+  // Always update UI even if API call fails
+  const badge=document.getElementById('notif-badge');
+  const tbBadge=document.getElementById('tb-notif-badge');
+  if(badge){badge.textContent='0';badge.style.display='none';}
+  if(tbBadge){tbBadge.textContent='0';tbBadge.style.display='none';}
+  setFaviconNotif(false);
+  _clearAllDMBadges();
+  // Rebuild notification list after a small delay to let DB sync
+  setTimeout(async()=>{
+    try{await updateNotifBadge();}catch{}
+    try{await buildNotifList();}catch{}
+  },300);
+}
 function _clearAllDMBadges(){document.querySelectorAll('.friend-item').forEach(fi=>{fi.style.fontWeight='';fi.classList.remove('dm-unread');const badge=fi.querySelector('.dm-unread-badge');if(badge)badge.remove();});document.querySelectorAll('.rail-notif-badge').forEach(b=>b.remove());}
 
 // ════════════════════════════════════════════
@@ -18658,7 +18710,7 @@ async function showBastionInviteUI(bastionIdx) {
         <h3 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#f2f3f5;margin:0;">Invite friends to ${escapeHTML(b.name)}</h3>
         <button onclick="this.closest('.input-dialog-overlay').remove()" style="background:none;border:none;color:#b5bac1;cursor:pointer;font-size:20px;line-height:1;padding:4px;">&times;</button>
       </div>
-      <div style="font-size:11.5px;color:#b5bac1;margin-bottom:12px;display:flex;align-items:center;gap:6px;">${b.emblem||'🏰'} <span style="font-weight:600;color:#f2f3f5;">${escapeHTML(b.name)}</span></div>
+      <div style="font-size:11.5px;color:#b5bac1;margin-bottom:12px;display:flex;align-items:center;gap:6px;">${b.icon?`<img src="${escapeHTML(b.icon)}" style="width:16px;height:16px;border-radius:4px;object-fit:cover;">`:`<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`} <span style="font-weight:600;color:#f2f3f5;">${escapeHTML(b.name)}</span></div>
       <div style="position:relative;margin-bottom:12px;">
         <input type="text" id="bastion-invite-search" placeholder="Search" autocomplete="off" style="width:100%;padding:8px 12px;border-radius:4px;background:#1e1f22;border:none;color:#dbdee1;font-size:13px;outline:none;box-sizing:border-box;" oninput="_filterBastionInviteFriends(this.value)">
       </div>
@@ -18982,10 +19034,10 @@ async function showBastionInviteDialog(bastion, inviterName, inviteCode) {
   const isLoggedIn = !!CU?.username;
   const verifiedBadge = boostLv >= 1 ? `<svg class="invite-verified" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` : '';
 
-  // Right panel: bastion logo
+  // Right panel: bastion logo (image only, no emoji fallback)
   const bastionLogoInner = bastion.icon
     ? `<img src="${escapeHTML(bastion.icon)}">`
-    : `<div class="invite-emblem">${bastion.emblem||'🏰'}</div>`;
+    : `<div class="invite-emblem" style="font-family:'Syne',sans-serif;font-weight:800;font-size:48px;color:var(--accent);">${(bastion.name||'B')[0].toUpperCase()}</div>`;
 
   // Gaming icon pattern SVGs for right panel
   const iconsSVG = [
@@ -19967,8 +20019,24 @@ function parseMD(s) {
     const invDesc = invBastion?.description || invBastion?.desc || '';
     const invMembers = invBastion ? (Object.keys(invBastion.memberRoles||{}).length || (invBastion.members||[]).length || invBastion.memberCount || 1) : 1;
     const onlineCount = invBastion ? Math.max(1, Math.floor(invMembers * 0.2)) : 1;
-    const emblemHTML = invIcon ? `<img src="${escapeHTML(invIcon)}" style="width:100%;height:100%;object-fit:cover;" oncontextmenu="return false" draggable="false" onerror="this.outerHTML='<span style=font-size:18px>🏰</span>'">` : `<span style="font-size:18px;">${invEmblem}</span>`;
-    return `<div class="ftz-embed" style="--embed-color:#23a55a;" onclick="joinByInvite('${escapeHTML(code)}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Bastion Invite</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="border-radius:12px;background:#1e1f22;">${emblemHTML}</div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">${escapeHTML(invName)}</div><div class="ftz-embed-desc" style="display:flex;align-items:center;gap:10px;margin-top:2px;"><span style="display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:#23a55a;display:inline-block;"></span>${onlineCount} Online</span><span style="display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:#80848e;display:inline-block;"></span>${invMembers} Members</span></div></div></div>${invDesc?`<div class="ftz-embed-body" style="padding-top:0;"><div class="ftz-embed-desc">${escapeHTML(invDesc)}</div></div>`:''}<div class="ftz-embed-btn ${alreadyMember?'':'primary'}" style="${alreadyMember?'opacity:.5;cursor:default;':'background:#248046;color:#fff;'}">${alreadyMember?'Joined':'Join Bastion'}</div></div></div></div>`;
+    const iconHTML = invIcon ? `<img src="${escapeHTML(invIcon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" oncontextmenu="return false" draggable="false" onerror="this.parentElement.innerHTML='<div class=bie-fallback>${escapeHTML(invName)[0]||'B'}</div>'">` : `<div class="bie-fallback">${escapeHTML(invName)[0]||'B'}</div>`;
+    const bannerBg = invBastion?.banner ? `<img src="${escapeHTML(invBastion.banner)}" oncontextmenu="return false" draggable="false">` : '';
+    return `<div class="bastion-invite-embed" onclick="joinByInvite('${escapeHTML(code)}')">
+      <div class="bie-banner">${bannerBg}</div>
+      <div class="bie-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> BASTION INVITE</div>
+      <div class="bie-body">
+        <div class="bie-header">
+          <div class="bie-icon">${iconHTML}</div>
+          <div class="bie-name">${escapeHTML(invName)}</div>
+        </div>
+        ${invDesc?`<div class="bie-desc">${escapeHTML(invDesc)}</div>`:''}
+        <div class="bie-stats">
+          <div class="bie-stat"><span class="bie-dot online"></span>${onlineCount} Online</div>
+          <div class="bie-stat"><span class="bie-dot total"></span>${invMembers} Member${invMembers!==1?'s':''}</div>
+        </div>
+        <button class="bie-join ${alreadyMember?'joined':'primary'}">${alreadyMember?'Joined':'Join Bastion'}</button>
+      </div>
+    </div>`;
   });
 
   // 5b. X / Twitter post links — unique tweet card (unified embed)
@@ -25176,6 +25244,52 @@ function switchAtelierTab(tab, el) {
   renderAtelierTab(tab);
 }
 
+function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
+  if (type === 'appearance') {
+    const owned = ownedApps.includes(item.id);
+    return '<div style="background:'+item.gradient+';border:1.5px solid '+item.borderColor+';border-radius:18px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor=\''+item.hoverBorder+'\';this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 40px rgba(0,0,0,.3)\'" onmouseout="this.style.borderColor=\''+item.borderColor+'\';this.style.transform=\'\';this.style.boxShadow=\'none\'">'
+      + '<div style="height:90px;background:'+item.previewBg+';display:flex;gap:3px;padding:10px;position:relative;">'
+      + '<div style="width:16px;background:'+item.sidebarBg+';border-radius:4px;"></div>'
+      + '<div style="flex:1;background:rgba(255,255,255,.02);border-radius:4px;padding:8px;"><div style="height:4px;background:#fff93e;border-radius:100px;width:35%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.05);border-radius:100px;width:55%;"></div></div>'
+      + '</div>'
+      + '<div style="padding:14px 16px;">'
+      + '<div style="font-family:\'Syne\',sans-serif;font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;">'+item.name+'</div>'
+      + '<div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;">Appearance</div>'
+      + (owned ? '<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>' : '<div style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> '+item.price+'</div>')
+      + '</div></div>';
+  } else if (type === 'decoration') {
+    const owned = ownedDecos.includes(item.id);
+    const equipped = activeDecoId === item.id;
+    const pfp = CU?.pfp;
+    const initLetter = (CU?.displayName||'U')[0].toUpperCase();
+    const avatarInner = pfp ? '<img src="'+pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : '<div style="width:100%;height:100%;background:'+item.color+'22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:Syne,sans-serif;font-weight:800;color:'+item.color+';">'+initLetter+'</div>';
+    return '<div style="background:rgba(255,255,255,.02);border:1.5px solid '+(equipped?item.color+'44':'rgba(255,255,255,.05)')+';border-radius:18px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);text-align:center;" onmouseover="this.style.borderColor=\''+item.color+'44\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\''+(equipped?item.color+'44':'rgba(255,255,255,.05)')+'\';this.style.transform=\'\'">'
+      + '<div style="padding:16px 12px 8px;"><div style="position:relative;width:60px;height:60px;margin:0 auto 10px;"><div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.06);overflow:hidden;">'+avatarInner+'</div>'
+      + '<img src="'+item.src+'" style="position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);object-fit:contain;pointer-events:none;" onerror="this.style.display=\'none\'"></div></div>'
+      + '<div style="padding:0 14px 14px;">'
+      + '<div style="font-family:\'Syne\',sans-serif;font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;">'+item.name+'</div>'
+      + '<div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;">Decoration</div>'
+      + (equipped ? '<div style="font-size:11px;font-weight:700;color:'+item.color+';">Equipped</div>' : owned ? '<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>' : '<div style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> '+item.price+'</div>')
+      + '</div></div>';
+  }
+  return '';
+}
+
+function _renderShopBundle(id, name, origPrice, price, items, gradient, borderColor, accent, checkOwned) {
+  const bundleOwned = checkOwned();
+  const discount = Math.round((1 - price / origPrice) * 100);
+  return '<div style="background:'+gradient+';border:1.5px solid '+borderColor+';border-radius:18px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;" onmouseover="this.style.borderColor=\''+accent+'44\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\''+borderColor+'\';this.style.transform=\'\'">'
+    + '<div style="position:absolute;top:10px;right:10px;background:'+accent+'15;border:1px solid '+accent+'25;border-radius:6px;padding:2px 7px;font-size:8.5px;font-weight:800;color:'+accent+';">-'+discount+'%</div>'
+    + '<div style="padding:18px 16px;">'
+    + '<div style="font-family:\'Syne\',sans-serif;font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;">'+name+'</div>'
+    + '<div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:6px;">Bundle</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px;">'
+    + items.map(function(it) { return '<span style="font-size:9px;padding:2px 7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:rgba(255,255,255,.4);font-weight:600;">'+it+'</span>'; }).join('')
+    + '</div>'
+    + (bundleOwned ? '<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>' : '<div style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> <span style="text-decoration:line-through;opacity:.4;margin-right:2px;">'+origPrice+'</span> '+price+'</div>')
+    + '</div></div>';
+}
+
 function renderAtelierTab(tab) {
   const el = document.getElementById('atelier-content');
   if (!el) return;
@@ -25212,20 +25326,53 @@ function renderAtelierTab(tab) {
     if (balHeader) balHeader.textContent = bal;
 
     el.innerHTML = `
+      <!-- Hero Welcome Section -->
+      <div style="position:relative;border-radius:20px;overflow:hidden;margin-bottom:28px;background:linear-gradient(145deg,rgba(255,249,62,.04),rgba(167,139,250,.03),rgba(96,165,250,.02));border:1.5px solid rgba(255,249,62,.08);padding:36px 32px;">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 30%,rgba(255,249,62,.06),transparent 55%),radial-gradient(ellipse at 80% 70%,rgba(167,139,250,.04),transparent 50%);pointer-events:none;"></div>
+        <div style="position:relative;">
+          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:-.02em;text-shadow:0 2px 16px rgba(0,0,0,.3);">WELCOME TO<br>YOUR ATELIER</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:18px;max-width:400px;line-height:1.5;">Your personal hub for customization, rewards, and exclusive items. Claim daily Onyx and unlock premium features.</div>
+          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            Browse the Shop
+          </button>
+        </div>
+      </div>
+
       <!-- Radiance status pill -->
-      ${hasPlus?`<div style="display:flex;align-items:center;gap:10px;background:rgba(255,220,62,.06);border:1px solid rgba(255,220,62,.12);border-radius:14px;padding:12px 18px;margin-bottom:22px;">
-        <img src="/fortized badges/radiance+.png" style="width:20px;height:20px;object-fit:contain;"><span style="font-size:12.5px;font-weight:700;color:#ffd93e;">Radiance+ Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysPlus} days left</span>
+      ${hasPlus?`<div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(255,220,62,.06),rgba(255,249,62,.03));border:1.5px solid rgba(255,220,62,.15);border-radius:16px;padding:14px 20px;margin-bottom:24px;">
+        <img src="/fortized badges/radiance+.png" style="width:22px;height:22px;object-fit:contain;"><span style="font-size:13px;font-weight:700;color:#ffd93e;">Radiance+ Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysPlus} days left</span>
         <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:rgba(255,220,62,.08);border:1px solid rgba(255,220,62,.15);border-radius:10px;color:#ffd93e;font-size:11px;font-weight:600;padding:6px 14px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,220,62,.14)'" onmouseout="this.style.background='rgba(255,220,62,.08)'">Manage</button>
-      </div>`:hasRad?`<div style="display:flex;align-items:center;gap:10px;background:rgba(255,160,62,.06);border:1px solid rgba(255,160,62,.12);border-radius:14px;padding:12px 18px;margin-bottom:22px;">
-        <img src="/fortized badges/basic radiance.png" style="width:20px;height:20px;object-fit:contain;"><span style="font-size:12.5px;font-weight:700;color:#ff9d3e;">Radiance Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysRad} days left</span>
+      </div>`:hasRad?`<div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(255,160,62,.06),rgba(255,140,62,.03));border:1.5px solid rgba(255,160,62,.15);border-radius:16px;padding:14px 20px;margin-bottom:24px;">
+        <img src="/fortized badges/basic radiance.png" style="width:22px;height:22px;object-fit:contain;"><span style="font-size:13px;font-weight:700;color:#ff9d3e;">Radiance Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysRad} days left</span>
         <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:rgba(255,160,62,.08);border:1px solid rgba(255,160,62,.15);border-radius:10px;color:#ff9d3e;font-size:11px;font-weight:600;padding:6px 14px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,160,62,.14)'" onmouseout="this.style.background='rgba(255,160,62,.08)'">Manage</button>
       </div>`:''}
 
-      <div style="display:flex;flex-direction:column;gap:28px;padding-bottom:60px;">
+      <!-- Explore What's New Section -->
+      <div style="margin-bottom:28px;">
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;">Explore What's New</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.3);margin-bottom:18px;line-height:1.5;">Check back often for the latest offerings exclusive for Atelier members, like yourself.</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          ${[
+            {tag:dailyDone?'CLAIMED':'NEW',tagColor:dailyDone?'#3ecf6e':'#ffd93e',title:'Daily Onyx Claim',desc:'Claim 50 Onyx every day. Stay consistent!',action:"claimDailyQuest()"},
+            {tag:'PERK',tagColor:'#60a5fa',title:'Your Theme. Your Style.',desc:'Unlock custom appearances and make Fortized uniquely yours.',action:"switchAtelierTab('shop',document.getElementById('atnav-shop'))"},
+            {tag:hasRad?'ACTIVE':'REWARD',tagColor:hasRad?'#3ecf6e':'#fb923c',title:'Radiance Badge',desc:'Unlock the evolving Radiance badge and premium perks.',action:"switchAtelierTab('radiance',document.getElementById('atnav-radiance'))"},
+          ].map(card=>`
+            <div style="background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.05);border-radius:18px;padding:18px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="${card.action}" onmouseover="this.style.borderColor='rgba(255,249,62,.15)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'">
+              <span style="display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:${card.tagColor}18;color:${card.tagColor};border:1px solid ${card.tagColor}25;margin-bottom:10px;">${card.tag}</span>
+              <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:6px;line-height:1.3;">${card.title}</div>
+              <div style="font-size:11.5px;color:rgba(255,255,255,.3);line-height:1.5;">${card.desc}</div>
+            </div>`).join('')}
+        </div>
+      </div>
 
+      <div style="display:flex;flex-direction:column;gap:28px;padding-bottom:60px;">
         <!-- Radiance Perks — card grid -->
         <div>
-          <div class="atel-section-hdr">Radiance Perks</div>
+          <div class="atel-section-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>Radiance Perks</span>
+            <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))">See All</span>
+          </div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
             ${PERKS.map(p => {
               const unlocked = p.plus ? hasPlus : hasRad;
@@ -25270,15 +25417,18 @@ function renderAtelierTab(tab) {
           </div>` : `<div style="font-size:12.5px;color:rgba(255,255,255,.2);text-align:center;padding:20px;background:rgba(255,255,255,.015);border-radius:12px;border:1px solid rgba(255,255,255,.03);">No quests completed yet — <span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">start one!</span></div>`}
         </div>
 
-        <!-- Shop teaser -->
+        <!-- Shop Highlights -->
         <div>
-          <div class="atel-section-hdr">Shop Preview</div>
+          <div class="atel-section-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>Check Out These Favourites</span>
+            <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))">See All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+          </div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-            ${[{name:'Avatar Frames',icon:ftzIcon('image','22'),color:'#a78bfa'},{name:'Profile Effects',icon:ftzIcon('star','22'),color:'#60a5fa'},{name:'Name Colors',icon:ftzIcon('letters','22'),color:'#fb923c'}].map(it=>`
-              <div style="background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" onmouseover="this.style.borderColor='${it.color}30';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.04)';this.style.transform=''">
-                <div style="color:${it.color};opacity:.4;margin-bottom:10px;">${it.icon}</div>
-                <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.35);">${it.name}</div>
-                <div style="font-size:10px;color:rgba(255,255,255,.15);margin-top:4px;">Coming Soon</div>
+            ${[{name:'Appearances',icon:ftzIcon('image','22'),color:'#a78bfa',desc:'Custom themes for your app'},{name:'Decorations',icon:ftzIcon('star','22'),color:'#60a5fa',desc:'Avatar frames & effects'},{name:'Bundles',icon:ftzIcon('gem','22'),color:'#fb923c',desc:'Save with item packs'}].map(it=>`
+              <div style="background:rgba(255,255,255,.015);border:1.5px solid rgba(255,255,255,.04);border-radius:16px;padding:20px 16px;text-align:center;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" onmouseover="this.style.borderColor='${it.color}30';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.04)';this.style.transform='';this.style.boxShadow='none'">
+                <div style="color:${it.color};opacity:.5;margin-bottom:10px;">${it.icon}</div>
+                <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.5);">${it.name}</div>
+                <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">${it.desc}</div>
               </div>`).join('')}
           </div>
         </div>
@@ -25564,135 +25714,87 @@ function renderAtelierTab(tab) {
 
         <!-- Shop Tabs -->
         <div style="position:relative;display:flex;gap:4px;margin-top:18px;">
-          ${['featured','browse','coming_soon'].map(t=>`
-            <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:9px 18px;border-radius:12px;border:1.5px solid ${shopTab===t?'rgba(255,249,62,.2)':'transparent'};background:${shopTab===t?'rgba(255,249,62,.06)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.35)'};font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="if('${t}'!=='${shopTab}')this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.7)'" onmouseout="if('${t}'!=='${shopTab}'){this.style.background='transparent';this.style.color='rgba(255,255,255,.35)'}">${t==='featured'?'Featured':t==='browse'?'Browse':'Coming Soon'}</button>`).join('')}
+          ${['featured','browse'].map(t=>`
+            <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:9px 18px;border-radius:12px;border:1.5px solid ${shopTab===t?'rgba(255,249,62,.2)':'transparent'};background:${shopTab===t?'rgba(255,249,62,.06)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.35)'};font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="if('${t}'!=='${shopTab}')this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.7)'" onmouseout="if('${t}'!=='${shopTab}'){this.style.background='transparent';this.style.color='rgba(255,255,255,.35)'}">${t==='featured'?'Featured':'Browse'}</button>`).join('')}
         </div>
       </div>
 
       <div style="padding:24px 32px 60px;">
         ${shopTab==='featured'?`
-          <!-- Appearances -->
-          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            Appearances
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;">
-            ${SHOP_APPEARANCES.map(a => {
-              const owned = ownedAppearances.includes(a.id);
-              return `<div style="background:${a.gradient};border:1.5px solid ${a.borderColor};border-radius:20px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='${a.hoverBorder}';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(0,0,0,.3)'" onmouseout="this.style.borderColor='${a.borderColor}';this.style.transform='';this.style.boxShadow='none'">
-                <!-- Mini preview -->
-                <div style="height:100px;background:${a.previewBg};display:flex;gap:3px;padding:12px;position:relative;">
-                  <div style="width:20px;background:${a.sidebarBg};border-radius:6px;"></div>
-                  <div style="flex:1;background:rgba(255,255,255,.02);border-radius:6px;padding:10px;">
-                    <div style="height:5px;background:#fff93e;border-radius:100px;width:40%;margin-bottom:5px;"></div>
-                    <div style="height:4px;background:rgba(255,255,255,.06);border-radius:100px;width:65%;"></div>
-                  </div>
-                  <span style="position:absolute;bottom:8px;right:12px;font-size:9px;color:${a.labelColor};font-weight:700;letter-spacing:.05em;">${a.name.toUpperCase()}</span>
-                </div>
-                <div style="padding:16px 18px;">
-                  <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:4px;">${a.name}</div>
-                  <div style="font-size:11.5px;color:rgba(255,255,255,.35);line-height:1.5;margin-bottom:12px;min-height:34px;">${a.desc}</div>
-                  ${owned
-                    ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:#3ecf6e;font-size:12px;font-weight:700;text-align:center;">Owned</div>'
-                    : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyAppearance('${a.id}',${a.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> ${a.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${a.id}','${a.name}',${a.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.5)'" title="Gift this item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg></button></div>`}
-                </div>
-              </div>`;
-            }).join('')}
-          </div>
 
-          <!-- Onyx Badge -->
-          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
-            Badges
-          </div>
-          <div style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.12);border-radius:20px;overflow:hidden;margin-bottom:32px;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(255,249,62,.12)';this.style.transform=''">
-            <div style="padding:18px 20px;display:flex;align-items:center;gap:16px;">
-              <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="/fortized badges/onyx.png" style="width:34px;height:34px;object-fit:contain;"></div>
-              <div style="flex:1;min-width:0;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-                  <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">Onyx Badge</span>
-                  ${onyxTier ? `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.12);">${onyxTier.name.split(' ')[1]}</span>` : ''}
-                </div>
-                <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;">Evolves as you invest Onyx. Apprentice → Adept → Artisan → Master.</div>
-                ${CU?.onyxBadge?`<div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-                  <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;max-width:160px;">
-                    <div style="height:100%;border-radius:2px;background:var(--accent);width:${Math.min(100,(CU.onyxBadgeSpent||0)/100)}%;transition:width .4s;"></div>
-                  </div>
-                  <span style="font-size:10.5px;font-weight:600;color:rgba(255,249,62,.6);">${CU.onyxBadgeSpent||0} invested</span>
-                </div>
-                <div style="display:flex;gap:6px;margin-top:8px;">
-                  ${[{amt:100,label:'100'},{amt:500,label:'500'},{amt:1000,label:'1K'}].map(u=>`<button onclick="upgradeOnyxBadge(${u.amt})" style="padding:5px 12px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);border-radius:10px;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .12s;" onmouseover="this.style.background='rgba(255,249,62,.12)'" onmouseout="this.style.background='rgba(255,249,62,.06)'"><img src='/Onyx.png' style='width:11px;height:11px;object-fit:contain;'> +${u.label}</button>`).join('')}
-                </div>`:''}
-              </div>
-              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 20px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;flex-shrink:0;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:14px;height:14px;object-fit:contain;'> 100</button>`:'<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:#3ecf6e;font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0;">Owned</div>'}
+          <!-- ═══ COLLECTIONS-BASED SHOP ═══ -->
+
+          <!-- Sunset Collection -->
+          <div style="margin-bottom:36px;">
+            <div style="position:relative;border-radius:20px;overflow:hidden;margin-bottom:16px;background:linear-gradient(135deg,rgba(26,4,16,.95),rgba(74,18,40,.8),rgba(245,217,120,.15));border:1.5px solid rgba(245,217,120,.12);padding:28px 24px;cursor:pointer;" onclick="setShopCat('All');setShopTab('browse')" onmouseover="this.style.borderColor='rgba(245,217,120,.3)'" onmouseout="this.style.borderColor='rgba(245,217,120,.12)'">
+              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:#f5d978;letter-spacing:-.01em;text-shadow:0 2px 12px rgba(245,217,120,.3);">SUNSET COLLECTION</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;">Bathe your profile in golden light</div>
+              <button style="margin-top:14px;padding:8px 18px;border-radius:10px;background:rgba(245,217,120,.12);border:1px solid rgba(245,217,120,.2);color:#f5d978;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(245,217,120,.2)'" onmouseout="this.style.background='rgba(245,217,120,.12)'">Shop the Collection</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+              ${_renderShopItemCard('appearance', SHOP_APPEARANCES.find(a=>a.id==='sunset'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
+              ${_renderShopItemCard('decoration', PROFILE_DECORATIONS.find(d=>d.id==='sunset_halo'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
+              ${_renderShopBundle('sunset_bundle','Sunset Bundle',220,175,['Sunset','Sunset Halo'],'linear-gradient(135deg,rgba(245,217,120,.06),rgba(26,4,16,.8))','rgba(245,217,120,.12)','#f5d978',()=>ownedAppearances.includes('sunset')&&(CU?.ownedDecorations||[]).includes('sunset_halo'))}
             </div>
           </div>
 
-          <!-- Profile Decorations -->
-          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/><path d="M2 12h20"/></svg>
-            Profile Decorations
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px;">
-            ${PROFILE_DECORATIONS.slice(0,4).map(d => {
-              const owned = (CU?.ownedDecorations||[]).includes(d.id);
-              const equipped = CU?.activeDecoration === d.id;
-              return `<div style="background:rgba(255,255,255,.02);border:1.5px solid ${equipped?d.color+'44':'rgba(255,255,255,.05)'};border-radius:16px;padding:16px 12px;text-align:center;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='${d.color}33';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='${equipped?d.color+'44':'rgba(255,255,255,.05)'}';this.style.transform=''">
-                <div style="position:relative;width:52px;height:52px;margin:0 auto 10px;">
-                  <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.06);overflow:hidden;">
-                    ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:`<div style="width:100%;height:100%;background:${d.color}22;display:flex;align-items:center;justify-content:center;font-size:15px;font-family:Syne,sans-serif;font-weight:800;color:${d.color};">${(CU?.displayName||CU?.username||'U')[0].toUpperCase()}</div>`}
-                  </div>
-                  <img src="${d.src}" style="position:absolute;inset:-5px;width:calc(100% + 10px);height:calc(100% + 10px);object-fit:contain;pointer-events:none;" onerror="this.style.display='none'">
-                </div>
-                <div style="font-size:11px;font-weight:700;color:#fff;margin-bottom:4px;">${d.name}</div>
-                ${equipped
-                  ? `<div style="font-size:9.5px;font-weight:700;color:${d.color};">Equipped</div>`
-                  : owned
-                    ? `<button onclick="event.stopPropagation();equipDecoration('${d.id}')" style="padding:4px 10px;background:${d.color}15;border:1px solid ${d.color}25;border-radius:8px;color:${d.color};font-size:9.5px;font-weight:700;cursor:pointer;">Equip</button>`
-                    : `<div style="display:flex;gap:4px;justify-content:center;"><button onclick="event.stopPropagation();buyDecoration('${d.id}',${d.price})" style="padding:4px 10px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-size:9.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:3px;"><img src='/Onyx.png' style='width:10px;height:10px;object-fit:contain;'> ${d.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${d.id}','${d.name}',${d.price})" style="padding:4px 8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.4);font-size:9.5px;cursor:pointer;" title="Gift"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
-              </div>`;
-            }).join('')}
+          <!-- Midnight Collection -->
+          <div style="margin-bottom:36px;">
+            <div style="position:relative;border-radius:20px;overflow:hidden;margin-bottom:16px;background:linear-gradient(135deg,rgba(5,8,18,.95),rgba(10,18,40,.8),rgba(96,165,250,.1));border:1.5px solid rgba(96,165,250,.12);padding:28px 24px;cursor:pointer;" onclick="setShopCat('All');setShopTab('browse')" onmouseover="this.style.borderColor='rgba(96,165,250,.3)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)'">
+              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:#60a5fa;letter-spacing:-.01em;text-shadow:0 2px 12px rgba(96,165,250,.3);">MIDNIGHT COLLECTION</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;">Command the night with deep blue aesthetics</div>
+              <button style="margin-top:14px;padding:8px 18px;border-radius:10px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(96,165,250,.18)'" onmouseout="this.style.background='rgba(96,165,250,.1)'">Shop the Collection</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+              ${_renderShopItemCard('appearance', SHOP_APPEARANCES.find(a=>a.id==='midnight_citadel'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
+              ${_renderShopItemCard('decoration', PROFILE_DECORATIONS.find(d=>d.id==='blue_glow'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
+              ${_renderShopBundle('midnight_bundle','Midnight Bundle',260,210,['Midnight Citadel','Blue Glow'],'linear-gradient(135deg,rgba(96,165,250,.04),rgba(5,8,18,.9))','rgba(96,165,250,.12)','#60a5fa',()=>ownedAppearances.includes('midnight_citadel')&&(CU?.ownedDecorations||[]).includes('blue_glow'))}
+            </div>
           </div>
 
-          <!-- Bundles -->
-          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            Bundles
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;">
-            ${[
-              {id:'sunset_bundle',name:'Sunset Bundle',desc:'The Sunset appearance paired with the Sunset Halo decoration. Bathe your profile in golden light.',items:['Sunset Appearance','Sunset Halo'],origPrice:220,price:175,gradient:'linear-gradient(135deg,rgba(245,217,120,.08),rgba(74,18,40,.6),rgba(26,4,16,.9))',borderColor:'rgba(245,217,120,.15)',accent:'#f5d978'},
-              {id:'midnight_bundle',name:'Midnight Bundle',desc:'Blue Glow decoration + Midnight Citadel appearance. Command the night.',items:['Blue Glow','Midnight Citadel'],origPrice:260,price:210,gradient:'linear-gradient(135deg,rgba(96,165,250,.06),rgba(5,8,18,.9))',borderColor:'rgba(96,165,250,.15)',accent:'#60a5fa'},
-            ].map(bundle => {
-              const bundleOwned = bundle.items.every(item => {
-                const lower = item.toLowerCase();
-                if (lower.includes('sunset halo')) return (CU?.ownedDecorations||[]).includes('sunset_halo');
-                if (lower.includes('sunset')) return ownedAppearances.includes('sunset');
-                if (lower.includes('blue glow')) return (CU?.ownedDecorations||[]).includes('blue_glow');
-                if (lower.includes('midnight')) return ownedAppearances.includes('midnight_citadel');
-                return false;
-              });
-              const discount = Math.round((1 - bundle.price / bundle.origPrice) * 100);
-              return `<div style="background:${bundle.gradient};border:1.5px solid ${bundle.borderColor};border-radius:20px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;" onmouseover="this.style.borderColor='${bundle.accent}44';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(0,0,0,.3)'" onmouseout="this.style.borderColor='${bundle.borderColor}';this.style.transform='';this.style.boxShadow='none'">
-                <div style="position:absolute;top:12px;right:12px;background:${bundle.accent}22;border:1px solid ${bundle.accent}33;border-radius:8px;padding:3px 8px;font-size:9px;font-weight:800;color:${bundle.accent};z-index:1;">-${discount}%</div>
-                <div style="padding:20px 18px 14px;">
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${bundle.accent}" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-                    <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;">${bundle.name}</div>
+          <!-- Onyx Collection -->
+          <div style="margin-bottom:36px;">
+            <div style="position:relative;border-radius:20px;overflow:hidden;margin-bottom:16px;background:linear-gradient(135deg,rgba(1,1,3,.95),rgba(14,10,34,.8),rgba(140,100,220,.08));border:1.5px solid rgba(140,100,220,.12);padding:28px 24px;">
+              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:rgba(140,100,220,.7);letter-spacing:-.01em;">ONYX COLLECTION</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:4px;">Pure darkness. Minimal distractions.</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+              ${_renderShopItemCard('appearance', SHOP_APPEARANCES.find(a=>a.id==='onyx_pure'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
+              <!-- Onyx Badge -->
+              <div style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.12);border-radius:18px;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,249,62,.12)';this.style.transform=''">
+                <div style="padding:18px 16px;display:flex;align-items:center;gap:14px;">
+                  <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="/fortized badges/onyx.png" style="width:30px;height:30px;object-fit:contain;"></div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;margin-bottom:2px;">Onyx Badge</div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:6px;">Evolving badge</div>
+                    ${CU?.onyxBadge
+                      ?`<div style="display:flex;align-items:center;gap:6px;">
+                        <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;max-width:120px;"><div style="height:100%;border-radius:2px;background:var(--accent);width:${Math.min(100,(CU.onyxBadgeSpent||0)/100)}%;"></div></div>
+                        <span style="font-size:10px;font-weight:600;color:rgba(255,249,62,.5);">${CU.onyxBadgeSpent||0} invested</span>
+                      </div>
+                      <div style="display:flex;gap:4px;margin-top:6px;">
+                        ${[{amt:100,label:'100'},{amt:500,label:'500'}].map(u=>\`<button onclick="upgradeOnyxBadge(\${u.amt})" style="padding:4px 10px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);border-radius:8px;color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px;"><img src='/Onyx.png' style='width:10px;height:10px;object-fit:contain;'> +\${u.label}</button>\`).join('')}
+                      </div>`
+                      :`<div style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> 100</div>`}
                   </div>
-                  <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.5;margin-bottom:12px;">${bundle.desc}</div>
-                  <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;">
-                    ${bundle.items.map(item => `<span style="font-size:10px;padding:3px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-weight:600;">${item}</span>`).join('')}
-                  </div>
-                  ${bundleOwned
-                    ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:#3ecf6e;font-size:12px;font-weight:700;text-align:center;">Owned</div>'
-                    : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:3px;">${bundle.origPrice}</span> ${bundle.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${bundle.id}','${bundle.name}',${bundle.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'" title="Gift"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
+                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:8px 14px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:4px;flex-shrink:0;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:#3ecf6e;flex-shrink:0;">Owned</div>'}
                 </div>
-              </div>`;
-            }).join('')}
+              </div>
+            </div>
           </div>
 
-          <!-- Upcoming -->
+          <!-- Glow Decorations Collection -->
+          <div style="margin-bottom:36px;">
+            <div style="position:relative;border-radius:20px;overflow:hidden;margin-bottom:16px;background:linear-gradient(135deg,rgba(96,165,250,.05),rgba(62,207,110,.04),rgba(251,146,60,.04));border:1.5px solid rgba(255,255,255,.06);padding:28px 24px;">
+              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:rgba(255,255,255,.7);letter-spacing:-.01em;">GLOW DECORATIONS</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:4px;">Make your avatar shine with vibrant glow effects</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+              ${PROFILE_DECORATIONS.filter(d=>d.id!=='sunset_halo').map(d => _renderShopItemCard('decoration', d, ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)).join('')}
+            </div>
+          </div>
+
+          <!-- Coming Soon -->
           <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Coming Soon

@@ -1012,6 +1012,21 @@
       return;
     }
 
+    // notifications/{username}/{notifId} — update a specific notification
+    if (parts[0] === 'notifications' && parts.length === 3) {
+      const updateObj = {};
+      if ('read' in updates) updateObj.read = updates.read;
+      if ('seen' in updates) {
+        // 'seen' is stored in the data JSONB column
+        const { data: existing } = await sb.from('notifications').select('data').eq('username', parts[1]).eq('id', parts[2]).maybeSingle();
+        updateObj.data = { ...(existing?.data || {}), seen: updates.seen };
+      }
+      if (Object.keys(updateObj).length) {
+        await sb.from('notifications').update(updateObj).eq('username', parts[1]).eq('id', parts[2]);
+      }
+      return;
+    }
+
     // notifications/{username} — partial updates (mark read)
     if (parts[0] === 'notifications' && parts.length === 2) {
       // Updates like { "notifId/read": true }
@@ -1177,13 +1192,13 @@
       // .get() → returns snap-like object
       get: async () => {
         const val = await supaGet(pathStr);
-        return _makeSnap(val);
+        return _makeSnap(val, null, pathStr);
       },
 
       // .once('value', cb) → one-time read
       once: async (eventType, cb) => {
         const val = await supaGet(pathStr);
-        const snap = _makeSnap(val);
+        const snap = _makeSnap(val, null, pathStr);
         if (cb) cb(snap);
         return snap;
       },
@@ -1235,14 +1250,14 @@
         const newVal = fn(current);
         if (newVal === undefined) return; // abort
         await supaSet(pathStr, newVal);
-        return { committed: true, snapshot: _makeSnap(newVal) };
+        return { committed: true, snapshot: _makeSnap(newVal, null, pathStr) };
       },
 
       // .on(event, callback) → realtime listener
       on: (event, callback) => {
         // First, do an initial fetch for 'value' events
         if (event === 'value') {
-          supaGet(pathStr).then(val => callback?.(_makeSnap(val)));
+          supaGet(pathStr).then(val => callback?.(_makeSnap(val, null, pathStr)));
         }
 
         // Set up Supabase realtime subscription
@@ -1261,11 +1276,12 @@
             .on('postgres_changes', subConfig, payload => {
               if (event === 'value') {
                 // Re-fetch the full value
-                supaGet(pathStr).then(val => callback?.(_makeSnap(val)));
+                supaGet(pathStr).then(val => callback?.(_makeSnap(val, null, pathStr)));
               } else {
                 const row = payload.new || payload.old;
                 const snapVal = _rowToSnapVal(table, row, parts);
-                callback?.(_makeSnap(snapVal, row?.id || row?.username));
+                const rowKey = row?.id || row?.username;
+                callback?.(_makeSnap(snapVal, rowKey, pathStr));
               }
             })
             .subscribe();
@@ -1342,7 +1358,7 @@
           } else {
             result = await supaGet(pathStr);
           }
-          const snap = _makeSnap(result);
+          const snap = _makeSnap(result, null, pathStr);
           if (cb) cb(snap);
           return snap;
         };
@@ -1358,7 +1374,7 @@
             const { data } = await sb.from('dms').select('*').eq('dm_key', parts[1]).order('timestamp', { ascending: false }).limit(n);
             const result = {};
             (data || []).reverse().forEach(r => { result[r.id] = { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited, reactions: r.reactions }; });
-            return _makeSnap(Object.keys(result).length ? result : null);
+            return _makeSnap(Object.keys(result).length ? result : null, null, pathStr);
           }
           if (parts[0] === 'bastionMsgs' && parts.length >= 3) {
             const { data } = await sb.from('bastion_msgs').select('*')
@@ -1366,19 +1382,19 @@
               .order('timestamp', { ascending: false }).limit(n);
             const result = {};
             (data || []).reverse().forEach(r => { result[r.id] = { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited, reactions: r.reactions }; });
-            return _makeSnap(Object.keys(result).length ? result : null);
+            return _makeSnap(Object.keys(result).length ? result : null, null, pathStr);
           }
           if (parts[0] === 'groupChats' && parts[2] === 'messages') {
             const { data } = await sb.from('group_chat_messages').select('*').eq('gc_id', parts[1]).order('timestamp', { ascending: false }).limit(n);
             const result = {};
             (data || []).reverse().forEach(r => { result[r.id] = { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited, ...(r.data || {}) }; });
-            return _makeSnap(Object.keys(result).length ? result : null);
+            return _makeSnap(Object.keys(result).length ? result : null, null, pathStr);
           }
           if (parts[0] === 'feedback') {
             const { data } = await sb.from('feedback').select('*').order('id', { ascending: false }).limit(n);
             const result = {};
             (data || []).forEach(r => { result[r.id] = r.data; });
-            return _makeSnap(Object.keys(result).length ? result : null);
+            return _makeSnap(Object.keys(result).length ? result : null, null, pathStr);
           }
           // Fallback
           return ref.get();
@@ -1400,15 +1416,22 @@
   }
 
   // ── Snapshot helper ─────────────────────────────────
-  function _makeSnap(val, key) {
-    return {
+  function _makeSnap(val, key, parentPath) {
+    const snapPath = parentPath ? (key ? parentPath + '/' + key : parentPath) : (key || '');
+    const snap = {
       val: () => val,
       exists: () => val !== null && val !== undefined,
       key: key || null,
+      // Provide ref so snap.ref.update() works (used by initNotifToasts)
+      ref: snapPath ? createRef(snapPath) : {
+        update: async () => {},
+        set: async () => {},
+        remove: async () => {},
+      },
       forEach: (cb) => {
         if (val && typeof val === 'object' && !Array.isArray(val)) {
           for (const [k, v] of Object.entries(val)) {
-            cb(_makeSnap(v, k));
+            cb(_makeSnap(v, k, snapPath));
           }
         }
       },
@@ -1417,6 +1440,7 @@
         return 0;
       },
     };
+    return snap;
   }
 
   // ── Map path to Supabase table for realtime ─────────

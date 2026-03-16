@@ -173,6 +173,15 @@ app.post('/api/presence/offline', async (req, res) => {
 });
 
 // ── Serve static frontend ──────────────────────────
+// Disable caching for HTML files so code updates are picked up immediately
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html') || req.path === '/' || !req.path.includes('.')) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+  next();
+});
 app.use(express.static(path.join(__dirname), {
   extensions: ['html'],
   index: 'index.html',
@@ -181,6 +190,13 @@ app.use(express.static(path.join(__dirname), {
 ['app', 'login', 'signup', 'blog', 'support', 'download', 'privacy', 'terms', 'legal'].forEach(route => {
   app.get(`/${route}`, (_req, res) => res.sendFile(path.join(__dirname, route, 'index.html')));
   app.get(`/${route}/*`, (_req, res) => res.sendFile(path.join(__dirname, route, 'index.html')));
+});
+
+// ── Custom 404 page for unknown routes ────────────
+app.use((req, res, next) => {
+  // Let API routes and socket.io pass through
+  if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/')) return next();
+  res.status(404).sendFile(path.join(__dirname, '404', 'index.html'));
 });
 
 // ── In-memory live state ───────────────────────────

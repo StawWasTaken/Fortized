@@ -628,8 +628,16 @@ const FortizedSocial = (() => {
         });
         _socketRooms.forEach(function(room) { _socket.emit('room:join', room); });
       });
-      _socket.on('disconnect', function() { _socketReady = false; });
-      _socket.on('connect_error', function() { _socketReady = false; });
+      _socket.on('disconnect', function() {
+        _socketReady = false;
+        var banner = document.getElementById('offline-banner');
+        if (banner && !navigator.onLine) banner.classList.add('visible');
+      });
+      _socket.on('connect_error', function() {
+        _socketReady = false;
+        var banner = document.getElementById('offline-banner');
+        if (banner && !navigator.onLine) banner.classList.add('visible');
+      });
       _socket.on('message:new', function(data) {
         if (_socketCallbacks.onMessage) _socketCallbacks.onMessage(data.room, data.message);
       });

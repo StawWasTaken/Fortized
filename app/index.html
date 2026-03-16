@@ -391,6 +391,11 @@ body.is-desktop-app .topbar{padding-right:0;}
 .app-loading .lbl{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--muted-light);}
 @keyframes spin{to{transform:rotate(360deg);}}
 .load-spinner{width:32px;height:32px;border:3px solid rgba(255,249,62,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+.offline-banner{position:fixed;top:0;left:0;right:0;z-index:10000;background:#d97706;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;text-align:center;padding:6px 12px;display:none;align-items:center;justify-content:center;gap:8px;animation:offlineBannerIn .25s ease;}
+.offline-banner.visible{display:flex;}
+.offline-banner svg{width:16px;height:16px;flex-shrink:0;}
+.offline-banner .reconnecting{font-weight:400;font-size:12px;opacity:.85;}
+@keyframes offlineBannerIn{from{transform:translateY(-100%);opacity:0;}to{transform:translateY(0);opacity:1;}}
 .home-wrap{flex:1;display:flex;overflow:hidden;min-width:0;min-height:0;}
 .home-feed{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column;scroll-behavior:smooth;}
 .home-right{display:none;}
@@ -2545,11 +2550,14 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 </div>
 <script>
 // Independent fail-safe: hide loading screen even if main script errors
+// When offline, use shorter timeout (3s) since we skip network calls
 (function(){
+  var delay = navigator.onLine ? 10000 : 3000;
   var t=setTimeout(function(){
     var el=document.getElementById('app-loading');
     if(el&&el.style.display!=='none'){
-      var lbl=el.querySelector('.lbl'); if(lbl) lbl.textContent='Taking too long — retrying...';
+      var lbl=el.querySelector('.lbl');
+      if(lbl) lbl.textContent = navigator.onLine ? 'Taking too long — retrying...' : 'Loading offline…';
       setTimeout(function(){
         var retry=document.createElement('button');
         retry.className='ui-btn ui-btn-ghost';
@@ -2557,7 +2565,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         retry.textContent='Retry loading';
         retry.onclick=function(){ window.location.reload(); };
         if(!el.querySelector('button')) el.appendChild(retry);
-        setTimeout(function(){ if(el&&el.style.display!=='none') el.style.display='none'; }, 4500);
+        setTimeout(function(){ if(el&&el.style.display!=='none') el.style.display='none'; }, navigator.onLine ? 4500 : 1500);
         // If no user session, redirect to login
         if(!localStorage.getItem('ftz_current')&&!localStorage.getItem('fortized_current_user')){
           window.location.href='/login';
@@ -2567,13 +2575,52 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
         if(vh&&vh.style.display!=='flex'){vh.style.display='flex';vh.style.opacity='1';vh.classList.add('active');}
       },1500);
     }
-  },10000);
+  },delay);
   window._loadingSafetyTimer=t;
+})();
+</script>
+<script>
+// ── Offline/Online Detection ──
+(function(){
+  window._fortizedOffline = !navigator.onLine;
+  function setOffline(offline) {
+    window._fortizedOffline = offline;
+    var banner = document.getElementById('offline-banner');
+    var text = document.getElementById('offline-banner-text');
+    if (!banner) return;
+    if (offline) {
+      banner.classList.add('visible');
+      if (text) text.textContent = 'You are offline';
+    } else {
+      if (text) text.innerHTML = 'Reconnecting… <span class="reconnecting">restoring connection</span>';
+      setTimeout(function() {
+        banner.classList.remove('visible');
+        // Re-init socket if it was lost
+        if (typeof FortizedSocial !== 'undefined' && typeof CU !== 'undefined' && CU && CU.username) {
+          try { FortizedSocial.initSocket(CU.username, window._ftzSocketCallbacks || {}); } catch(_){}
+        }
+      }, 1500);
+    }
+  }
+  // If already offline at load time, accelerate the loading screen
+  if (!navigator.onLine) {
+    var el = document.getElementById('app-loading');
+    var lbl = el && el.querySelector('.lbl');
+    if (lbl) lbl.textContent = 'Loading offline…';
+  }
+  window.addEventListener('online', function(){ setOffline(false); });
+  window.addEventListener('offline', function(){ setOffline(true); });
 })();
 </script>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- OFFLINE BANNER -->
+<div class="offline-banner" id="offline-banner">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+  <span id="offline-banner-text">You are offline</span>
+</div>
 
 <!-- TEXT SELECTION FORMATTING PANEL -->
 <div class="fmt-sel-panel" id="fmt-sel-panel">
@@ -9038,7 +9085,14 @@ function initFortizedUXResilience() {
   }
 
   if (!CU?.username){
-    // First load — must fetch from Firebase
+    if (!navigator.onLine) {
+      // Offline with no cache — can't proceed
+      localStorage.removeItem('ftz_current');
+      localStorage.removeItem('fortized_current_user');
+      window.location.href='/login';
+      return;
+    }
+    // First load — must fetch from database
     const lbl=document.querySelector('#app-loading .lbl');
     if(lbl)lbl.textContent='Signing in…';
     try{
@@ -9062,30 +9116,41 @@ function initFortizedUXResilience() {
   if (CU.onyx===undefined)CU.onyx=0;
   notifSettings=CU.notifSettings||notifSettings;
 
-  // ── Enforce bans & suspensions ──
-  try {
-    const banSnap = await firebase.database().ref('admin/bans/' + username).get();
-    if (banSnap.exists()) {
-      const ban = banSnap.val();
-      _showBanScreen(ban);
-      return;
-    }
-    // Check suspension
-    const suspSnap = await firebase.database().ref('users/' + username + '/suspension').get();
-    const suspLegacy = !suspSnap.exists() ? await firebase.database().ref('users/' + username + '/suspendedUntil').get() : null;
-    const suspData = suspSnap.exists() ? suspSnap.val() : (suspLegacy && suspLegacy.exists() ? { until: suspLegacy.val() } : null);
-    if (suspData) {
-      const until = new Date(suspData.until);
-      if (until > new Date()) {
-        _showSuspendScreen(suspData);
+  // ── Enforce bans & suspensions (skip when offline to avoid hanging) ──
+  if (navigator.onLine) {
+    try {
+      const banSnap = await Promise.race([
+        firebase.database().ref('admin/bans/' + username).get(),
+        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),4000))
+      ]);
+      if (banSnap.exists()) {
+        const ban = banSnap.val();
+        _showBanScreen(ban);
         return;
-      } else {
-        // Suspension expired — clear it
-        try { await firebase.database().ref('users/' + username + '/suspension').remove(); } catch {}
-        try { await firebase.database().ref('users/' + username + '/suspendedUntil').remove(); } catch {}
       }
-    }
-  } catch(e) { console.warn('Ban/suspension check failed:', e); }
+      // Check suspension
+      const suspSnap = await Promise.race([
+        firebase.database().ref('users/' + username + '/suspension').get(),
+        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),4000))
+      ]);
+      const suspLegacy = !suspSnap.exists() ? await Promise.race([
+        firebase.database().ref('users/' + username + '/suspendedUntil').get(),
+        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),3000))
+      ]) : null;
+      const suspData = suspSnap.exists() ? suspSnap.val() : (suspLegacy && suspLegacy.exists() ? { until: suspLegacy.val() } : null);
+      if (suspData) {
+        const until = new Date(suspData.until);
+        if (until > new Date()) {
+          _showSuspendScreen(suspData);
+          return;
+        } else {
+          // Suspension expired — clear it
+          try { await firebase.database().ref('users/' + username + '/suspension').remove(); } catch {}
+          try { await firebase.database().ref('users/' + username + '/suspendedUntil').remove(); } catch {}
+        }
+      }
+    } catch(e) { console.warn('Ban/suspension check skipped:', e); }
+  }
 
   // Migrate: ensure all bastions have unique globalIds
   let _needsSave = false;
@@ -9095,7 +9160,7 @@ function initFortizedUXResilience() {
       _needsSave = true;
     }
   }
-  if (_needsSave) { try { await FortizedSocial.saveUserObject(CU); } catch {} }
+  if (_needsSave && navigator.onLine) { try { await FortizedSocial.saveUserObject(CU); } catch {} }
 
   // Hide loading screen immediately once user data is ready
   const loader=document.getElementById('app-loading');
@@ -9113,7 +9178,7 @@ function initFortizedUXResilience() {
   try { if(typeof startVCListener==='function') startVCListener(CU.username); } catch(e) { console.warn('[init] startVCListener:', e); }
   // ── Initialize Socket.io for real-time events ──
   try {
-    FortizedSocial.initSocket(CU.username, {
+    const _socketCbs = {
       initialStatus: CU.status || 'online',
       initialGameActivity: CU.gameActivity || null,
       onStatusChange: function(data) {
@@ -9390,14 +9455,21 @@ function initFortizedUXResilience() {
         const sb = document.getElementById('sidebar-scroll');
         if (sb) renderDMSidebar(sb);
       },
-    });
+    };
+    window._ftzSocketCallbacks = _socketCbs;
+    FortizedSocial.initSocket(CU.username, _socketCbs);
     // Start Supabase real-time polling (merges with callbacks from initSocket above)
     FortizedSocial.startPolling(CU.username, {});
   } catch(e) { console.warn('[init] Socket.io/polling init:', e); }
+  // Show offline banner immediately if we loaded from cache while offline
+  if (!navigator.onLine) {
+    const _ob = document.getElementById('offline-banner');
+    if (_ob) _ob.classList.add('visible');
+  }
   setTimeout(initCrossDeviceSync, 800);
   setTimeout(initNotifToasts, 1200);
-  // Sync blocked list from Firebase
-  setTimeout(async()=>{try{const snap=await firebase.database().ref('users/'+CU.username+'/blockedUsers').get();if(snap.exists())localStorage.setItem('ftz_blocked',JSON.stringify(snap.val()));}catch{}},500);
+  // Sync blocked list from Firebase (skip when offline)
+  if(navigator.onLine) setTimeout(async()=>{try{const snap=await firebase.database().ref('users/'+CU.username+'/blockedUsers').get();if(snap.exists())localStorage.setItem('ftz_blocked',JSON.stringify(snap.val()));}catch{}},500);
 
   setTimeout(_ensureJoysterAccount, 4000);
   setTimeout(_ensureFortizedAccount, 4500);
@@ -9407,14 +9479,19 @@ function initFortizedUXResilience() {
   updateNotifBadge().catch(()=>{});
 
   // Sync staff data from Firebase BEFORE checking staff access for sidebar button
-  try {
-    const _staffSnap = await firebase.database().ref('admin/staff').get();
-    if (_staffSnap.exists()) {
-      localStorage.setItem('ftz_staff', JSON.stringify(_staffSnap.val()));
-    } else if (!localStorage.getItem('ftz_staff')) {
-      localStorage.setItem('ftz_staff', JSON.stringify({ admins: [], moderators: [] }));
-    }
-  } catch(e) { console.warn('Staff sync at init failed:', e); }
+  if (navigator.onLine) {
+    try {
+      const _staffSnap = await Promise.race([
+        firebase.database().ref('admin/staff').get(),
+        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),4000))
+      ]);
+      if (_staffSnap.exists()) {
+        localStorage.setItem('ftz_staff', JSON.stringify(_staffSnap.val()));
+      } else if (!localStorage.getItem('ftz_staff')) {
+        localStorage.setItem('ftz_staff', JSON.stringify({ admins: [], moderators: [] }));
+      }
+    } catch(e) { console.warn('Staff sync at init failed:', e); }
+  }
 
   // Staff console button (visible to superadmin, admin, moderator)
   if (hasStaffAccess()){

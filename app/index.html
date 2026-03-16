@@ -6325,7 +6325,12 @@ function showGCMemberPanel(meta) {
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
         if (ud.pfp) {
           const avWrap = entry.querySelector('.gc-ml-av');
-          if (avWrap) avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(m)}'"><span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:${FtzStatus.color('offline')};border:2px solid var(--channel);z-index:3;"></span>`;
+          if (avWrap) {
+            // Preserve existing status dot color instead of hardcoding offline
+            const existingDot = avWrap.querySelector('.profile-status-dot');
+            const dotColor = existingDot ? existingDot.style.background : FtzStatus.color('offline');
+            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(m)}'"><span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:${dotColor};border:2px solid var(--channel);z-index:3;"></span>`;
+          }
         }
       }).catch(()=>{});
     }, 80);

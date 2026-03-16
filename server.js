@@ -405,7 +405,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     if (!username) return;
     const prevEntry = onlineUsers.get(username);
-    onlineUsers.delete(username);
 
     // Only mark offline if the user doesn't have another active connection
     // (handles multi-tab: if they still have a tab open, stay online)
@@ -413,7 +412,18 @@ io.on('connection', (socket) => {
       return s.id !== socket.id && s.data?.username === username;
     });
 
-    if (!stillConnected) {
+    if (stillConnected) {
+      // User still has other tabs — re-associate onlineUsers with a remaining socket
+      const remainingSocket = [...io.sockets.sockets.values()].find(s =>
+        s.id !== socket.id && s.data?.username === username
+      );
+      if (remainingSocket && prevEntry) {
+        onlineUsers.set(username, { ...prevEntry, socketId: remainingSocket.id });
+      }
+    } else {
+      // User is truly gone — remove from onlineUsers and broadcast offline
+      onlineUsers.delete(username);
+
       // Broadcast ephemeral offline to connected clients
       io.emit('presence:update', { username, status: 'offline', gameActivity: null });
 

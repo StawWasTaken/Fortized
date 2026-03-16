@@ -162,7 +162,7 @@ app.post('/api/presence/offline', async (req, res) => {
   // Only mark offline if no active socket exists for this user
   const hasSocket = onlineUsers.has(u);
   if (!hasSocket) {
-    const now = new Date().toISOString();
+    const now = Date.now();
     await Promise.all([
       sb.from('statuses').upsert({ username: u, status: 'offline' }, { onConflict: 'username' }),
       sb.from('users').update({ status: 'offline', last_seen: now, game_activity: null }).eq('username', u),
@@ -225,8 +225,8 @@ io.on('connection', (socket) => {
       sb.from('users').update({ status: visibleStatus }).eq('username', username),
     ]).catch(err => console.warn('[Presence] DB online update failed for', username, err.message));
 
-    // Broadcast presence to everyone
-    io.emit('presence:update', { username, status, gameActivity });
+    // Broadcast presence to everyone (hide invisible as offline)
+    io.emit('presence:update', { username, status: visibleStatus, gameActivity });
   });
 
   // ── Status Change ──
@@ -235,7 +235,13 @@ io.on('connection', (socket) => {
     const entry = onlineUsers.get(username) || { socketId: socket.id };
     entry.status = data.status || 'online';
     onlineUsers.set(username, entry);
-    io.emit('presence:update', { username, status: entry.status, gameActivity: entry.gameActivity });
+    const broadcastStatus = entry.status === 'invisible' ? 'offline' : entry.status;
+    // Persist to DB
+    Promise.all([
+      sb.from('statuses').upsert({ username, status: broadcastStatus }, { onConflict: 'username' }),
+      sb.from('users').update({ status: broadcastStatus }).eq('username', username),
+    ]).catch(err => console.warn('[Presence] DB status update failed for', username, err.message));
+    io.emit('presence:update', { username, status: broadcastStatus, gameActivity: entry.gameActivity });
   });
 
   // ── Game / App Activity ──
@@ -244,7 +250,8 @@ io.on('connection', (socket) => {
     const entry = onlineUsers.get(username) || { socketId: socket.id };
     entry.gameActivity = data.activity || null;
     onlineUsers.set(username, entry);
-    io.emit('presence:update', { username, status: entry.status, gameActivity: entry.gameActivity });
+    const broadcastStatus = entry.status === 'invisible' ? 'offline' : entry.status;
+    io.emit('presence:update', { username, status: broadcastStatus, gameActivity: entry.gameActivity });
   });
 
   // ── Join a chat room (DM, bastion channel, group chat) ──
@@ -386,6 +393,17 @@ io.on('connection', (socket) => {
     });
   });
 
+  // ── Profile Update (pfp, displayName, etc.) ──
+  socket.on('profile:update', (data) => {
+    if (!username) return;
+    io.emit('profile:updated', {
+      username,
+      pfp: data.pfp || null,
+      displayName: data.displayName || null,
+      field: data.field || 'pfp',
+    });
+  });
+
   // ── Disconnect ──
   // Discord-style: when the socket drops (tab closed, network lost, etc.)
   // we persist offline status + last_seen to the database so the user
@@ -406,7 +424,7 @@ io.on('connection', (socket) => {
       io.emit('presence:update', { username, status: 'offline', gameActivity: null });
 
       // Persist to database — user is truly gone
-      const now = new Date().toISOString();
+      const now = Date.now();
       Promise.all([
         sb.from('statuses').upsert({ username, status: 'offline' }, { onConflict: 'username' }),
         sb.from('users').update({ status: 'offline', last_seen: now, game_activity: null }).eq('username', username),
@@ -428,7 +446,12 @@ io.on('connection', (socket) => {
     const result = {};
     (usernames || []).forEach(u => {
       const entry = onlineUsers.get(u);
-      result[u] = entry ? { status: entry.status, gameActivity: entry.gameActivity } : { status: 'offline', gameActivity: null };
+      if (entry) {
+        const s = entry.status === 'invisible' ? 'offline' : entry.status;
+        result[u] = { status: s, gameActivity: entry.gameActivity };
+      } else {
+        result[u] = { status: 'offline', gameActivity: null };
+      }
     });
     callback(result);
   });

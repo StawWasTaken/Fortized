@@ -673,6 +673,10 @@ const FortizedSocial = (() => {
       _socket.on('bastion:updated', function(data) {
         if (_socketCallbacks.onBastionUpdate) _socketCallbacks.onBastionUpdate(data);
       });
+      // ── Real-time profile updates (pfp, displayName) ──
+      _socket.on('profile:updated', function(data) {
+        if (_socketCallbacks.onProfileUpdate) _socketCallbacks.onProfileUpdate(data);
+      });
     } catch (e) {
       console.warn('[Fortized] Socket.io init failed', e);
       _socket = null;

@@ -892,7 +892,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .atelier-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden;background:var(--bg);}
 .atelier-banner{position:relative;width:100%;height:200px;overflow:hidden;flex-shrink:0;}
 .atelier-banner-img{width:100%;height:100%;object-fit:cover;display:block;}
-.atelier-banner-fade{display:none;}
+.atelier-banner-fade{position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to top,var(--bg),transparent);pointer-events:none;}
 .atelier-nav{display:none;}
 .atelier-nav-scroll{display:none;}
 .atelier-nav-section{display:none;}
@@ -901,10 +901,10 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .atelier-nav-sep{display:none;}
 .atelier-scroll{flex:1;overflow-y:auto;padding:0;scroll-behavior:smooth;}
 /* Atelier inline tabs */
-.atelier-tabs{display:flex;gap:5px;flex-wrap:wrap;padding:0 32px;margin-bottom:20px;}
-.atelier-tabs .disc-tab{padding:7px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid transparent;color:rgba(255,255,255,.4);transition:all .16s cubic-bezier(.22,1,.36,1);letter-spacing:.01em;background:transparent;}
+.atelier-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:0 32px;margin-bottom:22px;}
+.atelier-tabs .disc-tab{padding:8px 18px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid transparent;color:rgba(255,255,255,.4);transition:all .18s cubic-bezier(.22,1,.36,1);letter-spacing:.01em;background:transparent;}
 .atelier-tabs .disc-tab:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);}
-.atelier-tabs .disc-tab.active{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.15);color:var(--accent);font-weight:700;}
+.atelier-tabs .disc-tab.active{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.15);color:var(--accent);font-weight:700;box-shadow:0 2px 10px rgba(255,249,62,.06);}
 /* Quest tab chips — extends ftz-chip pattern */
 .quest-tab-chip{padding:7px 18px;border-radius:var(--radius-pill);font-size:var(--font-md);font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .2s var(--ease-out);background:var(--surface-1);}
 .quest-tab-chip.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(255,249,62,.25);box-shadow:0 2px 12px rgba(255,249,62,.1);}
@@ -924,8 +924,38 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Perk chips */
 .perk-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--radius-pill);font-size:var(--font-xs);font-weight:600;margin:3px;white-space:nowrap;transition:transform .15s;}
 .perk-chip:hover{transform:translateY(-1px);}
+/* ── Collection bar (Featured shop) ───────────────── */
+.collection-bar{position:relative;border-radius:20px;overflow:hidden;margin-bottom:16px;padding:32px 28px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);border:1.5px solid transparent;}
+.collection-bar:hover{transform:translateY(-2px);box-shadow:0 12px 48px rgba(0,0,0,.3);}
+.collection-bar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 20%,rgba(255,255,255,.04),transparent 60%);pointer-events:none;}
+.collection-bar-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:900;letter-spacing:-.01em;line-height:1.1;}
+.collection-bar-desc{font-size:12.5px;color:rgba(255,255,255,.45);margin-top:6px;line-height:1.5;}
+.collection-bar-btn{display:inline-flex;align-items:center;gap:6px;margin-top:16px;padding:9px 20px;border-radius:10px;font-size:11.5px;font-weight:700;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);border:1px solid;}
+.collection-bar-btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.collection-bar-btn svg{width:14px;height:14px;}
+/* ── Shop item card (Featured) ────────────────────── */
+.shop-item-card{border-radius:18px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);border:1.5px solid;position:relative;}
+.shop-item-card:hover{transform:translateY(-3px);box-shadow:0 14px 44px rgba(0,0,0,.35);}
+.shop-item-card .sic-preview{height:100px;display:flex;gap:3px;padding:12px;position:relative;overflow:hidden;}
+.shop-item-card .sic-preview::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 60%,rgba(0,0,0,.2));pointer-events:none;}
+.shop-item-card .sic-sidebar{width:18px;background:rgba(0,0,0,.3);border-radius:5px;}
+.shop-item-card .sic-content{flex:1;background:rgba(255,255,255,.02);border-radius:5px;padding:10px;}
+.shop-item-card .sic-body{padding:14px 16px 16px;}
+.shop-item-card .sic-name{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:#fff;margin-bottom:4px;}
+.shop-item-card .sic-type{font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;}
+.shop-item-card .sic-price{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--accent);}
+.shop-item-card .sic-price img{width:13px;height:13px;object-fit:contain;}
+.shop-item-card .sic-owned{font-size:11px;font-weight:700;color:#3ecf6e;}
+.shop-item-card .sic-discount{position:absolute;top:10px;right:10px;padding:3px 8px;border-radius:6px;font-size:8.5px;font-weight:800;letter-spacing:.03em;z-index:1;}
+/* ── Horizontal scroll row for featured items ─────── */
+.featured-scroll-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+.featured-scroll-row::-webkit-scrollbar{height:4px;}
+.featured-scroll-row::-webkit-scrollbar-thumb{background:rgba(255,249,62,.1);border-radius:100px;}
+.featured-scroll-row>.shop-item-card{min-width:220px;max-width:260px;flex-shrink:0;scroll-snap-align:start;}
 /* Atelier shared */
-.atel-section-hdr{font-size:var(--font-xs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:var(--space-lg);}
+.atel-section-hdr{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.32);margin-bottom:var(--space-lg);display:flex;align-items:center;gap:10px;}
+.atel-section-hdr::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(255,255,255,.06),transparent);}
+.atel-section-hdr.no-line::after{display:none;}
 .atelier-page-title{font-family:'Syne',sans-serif;font-size:var(--font-xl);font-weight:800;margin-bottom:var(--space-xs);}
 .atelier-page-sub{font-size:var(--font-md);color:var(--muted-light);margin-bottom:var(--space-xl);}
 .atelier-hero{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-xl);padding:var(--space-xl) 32px;margin-bottom:var(--space-xl);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));}
@@ -1618,6 +1648,52 @@ body.is-desktop-app .notif-panel{top:0;}
 .ftz-embed-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
 .ftz-embed-btn.primary{background:var(--embed-color,var(--accent));color:#060810;border:none;}
 .ftz-embed-btn.primary:hover{filter:brightness(1.1);}
+/* ── Custom Video Player ── */
+.ftz-vp{position:relative;background:#000;width:100%;overflow:hidden;border-radius:12px 12px 0 0;}
+.ftz-vp video{width:100%;max-height:400px;display:block;cursor:pointer;}
+.ftz-vp-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);transition:opacity .25s;cursor:pointer;z-index:2;}
+.ftz-vp-overlay.hidden{opacity:0;pointer-events:none;}
+.ftz-vp-overlay-btn{width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.15);transition:transform .15s;}
+.ftz-vp-overlay:hover .ftz-vp-overlay-btn{transform:scale(1.08);}
+.ftz-vp-buffer{position:absolute;bottom:0;left:0;height:3px;background:rgba(255,255,255,.12);z-index:1;transition:width .3s;}
+.ftz-vp-error{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.8);color:rgba(255,255,255,.5);font-size:13px;gap:6px;z-index:5;}
+.ftz-vp-controls{padding:8px 12px 10px;background:rgba(0,0,0,.3);backdrop-filter:blur(6px);display:flex;flex-direction:column;gap:6px;}
+.ftz-vp-progress{position:relative;height:6px;background:rgba(255,255,255,.08);border-radius:3px;cursor:pointer;overflow:visible;}
+.ftz-vp-progress:hover{height:8px;}
+.ftz-vp-prog-buffer{position:absolute;top:0;left:0;height:100%;background:rgba(255,255,255,.12);border-radius:3px;pointer-events:none;}
+.ftz-vp-prog-fill{position:absolute;top:0;left:0;height:100%;background:#fff;border-radius:3px;pointer-events:none;transition:width .05s linear;}
+.ftz-vp-prog-thumb{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.5);opacity:0;transition:opacity .15s;pointer-events:none;z-index:2;}
+.ftz-vp-progress:hover .ftz-vp-prog-thumb{opacity:1;}
+.ftz-vp-row{display:flex;align-items:center;gap:8px;}
+.ftz-vp-btn{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;padding:3px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:4px;transition:all .12s;}
+.ftz-vp-btn:hover{color:#fff;background:rgba(255,255,255,.08);}
+.ftz-vp-time{font-size:11px;color:rgba(255,255,255,.5);white-space:nowrap;flex-shrink:0;font-variant-numeric:tabular-nums;}
+.ftz-vp-vol-wrap{display:flex;align-items:center;gap:4px;position:relative;}
+.ftz-vp-vol-slider{width:0;overflow:hidden;transition:width .2s;display:flex;align-items:center;}
+.ftz-vp-vol-wrap:hover .ftz-vp-vol-slider{width:70px;}
+.ftz-vp-vol-track{width:70px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;position:relative;}
+.ftz-vp-vol-fill{height:100%;background:#fff;border-radius:2px;pointer-events:none;}
+.ftz-vp-speed{font-size:10px;font-weight:700;color:rgba(255,255,255,.5);cursor:pointer;padding:2px 6px;border-radius:4px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);transition:all .12s;flex-shrink:0;user-select:none;}
+.ftz-vp-speed:hover{color:#fff;border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.08);}
+.ftz-vp-fname{font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 12px 8px;}
+/* ── Custom Audio Player ── */
+.ftz-ap{display:flex;align-items:center;gap:10px;padding:12px 14px;}
+.ftz-ap-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.ftz-ap-btn:hover{background:rgba(255,255,255,.18);}
+.ftz-ap-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
+.ftz-ap-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ftz-ap-progress{height:6px;background:rgba(255,255,255,.08);border-radius:3px;cursor:pointer;position:relative;overflow:visible;}
+.ftz-ap-progress:hover{height:8px;}
+.ftz-ap-prog-fill{height:100%;background:#fff;border-radius:3px;pointer-events:none;transition:width .05s linear;}
+.ftz-ap-prog-thumb{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.5);opacity:0;transition:opacity .15s;pointer-events:none;z-index:2;}
+.ftz-ap-progress:hover .ftz-ap-prog-thumb{opacity:1;}
+.ftz-ap-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.ftz-ap-time{font-size:10px;color:rgba(255,255,255,.4);font-variant-numeric:tabular-nums;}
+.ftz-ap-vol-wrap{display:flex;align-items:center;gap:4px;}
+.ftz-ap-vol-track{width:50px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;position:relative;}
+.ftz-ap-vol-fill{height:100%;background:rgba(255,255,255,.5);border-radius:2px;pointer-events:none;}
+.ftz-ap-speed{font-size:9px;font-weight:700;color:rgba(255,255,255,.4);cursor:pointer;padding:1px 5px;border-radius:3px;border:1px solid rgba(255,255,255,.06);transition:all .12s;user-select:none;}
+.ftz-ap-speed:hover{color:#fff;border-color:rgba(255,255,255,.15);}
 /* Channel / Profile variant — horizontal with avatar */
 .ftz-embed-profile{display:flex;align-items:center;gap:12px;padding:12px 14px;}
 .ftz-embed-avatar{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#fff;overflow:hidden;}
@@ -3974,11 +4050,33 @@ async function _syncBastionFromGlobal(bastionIdx) {
 async function refreshCU() {
   if (!CU?.username) return;
   try {
+    const prevRad = CU.radianceUntil, prevPlus = CU.radiancePlus;
+    const prevBastions = CU.bastions;
+    const prevStatus = CU.status;
+    const prevPfp = CU.pfp;
     const fresh = await Promise.race([
       FortizedSocial.getUserByName(CU.username),
       new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))
     ]);
-    if (fresh?.username) { CU = fresh; saveLocal(); }
+    if (fresh?.username) {
+      // Preserve radiance data if DB returned null but local had active values
+      if(!fresh.radianceUntil && prevRad && new Date(prevRad)>new Date()) fresh.radianceUntil=prevRad;
+      if(!fresh.radiancePlus && prevPlus && new Date(prevPlus)>new Date()) fresh.radiancePlus=prevPlus;
+      // Preserve bastions if they were already loaded with full data (avoid losing channel/role data)
+      if (prevBastions && Array.isArray(prevBastions) && prevBastions.length > 0 && (!fresh.bastions || fresh.bastions.length === 0)) {
+        fresh.bastions = prevBastions;
+      } else if (prevBastions && Array.isArray(prevBastions) && fresh.bastions && Array.isArray(fresh.bastions)) {
+        // Merge: keep local bastion data (channels, roles etc.) that may not be in the DB user row
+        fresh.bastions = fresh.bastions.map(fb => {
+          const local = prevBastions.find(lb => (lb.globalId||lb.name) === (fb.globalId||fb.name));
+          if (local) return { ...local, ...fb, channels: fb.channels || local.channels, roles: fb.roles || local.roles, memberRoles: fb.memberRoles || local.memberRoles };
+          return fb;
+        });
+      }
+      // Preserve local pfp if DB somehow returned null
+      if (!fresh.pfp && prevPfp) fresh.pfp = prevPfp;
+      CU = fresh; saveLocal();
+    }
   } catch {}
 }
 function escapeHTML(s) {
@@ -6117,19 +6215,25 @@ function showGCMemberPanel(meta) {
   // Inject into DMs view
   const dmsView = document.getElementById('view-dms');
   if (dmsView) dmsView.appendChild(panel);
-  // Deferred pfp loading for GC members
+  // Deferred pfp + status loading for GC members
   (meta.members||[]).forEach(m => {
     if (m === CU.username) return;
     setTimeout(() => {
+      subscribeProfileStatus(m);
+      FortizedSocial.getStatus(m).then(st => {
+        const dot = panel.querySelector(`.profile-status-dot[data-for="${CSS.escape(m)}"]`);
+        if (dot) { dot.style.background = FtzStatus.color(st); }
+      }).catch(()=>{});
       FortizedSocial.getUserByName(m).then(ud => {
         if (!ud) return;
+        if (ud.pfp) _pfpCache[m] = ud.pfp;
         const entry = panel.querySelector(`.ml-entry[data-member="${CSS.escape(m)}"]`);
         if (!entry) return;
         const nameEl = entry.querySelector('.ml-name');
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
         if (ud.pfp) {
           const avWrap = entry.querySelector('.gc-ml-av');
-          if (avWrap) avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'">`;
+          if (avWrap) avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(m)}'"><span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:${FtzStatus.color('offline')};border:2px solid var(--channel);z-index:3;"></span>`;
         }
       }).catch(()=>{});
     }, 80);
@@ -6140,8 +6244,9 @@ function _buildGCMemberEntry(m, meta, isOwner) {
   const displayN = isMe ? (CU.displayName||CU.username) : m;
   const pfpSrc = isMe ? CU.pfp : null;
   const isGCOwner = m === meta.owner;
+  const myStatus = isMe ? (CU.status||'online') : 'offline';
   return `<div class="ml-entry" data-member="${escapeHTML(m)}" onclick="showMiniProfilePreview('${escapeHTML(m)}',this)">
-    <div class="gc-ml-av" style="width:30px;height:30px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30)}</div>
+    <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;background:${FtzStatus.color(myStatus)};border:2px solid var(--channel);z-index:3;"></span></div>
     <div style="flex:1;min-width:0;">
       <div style="display:flex;align-items:center;gap:4px;">
         <div class="ml-name" style="color:${isGCOwner?'var(--accent)':'rgba(255,255,255,.6)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
@@ -8030,6 +8135,15 @@ async function renderMemberList() {
   }
   ml.innerHTML = html;
 }
+// Debounced member list re-sort when status changes in real-time
+let _memberResortTimer = null;
+function _debouncedMemberListResort() {
+  if (_memberResortTimer) clearTimeout(_memberResortTimer);
+  _memberResortTimer = setTimeout(() => {
+    _memberResortTimer = null;
+    if (curBastion !== null) renderMemberList();
+  }, 500);
+}
 function _filterMemberList(query) {
   const q = query.toLowerCase().trim();
   document.querySelectorAll('.ml-entry').forEach(entry => {
@@ -8546,7 +8660,7 @@ function _renderOffendingContent(data) {
   if (media.length) html += `<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:6px;">
     <span style="color:#5a6478;font-size:13px;">Flagged Media</span>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">${media.map(m => {
-      if (m.type === 'video') return `<video src="${m.url}" style="max-width:200px;max-height:140px;border-radius:8px;border:1px solid rgba(255,255,255,.06);" controls muted></video>`;
+      if (m.type === 'video') { const _vp='rvid-'+Math.random().toString(36).slice(2); return `<div style="display:inline-block;max-width:200px;"><div class="ftz-vp" id="${_vp}-wrap" style="border-radius:8px;"><video id="${_vp}" src="${m.url}" style="max-width:200px;max-height:140px;display:block;cursor:pointer;" muted preload="metadata" onclick="ftzVideoToggle('${_vp}')" ontimeupdate="ftzVideoTick('${_vp}')" onloadedmetadata="ftzVideoMeta('${_vp}')" onended="ftzVideoEnd('${_vp}')"></video><div class="ftz-vp-overlay" id="${_vp}-overlay" onclick="ftzVideoToggle('${_vp}')"><div class="ftz-vp-overlay-btn" style="width:32px;height:32px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div></div></div>`; }
       return `<img src="${m.url}" style="max-width:200px;max-height:140px;border-radius:8px;border:1px solid rgba(255,255,255,.06);object-fit:cover;" onerror="this.style.display='none'">`;
     }).join('')}</div>
   </div>`;
@@ -8857,15 +8971,36 @@ function initFortizedUXResilience() {
       initialStatus: CU.status || 'online',
       initialGameActivity: CU.gameActivity || null,
       onStatusChange: function(data) {
-        // Update status dots in member lists and profiles
+        if (!data || !data.username) return;
+        const color = typeof FtzStatus !== 'undefined' ? FtzStatus.color(data.status) : (data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#f87171':'rgba(255,255,255,.15)');
+        // Update ALL status dots across the app
         document.querySelectorAll('.profile-status-dot[data-for="'+data.username+'"]').forEach(el => {
-          const sc = data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#f87171':'rgba(255,255,255,.15)';
-          el.style.background = sc;
-          el.style.boxShadow = '0 0 8px '+sc+'55';
+          el.style.background = color;
+          el.style.boxShadow = '0 0 8px '+color+'55';
         });
         document.querySelectorAll('.profile-status-label[data-for="'+data.username+'"]').forEach(el => {
           el.textContent = typeof FtzStatus !== 'undefined' ? FtzStatus.publicLabel(data.status) : data.status;
         });
+        // DM sidebar status dots
+        document.querySelectorAll('.dm-home-status[data-for="'+data.username+'"]').forEach(el => { el.style.background = color; });
+        document.querySelectorAll('.dm-home-status-text[data-for="'+data.username+'"]').forEach(el => { el.textContent = typeof FtzStatus !== 'undefined' ? FtzStatus.publicLabel(data.status) : data.status; });
+        // Member list status dots (.ml-status class)
+        document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-status').forEach(el => { el.style.background = color; });
+        // Mini profile preview dots
+        document.querySelectorAll('.mpp-status-dot[data-for="'+data.username+'"]').forEach(el => { el.style.background = color; });
+        // Update member list entry opacity (dim if offline)
+        const isOnline = data.status==='online'||data.status==='away'||data.status==='dnd';
+        document.querySelectorAll('.ml-entry[data-member="'+data.username+'"]').forEach(el => {
+          el.dataset.status = data.status;
+          // Re-sort member list if in a bastion view
+          if (el.closest('#member-list')) _debouncedMemberListResort();
+        });
+        // Update game activity display in member list
+        if (data.gameActivity) {
+          document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-custom-status').forEach(el => {
+            el.innerHTML = '<span style="opacity:.6;font-size:11px;">🎮 Playing ' + escapeHTML(data.gameActivity.name||'') + '</span>';
+          });
+        }
       },
       onMessage: function(room, msg) {
         // Message received in room — handled by Supabase real-time listeners
@@ -8897,6 +9032,19 @@ function initFortizedUXResilience() {
       onAnnouncementCleared: function() {
         const bar = document.getElementById('sys-announce-bar');
         if (bar) { bar.style.opacity='0'; bar.style.transform='translateY(-100%)'; setTimeout(()=>bar.remove(),300); }
+      },
+      onProfileUpdate: function(data) {
+        if (!data || !data.username || data.username === CU.username) return;
+        // Invalidate pfp cache and update all visible avatars
+        if (data.pfp) {
+          _pfpCache[data.username] = data.pfp;
+          document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-av-wrap img:not(.profile-status-dot):not(.profile-decoration-overlay-ml)').forEach(img => { img.src = data.pfp; });
+          document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .gc-ml-av img').forEach(img => { img.src = data.pfp; });
+          document.querySelectorAll('img[data-pfp-for="'+data.username+'"]').forEach(img => { img.src = data.pfp; });
+        }
+        if (data.displayName) {
+          document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-name').forEach(el => { el.textContent = data.displayName; });
+        }
       },
       onBastionUpdate: function(data) {
         // Re-sync bastion data when roles or member roles change
@@ -9058,7 +9206,15 @@ function initFortizedUXResilience() {
         FortizedSocial.getUserByName(username),
         new Promise((_,r)=>setTimeout(()=>r(new Error('t')),6000))
       ]);
-      if(fresh?.username){CU=fresh;saveLocal();updateUserbar();renderRailBastions();updateOnyxDisplay();}
+      if(fresh?.username){
+        // Preserve radiance data if the DB returned null but local has valid values
+        // (migration safety — ensures we never lose radiance on refresh)
+        if(!fresh.radianceUntil && CU.radianceUntil && new Date(CU.radianceUntil)>new Date()) fresh.radianceUntil=CU.radianceUntil;
+        if(!fresh.radiancePlus && CU.radiancePlus && new Date(CU.radiancePlus)>new Date()) fresh.radiancePlus=CU.radiancePlus;
+        CU=fresh;saveLocal();updateUserbar();renderRailBastions();updateOnyxDisplay();
+        // Re-persist radiance to DB if it was preserved from local cache
+        if(CU.radianceUntil||CU.radiancePlus) saveUser().catch(()=>{});
+      }
     }catch{}
   },1000);
 
@@ -9066,6 +9222,7 @@ function initFortizedUXResilience() {
   // Real-time notification listener
   try {
     firebase.database().ref('notifications/' + CU.username).on('value', async () => {
+      if (_markingAllRead) return; // Skip refresh while mark-all-read is in progress
       try { await updateNotifBadge(); } catch {}
       // If notif panel is open, refresh it
       if (notifPanelOpen) { try { await buildNotifList(); } catch {} }
@@ -14182,7 +14339,7 @@ function buildProfileView(tab) {
     main.innerHTML = `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('construction','48')}</div><h3>Coming Soon</h3><p>These settings are on the way!</p></div>`;
   }
 }
-async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}CU.displayName=dn;await saveUser();document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');toast('Display name updated!','success');showFeedbackToast('editing your profile','profile_edit');}
+async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}CU.displayName=dn;await saveUser();document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');try{const s=FortizedSocial.getSocket();if(s)s.emit('profile:update',{displayName:dn,field:'displayName'});}catch(e){}toast('Display name updated!','success');showFeedbackToast('editing your profile','profile_edit');}
 async function saveEmail(){const e=document.getElementById('email-input')?.value?.trim();CU.email=e;await saveUser();toast('Email updated!','success');}
 async function changePassword(){const old=document.getElementById('pw-old')?.value,nw=document.getElementById('pw-new')?.value,msg=document.getElementById('pw-msg');if(!old||!nw){if(msg){msg.style.color='var(--red)';msg.textContent='Fill both fields.';}return;}if(old!==CU.password){if(msg){msg.style.color='var(--red)';msg.textContent='Current password incorrect.';}return;}if(nw.length<6){if(msg){msg.style.color='var(--red)';msg.textContent='Too short.';}return;}CU.password=nw;await saveUser();if(msg){msg.style.color='var(--green)';msg.textContent='Password updated!';}document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';}
 async function updatePfp(e) {
@@ -14197,6 +14354,8 @@ async function updatePfp(e) {
       await saveUser();
       updateUserbar();
       buildProfileView('myprofile');
+      // Broadcast pfp change to other clients
+      try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { pfp: cropped, field: 'pfp' }); } catch(e){}
       toast('Avatar updated! ✓', 'success');
     });
   };
@@ -14323,7 +14482,7 @@ async function toggleNotifPanel() {
     <div class="npv-header">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       <h3>Inbox</h3>
-      <button onclick="markAllRead();buildNotifList()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Mark all read</button>
+      <button onclick="markAllRead()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Mark all read</button>
       <button onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
     </div>
     <div class="npv-tabs" id="npv-tabs">
@@ -14332,7 +14491,7 @@ async function toggleNotifPanel() {
       <button class="npv-tab" onclick="_setNotifTab('mentions',this)">Mentions</button>
       <button class="npv-tab" onclick="_setNotifTab('friends',this)">Friends</button>
     </div>
-    <div class="npv-list" id="np-list"><div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">Loading...</div></div>`;
+    <div class="npv-list" id="np-list-v2"><div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">Loading...</div></div>`;
   document.body.appendChild(panel);
   await buildNotifList();
 }
@@ -14345,7 +14504,7 @@ function _setNotifTab(tab, btn) {
 }
 
 async function buildNotifList() {
-  const list=document.getElementById('np-list'); if(!list) return;
+  const list=document.getElementById('np-list-v2')||document.getElementById('np-list'); if(!list) return;
   try {
   let notifs=[];
   try{notifs=await FortizedSocial.getNotifications(CU.username)||[];}catch(e){console.warn('[inbox] notif fetch:',e);}
@@ -14454,22 +14613,23 @@ async function buildNotifList() {
   }
 }
 
+let _markingAllRead = false;
 async function markAllRead(){
-  try{
-    await FortizedSocial.markNotificationsRead(CU.username);
-  }catch(e){console.warn('[inbox] markAllRead:',e);}
-  // Always update UI even if API call fails
+  _markingAllRead = true;
+  // Optimistically update UI immediately
   const badge=document.getElementById('notif-badge');
   const tbBadge=document.getElementById('tb-notif-badge');
   if(badge){badge.textContent='0';badge.style.display='none';}
   if(tbBadge){tbBadge.textContent='0';tbBadge.style.display='none';}
   setFaviconNotif(false);
   _clearAllDMBadges();
-  // Rebuild notification list after a small delay to let DB sync
-  setTimeout(async()=>{
-    try{await updateNotifBadge();}catch{}
-    try{await buildNotifList();}catch{}
-  },300);
+  try{
+    await FortizedSocial.markNotificationsRead(CU.username);
+  }catch(e){console.warn('[inbox] markAllRead:',e);}
+  // Rebuild after DB is updated
+  try{await updateNotifBadge();}catch{}
+  try{await buildNotifList();}catch{}
+  _markingAllRead = false;
 }
 function _clearAllDMBadges(){document.querySelectorAll('.friend-item').forEach(fi=>{fi.style.fontWeight='';fi.classList.remove('dm-unread');const badge=fi.querySelector('.dm-unread-badge');if(badge)badge.remove();});document.querySelectorAll('.rail-notif-badge').forEach(b=>b.remove());}
 
@@ -16018,12 +16178,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           ${media.length>0?`<div style="margin-bottom:14px;">
             <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.49"/></svg> Media Attachments (${media.length})</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;">
-              ${media.map(m => m.type==='video'?
-                `<div style="display:inline-block;"><video src="${escapeHTML(m.url)}" controls style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#000;" preload="metadata"></video>${m.name?`<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:3px;">${escapeHTML(m.name)}</div>`:''}</div>`:
-                m.type==='audio'?
-                `<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;display:inline-flex;align-items:center;gap:8px;"><span style="font-size:16px;">🎵</span><audio src="${escapeHTML(m.url)}" controls style="height:32px;" preload="metadata"></audio>${m.name?`<span style="font-size:11px;color:rgba(255,255,255,.35);">${escapeHTML(m.name)}</span>`:''}</div>`:
-                `<img src="${escapeHTML(m.url)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="this.style.display='none'">`
-              ).join('')}
+              ${media.map(m => { if(m.type==='video'){ const _vp='rpvid-'+Math.random().toString(36).slice(2); return `<div style="display:inline-block;max-width:320px;"><div class="ftz-vp" id="${_vp}-wrap" style="border-radius:10px;"><video id="${_vp}" src="${escapeHTML(m.url)}" style="max-width:320px;max-height:240px;display:block;cursor:pointer;" preload="metadata" onclick="ftzVideoToggle('${_vp}')" ontimeupdate="ftzVideoTick('${_vp}')" onloadedmetadata="ftzVideoMeta('${_vp}')" onended="ftzVideoEnd('${_vp}')"></video><div class="ftz-vp-overlay" id="${_vp}-overlay" onclick="ftzVideoToggle('${_vp}')"><div class="ftz-vp-overlay-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div></div>${m.name?`<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:3px;">${escapeHTML(m.name)}</div>`:''}</div>`; } if(m.type==='audio'){ const _ap='rpaud-'+Math.random().toString(36).slice(2); return `<div class="ftz-embed" style="--embed-color:#fef83d;max-width:300px;margin:0;"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-ap"><button class="ftz-ap-btn" id="${_ap}-btn" onclick="ftzAudioToggle('${_ap}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></button><div class="ftz-ap-body"><div class="ftz-ap-name">${m.name?escapeHTML(m.name):'Audio'}</div><div class="ftz-ap-progress" onclick="ftzAudioSeek('${_ap}',event)"><div class="ftz-ap-prog-fill" id="${_ap}-prog" style="width:0%;"></div></div><div class="ftz-ap-meta"><span class="ftz-ap-time"><span id="${_ap}-cur">0:00</span> / <span id="${_ap}-dur">--:--</span></span></div></div></div><audio id="${_ap}" src="${escapeHTML(m.url)}" preload="metadata" style="display:none;" ontimeupdate="ftzAudioTick('${_ap}')" onloadedmetadata="ftzAudioMeta('${_ap}')" onended="ftzAudioEnd('${_ap}')"></audio></div></div></div>`; } return `<img src="${escapeHTML(m.url)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="this.style.display='none'">`; }).join('')}
             </div>
           </div>`:''}
           <!-- Additional context -->
@@ -16316,8 +16471,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             ${mediaSrc?`<div style="margin-bottom:14px;">
               <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.49"/></svg> Flagged Content</div>
               <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                ${item.type==='video'?`<video src="${escapeHTML(mediaSrc)}" controls style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#000;" preload="metadata"></video>`
-                :`<img src="${escapeHTML(mediaSrc)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="this.style.display='none'">`}
+                ${(()=>{ if(item.type==='video'){ const _vp='nsfwvid-'+Math.random().toString(36).slice(2); return `<div style="display:inline-block;max-width:320px;"><div class="ftz-vp" id="${_vp}-wrap" style="border-radius:10px;"><video id="${_vp}" src="${escapeHTML(mediaSrc)}" style="max-width:320px;max-height:240px;display:block;cursor:pointer;" preload="metadata" onclick="ftzVideoToggle('${_vp}')" ontimeupdate="ftzVideoTick('${_vp}')" onloadedmetadata="ftzVideoMeta('${_vp}')" onended="ftzVideoEnd('${_vp}')"></video><div class="ftz-vp-overlay" id="${_vp}-overlay" onclick="ftzVideoToggle('${_vp}')"><div class="ftz-vp-overlay-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div></div></div>`; } return `<img src="${escapeHTML(mediaSrc)}" style="max-width:320px;max-height:240px;border-radius:10px;border:1px solid rgba(255,255,255,.08);object-fit:contain;background:rgba(0,0,0,.3);cursor:pointer;" onclick="_openMediaLightbox(this.src)" loading="lazy" onerror="this.style.display='none'">`; })()}
               </div>
             </div>`:''}
             <!-- AI Feedback -->
@@ -19912,43 +20066,86 @@ function parseMD(s) {
       + '<img src="' + data + '" style="max-width:360px;max-height:300px;border-radius:10px;display:block;cursor:pointer;" loading="lazy" onclick="_openMediaLightbox(this.src)">'
       + '</div>';
   });
-  // 0b. Video attachments — unified video player embed
+  // 0b. Video attachments — full-featured video player
   s = s.replace(/\[FTZVID:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
     var vid2='vid-'+Math.random().toString(36).slice(2);
-    return '<div class="ftz-embed" style="--embed-color:#fef83d;max-width:480px;"><div class="ftz-embed-inner" style="flex-direction:column;">'
-      +'<div style="position:relative;background:#000;cursor:pointer;width:100%;" onclick="ftzVideoToggle(\''+vid2+'\')">'
-      +'<video id="'+vid2+'" src="'+escapeHTML(data)+'" style="width:100%;max-height:360px;display:block;" preload="metadata" oncontextmenu="return false" ontimeupdate="ftzVideoTick(\''+vid2+'\')" onloadedmetadata="ftzVideoMeta(\''+vid2+'\')" onended="ftzVideoEnd(\''+vid2+'\')"></video>'
-      +'<div id="'+vid2+'-overlay" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);transition:opacity .2s;">'
-      +'<div style="width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.15);"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
+    return '<div class="ftz-embed" style="--embed-color:#fef83d;max-width:480px;" tabindex="0" onkeydown="ftzVideoKey(\''+vid2+'\',event)">'
+      +'<div class="ftz-embed-inner" style="flex-direction:column;">'
+      // Video area
+      +'<div class="ftz-vp" id="'+vid2+'-wrap">'
+      +'<video id="'+vid2+'" src="'+escapeHTML(data)+'" preload="metadata" oncontextmenu="return false" onclick="ftzVideoToggle(\''+vid2+'\')" ondblclick="ftzVideoFullscreen(\''+vid2+'\')" ontimeupdate="ftzVideoTick(\''+vid2+'\')" onloadedmetadata="ftzVideoMeta(\''+vid2+'\')" onended="ftzVideoEnd(\''+vid2+'\')" onprogress="ftzVideoBuffer(\''+vid2+'\')" onerror="ftzVideoError(\''+vid2+'\')" onwaiting="ftzVideoWaiting(\''+vid2+'\')" onplaying="ftzVideoPlaying(\''+vid2+'\')"></video>'
+      // Play overlay
+      +'<div class="ftz-vp-overlay" id="'+vid2+'-overlay" onclick="ftzVideoToggle(\''+vid2+'\')">'
+      +'<div class="ftz-vp-overlay-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
+      +'</div>'
+      // Buffering spinner
+      +'<div id="'+vid2+'-spinner" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:3;pointer-events:none;">'
+      +'<div style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;"></div>'
+      +'</div>'
+      // Error overlay
+      +'<div class="ftz-vp-error" id="'+vid2+'-error" style="display:none;">'
+      +'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+      +'<span>Failed to load video</span>'
+      +'</div>'
+      +'</div>'
+      // Controls
+      +'<div class="ftz-vp-controls">'
+      // Progress bar
+      +'<div class="ftz-vp-progress" onclick="ftzVideoSeek(\''+vid2+'\',event)" onmousemove="ftzVideoSeekPreview(\''+vid2+'\',event)">'
+      +'<div class="ftz-vp-prog-buffer" id="'+vid2+'-buf"></div>'
+      +'<div class="ftz-vp-prog-fill" id="'+vid2+'-prog"></div>'
+      +'<div class="ftz-vp-prog-thumb" id="'+vid2+'-thumb"></div>'
+      +'</div>'
+      // Control row
+      +'<div class="ftz-vp-row">'
+      +'<button class="ftz-vp-btn" id="'+vid2+'-btn" onclick="ftzVideoToggle(\''+vid2+'\')" title="Play/Pause"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>'
+      // Volume
+      +'<div class="ftz-vp-vol-wrap">'
+      +'<button class="ftz-vp-btn" onclick="ftzVideoMute(\''+vid2+'\')" id="'+vid2+'-vol-icon" title="Mute"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></button>'
+      +'<div class="ftz-vp-vol-slider"><div class="ftz-vp-vol-track" onclick="ftzVideoVol(\''+vid2+'\',event)"><div class="ftz-vp-vol-fill" id="'+vid2+'-vol-fill" style="width:100%;"></div></div></div>'
+      +'</div>'
+      // Time
+      +'<span class="ftz-vp-time"><span id="'+vid2+'-cur">0:00</span> / <span id="'+vid2+'-dur">--:--</span></span>'
+      +'<div style="flex:1;"></div>'
+      // Speed
+      +'<span class="ftz-vp-speed" id="'+vid2+'-speed" onclick="ftzVideoCycleSpeed(\''+vid2+'\')" title="Playback speed">1x</span>'
+      // PiP
+      +'<button class="ftz-vp-btn" onclick="ftzVideoPiP(\''+vid2+'\')" title="Picture-in-Picture"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="11" y="9" width="10" height="7" rx="1" fill="currentColor" stroke="none" opacity=".5"/></svg></button>'
+      // Fullscreen
+      +'<button class="ftz-vp-btn" onclick="ftzVideoFullscreen(\''+vid2+'\')" title="Fullscreen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>'
       +'</div></div>'
-      +'<div style="padding:10px 14px 12px;background:rgba(255,255,255,.02);">'
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
-      +'<button onclick="event.stopPropagation();ftzVideoToggle(\''+vid2+'\')" id="'+vid2+'-btn" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>'
-      +'<div style="flex:1;min-width:0;">'
-      +'<div style="height:6px;background:rgba(255,255,255,.08);border-radius:3px;cursor:pointer;position:relative;" onclick="event.stopPropagation();ftzVideoSeek(\''+vid2+'\',event)">'
-      +'<div id="'+vid2+'-prog" style="height:100%;background:#fff;border-radius:3px;width:0%;transition:width .1s;"></div></div>'
-      +'</div>'
-      +'<span style="font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;flex-shrink:0;"><span id="'+vid2+'-cur">0:00</span> / <span id="'+vid2+'-dur">--:--</span></span>'
-      +'<button onclick="event.stopPropagation();ftzVideoFullscreen(\''+vid2+'\')" style="background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;padding:2px;line-height:1;display:flex;flex-shrink:0;" title="Fullscreen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>'
-      +'</div>'
-      +'<div style="font-size:11px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHTML(name)+'</div>'
-      +'</div></div></div>';
+      // Filename
+      +'<div class="ftz-vp-fname">'+escapeHTML(name)+'</div>'
+      +'</div></div>';
   });
-  // 0c. Audio attachments — unified audio player embed
+  // 0c. Audio attachments — full-featured audio player
   s = s.replace(/\[FTZAUD:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
     var aid='aud-'+Math.random().toString(36).slice(2);
-    return '<div class="ftz-embed" style="--embed-color:#fef83d;"><div class="ftz-embed-inner">'
+    return '<div class="ftz-embed" style="--embed-color:#fef83d;" tabindex="0" onkeydown="ftzAudioKey(\''+aid+'\',event)">'
+      +'<div class="ftz-embed-inner">'
       +'<div class="ftz-embed-stripe"></div><div class="ftz-embed-content">'
-      +'<div style="padding:12px 14px;display:flex;align-items:center;gap:12px;">'
-      +'<button id="'+aid+'-btn" onclick="ftzAudioToggle(\''+aid+'\')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;" onmouseenter="this.style.background=\'rgba(255,255,255,.18)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.1)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>'
-      +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;">'+escapeHTML(name)+'</div>'
-      +'<div style="height:6px;background:rgba(255,255,255,.08);border-radius:3px;cursor:pointer;" onclick="ftzAudioSeek(\''+aid+'\',event)">'
-      +'<div id="'+aid+'-prog" style="height:100%;background:#fff;border-radius:3px;width:0%;transition:width .1s;"></div></div>'
-      +'<div style="display:flex;justify-content:space-between;margin-top:4px;">'
-      +'<span id="'+aid+'-cur" style="font-size:10px;color:rgba(255,255,255,.4);">0:00</span>'
-      +'<span id="'+aid+'-dur" style="font-size:10px;color:rgba(255,255,255,.4);">--:--</span>'
-      +'</div></div></div>'
+      +'<div class="ftz-ap">'
+      // Play button
+      +'<button class="ftz-ap-btn" id="'+aid+'-btn" onclick="ftzAudioToggle(\''+aid+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>'
+      +'<div class="ftz-ap-body">'
+      +'<div class="ftz-ap-name">'+escapeHTML(name)+'</div>'
+      // Progress bar
+      +'<div class="ftz-ap-progress" onclick="ftzAudioSeek(\''+aid+'\',event)">'
+      +'<div class="ftz-ap-prog-fill" id="'+aid+'-prog" style="width:0%;"></div>'
+      +'<div class="ftz-ap-prog-thumb" id="'+aid+'-thumb"></div>'
+      +'</div>'
+      // Meta row
+      +'<div class="ftz-ap-meta">'
+      +'<span class="ftz-ap-time"><span id="'+aid+'-cur">0:00</span> / <span id="'+aid+'-dur">--:--</span></span>'
+      +'<div style="display:flex;align-items:center;gap:6px;">'
+      // Volume
+      +'<div class="ftz-ap-vol-wrap">'
+      +'<button style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;padding:1px;line-height:1;display:flex;" onclick="ftzAudioMute(\''+aid+'\')" id="'+aid+'-vol-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg></button>'
+      +'<div class="ftz-ap-vol-track" onclick="ftzAudioVol(\''+aid+'\',event)"><div class="ftz-ap-vol-fill" id="'+aid+'-vol-fill" style="width:100%;"></div></div>'
+      +'</div>'
+      // Speed
+      +'<span class="ftz-ap-speed" id="'+aid+'-speed" onclick="ftzAudioCycleSpeed(\''+aid+'\')" title="Speed">1x</span>'
+      +'</div></div></div></div>'
       +'<audio id="'+aid+'" src="'+escapeHTML(data)+'" preload="metadata" style="display:none;" ontimeupdate="ftzAudioTick(\''+aid+'\')" onloadedmetadata="ftzAudioMeta(\''+aid+'\')" onended="ftzAudioEnd(\''+aid+'\')"></audio>'
       +'</div></div></div>';
   });
@@ -24445,6 +24642,10 @@ function _ftzFmtTime(s) {
   const m=Math.floor(s/60), sec=Math.floor(s%60);
   return m+':'+(sec<10?'0':'')+sec;
 }
+// ════════════════════════════════════════════
+// CUSTOM AUDIO PLAYER FUNCTIONS (full-featured)
+// ════════════════════════════════════════════
+const _ftzAudioSpeeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 function ftzAudioToggle(id) {
   const a=document.getElementById(id); if(!a) return;
   const btn=document.getElementById(id+'-btn');
@@ -24455,9 +24656,12 @@ function ftzAudioToggle(id) {
 }
 function ftzAudioTick(id) {
   const a=document.getElementById(id); if(!a||!a.duration) return;
+  const pct = (a.currentTime/a.duration*100);
   const prog=document.getElementById(id+'-prog');
+  const thumb=document.getElementById(id+'-thumb');
   const cur=document.getElementById(id+'-cur');
-  if(prog) prog.style.width=(a.currentTime/a.duration*100)+'%';
+  if(prog) prog.style.width=pct+'%';
+  if(thumb) thumb.style.left=pct+'%';
   if(cur) cur.textContent=_ftzFmtTime(a.currentTime);
 }
 function ftzAudioMeta(id) {
@@ -24468,18 +24672,57 @@ function ftzAudioMeta(id) {
 function ftzAudioEnd(id) {
   const btn=document.getElementById(id+'-btn');
   const prog=document.getElementById(id+'-prog');
+  const thumb=document.getElementById(id+'-thumb');
   if(btn) btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
   if(prog) prog.style.width='0%';
+  if(thumb) thumb.style.left='0%';
 }
 function ftzAudioSeek(id, e) {
   const a=document.getElementById(id); if(!a||!a.duration) return;
   const bar=e.currentTarget; const rect=bar.getBoundingClientRect();
   a.currentTime=((e.clientX-rect.left)/rect.width)*a.duration;
 }
+function ftzAudioMute(id) {
+  const a=document.getElementById(id); if(!a) return;
+  a.muted = !a.muted;
+  const icon=document.getElementById(id+'-vol-icon');
+  const fill=document.getElementById(id+'-vol-fill');
+  if(icon) icon.innerHTML = a.muted
+    ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>'
+    : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>';
+  if(fill) fill.style.width = a.muted ? '0%' : (a.volume*100)+'%';
+}
+function ftzAudioVol(id, e) {
+  const a=document.getElementById(id); if(!a) return;
+  const bar=e.currentTarget; const rect=bar.getBoundingClientRect();
+  const vol = Math.max(0, Math.min(1, (e.clientX-rect.left)/rect.width));
+  a.volume = vol; a.muted = false;
+  const fill=document.getElementById(id+'-vol-fill');
+  if(fill) fill.style.width=(vol*100)+'%';
+}
+function ftzAudioCycleSpeed(id) {
+  const a=document.getElementById(id); if(!a) return;
+  const cur = a.playbackRate || 1;
+  const idx = _ftzAudioSpeeds.indexOf(cur);
+  const next = _ftzAudioSpeeds[(idx+1) % _ftzAudioSpeeds.length];
+  a.playbackRate = next;
+  const el=document.getElementById(id+'-speed');
+  if(el) el.textContent = next+'x';
+}
+function ftzAudioKey(id, e) {
+  const a=document.getElementById(id); if(!a) return;
+  if(e.key===' '||e.key==='k'){e.preventDefault();ftzAudioToggle(id);}
+  else if(e.key==='ArrowRight'){e.preventDefault();a.currentTime=Math.min(a.duration||0,a.currentTime+5);}
+  else if(e.key==='ArrowLeft'){e.preventDefault();a.currentTime=Math.max(0,a.currentTime-5);}
+  else if(e.key==='ArrowUp'){e.preventDefault();a.volume=Math.min(1,a.volume+0.1);}
+  else if(e.key==='ArrowDown'){e.preventDefault();a.volume=Math.max(0,a.volume-0.1);}
+  else if(e.key==='m'){e.preventDefault();ftzAudioMute(id);}
+}
 
 // ════════════════════════════════════════════
-// CUSTOM VIDEO PLAYER FUNCTIONS
+// CUSTOM VIDEO PLAYER FUNCTIONS (full-featured)
 // ════════════════════════════════════════════
+const _ftzVideoSpeeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 function ftzVideoToggle(id) {
   const v=document.getElementById(id); if(!v) return;
   const btn=document.getElementById(id+'-btn');
@@ -24489,18 +24732,21 @@ function ftzVideoToggle(id) {
   if (v.paused) {
     v.play();
     if(btn) btn.innerHTML=pauseSvg;
-    if(ov) ov.style.opacity='0'; if(ov) ov.style.pointerEvents='none';
+    if(ov) ov.classList.add('hidden');
   } else {
     v.pause();
     if(btn) btn.innerHTML=playSvg;
-    if(ov) ov.style.opacity='1'; if(ov) ov.style.pointerEvents='auto';
+    if(ov) ov.classList.remove('hidden');
   }
 }
 function ftzVideoTick(id) {
   const v=document.getElementById(id); if(!v||!v.duration) return;
+  const pct = (v.currentTime/v.duration*100);
   const prog=document.getElementById(id+'-prog');
+  const thumb=document.getElementById(id+'-thumb');
   const cur=document.getElementById(id+'-cur');
-  if(prog) prog.style.width=(v.currentTime/v.duration*100)+'%';
+  if(prog) prog.style.width=pct+'%';
+  if(thumb) thumb.style.left=pct+'%';
   if(cur) cur.textContent=_ftzFmtTime(v.currentTime);
 }
 function ftzVideoMeta(id) {
@@ -24512,20 +24758,97 @@ function ftzVideoEnd(id) {
   const btn=document.getElementById(id+'-btn');
   const ov=document.getElementById(id+'-overlay');
   const prog=document.getElementById(id+'-prog');
+  const thumb=document.getElementById(id+'-thumb');
   if(btn) btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
-  if(ov){ov.style.opacity='1';ov.style.pointerEvents='auto';}
+  if(ov) ov.classList.remove('hidden');
   if(prog) prog.style.width='0%';
+  if(thumb) thumb.style.left='0%';
 }
-function ftzVideoFullscreen(id) {
-  const v=document.getElementById(id); if(!v) return;
-  if(v.requestFullscreen) v.requestFullscreen();
-  else if(v.webkitRequestFullscreen) v.webkitRequestFullscreen();
-  else if(v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+function ftzVideoBuffer(id) {
+  const v=document.getElementById(id); if(!v||!v.duration||!v.buffered.length) return;
+  const buf=document.getElementById(id+'-buf');
+  if(buf) buf.style.width=(v.buffered.end(v.buffered.length-1)/v.duration*100)+'%';
+}
+function ftzVideoError(id) {
+  const err=document.getElementById(id+'-error');
+  const ov=document.getElementById(id+'-overlay');
+  if(err) err.style.display='flex';
+  if(ov) ov.style.display='none';
+}
+function ftzVideoWaiting(id) {
+  const sp=document.getElementById(id+'-spinner');
+  if(sp) sp.style.display='flex';
+}
+function ftzVideoPlaying(id) {
+  const sp=document.getElementById(id+'-spinner');
+  if(sp) sp.style.display='none';
 }
 function ftzVideoSeek(id, e) {
   const v=document.getElementById(id); if(!v||!v.duration) return;
   const bar=e.currentTarget; const rect=bar.getBoundingClientRect();
   v.currentTime=((e.clientX-rect.left)/rect.width)*v.duration;
+}
+function ftzVideoSeekPreview(id, e) {
+  const v=document.getElementById(id); if(!v||!v.duration) return;
+  const thumb=document.getElementById(id+'-thumb');
+  if(!thumb) return;
+  const bar=e.currentTarget; const rect=bar.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(100, ((e.clientX-rect.left)/rect.width)*100));
+  thumb.style.left=pct+'%';
+}
+function ftzVideoFullscreen(id) {
+  const wrap=document.getElementById(id+'-wrap');
+  const v=document.getElementById(id);
+  const el = wrap || v; if(!el) return;
+  if(document.fullscreenElement) { document.exitFullscreen(); return; }
+  if(el.requestFullscreen) el.requestFullscreen();
+  else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  else if(v && v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+}
+function ftzVideoMute(id) {
+  const v=document.getElementById(id); if(!v) return;
+  v.muted = !v.muted;
+  const icon=document.getElementById(id+'-vol-icon');
+  const fill=document.getElementById(id+'-vol-fill');
+  if(icon) icon.innerHTML = v.muted
+    ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>'
+    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>';
+  if(fill) fill.style.width = v.muted ? '0%' : (v.volume*100)+'%';
+}
+function ftzVideoVol(id, e) {
+  const v=document.getElementById(id); if(!v) return;
+  const bar=e.currentTarget; const rect=bar.getBoundingClientRect();
+  const vol = Math.max(0, Math.min(1, (e.clientX-rect.left)/rect.width));
+  v.volume = vol; v.muted = false;
+  const fill=document.getElementById(id+'-vol-fill');
+  if(fill) fill.style.width=(vol*100)+'%';
+}
+function ftzVideoCycleSpeed(id) {
+  const v=document.getElementById(id); if(!v) return;
+  const cur = v.playbackRate || 1;
+  const idx = _ftzVideoSpeeds.indexOf(cur);
+  const next = _ftzVideoSpeeds[(idx < 0 ? 3 : idx+1) % _ftzVideoSpeeds.length];
+  v.playbackRate = next;
+  const el=document.getElementById(id+'-speed');
+  if(el) el.textContent = next+'x';
+}
+function ftzVideoPiP(id) {
+  const v=document.getElementById(id); if(!v) return;
+  if(document.pictureInPictureElement === v) { document.exitPictureInPicture().catch(()=>{}); }
+  else if(v.requestPictureInPicture) { v.requestPictureInPicture().catch(()=>{}); }
+}
+function ftzVideoKey(id, e) {
+  const v=document.getElementById(id); if(!v) return;
+  if(e.key===' '||e.key==='k'){e.preventDefault();ftzVideoToggle(id);}
+  else if(e.key==='ArrowRight'){e.preventDefault();v.currentTime=Math.min(v.duration||0,v.currentTime+5);}
+  else if(e.key==='ArrowLeft'){e.preventDefault();v.currentTime=Math.max(0,v.currentTime-5);}
+  else if(e.key==='ArrowUp'){e.preventDefault();v.volume=Math.min(1,v.volume+0.1);}
+  else if(e.key==='ArrowDown'){e.preventDefault();v.volume=Math.max(0,v.volume-0.1);}
+  else if(e.key==='f'){e.preventDefault();ftzVideoFullscreen(id);}
+  else if(e.key==='m'){e.preventDefault();ftzVideoMute(id);}
+  else if(e.key==='p'){e.preventDefault();ftzVideoPiP(id);}
+  else if(e.key==='j'){e.preventDefault();v.currentTime=Math.max(0,v.currentTime-10);}
+  else if(e.key==='l'){e.preventDefault();v.currentTime=Math.min(v.duration||0,v.currentTime+10);}
 }
 
 // ════════════════════════════════════════════
@@ -25247,15 +25570,15 @@ function switchAtelierTab(tab, el) {
 function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
   if (type === 'appearance') {
     const owned = ownedApps.includes(item.id);
-    return '<div style="background:'+item.gradient+';border:1.5px solid '+item.borderColor+';border-radius:18px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor=\''+item.hoverBorder+'\';this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 40px rgba(0,0,0,.3)\'" onmouseout="this.style.borderColor=\''+item.borderColor+'\';this.style.transform=\'\';this.style.boxShadow=\'none\'">'
-      + '<div style="height:90px;background:'+item.previewBg+';display:flex;gap:3px;padding:10px;position:relative;">'
-      + '<div style="width:16px;background:'+item.sidebarBg+';border-radius:4px;"></div>'
-      + '<div style="flex:1;background:rgba(255,255,255,.02);border-radius:4px;padding:8px;"><div style="height:4px;background:#fff93e;border-radius:100px;width:35%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.05);border-radius:100px;width:55%;"></div></div>'
+    return '<div class="shop-item-card" style="background:'+item.gradient+';border-color:'+item.borderColor+';" onmouseover="this.style.borderColor=\''+item.hoverBorder+'\'" onmouseout="this.style.borderColor=\''+item.borderColor+'\'">'
+      + '<div class="sic-preview" style="background:'+item.previewBg+';">'
+      + '<div class="sic-sidebar" style="background:'+item.sidebarBg+';"></div>'
+      + '<div class="sic-content"><div style="height:4px;background:#fff93e;border-radius:100px;width:40%;margin-bottom:5px;"></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:100px;width:60%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.03);border-radius:100px;width:45%;"></div></div>'
       + '</div>'
-      + '<div style="padding:14px 16px;">'
-      + '<div style="font-family:\'Syne\',sans-serif;font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;">'+item.name+'</div>'
-      + '<div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;">Appearance</div>'
-      + (owned ? '<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>' : '<div style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> '+item.price+'</div>')
+      + '<div class="sic-body">'
+      + '<div class="sic-name">'+item.name+'</div>'
+      + '<div class="sic-type">Appearance</div>'
+      + (owned ? '<div class="sic-owned">Owned</div>' : '<div class="sic-price"><img src="/Onyx.png"> '+item.price+'</div>')
       + '</div></div>';
   } else if (type === 'decoration') {
     const owned = ownedDecos.includes(item.id);
@@ -25263,13 +25586,13 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
     const pfp = CU?.pfp;
     const initLetter = (CU?.displayName||'U')[0].toUpperCase();
     const avatarInner = pfp ? '<img src="'+pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : '<div style="width:100%;height:100%;background:'+item.color+'22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:Syne,sans-serif;font-weight:800;color:'+item.color+';">'+initLetter+'</div>';
-    return '<div style="background:rgba(255,255,255,.02);border:1.5px solid '+(equipped?item.color+'44':'rgba(255,255,255,.05)')+';border-radius:18px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);text-align:center;" onmouseover="this.style.borderColor=\''+item.color+'44\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\''+(equipped?item.color+'44':'rgba(255,255,255,.05)')+'\';this.style.transform=\'\'">'
-      + '<div style="padding:16px 12px 8px;"><div style="position:relative;width:60px;height:60px;margin:0 auto 10px;"><div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.06);overflow:hidden;">'+avatarInner+'</div>'
-      + '<img src="'+item.src+'" style="position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);object-fit:contain;pointer-events:none;" onerror="this.style.display=\'none\'"></div></div>'
-      + '<div style="padding:0 14px 14px;">'
-      + '<div style="font-family:\'Syne\',sans-serif;font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;">'+item.name+'</div>'
-      + '<div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;">Decoration</div>'
-      + (equipped ? '<div style="font-size:11px;font-weight:700;color:'+item.color+';">Equipped</div>' : owned ? '<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>' : '<div style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> '+item.price+'</div>')
+    return '<div class="shop-item-card" style="background:rgba(255,255,255,.02);border-color:'+(equipped?item.color+'44':'rgba(255,255,255,.05)')+';text-align:center;" onmouseover="this.style.borderColor=\''+item.color+'44\'" onmouseout="this.style.borderColor=\''+(equipped?item.color+'44':'rgba(255,255,255,.05)')+'\'">'
+      + '<div style="padding:20px 12px 10px;"><div style="position:relative;width:68px;height:68px;margin:0 auto 10px;"><div style="width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.06);overflow:hidden;box-shadow:0 4px 16px '+item.color+'15;">'+avatarInner+'</div>'
+      + '<img src="'+item.src+'" style="position:absolute;inset:-7px;width:calc(100% + 14px);height:calc(100% + 14px);object-fit:contain;pointer-events:none;" onerror="this.style.display=\'none\'"></div></div>'
+      + '<div style="padding:0 14px 16px;">'
+      + '<div class="sic-name">'+item.name+'</div>'
+      + '<div class="sic-type">Decoration</div>'
+      + (equipped ? '<div style="font-size:11px;font-weight:700;color:'+item.color+';">Equipped</div>' : owned ? '<div class="sic-owned">Owned</div>' : '<div class="sic-price" style="justify-content:center;"><img src="/Onyx.png"> '+item.price+'</div>')
       + '</div></div>';
   }
   return '';
@@ -25278,15 +25601,15 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
 function _renderShopBundle(id, name, origPrice, price, items, gradient, borderColor, accent, checkOwned) {
   const bundleOwned = checkOwned();
   const discount = Math.round((1 - price / origPrice) * 100);
-  return '<div style="background:'+gradient+';border:1.5px solid '+borderColor+';border-radius:18px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;" onmouseover="this.style.borderColor=\''+accent+'44\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\''+borderColor+'\';this.style.transform=\'\'">'
-    + '<div style="position:absolute;top:10px;right:10px;background:'+accent+'15;border:1px solid '+accent+'25;border-radius:6px;padding:2px 7px;font-size:8.5px;font-weight:800;color:'+accent+';">-'+discount+'%</div>'
-    + '<div style="padding:18px 16px;">'
-    + '<div style="font-family:\'Syne\',sans-serif;font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;">'+name+'</div>'
-    + '<div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:6px;">Bundle</div>'
-    + '<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px;">'
-    + items.map(function(it) { return '<span style="font-size:9px;padding:2px 7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:rgba(255,255,255,.4);font-weight:600;">'+it+'</span>'; }).join('')
+  return '<div class="shop-item-card" style="background:'+gradient+';border-color:'+borderColor+';" onmouseover="this.style.borderColor=\''+accent+'44\'" onmouseout="this.style.borderColor=\''+borderColor+'\'">'
+    + '<div class="sic-discount" style="background:'+accent+'18;border:1px solid '+accent+'28;color:'+accent+';">-'+discount+'%</div>'
+    + '<div style="padding:20px 16px 18px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="'+accent+'" stroke-width="2" style="opacity:.6;"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg><span class="sic-name" style="margin:0;">'+name+'</span></div>'
+    + '<div class="sic-type" style="margin-bottom:8px;">Bundle</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">'
+    + items.map(function(it) { return '<span style="font-size:9.5px;padding:3px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-weight:600;">'+it+'</span>'; }).join('')
     + '</div>'
-    + (bundleOwned ? '<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>' : '<div style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> <span style="text-decoration:line-through;opacity:.4;margin-right:2px;">'+origPrice+'</span> '+price+'</div>')
+    + (bundleOwned ? '<div class="sic-owned">Owned</div>' : '<div class="sic-price"><img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;"> <span style="text-decoration:line-through;opacity:.4;margin-right:3px;">'+origPrice+'</span> '+price+'</div>')
     + '</div></div>';
 }
 
@@ -25369,7 +25692,7 @@ function renderAtelierTab(tab) {
       <div style="display:flex;flex-direction:column;gap:28px;padding-bottom:60px;">
         <!-- Radiance Perks — card grid -->
         <div>
-          <div class="atel-section-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
             <span>Radiance Perks</span>
             <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))">See All</span>
           </div>
@@ -25399,7 +25722,7 @@ function renderAtelierTab(tab) {
 
         <!-- Active Quests -->
         <div>
-          <div class="atel-section-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
             <span>Quests</span>
             <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">View All</span>
           </div>
@@ -25419,7 +25742,7 @@ function renderAtelierTab(tab) {
 
         <!-- Shop Highlights -->
         <div>
-          <div class="atel-section-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
             <span>Check Out These Favourites</span>
             <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))">See All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
           </div>
@@ -25457,7 +25780,22 @@ function renderAtelierTab(tab) {
     const PRICES = {basic:[{days:7,onyx:200},{days:30,onyx:600},{days:90,onyx:1500}], plus:[{days:30,onyx:1200},{days:90,onyx:3000}]};
 
     el.style.padding = '0';
-    el.innerHTML = `<div style="padding:32px;max-width:800px;">
+    el.innerHTML = `
+      <!-- Radiance Header (uniform style) -->
+      <div style="position:relative;overflow:hidden;background:linear-gradient(160deg,#0a0810 0%,#100c1c 50%,#0e0818 100%);padding:28px 32px 24px;border-bottom:1px solid rgba(255,255,255,.04);">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 30%,rgba(255,160,62,.05),transparent 55%),radial-gradient(ellipse at 85% 65%,rgba(255,220,62,.04),transparent 50%);pointer-events:none;"></div>
+        <div style="position:relative;display:flex;align-items:center;gap:14px;">
+          <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,180,62,.06);border:1px solid rgba(255,180,62,.12);display:flex;align-items:center;justify-content:center;">
+            <img src="/fortized badges/${hasPlus?'radiance+':'basic radiance'}.png" style="width:26px;height:26px;object-fit:contain;">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.4);margin-bottom:3px;">ATELIER</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.01em;">Radiance Dwelling</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:32px;max-width:800px;">
 
       <!-- Active subscription status -->
       ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,220,62,.1),rgba(255,249,62,.05));border:1.5px solid rgba(255,220,62,.2);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
@@ -25591,13 +25929,12 @@ function renderAtelierTab(tab) {
     el.style.padding = '0';
     el.innerHTML = `
       <!-- Quest Header -->
-      <div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#080b14,#0c1020);padding:28px 32px 24px;border-bottom:1px solid rgba(255,255,255,.04);">
-        <div style="position:absolute;inset:0;background:url('/Fortized banner2.png') center/cover;opacity:.12;"></div>
-        <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(8,11,20,.9),rgba(12,16,32,.85));"></div>
+      <div style="position:relative;overflow:hidden;background:linear-gradient(160deg,#080b14 0%,#0c1020 50%,#0e0a1a 100%);padding:28px 32px 24px;border-bottom:1px solid rgba(255,255,255,.04);">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 30%,rgba(62,207,110,.04),transparent 55%),radial-gradient(ellipse at 85% 65%,rgba(96,165,250,.03),transparent 50%);pointer-events:none;"></div>
         <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;">
           <div>
-            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.5);margin-bottom:6px;">FORTIZED QUESTS</div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;">Earn Onyx</div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.4);margin-bottom:6px;">ATELIER</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.01em;">Quests</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);line-height:1.5;">Complete quests to earn Onyx currency. Daily quests refresh at midnight.</div>
           </div>
           <!-- Daily progress ring -->
@@ -25693,16 +26030,16 @@ function renderAtelierTab(tab) {
     el.style.padding = '0';
     el.innerHTML = `
       <!-- Shop Header -->
-      <div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#08091a,#0c1020,#0a0818);padding:28px 32px 22px;border-bottom:1px solid rgba(255,255,255,.04);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 40%,rgba(255,249,62,.04),transparent 60%),radial-gradient(ellipse at 80% 60%,rgba(167,139,250,.03),transparent 50%);"></div>
+      <div style="position:relative;overflow:hidden;background:linear-gradient(160deg,#080a16 0%,#0c1020 50%,#0a0818 100%);padding:28px 32px 22px;border-bottom:1px solid rgba(255,255,255,.04);">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 30%,rgba(255,249,62,.05),transparent 55%),radial-gradient(ellipse at 85% 65%,rgba(167,139,250,.04),transparent 50%);pointer-events:none;"></div>
         <div style="position:relative;display:flex;align-items:center;justify-content:space-between;">
           <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:42px;height:42px;border-radius:14px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;">
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             </div>
             <div>
               <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.4);margin-bottom:3px;">ATELIER</div>
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Shop</div>
+              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.01em;">Shop</div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,249,62,.06);border:1.5px solid rgba(255,249,62,.12);border-radius:14px;">
@@ -25715,100 +26052,131 @@ function renderAtelierTab(tab) {
         <!-- Shop Tabs -->
         <div style="position:relative;display:flex;gap:4px;margin-top:18px;">
           ${['featured','browse'].map(t=>`
-            <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:9px 18px;border-radius:12px;border:1.5px solid ${shopTab===t?'rgba(255,249,62,.2)':'transparent'};background:${shopTab===t?'rgba(255,249,62,.06)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.35)'};font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="if('${t}'!=='${shopTab}')this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.7)'" onmouseout="if('${t}'!=='${shopTab}'){this.style.background='transparent';this.style.color='rgba(255,255,255,.35)'}">${t==='featured'?'Featured':'Browse'}</button>`).join('')}
+            <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:9px 20px;border-radius:12px;border:1.5px solid ${shopTab===t?'rgba(255,249,62,.2)':'transparent'};background:${shopTab===t?'rgba(255,249,62,.06)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.35)'};font-size:12.5px;font-weight:600;cursor:pointer;transition:all .18s;" onmouseover="if('${t}'!=='${shopTab}')this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.7)'" onmouseout="if('${t}'!=='${shopTab}'){this.style.background='transparent';this.style.color='rgba(255,255,255,.35)'}">${t==='featured'?'Featured':'Browse'}</button>`).join('')}
         </div>
       </div>
 
       <div style="padding:24px 32px 60px;">
         ${shopTab==='featured'?`
 
-          <!-- ═══ COLLECTIONS-BASED SHOP ═══ -->
+          <!-- ═══ COLLECTIONS-BASED SHOP (Discord-style) ═══ -->
 
-          <!-- Sunset Collection -->
+          <!-- ── Featured Items Row (horizontal scroll, like Discord shop) ── -->
           <div style="margin-bottom:36px;">
-            <div style="position:relative;border-radius:20px;overflow:hidden;margin-bottom:16px;background:linear-gradient(135deg,rgba(26,4,16,.95),rgba(74,18,40,.8),rgba(245,217,120,.15));border:1.5px solid rgba(245,217,120,.12);padding:28px 24px;cursor:pointer;" onclick="setShopCat('All');setShopTab('browse')" onmouseover="this.style.borderColor='rgba(245,217,120,.3)'" onmouseout="this.style.borderColor='rgba(245,217,120,.12)'">
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:#f5d978;letter-spacing:-.01em;text-shadow:0 2px 12px rgba(245,217,120,.3);">SUNSET COLLECTION</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;">Bathe your profile in golden light</div>
-              <button style="margin-top:14px;padding:8px 18px;border-radius:10px;background:rgba(245,217,120,.12);border:1px solid rgba(245,217,120,.2);color:#f5d978;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(245,217,120,.2)'" onmouseout="this.style.background='rgba(245,217,120,.12)'">Shop the Collection</button>
+            <div class="atel-section-hdr"><span>Featured Items</span></div>
+            <div class="featured-scroll-row">
+              ${SHOP_APPEARANCES.map(a => {
+                const owned = ownedAppearances.includes(a.id);
+                return '<div class="shop-item-card" style="background:'+a.gradient+';border-color:'+a.borderColor+';" onmouseover="this.style.borderColor=\''+a.hoverBorder+'\'" onmouseout="this.style.borderColor=\''+a.borderColor+'\'">'
+                  + '<div class="sic-preview" style="background:'+a.previewBg+';">'
+                  + '<div class="sic-sidebar" style="background:'+a.sidebarBg+';"></div>'
+                  + '<div class="sic-content"><div style="height:4px;background:#fff93e;border-radius:100px;width:40%;margin-bottom:5px;"></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:100px;width:60%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.03);border-radius:100px;width:45%;"></div></div>'
+                  + '</div>'
+                  + '<div class="sic-body">'
+                  + '<div class="sic-name">'+a.name+'</div>'
+                  + '<div class="sic-type">Appearance</div>'
+                  + (owned ? '<div class="sic-owned">Owned</div>' : '<div class="sic-price"><img src="/Onyx.png"> '+a.price+'</div>')
+                  + '</div></div>';
+              }).join('')}
+              ${PROFILE_DECORATIONS.slice(0,3).map(d => _renderShopItemCard('decoration', d, ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)).join('')}
             </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          </div>
+
+          <!-- ── Sunset Collection ── -->
+          <div style="margin-bottom:36px;">
+            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(26,4,16,.95),rgba(74,18,40,.75),rgba(166,80,53,.4),rgba(245,217,120,.18));border-color:rgba(245,217,120,.12);" onclick="setShopCat('All');setShopTab('browse')" onmouseover="this.style.borderColor='rgba(245,217,120,.3)'" onmouseout="this.style.borderColor='rgba(245,217,120,.12)'">
+              <div style="position:absolute;top:-20px;right:-10px;width:180px;height:180px;background:radial-gradient(circle,rgba(245,217,120,.08) 0%,transparent 70%);pointer-events:none;"></div>
+              <div class="collection-bar-title" style="color:#f5d978;text-shadow:0 2px 20px rgba(245,217,120,.35);">SUNSET COLLECTION</div>
+              <div class="collection-bar-desc">Bathe your profile in golden light</div>
+              <button class="collection-bar-btn" style="background:rgba(245,217,120,.12);border-color:rgba(245,217,120,.22);color:#f5d978;" onmouseover="this.style.background='rgba(245,217,120,.22)'" onmouseout="this.style.background='rgba(245,217,120,.12)'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                Shop the Collection
+              </button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
               ${_renderShopItemCard('appearance', SHOP_APPEARANCES.find(a=>a.id==='sunset'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
               ${_renderShopItemCard('decoration', PROFILE_DECORATIONS.find(d=>d.id==='sunset_halo'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
               ${_renderShopBundle('sunset_bundle','Sunset Bundle',220,175,['Sunset','Sunset Halo'],'linear-gradient(135deg,rgba(245,217,120,.06),rgba(26,4,16,.8))','rgba(245,217,120,.12)','#f5d978',()=>ownedAppearances.includes('sunset')&&(CU?.ownedDecorations||[]).includes('sunset_halo'))}
             </div>
           </div>
 
-          <!-- Midnight Collection -->
+          <!-- ── Midnight Collection ── -->
           <div style="margin-bottom:36px;">
-            <div style="position:relative;border-radius:20px;overflow:hidden;margin-bottom:16px;background:linear-gradient(135deg,rgba(5,8,18,.95),rgba(10,18,40,.8),rgba(96,165,250,.1));border:1.5px solid rgba(96,165,250,.12);padding:28px 24px;cursor:pointer;" onclick="setShopCat('All');setShopTab('browse')" onmouseover="this.style.borderColor='rgba(96,165,250,.3)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)'">
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:#60a5fa;letter-spacing:-.01em;text-shadow:0 2px 12px rgba(96,165,250,.3);">MIDNIGHT COLLECTION</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;">Command the night with deep blue aesthetics</div>
-              <button style="margin-top:14px;padding:8px 18px;border-radius:10px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(96,165,250,.18)'" onmouseout="this.style.background='rgba(96,165,250,.1)'">Shop the Collection</button>
+            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(5,8,18,.95),rgba(10,18,40,.8),rgba(30,60,130,.3),rgba(96,165,250,.12));border-color:rgba(96,165,250,.12);" onclick="setShopCat('All');setShopTab('browse')" onmouseover="this.style.borderColor='rgba(96,165,250,.3)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)'">
+              <div style="position:absolute;top:-30px;right:10px;width:160px;height:160px;background:radial-gradient(circle,rgba(96,165,250,.06) 0%,transparent 70%);pointer-events:none;"></div>
+              <div class="collection-bar-title" style="color:#60a5fa;text-shadow:0 2px 20px rgba(96,165,250,.35);">MIDNIGHT COLLECTION</div>
+              <div class="collection-bar-desc">Command the night with deep blue aesthetics</div>
+              <button class="collection-bar-btn" style="background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.2);color:#60a5fa;" onmouseover="this.style.background='rgba(96,165,250,.2)'" onmouseout="this.style.background='rgba(96,165,250,.1)'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                Shop the Collection
+              </button>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
               ${_renderShopItemCard('appearance', SHOP_APPEARANCES.find(a=>a.id==='midnight_citadel'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
               ${_renderShopItemCard('decoration', PROFILE_DECORATIONS.find(d=>d.id==='blue_glow'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
               ${_renderShopBundle('midnight_bundle','Midnight Bundle',260,210,['Midnight Citadel','Blue Glow'],'linear-gradient(135deg,rgba(96,165,250,.04),rgba(5,8,18,.9))','rgba(96,165,250,.12)','#60a5fa',()=>ownedAppearances.includes('midnight_citadel')&&(CU?.ownedDecorations||[]).includes('blue_glow'))}
             </div>
           </div>
 
-          <!-- Onyx Collection -->
+          <!-- ── Onyx Collection ── -->
           <div style="margin-bottom:36px;">
-            <div style="position:relative;border-radius:20px;overflow:hidden;margin-bottom:16px;background:linear-gradient(135deg,rgba(1,1,3,.95),rgba(14,10,34,.8),rgba(140,100,220,.08));border:1.5px solid rgba(140,100,220,.12);padding:28px 24px;">
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:rgba(140,100,220,.7);letter-spacing:-.01em;">ONYX COLLECTION</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:4px;">Pure darkness. Minimal distractions.</div>
+            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(1,1,3,.95),rgba(14,10,34,.85),rgba(60,40,120,.2),rgba(140,100,220,.08));border-color:rgba(140,100,220,.12);cursor:default;" onmouseover="this.style.borderColor='rgba(140,100,220,.25)'" onmouseout="this.style.borderColor='rgba(140,100,220,.12)'">
+              <div style="position:absolute;top:-20px;right:20px;width:140px;height:140px;background:radial-gradient(circle,rgba(140,100,220,.06) 0%,transparent 70%);pointer-events:none;"></div>
+              <div class="collection-bar-title" style="color:rgba(140,100,220,.8);text-shadow:0 2px 16px rgba(140,100,220,.25);">ONYX COLLECTION</div>
+              <div class="collection-bar-desc">Pure darkness. Minimal distractions.</div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
               ${_renderShopItemCard('appearance', SHOP_APPEARANCES.find(a=>a.id==='onyx_pure'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
               <!-- Onyx Badge -->
-              <div style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.12);border-radius:18px;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,249,62,.12)';this.style.transform=''">
-                <div style="padding:18px 16px;display:flex;align-items:center;gap:14px;">
-                  <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="/fortized badges/onyx.png" style="width:30px;height:30px;object-fit:contain;"></div>
+              <div class="shop-item-card" style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.01));border-color:rgba(255,249,62,.12);" onmouseover="this.style.borderColor='rgba(255,249,62,.25)'" onmouseout="this.style.borderColor='rgba(255,249,62,.12)'">
+                <div style="padding:20px 18px;display:flex;align-items:center;gap:14px;">
+                  <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,249,62,.1);"><img src="/fortized badges/onyx.png" style="width:32px;height:32px;object-fit:contain;"></div>
                   <div style="flex:1;min-width:0;">
-                    <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;margin-bottom:2px;">Onyx Badge</div>
-                    <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:6px;">Evolving badge</div>
+                    <div class="sic-name" style="margin-bottom:3px;">Onyx Badge</div>
+                    <div class="sic-type" style="margin-bottom:8px;">Evolving badge</div>
                     ${CU?.onyxBadge
                       ?`<div style="display:flex;align-items:center;gap:6px;">
                         <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;max-width:120px;"><div style="height:100%;border-radius:2px;background:var(--accent);width:${Math.min(100,(CU.onyxBadgeSpent||0)/100)}%;"></div></div>
                         <span style="font-size:10px;font-weight:600;color:rgba(255,249,62,.5);">${CU.onyxBadgeSpent||0} invested</span>
                       </div>
                       <div style="display:flex;gap:4px;margin-top:6px;">
-                        ${[{amt:100,label:'100'},{amt:500,label:'500'}].map(u=>'<button onclick="upgradeOnyxBadge('+u.amt+')" style="padding:4px 10px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);border-radius:8px;color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px;"><img src=\'/Onyx.png\' style=\'width:10px;height:10px;object-fit:contain;\'> +'+u.label+'</button>').join('')}
+                        ${[{amt:100,label:'100'},{amt:500,label:'500'}].map(u=>'<button onclick="upgradeOnyxBadge('+u.amt+')" style="padding:5px 11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);border-radius:8px;color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px;transition:all .15s;" onmouseover="this.style.background=\'rgba(255,249,62,.12)\'" onmouseout="this.style.background=\'rgba(255,249,62,.06)\'"><img src=\'/Onyx.png\' style=\'width:10px;height:10px;object-fit:contain;\'> +'+u.label+'</button>').join('')}
                       </div>`
-                      :`<div style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent);"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> 100</div>`}
+                      :`<div class="sic-price"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> 100</div>`}
                   </div>
-                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:8px 14px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:4px;flex-shrink:0;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:#3ecf6e;flex-shrink:0;">Owned</div>'}
+                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:#3ecf6e;flex-shrink:0;">Owned</div>'}
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Glow Decorations Collection -->
+          <!-- ── Glow Decorations Collection ── -->
           <div style="margin-bottom:36px;">
-            <div style="position:relative;border-radius:20px;overflow:hidden;margin-bottom:16px;background:linear-gradient(135deg,rgba(96,165,250,.05),rgba(62,207,110,.04),rgba(251,146,60,.04));border:1.5px solid rgba(255,255,255,.06);padding:28px 24px;">
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:rgba(255,255,255,.7);letter-spacing:-.01em;">GLOW DECORATIONS</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:4px;">Make your avatar shine with vibrant glow effects</div>
+            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(62,207,110,.04),rgba(251,146,60,.04),rgba(244,114,182,.03));border-color:rgba(255,255,255,.06);cursor:default;" onmouseover="this.style.borderColor='rgba(255,255,255,.12)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
+              <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(96,165,250,.04),transparent 50%),radial-gradient(ellipse at 70% 50%,rgba(251,146,60,.04),transparent 50%);pointer-events:none;"></div>
+              <div class="collection-bar-title" style="color:rgba(255,255,255,.75);">GLOW DECORATIONS</div>
+              <div class="collection-bar-desc">Make your avatar shine with vibrant glow effects</div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
               ${PROFILE_DECORATIONS.filter(d=>d.id!=='sunset_halo').map(d => _renderShopItemCard('decoration', d, ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)).join('')}
             </div>
           </div>
 
-          <!-- Coming Soon -->
-          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Coming Soon
+          <!-- ── Coming Soon ── -->
+          <div class="atel-section-hdr" style="margin-top:12px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Coming Soon</span>
           </div>
           <div class="ftz-grid cols-3">
             ${[{n:'Avatar Frames',i:'🖼️',c:'#a78bfa',d:'Decorate your profile picture'},{n:'Profile Effects',i:'✨',c:'#60a5fa',d:'Animated effects on your card'},{n:'Name Colors',i:'🎨',c:'#fb923c',d:'Stand out with colored names'}].map(it=>`
-              <div style="background:rgba(255,255,255,.015);border:1.5px solid rgba(255,255,255,.05);border-radius:16px;overflow:hidden;position:relative;transition:all .2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='${it.c}33';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform=''">
-                <div style="height:80px;background:linear-gradient(135deg,${it.c}08,rgba(0,0,0,.2));display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;">
-                  <span style="opacity:.4;">${it.i}</span>
-                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="font-size:22px;opacity:.3;">🔒</div></div>
+              <div style="background:rgba(255,255,255,.015);border:1.5px solid rgba(255,255,255,.05);border-radius:18px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='${it.c}33';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'">
+                <div style="height:85px;background:linear-gradient(135deg,${it.c}08,rgba(0,0,0,.2));display:flex;align-items:center;justify-content:center;font-size:38px;position:relative;">
+                  <span style="opacity:.35;">${it.i}</span>
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="font-size:24px;opacity:.25;">🔒</div></div>
                 </div>
-                <div style="padding:12px 14px;">
-                  <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:3px;">${it.n}</div>
-                  <div style="font-size:10.5px;color:rgba(255,255,255,.2);line-height:1.4;">${it.d}</div>
+                <div style="padding:14px 16px;">
+                  <div style="font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;color:rgba(255,255,255,.55);margin-bottom:4px;">${it.n}</div>
+                  <div style="font-size:10.5px;color:rgba(255,255,255,.22);line-height:1.5;">${it.d}</div>
                 </div>
               </div>`).join('')}
           </div>`:`
@@ -29423,7 +29791,7 @@ function _runAdvSearch(q) {
         if (imgMatches || vidMatches || fileMatches) {
           mediaHtml = '<div class="asr-media-preview">';
           if (imgMatches) imgMatches.slice(0,4).forEach(url => { mediaHtml += `<img src="${escapeHTML(url)}" loading="lazy" alt="Image" onerror="this.style.display='none'">`; });
-          if (vidMatches) vidMatches.slice(0,2).forEach(url => { mediaHtml += `<video src="${escapeHTML(url)}" muted preload="metadata" style="max-width:120px;max-height:80px;border-radius:8px;border:1px solid rgba(255,255,255,.06);"></video>`; });
+          if (vidMatches) vidMatches.slice(0,2).forEach(url => { const _sv='svid-'+Math.random().toString(36).slice(2); mediaHtml += `<div style="position:relative;display:inline-block;max-width:120px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.06);"><video id="${_sv}" src="${escapeHTML(url)}" muted preload="metadata" style="max-width:120px;max-height:80px;display:block;cursor:pointer;" onclick="ftzVideoToggle('${_sv}')" ontimeupdate="ftzVideoTick('${_sv}')" onloadedmetadata="ftzVideoMeta('${_sv}')" onended="ftzVideoEnd('${_sv}')"></video><div class="ftz-vp-overlay" id="${_sv}-overlay" onclick="ftzVideoToggle('${_sv}')" style="border-radius:8px;"><div class="ftz-vp-overlay-btn" style="width:28px;height:28px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div></div>`; });
           if (fileMatches) fileMatches.slice(0,3).forEach(f => {
             const fname = f.replace(/\[FTZFILE:|]/g,'').split('/').pop().split('?')[0] || 'File';
             mediaHtml += `<div class="asr-file-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${escapeHTML(fname.slice(0,30))}</div>`;

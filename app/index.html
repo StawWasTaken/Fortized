@@ -17,12 +17,40 @@
 <meta name="twitter:description" content="Your fortress awaits. Chat, connect, and build with your squad on Fortized.">
 <meta name="twitter:image" content="https://fortized.com/Fortized banner.png">
 <link rel="icon" type="image/png" href="/Fortized icon.png" id="favicon">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" async defer></script>
-<script src="/FortizedSocial-supabase.js"></script>
-<script src="/firebase-compat-shim.js"></script>
+<script>
+// Load CDN scripts with timeout — don't block page if CDN is unreachable
+window._cdnReady = new Promise(function(resolve) {
+  var loaded = 0, needed = 2, timer;
+  function done() { loaded++; if (loaded >= needed) { clearTimeout(timer); resolve(true); } }
+  function timeout() { console.warn('[Fortized] CDN scripts timed out — offline mode'); resolve(false); }
+  timer = setTimeout(timeout, 5000);
+
+  var s1 = document.createElement('script');
+  s1.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+  s1.onload = done; s1.onerror = done;
+  document.head.appendChild(s1);
+
+  var s2 = document.createElement('script');
+  s2.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
+  s2.onload = done; s2.onerror = done;
+  document.head.appendChild(s2);
+});
+window._cdnReady.then(function() {
+  // Load local scripts only after CDN attempt completes (or times out)
+  var s3 = document.createElement('script');
+  s3.src = '/FortizedSocial-supabase.js';
+  function loadShim() {
+    var s4 = document.createElement('script');
+    s4.src = '/firebase-compat-shim.js';
+    document.head.appendChild(s4);
+  }
+  s3.onload = loadShim;
+  s3.onerror = loadShim; // Load shim anyway — it has its own stub mode
+  document.head.appendChild(s3);
+});
+</script>
 <!-- NSFW scanning removed — TensorFlow/NSFWJS no longer loaded -->
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 :root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.08);--accent-mid:rgba(255,249,62,.18);--bg:#0c0f16;--rail:#080a12;--sidebar:#111318;--sidebar-ctx:#0e1016;--channel:#0e1017;--panel:#14171e;--panel2:#181c24;--panel3:#1c2028;--border:#1e2433;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-xs:4px;--space-sm:8px;--space-md:14px;--space-lg:20px;--space-xl:28px;--space-2xl:40px;--space-3xl:56px;--font-ui:'DM Sans',sans-serif;--font-display:'Syne',sans-serif;--font-xs:10.5px;--font-sm:12px;--font-md:13.5px;--font-lg:16px;--font-xl:20px;--font-2xl:28px;--font-hdr:10px;--surface-1:rgba(255,255,255,.03);--surface-2:rgba(255,255,255,.05);--surface-3:rgba(255,255,255,.08);--surface-4:rgba(255,255,255,.12);--surface-border:rgba(255,255,255,.05);--surface-border-hover:rgba(255,255,255,.1);--state-success:var(--green);--state-danger:var(--red);--state-warning:var(--yellow);--state-info:var(--blue);--state-success-dim:rgba(62,207,110,.08);--state-danger-dim:rgba(248,113,113,.08);--state-warning-dim:rgba(245,158,11,.08);--state-info-dim:rgba(96,165,250,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:22px;--radius-pill:100px;--elev-1:0 1px 4px rgba(0,0,0,.2);--elev-2:0 4px 16px rgba(0,0,0,.25);--elev-3:0 8px 32px rgba(0,0,0,.4);--ease-out:cubic-bezier(.22,1,.36,1);--shadow-sm:0 1px 4px rgba(0,0,0,.15);--shadow-md:0 4px 16px rgba(0,0,0,.2);--shadow-lg:0 8px 32px rgba(0,0,0,.35);}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}img{-webkit-user-drag:none;user-select:none;pointer-events:auto;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;draggable:false;}html,body{height:100%;overflow:hidden;}
@@ -2540,7 +2568,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 }
 </style>
 <style id="radiance-font-style"></style>
-<script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous" async></script>
 <body>
 <!-- APP LOADING -->
 <div class="app-loading" id="app-loading">
@@ -9065,6 +9093,19 @@ function initFortizedUXResilience() {
   try{
   if (document.readyState==='loading') await new Promise(r=>document.addEventListener('DOMContentLoaded',r));
 
+  // Wait for CDN scripts + FortizedSocial to be available (max 6s)
+  if (typeof FortizedSocial === 'undefined') {
+    await Promise.race([
+      new Promise(r => { const iv = setInterval(() => { if (typeof FortizedSocial !== 'undefined') { clearInterval(iv); r(); } }, 100); }),
+      new Promise(r => setTimeout(r, 6000))
+    ]);
+  }
+  if (typeof FortizedSocial === 'undefined') {
+    // Scripts never loaded — show offline state from cache if possible
+    const lbl = document.querySelector('#app-loading .lbl');
+    if (lbl) lbl.textContent = 'Offline — loading from cache…';
+  }
+
   // Detect Electron desktop app and add body class for CSS
   if (window.fortizedDesktop?.isDesktopApp) {
     document.body.classList.add('is-desktop-app');
@@ -9085,8 +9126,8 @@ function initFortizedUXResilience() {
   }
 
   if (!CU?.username){
-    if (!navigator.onLine) {
-      // Offline with no cache — can't proceed
+    if (!navigator.onLine || typeof FortizedSocial === 'undefined') {
+      // Offline or scripts failed with no cache — can't proceed
       localStorage.removeItem('ftz_current');
       localStorage.removeItem('fortized_current_user');
       window.location.href='/login';

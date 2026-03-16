@@ -11,6 +11,23 @@
 (function() {
   'use strict';
 
+  if (typeof FortizedSocial === 'undefined') {
+    console.warn('[Fortized] FortizedSocial not available — firebase shim running in stub mode');
+    // Install a minimal firebase stub so app code doesn't crash
+    window.firebase = window.firebase || {};
+    window.firebase.apps = window.firebase.apps || [{ name: 'offline-stub' }];
+    window.firebase.initializeApp = window.firebase.initializeApp || function() {};
+    window.firebase.database = function() {
+      return { ref: function() {
+        var noop = function() { return Promise.resolve({ exists: function(){return false;}, val: function(){return null;} }); };
+        var stub = { get: noop, set: noop, update: noop, remove: noop, push: function(){return stub;}, once: function(e,cb){if(cb)cb({exists:function(){return false;},val:function(){return null;}});return noop();}, on: function(){}, off: function(){}, onDisconnect: function(){return {set:noop,remove:noop};}, child: function(){return stub;}, orderByChild: function(){return stub;}, equalTo: function(){return stub;}, limitToLast: function(){return stub;}, limitToFirst: function(){return stub;} };
+        return stub;
+      }};
+    };
+    console.log('[Fortized] Firebase offline stub installed');
+    return;
+  }
+
   const sb = FortizedSocial.sb;
 
   // ── Path → table/key mapping ────────────────────────

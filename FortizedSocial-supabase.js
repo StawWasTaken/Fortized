@@ -9,7 +9,19 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 const FortizedSocial = (() => {
 
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  // Gracefully handle missing Supabase CDN (offline / blocked)
+  let sb;
+  let _offlineMode = false;
+  if (typeof supabase !== 'undefined' && supabase.createClient) {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  } else {
+    console.warn('[Fortized] Supabase SDK not loaded — running in offline mode');
+    _offlineMode = true;
+    // Stub that rejects all queries so callers get clean errors
+    const _reject = () => ({ data: null, error: { message: 'offline' } });
+    const _chain = () => new Proxy({}, { get: () => _chain });
+    sb = { from: () => ({ select: _chain, insert: _reject, update: _reject, upsert: _reject, delete: _reject }), rpc: () => Promise.resolve(_reject()) };
+  }
 
   // ── Helpers ──────────────────────────────────────────
   function norm(u) { return (u || '').trim().toLowerCase(); }

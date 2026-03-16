@@ -41,6 +41,21 @@ const FortizedSocial = (() => {
   }
 
   // Convert DB row → Firebase-shaped user object for compatibility
+  // Helper: BIGINT epoch-ms ↔ ISO string conversion for radiance timestamps
+  function _bigintToISO(v) {
+    if (!v) return null;
+    if (typeof v === 'number' || (typeof v === 'string' && /^\d+$/.test(v))) return new Date(Number(v)).toISOString();
+    // Already an ISO string
+    if (typeof v === 'string' && v.includes('T')) return v;
+    return null;
+  }
+  function _isoToBigint(v) {
+    if (!v) return null;
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string' && /^\d+$/.test(v)) return Number(v);
+    try { const ms = new Date(v).getTime(); return isNaN(ms) ? null : ms; } catch { return null; }
+  }
+
   function _userFromRow(r) {
     if (!r) return null;
     // Merge any extra fields stored in raw JSONB
@@ -60,8 +75,8 @@ const FortizedSocial = (() => {
       friendRequestsReceived: r.friend_requests_received || [],
       bastions: r.bastions || [],
       notifications: [],
-      radianceUntil: r.radiance_until || null,
-      radiancePlus: r.radiance_plus || null,
+      radianceUntil: _bigintToISO(r.radiance_until) || (extra.radianceUntil || null),
+      radiancePlus: _bigintToISO(r.radiance_plus) || (extra.radiancePlus || null),
       lastDaily: r.last_daily || null,
       blockedUsers: r.blocked_users || [],
       ignoredUsers: r.ignored_users || {},
@@ -112,8 +127,8 @@ const FortizedSocial = (() => {
       friend_requests_sent: u.friendRequestsSent || [],
       friend_requests_received: u.friendRequestsReceived || [],
       bastions: u.bastions || [],
-      radiance_until: u.radianceUntil || null,
-      radiance_plus: u.radiancePlus || null,
+      radiance_until: _isoToBigint(u.radianceUntil),
+      radiance_plus: _isoToBigint(u.radiancePlus),
       last_daily: u.lastDaily || null,
       blocked_users: u.blockedUsers || [],
       ignored_users: u.ignoredUsers || {},

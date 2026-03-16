@@ -251,7 +251,9 @@ io.on('connection', (socket) => {
     entry.gameActivity = data.activity || null;
     onlineUsers.set(username, entry);
     const broadcastStatus = entry.status === 'invisible' ? 'offline' : entry.status;
-    io.emit('presence:update', { username, status: broadcastStatus, gameActivity: entry.gameActivity });
+    // Hide game activity if invisible (would leak presence)
+    const broadcastActivity = entry.status === 'invisible' ? null : entry.gameActivity;
+    io.emit('presence:update', { username, status: broadcastStatus, gameActivity: broadcastActivity });
   });
 
   // ── Join a chat room (DM, bastion channel, group chat) ──
@@ -306,7 +308,7 @@ io.on('connection', (socket) => {
   socket.on('message:edit', (data) => {
     if (!username) return;
     const key = roomKey(data.type, data.id1, data.id2);
-    socket.to(key).emit('message:edited', {
+    io.to(key).emit('message:edited', {
       room: key,
       messageId: data.messageId,
       newText: data.newText,
@@ -318,7 +320,7 @@ io.on('connection', (socket) => {
   socket.on('message:delete', (data) => {
     if (!username) return;
     const key = roomKey(data.type, data.id1, data.id2);
-    socket.to(key).emit('message:deleted', {
+    io.to(key).emit('message:deleted', {
       room: key,
       messageId: data.messageId,
       deletedBy: username,
@@ -354,19 +356,11 @@ io.on('connection', (socket) => {
   // ── Poll Events (real-time broadcast) ──
   socket.on('poll:update', (data) => {
     if (!data.bastionId) return;
-    const key = roomKey('bastion', data.bastionId, data.channelId || '__polls');
-    io.to(key).emit('poll:updated', {
-      bastionId: data.bastionId,
-      channelName: data.channelName,
-      action: data.action, // 'create', 'vote', 'unvote', 'delete'
-      pollKey: data.pollKey,
-      username,
-    });
-    // Also broadcast to all bastion rooms for sidebar updates
+    // Broadcast to all connected clients so sidebar badges + poll channels update
     io.emit('poll:updated', {
       bastionId: data.bastionId,
       channelName: data.channelName,
-      action: data.action,
+      action: data.action, // 'create', 'vote', 'unvote', 'delete'
       pollKey: data.pollKey,
       username,
     });
@@ -438,6 +432,12 @@ io.on('connection', (socket) => {
         io.to(key).emit('typing:update', { room: key, users: [...typers] });
       }
     }
+
+    // Clean up room members
+    for (const [key, members] of roomMembers) {
+      members.delete(socket.id);
+      if (members.size === 0) roomMembers.delete(key);
+    }
   });
 
   // ── Bulk Presence Query ──
@@ -448,7 +448,8 @@ io.on('connection', (socket) => {
       const entry = onlineUsers.get(u);
       if (entry) {
         const s = entry.status === 'invisible' ? 'offline' : entry.status;
-        result[u] = { status: s, gameActivity: entry.gameActivity };
+        const ga = entry.status === 'invisible' ? null : entry.gameActivity;
+        result[u] = { status: s, gameActivity: ga };
       } else {
         result[u] = { status: 'offline', gameActivity: null };
       }

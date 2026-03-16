@@ -513,6 +513,17 @@
       return;
     }
 
+    // dms/{key}/{msgId}/reactions/{emoji} — set reaction users for a specific emoji
+    if (parts[0] === 'dms' && parts.length >= 5 && parts[3] === 'reactions') {
+      const dmKey = parts[1], msgId = parts[2], emoji = parts[4];
+      const { data: row } = await sb.from('dms').select('reactions').eq('dm_key', dmKey).eq('id', msgId).maybeSingle();
+      const reactions = row?.reactions || {};
+      if (val === null || (Array.isArray(val) && val.length === 0)) { delete reactions[emoji]; }
+      else { reactions[emoji] = val; }
+      await sb.from('dms').update({ reactions: Object.keys(reactions).length ? reactions : null }).eq('dm_key', dmKey).eq('id', msgId);
+      return;
+    }
+
     // dms/{key}/{msgId}
     if (parts[0] === 'dms') {
       if (parts.length >= 3 && val) {
@@ -524,6 +535,17 @@
           reactions: val.reactions || null,
         }, { onConflict: 'dm_key,id' });
       }
+      return;
+    }
+
+    // bastionMsgs/{bid}/{ch}/{msgId}/reactions/{emoji} — set reaction users
+    if (parts[0] === 'bastionMsgs' && parts.length >= 6 && parts[4] === 'reactions') {
+      const bid = parts[1], ch = parts[2], msgId = parts[3], emoji = parts[5];
+      const { data: row } = await sb.from('bastion_msgs').select('reactions').eq('bastion_id', bid).eq('channel_id', ch).eq('id', msgId).maybeSingle();
+      const reactions = row?.reactions || {};
+      if (val === null || (Array.isArray(val) && val.length === 0)) { delete reactions[emoji]; }
+      else { reactions[emoji] = val; }
+      await sb.from('bastion_msgs').update({ reactions: Object.keys(reactions).length ? reactions : null }).eq('bastion_id', bid).eq('channel_id', ch).eq('id', msgId);
       return;
     }
 
@@ -593,7 +615,18 @@
         }
         return;
       }
-      if (parts[2] === 'messages' && parts.length >= 4) {
+      // groupChats/{gcId}/messages/{msgId}/reactions/{emoji} — reaction on GC message
+      if (parts[2] === 'messages' && parts.length >= 6 && parts[4] === 'reactions') {
+        const gcId = parts[1], msgId = parts[3], emoji = parts[5];
+        const { data: row } = await sb.from('group_chat_messages').select('data').eq('gc_id', gcId).eq('id', msgId).maybeSingle();
+        const msgData = row?.data || {};
+        if (!msgData.reactions) msgData.reactions = {};
+        if (val === null || (Array.isArray(val) && val.length === 0)) { delete msgData.reactions[emoji]; }
+        else { msgData.reactions[emoji] = val; }
+        await sb.from('group_chat_messages').update({ data: msgData }).eq('gc_id', gcId).eq('id', msgId);
+        return;
+      }
+      if (parts[2] === 'messages' && parts.length === 4) {
         if (val && typeof val === 'object') {
           await sb.from('group_chat_messages').upsert({
             gc_id: parts[1], id: parts[3] || val.id,
@@ -881,8 +914,12 @@
       await sb.from('bastion_templates').delete().eq('id', parts[1]);
       return;
     }
+    // dms/{key}/{msgId}/reactions/{emoji} — remove a specific reaction emoji
+    if (parts[0] === 'dms' && parts.length >= 5 && parts[3] === 'reactions') {
+      return supaSet(pathStr, null);
+    }
     // dms/{key}/{msgId} — delete single DM message
-    if (parts[0] === 'dms' && parts.length >= 3) {
+    if (parts[0] === 'dms' && parts.length === 3) {
       const { error } = await sb.from('dms').delete().eq('dm_key', parts[1]).eq('id', parts[2]);
       if (error) throw new Error('[supaRemove] Delete DM failed: ' + error.message);
       return;
@@ -894,8 +931,12 @@
         await sb.from('group_chat_messages').delete().eq('gc_id', parts[1]);
         return;
       }
+      // groupChats/{gcId}/messages/{msgId}/reactions/{emoji} — remove reaction
+      if (parts[2] === 'messages' && parts.length >= 6 && parts[4] === 'reactions') {
+        return supaSet(pathStr, null);
+      }
       // groupChats/{gcId}/messages/{msgId} — delete single GC message
-      if (parts[2] === 'messages' && parts.length >= 4) {
+      if (parts[2] === 'messages' && parts.length === 4) {
         const { error } = await sb.from('group_chat_messages').delete().eq('gc_id', parts[1]).eq('id', parts[3]);
         if (error) throw new Error('Delete GC message failed: ' + error.message);
         return;
@@ -906,8 +947,12 @@
         return;
       }
     }
+    // bastionMsgs/{bid}/{ch}/{msgId}/reactions/{emoji} — remove a specific reaction emoji
+    if (parts[0] === 'bastionMsgs' && parts.length >= 6 && parts[4] === 'reactions') {
+      return supaSet(pathStr, null);
+    }
     // bastionMsgs/{bastionId}/{channelId}/{msgId} — delete single bastion message
-    if (parts[0] === 'bastionMsgs' && parts.length >= 4) {
+    if (parts[0] === 'bastionMsgs' && parts.length === 4) {
       const { error } = await sb.from('bastion_msgs').delete()
         .eq('bastion_id', parts[1]).eq('channel_id', parts[2]).eq('id', parts[3]);
       if (error) throw new Error('Delete bastion message failed: ' + error.message);

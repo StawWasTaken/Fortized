@@ -6325,7 +6325,12 @@ function showGCMemberPanel(meta) {
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
         if (ud.pfp) {
           const avWrap = entry.querySelector('.gc-ml-av');
-          if (avWrap) avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(m)}'"><span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:${FtzStatus.color('offline')};border:2px solid var(--channel);z-index:3;"></span>`;
+          if (avWrap) {
+            // Preserve existing status dot color instead of hardcoding offline
+            const existingDot = avWrap.querySelector('.profile-status-dot');
+            const dotColor = existingDot ? existingDot.style.background : FtzStatus.color('offline');
+            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(m)}'"><span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:${dotColor};border:2px solid var(--channel);z-index:3;"></span>`;
+          }
         }
       }).catch(()=>{});
     }, 80);
@@ -6363,6 +6368,8 @@ async function loadGCMessages(gcId) {
   const msgsEl = document.getElementById('gc-msgs');
   if (!msgsEl || !gcId) return;
   if (_gcListener) { try{_gcListener();}catch{} _gcListener=null; }
+  // Join Socket.io room for GC real-time events (typing, edits, deletes)
+  FortizedSocial.joinRoom('gc', gcId);
   try {
     const snap = await firebase.database().ref('groupChats/'+gcId+'/messages').orderByKey().get();
     const msgs = snap.exists() ? Object.values(snap.val()) : [];
@@ -7913,15 +7920,7 @@ function forwardMsg(text) {
 }
 async function forwardToDM(username) {
   try {
-    const now=new Date();
-    const msg={
-      id:Date.now().toString(36)+Math.random().toString(36).slice(2),
-      from:CU.username, text:forwardMsgText,
-      forwarded:true, forwardedBy:CU.username,
-      time:now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
-      timestamp:now.toISOString()
-    };
-    await firebase.database().ref(`dms/${[CU.username,username].sort().join('__')}/${msg.id}`).set(msg);
+    await FortizedSocial.sendDMMessage(CU.username, username, forwardMsgText);
     toast('Forwarded to '+username,'success');
   } catch { toast('Forward failed','error'); }
 }
@@ -9107,10 +9106,113 @@ function initFortizedUXResilience() {
         if ((CU?.friends||[]).includes(data.username)) _debouncedActiveNowRefresh();
       },
       onMessage: function(room, msg) {
-        // Message received in room — handled by Supabase real-time listeners
+        // New messages handled by Supabase real-time listeners
+      },
+      onTyping: function(room, users) {
+        if (!room || !users) return;
+        const others = (users||[]).filter(u => u !== CU.username);
+        // DM typing
+        if (room.startsWith('dm:') && curDM) {
+          const expectedRoom = 'dm:'+[CU.username, curDM].sort().join('__');
+          if (room === expectedRoom) {
+            const bar = document.getElementById('dm-typing-bar');
+            const txt = document.getElementById('dm-typing-text');
+            if (bar && txt) {
+              if (others.length > 0) {
+                txt.innerHTML = '<strong style="color:rgba(255,255,255,.5);">'+escapeHTML(others[0])+'</strong> is typing...';
+                bar.style.opacity = '1';
+              } else { bar.style.opacity = '0'; }
+            }
+          }
+        }
+        // GC typing
+        if (room.startsWith('gc:') && curGC) {
+          if (room === 'gc:'+curGC) {
+            const bar = document.getElementById('gc-typing-bar');
+            const txt = document.getElementById('gc-typing-text');
+            if (bar && txt) {
+              if (others.length > 0) {
+                const names = others.slice(0,3).map(u=>'<strong style="color:rgba(255,255,255,.5);">'+escapeHTML(u)+'</strong>');
+                txt.innerHTML = names.join(', ') + (others.length===1?' is typing...':' are typing...');
+                bar.style.opacity = '1';
+              } else { bar.style.opacity = '0'; }
+            }
+          }
+        }
+        // Bastion channel typing
+        if (room.startsWith('bastion:') && curBastion !== null && curChannel !== null) {
+          const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
+          if (b && ch) {
+            const expectedRoom = 'bastion:'+(b.globalId||b.name)+':'+ch.name;
+            if (room === expectedRoom) {
+              const bar = document.getElementById('ch-typing-bar');
+              const txt = document.getElementById('ch-typing-text');
+              if (bar && txt) {
+                if (others.length > 0) {
+                  const names = others.slice(0,3).map(u=>'<strong style="color:rgba(255,255,255,.5);">'+escapeHTML(u)+'</strong>');
+                  txt.innerHTML = names.join(', ') + (others.length===1?' is typing...':' are typing...');
+                  bar.style.opacity = '1';
+                } else { bar.style.opacity = '0'; }
+              }
+            }
+          }
+        }
+      },
+      onMessageEdited: function(data) {
+        if (!data || !data.messageId) return;
+        const row = document.querySelector('[data-msgid="'+CSS.escape(data.messageId)+'"]');
+        if (!row) return;
+        // Skip if we're the editor (already updated locally in saveEdit)
+        if (data.editedBy === CU.username) return;
+        const textEl = row.querySelector('.msg-text');
+        if (textEl && data.newText) {
+          row.dataset.text = data.newText;
+          textEl.innerHTML = parseMD(escapeHTML(data.newText)) + '<span class="msg-edited">(edited)</span>';
+        }
+      },
+      onMessageDeleted: function(data) {
+        if (!data || !data.messageId) return;
+        // Skip if we're the deleter (already removed locally in deleteMsg)
+        if (data.deletedBy === CU.username) return;
+        const row = document.querySelector('[data-msgid="'+CSS.escape(data.messageId)+'"]');
+        if (row) {
+          row.style.transition = 'opacity .2s ease, max-height .25s ease';
+          row.style.opacity = '0';
+          row.style.maxHeight = row.offsetHeight + 'px';
+          row.style.overflow = 'hidden';
+          setTimeout(() => { row.style.maxHeight = '0'; }, 80);
+          setTimeout(() => row.remove(), 300);
+        }
       },
       onReaction: function(data) {
-        // Reaction update — handled by Supabase real-time listeners
+        // Real-time reaction updates via Socket.io
+        if (!data || !data.messageId || !data.emoji) return;
+        if (data.username === CU.username) return; // already updated locally
+        // Refresh reaction UI from the DB by re-fetching the message's reactions
+        const row = document.querySelector('[data-msgid="'+CSS.escape(data.messageId)+'"]');
+        if (!row) return;
+        // Determine context from the message's container
+        const ctx = row.closest('#dm-msgs') ? 'dm' : row.closest('#gc-msgs') ? 'gc' : 'ch';
+        // Refetch reactions for this message to stay in sync
+        let refPath = '';
+        if (ctx === 'dm' && curDM) { refPath = 'dms/'+[CU.username,curDM].sort().join('__')+'/'+data.messageId+'/reactions'; }
+        else if (ctx === 'gc' && curGC) { refPath = 'groupChats/'+curGC+'/messages/'+data.messageId+'/reactions'; }
+        else if (ctx === 'ch' && curBastion !== null) { const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel]; if (b&&ch) refPath = 'bastionMsgs/'+(b.globalId||b.name)+'/'+ch.name+'/'+data.messageId+'/reactions'; }
+        if (refPath) {
+          firebase.database().ref(refPath).get().then(snap => {
+            const reactions = snap.val() || {};
+            // Update all reaction pills for this message
+            Object.entries(reactions).forEach(([em, users]) => {
+              updateReactionUI(data.messageId, em, Array.isArray(users) ? users : [], ctx);
+            });
+            // Remove pills for emojis no longer present
+            const row2 = document.querySelector('[data-msgid="'+CSS.escape(data.messageId)+'"]');
+            if (row2) row2.querySelectorAll('.r-pill').forEach(p => {
+              const em = p.getAttribute('data-emoji');
+              if (em && !reactions[em]) p.remove();
+            });
+          }).catch(() => {});
+        }
       },
       onPollUpdate: function(data) {
         // Re-fetch polls if viewing the same bastion poll channel
@@ -9168,7 +9270,13 @@ function initFortizedUXResilience() {
           }
         });
       },
+      onDMIndexChange: function() {
+        // Re-render DM sidebar when DM index changes (new conversation, reordered partners)
+        const sb = document.getElementById('sidebar-scroll');
+        if (sb) renderDMSidebar(sb);
+      },
     });
+    // Start Supabase real-time polling (merges with callbacks from initSocket above)
     FortizedSocial.startPolling(CU.username, {});
   } catch(e) { console.warn('[init] Socket.io/polling init:', e); }
   setTimeout(initCrossDeviceSync, 800);
@@ -25531,11 +25639,16 @@ function _attachDMLiveEdits(user1, user2) {
   ref.on('child_removed', _dmRemoveHandler);
 }
 
-let _chEditListeners = {};
+let _chEditListenerPath = null;
 function _attachChLiveEdits(bastionId, channelName) {
   const path = 'bastionMsgs/'+bastionId+'/'+channelName;
-  if (_chEditListeners[path]) return; // already attached
-  _chEditListeners[path] = true;
+  // Detach previous listener to prevent memory leaks
+  if (_chEditListenerPath && _chEditListenerPath !== path) {
+    try { firebase.database().ref(_chEditListenerPath).off('child_changed'); } catch{}
+    try { firebase.database().ref(_chEditListenerPath).off('child_removed'); } catch{}
+  }
+  if (_chEditListenerPath === path) return; // already attached
+  _chEditListenerPath = path;
   const ref = firebase.database().ref(path);
   ref.on('child_changed', snap => _liveUpdateMessage(snap, 'ch'));
   ref.on('child_removed', snap => _liveRemoveMessage(snap));
@@ -28570,16 +28683,6 @@ function _subscribeFriendStatuses() {
   });
 }
 
-let _activeNowRefreshTimer = null;
-function _debouncedActiveNowRefresh() {
-  if (_activeNowRefreshTimer) clearTimeout(_activeNowRefreshTimer);
-  _activeNowRefreshTimer = setTimeout(() => {
-    const anEl = document.getElementById('active-now-list');
-    if (anEl) renderActiveNowSidebar('active-now-list');
-    const homeAnEl = document.getElementById('home-active-now-list');
-    if (homeAnEl) renderActiveNowSidebar('home-active-now-list');
-  }, 1500);
-}
 
 
 // ════════════════════════════════════════════════════════════

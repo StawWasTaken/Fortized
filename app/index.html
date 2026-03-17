@@ -3312,12 +3312,24 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 
 <!-- FORWARD MESSAGE -->
 <div class="modal-overlay" role="dialog" id="modal-forward">
-  <div class="modal tall">
+  <div class="modal tall" style="max-width:480px;">
     <div class="modal-bar"></div>
-    <div class="modal-body">
-      <div class="modal-title">↪ Forward Message</div>
-      <div class="modal-sub">Choose a DM or channel to forward to</div>
-      <div id="forward-targets" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;"></div>
+    <div class="modal-body" style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg>
+        </div>
+        <div>
+          <div class="modal-title" style="margin:0;font-size:16px;">Forward Message</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:1px;">Select a conversation to share to</div>
+        </div>
+      </div>
+      <div id="forward-msg-preview" style="margin:14px 0 12px;padding:10px 14px;background:rgba(255,255,255,.03);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;font-size:12.5px;color:rgba(255,255,255,.5);max-height:60px;overflow:hidden;line-height:1.5;"></div>
+      <div style="position:relative;margin-bottom:12px;">
+        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="forward-search" placeholder="Search conversations..." oninput="_filterForwardTargets(this.value)" style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:8px 14px 8px 34px;font-family:'DM Sans',sans-serif;font-size:12.5px;color:#fff;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'">
+      </div>
+      <div id="forward-targets" style="display:flex;flex-direction:column;gap:2px;max-height:280px;overflow-y:auto;padding-right:4px;"></div>
       <div class="modal-actions" style="margin-top:14px;">
         <button class="btn-g" onclick="closeModal('modal-forward')">Cancel</button>
       </div>
@@ -6390,7 +6402,7 @@ async function openGroupChatView(gcId) {
   setTimeout(() => { setupEmojiAutocomplete('gc-input'); _initChatScroll(document.getElementById('gc-msgs')); }, 100);
 }
 
-function showGCMemberPanel(meta) {
+async function showGCMemberPanel(meta) {
   // Remove old GC panel if exists
   document.getElementById('gc-member-panel')?.remove();
   const panel = document.createElement('div');
@@ -6398,13 +6410,54 @@ function showGCMemberPanel(meta) {
   panel.style.cssText = 'width:260px;min-width:260px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;';
   const isOwner = meta.owner === CU.username;
   const memberCount = (meta.members||[]).length;
+
+  // Fetch live presence for all members BEFORE rendering (like bastion member list)
+  const _gcMembers = (meta.members||[]).filter(m => m !== CU.username);
+  const _gcStatusMap = {};
+  _gcStatusMap[CU.username] = CU.status || 'online';
+  if (_gcMembers.length) {
+    try {
+      const presenceData = await FortizedSocial.queryPresence(_gcMembers);
+      if (presenceData) {
+        _gcMembers.forEach(m => { _gcStatusMap[m] = presenceData[m]?.status || 'offline'; });
+      } else {
+        _gcMembers.forEach(m => { _gcStatusMap[m] = 'offline'; });
+      }
+    } catch { _gcMembers.forEach(m => { _gcStatusMap[m] = 'offline'; }); }
+  }
+
+  const _isOnline = (st) => st === 'online' || st === 'away' || st === 'dnd';
+  const allMembers = meta.members || [];
+  const ownerOnline = _isOnline(_gcStatusMap[meta.owner] || 'offline');
+  const othersOnline = allMembers.filter(m => m !== meta.owner && _isOnline(_gcStatusMap[m] || 'offline'));
+  const othersOffline = allMembers.filter(m => m !== meta.owner && !_isOnline(_gcStatusMap[m] || 'offline'));
+  const onlineCount = (ownerOnline ? 1 : 0) + othersOnline.length;
+
+  let membersHtml = '';
+  // Owner section (always shown at top)
+  if (ownerOnline) {
+    membersHtml += `<div class="ml-role-header" style="margin-top:4px;"><span style="font-size:12px;opacity:.6;">👑</span> Owner</div>`;
+    membersHtml += _buildGCMemberEntry(meta.owner, meta, isOwner, _gcStatusMap);
+  }
+  // Online members
+  if (othersOnline.length) {
+    membersHtml += `<div class="ml-role-header">Online <span class="ml-role-count">— ${othersOnline.length}</span></div>`;
+    othersOnline.forEach(m => { membersHtml += _buildGCMemberEntry(m, meta, isOwner, _gcStatusMap); });
+  }
+  // Offline section
+  const offlineMembers = [...(!ownerOnline ? [meta.owner] : []), ...othersOffline];
+  if (offlineMembers.length) {
+    membersHtml += `<div class="ml-role-header">Offline <span class="ml-role-count">— ${offlineMembers.length}</span></div>`;
+    offlineMembers.forEach(m => { membersHtml += _buildGCMemberEntry(m, meta, isOwner, _gcStatusMap); });
+  }
+
   panel.innerHTML = `
     <div style="padding:16px 14px 12px;border-bottom:1px solid rgba(255,255,255,.04);">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${meta.emoji||'👥'}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(meta.name)}</div>
-          <div style="font-size:10.5px;color:var(--muted);">${memberCount} member${memberCount!==1?'s':''}</div>
+          <div style="font-size:10.5px;color:var(--muted);">${onlineCount} online · ${memberCount} member${memberCount!==1?'s':''}</div>
         </div>
       </div>
       ${isOwner ? `
@@ -6418,10 +6471,7 @@ function showGCMemberPanel(meta) {
       <div style="position:relative;"><svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search members..." oninput="_filterGCMembers(this.value)" style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:7px 12px 7px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:#fff;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'"></div>
     </div>
     <div style="padding:6px 6px;flex:1;overflow-y:auto;">
-      <div class="ml-role-header" style="margin-top:4px;">Owner</div>
-      ${(meta.members||[]).filter(m=>m===meta.owner).map(m=>_buildGCMemberEntry(m, meta, isOwner)).join('')}
-      <div class="ml-role-header">Members <span class="ml-role-count">— ${memberCount - 1}</span></div>
-      ${(meta.members||[]).filter(m=>m!==meta.owner).map(m=>_buildGCMemberEntry(m, meta, isOwner)).join('')}
+      ${membersHtml}
     </div>
     ${isOwner ? `
     <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.04);">
@@ -6430,17 +6480,7 @@ function showGCMemberPanel(meta) {
   // Inject into DMs view
   const dmsView = document.getElementById('view-dms');
   if (dmsView) dmsView.appendChild(panel);
-  // Deferred pfp + status loading for GC members — use live Socket.IO presence
-  const _gcMembers = (meta.members||[]).filter(m => m !== CU.username);
-  FortizedSocial.queryPresence(_gcMembers).then(_gcPresence => {
-    if (_gcPresence) {
-      _gcMembers.forEach(m => {
-        const st = FtzStatus.sanitize(_gcPresence[m]?.status || 'offline');
-        const dot = panel.querySelector(`.profile-status-dot[data-for="${CSS.escape(m)}"]`);
-        if (dot) { dot.style.background = FtzStatus.color(st); dot.style.boxShadow = '0 0 8px '+FtzStatus.color(st)+'55'; }
-      });
-    }
-  }).catch(()=>{});
+  // Deferred pfp + display name loading for GC members
   _gcMembers.forEach(m => {
     setTimeout(() => {
       FortizedSocial.getUserByName(m).then(ud => {
@@ -6463,15 +6503,15 @@ function showGCMemberPanel(meta) {
     }, 80);
   });
 }
-function _buildGCMemberEntry(m, meta, isOwner) {
+function _buildGCMemberEntry(m, meta, isOwner, statusMap) {
   const isMe = m === CU.username;
   const displayN = isMe ? (CU.displayName||CU.username) : m;
   const pfpSrc = isMe ? CU.pfp : null;
   const isGCOwner = m === meta.owner;
-  // Don't hardcode non-self as 'offline' — use 'offline' as placeholder, live Socket.IO will update immediately
-  const initialStatus = isMe ? (CU.status||'online') : 'offline';
-  return `<div class="ml-entry" data-member="${escapeHTML(m)}" data-status="${initialStatus}" onclick="showMiniProfilePreview('${escapeHTML(m)}',this)">
-    <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;background:${FtzStatus.color(initialStatus)};border:2px solid var(--channel);z-index:3;"></span></div>
+  const st = statusMap ? (statusMap[m] || 'offline') : (isMe ? (CU.status||'online') : 'offline');
+  const isOnline = st === 'online' || st === 'away' || st === 'dnd';
+  return `<div class="ml-entry" data-member="${escapeHTML(m)}" data-status="${st}" onclick="showMiniProfilePreview('${escapeHTML(m)}',this)" style="${isOnline?'':'opacity:.4;'}">
+    <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;background:${FtzStatus.color(st)};border:2px solid var(--channel);z-index:3;"></span></div>
     <div style="flex:1;min-width:0;">
       <div style="display:flex;align-items:center;gap:4px;">
         <div class="ml-name" style="color:${isGCOwner?'var(--accent)':'rgba(255,255,255,.6)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
@@ -8038,19 +8078,100 @@ function _undoDelete() {
   document.querySelector('.undo-toast')?.remove();
 }
 function forwardMsg(text) {
-  forwardMsgText=text;
-  const targets=document.getElementById('forward-targets');
-  if (targets) targets.innerHTML=(CU?.friends||[]).map(f=>`
-    <div class="ch-item" style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:4px;cursor:pointer;" onclick="forwardToDM('${escapeHTML(f)}');closeModal('modal-forward');">
-      ${ftzIcon('chat','14')} ${escapeHTML(f)}
-    </div>`).join('')||'<div style="color:var(--muted);font-size:13px;">No friends to forward to</div>';
+  forwardMsgText = text;
+  // Show message preview
+  const preview = document.getElementById('forward-msg-preview');
+  if (preview) preview.textContent = text.length > 120 ? text.slice(0, 120) + '...' : text;
+  // Reset search
+  const searchInp = document.getElementById('forward-search');
+  if (searchInp) searchInp.value = '';
+  // Build all targets: friends (DMs), group chats, bastion channels
+  _buildForwardTargets('');
   openModal('modal-forward');
+  setTimeout(() => { const s = document.getElementById('forward-search'); if (s) s.focus(); }, 100);
+}
+function _buildForwardTargets(query) {
+  const targets = document.getElementById('forward-targets');
+  if (!targets) return;
+  const q = query.toLowerCase().trim();
+  let html = '';
+  // DM friends
+  const friends = (CU?.friends || []).filter(f => !q || f.toLowerCase().includes(q));
+  if (friends.length) {
+    html += `<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.18);padding:6px 4px 4px;">Direct Messages</div>`;
+    friends.forEach(f => {
+      const pfp = _pfpCache[f];
+      const av = pfp ? `<img src="${escapeHTML(pfp)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" onerror="this.outerHTML=buildAvatarHTML(null,'${escapeHTML(f)}',28)">` : buildAvatarHTML(null, f, 28);
+      html += `<div class="forward-target-item" data-name="${escapeHTML(f)}" onclick="forwardTo('dm','${escapeHTML(f)}');closeModal('modal-forward');" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s;" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='none'">
+        ${av}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(f)}</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg>
+      </div>`;
+    });
+  }
+  // Group chats
+  const gcs = (CU?.groupChats || []).filter(g => !q || (g.name || '').toLowerCase().includes(q));
+  if (gcs.length) {
+    html += `<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.18);padding:10px 4px 4px;">Group Chats</div>`;
+    gcs.forEach(g => {
+      html += `<div class="forward-target-item" data-name="${escapeHTML(g.name||'')}" onclick="forwardTo('gc','${escapeHTML(g.id)}');closeModal('modal-forward');" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s;" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='none'">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,${g.color||'#7c5cbf'},${g.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">${g.emoji||'👥'}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(g.name||'Group')}</div>
+          <div style="font-size:10px;color:var(--muted);">${(g.members||[]).length} members</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg>
+      </div>`;
+    });
+  }
+  // Bastion channels
+  const bastions = CU?.bastions || [];
+  bastions.forEach((b, bi) => {
+    const channels = (b.channels || []).filter(ch => ch.type === 'text' && (!q || ch.name.toLowerCase().includes(q) || b.name.toLowerCase().includes(q)));
+    if (channels.length) {
+      html += `<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.18);padding:10px 4px 4px;">${escapeHTML(b.name)}</div>`;
+      channels.forEach(ch => {
+        html += `<div class="forward-target-item" data-name="${escapeHTML(ch.name)}" onclick="forwardTo('bastion','${bi}:${escapeHTML(ch.id)}');closeModal('modal-forward');" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s;" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='none'">
+          <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--muted);font-size:14px;">#</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</div>
+            <div style="font-size:10px;color:var(--muted);">${escapeHTML(b.name)}</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="2"><polyline points="15,17 20,12 15,7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg>
+        </div>`;
+      });
+    }
+  });
+  if (!html) html = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No conversations found</div>';
+  targets.innerHTML = html;
+}
+function _filterForwardTargets(query) { _buildForwardTargets(query); }
+async function forwardTo(type, target) {
+  const text = forwardMsgText;
+  if (!text) return;
+  try {
+    if (type === 'dm') {
+      await FortizedSocial.sendDMMessage(CU.username, target, text);
+      toast('Forwarded to ' + target, 'success');
+    } else if (type === 'gc') {
+      const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
+      await firebase.database().ref('groupChats/' + target + '/messages').push(msgObj);
+      toast('Forwarded to group chat', 'success');
+    } else if (type === 'bastion') {
+      const [bi, chId] = target.split(':');
+      const b = CU.bastions?.[parseInt(bi)];
+      if (b) {
+        const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
+        await firebase.database().ref('bastionMsgs/' + (b.globalId || b.name) + '/' + chId).push(msgObj);
+        toast('Forwarded to #' + ((b.channels||[]).find(c=>c.id===chId)?.name || chId), 'success');
+      }
+    }
+  } catch { toast('Forward failed', 'error'); }
 }
 async function forwardToDM(username) {
-  try {
-    await FortizedSocial.sendDMMessage(CU.username, username, forwardMsgText);
-    toast('Forwarded to '+username,'success');
-  } catch { toast('Forward failed','error'); }
+  return forwardTo('dm', username);
 }
 function addReactionUI(eOrMsgId, msgIdOrCtx, contextOrNone) {
   // Support both (event, msgId, context) and (msgId, context) signatures
@@ -14163,14 +14284,9 @@ function buildProfileView(tab) {
           <!-- SECTION: Connections -->
           <div class="settings-section-title" style="margin-top:32px;">CONNECTIONS</div>
           <div style="background:rgba(255,255,255,.02);border:1px solid rgba(254,248,61,.04);border-radius:16px;padding:4px 14px;">
-            ${[
-              {key:'youtube', icon:'▶', label:'YouTube', pattern:'youtube.com', color:'#FF4444', placeholder:'https://youtube.com/@channel'},
-              {key:'roblox',  icon:'🎮', label:'Roblox',  pattern:'roblox.com',  color:'#00B2FF', placeholder:'https://roblox.com/users/...'},
-              {key:'spotify', icon:'♪',  label:'Spotify', pattern:'spotify.com', color:'#1DB954', placeholder:'https://open.spotify.com/user/...'},
-              {key:'twitter', icon:'𝕏', label:'X / Twitter', pattern:'x.com', color:'#1d9bf0', placeholder:'https://x.com/username'},
-            ].map(p => `
+            ${_CONN_PLATFORMS.map(p => `
               <div class="connected-row">
-                <div class="connected-icon" style="background:${p.color}18;color:${p.color};">${p.icon}</div>
+                <div class="connected-icon" style="background:${p.color}18;color:${p.color};">${_connIcon(p.key)}</div>
                 <div class="connected-label">${p.label}</div>
                 <input class="settings-input" id="social-${p.key}" value="${escapeHTML((CU.socials||{})[p.key]||'')}" placeholder="${p.placeholder}" style="flex:1;font-size:12.5px;padding:7px 12px;" oninput="markSettingsDirty();validateSocialLink('${p.key}','${p.pattern||p.key+'.com'}',this)">
               </div>`).join('')}
@@ -14224,14 +14340,9 @@ function buildProfileView(tab) {
               <!-- Connections block -->
               ${(()=>{
                 const socials = CU.socials||{};
-                const conns = [
-                  {key:'roblox',label:'Roblox',color:'#00B2FF'},
-                  {key:'youtube',label:'YouTube',color:'#FF4444'},
-                  {key:'spotify',label:'Spotify',color:'#1DB954'},
-                  {key:'twitter',label:'X / Twitter',color:'#1d9bf0'},
-                ].filter(c=>socials[c.key]);
+                const conns = _CONN_PLATFORMS.filter(c=>socials[c.key]);
                 if(!conns.length) return '';
-                return '<div style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:6px;">Connections</div><div style="display:flex;flex-direction:column;gap:4px;">'+conns.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='rgba(255,255,255,.06)'" onmouseleave="this.style.background='rgba(255,255,255,.03)'"><span style="font-size:12px;font-weight:600;color:${c.color};">${c.label}</span><span style="font-size:12px;color:rgba(255,255,255,.25);">→</span></div>`).join('')+'</div></div>';
+                return '<div style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:6px;">Connections</div><div style="display:flex;flex-direction:column;gap:4px;">'+conns.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='rgba(255,255,255,.06)'" onmouseleave="this.style.background='rgba(255,255,255,.03)'"><span style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:${c.color};">${_connIcon(c.key)} ${c.label}</span><span style="font-size:12px;color:rgba(255,255,255,.25);">→</span></div>`).join('')+'</div></div>';
               })()}
               <!-- Action buttons -->
               <div style="display:flex;gap:8px;margin-top:4px;">
@@ -15218,7 +15329,7 @@ async function viewUserProfile(username) {
       <!-- Roles -->
       ${_currentView === 'bastion' && curBastion !== null ? `<div class="up-left-divider"></div><div class="up-left-section"><div class="up-left-section-title">Roles</div><div style="display:flex;flex-wrap:wrap;gap:5px;">${renderUserRoleTags(username)}</div></div>` : ''}
       <!-- Connections -->
-      ${Object.values(socials).some(Boolean) ? `<div class="up-left-divider"></div><div class="up-left-section"><div class="up-left-section-title">Connections</div><div style="display:flex;flex-direction:column;gap:5px;">${[{k:'youtube',l:'YouTube',c:'#ff4444',i:'▶'},{k:'roblox',l:'Roblox',c:'#00b2ff',i:'◆'},{k:'spotify',l:'Spotify',c:'#1db954',i:'♫'},{k:'twitter',l:'X',c:'#1d9bf0',i:'✕'}].filter(p=>socials[p.k]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.k])}')" class="up-social-link" style="background:${p.c}0a;color:${p.c};border-color:${p.c}18;padding:7px 14px;font-size:11.5px;"><span style="font-size:9px;">${p.i}</span> ${p.l}</a>`).join('')}</div></div>` : ''}
+      ${Object.values(socials).some(Boolean) ? `<div class="up-left-divider"></div><div class="up-left-section"><div class="up-left-section-title">Connections</div><div style="display:flex;flex-direction:column;gap:5px;">${_CONN_PLATFORMS.filter(p=>socials[p.key]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.key])}')" class="up-social-link" style="background:${p.color}0a;color:${p.color};border-color:${p.color}18;padding:7px 14px;font-size:11.5px;display:flex;align-items:center;gap:8px;">${_connIcon(p.key)} ${p.label}</a>`).join('')}</div></div>` : ''}
       <!-- Note -->
       ${_userNote ? `<div class="up-left-section"><div class="up-left-section-title">Note</div><div style="font-size:12px;color:rgba(255,255,255,.32);font-style:italic;line-height:1.55;">${escapeHTML(_userNote.slice(0,200))}</div></div>` : ''}
       <!-- Actions at bottom -->
@@ -19814,6 +19925,26 @@ async function joinBastionById(bastionId, hasInvite) {
 // ════════════════════════════════════════════
 // SOCIAL LINKS VALIDATION & SAVING
 // ════════════════════════════════════════════
+// SVG logos for connection platforms
+const _CONN_SVGS = {
+  youtube: `<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>`,
+  roblox: `<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M4.9.98 0 18.8l19.1 4.2L24 5.18 4.9.98zm9 13.22-4.3-.94.94-4.3 4.3.94-.94 4.3z"/></svg>`,
+  spotify: `<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm5.5 17.3a.75.75 0 0 1-1 .25c-2.8-1.7-6.4-2.1-10.5-1.2a.75.75 0 1 1-.3-1.5c4.5-1 8.5-.6 11.5 1.3a.75.75 0 0 1 .3 1.1zm1.5-3.3a.94.94 0 0 1-1.3.3c-3.2-2-8.2-2.5-12-1.4a.94.94 0 1 1-.5-1.8c4.4-1.3 9.8-.7 13.5 1.6a.94.94 0 0 1 .3 1.3zm.1-3.4c-3.9-2.3-10.2-2.5-13.9-1.4a1.12 1.12 0 1 1-.7-2.2c4.2-1.3 11.2-1 15.6 1.6a1.12 1.12 0 0 1-1 2z"/></svg>`,
+  twitter: `<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+  tiktok: `<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.3 0 .59.04.86.12V9a6.27 6.27 0 0 0-.86-.05A6.34 6.34 0 0 0 3.15 15.3a6.34 6.34 0 0 0 10.86 4.43V13.4a8.16 8.16 0 0 0 4.77 1.52h.81V11.5a4.84 4.84 0 0 1-3.36-1.36 4.83 4.83 0 0 1-1.47-3.45h3.17l.02-.12a4.82 4.82 0 0 0 1.64.12z"/></svg>`,
+};
+function _connIcon(key, size) {
+  return _CONN_SVGS[key] || '';
+}
+// All connection platform definitions in one place
+const _CONN_PLATFORMS = [
+  {key:'youtube', label:'YouTube', pattern:'youtube.com', color:'#FF4444', placeholder:'https://youtube.com/@channel'},
+  {key:'roblox',  label:'Roblox',  pattern:'roblox.com',  color:'#00B2FF', placeholder:'https://roblox.com/users/...'},
+  {key:'spotify', label:'Spotify', pattern:'spotify.com', color:'#1DB954', placeholder:'https://open.spotify.com/user/...'},
+  {key:'twitter', label:'X / Twitter', pattern:'x.com', color:'#1d9bf0', placeholder:'https://x.com/username'},
+  {key:'tiktok',  label:'TikTok',  pattern:'tiktok.com',  color:'#ff0050', placeholder:'https://tiktok.com/@username'},
+];
+
 function validateSocialLink(key, pattern, input) {
   const val = input.value.trim();
   if (!val) return; // empty is fine
@@ -19830,20 +19961,18 @@ function validateSocialLink(key, pattern, input) {
 
 async function saveSocialLinks() {
   CU.socials = CU.socials || {};
-  const platforms = ['youtube','roblox','spotify','twitter'];
-  const patterns = { youtube:'youtube.com', roblox:'roblox.com', spotify:'open.spotify.com', twitter:'x.com' };
   let invalid = false;
-  platforms.forEach(key => {
-    const inp = document.getElementById('social-'+key);
+  _CONN_PLATFORMS.forEach(p => {
+    const inp = document.getElementById('social-'+p.key);
     if (!inp) return;
     const val = inp.value.trim();
-    if (val && (!val.startsWith('https://') || !val.includes(patterns[key]))) {
-      toast(`Invalid ${key} URL - must be a valid ${key} profile link`,'error');
+    if (val && (!val.startsWith('https://') || !val.includes(p.pattern))) {
+      toast(`Invalid ${p.key} URL - must be a valid ${p.label} profile link`,'error');
       invalid = true;
       return;
     }
-    if (val) CU.socials[key] = val;
-    else delete CU.socials[key];
+    if (val) CU.socials[p.key] = val;
+    else delete CU.socials[p.key];
   });
   if (invalid) return;
   await saveUser();
@@ -21972,27 +22101,39 @@ async function _searchIGDB(query) {
 }
 
 async function _enrichGamesFromIGDB(games) {
+  const needsEnrich = games.filter(g => !g.coverUrl && !g.coverThumb);
+  if (!needsEnrich.length) return;
+  // First apply manual covers
+  let changed = false;
+  needsEnrich.forEach(g => {
+    const manual = _getManualCover(g.name);
+    if (manual) {
+      g.coverUrl = manual; g.coverThumb = manual; changed = true;
+    }
+  });
+  // Then try IGDB for the rest
   const names = games.filter(g => !g.coverUrl && !g.coverThumb).map(g => g.name);
-  if (!names.length) return;
-  try {
-    const r = await fetch('/api/igdb/lookup', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({names})
-    });
-    if (!r.ok) return;
-    const data = await r.json();
-    const results = data.results || {};
-    let changed = false;
-    games.forEach(g => {
-      const match = results[g.name];
-      if (match) {
-        if (match.coverUrl && !g.coverUrl) { g.coverUrl = match.coverUrl; changed = true; }
-        if (match.coverThumb && !g.coverThumb) { g.coverThumb = match.coverThumb; changed = true; }
-        if (match.genres?.length && (!g.genre || g.genre === 'Game' || g.genre === 'Custom')) { g.genre = match.genres.join(', '); changed = true; }
+  if (names.length) {
+    try {
+      const r = await fetch('/api/igdb/lookup', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({names})
+      });
+      if (r.ok) {
+        const data = await r.json();
+        const results = data.results || {};
+        games.forEach(g => {
+          const match = results[g.name];
+          if (match) {
+            if (match.coverUrl && !g.coverUrl) { g.coverUrl = match.coverUrl; changed = true; }
+            if (match.coverThumb && !g.coverThumb) { g.coverThumb = match.coverThumb; changed = true; }
+            if (match.genres?.length && (!g.genre || g.genre === 'Game' || g.genre === 'Custom')) { g.genre = match.genres.join(', '); changed = true; }
+          }
+        });
       }
-    });
-    if (changed) { CU.gameCollection = games; await saveUser(); }
-  } catch {}
+    } catch {}
+  }
+  if (changed) { CU.gameCollection = games; await saveUser(); }
 }
 
 function openGameCollectionPicker() {
@@ -22827,10 +22968,9 @@ async function showDMUserPanel(username) {
   const socials = u.socials || {};
   const customStatus = u.customStatus;
   // Build connections HTML
-  const connPlatforms = [{k:'youtube',l:'YouTube',c:'#FF4444'},{k:'roblox',l:'Roblox',c:'#00B2FF'},{k:'spotify',l:'Spotify',c:'#1DB954'},{k:'twitter',l:'X',c:'#1d9bf0'}];
-  const activeConns = connPlatforms.filter(p=>socials[p.k]);
+  const activeConns = _CONN_PLATFORMS.filter(p=>socials[p.key]);
   const connHtml = activeConns.length ? '<div style="padding:12px 16px;"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;">Connections</div><div style="display:flex;flex-direction:column;gap:4px;">'
-    + activeConns.map(p=>'<a href="#" onclick="openExternalLink(event,\'' + escapeHTML(socials[p.k]) + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);text-decoration:none;transition:background .15s;" onmouseenter="this.style.background=\'rgba(255,255,255,.06)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.03)\'"><span style="font-size:12px;font-weight:600;color:'+p.c+';">'+p.l+'</span><span style="font-size:12px;color:rgba(255,255,255,.25);">\u2192</span></a>').join('')
+    + activeConns.map(p=>'<a href="#" onclick="openExternalLink(event,\'' + escapeHTML(socials[p.key]) + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);text-decoration:none;transition:background .15s;" onmouseenter="this.style.background=\'rgba(255,255,255,.06)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.03)\'"><span style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:'+p.color+';">'+_connIcon(p.key)+' '+p.label+'</span><span style="font-size:12px;color:rgba(255,255,255,.25);">\u2192</span></a>').join('')
     + '</div></div>' : '';
   // Banner
   const userBanner = (u.banner && hasR) ? u.banner : null;
@@ -25547,9 +25687,49 @@ async function openActivityDetector() {
   }
 }
 
+// Manual cover art for popular games (fallback when IGDB API is unavailable)
+const _MANUAL_COVER_ART = {
+  'Roblox':            'https://images.igdb.com/igdb/image/upload/t_cover_big/coabhb.webp',
+  'Minecraft':         'https://images.igdb.com/igdb/image/upload/t_cover_big/coa77e.webp',
+  'Fortnite':          'https://e.snmc.io/lk/f/x/36dc2572894a4503edefc9df7cbc7458/10934087',
+  'League of Legends': 'https://images.igdb.com/igdb/image/upload/t_cover_big/cobpn7.webp',
+  'Genshin Impact':    'https://images.igdb.com/igdb/image/upload/t_cover_big/coa9dy.webp',
+  'Hearts of Iron IV': 'https://images.igdb.com/igdb/image/upload/t_cover_big/coaaql.webp',
+  'Europa Universalis IV': 'https://images.igdb.com/igdb/image/upload/t_cover_big/coaarv.webp',
+  'Hytale':            'https://images.igdb.com/igdb/image/upload/t_cover_big/cobc4t.webp',
+  'Polytoria':         'https://images.igdb.com/igdb/image/upload/t_cover_big/co4kjd.webp',
+  'Ages of Conflict: World War Simulator': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co9f91.webp',
+  'Red Dead Redemption 2': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.webp',
+  'Bendy and the Ink Machine': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co67zs.webp',
+  'Fall Guys':         'https://images.igdb.com/igdb/image/upload/t_cover_big/coa7cs.webp',
+  "Five Nights at Freddy's: Security Breach": 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4aro.webp',
+  'Grand Theft Auto V': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co9751.webp',
+  'GTA V':             'https://images.igdb.com/igdb/image/upload/t_cover_big/co9751.webp',
+  'Honkai: Star Rail':  'https://images.igdb.com/igdb/image/upload/t_cover_big/cobivp.webp',
+};
+function _getManualCover(name) {
+  if (!name) return null;
+  // Exact match first
+  if (_MANUAL_COVER_ART[name]) return _MANUAL_COVER_ART[name];
+  // Case-insensitive match
+  const lower = name.toLowerCase();
+  for (const [k, v] of Object.entries(_MANUAL_COVER_ART)) {
+    if (k.toLowerCase() === lower) return v;
+  }
+  return null;
+}
+
 function setGameActivity(name, icon) {
   const prevGame = _gameActivity?.name;
   _gameActivity = name ? {name, icon: icon||'🎮', since: new Date().toISOString()} : null;
+  // Apply manual cover art immediately if available
+  if (_gameActivity) {
+    const manualCover = _getManualCover(name);
+    if (manualCover) {
+      _gameActivity.coverUrl = manualCover;
+      _gameActivity.coverThumb = manualCover;
+    }
+  }
   refreshGameActivityBar();
   _updateUserbarActivity();
   // Track lastPlayed on the game collection entry
@@ -25572,7 +25752,22 @@ function setGameActivity(name, icon) {
 async function _enrichActivityWithIGDB(activity) {
   try {
     const igdbOk = await _checkIGDB();
-    if (!igdbOk) return;
+    if (!igdbOk) {
+      // Fall back to manual covers if IGDB is down
+      const manualCover = _getManualCover(activity.name);
+      if (manualCover && !activity.coverUrl) {
+        activity.coverUrl = manualCover;
+        activity.coverThumb = manualCover;
+        refreshGameActivityBar();
+        _updateUserbarActivity();
+        if (CU) {
+          CU.gameActivity = activity;
+          firebase.database().ref('users/'+CU.username+'/gameActivity').set(activity).catch(()=>{});
+          FortizedSocial.socketEmit('activity:set', { activity });
+        }
+      }
+      return;
+    }
     const results = await _searchIGDB(activity.name);
     if (results.length > 0) {
       const match = results[0];
@@ -28356,7 +28551,13 @@ function initCrossDeviceSync() {
       CU.friends = data.friends;
     }
     if (data.groupChats && JSON.stringify(data.groupChats) !== JSON.stringify(CU.groupChats)) {
+      const hadNew = (data.groupChats||[]).length > (CU.groupChats||[]).length;
       CU.groupChats = data.groupChats;
+      // Re-render DM sidebar so new group chats appear for all members
+      if (hadNew) {
+        const scroll = document.getElementById('sidebar-scroll');
+        if (scroll) renderDMSidebar(scroll);
+      }
     }
     // Update local cache
     saveLocal();

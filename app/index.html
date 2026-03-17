@@ -5264,8 +5264,11 @@ async function _loadRealmFriends(friends, container, countEl) {
   const online = results.filter(r => FtzStatus.isPresent(r.status));
   const offline = results.filter(r => !FtzStatus.isPresent(r.status));
   if (countEl) countEl.textContent = online.length ? online.length + ' online' : '';
-  const sorted = [...online,...offline];
-  container.innerHTML = sorted.map(r=>{
+  if (!online.length) {
+    container.innerHTML = '<div style="padding:8px;font-size:13px;color:var(--muted);">All friends offline</div>';
+    return;
+  }
+  container.innerHTML = online.map(r=>{
     return `<div class="realm-friend" onclick="openDMView('${escapeHTML(r.username)}')" title="${escapeHTML(r.displayName)}">
       <div class="rf-av">
         <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:16px;">${buildAvatarHTML(r.pfp,r.displayName,44)}</div>
@@ -6324,6 +6327,8 @@ async function openGroupChatView(gcId) {
   if (curDM) { const _el = document.getElementById('dm-msgs'); if (_el) _saveChatScroll('dm:'+curDM, _el); }
   if (curGC && curGC !== gcId) { const _el = document.getElementById('gc-msgs'); if (_el) _saveChatScroll('gc:'+curGC, _el); }
   if (curBastion !== null && curChannel !== null && curChannel !== 'overview') { const _el = document.getElementById('ch-msgs-'+curChannel); if (_el) _saveChatScroll('ch:'+curBastion+':'+curChannel, _el); }
+  // Auto-clear notifications from this group chat
+  try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', null).then(()=>updateNotifBadge()).catch(()=>{}); } catch {}
   // Auto-unhide group chat when opening it
   unhideDMConversation('gc_' + gcId);
   curGC = gcId;
@@ -28362,6 +28367,11 @@ function initCrossDeviceSync() {
   _notifSyncListener = notifRef.on('child_added', snap => {
     const notif = snap.val();
     if (!notif) return;
+    // Auto-mark DM notifications as read if user is currently viewing that DM
+    if (notif.type === 'dm' && notif.from && !notif.read && curDM === (notif.from||'').toLowerCase()) {
+      try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', notif.from).then(()=>updateNotifBadge()).catch(()=>{}); } catch {}
+      return;
+    }
     if (!shouldDeliverRealtimeNotif(notif)) return;
     if (notifSettings.digestMode) { queueDigestNotif(notif); return; }
     // Auto-unhide DM conversations when new messages arrive
@@ -28861,6 +28871,12 @@ function _isPriorityNotif(notif) {
 }
 
 function shouldDeliverRealtimeNotif(notif) {
+  // Don't deliver notifications that are already read
+  if (notif.read) return false;
+  // Don't deliver DM notifications if user is currently viewing that DM
+  if (notif.type === 'dm' && notif.from && curDM === (notif.from||'').toLowerCase()) return false;
+  // Don't deliver mention notifications if user is currently in a bastion channel
+  if (notif.type === 'mention' && curBastion !== null && curChannel !== null && curChannel !== 'overview') return false;
   if (notifSettings.priorityOnly && !_isPriorityNotif(notif)) return false;
   if (notif.type === 'dm' && notifSettings.messages === false) return false;
   if (notif.type === 'mention' && notifSettings.mentions === false) return false;

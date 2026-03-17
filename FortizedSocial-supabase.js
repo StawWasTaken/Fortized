@@ -268,8 +268,9 @@ const FortizedSocial = (() => {
     const { data } = await sb.from('notifications').select('*').eq('username', norm(username));
     if (!data || !data.length) return [];
     return data.map(r => ({
+      ...(r.data || {}),
       id: r.id, type: r.type, from: r.from, time: r.time,
-      read: r.read, ...(r.data || {}),
+      read: r.read,
       data: r.data,
     })).sort((a, b) => new Date(b.time) - new Date(a.time));
   }
@@ -760,7 +761,7 @@ const FortizedSocial = (() => {
       }, payload => {
         const n = payload.new;
         if (!n || n.read) return;
-        const notif = { id: n.id, type: n.type, from: n.from, time: n.time, read: n.read, ...(n.data || {}) };
+        const notif = { ...(n.data || {}), id: n.id, type: n.type, from: n.from, time: n.time, read: n.read };
         _callbacks.onNewNotification?.(notif);
         updateNotifBadgeExternal(username);
       })

@@ -92,7 +92,7 @@
       if (!data || !data.length) return null;
       const result = {};
       data.forEach(r => {
-        result[r.id] = { id: r.id, type: r.type, from: r.from, time: r.time, read: r.read, ...(r.data || {}) };
+        result[r.id] = { ...(r.data || {}), id: r.id, type: r.type, from: r.from, time: r.time, read: r.read };
       });
       if (parts.length > 2) return getNestedValue(result, parts.slice(2));
       return result;

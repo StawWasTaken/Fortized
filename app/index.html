@@ -6326,6 +6326,8 @@ async function openGroupChatView(gcId) {
   if (curDM) { const _el = document.getElementById('dm-msgs'); if (_el) _saveChatScroll('dm:'+curDM, _el); }
   if (curGC && curGC !== gcId) { const _el = document.getElementById('gc-msgs'); if (_el) _saveChatScroll('gc:'+curGC, _el); }
   if (curBastion !== null && curChannel !== null && curChannel !== 'overview') { const _el = document.getElementById('ch-msgs-'+curChannel); if (_el) _saveChatScroll('ch:'+curBastion+':'+curChannel, _el); }
+  // Auto-clear notifications from this group chat
+  try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', null).then(()=>updateNotifBadge()).catch(()=>{}); } catch {}
   // Auto-unhide group chat when opening it
   unhideDMConversation('gc_' + gcId);
   curGC = gcId;
@@ -28360,6 +28362,11 @@ function initCrossDeviceSync() {
   _notifSyncListener = notifRef.on('child_added', snap => {
     const notif = snap.val();
     if (!notif) return;
+    // Auto-mark DM notifications as read if user is currently viewing that DM
+    if (notif.type === 'dm' && notif.from && !notif.read && curDM === (notif.from||'').toLowerCase()) {
+      try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', notif.from).then(()=>updateNotifBadge()).catch(()=>{}); } catch {}
+      return;
+    }
     if (!shouldDeliverRealtimeNotif(notif)) return;
     if (notifSettings.digestMode) { queueDigestNotif(notif); return; }
     // Auto-unhide DM conversations when new messages arrive
@@ -28859,6 +28866,12 @@ function _isPriorityNotif(notif) {
 }
 
 function shouldDeliverRealtimeNotif(notif) {
+  // Don't deliver notifications that are already read
+  if (notif.read) return false;
+  // Don't deliver DM notifications if user is currently viewing that DM
+  if (notif.type === 'dm' && notif.from && curDM === (notif.from||'').toLowerCase()) return false;
+  // Don't deliver mention notifications if user is currently in a bastion channel
+  if (notif.type === 'mention' && curBastion !== null && curChannel !== null && curChannel !== 'overview') return false;
   if (notifSettings.priorityOnly && !_isPriorityNotif(notif)) return false;
   if (notif.type === 'dm' && notifSettings.messages === false) return false;
   if (notif.type === 'mention' && notifSettings.mentions === false) return false;

@@ -5255,7 +5255,8 @@ async function _loadRealmFriends(friends, container, countEl) {
   const results = await Promise.all(_realmSlice.map(async f => {
     try {
       const u = await FortizedSocial.getUserByName(f);
-      const st = FtzStatus.sanitize(_realmPresence[f]?.status || u?.status || 'offline');
+      const _rLiveSt = _realmPresence[f]?.status;
+      const st = FtzStatus.sanitize(_rLiveSt !== undefined ? _rLiveSt : (u?.status || 'offline'));
       return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st};
     } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
   }));
@@ -5286,7 +5287,8 @@ async function _loadRPFriends(friends, container, countEl) {
   const results = await Promise.all(_rpSlice.map(async f => {
     try {
       const u = await FortizedSocial.getUserByName(f);
-      const st = FtzStatus.sanitize(_rpPresence[f]?.status || u?.status || 'offline');
+      const _rpLiveSt = _rpPresence[f]?.status;
+      const st = FtzStatus.sanitize(_rpLiveSt !== undefined ? _rpLiveSt : (u?.status || 'offline'));
       return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, customStatus:u?.customStatus||null, game:u?.currentGame||null};
     } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
   }));
@@ -5744,9 +5746,9 @@ async function renderDMSidebar(scroll) {
         if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
         const dnEl = document.getElementById('dm-dn-'+f);
         if (dnEl) dnEl.textContent = u.displayName || f;
-        // Use live Socket.IO presence, fallback to DB status
+        // Use live Socket.IO presence, fallback to DB status only if Socket.IO unavailable
         const liveSt = _dmPresenceMap[f]?.status;
-        const st = FtzStatus.sanitize(liveSt || u.status || 'offline');
+        const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : (u.status || 'offline'));
         document.querySelectorAll(`.profile-status-dot[data-for="${f}"]`).forEach(d=>{d.style.background=FtzStatus.color(st);d.style.boxShadow='0 0 8px '+FtzStatus.color(st)+'55';});
       }
       let lastTime = 0;
@@ -5899,9 +5901,9 @@ async function renderDMFriendsHome() {
       const pdnEl = document.getElementById('dm-home-pdn-'+f);
       if (pdnEl) pdnEl.textContent = u.displayName || f;
 
-      // Use LIVE Socket.IO presence first, fallback to DB status
+      // Use LIVE Socket.IO presence first, fallback to DB status only if Socket.IO unavailable
       const liveSt = _friendPresenceMap[f]?.status;
-      const st = FtzStatus.sanitize(liveSt || u.status || 'offline');
+      const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : (u.status || 'offline'));
       const dot = document.querySelector(`.dm-home-status[data-for="${CSS.escape(f)}"]`);
       if (dot) { dot.style.background = FtzStatus.color(st); dot.style.boxShadow = '0 0 8px '+FtzStatus.color(st)+'55'; }
       const stText = document.querySelector(`.dm-home-status-text[data-for="${CSS.escape(f)}"]`);
@@ -5967,10 +5969,10 @@ async function renderActiveNowSidebar(containerId) {
   const results = await Promise.all(friendsSlice.map(async f => {
     try {
       const u = await FortizedSocial.getUserByName(f);
-      // Use LIVE Socket.IO presence, fallback to DB status
+      // Use LIVE Socket.IO presence, fallback to DB status only if Socket.IO unavailable
       const liveSt = _anPresence[f]?.status;
       const liveGA = _anPresence[f]?.gameActivity;
-      const st = liveSt || u?.status || 'offline';
+      const st = liveSt !== undefined ? liveSt : (u?.status || 'offline');
       const csText = u?.customStatus?.text || (typeof u?.customStatus === 'string' ? u.customStatus : '');
       const gameAct = liveGA?.name || u?.gameActivity?.name || '';
       return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, customStatus:csText, gameActivity:gameAct};
@@ -15103,9 +15105,13 @@ async function viewUserProfile(username) {
   } else {
     try {
       const presenceResult = await FortizedSocial.queryPresence([username]);
-      status = presenceResult?.[username]?.status || 'offline';
-    } catch {}
-    if (status === 'offline') {
+      if (presenceResult && presenceResult[username]) {
+        status = presenceResult[username].status || 'offline';
+      } else {
+        // Socket.IO unavailable, fall back to DB
+        try { status = await FortizedSocial.getStatus(username); } catch {}
+      }
+    } catch {
       try { status = await FortizedSocial.getStatus(username); } catch {}
     }
   }
@@ -18245,8 +18251,11 @@ async function adminSearchUser() {
   const alreadyFriends = (CU.friends||[]).includes(username);
   const isMe = username === CU.username;
   let userStatus = 'offline';
-  try { const pr = await FortizedSocial.queryPresence([username]); userStatus = pr?.[username]?.status || 'offline'; } catch {}
-  if (userStatus === 'offline') { try { userStatus = await FortizedSocial.getStatus(username); } catch {} }
+  try {
+    const pr = await FortizedSocial.queryPresence([username]);
+    if (pr && pr[username]) { userStatus = pr[username].status || 'offline'; }
+    else { try { userStatus = await FortizedSocial.getStatus(username); } catch {} }
+  } catch { try { userStatus = await FortizedSocial.getStatus(username); } catch {} }
   const statusColors = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
 
   // Risk analysis
@@ -22796,8 +22805,11 @@ async function showDMUserPanel(username) {
   const _wName = document.getElementById('dm-welcome-name');
   if (_wName) _wName.textContent = u.displayName || username;
   let status = 'offline';
-  try { const pr = await FortizedSocial.queryPresence([username]); status = pr?.[username]?.status || 'offline'; } catch {}
-  if (status === 'offline') { try { status = await FortizedSocial.getStatus(username); } catch {} }
+  try {
+    const pr = await FortizedSocial.queryPresence([username]);
+    if (pr && pr[username]) { status = pr[username].status || 'offline'; }
+    else { try { status = await FortizedSocial.getStatus(username); } catch {} }
+  } catch { try { status = await FortizedSocial.getStatus(username); } catch {} }
   const sc = FtzStatus.color(status);
   const hasR = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
@@ -27263,7 +27275,8 @@ async function loadFriendActivity() {
     const statuses = await Promise.all(_actSlice.map(async f => {
       try {
         const u = await FortizedSocial.getUserByName(f);
-        const st = _actPresence[f]?.status || u?.status || 'offline';
+        const _actLiveSt = _actPresence[f]?.status;
+        const st = _actLiveSt !== undefined ? _actLiveSt : (u?.status || 'offline');
         return { username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, game:u?.currentGame||null, customStatus:u?.customStatus||null };
       } catch { return { username:f, displayName:f, pfp:null, status:'offline', game:null }; }
     }));
@@ -29099,9 +29112,12 @@ async function showMiniProfilePreview(username, anchorEl) {
   } else {
     try {
       const presenceResult = await FortizedSocial.queryPresence([username]);
-      status = presenceResult?.[username]?.status || 'offline';
-    } catch {}
-    if (status === 'offline') {
+      if (presenceResult && presenceResult[username]) {
+        status = presenceResult[username].status || 'offline';
+      } else {
+        try { status = await FortizedSocial.getStatus(username); } catch {}
+      }
+    } catch {
       try { status = await FortizedSocial.getStatus(username); } catch {}
     }
   }

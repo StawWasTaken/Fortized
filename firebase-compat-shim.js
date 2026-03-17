@@ -103,7 +103,7 @@
       if (parts.length >= 2) {
         const { data } = await sb.from('dms').select('*').eq('dm_key', parts[1]).order('timestamp', { ascending: true });
         const result = {};
-        (data || []).forEach(r => { result[r.id] = { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited, reactions: r.reactions }; });
+        (data || []).forEach(r => { result[r.id] = { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited, reactions: r.reactions, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined }; });
         if (parts.length > 2) return getNestedValue(result, parts.slice(2));
         return result;
       }
@@ -1142,12 +1142,14 @@
     if (parts[0] === 'dms' && parts.length >= 2) {
       const msg = val || {};
       msg.id = msg.id || key;
-      await sb.from('dms').insert({
+      const row = {
         dm_key: parts[1], id: msg.id,
         from: msg.from || null, text: msg.text || '',
         time: msg.time || null, timestamp: msg.timestamp || null,
         edited: false,
-      });
+      };
+      if (msg.forwarded) { row.forwarded = true; row.forwarded_by = msg.forwardedBy || msg.from || null; }
+      await sb.from('dms').insert(row);
       return { key: msg.id };
     }
 
@@ -1435,7 +1437,7 @@
           if (parts[0] === 'dms' && parts.length >= 2) {
             const { data } = await sb.from('dms').select('*').eq('dm_key', parts[1]).order('timestamp', { ascending: false }).limit(n);
             const result = {};
-            (data || []).reverse().forEach(r => { result[r.id] = { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited, reactions: r.reactions }; });
+            (data || []).reverse().forEach(r => { result[r.id] = { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited, reactions: r.reactions, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined }; });
             return _makeSnap(Object.keys(result).length ? result : null, null, pathStr);
           }
           if (parts[0] === 'bastionMsgs' && parts.length >= 3) {

@@ -403,10 +403,10 @@ const FortizedSocial = (() => {
   }
 
   function _dmFromRow(r) {
-    return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined };
+    return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined };
   }
 
-  async function sendDMMessage(fromUsername, toUsername, text) {
+  async function sendDMMessage(fromUsername, toUsername, text, opts) {
     fromUsername = norm(fromUsername);
     toUsername   = norm(toUsername);
     const key = _dmKey(fromUsername, toUsername);
@@ -419,7 +419,9 @@ const FortizedSocial = (() => {
       timestamp: now.toISOString()
     };
 
-    await sb.from('dms').insert({ dm_key: key, id: msg.id, from: msg.from, text: msg.text, time: msg.time, timestamp: msg.timestamp });
+    const row = { dm_key: key, id: msg.id, from: msg.from, text: msg.text, time: msg.time, timestamp: msg.timestamp };
+    if (opts?.forwarded) { row.forwarded = true; row.forwarded_by = opts.forwardedBy || fromUsername; msg.forwarded = true; msg.forwardedBy = row.forwarded_by; }
+    await sb.from('dms').insert(row);
 
     // Update DM index for both users
     const [myIdx, theirIdx] = await Promise.all([

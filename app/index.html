@@ -6389,7 +6389,7 @@ async function openGroupChatView(gcId) {
   setTimeout(() => { setupEmojiAutocomplete('gc-input'); _initChatScroll(document.getElementById('gc-msgs')); }, 100);
 }
 
-function showGCMemberPanel(meta) {
+async function showGCMemberPanel(meta) {
   // Remove old GC panel if exists
   document.getElementById('gc-member-panel')?.remove();
   const panel = document.createElement('div');
@@ -6397,13 +6397,54 @@ function showGCMemberPanel(meta) {
   panel.style.cssText = 'width:260px;min-width:260px;background:var(--channel);border-left:1px solid rgba(255,255,255,.04);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;';
   const isOwner = meta.owner === CU.username;
   const memberCount = (meta.members||[]).length;
+
+  // Fetch live presence for all members BEFORE rendering (like bastion member list)
+  const _gcMembers = (meta.members||[]).filter(m => m !== CU.username);
+  const _gcStatusMap = {};
+  _gcStatusMap[CU.username] = CU.status || 'online';
+  if (_gcMembers.length) {
+    try {
+      const presenceData = await FortizedSocial.queryPresence(_gcMembers);
+      if (presenceData) {
+        _gcMembers.forEach(m => { _gcStatusMap[m] = presenceData[m]?.status || 'offline'; });
+      } else {
+        _gcMembers.forEach(m => { _gcStatusMap[m] = 'offline'; });
+      }
+    } catch { _gcMembers.forEach(m => { _gcStatusMap[m] = 'offline'; }); }
+  }
+
+  const _isOnline = (st) => st === 'online' || st === 'away' || st === 'dnd';
+  const allMembers = meta.members || [];
+  const ownerOnline = _isOnline(_gcStatusMap[meta.owner] || 'offline');
+  const othersOnline = allMembers.filter(m => m !== meta.owner && _isOnline(_gcStatusMap[m] || 'offline'));
+  const othersOffline = allMembers.filter(m => m !== meta.owner && !_isOnline(_gcStatusMap[m] || 'offline'));
+  const onlineCount = (ownerOnline ? 1 : 0) + othersOnline.length;
+
+  let membersHtml = '';
+  // Owner section (always shown at top)
+  if (ownerOnline) {
+    membersHtml += `<div class="ml-role-header" style="margin-top:4px;"><span style="font-size:12px;opacity:.6;">👑</span> Owner</div>`;
+    membersHtml += _buildGCMemberEntry(meta.owner, meta, isOwner, _gcStatusMap);
+  }
+  // Online members
+  if (othersOnline.length) {
+    membersHtml += `<div class="ml-role-header">Online <span class="ml-role-count">— ${othersOnline.length}</span></div>`;
+    othersOnline.forEach(m => { membersHtml += _buildGCMemberEntry(m, meta, isOwner, _gcStatusMap); });
+  }
+  // Offline section
+  const offlineMembers = [...(!ownerOnline ? [meta.owner] : []), ...othersOffline];
+  if (offlineMembers.length) {
+    membersHtml += `<div class="ml-role-header">Offline <span class="ml-role-count">— ${offlineMembers.length}</span></div>`;
+    offlineMembers.forEach(m => { membersHtml += _buildGCMemberEntry(m, meta, isOwner, _gcStatusMap); });
+  }
+
   panel.innerHTML = `
     <div style="padding:16px 14px 12px;border-bottom:1px solid rgba(255,255,255,.04);">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${meta.emoji||'👥'}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(meta.name)}</div>
-          <div style="font-size:10.5px;color:var(--muted);">${memberCount} member${memberCount!==1?'s':''}</div>
+          <div style="font-size:10.5px;color:var(--muted);">${onlineCount} online · ${memberCount} member${memberCount!==1?'s':''}</div>
         </div>
       </div>
       ${isOwner ? `
@@ -6417,10 +6458,7 @@ function showGCMemberPanel(meta) {
       <div style="position:relative;"><svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search members..." oninput="_filterGCMembers(this.value)" style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:7px 12px 7px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:#fff;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'"></div>
     </div>
     <div style="padding:6px 6px;flex:1;overflow-y:auto;">
-      <div class="ml-role-header" style="margin-top:4px;">Owner</div>
-      ${(meta.members||[]).filter(m=>m===meta.owner).map(m=>_buildGCMemberEntry(m, meta, isOwner)).join('')}
-      <div class="ml-role-header">Members <span class="ml-role-count">— ${memberCount - 1}</span></div>
-      ${(meta.members||[]).filter(m=>m!==meta.owner).map(m=>_buildGCMemberEntry(m, meta, isOwner)).join('')}
+      ${membersHtml}
     </div>
     ${isOwner ? `
     <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.04);">
@@ -6429,17 +6467,7 @@ function showGCMemberPanel(meta) {
   // Inject into DMs view
   const dmsView = document.getElementById('view-dms');
   if (dmsView) dmsView.appendChild(panel);
-  // Deferred pfp + status loading for GC members — use live Socket.IO presence
-  const _gcMembers = (meta.members||[]).filter(m => m !== CU.username);
-  FortizedSocial.queryPresence(_gcMembers).then(_gcPresence => {
-    if (_gcPresence) {
-      _gcMembers.forEach(m => {
-        const st = FtzStatus.sanitize(_gcPresence[m]?.status || 'offline');
-        const dot = panel.querySelector(`.profile-status-dot[data-for="${CSS.escape(m)}"]`);
-        if (dot) { dot.style.background = FtzStatus.color(st); dot.style.boxShadow = '0 0 8px '+FtzStatus.color(st)+'55'; }
-      });
-    }
-  }).catch(()=>{});
+  // Deferred pfp + display name loading for GC members
   _gcMembers.forEach(m => {
     setTimeout(() => {
       FortizedSocial.getUserByName(m).then(ud => {
@@ -6462,15 +6490,15 @@ function showGCMemberPanel(meta) {
     }, 80);
   });
 }
-function _buildGCMemberEntry(m, meta, isOwner) {
+function _buildGCMemberEntry(m, meta, isOwner, statusMap) {
   const isMe = m === CU.username;
   const displayN = isMe ? (CU.displayName||CU.username) : m;
   const pfpSrc = isMe ? CU.pfp : null;
   const isGCOwner = m === meta.owner;
-  // Don't hardcode non-self as 'offline' — use 'offline' as placeholder, live Socket.IO will update immediately
-  const initialStatus = isMe ? (CU.status||'online') : 'offline';
-  return `<div class="ml-entry" data-member="${escapeHTML(m)}" data-status="${initialStatus}" onclick="showMiniProfilePreview('${escapeHTML(m)}',this)">
-    <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;background:${FtzStatus.color(initialStatus)};border:2px solid var(--channel);z-index:3;"></span></div>
+  const st = statusMap ? (statusMap[m] || 'offline') : (isMe ? (CU.status||'online') : 'offline');
+  const isOnline = st === 'online' || st === 'away' || st === 'dnd';
+  return `<div class="ml-entry" data-member="${escapeHTML(m)}" data-status="${st}" onclick="showMiniProfilePreview('${escapeHTML(m)}',this)" style="${isOnline?'':'opacity:.4;'}">
+    <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;background:${FtzStatus.color(st)};border:2px solid var(--channel);z-index:3;"></span></div>
     <div style="flex:1;min-width:0;">
       <div style="display:flex;align-items:center;gap:4px;">
         <div class="ml-name" style="color:${isGCOwner?'var(--accent)':'rgba(255,255,255,.6)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
@@ -28351,7 +28379,13 @@ function initCrossDeviceSync() {
       CU.friends = data.friends;
     }
     if (data.groupChats && JSON.stringify(data.groupChats) !== JSON.stringify(CU.groupChats)) {
+      const hadNew = (data.groupChats||[]).length > (CU.groupChats||[]).length;
       CU.groupChats = data.groupChats;
+      // Re-render DM sidebar so new group chats appear for all members
+      if (hadNew) {
+        const scroll = document.getElementById('sidebar-scroll');
+        if (scroll) renderDMSidebar(scroll);
+      }
     }
     // Update local cache
     saveLocal();

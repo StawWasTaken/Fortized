@@ -310,7 +310,7 @@ io.on('connection', (socket) => {
     const key = roomKey(data.type, data.id1, data.id2);
     if (!typingState.has(key)) typingState.set(key, new Set());
     typingState.get(key).add(username);
-    socket.to(key).emit('typing:update', { room: key, users: [...typingState.get(key)].filter(u => u !== username) });
+    socket.to(key).emit('typing:update', { room: key, users: [...typingState.get(key)] });
   });
 
   socket.on('typing:stop', (data) => {

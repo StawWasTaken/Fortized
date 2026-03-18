@@ -4331,6 +4331,8 @@ function scrollBottom(id, instant) {
     }
     // Update state if tracked
     if (_chatAutoScroll[el.id]) _chatAutoScroll[el.id].atBottom = true;
+    // Re-scroll after images/embeds load to stay at bottom
+    requestAnimationFrame(() => { if (el) el.scrollTop = el.scrollHeight; });
   }
 }
 function scrollToMsg(msgId) {
@@ -4343,6 +4345,7 @@ function scrollToMsg(msgId) {
 // Smart auto-scroll: track whether user is at bottom
 let _chatAutoScroll={};
 let _chatScrollDebounce={};
+let _chatObservers={};
 function _initChatScroll(msgsEl){
   if(!msgsEl)return;
   const id=msgsEl.id;
@@ -4353,7 +4356,7 @@ function _initChatScroll(msgsEl){
     _chatScrollDebounce[id]=true;
     requestAnimationFrame(()=>{
       _chatScrollDebounce[id]=false;
-      const atBot=msgsEl.scrollHeight-msgsEl.scrollTop-msgsEl.clientHeight<80;
+      const atBot=msgsEl.scrollHeight-msgsEl.scrollTop-msgsEl.clientHeight<150;
       _chatAutoScroll[id].atBottom=atBot;
       const pastBar=msgsEl.querySelector('.chat-past-bar');
       if(pastBar){
@@ -4369,10 +4372,25 @@ function _initChatScroll(msgsEl){
       }
     });
   },{passive:true});
+  // Observe DOM changes — when new messages are appended, auto-scroll if at bottom
+  if(_chatObservers[id]){try{_chatObservers[id].disconnect();}catch{}}
+  const obs=new MutationObserver(()=>{
+    if(_chatAutoScroll[id]?.atBottom){
+      msgsEl.scrollTop=msgsEl.scrollHeight;
+    }
+  });
+  obs.observe(msgsEl,{childList:true,subtree:true});
+  _chatObservers[id]=obs;
+  // Handle images/embeds loading after render — keep scroll at bottom
+  msgsEl.addEventListener('load',function(e){
+    if(e.target.tagName==='IMG'&&_chatAutoScroll[id]?.atBottom){
+      msgsEl.scrollTop=msgsEl.scrollHeight;
+    }
+  },true);
 }
 function _notifyNewMsg(msgsElId){
   const state=_chatAutoScroll[msgsElId];
-  if(!state||state.atBottom){scrollBottom(msgsElId);return;}
+  if(!state||state.atBottom){scrollBottom(msgsElId);requestAnimationFrame(()=>scrollBottom(msgsElId,true));return;}
   state.newCount++;
   const msgsEl=document.getElementById(msgsElId);
   if(!msgsEl)return;
@@ -15279,7 +15297,15 @@ async function viewUserProfile(username) {
   const modalEl = document.getElementById('user-modal-body');
   if (!modalEl) { openModal('modal-user'); return; }
 
-  const _mutualFriends = isOwn ? [] : (CU?.friends||[]).filter(f => f !== CU?.username && f !== u.username && (u.friends||[]).includes(f));
+  const _mutualFriendNames = isOwn ? [] : (CU?.friends||[]).filter(f => f !== CU?.username && f !== u.username && (u.friends||[]).includes(f));
+  // Fetch real profile data (pfps) for mutual friends
+  const _mutualFriendsData = {};
+  if (_mutualFriendNames.length) {
+    await Promise.all(_mutualFriendNames.slice(0, 20).map(async f => {
+      try { const ud = await FortizedSocial.getUserByName(f); if (ud) _mutualFriendsData[f] = ud; } catch {}
+    }));
+  }
+  const _mutualFriends = _mutualFriendNames;
   const _memberSince = (u.joinedAt||u.createdAt) ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : null;
   const _userNote = _getUserNote(username);
 
@@ -15394,7 +15420,7 @@ async function viewUserProfile(username) {
           ${_mutualFriends.length ? `<div class="up-right-section">
             <div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div>
             <div style="display:flex;flex-direction:column;gap:4px;">
-              ${_mutualFriends.slice(0,20).map(f => `<div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .14s;" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')" class="up-mutual-row"><div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(null,f,30)}</div><div style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(f)}</div></div>`).join('')}
+              ${_mutualFriends.slice(0,20).map(f => { const mfd = _mutualFriendsData[f]; const mfPfp = mfd?.pfp || null; const mfDisplay = mfd?.displayName || f; return `<div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .14s;" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')" class="up-mutual-row"><div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(mfPfp,mfDisplay,30)}</div><div style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(mfDisplay)}</div></div>`; }).join('')}
             </div>
           </div>` : `<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">👥</div><div style="color:rgba(255,255,255,.15);font-size:12.5px;font-weight:500;">No mutual friends</div></div>`}
         </div>` : ''}
@@ -22384,6 +22410,7 @@ function _openAddWidgetModal() {
   document.querySelector('.pw-add-widget-modal-overlay')?.remove();
   const widgets = _getProfileWidgets();
   const games = CU.gameCollection || [];
+  const bastions = CU.bastions || [];
   const overlay = document.createElement('div');
   overlay.className = 'pw-add-widget-modal-overlay';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
@@ -22392,16 +22419,50 @@ function _openAddWidgetModal() {
     const wState = widgets.find(w => w.id === def.id);
     const isOn = wState?.enabled;
     const previewImg = games.length > 0 && games[0].coverUrl ? `<img src="${escapeHTML(games[0].coverUrl)}">` : `<span style="font-size:22px;">${def.icon}</span>`;
+
+    // Build per-widget config form
+    let configForm = '';
+    if (def.id === 'favourite_game') {
+      configForm = `<div class="pwo-config" id="pwo-cfg-${def.id}" style="display:none;padding:12px 14px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);">
+        <label style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600;display:block;margin-bottom:6px;">Choose your favourite game</label>
+        <select id="pwo-cfg-select-${def.id}" class="settings-input" style="padding:8px 10px;font-size:12px;width:100%;">
+          <option value="">— Pick from your collection —</option>
+          ${games.map(g => `<option value="${escapeHTML(g.name)}">${escapeHTML(g.name)}</option>`).join('')}
+        </select>
+        <button onclick="_confirmAddWidget('${def.id}')" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Add Widget</button>
+      </div>`;
+    } else if (def.id === 'primary_bastion') {
+      configForm = `<div class="pwo-config" id="pwo-cfg-${def.id}" style="display:none;padding:12px 14px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);">
+        <label style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600;display:block;margin-bottom:6px;">Select your bastion</label>
+        <select id="pwo-cfg-select-${def.id}" class="settings-input" style="padding:8px 10px;font-size:12px;width:100%;">
+          ${bastions.length ? bastions.map((b,i) => `<option value="${i}">${escapeHTML(b.name||'Bastion '+(i+1))}</option>`).join('') : '<option value="">— No bastions joined —</option>'}
+        </select>
+        <button onclick="_confirmAddWidget('${def.id}')" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Add Widget</button>
+      </div>`;
+    } else if (def.id === 'game_collection' || def.id === 'games_rotation') {
+      configForm = `<div class="pwo-config" id="pwo-cfg-${def.id}" style="display:none;padding:12px 14px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);">
+        <label style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600;display:block;margin-bottom:6px;">Max games to show</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="range" id="pwo-cfg-range-${def.id}" min="3" max="12" value="8" style="flex:1;" oninput="this.nextElementSibling.textContent=this.value">
+          <span style="font-size:13px;color:rgba(255,255,255,.5);font-weight:700;min-width:20px;text-align:center;">8</span>
+        </div>
+        <button onclick="_confirmAddWidget('${def.id}')" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Add Widget</button>
+      </div>`;
+    }
+
     listHtml += `<div class="pw-widget-option ${isOn?'active':''}" data-widget-id="${def.id}">
-      <div class="pwo-preview">${previewImg}</div>
-      <div class="pwo-info">
-        <div class="pwo-name">${def.label}</div>
-        <div class="pwo-desc">${def.desc}</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px;" ${!isOn ? `onclick="_expandWidgetConfig('${def.id}')" style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;"` : ''}>
+        <div class="pwo-preview">${previewImg}</div>
+        <div class="pwo-info">
+          <div class="pwo-name">${def.label}</div>
+          <div class="pwo-desc">${def.desc}</div>
+        </div>
+        ${isOn
+          ? `<div class="pwo-added" title="Already added"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg></div>`
+          : `<div style="color:var(--accent);font-size:18px;font-weight:700;flex-shrink:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);transition:all .12s;">+</div>`
+        }
       </div>
-      ${isOn
-        ? `<div class="pwo-added" title="Already added"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg></div>`
-        : `<button class="pwo-add-btn" onclick="event.stopPropagation();_addWidgetFromModal('${def.id}')" title="Add widget">+</button>`
-      }
+      ${!isOn ? configForm : ''}
     </div>`;
   });
   overlay.innerHTML = `<div class="pw-add-widget-modal">
@@ -22416,6 +22477,36 @@ function _openAddWidgetModal() {
     <div class="pwm-list">${listHtml}</div>
   </div>`;
   document.body.appendChild(overlay);
+}
+
+function _expandWidgetConfig(widgetId) {
+  // Collapse all other configs
+  document.querySelectorAll('.pwo-config').forEach(el => { el.style.display = 'none'; });
+  const cfg = document.getElementById('pwo-cfg-' + widgetId);
+  if (cfg) cfg.style.display = cfg.style.display === 'none' ? 'block' : 'none';
+}
+
+async function _confirmAddWidget(widgetId) {
+  const widgets = _getProfileWidgets();
+  let w = widgets.find(w => w.id === widgetId);
+  if (!w) { w = {id:widgetId,enabled:false,config:{}}; widgets.push(w); }
+  w.enabled = true;
+  // Gather config from the modal form
+  if (widgetId === 'favourite_game') {
+    const sel = document.getElementById('pwo-cfg-select-favourite_game');
+    if (sel && sel.value) w.config.gameName = sel.value;
+  } else if (widgetId === 'primary_bastion') {
+    const sel = document.getElementById('pwo-cfg-select-primary_bastion');
+    if (sel) { w.config.bastionIdx = parseInt(sel.value)||0; w.config.bastionName = sel.options[sel.selectedIndex]?.text || ''; }
+  } else if (widgetId === 'game_collection' || widgetId === 'games_rotation') {
+    const range = document.getElementById('pwo-cfg-range-' + widgetId);
+    if (range) w.config.maxShow = parseInt(range.value)||8;
+  }
+  _setProfileWidgets(widgets);
+  await saveUser();
+  document.querySelector('.pw-add-widget-modal-overlay')?.remove();
+  buildProfileView('profile_widgets');
+  toast('Widget added!', 'success');
 }
 
 function _filterWidgetOptions(q) {
@@ -22443,13 +22534,14 @@ async function _addWidgetFromModal(widgetId) {
 async function toggleProfileWidget(widgetId, btnEl) {
   const widgets = _getProfileWidgets();
   let w = widgets.find(w => w.id === widgetId);
-  if (!w) { w = {id:widgetId,enabled:false,config:{}}; widgets.push(w); }
+  if (!w) return;
   w.enabled = !w.enabled;
+  w.config = w.enabled ? w.config : {};
   if (btnEl) btnEl.classList.toggle('on', w.enabled);
   _setProfileWidgets(widgets);
   await saveUser();
   buildProfileView('profile_widgets');
-  toast(w.enabled ? 'Widget enabled' : 'Widget disabled', 'success');
+  toast(w.enabled ? 'Widget added' : 'Widget removed', 'success');
 }
 
 async function updateWidgetConfig(widgetId, configPatch) {

@@ -732,7 +732,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .picker-top-tab:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.02);}
 .picker-top-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.03);}
 /* Sticker picker panel */
-.sticker-picker-panel{width:440px;max-height:560px;}
+.sticker-picker-panel{width:460px;max-height:560px;}
 .sticker-picker-panel .spp-header{padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent);}
 .sticker-picker-panel .spp-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.02em;}
 .sticker-picker-panel .spp-bastion-label{font-size:8px;color:rgba(255,249,62,.5);letter-spacing:.1em;font-weight:700;text-transform:uppercase;margin-left:auto;background:rgba(255,249,62,.06);padding:4px 10px;border-radius:100px;border:1px solid rgba(255,249,62,.1);}
@@ -752,7 +752,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .spp-sticker img{width:100%;height:100%;object-fit:contain;border-radius:4px;}
 .spp-empty{grid-column:1/-1;text-align:center;padding:48px 24px;color:rgba(255,255,255,.25);font-size:13px;line-height:1.7;}
 /* Bot command shortcut panel */
-.botcmd-panel{width:400px;max-height:420px;}
+.botcmd-panel{width:460px;max-height:520px;}
 .botcmd-panel .bcp-header{padding:14px 18px 12px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.015);}
 .botcmd-panel .bcp-header svg{color:#60a5fa;}
 .botcmd-list{flex:1;overflow-y:auto;padding:8px;}
@@ -792,7 +792,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .media-lightbox-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 /* GIF favourite button in chat messages */
 .chat-gif-fav-btn{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s,transform .15s;z-index:2;line-height:1;}
-.chat-gif-wrap:hover .chat-gif-fav-btn{opacity:1;}
+.chat-gif-wrap:hover .chat-gif-fav-btn,.ftz-embed-gif:hover .chat-gif-fav-btn{opacity:1;}
 .chat-gif-fav-btn:hover{transform:scale(1.15);background:rgba(0,0,0,.7);}
 /* Drag-drop overlay — scoped to chatbar */
 .drop-overlay{position:absolute;inset:0;background:rgba(255,249,62,.06);border:2px dashed var(--accent);border-radius:12px;z-index:30;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none;}
@@ -4199,7 +4199,7 @@ function escapeHTML(s) {
 
 
 function _getTrustedDomains() {
-  const builtIn = ['youtube.com','youtu.be','spotify.com','github.com','twitter.com','x.com','twitch.tv','reddit.com','itch.io','roblox.com','steam','fortized.com','giphy.com'];
+  const builtIn = ['youtube.com','youtu.be','spotify.com','github.com','twitter.com','x.com','twitch.tv','reddit.com','itch.io','roblox.com','steam','fortized.com','giphy.com','klipy.com','tenor.com'];
   try { const user = JSON.parse(localStorage.getItem('ftz_trusted_domains')||'[]'); return [...builtIn, ...user]; } catch { return builtIn; }
 }
 function _trustDomain(domain) {
@@ -16727,6 +16727,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       // Tenor links
       const tenorRx = /https?:\/\/(?:media\.)?tenor\.com\/[^\s"'<>]+\.(?:gif|mp4)/gi;
       while ((m = tenorRx.exec(text)) !== null) media.push({ type: m[0].endsWith('.mp4') ? 'video' : 'image', url: m[0] });
+      // Klipy CDN links
+      const klipyRx = /https?:\/\/[^\s"'<>]*klipy\.[^\s"'<>]+\.(?:gif|webp|mp4)/gi;
+      while ((m = klipyRx.exec(text)) !== null) media.push({ type: m[0].endsWith('.mp4') ? 'video' : 'image', url: m[0] });
       // FTZGIF tokens
       const ftzRx = /\[FTZGIF:(https?:\/\/[^\]]+)\]/gi;
       while ((m = ftzRx.exec(text)) !== null) media.push({ type: 'image', url: m[1] });
@@ -20533,15 +20536,20 @@ function searchGiphy(q, targetInputId) {
     const results = document.getElementById('giphy-results');
     if (!results) return;
     results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Searching…</div>';
-    // Use Giphy public beta key for demo searches
     try {
-      const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=8tjnuv9jBeGxVGmRLkrV2nhuvhKXTvDY&q=${encodeURIComponent(q)}&limit=12&rating=pg-13`);
+      const cid = CU?.username || 'anon';
+      const res = await fetch(KLIPY_BASE + '/gifs/search?q=' + encodeURIComponent(q) + '&per_page=12&content_filter=medium&customer_id=' + encodeURIComponent(cid));
       const data = await res.json();
-      if (!data.data?.length) { results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">No GIFs found</div>'; return; }
-      results.innerHTML = data.data.map(gif => `
-        <div style="border-radius:10px;overflow:hidden;cursor:pointer;aspect-ratio:1;background:var(--panel2);" onclick="insertGif('${gif.embed_url}','${targetInputId}')">
-          <img src="${gif.images.fixed_height_small.url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
-        </div>`).join('');
+      const gifs = data.data?.data || data.data || [];
+      if (!gifs.length) { results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">No GIFs found</div>'; return; }
+      results.innerHTML = gifs.map(gif => {
+        const thumb = _klipyGifUrl(gif, 'sm') || _klipyGifUrl(gif, 'xs');
+        const fullUrl = _klipyGifUrl(gif, 'hd') || _klipyGifUrl(gif, 'md') || thumb;
+        const gid = gif.slug || gif.id || '';
+        return `<div style="border-radius:10px;overflow:hidden;cursor:pointer;aspect-ratio:1;background:var(--panel2);" onclick="sendGifDirectly('${escapeHTML(String(gid))}','${targetInputId}','${escapeHTML(fullUrl)}')">
+          <img src="${escapeHTML(thumb)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+        </div>`;
+      }).join('');
     } catch {
       results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">GIF search unavailable offline</div>';
     }
@@ -20676,7 +20684,7 @@ function parseMD(s) {
   // 0. GIF token from sendGifDirectly — unified GIF embed
   s = s.replace(/\[FTZGIF:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);
-    const gifId = url.split('/media/')[1]?.split('/')[0] || ('custom-' + Math.random().toString(36).slice(2,8));
+    const gifId = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16) || ('gif-' + Math.random().toString(36).slice(2,8));
     return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
   });
   // 0a. Sticker token from sticker picker
@@ -20825,7 +20833,24 @@ function parseMD(s) {
   s = s.replace(/https?:\/\/(?:www\.)?giphy\.com\/gifs\/([\w-]+)/gi, (url, id) => {
     const cleanId = id.split('-').pop();
     const gifUrl = 'https://media.giphy.com/media/'+cleanId+'/giphy.gif';
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${gifUrl}')"><img src="${gifUrl}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${cleanId}',url:'${gifUrl}'})" title="Save to favourites">&#11088;</button></div>`;
+    const fid = cleanId.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${gifUrl}')"><img src="${gifUrl}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${gifUrl}'})" title="Save to favourites">&#11088;</button></div>`;
+  });
+  // 1a. Tenor GIF links — embed with fav button
+  s = s.replace(/(https?:\/\/(?:media\.)?tenor\.com\/[^\s"'<>]+\.(?:gif|mp4))(?=[\s<]|$)/gi, (url) => {
+    const safe = escapeHTML(url.trim());
+    const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
+    const isVideo = url.endsWith('.mp4');
+    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline style="width:100%;max-height:350px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
+  });
+  // 1b. Generic .gif URL links — embed with fav button
+  s = s.replace(/(https?:\/\/[^\s"'<>]+\.gif)(?=[\s<]|$)/gi, (url) => {
+    // Skip if already handled by GIPHY regex above
+    if (/giphy\.com/i.test(url)) return url;
+    const safe = escapeHTML(url.trim());
+    const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
   });
   // 2. YouTube embed — all unified
   // YouTube Shorts — portrait 9:16 (same structure, just different aspect ratio)
@@ -23221,7 +23246,7 @@ function renderFavGifs(targetInput) {
     return;
   }
   grid.innerHTML = favs.map(gif => {
-    const url = gif.url || ('https://media.giphy.com/media/' + gif.id + '/giphy.gif');
+    const url = gif.url || '';
     return `<div class="gif-card" data-id="${gif.id}" data-url="${escapeHTML(url)}" data-input="${escapeHTML(targetInput)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);break-inside:avoid;margin-bottom:8px;transition:all .2s cubic-bezier(.22,1,.36,1);">
       <img src="${escapeHTML(url)}" style="width:100%;display:block;border-radius:9px;" loading="lazy" draggable="false">
       <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.18s;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 45%);display:flex;align-items:flex-end;justify-content:space-between;padding:10px;pointer-events:none;border-radius:10px;"></div>
@@ -23238,8 +23263,10 @@ function renderFavGifs(targetInput) {
 }
 
 // ════════════════════════════════════════════
-// ENHANCED GIPHY PICKER (with tabs + fav)
+// KLIPY GIF PICKER (with tabs + fav)
 // ════════════════════════════════════════════
+const KLIPY_API_KEY = 'EqGUGEILgw2I1I4vgmCvHAH10yg7oN3aSsRNuwJgxt8jx6auXVfkxOUVpJYwOH4G';
+const KLIPY_BASE = 'https://api.klipy.com/api/v1/' + KLIPY_API_KEY;
 let _giphyTab = 'trending'; // 'trending' | 'search' | 'favourites'
 let _giphyInput = 'ch-input';
 
@@ -23284,7 +23311,7 @@ function openGiphyPicker(inputId) {
     <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="giphy-search-input" placeholder="Search GIFs…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
+        <input id="giphy-search-input" placeholder="Search KLIPY" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
       </div>
       <!-- Navigation row: quick access tabs -->
       <div style="display:flex;align-items:center;gap:4px;padding:8px 0 4px;border-bottom:1px solid rgba(255,255,255,.04);overflow-x:auto;scrollbar-width:none;" id="gif-nav-row">
@@ -23382,9 +23409,10 @@ async function loadGiphyTrending(inputId) {
   grid.style.display = '';
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Loading…</div>';
   try {
-    const res = await fetch('https://api.giphy.com/v1/gifs/trending?api_key=8tjnuv9jBeGxVGmRLkrV2nhuvhKXTvDY&limit=30&rating=pg-13');
+    const cid = CU?.username || 'anon';
+    const res = await fetch(KLIPY_BASE + '/gifs/trending?per_page=30&content_filter=medium&customer_id=' + encodeURIComponent(cid));
     const data = await res.json();
-    renderGiphyResults(data.data, inputId);
+    renderGiphyResults((data.data?.data || data.data || []), inputId);
   } catch { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Failed to load</div>'; }
 }
 
@@ -23396,10 +23424,18 @@ async function searchGifs(q, inputId) {
   grid.style.display = '';
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Searching…</div>';
   try {
-    const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=8tjnuv9jBeGxVGmRLkrV2nhuvhKXTvDY&q=${encodeURIComponent(q)}&limit=30&rating=pg-13`);
+    const cid = CU?.username || 'anon';
+    const res = await fetch(KLIPY_BASE + '/gifs/search?q=' + encodeURIComponent(q) + '&per_page=30&content_filter=medium&customer_id=' + encodeURIComponent(cid));
     const data = await res.json();
-    renderGiphyResults(data.data, inputId);
+    renderGiphyResults((data.data?.data || data.data || []), inputId);
   } catch { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Search failed</div>'; }
+}
+
+function _klipyGifUrl(item, size) {
+  // Extract best available GIF URL from Klipy response item
+  const f = item.file || {};
+  const sz = f[size] || f.md || f.sm || f.hd || f.xs || {};
+  return sz.gif?.url || sz.webp?.url || sz.mp4?.url || sz.jpg?.url || '';
 }
 
 function renderGiphyResults(gifs, inputId) {
@@ -23410,14 +23446,16 @@ function renderGiphyResults(gifs, inputId) {
     return;
   }
   grid.innerHTML = gifs.map(g => {
-    const thumb = g.images?.fixed_height_small?.url || g.images?.fixed_height?.url || g.images?.original?.url || '';
-    const fullUrl = g.images?.original?.url || g.images?.fixed_height?.url || thumb;
-    return `<div class="gif-card" data-id="${g.id}" data-url="${escapeHTML(fullUrl)}" data-input="${escapeHTML(inputId)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);break-inside:avoid;margin-bottom:8px;transition:all .2s cubic-bezier(.22,1,.36,1);">
+    const thumb = _klipyGifUrl(g, 'sm') || _klipyGifUrl(g, 'xs');
+    const fullUrl = _klipyGifUrl(g, 'hd') || _klipyGifUrl(g, 'md') || thumb;
+    const gid = g.slug || g.id || ('klipy-' + Math.random().toString(36).slice(2,8));
+    if (!thumb && !fullUrl) return '';
+    return `<div class="gif-card" data-id="${escapeHTML(String(gid))}" data-url="${escapeHTML(fullUrl)}" data-input="${escapeHTML(inputId)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);break-inside:avoid;margin-bottom:8px;transition:all .2s cubic-bezier(.22,1,.36,1);">
       <img src="${escapeHTML(thumb)}" style="width:100%;display:block;border-radius:9px;" loading="lazy" draggable="false">
       <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.18s;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 45%);display:flex;align-items:flex-end;justify-content:space-between;padding:10px;pointer-events:none;border-radius:10px;">
         <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,.6);max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(g.title||'')}</div>
       </div>
-      <button class="gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${g.id}',url:'${escapeHTML(fullUrl)}'})" title="Save" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);color:#ffd93e;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">★</button>
+      <button class="gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${escapeHTML(String(gid))}',url:'${escapeHTML(fullUrl)}'})" title="Save" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);color:#ffd93e;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.18s;pointer-events:auto;">★</button>
     </div>`;
   }).join('');
   grid.querySelectorAll('.gif-card').forEach(card => {
@@ -23432,8 +23470,8 @@ function renderGiphyResults(gifs, inputId) {
 function sendGifDirectly(id, inputId, url) {
   // Close picker first
   document.getElementById('giphy-picker')?.remove();
-  // Build the giphy embed URL for parseMD to render
-  const gifUrl = url || ('https://media.giphy.com/media/' + id + '/giphy.gif');
+  const gifUrl = url || '';
+  if (!gifUrl) return;
   // Use [FTZGIF] token so parseMD renders it inline directly
   const token = '[FTZGIF:' + gifUrl + ']';
   // Inject into chat input and trigger send
@@ -23504,9 +23542,11 @@ function openStickerPicker(inputId) {
 
   picker.innerHTML = `
     ${_pickerTopTabs('sticker')}
-    <div class="chat-picker-search" style="position:relative;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="sticker-search-input" placeholder="Search stickers…" oninput="_searchStickers(this.value)">
+    <div style="padding:10px 14px 0;flex-shrink:0;">
+      <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="sticker-search-input" placeholder="Search stickers…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="_searchStickers(this.value)">
+      </div>
     </div>
     ${bastionTabsHTML ? `<div class="spp-tabs"><button class="spp-tab active" onclick="_filterStickerBastion('all', event)">All</button>${bastionTabsHTML}</div>` : ''}
     <div class="spp-grid" id="sticker-grid"></div>
@@ -23631,10 +23671,12 @@ function openBotCommandPanel(inputId, context) {
       Bot Commands
       <span style="font-size:8.5px;color:rgba(96,165,250,.45);letter-spacing:.08em;font-weight:700;text-transform:uppercase;margin-left:auto;background:rgba(96,165,250,.06);padding:3px 9px;border-radius:100px;border:1px solid rgba(96,165,250,.1);">${commands.length} cmd${commands.length!==1?'s':''}</span>
     </div>
-    ${commands.length > 3 ? `<div class="chat-picker-search" style="position:relative;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input placeholder="Search commands…" oninput="_filterBotCmds(this.value,'${escapeHTML(inputId)}')">
-    </div>` : ''}
+    <div style="padding:10px 14px 0;flex-shrink:0;">
+      <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input placeholder="Search commands…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="_filterBotCmds(this.value,'${escapeHTML(inputId)}')">
+      </div>
+    </div>
     <div class="botcmd-list" id="botcmd-list"></div>
   `;
 

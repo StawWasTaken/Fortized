@@ -858,7 +858,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .discover-scroll{flex:1;overflow-y:auto;padding:28px;scroll-behavior:smooth;}
 .page-banner{position:relative;width:100%;height:200px;overflow:hidden;flex-shrink:0;margin-bottom:0;}
 .page-banner-img{width:100%;height:100%;object-fit:cover;display:block;}
-.page-banner-fade{display:none;}
+.page-banner-fade{position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to top,var(--bg),transparent);pointer-events:none;}
 .disc-hero{background:linear-gradient(135deg,rgba(14,18,30,.95),rgba(10,13,22,.98));border:1px solid rgba(255,249,62,.08);border-radius:16px;padding:36px 36px;margin-bottom:28px;position:relative;overflow:hidden;}
 .disc-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 10%,rgba(255,249,62,.05),transparent 50%),radial-gradient(ellipse at 85% 80%,rgba(62,207,110,.03),transparent 45%);pointer-events:none;}
 .disc-hero h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;position:relative;display:flex;align-items:center;gap:10px;}
@@ -6105,6 +6105,7 @@ function showDMFriendsHome() {
     <div id="dm-friends-home" style="flex:1;overflow-y:auto;">
       <div class="page-banner" style="margin-bottom:0;">
         <img src="/Fortized banner5.png" class="page-banner-img" alt="" onerror="this.style.display='none'">
+        <div class="page-banner-fade"></div>
       </div>
       <div style="padding:0 28px 28px;max-width:900px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
@@ -22434,10 +22435,10 @@ function renderProfileWidgetsTab(main) {
       </select>`;
     }
     if (def.id === 'game_collection' || def.id === 'games_rotation') {
-      const maxShow = wState.config?.maxShow || 8;
+      const maxShow = wState.config?.maxShow || 20;
       configHtml = `<div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
         <span style="font-size:11px;color:rgba(255,255,255,.3);">Show up to</span>
-        <input type="range" min="3" max="12" value="${maxShow}" style="flex:1;" oninput="this.nextElementSibling.textContent=this.value" onchange="updateWidgetConfig('${def.id}',{maxShow:parseInt(this.value)})">
+        <input type="range" min="3" max="20" value="${maxShow}" style="flex:1;" oninput="this.nextElementSibling.textContent=this.value" onchange="updateWidgetConfig('${def.id}',{maxShow:parseInt(this.value)})">
         <span style="font-size:12px;color:rgba(255,255,255,.5);font-weight:700;min-width:18px;text-align:center;">${maxShow}</span>
         <span style="font-size:11px;color:rgba(255,255,255,.3);">games</span>
       </div>`;
@@ -22456,15 +22457,16 @@ function renderProfileWidgetsTab(main) {
   });
 
   main.innerHTML = `<div style="padding:24px;">
-    <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Profile Widgets</div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize your profile card with widgets.</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:rgba(255,255,255,.5);">Your Widgets</div>
+      </div>
+      <button onclick="_openAddWidgetPanel()" style="padding:8px 18px;border-radius:10px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.7);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.color='var(--accent)';this.style.background='rgba(255,249,62,.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)';this.style.background='rgba(255,255,255,.03)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Widget
+      </button>
     </div>
-    ${activeWidgetsHtml ? `<div style="display:flex;flex-direction:column;gap:0;margin-bottom:16px;">${activeWidgetsHtml}</div>` : ''}
-    <button onclick="_openAddWidgetPanel()" style="width:100%;padding:16px;border-radius:14px;border:2px dashed rgba(255,249,62,.15);background:rgba(255,249,62,.02);color:var(--accent);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:10px;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.background='rgba(255,249,62,.05)'" onmouseout="this.style.borderColor='rgba(255,249,62,.15)';this.style.background='rgba(255,249,62,.02)'">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Add Widget
-    </button>
+    ${activeWidgetsHtml ? `<div style="display:flex;flex-direction:column;gap:0;margin-bottom:16px;">${activeWidgetsHtml}</div>` : `<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">🧩</div><div style="color:rgba(255,255,255,.2);font-size:13px;font-weight:500;">No widgets added yet</div></div>`}
   </div>`;
 }
 
@@ -22473,52 +22475,74 @@ function _openAddWidgetPanel() {
   const games = CU.gameCollection || [];
   const bastions = CU.bastions || [];
 
-  // Build the full widget customization panel inline
+  // Featured game widgets (shown as preview cards with artwork)
+  const featuredGames = [
+    {name:'Marvel Rivals', emoji:'🎮', coverUrl:'https://images.igdb.com/igdb/image/upload/t_cover_big/co8l53.jpg', color:'#e53e3e'},
+    {name:'Wuthering Waves', emoji:'🎵', coverUrl:'https://images.igdb.com/igdb/image/upload/t_cover_big/co7qlp.jpg', color:'#7c3aed'},
+    {name:'League of Legends', emoji:'⚔️', coverUrl:'https://images.igdb.com/igdb/image/upload/t_cover_big/co49wj.jpg', color:'#d4a017'},
+    {name:'Valorant', emoji:'🎯', coverUrl:'https://images.igdb.com/igdb/image/upload/t_cover_big/co8hv1.jpg', color:'#ef4444'},
+  ];
+
   let cardsHtml = '';
+
+  // Featured game widget cards
+  featuredGames.forEach(fg => {
+    const has = games.some(g => g.name.toLowerCase() === fg.name.toLowerCase());
+    cardsHtml += `<div class="pw-awp-game-card" style="position:relative;border-radius:16px;overflow:hidden;border:1.5px solid rgba(255,255,255,.06);background:var(--panel2,rgba(255,255,255,.02));cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='rgba(255,255,255,.15)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.transform=''" onclick="_addGameWidgetFromPanel('${escapeHTML(fg.name)}','${fg.emoji}','Game',${fg.coverUrl?`'${escapeHTML(fg.coverUrl)}'`:'null'})">
+      <div style="height:120px;position:relative;background:linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.01));">
+        <img src="${escapeHTML(fg.coverUrl)}" style="position:absolute;right:0;bottom:0;height:110%;max-width:50%;object-fit:cover;opacity:.35;mask-image:linear-gradient(to left,rgba(0,0,0,.8),transparent);-webkit-mask-image:linear-gradient(to left,rgba(0,0,0,.8),transparent);" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;padding:16px;display:flex;flex-direction:column;justify-content:center;">
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <div style="width:44px;height:8px;border-radius:4px;background:rgba(255,255,255,.08);"></div>
+              <div style="width:30px;height:8px;border-radius:4px;background:rgba(255,255,255,.05);"></div>
+            </div>
+            <div style="display:flex;gap:4px;margin-top:4px;">
+              <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.06);"></div>
+              <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.06);"></div>
+              <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.06);"></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">${escapeHTML(fg.name)} ${fg.emoji}</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:10px 16px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(62,207,110,.6)" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>
+        <span style="font-size:11.5px;color:rgba(255,255,255,.4);"><span style="color:#3ecf6e;font-weight:600;">Connect your account</span> to show off your game stats</span>
+      </div>
+    </div>`;
+  });
+
+  // Standard widget definitions
   PROFILE_WIDGET_DEFS.forEach(def => {
     const wState = widgets.find(w => w.id === def.id);
     const isOn = wState?.enabled;
 
-    let configFields = '';
-    if (def.id === 'favourite_game') {
-      configFields = `<div style="margin-top:12px;">
-        <label style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600;display:block;margin-bottom:6px;">Choose your favourite game</label>
-        <select id="pw-cfg-${def.id}" class="settings-input" style="padding:9px 12px;font-size:12px;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;">
-          <option value="">— Pick from your collection —</option>
-          ${games.map(g => `<option value="${escapeHTML(g.name)}" ${wState?.config?.gameName===g.name?'selected':''}>${escapeHTML(g.name)}</option>`).join('')}
-        </select>
-      </div>`;
-    } else if (def.id === 'primary_bastion') {
-      configFields = `<div style="margin-top:12px;">
-        <label style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600;display:block;margin-bottom:6px;">Select your bastion</label>
-        <select id="pw-cfg-${def.id}" class="settings-input" style="padding:9px 12px;font-size:12px;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;">
-          ${bastions.length ? bastions.map((b,i) => `<option value="${i}" ${wState?.config?.bastionIdx===i?'selected':''}>${escapeHTML(b.name||'Bastion '+(i+1))}</option>`).join('') : '<option value="">— No bastions joined —</option>'}
-        </select>
-      </div>`;
-    } else if (def.id === 'game_collection' || def.id === 'games_rotation') {
-      const maxShow = wState?.config?.maxShow || 8;
-      configFields = `<div style="margin-top:12px;">
-        <label style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600;display:block;margin-bottom:6px;">Max games to show</label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="range" id="pw-cfg-${def.id}" min="3" max="12" value="${maxShow}" style="flex:1;accent-color:${def.color};" oninput="this.nextElementSibling.textContent=this.value">
-          <span style="font-size:13px;color:rgba(255,255,255,.5);font-weight:700;min-width:20px;text-align:center;">${maxShow}</span>
-        </div>
-      </div>`;
+    // Get cover image for favourite game / games rotation cards
+    let coverImg = '';
+    if (def.id === 'favourite_game' && games.length) {
+      const fg = games[0];
+      coverImg = fg.coverUrl || fg.coverThumb || _getManualCover(fg.name) || '';
     }
 
-    cardsHtml += `<div style="background:rgba(255,255,255,.02);border:1.5px solid ${isOn ? def.color+'33' : 'rgba(255,255,255,.06)'};border-radius:16px;padding:20px;transition:all .18s;${isOn ? 'box-shadow:0 0 0 1px '+def.color+'11;' : ''}" onmouseover="if(!this.dataset.on)this.style.borderColor='rgba(255,255,255,.12)'" onmouseout="if(!this.dataset.on)this.style.borderColor='rgba(255,255,255,.06)'" ${isOn?'data-on="1"':''}>
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:${configFields?'0':'0'}px;">
-        <div style="width:44px;height:44px;border-radius:12px;background:${def.color}12;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid ${def.color}20;">${def.icon}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">${def.label}</div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:2px;">${def.desc}</div>
+    cardsHtml += `<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(255,255,255,.02);border:1.5px solid ${isOn ? def.color+'33' : 'rgba(255,255,255,.06)'};border-radius:14px;transition:all .18s;cursor:pointer;${isOn ? 'box-shadow:0 0 0 1px '+def.color+'11;' : ''}" onmouseover="this.style.borderColor='rgba(255,255,255,.12)'" onmouseout="this.style.borderColor='${isOn ? def.color+'33' : 'rgba(255,255,255,.06)'}'" onclick="${isOn ? `toggleProfileWidget('${def.id}',null);setTimeout(()=>_openAddWidgetPanel(),200)` : `_addWidgetFromPanel('${def.id}');setTimeout(()=>_openAddWidgetPanel(),200)`}">
+      ${coverImg ? `<img src="${escapeHTML(coverImg)}" style="width:52px;height:68px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.06);" onerror="this.style.display='none'">` : `<div style="width:44px;height:44px;border-radius:12px;background:${def.color}12;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid ${def.color}20;">${def.icon}</div>`}
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:#fff;">${def.label}</div>
         </div>
-        ${isOn
-          ? `<button onclick="toggleProfileWidget('${def.id}',null);_openAddWidgetPanel()" style="padding:8px 16px;border-radius:10px;border:1px solid rgba(248,113,113,.2);background:rgba(248,113,113,.08);color:#f87171;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;flex-shrink:0;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Remove</button>`
-          : `<button onclick="_addWidgetFromPanel('${def.id}');_openAddWidgetPanel()" style="padding:8px 16px;border-radius:10px;border:1px solid ${def.color}30;background:${def.color}12;color:${def.color};font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;flex-shrink:0;" onmouseover="this.style.background='${def.color}22'" onmouseout="this.style.background='${def.color}12'">${configFields ? 'Add' : 'Add Widget'}</button>`
-        }
       </div>
-      ${configFields}
+      ${isOn
+        ? `<span style="font-size:10px;font-weight:700;color:#3ecf6e;background:rgba(62,207,110,.1);padding:4px 10px;border-radius:6px;">Active</span>`
+        : ''}
     </div>`;
   });
 
@@ -22526,21 +22550,34 @@ function _openAddWidgetPanel() {
   const overlay = document.createElement('div');
   overlay.className = 'pw-add-widget-modal-overlay';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  overlay.innerHTML = `<div class="pw-add-widget-modal" style="max-width:520px;width:92%;max-height:85vh;overflow-y:auto;">
-    <div class="pwm-header" style="position:sticky;top:0;z-index:2;background:rgba(16,18,28,.98);backdrop-filter:blur(20px);padding:20px 24px 16px;">
+  overlay.innerHTML = `<div class="pw-add-widget-modal" style="max-width:480px;width:92%;max-height:85vh;overflow-y:auto;">
+    <div class="pwm-header" style="position:sticky;top:0;z-index:2;background:var(--panel,rgba(16,18,28,.98));backdrop-filter:blur(20px);padding:20px 24px 16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <h3 style="margin:0;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">Add Widget</h3>
-          <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,.3);">Pick a widget and customize it for your profile</p>
-        </div>
+        <h3 style="margin:0;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">Add Profile Widget</h3>
         <button onclick="this.closest('.pw-add-widget-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.4);cursor:pointer;width:34px;height:34px;display:flex;align-items:center;justify-content:center;transition:all .12s;font-size:16px;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:12px;padding:0 24px 24px;">
+    <div style="display:flex;flex-direction:column;gap:12px;padding:4px 20px 24px;">
       ${cardsHtml}
     </div>
   </div>`;
   document.body.appendChild(overlay);
+}
+
+async function _addGameWidgetFromPanel(name, icon, genre, coverUrl) {
+  // Add game to collection and enable game_collection widget
+  if (!CU.gameCollection?.some(g => g.name.toLowerCase() === name.toLowerCase())) {
+    await addGameToCollection(name, icon, genre, coverUrl, null);
+  }
+  const widgets = _getProfileWidgets();
+  let w = widgets.find(w => w.id === 'game_collection');
+  if (!w) { w = {id:'game_collection',enabled:false,config:{}}; widgets.push(w); }
+  if (!w.enabled) { w.enabled = true; _setProfileWidgets(widgets); await saveUser(); }
+  document.querySelector('.pw-add-widget-modal-overlay')?.remove();
+  const wc = document.getElementById('up-widgets-container');
+  if (wc) renderProfileWidgetsOnCard(CU, wc);
+  buildProfileView('profile_widgets');
+  toast(name + ' added!', 'success');
 }
 
 async function _addWidgetFromPanel(widgetId) {
@@ -22631,19 +22668,25 @@ function renderProfileWidgetsOnCard(u, containerEl) {
   widgets.forEach(w => {
     if (!w.enabled) return;
 
-    if (w.id === 'game_collection' && games.length) {
-      const max = w.config?.maxShow || 8;
+    if (w.id === 'game_collection') {
+      const max = w.config?.maxShow || 20;
       const visibleGames = games.slice(0, max);
-      html += `<div class="pw-widget" style="padding:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div class="pw-widget-title" style="margin-bottom:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> Games I Like</div>
-          <span style="font-size:9px;color:rgba(255,255,255,.15);font-weight:600;">${visibleGames.length} of ${games.length}</span>
+      html += `<div class="pw-widget" style="padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">Games I like</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">Add up to 20 games</div>
+          </div>
+          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event)" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:5px;" onmouseover="this.style.borderColor='rgba(255,255,255,.2)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.6)'">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add game
+          </button>` : ''}
         </div>
-        <div class="pw-gc-masonry">${visibleGames.map(g => {const _cv = g.coverUrl || _getManualCover(g.name); return `<div class="pw-gc-card">
+        ${visibleGames.length ? `<div class="pw-gc-masonry">${visibleGames.map(g => {const _cv = g.coverUrl || _getManualCover(g.name); return `<div class="pw-gc-card">
           ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02));">${g.icon||'🎮'}</div>`}
           <div class="gc-hover-name">${escapeHTML(g.name)}</div>
           ${isOwnProfile ? `<button class="gc-delete-btn" onclick="event.stopPropagation();_removeGameFromCollection('${escapeHTML(g.name)}')" title="Remove"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>` : ''}
-        </div>`;}).join('')}${isOwnProfile ? `<div class="pw-gc-add-card" onclick="showView('profile');setTimeout(()=>buildProfileView('game_collection'),100)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add</div>` : ''}</div>
+        </div>`;}).join('')}</div>` : `<div style="text-align:center;padding:24px;color:rgba(255,255,255,.2);font-size:12px;">No games added yet</div>`}
       </div>`;
     }
 
@@ -22719,6 +22762,80 @@ async function _removeGameFromCollection(gameName) {
   const wc = document.getElementById('up-widgets-container');
   if (wc) renderProfileWidgetsOnCard(CU, wc);
   toast('Game removed','info');
+}
+
+// Inline game search dropdown from the "+" button on widget
+function _openWidgetGameSearch(e) {
+  e.stopPropagation();
+  document.getElementById('pw-game-search-drop')?.remove();
+  const btn = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const drop = document.createElement('div');
+  drop.id = 'pw-game-search-drop';
+  drop.style.cssText = `position:fixed;top:${rect.bottom+6}px;left:${rect.left}px;width:280px;max-height:320px;background:var(--panel,#161a23);border:1.5px solid var(--border,rgba(255,255,255,.1));border-radius:14px;z-index:9600;box-shadow:0 16px 48px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden;animation:pickerSlideIn .18s cubic-bezier(.22,1,.36,1);`;
+  // Adjust if goes off right edge
+  if (rect.left + 280 > window.innerWidth) drop.style.left = (window.innerWidth - 288) + 'px';
+  const owned = new Set((CU.gameCollection||[]).map(g => g.name.toLowerCase()));
+  drop.innerHTML = `<div style="padding:10px 12px 8px;flex-shrink:0;">
+    <input id="pw-gs-input" placeholder="Search" style="width:100%;padding:8px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'" oninput="_filterWidgetGameSearch(this.value)">
+  </div>
+  <div id="pw-gs-results" style="flex:1;overflow-y:auto;padding:4px 8px 10px;scrollbar-width:thin;"></div>`;
+  document.body.appendChild(drop);
+  _filterWidgetGameSearch('');
+  drop.querySelector('#pw-gs-input').focus();
+  const closeHandler = (ev) => { if (!drop.contains(ev.target) && ev.target !== btn) { drop.remove(); document.removeEventListener('mousedown', closeHandler, true); } };
+  setTimeout(() => document.addEventListener('mousedown', closeHandler, true), 10);
+}
+
+function _filterWidgetGameSearch(q) {
+  const results = document.getElementById('pw-gs-results');
+  if (!results) return;
+  const owned = new Set((CU.gameCollection||[]).map(g => g.name.toLowerCase()));
+  let catalog = GAME_CATALOG || [];
+  if (q.trim()) {
+    const ql = q.toLowerCase();
+    catalog = catalog.filter(g => g.name.toLowerCase().includes(ql));
+  }
+  // Also trigger IGDB search if available
+  if (q.trim() && _igdbAvailable) {
+    clearTimeout(window._pwIgdbTimer);
+    window._pwIgdbTimer = setTimeout(async () => {
+      const igdbResults = await _searchIGDB(q);
+      const localNames = new Set(catalog.map(g => g.name.toLowerCase()));
+      const newResults = igdbResults.filter(g => !localNames.has(g.name.toLowerCase()));
+      if (newResults.length) {
+        const existing = results.innerHTML;
+        results.innerHTML = existing + newResults.map(g => {
+          const has = owned.has(g.name.toLowerCase());
+          return `<div style="padding:8px 12px;border-radius:8px;cursor:${has?'default':'pointer'};transition:all .12s;color:${has?'rgba(255,255,255,.25)':'rgba(255,255,255,.7)'};font-size:13px;font-weight:${has?'400':'500'};${has?'':''}display:flex;align-items:center;justify-content:space-between;" ${has?'':`onclick="_addGameFromWidgetSearch('${escapeHTML(g.name)}','${g.icon||'🎮'}','${escapeHTML(g.genre||'Game')}',${g.coverUrl?`'${escapeHTML(g.coverUrl)}'`:'null'},${g.coverThumb?`'${escapeHTML(g.coverThumb)}'`:'null'})" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background='none'"`}>
+            <span>${escapeHTML(g.name)}</span>
+            ${g._igdb ? '<span style="font-size:9px;color:rgba(62,207,110,.4);margin-left:6px;">IGDB</span>' : ''}
+          </div>`;
+        }).join('');
+      }
+    }, 200);
+  }
+  const maxItems = 20;
+  const shown = catalog.slice(0, maxItems);
+  results.innerHTML = shown.map(g => {
+    const has = owned.has(g.name.toLowerCase());
+    return `<div style="padding:8px 12px;border-radius:8px;cursor:${has?'default':'pointer'};transition:all .12s;color:${has?'rgba(255,255,255,.25)':'rgba(255,255,255,.7)'};font-size:13px;font-weight:${has?'400':'500'};display:flex;align-items:center;justify-content:space-between;" ${has?'':`onclick="_addGameFromWidgetSearch('${escapeHTML(g.name)}','${g.icon||'🎮'}','${escapeHTML(g.genre||'Game')}',${g.coverUrl?`'${escapeHTML(g.coverUrl)}'`:'null'},${g.coverThumb?`'${escapeHTML(g.coverThumb)}'`:'null'})" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background='none'"`}>
+      <span>${escapeHTML(g.name)}</span>
+    </div>`;
+  }).join('');
+  if (!shown.length && q.trim()) {
+    results.innerHTML = `<div style="padding:12px;text-align:center;color:rgba(255,255,255,.25);font-size:12px;">
+      ${_igdbAvailable ? 'Searching IGDB...' : 'No results'}
+      <div style="margin-top:8px;"><button onclick="_addGameFromWidgetSearch('${escapeHTML(q)}','🎮','Custom',null,null)" style="padding:6px 14px;border-radius:8px;background:var(--accent-dim);border:1px solid var(--accent-mid);color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;">Add &ldquo;${escapeHTML(q)}&rdquo;</button></div>
+    </div>`;
+  }
+}
+
+async function _addGameFromWidgetSearch(name, icon, genre, coverUrl, coverThumb) {
+  document.getElementById('pw-game-search-drop')?.remove();
+  await addGameToCollection(name, icon, genre, coverUrl, coverThumb);
+  const wc = document.getElementById('up-widgets-container');
+  if (wc) renderProfileWidgetsOnCard(CU, wc);
 }
 
 function _renderProfileWidgetManager(mgr) {
@@ -26883,6 +27000,8 @@ function renderAtelierTab(tab) {
 
   // ── QUESTS ────────────────────────────────────────────────
   else if (tab === 'quests') {
+    // Award any pending one-time quest rewards first
+    _checkAndAwardPendingQuests().catch(()=>{});
     const completed = CU?.completedQuests || [];
     const today = new Date().toDateString();
     const dailyLog = CU?.questsDailyLog || {};
@@ -27864,6 +27983,41 @@ async function awardQuestBadge(questName='invite') {
   }
 }
 
+// Check and award one-time quest rewards that were met but not yet rewarded
+async function _checkAndAwardPendingQuests() {
+  if (!CU) return;
+  if (!CU.completedQuests) CU.completedQuests = [];
+  if (!CU.questsRewarded) CU.questsRewarded = [];
+  const QUEST_REWARDS = [
+    {id:'join_bastion', reward:25, check:()=>(CU?.bastions||[]).length>0},
+    {id:'add_friend', reward:15, check:()=>(CU?.friends||[]).length>0},
+    {id:'set_pfp', reward:20, check:()=>!!CU?.pfp},
+    {id:'set_bio', reward:15, check:()=>!!CU?.bio},
+    {id:'five_friends', reward:40, check:()=>(CU?.friends||[]).length>=5},
+    {id:'send_gif', reward:10, check:()=>CU.completedQuests.includes('send_gif')},
+    {id:'create_bastion', reward:50, check:()=>CU.completedQuests.includes('create_bastion')},
+  ];
+  let totalGained = 0;
+  let newlyCompleted = [];
+  QUEST_REWARDS.forEach(q => {
+    if (CU.questsRewarded.includes(q.id)) return;
+    const isDone = CU.completedQuests.includes(q.id) || q.check();
+    if (isDone) {
+      CU.onyx = (CU.onyx || 0) + q.reward;
+      if (!CU.completedQuests.includes(q.id)) CU.completedQuests.push(q.id);
+      CU.questsRewarded.push(q.id);
+      totalGained += q.reward;
+      newlyCompleted.push(q.id);
+    }
+  });
+  if (totalGained > 0) {
+    updateOnyxDisplay();
+    await saveUser(true);
+    if (typeof animateOnyxGain === 'function') animateOnyxGain(totalGained);
+    toast(`🏆 Quest${newlyCompleted.length>1?'s':''} completed! +${totalGained} Onyx`, 'success');
+  }
+}
+
 // ════════════════════════════════════════════════════
 // SAVE ACCOUNT ON INIT (for account switcher)
 // ════════════════════════════════════════════════════
@@ -27876,6 +28030,8 @@ function _postInitSetup() {
   }, 5000);
   // Show the daily quest popup after a short delay (let the UI settle)
   setTimeout(() => { try { _showDailyQuestPopup(); } catch(e) { console.warn('[quest-popup]', e); } }, 2000);
+  // Check for pending quest rewards that haven't been granted yet
+  setTimeout(() => { try { _checkAndAwardPendingQuests(); } catch(e) { console.warn('[quest-check]', e); } }, 3000);
 }
 
 
@@ -29249,8 +29405,9 @@ async function claimDailyQuest() {
   // Mark daily quest as done for today (not permanently — resets each day)
   if (!CU.questsDailyLog) CU.questsDailyLog = {};
   CU.questsDailyLog.daily_claim = today;
-  await saveUser();
   updateOnyxDisplay();
+  // Save immediately (bypass debounce) so Firebase doesn't overwrite with old onyx
+  await saveUser(true);
   if (typeof animateOnyxGain === 'function') animateOnyxGain(totalReward);
   toast(`🎁 +${totalReward} Onyx claimed!${streakBonus ? ' ('+streakBonus+' streak bonus!)' : ''}`, 'success');
   renderAtelierTab('quests');
@@ -29277,8 +29434,8 @@ async function _trackSendMsgQuest() {
   if (CU.questsDailyLog.send_msg === today) return; // already done today
   CU.questsDailyLog.send_msg = today;
   CU.onyx = (CU.onyx || 0) + 10;
-  await saveUser();
   updateOnyxDisplay();
+  await saveUser(true);
   if (typeof animateOnyxGain === 'function') animateOnyxGain(10);
   toast('💬 Quest complete: Send a Message — +10 Onyx!', 'success');
 }

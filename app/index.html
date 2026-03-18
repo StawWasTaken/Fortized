@@ -417,6 +417,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 @keyframes viewFadeIn{from{opacity:0;}to{opacity:1;}}
 .app-loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px;animation:forceHideLoading .3s ease 12s forwards;}
 @keyframes forceHideLoading{to{opacity:0;pointer-events:none;visibility:hidden;z-index:-1;}}
+.app-loading .app-loading-anim{width:80px;height:80px;object-fit:contain;}
 .app-loading .lbl{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--muted-light);}
 @keyframes spin{to{transform:rotate(360deg);}}
 .load-spinner{width:32px;height:32px;border:3px solid rgba(255,249,62,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
@@ -2495,62 +2496,72 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 }
 
 /* ── MOBILE (max-width: 768px) ──── */
+/* ── Mobile Bottom Tab Bar ──── */
+.mobile-tab-bar{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--sidebar-ctx,#0e1017);border-top:1px solid rgba(255,255,255,.06);z-index:200;padding:0;padding-bottom:env(safe-area-inset-bottom,0);box-sizing:content-box;}
+.mobile-tab-bar-inner{display:flex;align-items:center;justify-content:space-around;height:56px;padding:0 8px;}
+.mobile-tab-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 0;cursor:pointer;color:rgba(255,255,255,.35);transition:color .15s;position:relative;-webkit-tap-highlight-color:transparent;min-width:48px;}
+.mobile-tab-item.active{color:#fff;}
+.mobile-tab-item svg{width:22px;height:22px;transition:color .15s;}
+.mobile-tab-item .mtb-label{font-size:9px;font-weight:600;font-family:'DM Sans',sans-serif;letter-spacing:.02em;}
+.mobile-tab-item .mtb-badge{position:absolute;top:2px;right:50%;transform:translateX(14px);min-width:16px;height:16px;border-radius:100px;background:#ef4444;color:#fff;font-size:8px;font-weight:800;font-family:'Syne',sans-serif;padding:0 4px;line-height:16px;text-align:center;display:none;}
+.mobile-tab-item .mtb-dot{position:absolute;top:6px;right:50%;transform:translateX(12px);width:8px;height:8px;border-radius:50%;background:#ef4444;display:none;}
+.mobile-tab-item .mtb-avatar{width:24px;height:24px;border-radius:50%;overflow:hidden;border:2px solid transparent;transition:border-color .15s;}
+.mobile-tab-item.active .mtb-avatar{border-color:var(--accent);}
+.mobile-tab-item .mtb-avatar img{width:100%;height:100%;object-fit:cover;}
+
+/* ── Mobile Profile/Settings Drawer (from right) ──── */
+.mobile-settings-drawer{display:none;position:fixed;right:0;top:0;bottom:0;width:300px;max-width:85vw;background:var(--panel,#161a23);z-index:300;transform:translateX(100%);transition:transform .28s cubic-bezier(.22,1,.36,1);box-shadow:-8px 0 40px rgba(0,0,0,.6);overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,0);}
+.mobile-settings-drawer.open{transform:translateX(0);}
+.mobile-settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:299;backdrop-filter:blur(2px);animation:fadeIn .15s;}
+.mobile-settings-overlay.active{display:block;}
+.msd-item{display:flex;align-items:center;gap:12px;padding:14px 12px;border-radius:12px;cursor:pointer;color:rgba(255,255,255,.65);font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;transition:background .12s;-webkit-tap-highlight-color:transparent;}
+.msd-item:active{background:rgba(255,255,255,.06);}
+.msd-item svg:first-child{flex-shrink:0;color:rgba(255,255,255,.4);}
+.msd-sep{height:1px;background:rgba(255,255,255,.05);margin:6px 4px;}
+
 @media(max-width:768px){
   body{flex-direction:column;}
-  /* Hide sidebar by default, show as slide-out drawer */
-  .sidebar{position:fixed;left:0;top:0;bottom:0;width:260px!important;min-width:260px!important;transform:translateX(-100%);transition:transform .25s cubic-bezier(.22,1,.36,1);z-index:100;box-shadow:8px 0 40px rgba(0,0,0,.6);padding-bottom:68px;}
-  .sidebar.mobile-open{transform:translateX(0);}
-  .sidebar.mobile-open .sidebar-logo-text{display:inline;}
-  .sidebar.mobile-open .rail-btn span{display:inline;}
-  .sidebar.mobile-open .rail-btn{width:auto;height:42px;justify-content:flex-start;padding:0 14px;margin:1px 0;border-radius:14px;font-size:13px;}
-  .sidebar.mobile-open .rail-bastion{width:auto;height:42px;justify-content:flex-start;padding:0 14px;margin:1px 0;border-radius:14px;font-size:13px;}
-  .sidebar.mobile-open .rail-bastion .bastion-icon{width:34px;height:34px;border-radius:12px;}
-  .sidebar.mobile-open .ua-info{display:block!important;}
-  .sidebar.mobile-open .sidebar-logo{padding:18px 16px 12px;justify-content:flex-start;}
-  .sidebar.mobile-open .sidebar-nav{padding:8px 10px;gap:2px;}
-  .sidebar.mobile-open .nav-badge{position:static;margin-left:auto;}
-  .sidebar.mobile-open div[style*="Bastions"]{display:block!important;}
-  .sidebar.mobile-open .rail-sep{margin:8px 12px;}
-  .mobile-overlay.active{display:block;}
-  /* Userbar on mobile — full width bottom bar */
-  .userbar{position:fixed!important;bottom:0!important;left:0!important;width:100%!important;margin:0!important;border-radius:0!important;border:none!important;border-top:1px solid rgba(255,255,255,.06)!important;background:var(--sidebar-ctx)!important;z-index:50!important;min-height:52px!important;max-height:52px!important;padding:0!important;gap:0!important;}
-  .userbar .ub-activity-row{display:none!important;}
-  .userbar .ua-custom-status-bubble{display:none!important;}
-  .userbar .ub-user-row{padding:6px 12px!important;}
-  .ua-info{display:block!important;}
-  .ua-btns{display:flex!important;}
+  /* Hide desktop sidebar completely */
+  .sidebar{display:none!important;}
+  .sidebar-ctx{position:fixed!important;left:0;top:0;bottom:0;width:300px!important;min-width:300px!important;transform:translateX(-100%);transition:transform .25s cubic-bezier(.22,1,.36,1);z-index:100;box-shadow:8px 0 40px rgba(0,0,0,.6);border-right:1px solid rgba(255,255,255,.06);}
+  .sidebar-ctx.mobile-ctx-open{transform:translateX(0);}
+  .mobile-overlay.active{display:block;z-index:90;}
+  /* Hide desktop userbar */
+  .userbar{display:none!important;}
+  /* Show mobile bottom tab bar */
+  .mobile-tab-bar{display:block;}
+  /* Show mobile settings drawer */
+  .mobile-settings-drawer{display:block;}
   /* Show hamburger menu button */
   .mobile-menu-btn{display:flex;}
+  .mobile-back-btn{display:flex;}
   /* Main wrap takes full width */
   .main-wrap{flex:1;min-height:0;}
   /* Topbar adjustments */
-  .topbar{padding:0 12px;gap:8px;height:52px;}
+  .topbar{padding:0 12px;gap:8px;height:48px;}
   .tb-search{display:none;}
   .tb-onyx-pill{padding:4px 10px 4px 7px;}
   .tb-onyx-pill span:last-child{display:none;}
+  .tb-win-controls{display:none!important;}
   /* Main content area */
   .main{border-radius:0;border:none;flex-direction:column;}
-  /* Secondary sidebar as slide-out on mobile */
-  .sidebar-ctx{position:fixed!important;left:0;top:0;bottom:0;width:280px!important;min-width:280px!important;transform:translateX(-100%);transition:transform .25s cubic-bezier(.22,1,.36,1);z-index:90;box-shadow:8px 0 40px rgba(0,0,0,.6);border-right:1px solid rgba(255,255,255,.06);}
-  .sidebar-ctx.mobile-ctx-open{transform:translateX(0);}
-  .mobile-back-btn{display:flex;}
   /* Content fills screen */
   .content{border-radius:0;}
   /* Chat messages */
-  .msg-row{padding:6px 12px;}
-  .msg-row.msg-first{padding:10px 12px 6px;}
+  .msg-row{padding:6px 14px;}
+  .msg-row.msg-first{padding:10px 14px 6px;}
   /* Room topbar */
   .room-topbar{padding:0 12px;gap:8px;}
   .room-topbar .rt-desc{display:none;}
   .room-topbar .rt-sep{display:none;}
-  /* Own profile panel */
-  .own-profile-panel{left:50%!important;transform:translateX(-50%);bottom:64px!important;width:calc(100vw - 24px)!important;max-width:340px;}
-  /* Notification panel */
+  /* Own profile panel — hide on mobile (use drawer instead) */
+  .own-profile-panel{left:50%!important;transform:translateX(-50%);bottom:68px!important;width:calc(100vw - 24px)!important;max-width:340px;}
+  /* Notification panel — full screen */
   .notif-panel{width:100%!important;border-radius:0!important;top:0!important;max-height:100vh!important;}
   /* Profile/settings view */
   .profile-wrap{flex-direction:column;}
   .profile-nav{width:100%!important;min-width:100%!important;max-height:44px;overflow:hidden;flex-direction:row;padding:0;border-right:none;border-bottom:1px solid rgba(254,248,61,.04);}
-  .profile-nav.mobile-nav-open{max-height:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:#0a0d14;overflow-y:auto;}
+  .profile-nav.mobile-nav-open{max-height:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:var(--bg);overflow-y:auto;}
   .profile-nav-section{display:none;}
   .profile-nav-item{margin:0;border-radius:0;padding:11px 16px;white-space:nowrap;}
   .profile-nav:not(.mobile-nav-open){overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
@@ -2576,19 +2587,32 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .suggest-panel{left:12px!important;right:12px!important;max-width:none!important;width:auto!important;}
   /* Bastion dropdown */
   .bastion-dropdown{position:fixed!important;left:12px!important;right:12px!important;top:auto!important;bottom:0!important;width:auto!important;border-radius:18px 18px 0 0!important;max-height:70vh;animation:ctxSlideUp .2s cubic-bezier(.22,1,.36,1)!important;}
-  /* Bottom padding for fixed userbar */
-  .home-feed{padding-bottom:64px;}
-  .atelier-scroll{padding-bottom:64px;}
-  .profile-main{padding-bottom:64px;}
-  .sidebar-ctx .sidebar-scroll{padding-bottom:64px;}
+  /* Bottom padding for mobile tab bar */
+  .home-feed{padding-bottom:72px;}
+  .atelier-scroll{padding-bottom:72px;}
+  .profile-main{padding-bottom:72px;}
+  .sidebar-ctx .sidebar-scroll{padding-bottom:72px;}
+  .discover-scroll{padding-bottom:72px;}
+  .view{padding-bottom:72px!important;}
+  .chat-input-outer{margin-bottom:56px;margin-bottom:calc(56px + env(safe-area-inset-bottom,0));}
   /* Bastion banner */
   .bastion-banner-hero{height:120px;}
   .bastion-banner-hero img{height:120px;}
-  /* Toast above mobile userbar */
-  #toast-container{bottom:140px!important;right:12px!important;left:12px!important;align-items:stretch;}
+  /* Toast above mobile tab bar */
+  #toast-container{bottom:80px!important;right:12px!important;left:12px!important;align-items:stretch;}
   /* Voice call room mobile adjustments */
   #vc-call-bar{padding:0!important;}
   #vc-call-bar>div:nth-child(2){gap:30px!important;padding:20px!important;}
+  /* Page banners */
+  .page-banner{height:140px;}
+  .atelier-banner{height:140px;}
+  /* Picker panels */
+  .chat-picker-base{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;max-width:100%!important;width:100%!important;border-radius:18px 18px 0 0!important;max-height:70vh!important;animation:ctxSlideUp .22s cubic-bezier(.22,1,.36,1)!important;}
+  .emoji-picker-panel{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;max-width:100%!important;width:100%!important;border-radius:18px 18px 0 0!important;max-height:70vh!important;animation:ctxSlideUp .22s cubic-bezier(.22,1,.36,1)!important;}
+  /* Mobile DM list style */
+  .dm-item{padding:10px 16px!important;gap:12px!important;border-radius:0!important;border-bottom:1px solid rgba(255,255,255,.03);}
+  .dm-item .dm-name{font-size:15px!important;}
+  .dm-item .dm-preview{font-size:13px!important;}
 }
 
 /* ── SMALL PHONE (max-width: 480px) ──── */
@@ -2604,6 +2628,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .bastion-hub-main{padding:12px;}
   .uv-header{min-height:180px;}
   .uv-header-content{min-height:180px;}
+  .mobile-settings-drawer{width:100%;max-width:100vw;}
 }
 </style>
 <style id="radiance-font-style"></style>
@@ -2611,8 +2636,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 <body>
 <!-- APP LOADING -->
 <div class="app-loading" id="app-loading">
-  <img src="/Fortized icon.png" style="width:50px;height:50px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(255,249,62,.4));">
-  <div class="load-spinner"></div>
+  <img src="/fortized loading animation.gif" class="app-loading-anim" alt="" onerror="this.src='/Fortized icon.png';this.style.width='50px';this.style.height='50px';this.style.filter='drop-shadow(0 0 16px rgba(255,249,62,.4))';">
   <div class="lbl">Loading Fortized...</div>
 </div>
 <script>
@@ -2721,6 +2745,88 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <button onclick="markAllRead()" style="margin-left:auto;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Mark all read</button>
   </div>
   <div class="np-list" id="np-list"><div style="padding:16px;display:flex;flex-direction:column;gap:10px;">${[1,2,3].map(()=>'<div style="display:flex;gap:10px;align-items:center;"><div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.04);animation:skeletonPulse 1.5s infinite;flex-shrink:0;"></div><div style="flex:1;display:flex;flex-direction:column;gap:5px;"><div style="height:10px;width:70%;background:rgba(255,255,255,.04);border-radius:4px;animation:skeletonPulse 1.5s infinite;"></div><div style="height:8px;width:40%;background:rgba(255,255,255,.03);border-radius:4px;animation:skeletonPulse 1.5s infinite .2s;"></div></div></div>').join('')}</div></div>
+</div>
+
+<!-- MOBILE BOTTOM TAB BAR (Discord-style) -->
+<div class="mobile-tab-bar" id="mobile-tab-bar">
+  <div class="mobile-tab-bar-inner">
+    <div class="mobile-tab-item active" id="mtab-home" onclick="_mobileTab('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="mtb-label">Home</span>
+    </div>
+    <div class="mobile-tab-item" id="mtab-friends" onclick="_mobileTab('friends')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span class="mtb-label">Friends</span>
+      <span class="mtb-dot" id="mtab-friends-dot"></span>
+    </div>
+    <div class="mobile-tab-item" id="mtab-search" onclick="_mobileTab('search')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <span class="mtb-label">Search</span>
+    </div>
+    <div class="mobile-tab-item" id="mtab-notifs" onclick="_mobileTab('notifs')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="mtb-label">Notifications</span>
+      <span class="mtb-badge" id="mtab-notif-badge"></span>
+    </div>
+    <div class="mobile-tab-item" id="mtab-profile" onclick="_mobileTab('profile')">
+      <div class="mtb-avatar" id="mtab-avatar"><div style="width:100%;height:100%;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent);font-weight:800;">?</div></div>
+      <span class="mtb-label">You</span>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE SETTINGS DRAWER (from right, Discord-style) -->
+<div class="mobile-settings-overlay" id="mobile-settings-overlay" onclick="_closeMobileSettings()"></div>
+<div class="mobile-settings-drawer" id="mobile-settings-drawer">
+  <div style="padding:24px 20px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(255,255,255,.06);">
+    <div id="msd-avatar" style="width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.06);"></div>
+    <div style="flex:1;min-width:0;">
+      <div id="msd-name" style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;"></div>
+      <div id="msd-username" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:1px;"></div>
+    </div>
+  </div>
+  <div style="padding:8px 12px;">
+    <div class="msd-item" onclick="_mobileSettingsNav('status')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      <span>Set Status</span>
+      <div style="flex:1;"></div>
+      <span id="msd-status-text" style="font-size:11px;color:rgba(255,255,255,.25);display:flex;align-items:center;gap:4px;"></span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="msd-item" onclick="_mobileSettingsNav('account')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Account</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="msd-item" onclick="_mobileSettingsNav('profile_widgets')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Profiles</span>
+      <span style="font-size:9px;font-weight:700;background:rgba(62,207,110,.12);color:#3ecf6e;padding:2px 6px;border-radius:4px;margin-left:4px;">NEW</span>
+      <div style="flex:1;"></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="msd-item" onclick="_mobileSettingsNav('safety')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>Privacy & Safety</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="msd-item" onclick="_mobileSettingsNav('appearance')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <span>Appearance</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="msd-sep"></div>
+    <div class="msd-item" onclick="_mobileSettingsNav('game_collection')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>
+      <span>Apps & Games</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="msd-item" onclick="showView('friends')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      <span>Friend Requests</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </div>
 </div>
 
 <!-- SIDEBAR — Vertical, left side -->
@@ -4549,6 +4655,8 @@ function showView(v) {
   _currentView = v;
   // Close mobile sidebars on navigation
   if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
+  // Sync mobile tab bar
+  setTimeout(() => { try { _syncMobileTabBar(); } catch {} }, 50);
   // Clear the unsaved-settings bar when leaving the profile view so it
   // doesn't float over other views and block button clicks
   if (v !== 'profile') clearSettingsDirty();
@@ -4781,6 +4889,8 @@ function updateUserbar() {
     }
   }
   _syncRailUserbarActivity();
+  // Update mobile tab bar avatar and badges
+  try { _updateMobileTabAvatar(); _updateMobileNotifBadge(); } catch {}
 }
 function _isMobile() { return window.innerWidth <= 768; }
 function _isTablet() { return window.innerWidth <= 1024 && window.innerWidth > 768; }
@@ -4915,10 +5025,104 @@ function _updateMobileBackBtn() {
 }
 /* Close mobile sidebars on resize to desktop */
 window.addEventListener('resize', function() {
-  if (!_isMobile()) { closeMobileSidebar(); closeMobileCtxSidebar(); }
+  if (!_isMobile()) { closeMobileSidebar(); closeMobileCtxSidebar(); _closeMobileSettings(); }
   updateUserbarWidth();
   _updateMobileBackBtn();
 });
+
+// ── Mobile Bottom Tab Bar ──────────────────────────────
+function _mobileTab(tab) {
+  // Close any open drawers
+  closeMobileSidebar();
+  _closeMobileSettings();
+  // Update active tab
+  document.querySelectorAll('.mobile-tab-item').forEach(t => t.classList.remove('active'));
+  const tabEl = document.getElementById('mtab-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+  // Navigate
+  if (tab === 'home') showView('home');
+  else if (tab === 'friends') showView('dms');
+  else if (tab === 'search') { if (typeof openAdvancedSearch === 'function') openAdvancedSearch(); }
+  else if (tab === 'notifs') { if (typeof toggleNotifPanel === 'function') toggleNotifPanel(); }
+  else if (tab === 'profile') _openMobileSettings();
+}
+
+// Sync mobile tab bar active state with current view
+function _syncMobileTabBar() {
+  if (!_isMobile()) return;
+  const views = {'view-home':'home','view-dms':'friends','view-friends':'friends','view-profile':'profile','view-atelier':'home','view-discover':'home'};
+  const activeView = document.querySelector('.view.active, .view[style*="display: flex"], .view[style*="display:flex"]');
+  const viewId = activeView?.id || '';
+  const tab = views[viewId] || 'home';
+  document.querySelectorAll('.mobile-tab-item').forEach(t => t.classList.remove('active'));
+  const tabEl = document.getElementById('mtab-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+}
+
+// Update mobile tab avatar
+function _updateMobileTabAvatar() {
+  const avatarEl = document.getElementById('mtab-avatar');
+  if (!avatarEl || !CU) return;
+  if (CU.pfp) {
+    avatarEl.innerHTML = '<img src="' + escapeHTML(CU.pfp) + '" alt="">';
+  } else {
+    const initial = (CU.displayName || CU.username || '?')[0].toUpperCase();
+    avatarEl.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent);font-weight:800;">' + initial + '</div>';
+  }
+}
+
+// Update mobile notification badge
+function _updateMobileNotifBadge() {
+  const badge = document.getElementById('mtab-notif-badge');
+  const dot = document.getElementById('mtab-friends-dot');
+  if (badge) {
+    const count = CU?.notifications?.filter(n => !n.read)?.length || 0;
+    if (count > 0) { badge.style.display = ''; badge.textContent = count > 99 ? '99+' : count; }
+    else badge.style.display = 'none';
+  }
+  if (dot) {
+    const pending = CU?.friends?.filter(f => f.status === 'pending_in')?.length || 0;
+    dot.style.display = pending > 0 ? '' : 'none';
+  }
+}
+
+// ── Mobile Settings Drawer ──────────────────────────────
+function _openMobileSettings() {
+  const drawer = document.getElementById('mobile-settings-drawer');
+  const overlay = document.getElementById('mobile-settings-overlay');
+  if (!drawer) return;
+  // Update drawer content
+  const nameEl = document.getElementById('msd-name');
+  const usernameEl = document.getElementById('msd-username');
+  const avatarEl = document.getElementById('msd-avatar');
+  const statusEl = document.getElementById('msd-status-text');
+  if (nameEl) nameEl.textContent = CU?.displayName || CU?.username || 'User';
+  if (usernameEl) usernameEl.textContent = '@' + (CU?.username || 'user');
+  if (avatarEl) {
+    if (CU?.pfp) avatarEl.innerHTML = '<img src="' + escapeHTML(CU.pfp) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    else { const init = (CU?.displayName || CU?.username || '?')[0].toUpperCase(); avatarEl.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:rgba(255,249,62,.1);display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:var(--accent);">' + init + '</div>'; }
+  }
+  if (statusEl) {
+    const st = FtzStatus?.current?.() || 'online';
+    const dot = '<span style="width:8px;height:8px;border-radius:50%;background:' + (st==='online'?'#3ecf6e':st==='idle'?'#fbbf24':st==='dnd'?'#ef4444':'#6b7280') + ';display:inline-block;"></span>';
+    statusEl.innerHTML = dot + ' ' + (st==='dnd'?'Do Not Disturb':st.charAt(0).toUpperCase()+st.slice(1));
+  }
+  drawer.classList.add('open');
+  if (overlay) overlay.classList.add('active');
+}
+
+function _closeMobileSettings() {
+  const drawer = document.getElementById('mobile-settings-drawer');
+  const overlay = document.getElementById('mobile-settings-overlay');
+  if (drawer) drawer.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function _mobileSettingsNav(tab) {
+  _closeMobileSettings();
+  showView('profile');
+  setTimeout(() => buildProfileView(tab), 100);
+}
 function updateOnyxDisplay() {
   const bal = CU?.onyx || 0;
   ['onyx-val','atelier-balance'].forEach(id => {
@@ -20902,10 +21106,24 @@ function parseMD(s) {
     if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline style="width:100%;max-height:350px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
     return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
   });
+  // 1ab. Klipy GIF links — auto-embed any klipy.com URL as inline GIF
+  s = s.replace(/(https?:\/\/[^\s"'<>]*klipy\.[^\s"'<>]+\.(?:gif|webp|mp4))(?=[\s<]|$)/gi, (url) => {
+    const safe = escapeHTML(url.trim());
+    const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
+    const isVideo = /\.mp4$/i.test(url);
+    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline style="width:100%;max-height:350px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
+  });
+  // 1ac. Klipy page links — resolve klipy.com/gifs/... or klipy.com/stickers/... to embed
+  s = s.replace(/https?:\/\/(?:www\.)?klipy\.com\/(?:gifs|stickers|clips)\/([\w-]+)[^\s]*/gi, (url, slug) => {
+    const safe = escapeHTML(url.trim());
+    // Render as a clickable Klipy embed card that opens externally
+    return `<div class="ftz-embed" style="--embed-color:#7c3aed;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="4"/></svg> Klipy</div><div class="ftz-embed-body"><div class="ftz-embed-title">${escapeHTML(slug.replace(/-/g,' '))}</div><div class="ftz-embed-desc">View on Klipy</div></div></div></div></div>`;
+  });
   // 1b. Generic .gif URL links — embed with fav button
   s = s.replace(/(https?:\/\/[^\s"'<>]+\.gif)(?=[\s<]|$)/gi, (url) => {
-    // Skip if already handled by GIPHY regex above
-    if (/giphy\.com/i.test(url)) return url;
+    // Skip if already handled by GIPHY or Klipy regex above
+    if (/giphy\.com/i.test(url) || /klipy\./i.test(url)) return url;
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
     return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;

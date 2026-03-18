@@ -731,6 +731,14 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .picker-top-tab{flex:1;padding:12px 0;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.3);cursor:pointer;text-align:center;border:none;background:transparent;transition:all .16s;border-bottom:2px solid transparent;}
 .picker-top-tab:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.03);}
 .picker-top-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.04);}
+/* GIF category chips row */
+.gif-cat-row{display:flex;gap:5px;padding:8px 14px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(0,0,0,.08);}
+.gif-cat-row::-webkit-scrollbar{display:none;}
+.gif-cat-chip{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:rgba(255,255,255,.45);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);}
+.gif-cat-chip:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.7);transform:translateY(-1px);}
+.gif-cat-chip.active{background:rgba(255,249,62,.1);border-color:rgba(255,249,62,.2);color:var(--accent);box-shadow:0 2px 10px rgba(255,249,62,.08);}
+.gif-cat-chip .gcc-emoji{font-size:13px;line-height:1;}
+.gif-cat-chip .gcc-count{font-size:9px;padding:1px 5px;background:rgba(255,249,62,.15);border-radius:100px;color:var(--accent);font-weight:700;}
 /* Sticker picker panel */
 .sticker-picker-panel{width:460px;max-height:560px;}
 .sticker-picker-panel .spp-header{padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent);}
@@ -23270,22 +23278,30 @@ function openGiphyPicker(inputId) {
   const esc = escapeHTML(_giphyInput);
   const favCount = getFavGifs().length;
   const categories = [
-    {id:'trending',label:'Trending',emoji:'🔥'},
-    {id:'reactions',label:'Reactions',emoji:'😂'},
-    {id:'love',label:'Love',emoji:'❤️'},
-    {id:'gaming',label:'Gaming',emoji:'🎮'},
-    {id:'laughing',label:'Laughing',emoji:'🤣'},
-    {id:'sad',label:'Sad',emoji:'😢'},
-    {id:'excited',label:'Excited',emoji:'🎉'},
-    {id:'angry',label:'Angry',emoji:'😡'},
-    {id:'dance',label:'Dance',emoji:'💃'},
-    {id:'thumbs up',label:'Approve',emoji:'👍'},
-    {id:'thinking',label:'Thinking',emoji:'🤔'},
-    {id:'anime',label:'Anime',emoji:'🎌'},
-    {id:'animals',label:'Animals',emoji:'🐱'},
-    {id:'sports',label:'Sports',emoji:'⚽'},
-    {id:'food',label:'Food',emoji:'🍕'},
-    {id:'nature',label:'Nature',emoji:'🌿'},
+    {id:'trending',label:'Trending',emoji:'🔥',color:'#ff6b35'},
+    {id:'reactions',label:'Reactions',emoji:'😂',color:'#ffd93e'},
+    {id:'love',label:'Love',emoji:'❤️',color:'#ff4d6d'},
+    {id:'gaming',label:'Gaming',emoji:'🎮',color:'#3ecf6e'},
+    {id:'laughing',label:'Laughing',emoji:'🤣',color:'#ffe066'},
+    {id:'sad',label:'Sad',emoji:'😢',color:'#60a5fa'},
+    {id:'excited',label:'Excited',emoji:'🎉',color:'#c084fc'},
+    {id:'angry',label:'Angry',emoji:'😡',color:'#f87171'},
+    {id:'dance',label:'Dance',emoji:'💃',color:'#f472b6'},
+    {id:'thumbs up',label:'Approve',emoji:'👍',color:'#34d399'},
+    {id:'thinking',label:'Thinking',emoji:'🤔',color:'#a78bfa'},
+    {id:'anime',label:'Anime',emoji:'🎌',color:'#fb7185'},
+    {id:'animals',label:'Animals',emoji:'🐱',color:'#fdba74'},
+    {id:'sports',label:'Sports',emoji:'⚽',color:'#38bdf8'},
+    {id:'food',label:'Food',emoji:'🍕',color:'#fb923c'},
+    {id:'nature',label:'Nature',emoji:'🌿',color:'#4ade80'},
+    {id:'meme',label:'Memes',emoji:'🗿',color:'#94a3b8'},
+    {id:'celebrities',label:'Celebs',emoji:'🌟',color:'#fbbf24'},
+    {id:'hello',label:'Hello',emoji:'👋',color:'#a3e635'},
+    {id:'yes',label:'Yes',emoji:'✅',color:'#22c55e'},
+    {id:'no',label:'No',emoji:'❌',color:'#ef4444'},
+    {id:'please',label:'Please',emoji:'🥺',color:'#c4b5fd'},
+    {id:'hug',label:'Hugs',emoji:'🤗',color:'#fda4af'},
+    {id:'facepalm',label:'Facepalm',emoji:'🤦',color:'#cbd5e1'},
   ];
 
   picker.innerHTML = `
@@ -23295,25 +23311,14 @@ function openGiphyPicker(inputId) {
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input id="giphy-search-input" placeholder="Search KLIPY" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
       </div>
-      <!-- Navigation row: quick access tabs -->
-      <div style="display:flex;align-items:center;gap:4px;padding:8px 0 4px;border-bottom:1px solid rgba(255,255,255,.04);overflow-x:auto;scrollbar-width:none;" id="gif-nav-row">
-        <button class="spp-tab active" onclick="_gifChip(this,'trending','${esc}')" style="flex-shrink:0;">🔥 Trending</button>
-        <button class="spp-tab" onclick="switchGiphyTab('favourites','${esc}');_gifChipActivate(this)" style="flex-shrink:0;">⭐ Saved${favCount?' ('+favCount+')':''}</button>
-        <button class="spp-tab" onclick="_gifShowCategories('${esc}');_gifChipActivate(this)" style="flex-shrink:0;">📂 Categories</button>
-      </div>
+    </div>
+    <!-- Category chips row -->
+    <div class="gif-cat-row" id="gif-nav-row">
+      <button class="gif-cat-chip active" data-cat="trending" onclick="_gifChip(this,'trending','${esc}')"><span class="gcc-emoji">🔥</span>Trending</button>
+      <button class="gif-cat-chip" data-cat="favourites" onclick="switchGiphyTab('favourites','${esc}');_gifChipActivate(this)"><span class="gcc-emoji">⭐</span>Saved${favCount?' <span class="gcc-count">'+favCount+'</span>':''}</button>
+      ${categories.filter(c=>c.id!=='trending').map(c => `<button class="gif-cat-chip" data-cat="${c.id}" onclick="_gifChip(this,'${c.id}','${esc}')" style="--cat-color:${c.color};"><span class="gcc-emoji">${c.emoji}</span>${c.label}</button>`).join('')}
     </div>
     <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;"></div>
-    <!-- Category browser (hidden by default) -->
-    <div id="gif-category-browser" style="display:none;flex:1;overflow-y:auto;padding:10px;">
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
-        ${categories.map(c => `
-          <div class="gif-category-tile" onclick="_gifSelectCategory('${c.id}','${esc}')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px 6px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;cursor:pointer;transition:all .15s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.background='rgba(255,249,62,.06)';this.style.borderColor='rgba(255,249,62,.15)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255,255,255,.03)';this.style.borderColor='rgba(255,255,255,.06)';this.style.transform=''">
-            <div style="font-size:22px;">${c.emoji}</div>
-            <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.5);">${c.label}</div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
   `;
 
   document.body.appendChild(picker);
@@ -23321,34 +23326,27 @@ function openGiphyPicker(inputId) {
   loadGiphyTrending(_giphyInput);
 }
 
-function _gifShowCategories(inputId) {
-  const grid = document.getElementById('giphy-grid');
-  const browser = document.getElementById('gif-category-browser');
-  if (grid) grid.style.display = 'none';
-  if (browser) browser.style.display = '';
-}
-
-function _gifSelectCategory(category, inputId) {
-  const grid = document.getElementById('giphy-grid');
-  const browser = document.getElementById('gif-category-browser');
-  if (grid) grid.style.display = '';
-  if (browser) browser.style.display = 'none';
-  // Update search input
-  const searchInput = document.getElementById('giphy-search-input');
-  if (searchInput) searchInput.value = category;
-  // Activate the trending tab since we're doing a search
-  const navRow = document.getElementById('gif-nav-row');
-  if (navRow) navRow.querySelectorAll('.spp-tab').forEach((b,i) => b.classList.toggle('active', i===0));
-  searchGifs(category, inputId);
-}
 function _gifChip(btn, category, inputId) {
   _gifChipActivate(btn);
-  if (category === 'trending') { switchGiphyTab('trending', inputId); }
-  else { document.getElementById('giphy-search-input').value = category; searchGifs(category, inputId); }
+  // Show the grid (in case it was hidden)
+  const grid = document.getElementById('giphy-grid');
+  if (grid) grid.style.display = '';
+  if (category === 'trending') {
+    const searchInput = document.getElementById('giphy-search-input');
+    if (searchInput) searchInput.value = '';
+    switchGiphyTab('trending', inputId);
+  } else {
+    const searchInput = document.getElementById('giphy-search-input');
+    if (searchInput) searchInput.value = category;
+    searchGifs(category, inputId);
+  }
 }
 function _gifChipActivate(btn) {
-  btn.parentElement.querySelectorAll('.spp-tab').forEach(b => b.classList.remove('active'));
+  const row = document.getElementById('gif-nav-row');
+  if (row) row.querySelectorAll('.gif-cat-chip').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  // Scroll the active chip into view
+  btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
 function _giphyOutsideClose(e) {
@@ -23358,27 +23356,25 @@ function _giphyOutsideClose(e) {
 
 function switchGiphyTab(tab, inputId) {
   _giphyTab = tab;
-  ['trending','favourites'].forEach(t => {
-    const btn = document.getElementById('gtab-' + t);
-    if (!btn) return;
-    const active = t === tab;
-    btn.style.background = active ? 'var(--accent-dim)' : 'transparent';
-    btn.style.borderColor = active ? 'var(--accent-mid)' : 'var(--border)';
-    btn.style.color = active ? 'var(--accent)' : 'var(--muted-light)';
-  });
   if (tab === 'favourites') renderFavGifs(inputId);
   else if (tab === 'trending') loadGiphyTrending(inputId);
 }
 
 function handleGiphySearch(q, inputId) {
-  // Hide category browser when typing
-  const browser = document.getElementById('gif-category-browser');
   const grid = document.getElementById('giphy-grid');
-  if (browser) browser.style.display = 'none';
   if (grid) grid.style.display = '';
+  // Deactivate all category chips while typing (custom search)
+  const row = document.getElementById('gif-nav-row');
+  if (q.trim() && row) row.querySelectorAll('.gif-cat-chip').forEach(b => b.classList.remove('active'));
   clearTimeout(window._giphySearchTimer);
   window._giphySearchTimer = setTimeout(() => {
-    if (!q.trim()) { _giphyTab = 'trending'; loadGiphyTrending(inputId); return; }
+    if (!q.trim()) {
+      _giphyTab = 'trending';
+      // Reactivate the trending chip
+      if (row) { const tb = row.querySelector('[data-cat="trending"]'); if (tb) { row.querySelectorAll('.gif-cat-chip').forEach(b => b.classList.remove('active')); tb.classList.add('active'); } }
+      loadGiphyTrending(inputId);
+      return;
+    }
     searchGifs(q, inputId);
   }, 300);
 }

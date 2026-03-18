@@ -716,21 +716,21 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .cit-botcmd::after{content:'Bot Commands';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%) scale(.9);background:var(--panel2);color:rgba(255,255,255,.7);font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;border:1px solid var(--border);}
 .cit-botcmd:hover::after{opacity:1;transform:translateX(-50%) scale(1);}
 /* ── Chat Picker Panel (shared base for stickers, bot cmds, GIF) ── */
-.chat-picker-base{position:fixed;background:rgba(16,18,28,.96);border:1px solid rgba(255,255,255,.06);border-radius:14px;z-index:8500;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);animation:pickerSlideIn .2s cubic-bezier(.22,1,.36,1);}
-@keyframes pickerSlideIn{from{opacity:0;transform:translateY(8px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+.chat-picker-base{position:fixed;background:rgba(14,16,26,.97);border:1px solid rgba(255,255,255,.07);border-radius:16px;z-index:8500;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(48px) saturate(160%);-webkit-backdrop-filter:blur(48px) saturate(160%);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
+@keyframes pickerSlideIn{from{opacity:0;transform:translateY(10px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
 .chat-picker-header{padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px;background:transparent;}
 .chat-picker-header .cph-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacing:-.02em;}
 .chat-picker-header .cph-badge{font-size:8px;color:rgba(255,249,62,.5);letter-spacing:.1em;font-weight:700;text-transform:uppercase;margin-left:auto;background:rgba(255,249,62,.04);padding:3px 8px;border-radius:100px;border:1px solid rgba(255,249,62,.08);}
 .chat-picker-search{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);position:relative;}
-.chat-picker-search input{width:100%;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.07);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 14px 10px 38px;outline:none;box-sizing:border-box;transition:all .2s cubic-bezier(.22,1,.36,1);}
-.chat-picker-search input:focus{border-color:rgba(255,249,62,.25);background:rgba(255,255,255,.07);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
-.chat-picker-search input::placeholder{color:rgba(255,255,255,.22);}
-.chat-picker-search svg{position:absolute;left:28px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,.25);}
+.chat-picker-search input{width:100%;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:10px 14px 10px 38px;outline:none;box-sizing:border-box;transition:all .2s cubic-bezier(.22,1,.36,1);}
+.chat-picker-search input:focus{border-color:rgba(255,249,62,.25);background:rgba(255,255,255,.06);box-shadow:0 0 0 3px rgba(255,249,62,.06);}
+.chat-picker-search input::placeholder{color:rgba(255,255,255,.2);}
+.chat-picker-search svg{position:absolute;left:28px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,.2);}
 /* Unified picker top tabs (GIFs | Stickers | Emoji) */
-.picker-top-tabs{display:flex;gap:0;padding:0;flex-shrink:0;background:rgba(0,0,0,.15);border-bottom:1px solid rgba(255,255,255,.05);}
-.picker-top-tab{flex:1;padding:11px 0;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.35);cursor:pointer;text-align:center;border:none;background:transparent;transition:all .14s;border-bottom:2px solid transparent;}
-.picker-top-tab:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.02);}
-.picker-top-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.03);}
+.picker-top-tabs{display:flex;gap:0;padding:0;flex-shrink:0;background:rgba(0,0,0,.18);border-bottom:1px solid rgba(255,255,255,.05);}
+.picker-top-tab{flex:1;padding:12px 0;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.3);cursor:pointer;text-align:center;border:none;background:transparent;transition:all .16s;border-bottom:2px solid transparent;}
+.picker-top-tab:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.03);}
+.picker-top-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.04);}
 /* Sticker picker panel */
 .sticker-picker-panel{width:460px;max-height:560px;}
 .sticker-picker-panel .spp-header{padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent);}
@@ -742,18 +742,18 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .sticker-picker-panel .spp-search input::placeholder{color:rgba(255,255,255,.22);}
 .spp-tabs{display:flex;gap:4px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05);overflow-x:auto;background:rgba(0,0,0,.1);}
 .spp-tabs::-webkit-scrollbar{height:0;}
-.spp-tab{padding:7px 16px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,.35);font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);font-family:'DM Sans',sans-serif;}
-.spp-tab:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);}
-.spp-tab.active{background:rgba(255,249,62,.12);color:var(--accent);font-weight:700;box-shadow:0 2px 8px rgba(255,249,62,.08);}
+.spp-tab{padding:7px 16px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,.3);font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s cubic-bezier(.22,1,.36,1);font-family:'DM Sans',sans-serif;}
+.spp-tab:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.65);}
+.spp-tab.active{background:rgba(255,249,62,.1);color:var(--accent);font-weight:700;box-shadow:0 2px 10px rgba(255,249,62,.06);}
 .spp-tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .spp-grid{flex:1;overflow-y:auto;padding:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;scrollbar-width:thin;}
-.spp-sticker{border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;padding:12px;aspect-ratio:1;}
-.spp-sticker:hover{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.18);transform:scale(1.08) translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3),0 0 0 1px rgba(255,249,62,.06);}
+.spp-sticker{border-radius:12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:center;padding:12px;aspect-ratio:1;}
+.spp-sticker:hover{background:rgba(255,249,62,.06);border-color:rgba(255,249,62,.15);transform:scale(1.06) translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.35),0 0 0 1px rgba(255,249,62,.05);}
 .spp-sticker img{width:100%;height:100%;object-fit:contain;border-radius:4px;}
 .spp-empty{grid-column:1/-1;text-align:center;padding:48px 24px;color:rgba(255,255,255,.25);font-size:13px;line-height:1.7;}
 /* Bot command shortcut panel */
 .botcmd-panel{width:460px;max-height:520px;}
-.botcmd-panel .bcp-header{padding:14px 18px 12px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.015);}
+.botcmd-panel .bcp-header{padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,.05);font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.015);}
 .botcmd-panel .bcp-header svg{color:#60a5fa;}
 .botcmd-list{flex:1;overflow-y:auto;padding:8px;}
 .botcmd-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;cursor:pointer;transition:all .14s;border:1px solid transparent;}
@@ -1284,7 +1284,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .vc-btn.muted-btn.active{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);}
 .vc-btn.disc-btn{background:var(--red);color:#fff;}
 /* ── Emoji Picker 3.0 ─────────────────────────── */
-.emoji-picker-panel{position:fixed;width:460px;max-height:520px;background:rgba(16,18,28,.96);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:0;z-index:9000;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02);display:none;flex-direction:row;overflow:hidden;font-family:'DM Sans',sans-serif;backdrop-filter:blur(40px) saturate(150%);-webkit-backdrop-filter:blur(40px) saturate(150%);animation:pickerSlideIn .2s cubic-bezier(.22,1,.36,1);}
+.emoji-picker-panel{position:fixed;width:460px;max-height:520px;background:rgba(14,16,26,.97);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:0;z-index:9000;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 40px rgba(0,0,0,.2);display:none;flex-direction:row;overflow:hidden;font-family:'DM Sans',sans-serif;backdrop-filter:blur(48px) saturate(160%);-webkit-backdrop-filter:blur(48px) saturate(160%);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
 .emoji-picker-panel.show{display:flex;}
 /* Emoji picker sidebar */
 .epp-sidebar{width:44px;background:rgba(0,0,0,.2);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px;overflow-y:auto;scrollbar-width:none;flex-shrink:0;}
@@ -6149,6 +6149,8 @@ function openDMView(username) {
   setTimeout(() => { showDMUserPanel(username); _initChatScroll(document.getElementById('dm-msgs')); }, 80);
   setTimeout(() => setupEmojiAutocomplete('dm-input'), 100);
   ensureDMExists(username).catch(()=>{});
+  // Join Socket.io room for DM real-time events (typing, edits, deletes)
+  FortizedSocial.joinRoom('dm', CU.username, username);
   _listenTyping(username);
 }
 function openDMChat(u) { openDMView(u); }
@@ -6637,6 +6639,9 @@ function _gcTypingPath(gcId) { return 'gcTyping/'+gcId; }
 
 function broadcastGCTyping() {
   if (!CU?.username||!curGC) return;
+  // Socket.io for instant delivery
+  FortizedSocial.socketEmit('typing:start', { type: 'gc', id1: curGC });
+  // Firebase fallback
   const ref = firebase.database().ref(_gcTypingPath(curGC)+'/'+CU.username);
   if (!_gcIsTyping) {
     _gcIsTyping=true;
@@ -6644,7 +6649,7 @@ function broadcastGCTyping() {
     ref.onDisconnect().remove();
   }
   clearTimeout(_gcTypingTimeout);
-  _gcTypingTimeout = setTimeout(()=>{ _gcIsTyping=false; ref.remove().catch(()=>{}); }, 2500);
+  _gcTypingTimeout = setTimeout(()=>{ _gcIsTyping=false; FortizedSocial.socketEmit('typing:stop', { type: 'gc', id1: curGC }); ref.remove().catch(()=>{}); }, 2500);
 }
 
 function _stopGCTypingBroadcast() {
@@ -7281,6 +7286,8 @@ async function loadChannelMessages(idx) {
   const msgsEl=document.getElementById('ch-msgs-'+idx);
   if (!ch||!msgsEl) return;
   if (_chListener){try{_chListener();}catch{}_chListener=null;}
+  // Join Socket.io room for bastion channel real-time events (typing, edits, deletes)
+  FortizedSocial.joinRoom('bastion', b.globalId||b.name, ch.name);
   try {
     const msgs=await FortizedSocial.getBastionChannelMessages(b.globalId||b.name,ch.name);
     renderMessages(msgsEl,msgs||[],'ch');
@@ -7573,7 +7580,7 @@ function renderMessages(container, msgs, context) {
     let effectivePrevAuthor = lastAuthor;
     if (lastAuthor === msg.from && lastTimestamp && msg.timestamp) {
       const gap = Math.abs(new Date(msg.timestamp) - new Date(lastTimestamp));
-      if (gap >= 5 * 60 * 1000) effectivePrevAuthor = null; // force new header
+      if (gap >= 20 * 60 * 1000) effectivePrevAuthor = null; // force new header after 20 min gap
     }
     appendMessage(container,msg,context,effectivePrevAuthor);
     lastAuthor=msg.from;
@@ -7667,7 +7674,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     const lastTs = lastRow?.dataset.timestamp;
     if (lastTs && msg.timestamp) {
       const gap = Math.abs(new Date(msg.timestamp).getTime() - new Date(lastTs).getTime());
-      if (gap > 5 * 60 * 1000) isFirst = true;
+      if (gap > 20 * 60 * 1000) isFirst = true;
     }
   }
   const isOwn=msg.from===CU?.username;
@@ -20722,10 +20729,19 @@ function parseMD(s) {
       return EMOTICON_MAP[m.replace(/-/g,'')] || m;
     });
   }
-  // 0a. Image attachments
+  // 0a. Image attachments (with fav button for GIFs)
   s = s.replace(/\[FTZIMG:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
+    const isGif = /\.gif/i.test(name) || /^data:image\/gif/i.test(data);
+    const safeSrc = escapeHTML(data);
+    const fid = (name + data).replace(/[^a-zA-Z0-9]/g,'').slice(-16);
+    if (isGif) {
+      return '<div class="ftz-embed-gif" onclick="_openMediaLightbox(\'' + safeSrc + '\')">'
+        + '<img src="' + safeSrc + '" loading="lazy">'
+        + '<button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:\'' + fid + '\',url:\'' + safeSrc + '\'})" title="Save to favourites">&#11088;</button>'
+        + '</div>';
+    }
     return '<div style="margin:5px 0;">'
-      + '<img src="' + data + '" style="max-width:360px;max-height:300px;border-radius:10px;display:block;cursor:pointer;" loading="lazy" onclick="_openMediaLightbox(this.src)">'
+      + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:10px;display:block;cursor:pointer;" loading="lazy" onclick="_openMediaLightbox(this.src)">'
       + '</div>';
   });
   // 0b. Video attachments — full-featured video player
@@ -22398,146 +22414,117 @@ function renderProfileWidgetsTab(main) {
     </div>`;
   });
 
-  if (!activeWidgetsHtml) {
-    activeWidgetsHtml = `<div style="text-align:center;padding:30px 20px;color:rgba(255,255,255,.2);">
-      <div style="font-size:28px;margin-bottom:10px;opacity:.3;">📦</div>
-      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:4px;">No widgets added</div>
-      <div style="font-size:12px;">Click the button below to add your first widget</div>
-    </div>`;
-  }
-
   main.innerHTML = `<div style="padding:24px;">
     <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Profile Widgets</div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize your profile with widgets — just like Discord.</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize your profile card with widgets.</div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:0;margin-bottom:16px;">
-      ${activeWidgetsHtml}
-    </div>
-    <button onclick="_openAddWidgetModal()" style="width:100%;padding:14px;border-radius:14px;border:2px dashed rgba(255,249,62,.15);background:rgba(255,249,62,.02);color:var(--accent);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.background='rgba(255,249,62,.05)'" onmouseout="this.style.borderColor='rgba(255,249,62,.15)';this.style.background='rgba(255,249,62,.02)'">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Add Profile Widget
+    ${activeWidgetsHtml ? `<div style="display:flex;flex-direction:column;gap:0;margin-bottom:16px;">${activeWidgetsHtml}</div>` : ''}
+    <button onclick="_openAddWidgetPanel()" style="width:100%;padding:16px;border-radius:14px;border:2px dashed rgba(255,249,62,.15);background:rgba(255,249,62,.02);color:var(--accent);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:10px;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.background='rgba(255,249,62,.05)'" onmouseout="this.style.borderColor='rgba(255,249,62,.15)';this.style.background='rgba(255,249,62,.02)'">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Widget
     </button>
-    <div style="margin-top:20px;padding:14px;background:rgba(254,248,61,.03);border:1px solid rgba(254,248,61,.08);border-radius:12px;">
-      <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.6;">
-        <strong style="color:rgba(255,255,255,.5);">Tip:</strong> Widgets appear on your public profile. Drag to reorder. The <strong>Primary Bastion</strong> widget only works if the bastion is public.
-      </div>
-    </div>
   </div>`;
 }
 
-function _openAddWidgetModal() {
-  document.querySelector('.pw-add-widget-modal-overlay')?.remove();
+function _openAddWidgetPanel() {
   const widgets = _getProfileWidgets();
   const games = CU.gameCollection || [];
   const bastions = CU.bastions || [];
-  const overlay = document.createElement('div');
-  overlay.className = 'pw-add-widget-modal-overlay';
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  let listHtml = '';
+
+  // Build the full widget customization panel inline
+  let cardsHtml = '';
   PROFILE_WIDGET_DEFS.forEach(def => {
     const wState = widgets.find(w => w.id === def.id);
     const isOn = wState?.enabled;
-    const previewImg = games.length > 0 && games[0].coverUrl ? `<img src="${escapeHTML(games[0].coverUrl)}">` : `<span style="font-size:22px;">${def.icon}</span>`;
 
-    // Build per-widget config form
-    let configForm = '';
+    let configFields = '';
     if (def.id === 'favourite_game') {
-      configForm = `<div class="pwo-config" id="pwo-cfg-${def.id}" style="display:none;padding:12px 14px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);">
+      configFields = `<div style="margin-top:12px;">
         <label style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600;display:block;margin-bottom:6px;">Choose your favourite game</label>
-        <select id="pwo-cfg-select-${def.id}" class="settings-input" style="padding:8px 10px;font-size:12px;width:100%;">
+        <select id="pw-cfg-${def.id}" class="settings-input" style="padding:9px 12px;font-size:12px;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;">
           <option value="">— Pick from your collection —</option>
-          ${games.map(g => `<option value="${escapeHTML(g.name)}">${escapeHTML(g.name)}</option>`).join('')}
+          ${games.map(g => `<option value="${escapeHTML(g.name)}" ${wState?.config?.gameName===g.name?'selected':''}>${escapeHTML(g.name)}</option>`).join('')}
         </select>
-        <button onclick="_confirmAddWidget('${def.id}')" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Add Widget</button>
       </div>`;
     } else if (def.id === 'primary_bastion') {
-      configForm = `<div class="pwo-config" id="pwo-cfg-${def.id}" style="display:none;padding:12px 14px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);">
+      configFields = `<div style="margin-top:12px;">
         <label style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600;display:block;margin-bottom:6px;">Select your bastion</label>
-        <select id="pwo-cfg-select-${def.id}" class="settings-input" style="padding:8px 10px;font-size:12px;width:100%;">
-          ${bastions.length ? bastions.map((b,i) => `<option value="${i}">${escapeHTML(b.name||'Bastion '+(i+1))}</option>`).join('') : '<option value="">— No bastions joined —</option>'}
+        <select id="pw-cfg-${def.id}" class="settings-input" style="padding:9px 12px;font-size:12px;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;">
+          ${bastions.length ? bastions.map((b,i) => `<option value="${i}" ${wState?.config?.bastionIdx===i?'selected':''}>${escapeHTML(b.name||'Bastion '+(i+1))}</option>`).join('') : '<option value="">— No bastions joined —</option>'}
         </select>
-        <button onclick="_confirmAddWidget('${def.id}')" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Add Widget</button>
       </div>`;
     } else if (def.id === 'game_collection' || def.id === 'games_rotation') {
-      configForm = `<div class="pwo-config" id="pwo-cfg-${def.id}" style="display:none;padding:12px 14px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);">
+      const maxShow = wState?.config?.maxShow || 8;
+      configFields = `<div style="margin-top:12px;">
         <label style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600;display:block;margin-bottom:6px;">Max games to show</label>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input type="range" id="pwo-cfg-range-${def.id}" min="3" max="12" value="8" style="flex:1;" oninput="this.nextElementSibling.textContent=this.value">
-          <span style="font-size:13px;color:rgba(255,255,255,.5);font-weight:700;min-width:20px;text-align:center;">8</span>
+          <input type="range" id="pw-cfg-${def.id}" min="3" max="12" value="${maxShow}" style="flex:1;accent-color:${def.color};" oninput="this.nextElementSibling.textContent=this.value">
+          <span style="font-size:13px;color:rgba(255,255,255,.5);font-weight:700;min-width:20px;text-align:center;">${maxShow}</span>
         </div>
-        <button onclick="_confirmAddWidget('${def.id}')" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Add Widget</button>
       </div>`;
     }
 
-    listHtml += `<div class="pw-widget-option ${isOn?'active':''}" data-widget-id="${def.id}">
-      <div style="display:flex;align-items:center;gap:12px;padding:14px;" ${!isOn ? `onclick="_expandWidgetConfig('${def.id}')" style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;"` : ''}>
-        <div class="pwo-preview">${previewImg}</div>
-        <div class="pwo-info">
-          <div class="pwo-name">${def.label}</div>
-          <div class="pwo-desc">${def.desc}</div>
+    cardsHtml += `<div style="background:rgba(255,255,255,.02);border:1.5px solid ${isOn ? def.color+'33' : 'rgba(255,255,255,.06)'};border-radius:16px;padding:20px;transition:all .18s;${isOn ? 'box-shadow:0 0 0 1px '+def.color+'11;' : ''}" onmouseover="if(!this.dataset.on)this.style.borderColor='rgba(255,255,255,.12)'" onmouseout="if(!this.dataset.on)this.style.borderColor='rgba(255,255,255,.06)'" ${isOn?'data-on="1"':''}>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:${configFields?'0':'0'}px;">
+        <div style="width:44px;height:44px;border-radius:12px;background:${def.color}12;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid ${def.color}20;">${def.icon}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">${def.label}</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:2px;">${def.desc}</div>
         </div>
         ${isOn
-          ? `<div class="pwo-added" title="Already added"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg></div>`
-          : `<div style="color:var(--accent);font-size:18px;font-weight:700;flex-shrink:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);transition:all .12s;">+</div>`
+          ? `<button onclick="toggleProfileWidget('${def.id}',null);_openAddWidgetPanel()" style="padding:8px 16px;border-radius:10px;border:1px solid rgba(248,113,113,.2);background:rgba(248,113,113,.08);color:#f87171;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;flex-shrink:0;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Remove</button>`
+          : `<button onclick="_addWidgetFromPanel('${def.id}');_openAddWidgetPanel()" style="padding:8px 16px;border-radius:10px;border:1px solid ${def.color}30;background:${def.color}12;color:${def.color};font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;flex-shrink:0;" onmouseover="this.style.background='${def.color}22'" onmouseout="this.style.background='${def.color}12'">${configFields ? 'Add' : 'Add Widget'}</button>`
         }
       </div>
-      ${!isOn ? configForm : ''}
+      ${configFields}
     </div>`;
   });
-  overlay.innerHTML = `<div class="pw-add-widget-modal">
-    <div class="pwm-header">
+
+  document.querySelector('.pw-add-widget-modal-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'pw-add-widget-modal-overlay';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="pw-add-widget-modal" style="max-width:520px;width:92%;max-height:85vh;overflow-y:auto;">
+    <div class="pwm-header" style="position:sticky;top:0;z-index:2;background:rgba(16,18,28,.98);backdrop-filter:blur(20px);padding:20px 24px 16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <h3>Add Profile Widget</h3>
-        <button onclick="this.closest('.pw-add-widget-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
+        <div>
+          <h3 style="margin:0;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">Add Widget</h3>
+          <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,.3);">Pick a widget and customize it for your profile</p>
+        </div>
+        <button onclick="this.closest('.pw-add-widget-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.4);cursor:pointer;width:34px;height:34px;display:flex;align-items:center;justify-content:center;transition:all .12s;font-size:16px;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
       </div>
-      <p>Choose a widget to customize your profile</p>
-      <input class="pwm-search" placeholder="Search widgets…" oninput="_filterWidgetOptions(this.value)">
     </div>
-    <div class="pwm-list">${listHtml}</div>
+    <div style="display:flex;flex-direction:column;gap:12px;padding:0 24px 24px;">
+      ${cardsHtml}
+    </div>
   </div>`;
   document.body.appendChild(overlay);
 }
 
-function _expandWidgetConfig(widgetId) {
-  // Collapse all other configs
-  document.querySelectorAll('.pwo-config').forEach(el => { el.style.display = 'none'; });
-  const cfg = document.getElementById('pwo-cfg-' + widgetId);
-  if (cfg) cfg.style.display = cfg.style.display === 'none' ? 'block' : 'none';
-}
-
-async function _confirmAddWidget(widgetId) {
+async function _addWidgetFromPanel(widgetId) {
   const widgets = _getProfileWidgets();
   let w = widgets.find(w => w.id === widgetId);
   if (!w) { w = {id:widgetId,enabled:false,config:{}}; widgets.push(w); }
   w.enabled = true;
-  // Gather config from the modal form
-  if (widgetId === 'favourite_game') {
-    const sel = document.getElementById('pwo-cfg-select-favourite_game');
-    if (sel && sel.value) w.config.gameName = sel.value;
-  } else if (widgetId === 'primary_bastion') {
-    const sel = document.getElementById('pwo-cfg-select-primary_bastion');
-    if (sel) { w.config.bastionIdx = parseInt(sel.value)||0; w.config.bastionName = sel.options[sel.selectedIndex]?.text || ''; }
-  } else if (widgetId === 'game_collection' || widgetId === 'games_rotation') {
-    const range = document.getElementById('pwo-cfg-range-' + widgetId);
-    if (range) w.config.maxShow = parseInt(range.value)||8;
+  // Gather config from the panel form
+  const cfgEl = document.getElementById('pw-cfg-' + widgetId);
+  if (widgetId === 'favourite_game' && cfgEl) {
+    w.config.gameName = cfgEl.value;
+  } else if (widgetId === 'primary_bastion' && cfgEl) {
+    w.config.bastionIdx = parseInt(cfgEl.value)||0;
+    w.config.bastionName = cfgEl.options?.[cfgEl.selectedIndex]?.text || '';
+  } else if ((widgetId === 'game_collection' || widgetId === 'games_rotation') && cfgEl) {
+    w.config.maxShow = parseInt(cfgEl.value)||8;
   }
   _setProfileWidgets(widgets);
   await saveUser();
-  document.querySelector('.pw-add-widget-modal-overlay')?.remove();
   buildProfileView('profile_widgets');
   toast('Widget added!', 'success');
 }
 
-function _filterWidgetOptions(q) {
-  const list = document.querySelector('.pw-add-widget-modal .pwm-list');
-  if (!list) return;
-  list.querySelectorAll('.pw-widget-option').forEach(el => {
-    const name = el.querySelector('.pwo-name')?.textContent?.toLowerCase() || '';
-    const desc = el.querySelector('.pwo-desc')?.textContent?.toLowerCase() || '';
-    el.style.display = (!q || name.includes(q.toLowerCase()) || desc.includes(q.toLowerCase())) ? '' : 'none';
-  });
-}
+// Legacy alias
+function _openAddWidgetModal() { _openAddWidgetPanel(); }
 
 async function _addWidgetFromModal(widgetId) {
   const widgets = _getProfileWidgets();
@@ -30431,6 +30418,9 @@ function broadcastChannelTyping() {
   const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
   const bid = b?.globalId || b?.name; const chName = ch?.name || 'general';
   if (!bid) return;
+  // Socket.io for instant delivery
+  FortizedSocial.socketEmit('typing:start', { type: 'bastion', id1: bid, id2: chName });
+  // Firebase fallback
   const ref = firebase.database().ref(_chTypingPath(bid, chName) + '/' + CU.username);
   if (!_chIsTyping) {
     _chIsTyping = true;
@@ -30438,7 +30428,7 @@ function broadcastChannelTyping() {
     ref.onDisconnect().remove();
   }
   clearTimeout(_chTypingTimeout);
-  _chTypingTimeout = setTimeout(() => { _chIsTyping = false; ref.remove().catch(() => {}); }, 2500);
+  _chTypingTimeout = setTimeout(() => { _chIsTyping = false; FortizedSocial.socketEmit('typing:stop', { type: 'bastion', id1: bid, id2: chName }); ref.remove().catch(() => {}); }, 2500);
 }
 
 function _stopChannelTypingBroadcast() {

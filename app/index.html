@@ -716,7 +716,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .cit-botcmd::after{content:'Bot Commands';position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%) scale(.9);background:var(--panel2);color:rgba(255,255,255,.7);font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;border:1px solid var(--border);}
 .cit-botcmd:hover::after{opacity:1;transform:translateX(-50%) scale(1);}
 /* ── Chat Picker Panel (shared base for stickers, bot cmds, GIF) ── */
-.chat-picker-base{position:fixed;background:rgba(14,16,26,.97);border:1px solid rgba(255,255,255,.07);border-radius:16px;z-index:8500;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(48px) saturate(160%);-webkit-backdrop-filter:blur(48px) saturate(160%);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
+.chat-picker-base{position:fixed;background:var(--panel,rgba(14,16,26,.97));border:1px solid var(--border,rgba(255,255,255,.07));border-radius:16px;z-index:8500;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(48px) saturate(160%);-webkit-backdrop-filter:blur(48px) saturate(160%);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
 @keyframes pickerSlideIn{from{opacity:0;transform:translateY(10px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
 .chat-picker-header{padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px;background:transparent;}
 .chat-picker-header .cph-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacing:-.02em;}
@@ -727,7 +727,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .chat-picker-search input::placeholder{color:rgba(255,255,255,.2);}
 .chat-picker-search svg{position:absolute;left:28px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,.2);}
 /* Unified picker top tabs (GIFs | Stickers | Emoji) */
-.picker-top-tabs{display:flex;gap:0;padding:0;flex-shrink:0;background:rgba(0,0,0,.18);border-bottom:1px solid rgba(255,255,255,.05);}
+.picker-top-tabs{display:flex;gap:0;padding:0;flex-shrink:0;background:var(--panel2,rgba(0,0,0,.18));border-bottom:1px solid var(--border,rgba(255,255,255,.05));}
 .picker-top-tab{flex:1;padding:12px 0;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.3);cursor:pointer;text-align:center;border:none;background:transparent;transition:all .16s;border-bottom:2px solid transparent;}
 .picker-top-tab:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.03);}
 .picker-top-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(255,249,62,.04);}
@@ -739,6 +739,17 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .gif-cat-chip.active{background:rgba(255,249,62,.1);border-color:rgba(255,249,62,.2);color:var(--accent);box-shadow:0 2px 10px rgba(255,249,62,.08);}
 .gif-cat-chip .gcc-emoji{font-size:13px;line-height:1;}
 .gif-cat-chip .gcc-count{font-size:9px;padding:1px 5px;background:rgba(255,249,62,.15);border-radius:100px;color:var(--accent);font-weight:700;}
+/* GIF collection grid (visual category cards) */
+.gif-collection-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;overflow-y:auto;flex:1;scrollbar-width:thin;}
+.gif-collection-card{position:relative;border-radius:12px;overflow:hidden;cursor:pointer;height:100px;background:var(--panel2,rgba(255,255,255,.03));border:1.5px solid rgba(255,255,255,.06);transition:all .22s cubic-bezier(.22,1,.36,1);}
+.gif-collection-card:hover{border-color:rgba(255,249,62,.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.gif-collection-card img{width:100%;height:100%;object-fit:cover;opacity:.55;transition:opacity .22s;}
+.gif-collection-card:hover img{opacity:.75;}
+.gif-collection-card .gcc-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7),0 0 20px rgba(0,0,0,.3);letter-spacing:.01em;z-index:1;}
+.gif-collection-card .gcc-label svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));}
+.gif-collection-card::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.45) 100%);pointer-events:none;}
+.gif-collection-card.gcc-fav{border-color:rgba(255,249,62,.12);}
+.gif-collection-card.gcc-fav::after{background:linear-gradient(135deg,rgba(255,249,62,.08) 0%,rgba(0,0,0,.4) 100%);}
 /* Sticker picker panel */
 .sticker-picker-panel{width:460px;max-height:560px;}
 .sticker-picker-panel .spp-header{padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent);}
@@ -952,6 +963,25 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .quest-tab-chip.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(255,249,62,.25);box-shadow:0 2px 12px rgba(255,249,62,.1);}
 .quest-tab-chip:not(.active){color:rgba(255,255,255,.4);}
 .quest-tab-chip:not(.active):hover{background:var(--surface-2);color:rgba(255,255,255,.8);}
+/* Daily Quest Popup — "Hearken" overlay */
+.quest-popup-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;transition:opacity .4s cubic-bezier(.22,1,.36,1);pointer-events:none;}
+.quest-popup-overlay.visible{opacity:1;pointer-events:all;}
+.quest-popup-card{width:420px;max-width:92vw;background:linear-gradient(170deg,#0e1020 0%,#0a0d18 40%,#100c1e 100%);border:1.5px solid rgba(255,249,62,.12);border-radius:24px;overflow:hidden;transform:scale(.92) translateY(20px);transition:transform .45s cubic-bezier(.22,1,.36,1);box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 60px rgba(255,249,62,.06);}
+.quest-popup-overlay.visible .quest-popup-card{transform:scale(1) translateY(0);}
+.quest-popup-img{width:100%;height:220px;object-fit:contain;background:radial-gradient(ellipse at center,rgba(255,249,62,.06),transparent 70%);padding:24px 40px 12px;}
+.quest-popup-body{padding:0 32px 28px;text-align:center;}
+.quest-popup-label{font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,249,62,.45);margin-bottom:10px;}
+.quest-popup-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:8px;line-height:1.3;letter-spacing:-.01em;}
+.quest-popup-desc{font-size:13px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:24px;}
+.quest-popup-reward{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);border-radius:10px;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:24px;}
+.quest-popup-btns{display:flex;gap:10px;}
+.quest-popup-btns .qp-btn{flex:1;padding:12px;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;border:none;transition:all .18s cubic-bezier(.22,1,.36,1);}
+.quest-popup-btns .qp-claim{background:var(--accent);color:#060810;box-shadow:0 4px 20px rgba(255,249,62,.18);}
+.quest-popup-btns .qp-claim:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 6px 28px rgba(255,249,62,.25);}
+.quest-popup-btns .qp-close{background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.06);}
+.quest-popup-btns .qp-close:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);}
+@keyframes quest-shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.quest-popup-shimmer{position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,249,62,.03) 50%,transparent 100%);background-size:200% 100%;animation:quest-shimmer 3s ease infinite;pointer-events:none;border-radius:24px;}
 /* Shop filter chips — extends ftz-chip pattern */
 .shop-filter-chip{padding:6px 16px;border-radius:var(--radius-pill);font-size:var(--font-sm);font-weight:600;cursor:pointer;border:1px solid var(--surface-border);color:rgba(255,255,255,.4);transition:all .2s var(--ease-out);background:var(--surface-1);}
 .shop-filter-chip:hover{border-color:var(--surface-border-hover);color:rgba(255,255,255,.8);background:var(--surface-2);}
@@ -1292,10 +1322,10 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .vc-btn.muted-btn.active{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);}
 .vc-btn.disc-btn{background:var(--red);color:#fff;}
 /* ── Emoji Picker 3.0 ─────────────────────────── */
-.emoji-picker-panel{position:fixed;width:460px;max-height:520px;background:rgba(14,16,26,.97);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:0;z-index:9000;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 40px rgba(0,0,0,.2);display:none;flex-direction:row;overflow:hidden;font-family:'DM Sans',sans-serif;backdrop-filter:blur(48px) saturate(160%);-webkit-backdrop-filter:blur(48px) saturate(160%);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
+.emoji-picker-panel{position:fixed;width:460px;max-height:520px;background:var(--panel,rgba(14,16,26,.97));border:1px solid var(--border,rgba(255,255,255,.07));border-radius:16px;padding:0;z-index:9000;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 40px rgba(0,0,0,.2);display:none;flex-direction:row;overflow:hidden;font-family:'DM Sans',sans-serif;backdrop-filter:blur(48px) saturate(160%);-webkit-backdrop-filter:blur(48px) saturate(160%);animation:pickerSlideIn .22s cubic-bezier(.22,1,.36,1);}
 .emoji-picker-panel.show{display:flex;}
 /* Emoji picker sidebar */
-.epp-sidebar{width:44px;background:rgba(0,0,0,.2);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px;overflow-y:auto;scrollbar-width:none;flex-shrink:0;}
+.epp-sidebar{width:44px;background:var(--panel2,rgba(0,0,0,.2));border-right:1px solid var(--border,rgba(255,255,255,.04));display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px;overflow-y:auto;scrollbar-width:none;flex-shrink:0;}
 .epp-sidebar::-webkit-scrollbar{display:none;}
 .epp-sidebar-btn{width:34px;height:34px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:transparent;color:rgba(255,255,255,.4);transition:all .12s;flex-shrink:0;padding:0;}
 .epp-sidebar-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);}
@@ -6244,6 +6274,7 @@ async function sendDM() {
   try {
     await FortizedSocial.sendDMMessage(CU.username, curDM, text);
     FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: msg });
+    _trackSendMsgQuest();
   } catch { toast('Failed to send','error'); }
 }
 
@@ -6635,6 +6666,7 @@ async function sendGCMessage() {
     appendMessage(msgsEl, msg, 'gc', lastAuthor);
     scrollBottom('gc-msgs');
   }
+  _trackSendMsgQuest();
   try { await msgRef.set(msg); }
   catch { toast('Failed to send','error'); }
 }
@@ -7504,6 +7536,7 @@ async function sendChannelMsg(idx) {
   }
   // Award message reputation
   awardMessageRep(b.globalId||b.name, CU.username);
+  _trackSendMsgQuest();
   try {
     await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text);
     FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: msg });
@@ -23314,26 +23347,40 @@ function openGiphyPicker(inputId) {
     <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="giphy-search-input" placeholder="Search KLIPY" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
+        <input id="giphy-search-input" placeholder="Search Klipy" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
       </div>
     </div>
-    <!-- Category chips row -->
-    <div class="gif-cat-row" id="gif-nav-row">
-      <button class="gif-cat-chip active" data-cat="trending" onclick="_gifChip(this,'trending','${esc}')"><span class="gcc-emoji">🔥</span>Trending</button>
-      <button class="gif-cat-chip" data-cat="favourites" onclick="switchGiphyTab('favourites','${esc}');_gifChipActivate(this)"><span class="gcc-emoji">⭐</span>Saved${favCount?' <span class="gcc-count">'+favCount+'</span>':''}</button>
-      ${categories.filter(c=>c.id!=='trending').map(c => `<button class="gif-cat-chip" data-cat="${c.id}" onclick="_gifChip(this,'${c.id}','${esc}')" style="--cat-color:${c.color};"><span class="gcc-emoji">${c.emoji}</span>${c.label}</button>`).join('')}
+    <div id="gif-collection-view" class="gif-collection-grid">
+      <div class="gif-collection-card gcc-fav" onclick="_gifCollectionPick('favourites','${esc}')">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(255,249,62,.12),rgba(167,139,250,.08));"></div>
+        <div class="gcc-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Favourites</div>
+      </div>
+      <div class="gif-collection-card" onclick="_gifCollectionPick('trending','${esc}')">
+        <img src="" data-cat-preview="trending" alt="">
+        <div class="gcc-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Trending GIFs</div>
+      </div>
+      ${categories.filter(c=>c.id!=='trending').map(c => `<div class="gif-collection-card" onclick="_gifCollectionPick('${c.id}','${esc}')">
+        <img src="" data-cat-preview="${c.id}" alt="">
+        <div class="gcc-label">${c.label}</div>
+      </div>`).join('')}
     </div>
-    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;"></div>
+    <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;display:none;"></div>
+    <div id="gif-back-bar" style="display:none;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;">
+      <button onclick="_gifBackToCollections('${esc}')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:4px 6px;border-radius:8px;transition:all .15s;" onmouseover="this.style.color='#fff';this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.color='rgba(255,255,255,.5)';this.style.background='none'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        <span id="gif-back-label">Back to Collections</span>
+      </button>
+    </div>
   `;
 
   document.body.appendChild(picker);
   document.addEventListener('mousedown', _giphyOutsideClose, {once:true, capture:true});
-  loadGiphyTrending(_giphyInput);
+  // Load preview thumbnails for collection cards
+  _loadCollectionPreviews();
 }
 
 function _gifChip(btn, category, inputId) {
   _gifChipActivate(btn);
-  // Show the grid (in case it was hidden)
   const grid = document.getElementById('giphy-grid');
   if (grid) grid.style.display = '';
   if (category === 'trending') {
@@ -23350,8 +23397,65 @@ function _gifChipActivate(btn) {
   const row = document.getElementById('gif-nav-row');
   if (row) row.querySelectorAll('.gif-cat-chip').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  // Scroll the active chip into view
   btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+
+// Collection grid — pick a category card
+function _gifCollectionPick(category, inputId) {
+  const collectionView = document.getElementById('gif-collection-view');
+  const grid = document.getElementById('giphy-grid');
+  const backBar = document.getElementById('gif-back-bar');
+  const label = document.getElementById('gif-back-label');
+  if (collectionView) collectionView.style.display = 'none';
+  if (grid) grid.style.display = '';
+  if (backBar) backBar.style.display = '';
+  if (label) label.textContent = category === 'favourites' ? 'Favourites' : category === 'trending' ? 'Trending GIFs' : category.charAt(0).toUpperCase() + category.slice(1);
+  if (category === 'favourites') { switchGiphyTab('favourites', inputId); }
+  else if (category === 'trending') { loadGiphyTrending(inputId); }
+  else { searchGifs(category, inputId); }
+}
+
+// Back button — return to collection grid
+function _gifBackToCollections(inputId) {
+  const collectionView = document.getElementById('gif-collection-view');
+  const grid = document.getElementById('giphy-grid');
+  const backBar = document.getElementById('gif-back-bar');
+  const searchInput = document.getElementById('giphy-search-input');
+  if (collectionView) collectionView.style.display = '';
+  if (grid) grid.style.display = 'none';
+  if (backBar) backBar.style.display = 'none';
+  if (searchInput) searchInput.value = '';
+}
+
+// Load preview GIF thumbnails for collection cards
+async function _loadCollectionPreviews() {
+  const previewCards = document.querySelectorAll('[data-cat-preview]');
+  if (!previewCards.length) return;
+  // Load trending preview
+  try {
+    const cid = CU?.username || 'anon';
+    const res = await fetch(KLIPY_BASE + '/gifs/trending?per_page=6&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+    const data = await res.json();
+    const items = data.data?.data || data.data || [];
+    // Assign first gif to trending, then distribute to categories
+    const trendCard = document.querySelector('[data-cat-preview="trending"]');
+    if (trendCard && items[0]) trendCard.src = _klipyGifUrl(items[0], 'sm') || _klipyGifUrl(items[0], 'xs');
+  } catch {}
+  // Load a preview for each category (batch a few at a time)
+  const cats = [...previewCards].filter(c => c.dataset.catPreview !== 'trending');
+  for (let i = 0; i < cats.length; i += 4) {
+    const batch = cats.slice(i, i + 4);
+    await Promise.allSettled(batch.map(async (card) => {
+      try {
+        const cat = card.dataset.catPreview;
+        const cid = CU?.username || 'anon';
+        const res = await fetch(KLIPY_BASE + '/gifs/search?q=' + encodeURIComponent(cat) + '&per_page=1&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+        const data = await res.json();
+        const items = data.data?.data || data.data || [];
+        if (items[0]) card.src = _klipyGifUrl(items[0], 'sm') || _klipyGifUrl(items[0], 'xs');
+      } catch {}
+    }));
+  }
 }
 
 function _giphyOutsideClose(e) {
@@ -23367,28 +23471,29 @@ function switchGiphyTab(tab, inputId) {
 
 function handleGiphySearch(q, inputId) {
   const grid = document.getElementById('giphy-grid');
-  if (grid) grid.style.display = '';
-  // Deactivate all category chips while typing (custom search)
-  const row = document.getElementById('gif-nav-row');
-  if (q.trim() && row) row.querySelectorAll('.gif-cat-chip').forEach(b => b.classList.remove('active'));
+  const collectionView = document.getElementById('gif-collection-view');
+  const backBar = document.getElementById('gif-back-bar');
   clearTimeout(window._giphySearchTimer);
   window._giphySearchTimer = setTimeout(() => {
     if (!q.trim()) {
       _giphyTab = 'trending';
-      // Reactivate the trending chip
-      if (row) { const tb = row.querySelector('[data-cat="trending"]'); if (tb) { row.querySelectorAll('.gif-cat-chip').forEach(b => b.classList.remove('active')); tb.classList.add('active'); } }
-      loadGiphyTrending(inputId);
+      // Show collections again
+      if (collectionView) collectionView.style.display = '';
+      if (grid) grid.style.display = 'none';
+      if (backBar) backBar.style.display = 'none';
       return;
     }
+    // Hide collections, show grid
+    if (collectionView) collectionView.style.display = 'none';
+    if (grid) grid.style.display = '';
+    if (backBar) { backBar.style.display = ''; const label = document.getElementById('gif-back-label'); if (label) label.textContent = 'Search: ' + q; }
     searchGifs(q, inputId);
   }, 300);
 }
 
 async function loadGiphyTrending(inputId) {
   const grid = document.getElementById('giphy-grid');
-  const browser = document.getElementById('gif-category-browser');
   if (!grid) return;
-  if (browser) browser.style.display = 'none';
   grid.style.display = '';
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Loading…</div>';
   try {
@@ -23401,9 +23506,7 @@ async function loadGiphyTrending(inputId) {
 
 async function searchGifs(q, inputId) {
   const grid = document.getElementById('giphy-grid');
-  const browser = document.getElementById('gif-category-browser');
   if (!grid) return;
-  if (browser) browser.style.display = 'none';
   grid.style.display = '';
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Searching…</div>';
   try {
@@ -26542,12 +26645,17 @@ function renderAtelierTab(tab) {
     const doneQuests = (CU?.completedQuests||[]);
     const allQ = [
       {id:'daily_claim',icon:ftzIcon('gift','18'),title:'Daily Claim',reward:'50 Onyx'},
+      {id:'send_msg',icon:'💬',title:'Send a Message',reward:'10 Onyx'},
       {id:'invite',icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',title:'Invite a Friend',reward:'+9 Onyx/friend'},
       {id:'join_bastion',icon:ftzIcon('castle','18'),title:'Join a Bastion',reward:'25 Onyx'},
       {id:'add_friend',icon:ftzIcon('users','18'),title:'Add First Friend',reward:'15 Onyx'},
       {id:'set_pfp',icon:ftzIcon('image','18'),title:'Set Avatar',reward:'20 Onyx'},
+      {id:'set_bio',icon:'📝',title:'Write Your Bio',reward:'15 Onyx'},
+      {id:'five_friends',icon:'🤝',title:'Social Butterfly',reward:'40 Onyx'},
+      {id:'send_gif',icon:'🎞️',title:'GIF Master',reward:'10 Onyx'},
+      {id:'create_bastion',icon:'⚔️',title:'Fortress Builder',reward:'50 Onyx'},
     ];
-    const doneQ = allQ.filter(q => doneQuests.includes(q.id) || (q.id==='join_bastion'&&(CU?.bastions||[]).length>0) || (q.id==='add_friend'&&(CU?.friends||[]).length>0) || (q.id==='set_pfp'&&CU?.pfp) || (q.id==='daily_claim'&&dailyDone));
+    const doneQ = allQ.filter(q => doneQuests.includes(q.id) || (q.id==='join_bastion'&&(CU?.bastions||[]).length>0) || (q.id==='add_friend'&&(CU?.friends||[]).length>0) || (q.id==='set_pfp'&&CU?.pfp) || (q.id==='daily_claim'&&dailyDone) || (q.id==='send_msg'&&isDailyQuestDone('send_msg')) || (q.id==='set_bio'&&!!CU?.bio) || (q.id==='five_friends'&&(CU?.friends||[]).length>=5));
 
     // Update the balance in the unified header
     const balHeader = document.getElementById('atelier-balance');
@@ -26787,13 +26895,21 @@ function renderAtelierTab(tab) {
     const dailyClaimDone = isDailyQuestDone('daily_claim');
     const inviteDone = dailyLog.invite === today;
 
+    // Streak tracking
+    const streak = CU?.dailyStreak || 0;
+    const streakBonus = streak >= 7 ? 25 : streak >= 3 ? 10 : 0;
+
     const QUESTS_DEF = [
-      { id:'daily_claim', icon:'🎁', title:'Daily Claim', category:'Daily', daily:true, desc:'Claim your free 50 Onyx. Resets at midnight.', reward:50, unit:'Onyx', done: dailyClaimDone, action:`claimDailyQuest()` },
-      { id:'send_msg', icon:'💬', title:'Send a Message', category:'Daily', daily:true, desc:'Chat with someone today. Stay connected!', reward:10, unit:'Onyx', done: (dailyLog.send_msg === today), action:`showView('dms')` },
+      { id:'daily_claim', icon:'🎁', title:'Daily Claim', category:'Daily', daily:true, desc:`Claim your free 50 Onyx${streakBonus ? ' (+'+streakBonus+' streak bonus!)' : ''}. Resets at midnight.`, reward:50+streakBonus, unit:'Onyx', done: dailyClaimDone, action:`claimDailyQuest()` },
+      { id:'send_msg', icon:'💬', title:'Send a Message', category:'Daily', daily:true, desc:'Chat with someone today. Stay connected!', reward:10, unit:'Onyx', done: isDailyQuestDone('send_msg'), action:`showView('dms')` },
       { id:'invite', icon:'🔗', title:'Invite a Friend', category:'Daily', daily:true, desc:'+9 Onyx per friend who joins. Copy your invite link!', reward:9, unit:'Onyx/friend', done: inviteDone, action:`_showInviteFriendsPanel()` },
       { id:'join_bastion', icon:'🏰', title:'Join a Bastion', category:'Beginner', daily:false, desc:'Find and join any public Bastion community.', reward:25, unit:'Onyx', done: completed.includes('join_bastion') || (CU?.bastions||[]).length > 0, action:`showView('discover')` },
       { id:'add_friend', icon:'👥', title:'Add Your First Friend', category:'Beginner', daily:false, desc:'Send a friend request to someone.', reward:15, unit:'Onyx', done: completed.includes('add_friend') || (CU?.friends||[]).length > 0, action:`openModal('modal-add-friend')` },
       { id:'set_pfp', icon:'🖼️', title:'Set Your Avatar', category:'Beginner', daily:false, desc:'Upload a profile picture to stand out.', reward:20, unit:'Onyx', done: completed.includes('set_pfp') || !!CU?.pfp, action:`showView('profile')` },
+      { id:'set_bio', icon:'📝', title:'Write Your Bio', category:'Beginner', daily:false, desc:'Tell the world about yourself. Set a custom bio.', reward:15, unit:'Onyx', done: completed.includes('set_bio') || !!(CU?.bio), action:`showView('profile')` },
+      { id:'five_friends', icon:'🤝', title:'Social Butterfly', category:'Explorer', daily:false, desc:'Add 5 friends. Build your network!', reward:40, unit:'Onyx', done: completed.includes('five_friends') || (CU?.friends||[]).length >= 5, action:`openModal('modal-add-friend')` },
+      { id:'send_gif', icon:'🎞️', title:'GIF Master', category:'Explorer', daily:false, desc:'Send your first GIF in a conversation.', reward:10, unit:'Onyx', done: completed.includes('send_gif'), action:`showView('dms')` },
+      { id:'create_bastion', icon:'⚔️', title:'Fortress Builder', category:'Explorer', daily:false, desc:'Create your own Bastion community.', reward:50, unit:'Onyx', done: completed.includes('create_bastion'), action:`showView('bastions')` },
     ];
 
     const dailyQ = QUESTS_DEF.filter(q => q.daily);
@@ -26806,7 +26922,7 @@ function renderAtelierTab(tab) {
     const totalOnyx = doneQ.reduce((s,q) => s + q.reward, 0);
 
     const questCardHTML = (q) => {
-      const catColor = q.daily ? '#60a5fa' : '#a78bfa';
+      const catColor = q.daily ? '#60a5fa' : q.category==='Explorer' ? '#fb923c' : '#a78bfa';
       return `<div style="background:${q.done?'rgba(62,207,110,.025)':'rgba(255,255,255,.02)'};border:1.5px solid ${q.done?'rgba(62,207,110,.1)':'rgba(255,255,255,.05)'};border-radius:16px;padding:16px 18px;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:14px;" ${!q.done?`onmouseover="this.style.borderColor='rgba(255,249,62,.15)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(0,0,0,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'"`:''}>
         <div style="width:46px;height:46px;border-radius:14px;background:${q.done?'rgba(62,207,110,.08)':'rgba(255,255,255,.03)'};border:1px solid ${q.done?'rgba(62,207,110,.12)':'rgba(255,255,255,.06)'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative;">
           ${q.icon}
@@ -26865,6 +26981,10 @@ function renderAtelierTab(tab) {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
             <span style="font-size:11.5px;font-weight:700;color:var(--green);">${doneQ.length}/${QUESTS_DEF.length} done</span>
           </div>
+          ${streak > 0 ? `<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.1);border-radius:10px;">
+            <span style="font-size:13px;">🔥</span>
+            <span style="font-size:11.5px;font-weight:700;color:#fb923c;">${streak} day streak</span>
+          </div>` : ''}
         </div>
       </div>
 
@@ -26887,14 +27007,24 @@ function renderAtelierTab(tab) {
               ${activeQ.filter(q=>q.daily).map(q=>questCardHTML(q)).join('')}
             </div>` : ''}
 
-          <!-- Beginner/Other Quests -->
-          ${activeQ.filter(q=>!q.daily).length ? `
+          <!-- Beginner Quests -->
+          ${activeQ.filter(q=>!q.daily && q.category==='Beginner').length ? `
             <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(167,139,250,.5);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              One-Time Quests
+              Beginner Quests
             </div>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
-              ${activeQ.filter(q=>!q.daily).map(q=>questCardHTML(q)).join('')}
+              ${activeQ.filter(q=>!q.daily && q.category==='Beginner').map(q=>questCardHTML(q)).join('')}
+            </div>` : ''}
+
+          <!-- Explorer Quests -->
+          ${activeQ.filter(q=>!q.daily && q.category==='Explorer').length ? `
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(251,146,60,.5);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Explorer Quests
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+              ${activeQ.filter(q=>!q.daily && q.category==='Explorer').map(q=>questCardHTML(q)).join('')}
             </div>` : ''}
 
           ${!activeQ.length ? `<div style="text-align:center;padding:48px 24px;background:rgba(255,255,255,.015);border-radius:18px;border:1px solid rgba(255,255,255,.04);">
@@ -27749,6 +27879,8 @@ function _postInitSetup() {
     const statO = document.getElementById('stat-onyx');
     if (statO) statO.textContent = CU?.onyx||0;
   }, 5000);
+  // Show the daily quest popup after a short delay (let the UI settle)
+  setTimeout(() => { try { _showDailyQuestPopup(); } catch(e) { console.warn('[quest-popup]', e); } }, 2000);
 }
 
 
@@ -29106,7 +29238,17 @@ async function claimDailyQuest() {
     toast('Already claimed today! Come back tomorrow 🕛', 'info');
     return;
   }
-  CU.onyx = (CU.onyx || 0) + 50;
+  // Streak tracking: check if yesterday was claimed
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  const wasYesterday = CU.lastDailyReward === yesterday || CU.lastDaily === yesterday;
+  if (wasYesterday) {
+    CU.dailyStreak = (CU.dailyStreak || 0) + 1;
+  } else {
+    CU.dailyStreak = 1;
+  }
+  const streakBonus = CU.dailyStreak >= 7 ? 25 : CU.dailyStreak >= 3 ? 10 : 0;
+  const totalReward = 50 + streakBonus;
+  CU.onyx = (CU.onyx || 0) + totalReward;
   CU.lastDailyReward = today;
   CU.lastDaily = today;
   // Mark daily quest as done for today (not permanently — resets each day)
@@ -29114,8 +29256,8 @@ async function claimDailyQuest() {
   CU.questsDailyLog.daily_claim = today;
   await saveUser();
   updateOnyxDisplay();
-  if (typeof animateOnyxGain === 'function') animateOnyxGain(50);
-  toast('🎁 +50 Onyx claimed!', 'success');
+  if (typeof animateOnyxGain === 'function') animateOnyxGain(totalReward);
+  toast(`🎁 +${totalReward} Onyx claimed!${streakBonus ? ' ('+streakBonus+' streak bonus!)' : ''}`, 'success');
   renderAtelierTab('quests');
 }
 
@@ -29126,11 +29268,75 @@ function isDailyQuestDone(questId) {
   if (questId === 'daily_claim') {
     return CU?.lastDailyReward === today || CU?.lastDaily === today;
   }
-  if (questId === 'invite') {
-    // Invite quest: resets daily, user can earn each day by inviting
+  if (questId === 'invite' || questId === 'send_msg') {
     return log[questId] === today;
   }
   return false;
+}
+
+// Track send_msg daily quest — called from sendDM / sendGCMessage / sendChannelMsg
+async function _trackSendMsgQuest() {
+  if (!CU) return;
+  const today = new Date().toDateString();
+  if (!CU.questsDailyLog) CU.questsDailyLog = {};
+  if (CU.questsDailyLog.send_msg === today) return; // already done today
+  CU.questsDailyLog.send_msg = today;
+  CU.onyx = (CU.onyx || 0) + 10;
+  await saveUser();
+  updateOnyxDisplay();
+  if (typeof animateOnyxGain === 'function') animateOnyxGain(10);
+  toast('💬 Quest complete: Send a Message — +10 Onyx!', 'success');
+}
+
+// ════════════════════════════════════════════════════════════
+// DAILY QUEST POPUP — "Hearken, Hearken!"
+// ════════════════════════════════════════════════════════════
+function _showDailyQuestPopup() {
+  if (!CU) return;
+  const today = new Date().toDateString();
+  // Don't show if already claimed today or already dismissed today
+  if (CU.lastDailyReward === today || CU.lastDaily === today) return;
+  if (CU._questPopupDismissed === today) return;
+  // Don't show if already visible
+  if (document.getElementById('daily-quest-popup')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'daily-quest-popup';
+  overlay.className = 'quest-popup-overlay';
+  overlay.innerHTML = `
+    <div class="quest-popup-card" style="position:relative;">
+      <div class="quest-popup-shimmer"></div>
+      <img src="/Fortized Conquer.png" class="quest-popup-img" alt="Fortized Conquer">
+      <div class="quest-popup-body">
+        <div class="quest-popup-label">DAILY QUEST</div>
+        <div class="quest-popup-title">Hearken, Hearken!<br>A new quest is available to you!</div>
+        <div class="quest-popup-desc">Claim your daily reward of <strong style="color:var(--accent);">50 Onyx</strong> and continue your conquest. Consistency is the key to greatness.</div>
+        <div class="quest-popup-reward">
+          <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;">
+          +50 Onyx
+        </div>
+        <div class="quest-popup-btns">
+          <button class="qp-btn qp-close" onclick="_dismissDailyPopup(false)">Complete Later</button>
+          <button class="qp-btn qp-claim" onclick="_dismissDailyPopup(true)">Claim Now</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('visible')));
+}
+
+async function _dismissDailyPopup(claim) {
+  const overlay = document.getElementById('daily-quest-popup');
+  if (overlay) {
+    overlay.classList.remove('visible');
+    setTimeout(() => overlay.remove(), 450);
+  }
+  if (claim) {
+    await claimDailyQuest();
+  } else {
+    // Remember dismissal so we don't show again today
+    if (CU) CU._questPopupDismissed = new Date().toDateString();
+  }
 }
 
 

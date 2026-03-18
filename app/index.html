@@ -21114,11 +21114,11 @@ function parseMD(s) {
     if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline style="width:100%;max-height:350px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
     return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
   });
-  // 1ac. Klipy page links — resolve klipy.com/gifs/... or klipy.com/stickers/... to embed
+  // 1ac. Klipy page links — resolve klipy.com/gifs/... or klipy.com/stickers/... to inline GIF
   s = s.replace(/https?:\/\/(?:www\.)?klipy\.com\/(?:gifs|stickers|clips)\/([\w-]+)[^\s]*/gi, (url, slug) => {
-    const safe = escapeHTML(url.trim());
-    // Render as a clickable Klipy embed card that opens externally
-    return `<div class="ftz-embed" style="--embed-color:#7c3aed;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="4"/></svg> Klipy</div><div class="ftz-embed-body"><div class="ftz-embed-title">${escapeHTML(slug.replace(/-/g,' '))}</div><div class="ftz-embed-desc">View on Klipy</div></div></div></div></div>`;
+    const pid = 'klipy-ph-' + slug + '-' + Math.random().toString(36).slice(2,8);
+    setTimeout(() => _resolveKlipySlug(pid, slug), 0);
+    return `<div id="${pid}" class="ftz-embed-gif" style="min-height:80px;display:flex;align-items:center;justify-content:center;"><div style="font-size:11px;color:rgba(255,255,255,.25);">Loading GIF…</div></div>`;
   });
   // 1b. Generic .gif URL links — embed with fav button
   s = s.replace(/(https?:\/\/[^\s"'<>]+\.gif)(?=[\s<]|$)/gi, (url) => {
@@ -23850,6 +23850,36 @@ async function searchGifs(q, inputId) {
     const data = await res.json();
     renderGiphyResults((data.data?.data || data.data || []), inputId);
   } catch { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Search failed</div>'; }
+}
+
+async function _resolveKlipySlug(placeholderId, slug) {
+  const el = document.getElementById(placeholderId);
+  if (!el) return;
+  try {
+    const cid = CU?.username || 'anon';
+    const res = await fetch(KLIPY_BASE + '/gifs/search?q=' + encodeURIComponent(slug.replace(/-/g, ' ')) + '&per_page=5&content_filter=medium&customer_id=' + encodeURIComponent(cid));
+    const data = await res.json();
+    const items = data.data?.data || data.data || [];
+    // Try to find exact slug match, otherwise use first result
+    const match = items.find(g => g.slug === slug) || items[0];
+    if (match) {
+      const gifUrl = _klipyGifUrl(match, 'hd') || _klipyGifUrl(match, 'md') || _klipyGifUrl(match, 'sm') || _klipyGifUrl(match, 'xs');
+      if (gifUrl) {
+        const safe = escapeHTML(gifUrl);
+        const gid = match.slug || match.id || slug;
+        el.innerHTML = `<img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${escapeHTML(String(gid))}',url:'${safe}'})" title="Save to favourites">&#11088;</button>`;
+        el.style.minHeight = '';
+        el.onclick = () => _openMediaLightbox(gifUrl);
+        return;
+      }
+    }
+    // Fallback — open on Klipy
+    el.innerHTML = `<div style="font-size:11px;color:rgba(255,255,255,.3);cursor:pointer;" onclick="openExternalLink(event,'https://klipy.com/gifs/${escapeHTML(slug)}')">Could not load GIF — click to view on Klipy</div>`;
+    el.style.minHeight = '';
+  } catch {
+    el.innerHTML = `<div style="font-size:11px;color:rgba(255,255,255,.3);cursor:pointer;" onclick="openExternalLink(event,'https://klipy.com/gifs/${escapeHTML(slug)}')">Could not load GIF — click to view on Klipy</div>`;
+    el.style.minHeight = '';
+  }
 }
 
 function _klipyGifUrl(item, size) {

@@ -2577,6 +2577,9 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   /* Atelier */
   .atelier-hero{flex-direction:column;gap:16px;padding:20px;}
   .atelier-scroll{padding:0;}
+  .atelier-tabs{padding:0 16px!important;gap:4px!important;overflow-x:auto;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .atelier-tabs::-webkit-scrollbar{display:none;}
+  .atelier-tabs .disc-tab{white-space:nowrap;flex-shrink:0;}
   /* Bastion hub */
   .bastion-hub-main{padding:16px;}
   /* Mention preview */
@@ -2600,6 +2603,25 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .bastion-banner-hero img{height:120px;}
   /* Toast above mobile tab bar */
   #toast-container{bottom:80px!important;right:12px!important;left:12px!important;align-items:stretch;}
+  /* Hide Active Now sidebars on mobile */
+  .active-now-sidebar{display:none!important;}
+  /* Hide member list on mobile */
+  .member-list{display:none!important;}
+  /* Hide DM user panel on mobile */
+  #dm-user-panel{display:none!important;}
+  /* Quest layout mobile fixes */
+  .quest-header-mobile{padding:20px 16px 18px!important;}
+  .quest-content-mobile{padding:16px 14px 80px!important;}
+  /* Home hero mobile */
+  .home-hero{grid-template-columns:1fr!important;min-height:180px!important;padding:0 20px!important;}
+  .realm-section{padding:0 16px!important;}
+  .hero-joyster-wrap{display:none!important;}
+  .home-hero h1{font-size:24px!important;}
+  .hero-greeting{font-size:12px!important;}
+  .home-hero-actions .hero-btn{padding:9px 16px!important;font-size:12px!important;}
+  /* Friends view mobile */
+  #view-friends>div{padding:16px!important;}
+  #view-friends h2{font-size:18px!important;}
   /* Voice call room mobile adjustments */
   #vc-call-bar{padding:0!important;}
   #vc-call-bar>div:nth-child(2){gap:30px!important;padding:20px!important;}
@@ -4699,6 +4721,9 @@ function showView(v) {
   document.querySelectorAll('.sidebar-logo').forEach(el => el.classList.remove('active'));
   const rBtn = document.getElementById('rb-' + v);
   if (rBtn) rBtn.classList.add('active');
+
+  // Sync mobile tab bar active state
+  if (typeof _syncMobileTabBar === 'function') _syncMobileTabBar();
 
   // Post-show callbacks
   if (v === 'atelier') setTimeout(() => { refreshCU().then(()=>{ updateAtelierSidebar(); renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }).catch(()=>{ updateAtelierSidebar(); renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }); }, 0);
@@ -15318,6 +15343,8 @@ async function updateNotifBadge() {
   const unread=notifs.filter(n=>!n.read).length;
   if(badge){badge.textContent=unread;badge.style.display=unread>0?'flex':'none';}
   if(tbBadge){tbBadge.textContent=unread;tbBadge.style.display=unread>0?'block':'none';}
+  // Sync mobile tab bar badge
+  if(typeof _updateMobileNotifBadge==='function') _updateMobileNotifBadge();
   setFaviconNotif(unread>0);
   // Also clear bastion rail notification badges if no unread
   if (unread === 0) {
@@ -27317,10 +27344,10 @@ function renderAtelierTab(tab) {
     el.style.padding = '0';
     el.innerHTML = `
       <!-- Quest Header -->
-      <div style="position:relative;overflow:hidden;background:linear-gradient(160deg,#080b14 0%,#0c1020 50%,#0e0a1a 100%);padding:28px 32px 24px;border-bottom:1px solid rgba(255,255,255,.04);">
+      <div class="quest-header-mobile" style="position:relative;overflow:hidden;background:linear-gradient(160deg,#080b14 0%,#0c1020 50%,#0e0a1a 100%);padding:28px 32px 24px;border-bottom:1px solid rgba(255,255,255,.04);">
         <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 30%,rgba(62,207,110,.04),transparent 55%),radial-gradient(ellipse at 85% 65%,rgba(96,165,250,.03),transparent 50%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;">
-          <div>
+        <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+          <div style="min-width:0;">
             <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.4);margin-bottom:6px;">ATELIER</div>
             <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.01em;">Quests</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);line-height:1.5;">Complete quests to earn Onyx currency. Daily quests refresh at midnight.</div>
@@ -27356,7 +27383,7 @@ function renderAtelierTab(tab) {
       </div>
 
       <!-- Quest Content -->
-      <div style="padding:22px 28px 60px;">
+      <div class="quest-content-mobile" style="padding:22px 28px 60px;">
         <!-- Tabs -->
         <div style="display:flex;gap:8px;margin-bottom:20px;">
           <button class="quest-tab-chip ${qTab==='available'?'active':''}" onclick="setQuestTab('available')" id="qtab-available">Available (${activeQ.length})</button>

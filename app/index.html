@@ -2686,6 +2686,60 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .uv-header-content{min-height:180px;}
   .mobile-settings-drawer{width:100%;max-width:100vw;}
 }
+/* ── LIGHT THEME (Kingdom of God) ──── */
+.theme-light{color-scheme:light;}
+.theme-light,.theme-light *{--text-primary:#1a1a1a;--text-secondary:rgba(0,0,0,.6);--text-dim:rgba(0,0,0,.4);}
+.theme-light .topbar,.theme-light .room-topbar{background:var(--panel)!important;border-bottom:1px solid var(--border)!important;}
+.theme-light .topbar-title,.theme-light .rt-name{color:#1a1a1a!important;}
+.theme-light .msg-text{color:#2a2a2a!important;}
+.theme-light .msg-author-name{color:#1a1a1a!important;}
+.theme-light .msg-time{color:rgba(0,0,0,.35)!important;}
+.theme-light .msg-row:hover{background:rgba(0,0,0,.02)!important;}
+.theme-light .ch-item-2027,.theme-light .ch-overview-item,.theme-light .ch-sidebar-action{color:rgba(0,0,0,.45)!important;}
+.theme-light .ch-item-2027:hover,.theme-light .ch-overview-item:hover,.theme-light .ch-sidebar-action:hover{background:rgba(0,0,0,.04)!important;color:rgba(0,0,0,.75)!important;}
+.theme-light .ch-item-2027.active,.theme-light .ch-overview-item.active{background:rgba(0,0,0,.06)!important;color:#1a1a1a!important;}
+.theme-light .ch-category{color:rgba(0,0,0,.4)!important;}
+.theme-light .ch-hash{color:rgba(0,0,0,.3)!important;}
+.theme-light .chat-input-outer{background:var(--panel)!important;}
+.theme-light .chat-input{background:var(--bg)!important;color:#1a1a1a!important;border-color:var(--border)!important;}
+.theme-light .chat-input::placeholder{color:rgba(0,0,0,.35)!important;}
+.theme-light .sidebar-divider{background:rgba(0,0,0,.06)!important;}
+.theme-light .bastion-name-toggle{color:#1a1a1a!important;}
+.theme-light .rail-btn{color:rgba(0,0,0,.45)!important;}
+.theme-light .rail-btn:hover,.theme-light .rail-btn.active{color:#1a1a1a!important;background:rgba(0,0,0,.06)!important;}
+.theme-light .member-cat{color:rgba(0,0,0,.4)!important;}
+.theme-light .member-item .member-name{color:rgba(0,0,0,.65)!important;}
+.theme-light .settings-input{background:rgba(0,0,0,.03)!important;color:#1a1a1a!important;border-color:rgba(0,0,0,.1)!important;}
+.theme-light .settings-section-title{color:rgba(0,0,0,.35)!important;}
+.theme-light .settings-row-label .srl-name{color:#1a1a1a!important;}
+.theme-light .settings-row-label .srl-desc{color:rgba(0,0,0,.4)!important;}
+.theme-light .profile-nav-item{color:rgba(0,0,0,.45)!important;}
+.theme-light .profile-nav-item:hover{background:rgba(0,0,0,.04)!important;color:rgba(0,0,0,.75)!important;}
+.theme-light .profile-nav-item.active{color:#1a1a1a!important;background:rgba(0,0,0,.06)!important;}
+.theme-light .profile-nav-section{color:rgba(0,0,0,.3)!important;}
+.theme-light .unsaved-bar{background:var(--panel)!important;border-color:rgba(212,160,23,.3)!important;}
+.theme-light .unsaved-bar-msg{color:rgba(0,0,0,.7)!important;}
+.theme-light .toast{background:var(--panel)!important;color:#1a1a1a!important;border-color:var(--border)!important;}
+.theme-light .ftz-ctx-menu{background:var(--panel)!important;}
+.theme-light .ftz-ctx-item{color:rgba(0,0,0,.65)!important;}
+.theme-light .ftz-ctx-item:hover{background:rgba(0,0,0,.04)!important;}
+.theme-light .modal-wrap{background:var(--panel)!important;color:#1a1a1a!important;}
+.theme-light .mini-profile-preview{background:var(--panel)!important;}
+.theme-light .ov-name,.theme-light .bs-section-title{color:#1a1a1a!important;}
+.theme-light .ov-tagline,.theme-light .bs-section-desc{color:rgba(0,0,0,.45)!important;}
+.theme-light .ov-badge{color:rgba(0,0,0,.55)!important;background:rgba(0,0,0,.04)!important;border-color:rgba(0,0,0,.08)!important;}
+.theme-light .ov-quick-action{color:rgba(0,0,0,.6)!important;background:var(--panel)!important;border-color:var(--border)!important;}
+.theme-light .ov-welcome-card .ov-wc-text{color:rgba(0,0,0,.5)!important;}
+.theme-light .ov-stat-card .ov-sc-val{color:#1a1a1a!important;}
+.theme-light .ov-stat-card .ov-sc-label{color:rgba(0,0,0,.4)!important;}
+.theme-light .dm-name{color:#1a1a1a!important;}
+.theme-light .dm-preview{color:rgba(0,0,0,.4)!important;}
+.theme-light .dm-item:hover{background:rgba(0,0,0,.03)!important;}
+.theme-light .home-hero h1{color:#1a1a1a!important;}
+.theme-light .home-hero p{color:rgba(0,0,0,.5)!important;}
+.theme-light ::selection{background:rgba(212,160,23,.2);}
+.theme-light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12)!important;}
+.theme-light ::-webkit-scrollbar-track{background:transparent!important;}
 </style>
 <style id="radiance-font-style"></style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous" async></script>
@@ -14569,14 +14623,14 @@ function buildProfileView(tab) {
     const sc = FtzStatus.color(CU.status||'online');
 
     main.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 300px;height:100%;min-height:0;">
+      <div style="display:grid;grid-template-columns:1fr 320px;height:100%;min-height:0;">
         <!-- LEFT: settings form -->
-        <div style="overflow-y:auto;padding:0 36px 60px;border-right:1px solid rgba(255,255,255,.05);">
+        <div style="overflow-y:auto;padding:0 40px 60px;border-right:1px solid rgba(255,255,255,.05);">
 
           <!-- Page Hero -->
-          <div style="margin:0 -36px 28px;padding:32px 36px 20px;border-bottom:1px solid rgba(255,255,255,.05);">
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">My Profile</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize how others see you on Fortized</div>
+          <div style="margin:0 -40px 28px;padding:36px 40px 22px;border-bottom:1px solid rgba(255,255,255,.05);background:linear-gradient(180deg,rgba(255,249,62,.015) 0%,transparent 100%);">
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;">My Profile</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:5px;">Customize how others see you on Fortized</div>
           </div>
 
           <!-- SECTION: Profile -->
@@ -14709,26 +14763,30 @@ function buildProfileView(tab) {
         </div>
 
         <!-- RIGHT: Live profile preview -->
-        <div style="overflow-y:auto;padding:24px 20px;background:var(--panel2);border-left:1px solid var(--border);">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:12px;">Live Preview</div>
-          <div class="profile-preview-card" style="border-radius:18px;overflow:hidden;border:2px solid ${CU.profileTheme?.color1 ? `transparent;background-image:linear-gradient(135deg,${CU.profileTheme.color1}0a,var(--panel) 40%,${CU.profileTheme.color2}08),linear-gradient(135deg,${CU.profileTheme.color1},${CU.profileTheme.color2||CU.profileTheme.color1});background-origin:border-box;background-clip:padding-box,border-box` : 'var(--border)'};box-shadow:${CU.profileTheme?.color1 ? `0 0 20px ${CU.profileTheme.color1}15` : 'none'};">
+        <div style="overflow-y:auto;padding:28px 24px;background:var(--panel2);border-left:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);">Live Preview</div>
+          </div>
+          <div class="profile-preview-card" style="border-radius:18px;overflow:hidden;border:2px solid ${CU.profileTheme?.color1 ? `transparent;background-image:linear-gradient(135deg,${CU.profileTheme.color1}0a,var(--panel) 40%,${CU.profileTheme.color2}08),linear-gradient(135deg,${CU.profileTheme.color1},${CU.profileTheme.color2||CU.profileTheme.color1});background-origin:border-box;background-clip:padding-box,border-box` : 'var(--border)'};box-shadow:0 8px 40px rgba(0,0,0,.25)${CU.profileTheme?.color1 ? `,0 0 20px ${CU.profileTheme.color1}15` : ''};">
             <!-- Banner -->
-            <div style="height:110px;position:relative;background:linear-gradient(135deg,#141a2e,#1a1030,#0f1828);overflow:hidden;">
+            <div style="height:120px;position:relative;background:linear-gradient(135deg,#141a2e,#1a1030,#0f1828);overflow:hidden;">
               ${CU.banner ? `<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${CU.profileTheme?.color1||'#1e2340'}88,${CU.profileTheme?.color2||'#1a1535'}66);"></div>`}
+              <div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,transparent 50%);"></div>
               ${CU.profileTheme?.color1 ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${CU.profileTheme.color1},${CU.profileTheme.color2});opacity:.6;z-index:1;"></div>` : ''}
             </div>
-            <div style="padding:0 18px 20px;">
+            <div style="padding:0 20px 22px;">
               <!-- Profile picture + Badge row -->
-              <div style="display:flex;align-items:flex-end;gap:12px;margin-top:-34px;margin-bottom:14px;position:relative;z-index:2;">
-                <div style="width:68px;height:68px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 20px rgba(0,0,0,.6);flex-shrink:0;">
+              <div style="display:flex;align-items:flex-end;gap:14px;margin-top:-38px;margin-bottom:16px;position:relative;z-index:2;">
+                <div style="width:76px;height:76px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 20px rgba(0,0,0,.6);flex-shrink:0;">
                   ${CU.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</span>`}
                 </div>
-                <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;">${renderBadgesHTML(CU)}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px;">${renderBadgesHTML(CU)}</div>
               </div>
               <!-- Identity section -->
-              <div style="margin-bottom:12px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-                  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;line-height:1;">${escapeHTML(CU.displayName||CU.username)}</div>
+              <div style="margin-bottom:14px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                  <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;line-height:1;">${escapeHTML(CU.displayName||CU.username)}</div>
                   <span style="width:10px;height:10px;border-radius:50%;background:${sc};flex-shrink:0;box-shadow:0 0 6px ${sc}55;"></span>
                 </div>
                 <div style="font-size:12px;color:rgba(255,255,255,.35);">@${escapeHTML(CU.username)}</div>
@@ -15028,6 +15086,7 @@ function buildProfileView(tab) {
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
       {id:'sunset',           name:'Sunset',           desc:'Sunset gradient overlay on Fortized Classic',    bg:'rgba(10,13,20,0.65)', sidebar:'rgba(19,22,29,0.75)', channel:'rgba(15,18,25,0.65)', panel:'rgba(22,26,35,0.75)', accent:'#fef83d', border:'rgba(37,45,61,0.5)', muted:'#4e5a6f', bodyGrad:'linear-gradient(170deg,#1a0410 0%,#2e0820 15%,#4a1228 30%,#742a2c 45%,#a65035 58%,#c77a3a 70%,#dba040 82%,#f5d978 100%)', cost:100, locked:!unlocked.includes('sunset')},
+      {id:'kingdom_of_god',    name:'Kingdom of God',   desc:'White and gold — the light of the kingdom',      bg:'#f5f3ee', sidebar:'#eae7df', channel:'#faf9f6', panel:'#ffffff', accent:'#d4a017', border:'#ddd8cc', muted:'#8a8478', bodyGrad:'linear-gradient(170deg,#faf9f6 0%,#f0ead4 100%)', light:true, cost:200, locked:!unlocked.includes('kingdom_of_god')},
     ];
     const defaultThemes = allThemes.filter(t => t.free);
     const ownedThemes = allThemes.filter(t => !t.free && !t.locked);
@@ -15041,6 +15100,11 @@ function buildProfileView(tab) {
     function buildChatPreview(t, label) {
       const uName = CU?.displayName || CU?.username || 'You';
       const uInitial = uName[0].toUpperCase();
+      const isLight = !!t.light;
+      const textMain = isLight ? 'rgba(0,0,0,.75)' : 'rgba(255,255,255,.55)';
+      const textStrong = isLight ? '#1a1a1a' : '#fff';
+      const textDim = isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)';
+      const textDim2 = isLight ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.04)';
       const pfpHtml = CU?.pfp
         ? '<img src="'+CU.pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
         : '<div style="width:100%;height:100%;border-radius:50%;background:'+t.panel+';display:flex;align-items:center;justify-content:center;font-size:11px;font-family:Syne,sans-serif;font-weight:800;color:'+t.accent+';">'+uInitial+'</div>';
@@ -15050,7 +15114,7 @@ function buildProfileView(tab) {
         <div style="border-radius:16px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};">
           <!-- Titlebar -->
           <div style="height:32px;background:${t.sidebar};display:flex;align-items:center;padding:0 12px;gap:6px;border-bottom:1px solid ${t.border};">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);"># general</div>
+            <div style="font-size:10px;font-weight:700;color:${isLight?'rgba(0,0,0,.4)':'rgba(255,255,255,.35)'};"># general</div>
             <div style="flex:1;"></div>
             <div style="width:6px;height:6px;border-radius:50%;background:${t.muted};opacity:.4;"></div>
             <div style="width:6px;height:6px;border-radius:50%;background:${t.muted};opacity:.4;"></div>
@@ -15059,21 +15123,21 @@ function buildProfileView(tab) {
             <!-- Sidebar mock -->
             <div style="width:44px;background:${t.sidebar};border-right:1px solid ${t.border};padding:8px 6px;display:flex;flex-direction:column;gap:4px;">
               <div style="height:5px;background:${t.accent};border-radius:3px;width:80%;opacity:.6;"></div>
-              <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;width:65%;"></div>
-              <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;width:90%;"></div>
-              <div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;width:50%;"></div>
+              <div style="height:5px;background:${textDim};border-radius:3px;width:65%;"></div>
+              <div style="height:5px;background:${textDim};border-radius:3px;width:90%;"></div>
+              <div style="height:5px;background:${textDim2};border-radius:3px;width:50%;"></div>
             </div>
             <!-- Chat area -->
             <div style="flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:${t.channel};overflow:hidden;">
               <!-- Message 1 -->
               <div style="display:flex;gap:8px;align-items:flex-start;">
-                <div style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:9px;color:${t.muted};">F</div>
+                <div style="width:26px;height:26px;border-radius:50%;background:${textDim};flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:9px;color:${t.muted};">F</div>
                 <div style="min-width:0;">
                   <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
                     <span style="font-size:10px;font-weight:700;color:${t.accent};">Fortized</span>
                     <span style="font-size:8px;color:${t.muted};">Today 14:32</span>
                   </div>
-                  <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">Welcome to the bastion! 🏰</div>
+                  <div style="font-size:10px;color:${textMain};line-height:1.4;">Welcome to the bastion! 🏰</div>
                 </div>
               </div>
               <!-- Message 2: user's own message -->
@@ -15081,10 +15145,10 @@ function buildProfileView(tab) {
                 <div style="width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;">${pfpHtml}</div>
                 <div style="min-width:0;">
                   <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
-                    <span style="font-size:10px;font-weight:700;color:#fff;">${uName}</span>
+                    <span style="font-size:10px;font-weight:700;color:${textStrong};">${uName}</span>
                     <span style="font-size:8px;color:${t.muted};">Today 14:33</span>
                   </div>
-                  <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">This looks amazing!</div>
+                  <div style="font-size:10px;color:${textMain};line-height:1.4;">This looks amazing!</div>
                 </div>
               </div>
               <!-- Message 3 -->
@@ -15095,7 +15159,7 @@ function buildProfileView(tab) {
                     <span style="font-size:10px;font-weight:700;color:#a78bfa;">Knight</span>
                     <span style="font-size:8px;color:${t.muted};">Today 14:34</span>
                   </div>
-                  <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">Hey, welcome aboard!</div>
+                  <div style="font-size:10px;color:${textMain};line-height:1.4;">Hey, welcome aboard!</div>
                 </div>
               </div>
               <div style="flex:1;"></div>
@@ -15113,9 +15177,14 @@ function buildProfileView(tab) {
     function buildAppearanceCard(t) {
       const isActive = currentTheme===t.id;
       const isLocked = t.locked;
+      const isLight = !!t.light;
       const borderCol = isActive ? 'rgba(254,248,61,.35)' : 'rgba(255,255,255,.06)';
       const bgCol = isActive ? 'rgba(254,248,61,.04)' : 'rgba(255,255,255,.015)';
       const txtCol = isActive ? '#fef83d' : '#fff';
+      const mockDim = isLight ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.06)';
+      const mockDim2 = isLight ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.04)';
+      const mockText = isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.08)';
+      const mockText2 = isLight ? 'rgba(0,0,0,.14)' : 'rgba(255,255,255,.12)';
       const clickAction = isLocked ? "buyAppearance('" + t.id + "'," + t.cost + ")" : "selectAppearancePreview('" + t.id + "')";
       const opac = isLocked ? 'opacity:.55;' : '';
       return `
@@ -15125,23 +15194,23 @@ function buildProfileView(tab) {
           <!-- Mini sidebar -->
           <div style="width:28px;background:${t.sidebar};border-right:1px solid ${t.border};padding:8px 5px;display:flex;flex-direction:column;gap:4px;">
             <div style="height:4px;background:${t.accent};border-radius:3px;width:70%;opacity:.5;"></div>
-            <div style="height:4px;background:rgba(255,255,255,.06);border-radius:3px;width:85%;"></div>
-            <div style="height:4px;background:rgba(255,255,255,.04);border-radius:3px;width:55%;"></div>
+            <div style="height:4px;background:${mockDim};border-radius:3px;width:85%;"></div>
+            <div style="height:4px;background:${mockDim2};border-radius:3px;width:55%;"></div>
           </div>
           <!-- Mini chat area -->
           <div style="flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:5px;background:${t.channel};">
             <div style="display:flex;gap:5px;align-items:center;">
-              <div style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.06);flex-shrink:0;"></div>
+              <div style="width:14px;height:14px;border-radius:50%;background:${mockDim};flex-shrink:0;"></div>
               <div style="flex:1;">
                 <div style="height:3px;background:${t.accent};border-radius:3px;width:35%;margin-bottom:3px;opacity:.6;"></div>
-                <div style="height:3px;background:rgba(255,255,255,.08);border-radius:2px;width:65%;"></div>
+                <div style="height:3px;background:${mockText};border-radius:2px;width:65%;"></div>
               </div>
             </div>
             <div style="display:flex;gap:5px;align-items:center;">
               <div style="width:14px;height:14px;border-radius:50%;background:rgba(140,100,220,.12);flex-shrink:0;"></div>
               <div style="flex:1;">
-                <div style="height:3px;background:rgba(255,255,255,.12);border-radius:3px;width:28%;margin-bottom:3px;"></div>
-                <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;width:55%;"></div>
+                <div style="height:3px;background:${mockText2};border-radius:3px;width:28%;margin-bottom:3px;"></div>
+                <div style="height:3px;background:${mockDim};border-radius:2px;width:55%;"></div>
               </div>
             </div>
             <div style="flex:1;"></div>
@@ -15166,9 +15235,9 @@ function buildProfileView(tab) {
 
     main.innerHTML = `<div class="settings-panel">
       <!-- Page Hero -->
-      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Appearance</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Your client, your look — choose how Fortized feels</div>
+      <div style="margin-bottom:28px;margin-top:28px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;">Appearance</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:5px;">Your client, your look — choose how Fortized feels</div>
       </div>
 
       <!-- Live Preview: Current vs Selected -->
@@ -30434,6 +30503,23 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--muted',      '#4e5a6f');
     document.documentElement.style.setProperty('--muted-light','#7d8a9e');
     document.body.style.background = 'linear-gradient(170deg, #1a0410 0%, #2e0820 15%, #4a1228 30%, #742a2c 45%, #a65035 58%, #c77a3a 70%, #dba040 82%, #f5d978 100%)';
+  } else if (themeId === 'kingdom_of_god') {
+    sidebarColor = '#eae7df';
+    document.documentElement.style.setProperty('--bg',         '#f5f3ee');
+    document.documentElement.style.setProperty('--rail',       '#e4e0d6');
+    document.documentElement.style.setProperty('--sidebar',    sidebarColor);
+    document.documentElement.style.setProperty('--channel',    '#faf9f6');
+    document.documentElement.style.setProperty('--panel',      '#ffffff');
+    document.documentElement.style.setProperty('--panel2',     '#f7f5f0');
+    document.documentElement.style.setProperty('--panel3',     '#efece4');
+    document.documentElement.style.setProperty('--border',     '#ddd8cc');
+    document.documentElement.style.setProperty('--muted',      '#8a8478');
+    document.documentElement.style.setProperty('--muted-light','#a69e90');
+    document.documentElement.style.setProperty('--accent',     '#d4a017');
+    document.documentElement.style.setProperty('--accent-dim', 'rgba(212,160,23,.1)');
+    document.documentElement.style.setProperty('--accent-mid', 'rgba(212,160,23,.22)');
+    document.body.style.background = 'linear-gradient(170deg, #faf9f6 0%, #f0ead4 100%)';
+    document.documentElement.classList.add('theme-light');
   } else {
     // Fortized Classic (default)
     sidebarColor = '#13161d';
@@ -30452,12 +30538,16 @@ function applyAppearance(themeId) {
   document.documentElement.style.setProperty('--sidebar-ctx', _darkenHex(sidebarColor, 0.188));
   // For sunset, override sidebar-ctx to be semi-transparent so gradient bleeds through
   if (themeId === 'sunset') document.documentElement.style.setProperty('--sidebar-ctx', 'rgba(15,18,23,0.8)');
-  // Reset body gradient if not onyx_pure
-  if (themeId !== 'onyx_pure' && themeId !== 'sunset') document.body.style.background = '';
-  // All themes keep yellow accent
-  document.documentElement.style.setProperty('--accent',     '#fff93e');
-  document.documentElement.style.setProperty('--accent-dim', 'rgba(255,249,62,.1)');
-  document.documentElement.style.setProperty('--accent-mid', 'rgba(255,249,62,.22)');
+  // Reset body gradient if not a gradient theme
+  if (themeId !== 'onyx_pure' && themeId !== 'sunset' && themeId !== 'kingdom_of_god') document.body.style.background = '';
+  // Remove light theme class if not light theme
+  if (themeId !== 'kingdom_of_god') document.documentElement.classList.remove('theme-light');
+  // All themes keep yellow accent (Kingdom of God uses deeper gold)
+  if (themeId !== 'kingdom_of_god') {
+    document.documentElement.style.setProperty('--accent',     '#fff93e');
+    document.documentElement.style.setProperty('--accent-dim', 'rgba(255,249,62,.1)');
+    document.documentElement.style.setProperty('--accent-mid', 'rgba(255,249,62,.22)');
+  }
   // Re-render appearance settings if it's currently open
   const activeNav = document.querySelector('.profile-nav-item.active');
   if (activeNav && activeNav.id === 'pnav-appearance') buildProfileView('appearance');
@@ -30466,7 +30556,7 @@ function applyAppearance(themeId) {
   const chatInputOuter = document.querySelector('.chat-input-outer');
   if (userbarEl) userbarEl.style.background = '';
   if (chatInputOuter) chatInputOuter.style.background = '';
-  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic', sunset:'🌅 Sunset'};
+  const toastMsgs = {midnight_citadel:'🌙 Midnight Citadel', dark_realm:'🌑 Dark Realm', onyx_pure:'⬛ Onyx Pure', fortized_classic:'⚡ Fortized Classic', sunset:'🌅 Sunset', kingdom_of_god:'✝ Kingdom of God'};
   toast((toastMsgs[themeId]||'⚡ Theme')+' activated!', 'success');
 }
 
@@ -30478,11 +30568,17 @@ const _appearanceThemeData = {
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
   sunset:           {id:'sunset',           name:'Sunset',           bg:'rgba(10,13,20,0.65)', sidebar:'rgba(19,22,29,0.75)', get sidebarCtx(){return 'rgba(15,18,23,0.8)';}, channel:'rgba(15,18,25,0.65)', panel:'rgba(22,26,35,0.75)', accent:'#fef83d', border:'rgba(37,45,61,0.5)', muted:'#4e5a6f', bodyGrad:'linear-gradient(170deg,#1a0410 0%,#2e0820 15%,#4a1228 30%,#742a2c 45%,#a65035 58%,#c77a3a 70%,#dba040 82%,#f5d978 100%)'},
+  kingdom_of_god:   {id:'kingdom_of_god',   name:'Kingdom of God',   bg:'#f5f3ee', sidebar:'#eae7df', get sidebarCtx(){return '#e0dcd2';}, channel:'#faf9f6', panel:'#ffffff', accent:'#d4a017', border:'#ddd8cc', muted:'#8a8478', bodyGrad:'linear-gradient(170deg,#faf9f6 0%,#f0ead4 100%)', light:true},
 };
 
 function _buildPreviewMockup(t, label) {
   const uName = CU?.displayName || CU?.username || 'You';
   const uInitial = uName[0].toUpperCase();
+  const isLight = !!t.light;
+  const textMain = isLight ? 'rgba(0,0,0,.75)' : 'rgba(255,255,255,.55)';
+  const textStrong = isLight ? '#1a1a1a' : '#fff';
+  const textDim = isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)';
+  const textDim2 = isLight ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.04)';
   const pfpHtml = CU?.pfp
     ? '<img src="'+CU.pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
     : '<div style="width:100%;height:100%;border-radius:50%;background:'+t.panel+';display:flex;align-items:center;justify-content:center;font-size:11px;font-family:Syne,sans-serif;font-weight:800;color:'+t.accent+';">'+uInitial+'</div>';
@@ -30490,7 +30586,7 @@ function _buildPreviewMockup(t, label) {
   <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:10px;">${label}</div>
   <div style="border-radius:16px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};">
     <div style="height:32px;background:${t.sidebar};display:flex;align-items:center;padding:0 12px;gap:6px;border-bottom:1px solid ${t.border};">
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);"># general</div>
+      <div style="font-size:10px;font-weight:700;color:${isLight?'rgba(0,0,0,.4)':'rgba(255,255,255,.35)'};"># general</div>
       <div style="flex:1;"></div>
       <div style="width:6px;height:6px;border-radius:50%;background:${t.muted};opacity:.4;"></div>
       <div style="width:6px;height:6px;border-radius:50%;background:${t.muted};opacity:.4;"></div>
@@ -30498,29 +30594,29 @@ function _buildPreviewMockup(t, label) {
     <div style="display:flex;height:155px;">
       <div style="width:44px;background:${t.sidebarCtx||t.sidebar};border-right:1px solid ${t.border};padding:8px 6px;display:flex;flex-direction:column;gap:4px;">
         <div style="height:5px;background:${t.accent};border-radius:3px;width:80%;opacity:.6;"></div>
-        <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;width:65%;"></div>
-        <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;width:90%;"></div>
-        <div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;width:50%;"></div>
+        <div style="height:5px;background:${textDim};border-radius:3px;width:65%;"></div>
+        <div style="height:5px;background:${textDim};border-radius:3px;width:90%;"></div>
+        <div style="height:5px;background:${textDim2};border-radius:3px;width:50%;"></div>
       </div>
       <div style="flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:${t.channel};overflow:hidden;">
         <div style="display:flex;gap:8px;align-items:flex-start;">
-          <div style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:${t.muted};">F</div>
+          <div style="width:26px;height:26px;border-radius:50%;background:${textDim};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:${t.muted};">F</div>
           <div style="min-width:0;">
             <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
               <span style="font-size:10px;font-weight:700;color:${t.accent};">Fortized</span>
               <span style="font-size:8px;color:${t.muted};">Today 14:32</span>
             </div>
-            <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">Welcome to the bastion! 🏰</div>
+            <div style="font-size:10px;color:${textMain};line-height:1.4;">Welcome to the bastion! 🏰</div>
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:flex-start;">
           <div style="width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;">${pfpHtml}</div>
           <div style="min-width:0;">
             <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
-              <span style="font-size:10px;font-weight:700;color:#fff;">${uName}</span>
+              <span style="font-size:10px;font-weight:700;color:${textStrong};">${uName}</span>
               <span style="font-size:8px;color:${t.muted};">Today 14:33</span>
             </div>
-            <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">This looks amazing!</div>
+            <div style="font-size:10px;color:${textMain};line-height:1.4;">This looks amazing!</div>
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:flex-start;">
@@ -30530,7 +30626,7 @@ function _buildPreviewMockup(t, label) {
               <span style="font-size:10px;font-weight:700;color:#a78bfa;">Knight</span>
               <span style="font-size:8px;color:${t.muted};">Today 14:34</span>
             </div>
-            <div style="font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;">Hey, welcome aboard!</div>
+            <div style="font-size:10px;color:${textMain};line-height:1.4;">Hey, welcome aboard!</div>
           </div>
         </div>
         <div style="flex:1;"></div>

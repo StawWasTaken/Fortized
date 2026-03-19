@@ -2520,45 +2520,70 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 .msd-sep{height:1px;background:rgba(255,255,255,.05);margin:6px 4px;}
 
 @media(max-width:768px){
-  body{flex-direction:column;}
-  /* Hide desktop sidebar completely */
-  .sidebar{display:none!important;}
-  .sidebar-ctx{position:fixed!important;left:0;top:0;bottom:0;width:300px!important;min-width:300px!important;transform:translateX(-100%);transition:transform .25s cubic-bezier(.22,1,.36,1);z-index:100;box-shadow:8px 0 40px rgba(0,0,0,.6);border-right:1px solid rgba(255,255,255,.06);}
+  body{flex-direction:row;}
+  /* ── Sidebar rail: visible as narrow icon strip ── */
+  .sidebar{display:flex!important;width:56px!important;min-width:56px!important;padding-bottom:0;z-index:50;border-right:1px solid rgba(255,255,255,.04);}
+  .sidebar-logo-icon{width:40px;height:40px;}
+  .sidebar-logo-icon img{width:40px;height:40px;}
+  .sidebar-logo{padding:10px 0 6px;}
+  .sidebar-nav{padding:4px 0;gap:2px;}
+  .rail-btn{width:40px;height:40px;border-radius:14px;}
+  .rail-btn svg{width:18px;height:18px;}
+  .rail-btn span{display:none;}
+  .rail-bastion{width:40px;height:40px;}
+  .rail-bastion .bastion-icon{width:40px;height:40px;}
+  .rail-sep{width:24px;margin:4px auto;}
+  .rail-notif-badge{transform:scale(.85);top:-3px;right:-3px;}
+  .rail-userbar{display:none!important;}
+  .rail-ub-activity-row{display:none!important;}
+  /* ── Sidebar context (channel list): slide-over from left ── */
+  .sidebar-ctx{position:fixed!important;left:56px;top:0;bottom:0;width:280px!important;min-width:280px!important;transform:translateX(-340px);transition:transform .25s cubic-bezier(.22,1,.36,1);z-index:100;box-shadow:8px 0 40px rgba(0,0,0,.6);border-right:1px solid rgba(255,255,255,.06);}
   .sidebar-ctx.mobile-ctx-open{transform:translateX(0);}
   .mobile-overlay.active{display:block;z-index:90;}
-  /* Hide desktop userbar */
+  /* ── Hide desktop userbar ── */
   .userbar{display:none!important;}
-  /* Show mobile bottom tab bar */
-  .mobile-tab-bar{display:block;}
-  /* Show mobile settings drawer */
+  /* ── Show mobile bottom tab bar ── */
+  .mobile-tab-bar{display:block;left:0;}
+  /* ── Show mobile settings drawer ── */
   .mobile-settings-drawer{display:block;}
-  /* Show hamburger menu button */
-  .mobile-menu-btn{display:flex;}
+  /* ── Hide hamburger (rail is visible now), keep back btn ── */
+  .mobile-menu-btn{display:none!important;}
   .mobile-back-btn{display:flex;}
-  /* Main wrap takes full width */
-  .main-wrap{flex:1;min-height:0;}
-  /* Topbar adjustments */
+  /* ── Main wrap fills remaining space ── */
+  .main-wrap{flex:1;min-width:0;min-height:0;}
+  /* ── Topbar ── */
   .topbar{padding:0 12px;gap:8px;height:48px;}
   .tb-search{display:none;}
   .tb-onyx-pill{padding:4px 10px 4px 7px;}
   .tb-onyx-pill span:last-child{display:none;}
   .tb-win-controls{display:none!important;}
-  /* Main content area */
-  .main{border-radius:0;border:none;flex-direction:column;}
-  /* Content fills screen */
+  /* ── Main content area ── */
+  .main{border-radius:0;border:none;flex-direction:column;border-top-left-radius:0;}
   .content{border-radius:0;}
-  /* Chat messages */
+  /* ── Hide Active Now sidebar on mobile ── */
+  .active-now-sidebar{display:none!important;}
+  /* ── Home hero adjustments ── */
+  .home-hero{min-height:180px!important;padding:20px!important;}
+  .home-hero h1{font-size:22px!important;}
+  .hero-knight-bg{opacity:.15!important;right:-40px!important;}
+  .hero-joyster-wrap{display:none!important;}
+  .joyster-bubble{display:none!important;}
+  .home-hero-actions{flex-wrap:wrap;gap:8px!important;}
+  .hero-btn{padding:8px 14px!important;font-size:12px!important;}
+  .home-feed{padding-bottom:72px;}
+  .home-wrap{flex-direction:column;}
+  /* ── Chat messages ── */
   .msg-row{padding:6px 14px;}
   .msg-row.msg-first{padding:10px 14px 6px;}
-  /* Room topbar */
+  /* ── Room topbar ── */
   .room-topbar{padding:0 12px;gap:8px;}
   .room-topbar .rt-desc{display:none;}
   .room-topbar .rt-sep{display:none;}
-  /* Own profile panel — hide on mobile (use drawer instead) */
-  .own-profile-panel{left:50%!important;transform:translateX(-50%);bottom:68px!important;width:calc(100vw - 24px)!important;max-width:340px;}
-  /* Notification panel — full screen */
-  .notif-panel{width:100%!important;border-radius:0!important;top:0!important;max-height:100vh!important;}
-  /* Profile/settings view */
+  /* ── Own profile panel ── */
+  .own-profile-panel{left:50%!important;transform:translateX(-50%);bottom:68px!important;width:calc(100vw - 80px)!important;max-width:340px;}
+  /* ── Notification panel — full width ── */
+  .notif-panel{width:calc(100vw - 56px)!important;border-radius:0!important;top:0!important;max-height:100vh!important;right:0!important;}
+  /* ── Profile/settings ── */
   .profile-wrap{flex-direction:column;}
   .profile-nav{width:100%!important;min-width:100%!important;max-height:44px;overflow:hidden;flex-direction:row;padding:0;border-right:none;border-bottom:1px solid rgba(254,248,61,.04);}
   .profile-nav.mobile-nav-open{max-height:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:var(--bg);overflow-y:auto;}
@@ -2570,49 +2595,51 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .settings-panel{padding:0 16px 80px;}
   .settings-row{flex-direction:column;gap:8px;padding:14px;}
   .settings-row-label{width:100%;}
-  /* Discover hero */
+  /* ── Discover ── */
   .disc-hero{padding:24px 20px;}
   .disc-hero h2{font-size:22px;}
   .uv-header-content{padding:20px;flex-direction:column;align-items:flex-start;gap:12px;}
-  /* Atelier */
+  /* ── Atelier ── */
   .atelier-hero{flex-direction:column;gap:16px;padding:20px;}
-  .atelier-scroll{padding:0;}
-  /* Bastion hub */
+  .atelier-scroll{padding:0;padding-bottom:72px;}
+  /* ── Bastion hub ── */
   .bastion-hub-main{padding:16px;}
-  /* Mention preview */
-  .mention-preview{width:calc(100vw - 24px)!important;max-width:300px;}
-  /* Mini profile preview */
-  .mini-profile-preview{width:calc(100vw - 24px)!important;max-width:340px;}
-  /* Suggest panel */
+  /* ── Popups/panels ── */
+  .mention-preview{width:calc(100vw - 80px)!important;max-width:300px;}
+  .mini-profile-preview{width:calc(100vw - 80px)!important;max-width:340px;}
   .suggest-panel{left:12px!important;right:12px!important;max-width:none!important;width:auto!important;}
-  /* Bastion dropdown */
-  .bastion-dropdown{position:fixed!important;left:12px!important;right:12px!important;top:auto!important;bottom:0!important;width:auto!important;border-radius:18px 18px 0 0!important;max-height:70vh;animation:ctxSlideUp .2s cubic-bezier(.22,1,.36,1)!important;}
-  /* Bottom padding for mobile tab bar */
-  .home-feed{padding-bottom:72px;}
-  .atelier-scroll{padding-bottom:72px;}
+  .bastion-dropdown{position:fixed!important;left:56px!important;right:0!important;top:auto!important;bottom:0!important;width:auto!important;border-radius:18px 18px 0 0!important;max-height:70vh;animation:ctxSlideUp .2s cubic-bezier(.22,1,.36,1)!important;}
+  /* ── Bottom padding for tab bar ── */
   .profile-main{padding-bottom:72px;}
   .sidebar-ctx .sidebar-scroll{padding-bottom:72px;}
   .discover-scroll{padding-bottom:72px;}
   .view{padding-bottom:72px!important;}
   .chat-input-outer{margin-bottom:56px;margin-bottom:calc(56px + env(safe-area-inset-bottom,0));}
-  /* Bastion banner */
+  /* ── Bastion banner ── */
   .bastion-banner-hero{height:120px;}
   .bastion-banner-hero img{height:120px;}
-  /* Toast above mobile tab bar */
-  #toast-container{bottom:80px!important;right:12px!important;left:12px!important;align-items:stretch;}
-  /* Voice call room mobile adjustments */
+  /* ── Toast above tab bar ── */
+  #toast-container{bottom:80px!important;right:12px!important;left:68px!important;align-items:stretch;}
+  /* ── Voice call ── */
   #vc-call-bar{padding:0!important;}
   #vc-call-bar>div:nth-child(2){gap:30px!important;padding:20px!important;}
-  /* Page banners */
+  /* ── Page banners ── */
   .page-banner{height:140px;}
   .atelier-banner{height:140px;}
-  /* Picker panels */
+  /* ── Picker panels (bottom sheet) ── */
   .chat-picker-base{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;max-width:100%!important;width:100%!important;border-radius:18px 18px 0 0!important;max-height:70vh!important;animation:ctxSlideUp .22s cubic-bezier(.22,1,.36,1)!important;}
   .emoji-picker-panel{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;max-width:100%!important;width:100%!important;border-radius:18px 18px 0 0!important;max-height:70vh!important;animation:ctxSlideUp .22s cubic-bezier(.22,1,.36,1)!important;}
-  /* Mobile DM list style */
+  /* ── DM list ── */
   .dm-item{padding:10px 16px!important;gap:12px!important;border-radius:0!important;border-bottom:1px solid rgba(255,255,255,.03);}
   .dm-item .dm-name{font-size:15px!important;}
   .dm-item .dm-preview{font-size:13px!important;}
+  /* ── Realm sections on home ── */
+  .realm-section{padding:0 16px!important;}
+  .realm-section-title{font-size:13px!important;}
+  .realm-scroll{gap:10px!important;}
+  .realm-card{min-width:200px!important;}
+  /* ── Context menu as bottom sheet ── */
+  .ftz-ctx-menu{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;max-width:100%!important;width:100%!important;border-radius:16px 16px 0 0!important;max-height:65vh!important;animation:ctxSlideUp .2s cubic-bezier(.22,1,.36,1)!important;}
 }
 
 /* ── SMALL PHONE (max-width: 480px) ──── */
@@ -2753,15 +2780,6 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <div class="mobile-tab-item active" id="mtab-home" onclick="_mobileTab('home')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span class="mtb-label">Home</span>
-    </div>
-    <div class="mobile-tab-item" id="mtab-friends" onclick="_mobileTab('friends')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      <span class="mtb-label">Friends</span>
-      <span class="mtb-dot" id="mtab-friends-dot"></span>
-    </div>
-    <div class="mobile-tab-item" id="mtab-search" onclick="_mobileTab('search')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <span class="mtb-label">Search</span>
     </div>
     <div class="mobile-tab-item" id="mtab-notifs" onclick="_mobileTab('notifs')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
@@ -4985,6 +5003,8 @@ setInterval(() => { if (_gameActivity) _updateUserbarActivity(); }, 30000);
 
 /* ── Mobile sidebar toggle ──── */
 function toggleMobileSidebar() {
+  // On mobile the sidebar rail is always visible, so toggle the ctx panel instead
+  if (_isMobile()) { toggleMobileCtxSidebar(); return; }
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('mobile-overlay');
   if (!sb) return;
@@ -5013,7 +5033,9 @@ function toggleMobileCtxSidebar() {
 }
 function closeMobileCtxSidebar() {
   const ctx = document.getElementById('sidebar-ctx');
+  const ov = document.getElementById('mobile-overlay');
   if (ctx) ctx.classList.remove('mobile-ctx-open');
+  if (ov) ov.classList.remove('active');
 }
 function _updateMobileBackBtn() {
   const btn = document.getElementById('mobile-back-btn');
@@ -5040,8 +5062,6 @@ function _mobileTab(tab) {
   if (tabEl) tabEl.classList.add('active');
   // Navigate
   if (tab === 'home') showView('home');
-  else if (tab === 'friends') showView('dms');
-  else if (tab === 'search') { if (typeof openAdvancedSearch === 'function') openAdvancedSearch(); }
   else if (tab === 'notifs') { if (typeof toggleNotifPanel === 'function') toggleNotifPanel(); }
   else if (tab === 'profile') _openMobileSettings();
 }
@@ -5049,7 +5069,7 @@ function _mobileTab(tab) {
 // Sync mobile tab bar active state with current view
 function _syncMobileTabBar() {
   if (!_isMobile()) return;
-  const views = {'view-home':'home','view-dms':'friends','view-friends':'friends','view-profile':'profile','view-atelier':'home','view-discover':'home'};
+  const views = {'view-home':'home','view-dms':'home','view-friends':'home','view-profile':'profile','view-atelier':'home','view-discover':'home','view-bastion':'home','view-bsettings':'home','view-bhub':'home'};
   const activeView = document.querySelector('.view.active, .view[style*="display: flex"], .view[style*="display:flex"]');
   const viewId = activeView?.id || '';
   const tab = views[viewId] || 'home';
@@ -7152,6 +7172,10 @@ function openBastion(idx) {
       }
     }
     document.getElementById('member-list').innerHTML='';
+    // On mobile, auto-open the sidebar-ctx (channel list) when entering a bastion
+    if (typeof _isMobile === 'function' && _isMobile()) {
+      setTimeout(() => toggleMobileCtxSidebar(), 50);
+    }
   });
 }
 
@@ -10811,6 +10835,11 @@ async function createBastion() {
   renderRailBastions();
   cbIconData = null;
   cbSelectedEmoji = null;
+  // Track create_bastion quest completion
+  if (!CU.completedQuests?.includes('create_bastion')) {
+    CU.completedQuests = [...(CU.completedQuests||[]), 'create_bastion'];
+    saveUser(true);
+  }
   toast(`${name} created!`, 'success');
   showFeedbackToast('creating a Bastion', 'bastion_create');
   openBastion(CU.bastions.length - 1);
@@ -11124,6 +11153,8 @@ function openOverviewRoom() {
   if (curBastion === null) return;
   _teardownPollLive?.();
   curChannel = 'overview';
+  // Close mobile sidebar-ctx when selecting overview
+  if (typeof closeMobileCtxSidebar === 'function') closeMobileCtxSidebar();
   // Remember last channel as overview
   const b = CU.bastions?.[curBastion];
   if (b) localStorage.setItem('ftz_last_ch_' + (b.globalId||b.name||curBastion), 'overview');
@@ -12559,6 +12590,15 @@ async function generateInvite() {
 }
 function copyInvite(code) {
   navigator.clipboard.writeText('https://fortized.com/app?invite='+code).then(()=>toast('🔗 Invite link copied!','success')).catch(()=>toast('Copy failed','error'));
+  // Track invite daily quest
+  const today = new Date().toDateString();
+  if (CU && (!CU.questsDailyLog || CU.questsDailyLog.invite !== today)) {
+    CU.questsDailyLog = CU.questsDailyLog || {};
+    CU.questsDailyLog.invite = today;
+    CU.onyx = (CU.onyx||0) + 9;
+    saveUser(true);
+    toast('+9 Onyx — Invite quest complete!','success');
+  }
 }
 async function revokeInvite(i) {
   CU.bastions[curBastion].invites.splice(i,1);
@@ -23918,6 +23958,11 @@ function sendGifDirectly(id, inputId, url) {
   document.getElementById('giphy-picker')?.remove();
   const gifUrl = url || '';
   if (!gifUrl) return;
+  // Track send_gif quest completion
+  if (CU && !CU.completedQuests?.includes('send_gif')) {
+    CU.completedQuests = [...(CU.completedQuests||[]), 'send_gif'];
+    saveUser(true);
+  }
   // Use [FTZGIF] token so parseMD renders it inline directly
   const token = '[FTZGIF:' + gifUrl + ']';
   // Inject into chat input and trigger send
@@ -27271,7 +27316,7 @@ function renderAtelierTab(tab) {
       { id:'set_bio', icon:'📝', title:'Write Your Bio', category:'Beginner', daily:false, desc:'Tell the world about yourself. Set a custom bio.', reward:15, unit:'Onyx', done: completed.includes('set_bio') || !!(CU?.bio), action:`showView('profile')` },
       { id:'five_friends', icon:'🤝', title:'Social Butterfly', category:'Explorer', daily:false, desc:'Add 5 friends. Build your network!', reward:40, unit:'Onyx', done: completed.includes('five_friends') || (CU?.friends||[]).length >= 5, action:`openModal('modal-add-friend')` },
       { id:'send_gif', icon:'🎞️', title:'GIF Master', category:'Explorer', daily:false, desc:'Send your first GIF in a conversation.', reward:10, unit:'Onyx', done: completed.includes('send_gif'), action:`showView('dms')` },
-      { id:'create_bastion', icon:'⚔️', title:'Fortress Builder', category:'Explorer', daily:false, desc:'Create your own Bastion community.', reward:50, unit:'Onyx', done: completed.includes('create_bastion'), action:`showView('bastions')` },
+      { id:'create_bastion', icon:'⚔️', title:'Fortress Builder', category:'Explorer', daily:false, desc:'Create your own Bastion community.', reward:50, unit:'Onyx', done: completed.includes('create_bastion'), action:`openModal('modal-create-bastion')` },
     ];
 
     const dailyQ = QUESTS_DEF.filter(q => q.daily);

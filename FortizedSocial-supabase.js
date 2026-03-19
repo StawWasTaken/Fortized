@@ -931,6 +931,170 @@ const FortizedSocial = (() => {
     return data?.data || {};
   }
 
+  // ── Admin CRUD helpers (Supabase-native) ────────────
+  // These replace the old Firebase admin/* paths.
+  // Uses a generic 'admin_kv' table with {key TEXT PK, data JSONB}
+  // and the existing 'reports' table and 'users' table columns.
+
+  async function _adminKVGet(key) {
+    const { data } = await sb.from('admin_kv').select('data').eq('key', key).maybeSingle();
+    return data?.data ?? null;
+  }
+  async function _adminKVSet(key, val) {
+    await sb.from('admin_kv').upsert({ key, data: val }, { onConflict: 'key' });
+  }
+
+  // -- Reports --
+  async function adminGetReports() {
+    const { data } = await sb.from('reports').select('*');
+    return (data || []).map(r => r.data || r);
+  }
+  async function adminSaveReport(report) {
+    if (!report?.id) return;
+    await sb.from('reports').upsert({ id: report.id, data: report }, { onConflict: 'id' });
+  }
+
+  // -- Bans (stored as admin_kv key 'bans' array AND on user row) --
+  async function adminGetBans() {
+    return (await _adminKVGet('bans')) || [];
+  }
+  async function adminSaveBan(banObj) {
+    const bans = await adminGetBans();
+    const existing = bans.findIndex(b => b.username === banObj.username);
+    if (existing >= 0) bans[existing] = banObj; else bans.push(banObj);
+    await _adminKVSet('bans', bans);
+    // Also mark the user's row
+    const { data: row } = await sb.from('users').select('raw').eq('username', norm(banObj.username)).maybeSingle();
+    if (row !== null) {
+      await sb.from('users').update({ banned: true, ban_reason: banObj.reason || null }).eq('username', norm(banObj.username));
+    }
+  }
+  async function adminRemoveBan(username) {
+    const bans = (await adminGetBans()).filter(b => b.username !== username);
+    await _adminKVSet('bans', bans);
+    await sb.from('users').update({ banned: false, ban_reason: null }).eq('username', norm(username));
+  }
+
+  // -- Suspensions (stored on user row) --
+  async function adminSuspendUser(username, suspObj) {
+    await sb.from('users').update({
+      suspension: suspObj,
+      suspended_until: suspObj.until
+    }).eq('username', norm(username));
+  }
+  async function adminUnsuspendUser(username) {
+    await sb.from('users').update({ suspension: null, suspended_until: null }).eq('username', norm(username));
+  }
+
+  // -- Warnings (stored on user row) --
+  async function adminWarnUser(username, warningObj) {
+    await sb.from('users').update({ active_warning: warningObj }).eq('username', norm(username));
+  }
+  async function adminClearWarning(username) {
+    await sb.from('users').update({ active_warning: null }).eq('username', norm(username));
+  }
+
+  // -- Force logout (set a flag on user row that client checks) --
+  async function adminForceLogout(username) {
+    const { data: row } = await sb.from('users').select('raw').eq('username', norm(username)).maybeSingle();
+    const raw = row?.raw || {};
+    raw.forceLogoutAt = new Date().toISOString();
+    await sb.from('users').update({ raw }).eq('username', norm(username));
+  }
+
+  // -- NSFW Queue --
+  async function adminGetNsfwQueue() {
+    return (await _adminKVGet('nsfw_queue')) || [];
+  }
+  async function adminSaveNsfwQueue(queue) {
+    await _adminKVSet('nsfw_queue', queue);
+  }
+
+  // -- Staff --
+  async function adminGetStaff() {
+    return (await _adminKVGet('staff')) || { admins: [], moderators: [] };
+  }
+  async function adminSaveStaff(staff) {
+    await _adminKVSet('staff', staff);
+  }
+
+  // -- Audit Log --
+  async function adminGetAuditLog() {
+    return (await _adminKVGet('audit_log')) || [];
+  }
+  async function adminPushAuditLog(entry) {
+    const log = await adminGetAuditLog();
+    log.unshift(entry);
+    await _adminKVSet('audit_log', log.slice(0, 500));
+  }
+
+  // -- Global Settings --
+  async function adminGetGlobalSettings() {
+    return await _getGlobalSettings();
+  }
+  async function adminSaveGlobalSettings(settings) {
+    await sb.from('admin_global_settings').upsert({ id: 1, data: settings }, { onConflict: 'id' });
+  }
+
+  // -- NSFW Banned Hashes --
+  async function adminGetNsfwBannedHashes() {
+    return (await _adminKVGet('nsfw_banned_hashes')) || [];
+  }
+  async function adminSaveNsfwBannedHashes(hashes) {
+    await _adminKVSet('nsfw_banned_hashes', hashes);
+  }
+
+  // -- User field updates (onyx, radiance, etc) --
+  async function adminUpdateUserField(username, field, value) {
+    const u = await getUserByName(username);
+    if (!u) return;
+    u[field] = value;
+    await saveUserObject(u);
+  }
+
+  // -- Support tickets --
+  async function adminGetSupportTickets() {
+    return (await _adminKVGet('support_tickets')) || {};
+  }
+  async function adminSaveSupportTickets(tickets) {
+    await _adminKVSet('support_tickets', tickets);
+  }
+
+  // -- Scheduled actions --
+  async function adminGetScheduledActions() {
+    return (await _adminKVGet('scheduled_actions')) || [];
+  }
+  async function adminSaveScheduledActions(actions) {
+    await _adminKVSet('scheduled_actions', actions);
+  }
+
+  // -- NSFW AI feedback & safe hashes --
+  async function adminPushNsfwAIFeedback(feedback) {
+    const list = (await _adminKVGet('nsfw_ai_feedback')) || [];
+    list.push(feedback);
+    await _adminKVSet('nsfw_ai_feedback', list);
+  }
+  async function adminSaveNsfwSafeHash(hashKey, data) {
+    const hashes = (await _adminKVGet('nsfw_safe_hashes')) || {};
+    hashes[hashKey] = data;
+    await _adminKVSet('nsfw_safe_hashes', hashes);
+  }
+
+  // -- Admin signals (force refresh, clear sessions, staff revocation) --
+  async function adminSetSignal(key, value) {
+    await _adminKVSet('signal_' + key, value);
+  }
+  async function adminGetSignal(key) {
+    return await _adminKVGet('signal_' + key);
+  }
+
+  // -- Feedback storage --
+  async function adminPushFeedback(entry) {
+    const list = (await _adminKVGet('feedback')) || [];
+    list.push(entry);
+    await _adminKVSet('feedback', list.slice(-200));
+  }
+
   // ── Public API ───────────────────────────────────────
   return {
     sb, // Expose supabase client for direct calls in app code
@@ -955,6 +1119,23 @@ const FortizedSocial = (() => {
     getBastionMembers, addBastionMember, removeBastionMember,
     getInvite, saveInvite, incrementInviteUses,
     submitReport,
+    // Admin API
+    adminGetReports, adminSaveReport,
+    adminGetBans, adminSaveBan, adminRemoveBan,
+    adminSuspendUser, adminUnsuspendUser,
+    adminWarnUser, adminClearWarning,
+    adminForceLogout,
+    adminGetNsfwQueue, adminSaveNsfwQueue,
+    adminGetStaff, adminSaveStaff,
+    adminGetAuditLog, adminPushAuditLog,
+    adminGetGlobalSettings, adminSaveGlobalSettings,
+    adminGetNsfwBannedHashes, adminSaveNsfwBannedHashes,
+    adminUpdateUserField,
+    adminGetSupportTickets, adminSaveSupportTickets,
+    adminGetScheduledActions, adminSaveScheduledActions,
+    adminPushNsfwAIFeedback, adminSaveNsfwSafeHash,
+    adminSetSignal, adminGetSignal,
+    adminPushFeedback,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     initSocket, getSocket, isSocketReady, socketEmit,
     joinRoom, leaveRoom, queryPresence, disconnectSocket,

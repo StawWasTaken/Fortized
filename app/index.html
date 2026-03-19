@@ -1801,8 +1801,8 @@ body.is-desktop-app .notif-panel{top:0;}
 .ftz-embed-avatar{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#fff;overflow:hidden;}
 .ftz-embed-avatar img{width:100%;height:100%;object-fit:cover;}
 /* GIF variant */
-.ftz-embed-gif{margin:8px 0;max-width:480px;border-radius:12px;overflow:hidden;display:inline-block;position:relative;cursor:pointer;}
-.ftz-embed-gif img{width:100%;max-height:450px;object-fit:contain;display:block;}
+.ftz-embed-gif{margin:8px 0;max-width:400px;border-radius:12px;overflow:hidden;display:inline-block;position:relative;cursor:pointer;}
+.ftz-embed-gif img{width:100%;max-height:360px;object-fit:contain;display:block;}
 .ftz-embed-gif .chat-gif-fav-btn{position:absolute;top:6px;right:6px;}
 /* Clickable embed cursor */
 .ftz-embed[onclick],.ftz-embed a{cursor:pointer;}
@@ -21207,7 +21207,7 @@ function parseMD(s) {
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
     const isVideo = url.endsWith('.mp4');
-    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline style="width:100%;max-height:350px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
+    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
     return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
   });
   // 1ab. Klipy GIF links — auto-embed any klipy.com URL as inline GIF
@@ -21215,7 +21215,7 @@ function parseMD(s) {
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
     const isVideo = /\.mp4$/i.test(url);
-    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline style="width:100%;max-height:350px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
+    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
     return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
   });
   // 1ac. Klipy page links — resolve klipy.com/gifs/... or klipy.com/stickers/... to inline GIF
@@ -23988,9 +23988,10 @@ async function _resolveKlipySlug(placeholderId, slug) {
 
 function _klipyGifUrl(item, size) {
   // Extract best available GIF URL from Klipy response item
+  // Prefer webp/mp4 over gif — gif format has 256-color limit causing grainy/banded visuals
   const f = item.file || {};
   const sz = f[size] || f.hd || f.md || f.sm || f.xs || {};
-  return sz.gif?.url || sz.webp?.url || sz.mp4?.url || sz.jpg?.url || '';
+  return sz.webp?.url || sz.mp4?.url || sz.gif?.url || sz.jpg?.url || '';
 }
 
 function renderGiphyResults(gifs, inputId) {

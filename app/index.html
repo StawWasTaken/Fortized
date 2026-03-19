@@ -1181,12 +1181,36 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .toggle.on::after{transform:translateX(18px);}
 .radiance-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(255,160,62,.12),rgba(255,180,62,.12));border:1px solid rgba(255,160,62,.25);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:#ff9d3e;margin-top:5px;}
 .bsettings-wrap{flex:1;display:flex;overflow:hidden;background:var(--bg);}
-.bsettings-nav{width:220px;min-width:220px;border-right:1px solid var(--border);background:linear-gradient(180deg,var(--sidebar),var(--bg));overflow-y:auto;padding:8px 0;}
-.bsettings-main{flex:1;overflow-y:auto;padding:32px;background:linear-gradient(165deg,var(--bg),var(--panel));}
-.bsettings-nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;margin:1px 6px;border-radius:8px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.45);transition:all .12s;}
-.bsettings-nav-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.85);}
-.bsettings-nav-item.active{background:rgba(255,249,62,.07);color:var(--accent);}
-.bsettings-nav-section{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.18);padding:14px 14px 4px;}
+.bsettings-nav{width:232px;min-width:232px;border-right:1px solid var(--border);background:var(--sidebar);overflow-y:auto;padding:0;display:flex;flex-direction:column;}
+.bsettings-nav-header{padding:16px 14px 12px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;}
+.bsettings-nav-scroll{flex:1;overflow-y:auto;padding:8px 0 16px;}
+.bsettings-main{flex:1;overflow-y:auto;padding:40px 40px 40px 48px;max-width:740px;}
+.bsettings-main-wrap{flex:1;display:flex;overflow-y:auto;background:var(--bg);}
+.bsettings-preview{width:300px;min-width:300px;padding:40px 24px;overflow-y:auto;border-left:1px solid rgba(255,255,255,.04);}
+.bsettings-nav-item{display:flex;align-items:center;gap:9px;padding:7px 12px;margin:1px 8px;border-radius:6px;cursor:pointer;font-size:14px;color:rgba(255,255,255,.45);transition:all .12s;font-weight:500;}
+.bsettings-nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85);}
+.bsettings-nav-item.active{background:rgba(255,249,62,.08);color:var(--accent);font-weight:600;}
+.bsettings-nav-item svg,.bsettings-nav-item img{opacity:.6;flex-shrink:0;}
+.bsettings-nav-item.active svg,.bsettings-nav-item.active img{opacity:1;}
+.bsettings-nav-item.danger{color:rgba(248,113,113,.6);}
+.bsettings-nav-item.danger:hover{background:rgba(248,113,113,.08);color:#f87171;}
+.bsettings-nav-section{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:18px 12px 4px 20px;}
+.bsettings-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 16px;}
+.bsettings-nav-back{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:4px 8px;border-radius:6px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.3);transition:all .12s;}
+.bsettings-nav-back:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);}
+.bs-section-title{font-size:18px;font-weight:800;font-family:'Syne',sans-serif;color:#fff;margin-bottom:6px;}
+.bs-section-desc{font-size:13px;color:rgba(255,255,255,.35);margin-bottom:20px;line-height:1.5;}
+.bs-divider{height:1px;background:rgba(255,255,255,.06);margin:28px 0;}
+.bs-field-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.bs-preview-card{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;}
+.bs-preview-banner{height:100px;background:linear-gradient(135deg,#1a0f30,#0f1830);overflow:hidden;}
+.bs-preview-banner img{width:100%;height:100%;object-fit:cover;}
+.bs-preview-body{padding:16px;position:relative;}
+.bs-preview-icon{width:56px;height:56px;border-radius:16px;background:var(--panel2);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-top:-36px;border:3px solid var(--panel);position:relative;z-index:1;}
+.bs-preview-icon img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.bs-preview-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-top:8px;}
+.bs-preview-stats{font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;display:flex;gap:8px;align-items:center;}
+.bs-preview-desc{font-size:12px;color:rgba(255,255,255,.4);margin-top:10px;line-height:1.5;}
 .role-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;margin-bottom:6px;cursor:pointer;transition:all .12s;}
 .role-item:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08);}
 .role-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
@@ -3221,7 +3245,10 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
     <div class="view" id="view-bsettings">
       <div class="bsettings-wrap">
         <div class="bsettings-nav" id="bsettings-nav"></div>
-        <div class="bsettings-main" id="bsettings-main"></div>
+        <div class="bsettings-main-wrap">
+          <div class="bsettings-main" id="bsettings-main"></div>
+          <div class="bsettings-preview" id="bsettings-preview"></div>
+        </div>
       </div>
     </div>
 
@@ -4365,8 +4392,24 @@ async function refreshCU() {
         fresh.questsRewarded = [...merged];
       }
       CU = fresh; saveLocal();
+      // Check for admin force-logout flag
+      _checkForceLogout(fresh);
     }
   } catch {}
+}
+function _checkForceLogout(user) {
+  if (!user) return;
+  const forceLogoutAt = user.forceLogoutAt || (user.raw && user.raw.forceLogoutAt);
+  if (!forceLogoutAt) return;
+  const lastChecked = localStorage.getItem('ftz_force_logout_ack');
+  if (lastChecked === forceLogoutAt) return; // Already acknowledged
+  // Force logout
+  localStorage.setItem('ftz_force_logout_ack', forceLogoutAt);
+  toast('You have been logged out by an administrator.', 'error');
+  setTimeout(() => {
+    FortizedSocial.logout();
+    location.reload();
+  }, 1500);
 }
 function escapeHTML(s) {
   if (!s) return '';
@@ -4652,7 +4695,7 @@ async function logAudit(action, target, note='') {
   const log = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
   log.unshift(entry);
   localStorage.setItem('ftz_audit_log', JSON.stringify(log.slice(0,500)));
-  try { await firebase.database().ref('admin/audit_log').push(entry); } catch {}
+  try { await FortizedSocial.adminPushAuditLog(entry); } catch {}
 }
 
 // ════════════════════════════════════════════
@@ -6393,6 +6436,8 @@ function openDMView(username) {
   document.getElementById('gc-member-panel')?.remove();
   closeModal('modal-new-dm');
   showView('dms');
+  // Close mobile drawer when opening a DM chat
+  if (window.innerWidth <= 768) closeMobileSidebar();
   // Hide Active Now sidebar when in a DM chat
   const anSidebar = document.getElementById('dm-active-now');
   if (anSidebar) anSidebar.style.display = 'none';
@@ -6427,7 +6472,7 @@ function openDMView(username) {
       ${buildChatInputBar({inputId:'dm-input',placeholder:'Message '+escapeHTML(username)+'…',context:'dm'})}
     </div>`;
   loadDMMessages(username);
-  setTimeout(() => { showDMUserPanel(username); _initChatScroll(document.getElementById('dm-msgs')); }, 80);
+  setTimeout(() => { if (window.innerWidth > 768) showDMUserPanel(username); _initChatScroll(document.getElementById('dm-msgs')); }, 80);
   setTimeout(() => setupEmojiAutocomplete('dm-input'), 100);
   ensureDMExists(username).catch(()=>{});
   // Join Socket.io room for DM real-time events (typing, edits, deletes)
@@ -9622,25 +9667,13 @@ function initFortizedUXResilience() {
   // ── Enforce bans & suspensions (skip when offline to avoid hanging) ──
   if (navigator.onLine) {
     try {
-      const banSnap = await Promise.race([
-        firebase.database().ref('admin/bans/' + username).get(),
-        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),4000))
-      ]);
-      if (banSnap.exists()) {
-        const ban = banSnap.val();
-        _showBanScreen(ban);
+      // Check ban from Supabase user data (already loaded as CU)
+      if (CU.banned) {
+        _showBanScreen({ reason: CU.banReason || 'You have been banned.' });
         return;
       }
-      // Check suspension
-      const suspSnap = await Promise.race([
-        firebase.database().ref('users/' + username + '/suspension').get(),
-        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),4000))
-      ]);
-      const suspLegacy = !suspSnap.exists() ? await Promise.race([
-        firebase.database().ref('users/' + username + '/suspendedUntil').get(),
-        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),3000))
-      ]) : null;
-      const suspData = suspSnap.exists() ? suspSnap.val() : (suspLegacy && suspLegacy.exists() ? { until: suspLegacy.val() } : null);
+      // Check suspension from Supabase user data
+      const suspData = CU.suspension || (CU.suspendedUntil ? { until: CU.suspendedUntil } : null);
       if (suspData) {
         const until = new Date(suspData.until);
         if (until > new Date()) {
@@ -9648,8 +9681,7 @@ function initFortizedUXResilience() {
           return;
         } else {
           // Suspension expired — clear it
-          try { await firebase.database().ref('users/' + username + '/suspension').remove(); } catch {}
-          try { await firebase.database().ref('users/' + username + '/suspendedUntil').remove(); } catch {}
+          try { await FortizedSocial.adminUnsuspendUser(username); } catch {}
         }
       }
     } catch(e) { console.warn('Ban/suspension check skipped:', e); }
@@ -9985,15 +10017,15 @@ function initFortizedUXResilience() {
   // NSFW scanning disabled — no model preload needed
   updateNotifBadge().catch(()=>{});
 
-  // Sync staff data from Firebase BEFORE checking staff access for sidebar button
+  // Sync staff data from Supabase BEFORE checking staff access for sidebar button
   if (navigator.onLine) {
     try {
-      const _staffSnap = await Promise.race([
-        firebase.database().ref('admin/staff').get(),
+      const _staffData = await Promise.race([
+        FortizedSocial.adminGetStaff(),
         new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),4000))
       ]);
-      if (_staffSnap.exists()) {
-        localStorage.setItem('ftz_staff', JSON.stringify(_staffSnap.val()));
+      if (_staffData && (_staffData.admins || _staffData.moderators)) {
+        localStorage.setItem('ftz_staff', JSON.stringify(_staffData));
       } else if (!localStorage.getItem('ftz_staff')) {
         localStorage.setItem('ftz_staff', JSON.stringify({ admins: [], moderators: [] }));
       }
@@ -10044,44 +10076,32 @@ function initFortizedUXResilience() {
   // Listen for force-refresh and session-clear signals from admin
   try { _listenForceRefresh(); } catch(e) { console.warn('[init] _listenForceRefresh:', e); }
   try { _listenClearSessions(); } catch(e) { console.warn('[init] _listenClearSessions:', e); }
-  // Listen for real-time ban enforcement — kick user immediately if banned while online
-  // Also auto-refresh if ban is revoked (unbanned)
-  let _wasBanned = false;
+  // Poll for ban/suspension/warning enforcement via Supabase (every 15s)
+  let _wasBanned = CU.banned || false;
+  let _wasSuspended = !!(CU.suspension || CU.suspendedUntil);
   try {
-    firebase.database().ref('admin/bans/' + CU.username).on('value', snap => {
-      if (snap.exists()) { _wasBanned = true; _showBanScreen(snap.val()); }
-      else if (_wasBanned) { location.reload(); }
-    });
-  } catch(e) { console.warn('[init] ban listener:', e); }
-  // Listen for real-time suspension enforcement (new path)
-  // Also auto-refresh if suspension is revoked or expires
-  let _wasSuspended = false;
-  try {
-    firebase.database().ref('users/' + CU.username + '/suspension').on('value', snap => {
-      if (snap.exists()) {
-        const data = snap.val();
-        if (data && data.until && new Date(data.until) > new Date()) { _wasSuspended = true; _showSuspendScreen(data); }
-        else if (_wasSuspended) { location.reload(); }
-      } else if (_wasSuspended) { location.reload(); }
-    });
-  } catch(e) { console.warn('[init] suspension listener:', e); }
-  // Listen for real-time suspension enforcement (legacy path)
-  try {
-    firebase.database().ref('users/' + CU.username + '/suspendedUntil').on('value', snap => {
-      if (snap.exists() && new Date(snap.val()) > new Date()) { _wasSuspended = true; _showSuspendScreen({ until: snap.val() }); }
-      else if (_wasSuspended) { location.reload(); }
-    });
-  } catch(e) { console.warn('[init] suspendedUntil listener:', e); }
-  // Listen for real-time warnings
-  try {
-    firebase.database().ref('users/' + CU.username + '/activeWarning').on('value', snap => {
-      if (snap.exists()) {
-        const w = snap.val();
-        _showWarningOverlay(w.reason || 'Violation of Terms of Use', w.issuedBy, w.contentData || null);
-        firebase.database().ref('users/' + CU.username + '/activeWarning').remove();
-      }
-    });
-  } catch(e) { console.warn('[init] warning listener:', e); }
+    setInterval(async () => {
+      try {
+        const u = await FortizedSocial.getUserByName(CU.username);
+        if (!u) return;
+        // Ban check
+        if (u.banned) { _wasBanned = true; _showBanScreen({ reason: u.banReason || 'You have been banned.' }); }
+        else if (_wasBanned) { location.reload(); }
+        // Suspension check
+        const suspData = u.suspension || (u.suspendedUntil ? { until: u.suspendedUntil } : null);
+        if (suspData && suspData.until && new Date(suspData.until) > new Date()) { _wasSuspended = true; _showSuspendScreen(suspData); }
+        else if (_wasSuspended && !suspData) { location.reload(); }
+        // Warning check
+        if (u.activeWarning) {
+          const w = u.activeWarning;
+          _showWarningOverlay(w.reason || 'Violation of Terms of Use', w.issuedBy, w.contentData || null);
+          FortizedSocial.adminClearWarning(CU.username).catch(()=>{});
+        }
+        // Force logout check
+        _checkForceLogout(u);
+      } catch {}
+    }, 15000);
+  } catch(e) { console.warn('[init] enforcement poller:', e); }
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling for all staff
   try { if(hasStaffAccess())setTimeout(startReportPolling,2000); } catch(e) { console.warn('[init] reportPolling:', e); }
@@ -11578,39 +11598,68 @@ function renderBSettingsNav(activeTab) {
   if (!nav||!b) return;
   document.getElementById('sidebar-title').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> '+escapeHTML(b.name);
   const sections = [
-    {label:'Bastion'},
-    {id:'overview',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',label:'Overview'},
-    {id:'channels',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',label:'Rooms Management'},
-    {id:'roles',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',label:'Roles'},
-    {id:'emojis',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',label:'Bastion Identity'},
-    {label:'Moderation'},
-    {id:'automod',icon:ftzIcon('shield','14'),label:'AutoMod'},
-    {id:'bots',icon:'<img src="/Fortized Bot.png" style="width:14px;height:14px;">',label:'Bots'},
-    {id:'invites',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',label:'Invites'},
-    {id:'members',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',label:'Members'},
-    {id:'bans',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',label:'Bans'},
-    {label:'Community'},
-    {id:'welcome_msg',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',label:'Welcome Message'},
-    {id:'rules',icon:ftzIcon('clipboard','14'),label:'Server Rules'},
-    {id:'announcements',icon:ftzIcon('megaphone','14'),label:'Announcements'},
-    {id:'insights',icon:ftzIcon('chartUp','14'),label:'Insights'},
-    {id:'starboard',icon:ftzIcon('star','14'),label:'Starboard'},
-    {id:'events',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',label:'Events'},
-    {id:'slowmode',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',label:'Slow Mode'},
-    {label:'Living Bastion'},
-    {id:'mood',icon:ftzIcon('castle','14'),label:'Bastion Mood'},
-    {id:'reputation',icon:ftzIcon('shield','14'),label:'Reputation'},
-    {label:'Perks'},
-    {id:'boost',icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',label:'Boost'},
-    {id:'templates',icon:ftzIcon('clipboard','14'),label:'Templates'},
-    {label:'Danger'},
-    {id:'danger',icon:ftzIcon('warning','14'),label:'Danger Zone'},
+    {label:escapeHTML(b.name).toUpperCase()},
+    {id:'overview',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',label:'Bastion Profile'},
+    {id:'channels',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',label:'Rooms'},
+    {id:'boost',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',label:'Boost Perks'},
+    {label:'EXPRESSION'},
+    {id:'emojis',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',label:'Emoji & Stickers'},
+    {id:'templates',icon:ftzIcon('clipboard','15'),label:'Templates'},
+    {label:'PEOPLE'},
+    {id:'members',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',label:'Members'},
+    {id:'roles',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',label:'Roles'},
+    {id:'invites',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',label:'Invites'},
+    {id:'bans',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',label:'Bans'},
+    {label:'MODERATION'},
+    {id:'automod',icon:ftzIcon('shield','15'),label:'AutoMod'},
+    {id:'bots',icon:'<img src="/Fortized Bot.png" style="width:15px;height:15px;">',label:'Bots'},
+    {id:'slowmode',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',label:'Slow Mode'},
+    {label:'COMMUNITY'},
+    {id:'welcome_msg',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',label:'Welcome Message'},
+    {id:'rules',icon:ftzIcon('clipboard','15'),label:'Server Rules'},
+    {id:'announcements',icon:ftzIcon('megaphone','15'),label:'Announcements'},
+    {id:'insights',icon:ftzIcon('chartUp','15'),label:'Insights'},
+    {id:'starboard',icon:ftzIcon('star','15'),label:'Starboard'},
+    {id:'events',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',label:'Events'},
+    {label:'LIVING BASTION'},
+    {id:'mood',icon:ftzIcon('castle','15'),label:'Bastion Mood'},
+    {id:'reputation',icon:ftzIcon('shield','15'),label:'Reputation'},
+    {sep:true},
+    {id:'danger',icon:ftzIcon('warning','15'),label:'Delete Bastion',danger:true},
   ];
-  nav.innerHTML = sections.map(s=>{
+  let html = `<div class="bsettings-nav-header">${escapeHTML(b.name)}</div><div class="bsettings-nav-scroll">`;
+  html += sections.map(s=>{
+    if(s.sep) return '<div class="bsettings-nav-sep"></div>';
     if(!s.id) return `<div class="bsettings-nav-section">${s.label}</div>`;
-    return `<div class="bsettings-nav-item ${activeTab===s.id?'active':''}" onclick="renderBSettingsMain('${s.id}')">${s.icon} ${s.label}</div>`;
+    return `<div class="bsettings-nav-item${activeTab===s.id?' active':''}${s.danger?' danger':''}" onclick="renderBSettingsMain('${s.id}')">${s.icon} <span>${s.label}</span></div>`;
   }).join('');
-  nav.innerHTML += `<div style="height:14px;"></div><div class="bsettings-nav-item" onclick="openBastion(curBastion)" style="color:var(--muted);">← Back to Bastion</div>`;
+  html += `<div class="bsettings-nav-sep"></div>`;
+  html += `<div class="bsettings-nav-back" onclick="openBastion(curBastion)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Bastion</div>`;
+  html += '</div>';
+  nav.innerHTML = html;
+}
+
+function _updateBSettingsPreview() {
+  const preview = document.getElementById('bsettings-preview');
+  const b = CU.bastions?.[curBastion];
+  if (!preview || !b) return;
+  const memberCount = b.memberCount || 1;
+  const onlineGuess = Math.max(1, Math.floor(memberCount * 0.3));
+  preview.innerHTML = `
+    <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:12px;">Preview</div>
+    <div class="bs-preview-card">
+      <div class="bs-preview-banner">${b.banner?`<img src="${escapeHTML(b.banner)}">`:'<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a0f30,#0f1830);"></div>'}</div>
+      <div class="bs-preview-body">
+        <div class="bs-preview-icon">${b.icon?`<img src="${escapeHTML(b.icon)}">`:`<span style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}</div>
+        <div class="bs-preview-name">${escapeHTML(b.name)}</div>
+        <div class="bs-preview-stats">
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;"></span> ${onlineGuess} Online</span>
+          <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:50%;background:#6b7280;"></span> ${memberCount} Members</span>
+        </div>
+        ${b.desc?`<div class="bs-preview-desc">${escapeHTML(b.desc)}</div>`:''}
+        ${b.tagline?`<div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,.3);font-style:italic;">"${escapeHTML(b.tagline)}"</div>`:''}
+      </div>
+    </div>`;
 }
 
 function renderBSettingsMain(tab) {
@@ -11618,10 +11667,12 @@ function renderBSettingsMain(tab) {
   const b = CU.bastions[curBastion];
   if (!main||!b) return;
   renderBSettingsNav(tab);
+  _updateBSettingsPreview();
 
   if (tab==='overview') {
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">🏰 Overview</div>
+      <div class="bs-section-title">Bastion Profile</div>
+      <div class="bs-section-desc">Customize how your bastion appears across Fortized.</div>
       <div style="margin-bottom:18px;">
         <div class="settings-title">Banner</div>
         <div style="height:160px;border-radius:12px;overflow:hidden;border:1.5px dashed var(--border);cursor:pointer;position:relative;" onclick="document.getElementById('bs-banner-upload').click()">
@@ -11704,7 +11755,8 @@ function renderBSettingsMain(tab) {
         <button class="btn-d" style="padding:4px 9px;font-size:11px;" onclick="deleteChannel(${realIdx})">✕</button>
       </div>`;}).join('');
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:20px;">📝 Rooms Management</div>
+      <div class="bs-section-title">Rooms</div>
+      <div class="bs-section-desc">Create and manage your bastion's channels and categories.</div>
       <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
         <button class="btn-g" onclick="addCategoryPrompt()" style="font-size:13px;">+ Category</button>
         <button class="btn-a" onclick="addChannel(curBastion,'text')" style="font-size:13px;">+ Text Room</button>
@@ -11739,8 +11791,8 @@ function renderBSettingsMain(tab) {
       </div>`;
     }).join('');
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🛡️ Roles</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Roles are sorted by priority (highest first). Higher priority roles override lower ones.</div>
+      <div class="bs-section-title">Roles</div>
+      <div class="bs-section-desc">Roles are sorted by priority (highest first). Higher priority roles override lower ones.</div>
       <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
         <button class="btn-a" style="font-size:13px;" onclick="createNewRole()">+ Create Role</button>
       </div>
@@ -11769,8 +11821,8 @@ function renderBSettingsMain(tab) {
     }).join('');
     const nextLimit = slotsByLevel[Math.min((b.boostLevel||0)+1,3)];
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px;">🏰 Bastion Identity</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Manage your bastion's custom emojis and stickers. These are available to all members.</div>
+      <div class="bs-section-title">Emoji & Stickers</div>
+      <div class="bs-section-desc">Manage your bastion's custom emojis and stickers. These are available to all members.</div>
 
       <!-- Sub-tabs for Emoji vs Stickers -->
       <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
@@ -11828,8 +11880,8 @@ function renderBSettingsMain(tab) {
       {key:'profanityFilter',icon:'🤬',title:'Profanity Filter',desc:'Automatically filter commonly offensive language.'},
     ];
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"> AutoMod 2.0</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Modular safety toggles. Enable or disable each rule independently.</div>
+      <div class="bs-section-title">AutoMod</div>
+      <div class="bs-section-desc">Modular safety toggles. Enable or disable each rule independently.</div>
       ${amRules.map(r=>`<div class="automod-rule">
         <div class="amr-header"><span style="font-size:20px;">${r.icon}</span><div class="amr-title">${r.title}</div>
           <div class="amr-enabled"><span>${am[r.key]?'Enabled':'Disabled'}</span><div class="toggle ${am[r.key]?'on':''}" onclick="toggleAM('${r.key}',this)"></div></div></div>
@@ -11856,8 +11908,8 @@ function renderBSettingsMain(tab) {
   else if (tab==='invites') {
     const invites = b.invites || [];
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🔗 Invite Manager</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:16px;">Create and manage invite links for your bastion.</div>
+      <div class="bs-section-title">Invites</div>
+      <div class="bs-section-desc">Create and manage invite links for your bastion.</div>
       <div style="padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:18px;">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Generate New Invite</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -11901,7 +11953,7 @@ function renderBSettingsMain(tab) {
   }
   else if (tab==='members') {
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">👥 Members</div>
+      <div class="bs-section-title">Members</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:16px;">${b.memberCount||1} member${(b.memberCount||1)!==1?'s':''}</div>
       <input class="field-input" id="member-search" placeholder="Search members…" oninput="filterBSettingsMembers(this.value)" style="margin-bottom:14px;">
       <div id="bsettings-members-list"><div style="color:var(--muted);">Loading…</div></div>`;
@@ -11911,7 +11963,7 @@ function renderBSettingsMain(tab) {
     const bans = b.bans || [];
     const isOwner=b.owner===CU.username;
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🔨 Bans</div>
+      <div class="bs-section-title">Bans</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:16px;">${bans.length} banned member${bans.length!==1?'s':''}</div>
       ${isOwner?`<div style="display:flex;gap:8px;margin-bottom:18px;">
         <input class="field-input" id="ban-username-input" placeholder="Username to ban" style="flex:1;">
@@ -11954,8 +12006,8 @@ function renderBSettingsMain(tab) {
       </div>`;
     }).join('');
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">⚡ Bastion Boosts 2.0</div>
-      <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Boost your bastion with Onyx to unlock perks. 90 Onyx per level per month.</div>
+      <div class="bs-section-title">Boost Perks</div>
+      <div class="bs-section-desc">Boost your bastion with Onyx to unlock perks. 90 Onyx per level per month.</div>
       <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;">
         <span style="font-size:20px;">💎</span>
         <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Your Onyx Balance</div><div style="font-size:11px;color:var(--muted);">Available to spend</div></div>
@@ -11983,7 +12035,7 @@ function renderBSettingsMain(tab) {
     const curMood = calculateBastionMood(b);
     const moodInfo = curMood ? BASTION_MOODS[curMood] : null;
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🏰 Bastion Mood</div>
+      <div class="bs-section-title">Bastion Mood</div>
       <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Your Bastion has a live Mood State based on activity, time, and engagement. It changes the sidebar atmosphere.</div>
       <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
         <div style="font-weight:700;margin-bottom:8px;">Current Mood</div>
@@ -12021,7 +12073,7 @@ function renderBSettingsMain(tab) {
     const repData = JSON.parse(localStorage.getItem('ftz_rep_'+bastionId)||'{}');
     const sorted = Object.entries(repData).sort((a,b_)=>b_[1]-a[1]).slice(0,10);
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🛡️ Bastion Reputation</div>
+      <div class="bs-section-title">Reputation</div>
       <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Members earn Reputation through reactions, polls, events, boosting, and engagement. It's Bastion-specific — not global clout farming.</div>
       <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
         <div style="font-weight:700;margin-bottom:12px;">Top Contributors</div>
@@ -12061,7 +12113,7 @@ function renderBSettingsMain(tab) {
     const welcomeMsg = b.welcomeMessage || '**{user}** joined the bastion. Welcome!';
     const welcomeChannel = b.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">👋 Welcome Message</div>
+      <div class="bs-section-title">Welcome Message</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">Customize the greeting shown when new members join your bastion.</div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
         <span style="font-size:13px;font-weight:600;">Enable Welcome Messages</span>
@@ -12086,7 +12138,7 @@ function renderBSettingsMain(tab) {
   else if (tab==='rules') {
     const rules = b.rules || [];
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">📜 Server Rules</div>
+      <div class="bs-section-title">Server Rules</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">Define rules for your bastion. These will be shown to new members when they join.</div>
       <div id="rules-list">
         ${rules.map((r,i) => `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
@@ -12113,7 +12165,7 @@ function renderBSettingsMain(tab) {
   else if (tab==='announcements') {
     const bastionId = b.globalId||b.name;
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">📣 Announcements</div>
+      <div class="bs-section-title">Announcements</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">Broadcast an announcement to a channel. Only owners and admins can send announcements.</div>
       <div class="settings-title">Announcement Channel</div>
       <select class="field-input" id="announce-channel" style="margin-bottom:14px;">
@@ -12143,7 +12195,7 @@ function renderBSettingsMain(tab) {
     const emojiCount = (b.customEmojis||[]).length;
     const createdAt = b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : 'Unknown';
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">📊 Insights</div>
+      <div class="bs-section-title">Insights</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">A quick overview of your bastion's stats and health.</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
         ${[
@@ -12183,7 +12235,7 @@ function renderBSettingsMain(tab) {
     const starChannel = b.starboardChannel || '';
     const starEmoji = b.starboardEmoji || '⭐';
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">⭐ Starboard</div>
+      <div class="bs-section-title">Starboard</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">When a message gets enough reactions, it gets pinned to a special starboard channel for everyone to see.</div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
         <span style="font-size:13px;font-weight:600;">Enable Starboard</span>
@@ -12209,14 +12261,14 @@ function renderBSettingsMain(tab) {
   }
   else if (tab==='events') {
     const bastionId = b.globalId||b.name;
-    main.innerHTML = `<div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;">📅 Events</div><div id="bastion-events-container"></div>`;
+    main.innerHTML = `<div class="bs-section-title">Events</div><div class="bs-section-desc">Schedule and manage community events.</div><div id="bastion-events-container"></div>`;
     _renderEventsPanel(document.getElementById('bastion-events-container'), bastionId);
   }
   else if (tab==='slowmode') {
     const bastionId = b.globalId||b.name;
     const channels = b.channels||[];
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">🐌 Slow Mode</div>
+      <div class="bs-section-title">Slow Mode</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Rate-limit messages per channel. Only bastion admins and owners can configure.</div>
       ${channels.map((ch,i) => {
         const sm = _getSlowMode(bastionId, ch.name||'general');
@@ -12235,7 +12287,8 @@ function renderBSettingsMain(tab) {
   }
   else if (tab==='danger') {
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;display:flex;align-items:center;gap:8px;">${ftzIcon('warning','20')} Danger Zone</div>
+      <div class="bs-section-title" style="color:#f87171;">Delete Bastion</div>
+      <div class="bs-section-desc">Irreversible actions. Proceed with caution.</div>
       ${b.owner===CU.username?`<div style="padding:16px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:16px;margin-bottom:14px;">
         <div style="font-weight:700;margin-bottom:6px;">Transfer Ownership</div>
         <div style="font-size:13px;color:var(--muted-light);margin-bottom:12px;">Transfer this bastion to another member. You will lose owner privileges.</div>
@@ -12257,7 +12310,7 @@ function renderBSettingsMain(tab) {
     const myBots = (CU.bots||[]);
     const availBots = myBots.filter(bot=>!bots.find(db=>db.id===bot.id));
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"> Bastion Bots</div>
+      <div class="bs-section-title">Bots</div>
       <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Manage bots deployed to this bastion, create your own, or browse the Bot Marketplace.</div>
 
       <!-- Sub-tabs: Deployed / My Bots / Marketplace -->
@@ -12357,7 +12410,7 @@ function renderBSettingsMain(tab) {
     const previewChs = (b.channels||[]).slice(0,6).map(c=>`<div style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,.5);padding:2px 0;"><span style="font-size:11px;opacity:.6;">${chIcon[c.type]||'#'}</span>${escapeHTML(c.name)}</div>`).join('');
     const previewRoles = (b.roles||[]).slice(0,5).map(r=>`<span style="font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:100px;color:${r.color};background:${r.color}15;border:1px solid ${r.color}33;">${escapeHTML(r.name)}</span>`).join(' ');
     main.innerHTML = `
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">📋 Bastion Templates</div>
+      <div class="bs-section-title">Templates</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Save your bastion as a template that others can use to create bastions with the same layout, channels, roles, and design.</div>
       ${isOwner ? `
       <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:18px;">
@@ -12711,7 +12764,7 @@ async function distributeOnyxRevenue(cost) {
     sends.push((async () => {
       try {
         const u = await FortizedSocial.getUserByName('staw');
-        if (u) await firebase.database().ref('users/staw/onyx').set((u.onyx || 0) + stawShare);
+        if (u) await FortizedSocial.adminUpdateUserField('staw', 'onyx', (u.onyx || 0) + stawShare);
       } catch {}
     })());
   }
@@ -12719,7 +12772,7 @@ async function distributeOnyxRevenue(cost) {
     sends.push((async () => {
       try {
         const u = await FortizedSocial.getUserByName('fortized');
-        if (u) await firebase.database().ref('users/fortized/onyx').set((u.onyx || 0) + fortizedShare);
+        if (u) await FortizedSocial.adminUpdateUserField('fortized', 'onyx', (u.onyx || 0) + fortizedShare);
       } catch {}
     })());
   }
@@ -12728,7 +12781,7 @@ async function distributeOnyxRevenue(cost) {
       sends.push((async () => {
         try {
           const u = await FortizedSocial.getUserByName(member);
-          if (u) await firebase.database().ref('users/' + member + '/onyx').set((u.onyx || 0) + perStaff);
+          if (u) await FortizedSocial.adminUpdateUserField(member, 'onyx', (u.onyx || 0) + perStaff);
         } catch {}
       })());
     }
@@ -15443,21 +15496,18 @@ async function buildNotifList() {
 
   // Fetch user's support tickets and merge into notifications
   try {
-    const ticketSnap = await firebase.database().ref('support/tickets').orderByChild('username').equalTo(CU.username).limitToLast(10).once('value');
-    if (ticketSnap.exists()) {
-      const tickets = ticketSnap.val();
-      Object.entries(tickets).forEach(([id, t]) => {
-        if (!t) return;
-        notifs.push({
-          type: 'support_ticket',
-          from: 'Support',
-          time: t.submittedAt || t.createdAt || new Date().toISOString(),
-          read: t.status === 'closed',
-          data: { subject: t.subject || '', status: t.status || 'open', category: t.category || '', ticketId: id }
-        });
+    const allTickets = await FortizedSocial.adminGetSupportTickets();
+    Object.entries(allTickets).forEach(([id, t]) => {
+      if (!t || t.username !== CU.username) return;
+      notifs.push({
+        type: 'support_ticket',
+        from: 'Support',
+        time: t.submittedAt || t.createdAt || new Date().toISOString(),
+        read: t.status === 'closed',
+        data: { subject: t.subject || '', status: t.status || 'open', category: t.category || '', ticketId: id }
       });
-    }
-  } catch(e) { /* index may not exist — silently skip */ }
+    });
+  } catch(e) { /* silently skip */ }
 
   // Sort by time descending
   notifs.sort((a,b) => new Date(b.time||0) - new Date(a.time||0));
@@ -16537,10 +16587,10 @@ async function submitReport() {
     bastionId: curBastion !== null ? CU.bastions[curBastion]?.name : null,
   };
 
-  // Save to Firebase reports queue (primary) + localStorage (cache)
+  // Save to Supabase reports queue (primary) + localStorage (cache)
   try {
-    await firebase.database().ref('reports/' + report.id).set(report);
-  } catch(e) { console.warn('Report Firebase write failed:', e); }
+    await FortizedSocial.adminSaveReport(report);
+  } catch(e) { console.warn('Report save failed:', e); }
   // Always store locally too as cache
   const existing = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
   if (!existing.find(r => r.id === report.id)) existing.push(report);
@@ -16563,107 +16613,45 @@ async function submitReport() {
 // ── Admin data sync helpers ──
 async function _syncAdminDataFromFirebase() {
   try {
-    const [reps, bans, staffSnap, auditSnap, gsSnap, nsfwSnap, bannedHashesSnap] = await Promise.all([
-      firebase.database().ref('reports').get(),
-      firebase.database().ref('admin/bans').get(),
-      firebase.database().ref('admin/staff').get(),
-      firebase.database().ref('admin/audit_log').limitToLast(500).get(),
-      firebase.database().ref('admin/global_settings').get(),
-      firebase.database().ref('admin/nsfw_queue').get(),
-      firebase.database().ref('admin/nsfw_banned_hashes').get(),
+    const [reports, bans, staff, auditLog, gs, nsfwQueue, bannedHashes, tickets] = await Promise.all([
+      FortizedSocial.adminGetReports().catch(()=>[]),
+      FortizedSocial.adminGetBans().catch(()=>[]),
+      FortizedSocial.adminGetStaff().catch(()=>({admins:[],moderators:[]})),
+      FortizedSocial.adminGetAuditLog().catch(()=>[]),
+      FortizedSocial.adminGetGlobalSettings().catch(()=>({})),
+      FortizedSocial.adminGetNsfwQueue().catch(()=>[]),
+      FortizedSocial.adminGetNsfwBannedHashes().catch(()=>[]),
+      FortizedSocial.adminGetSupportTickets().catch(()=>({})),
     ]);
-    if (reps.exists()) {
-      const fb = Object.values(reps.val());
-      const local = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
-      // Firebase is source of truth — merge with Firebase data winning on conflicts
-      const fbMap = new Map();
-      fb.forEach(r => { if (r.id) fbMap.set(r.id, r); });
-      // Start with all Firebase reports
-      const merged = [...fb];
-      // Add any local-only reports that don't exist in Firebase yet
-      local.forEach(lr => { if (lr.id && !fbMap.has(lr.id)) merged.push(lr); });
-      localStorage.setItem('ftz_reports', JSON.stringify(merged));
-      // Push any local-only reports to Firebase
-      local.forEach(lr => {
-        if (lr.id && !fbMap.has(lr.id)) {
-          try { firebase.database().ref('reports/' + lr.id).set(lr); } catch {}
-        }
-      });
-    }
-    if (bans.exists()) {
-      localStorage.setItem('ftz_bans', JSON.stringify(Object.values(bans.val())));
-    } else {
-      localStorage.setItem('ftz_bans', '[]');
-    }
-    if (staffSnap.exists()) {
-      localStorage.setItem('ftz_staff', JSON.stringify(staffSnap.val()));
-    } else {
-      const defaultStaff = { admins: [], moderators: [] };
-      localStorage.setItem('ftz_staff', JSON.stringify(defaultStaff));
-    }
-    if (auditSnap.exists()) {
-      const entries = Object.values(auditSnap.val()).sort((a,b) => new Date(b.at||b.timestamp||0) - new Date(a.at||a.timestamp||0));
-      localStorage.setItem('ftz_audit_log', JSON.stringify(entries.slice(0,500)));
-    }
-    if (gsSnap.exists()) {
-      const gs = gsSnap.val();
-      localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
-      _globalSettings = gs;
-    }
-    if (nsfwSnap.exists()) {
-      localStorage.setItem('ftz_nsfw_queue', JSON.stringify(Object.values(nsfwSnap.val())));
-    } else {
-      localStorage.setItem('ftz_nsfw_queue', '[]');
-    }
-    // Sync banned content hashes from Firebase
-    if (bannedHashesSnap.exists()) {
-      const fbHashes = bannedHashesSnap.val();
-      const arr = Array.isArray(fbHashes) ? fbHashes : Object.values(fbHashes);
-      // Merge with local hashes
-      const mergedHashes = [...new Set([..._nsfwBannedHashes, ...arr])];
-      _nsfwBannedHashes = mergedHashes;
-      localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(mergedHashes));
-    }
+    localStorage.setItem('ftz_reports', JSON.stringify(reports));
+    localStorage.setItem('ftz_bans', JSON.stringify(bans));
+    localStorage.setItem('ftz_staff', JSON.stringify(staff));
+    localStorage.setItem('ftz_audit_log', JSON.stringify(auditLog));
+    localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
+    _globalSettings = gs;
+    localStorage.setItem('ftz_nsfw_queue', JSON.stringify(nsfwQueue));
+    const mergedHashes = [...new Set([..._nsfwBannedHashes, ...bannedHashes])];
+    _nsfwBannedHashes = mergedHashes;
+    localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(mergedHashes));
+    localStorage.setItem('ftz_support_tickets', JSON.stringify(tickets));
   } catch(e) { console.warn('Admin sync partial fail:', e); }
 }
 
 async function _saveBanToFirebase(banObj) {
-  try {
-    await firebase.database().ref('admin/bans/' + banObj.username).set(banObj);
-  } catch(e) {
-    console.warn('Ban save failed, retrying:', e);
-    try { await new Promise(r => setTimeout(r, 1000)); await firebase.database().ref('admin/bans/' + banObj.username).set(banObj); }
-    catch(e2) { console.error('Ban save retry failed:', e2); toast('Failed to save ban to server. Check connection.', 'error'); }
-  }
+  try { await FortizedSocial.adminSaveBan(banObj); }
+  catch(e) { console.error('Ban save failed:', e); toast('Failed to save ban to server.', 'error'); }
 }
 async function _removeBanFromFirebase(username) {
-  try {
-    await firebase.database().ref('admin/bans/' + username).remove();
-  } catch(e) {
-    console.warn('Ban removal failed, retrying:', e);
-    try { await new Promise(r => setTimeout(r, 1000)); await firebase.database().ref('admin/bans/' + username).remove(); }
-    catch(e2) { console.error('Ban removal retry failed:', e2); toast('Failed to remove ban from server.', 'error'); }
-  }
+  try { await FortizedSocial.adminRemoveBan(username); }
+  catch(e) { console.error('Ban removal failed:', e); toast('Failed to remove ban from server.', 'error'); }
 }
 async function _saveStaffToFirebase(staff) {
-  try {
-    await firebase.database().ref('admin/staff').set(staff);
-  } catch(e) {
-    console.warn('Staff save failed, retrying:', e);
-    try { await new Promise(r => setTimeout(r, 1000)); await firebase.database().ref('admin/staff').set(staff); }
-    catch(e2) { console.error('Staff save retry failed:', e2); toast('Failed to save staff to server.', 'error'); }
-  }
+  try { await FortizedSocial.adminSaveStaff(staff); }
+  catch(e) { console.error('Staff save failed:', e); toast('Failed to save staff to server.', 'error'); }
 }
 async function _saveNsfwQueueToFirebase(queue) {
-  const obj = {};
-  queue.forEach(item => { obj[item.id] = item; });
-  try {
-    await firebase.database().ref('admin/nsfw_queue').set(obj);
-  } catch(e) {
-    console.warn('NSFW queue save failed, retrying:', e);
-    try { await new Promise(r => setTimeout(r, 1000)); await firebase.database().ref('admin/nsfw_queue').set(obj); }
-    catch(e2) { console.error('NSFW queue save retry failed:', e2); }
-  }
+  try { await FortizedSocial.adminSaveNsfwQueue(queue); }
+  catch(e) { console.error('NSFW queue save failed:', e); }
 }
 
 function tryOpenAdmin() {
@@ -16736,43 +16724,23 @@ function _closeAdminPanel() {
   showView(_adminPreviousView || 'home');
 }
 
-// ── Admin Live Sync — real-time Firebase listeners so all staff see changes live ──
-let _adminLiveRefs = [];
-let _adminLiveSyncTimer = null;
+// ── Admin Live Sync — periodic polling from Supabase ──
+let _adminLiveSyncInterval = null;
 function _setupAdminLiveSync() {
   _teardownAdminLiveSync();
-  const db = firebase.database();
-  let _firstFire = {};
-  const paths = [
-    { ref: db.ref('reports'), key: 'ftz_reports', transform: snap => snap.exists() ? Object.values(snap.val()) : [] },
-    { ref: db.ref('admin/bans'), key: 'ftz_bans', transform: snap => snap.exists() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [] },
-    { ref: db.ref('admin/nsfw_queue'), key: 'ftz_nsfw_queue', transform: snap => snap.exists() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [] },
-    { ref: db.ref('admin/global_settings'), key: 'ftz_global_settings', transform: snap => snap.exists() ? snap.val() : {} },
-    { ref: db.ref('admin/staff'), key: 'ftz_staff', transform: snap => snap.exists() ? snap.val() : {} },
-    { ref: db.ref('support/tickets'), key: 'ftz_support_tickets', transform: snap => snap.exists() ? snap.val() : {} },
-  ];
-  paths.forEach(p => {
-    const cb = p.ref.on('value', snap => {
-      // Skip first fire (initial sync already handled)
-      if (!_firstFire[p.key]) { _firstFire[p.key] = true; return; }
-      const data = p.transform(snap);
-      localStorage.setItem(p.key, JSON.stringify(data));
-      if (p.key === 'ftz_global_settings') _globalSettings = data;
-      // Debounce refresh so rapid changes don't cause flicker
-      clearTimeout(_adminLiveSyncTimer);
-      _adminLiveSyncTimer = setTimeout(() => {
-        if (typeof adminTab !== 'undefined' && adminTab) {
-          _renderAdminNav(adminTab);
-          _loadAdminPage(adminTab, true);
-        }
-      }, 300);
-    });
-    _adminLiveRefs.push({ ref: p.ref, event: 'value', cb });
-  });
+  // Poll Supabase every 10 seconds for admin data updates
+  _adminLiveSyncInterval = setInterval(async () => {
+    try {
+      await _syncAdminDataFromFirebase();
+      if (typeof adminTab !== 'undefined' && adminTab) {
+        _renderAdminNav(adminTab);
+        _loadAdminPage(adminTab, true);
+      }
+    } catch {}
+  }, 10000);
 }
 function _teardownAdminLiveSync() {
-  _adminLiveRefs.forEach(l => { try { l.ref.off(l.event, l.cb); } catch {} });
-  _adminLiveRefs = [];
+  if (_adminLiveSyncInterval) { clearInterval(_adminLiveSyncInterval); _adminLiveSyncInterval = null; }
 }
 
 function _renderAdminNav(active) {
@@ -16874,22 +16842,15 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     const totalStaff = SUPER_ADMINS.length + (staff.admins||[]).length + (staff.moderators||[]).length;
     let totalUsers = '–', onlineCount = 0, radianceCount = 0, awayCount = 0, dndCount = 0, newestUsers = [], topOnyx = [];
     try {
-      const s = await firebase.database().ref('users').get();
-      if (s.exists()) {
-        const usersObj = s.val();
-        const usersList = Object.values(usersObj);
-        totalUsers = usersList.length;
-        radianceCount = usersList.filter(u => u.radianceUntil && new Date(u.radianceUntil) > new Date()).length;
-        newestUsers = usersList.filter(u=>u.createdAt||u.joinedAt).sort((a,b)=>new Date(b.createdAt||b.joinedAt)-new Date(a.createdAt||a.joinedAt)).slice(0,5);
-        topOnyx = [...usersList].sort((a,b)=>(b.onyx||0)-(a.onyx||0)).slice(0,5);
-      }
-      const statSnap = await firebase.database().ref('statuses').get();
-      if (statSnap.exists()) {
-        const statVals = Object.values(statSnap.val());
-        onlineCount = statVals.filter(s => s === 'online').length;
-        awayCount = statVals.filter(s => s === 'away').length;
-        dndCount = statVals.filter(s => s === 'dnd').length;
-      }
+      const usersList = await FortizedSocial.getUsers();
+      totalUsers = usersList.length;
+      radianceCount = usersList.filter(u => u.radianceUntil && new Date(u.radianceUntil) > new Date()).length;
+      newestUsers = usersList.filter(u=>u.createdAt||u.joinedAt).sort((a,b)=>new Date(b.createdAt||b.joinedAt)-new Date(a.createdAt||a.joinedAt)).slice(0,5);
+      topOnyx = [...usersList].sort((a,b)=>(b.onyx||0)-(a.onyx||0)).slice(0,5);
+      // Count by status
+      onlineCount = usersList.filter(u => u.status === 'online').length;
+      awayCount = usersList.filter(u => u.status === 'away' || u.status === 'idle').length;
+      dndCount = usersList.filter(u => u.status === 'dnd').length;
     } catch {}
     const pending = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
     const nsfwQueue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
@@ -17455,11 +17416,10 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     </div>`;
   }
   else if (tab === 'settings' && isSuperAdmin()) {
-    // Always fetch latest from Firebase for settings page
+    // Always fetch latest from Supabase for settings page
     try {
-      const snap = await firebase.database().ref('admin/global_settings').get();
-      if (snap.exists()) {
-        const gs2 = snap.val();
+      const gs2 = await FortizedSocial.adminGetGlobalSettings();
+      if (gs2 && Object.keys(gs2).length) {
         localStorage.setItem('ftz_global_settings', JSON.stringify(gs2));
         _globalSettings = gs2;
       }
@@ -17494,7 +17454,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <textarea class="settings-input" id="gs-announcement" placeholder="Type announcement…" style="width:100%;font-size:12px;padding:8px;min-height:60px;resize:vertical;margin-bottom:8px;">${escapeHTML(gs.announcement||'')}</textarea>
             <div style="display:flex;gap:6px;">
               <button onclick="_broadcastAnnouncement()" style="padding:6px 14px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:8px;color:var(--accent);cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Broadcast</button>
-              <button onclick="_updateGlobalSetting('announcement','');document.getElementById('gs-announcement').value='';firebase.database().ref('admin/global_settings/announcement').set('');toast('Cleared','success');" style="padding:6px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.5);cursor:pointer;font-size:12px;">Clear</button>
+              <button onclick="_updateGlobalSetting('announcement','');document.getElementById('gs-announcement').value='';toast('Cleared','success');" style="padding:6px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.5);cursor:pointer;font-size:12px;">Clear</button>
             </div>
             ${gs.announcement?'<div style="margin-top:8px;padding:8px 12px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.08);border-radius:8px;font-size:11px;color:rgba(255,249,62,.6);"><strong>Active:</strong> '+escapeHTML(gs.announcement)+'</div>':''}
           </div>
@@ -17666,13 +17626,12 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
 
   else if (tab === 'broadcast') {
     if (!isSuperAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
-    // Fetch latest from Firebase to ensure we have current state
+    // Fetch latest from Supabase to ensure we have current state
     let currentMsg = '', statusMsg = '';
     try {
-      const annSnap = await firebase.database().ref('admin/global_settings/announcement').get();
-      if (annSnap.exists()) currentMsg = annSnap.val() || '';
-      const statSnap = await firebase.database().ref('admin/global_settings/platformStatus').get();
-      if (statSnap.exists()) statusMsg = statSnap.val() || '';
+      const gs2 = await FortizedSocial.adminGetGlobalSettings();
+      currentMsg = gs2.announcement || '';
+      statusMsg = gs2.platformStatus || '';
       // Sync to localStorage
       const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
       gs.announcement = currentMsg; gs.platformStatus = statusMsg;
@@ -17843,7 +17802,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   else if (tab === 'scheduled_actions') {
     if (!isAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
     let scheduledItems = [];
-    try { const snap = await firebase.database().ref('admin/scheduled_actions').get(); if (snap.exists()) scheduledItems = Object.entries(snap.val()).map(([k,v])=>({...v,_key:k})); } catch {}
+    try { const acts = await FortizedSocial.adminGetScheduledActions(); scheduledItems = acts.map((v,i)=>({...v,_key:i})); } catch {}
     main.innerHTML = `<div style="padding:var(--space-xl);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-xl);">
         <div>
@@ -17936,10 +17895,7 @@ function resolveReport(idx, action) {
     report.resolvedAt = new Date().toISOString();
     if (reason) report.resolutionNote = reason;
     localStorage.setItem('ftz_reports', JSON.stringify(reports));
-    const reportId = report.id;
-    if (reportId) {
-      try { await firebase.database().ref('reports/' + reportId).set(report); } catch(e) { console.warn('Report sync failed:', e); }
-    }
+    try { await FortizedSocial.adminSaveReport(report); } catch(e) { console.warn('Report sync failed:', e); }
     logAudit('report_'+action, target||report.reporter||'?', reason||action);
 
     // Delete the reported message and replace with moderation notice
@@ -17949,7 +17905,7 @@ function resolveReport(idx, action) {
 
     // Execute the action on the reported user
     if (action === 'warned' && target) {
-      await firebase.database().ref('users/'+target+'/activeWarning').set({
+      await FortizedSocial.adminWarnUser(target, {
         reason: reason || report.reason || 'Violation of Terms of Use',
         issuedBy: CU.username,
         issuedAt: new Date().toISOString(),
@@ -18020,14 +17976,13 @@ async function _loadAdminSuspensions() {
   const el = document.getElementById('admin-suspensions-list');
   if (!el) return;
   try {
-    const snap = await firebase.database().ref('users').orderByChild('suspension').once('value');
-    const users = snap.val() || {};
+    const allUsers = await FortizedSocial.getUsers();
     const suspensions = [];
-    for (const [uname, udata] of Object.entries(users)) {
-      if (udata.suspension) {
-        const s = udata.suspension;
+    for (const u of allUsers) {
+      if (u.suspension) {
+        const s = u.suspension;
         const isActive = new Date(s.until) > new Date();
-        suspensions.push({ username: uname, ...s, active: isActive });
+        suspensions.push({ username: u.username, ...s, active: isActive });
       }
     }
     suspensions.sort((a,b) => (b.active?1:0) - (a.active?1:0) || new Date(b.suspendedAt||0) - new Date(a.suspendedAt||0));
@@ -18041,7 +17996,7 @@ async function _loadAdminSuspensions() {
           <div style="font-size:10.5px;color:rgba(255,255,255,.25);">By ${escapeHTML(s.suspendedBy||'admin')} · Until ${_fmtDateEU(s.until)}</div>
         </div>
         <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(s.username)}';adminSearchUser();}},150);" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:#60a5fa;font-size:12px;cursor:pointer;">Inspect</button>
-        ${s.active?`<button onclick="firebase.database().ref('users/${escapeHTML(s.username)}/suspension').remove();firebase.database().ref('users/${escapeHTML(s.username)}/suspendedUntil').remove();logAudit('unsuspend','${escapeHTML(s.username)}','Lifted by admin');toast('${escapeHTML(s.username)} unsuspended','success');_loadAdminPage('suspensions');" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Unsuspend</button>`:''}
+        ${s.active?`<button onclick="FortizedSocial.adminUnsuspendUser('${escapeHTML(s.username)}').then(()=>{logAudit('unsuspend','${escapeHTML(s.username)}','Lifted by admin');toast('${escapeHTML(s.username)} unsuspended','success');_loadAdminPage('suspensions');});" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Unsuspend</button>`:''}
       </div>`).join('');
   } catch(e) {
     el.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">Failed to load suspensions</div>';
@@ -18055,8 +18010,7 @@ async function _loadAdminSupportTickets() {
   const el = document.getElementById('admin-tickets-list');
   if (!el) return;
   try {
-    const snap = await firebase.database().ref('support/tickets').once('value');
-    const raw = snap.val() || {};
+    const raw = await FortizedSocial.adminGetSupportTickets();
     _allTickets = Object.entries(raw).map(([id, t]) => ({ id, ...t }));
     // Filter: admins only see non-sensitive categories
     if (!isSuperAdmin()) {
@@ -18108,22 +18062,32 @@ function _renderTickets() {
 }
 
 async function _closeTicket(id) {
-  await firebase.database().ref('support/tickets/'+id+'/status').set('closed').catch(()=>{});
-  await firebase.database().ref('support/tickets/'+id+'/closedBy').set(CU.username).catch(()=>{});
-  await firebase.database().ref('support/tickets/'+id+'/closedAt').set(new Date().toISOString()).catch(()=>{});
+  try {
+    const tickets = await FortizedSocial.adminGetSupportTickets();
+    if (tickets[id]) { tickets[id].status = 'closed'; tickets[id].closedBy = CU.username; tickets[id].closedAt = new Date().toISOString(); }
+    await FortizedSocial.adminSaveSupportTickets(tickets);
+  } catch {}
   toast('Ticket closed','success');
   _loadAdminSupportTickets();
 }
 
 async function _reopenTicket(id) {
-  await firebase.database().ref('support/tickets/'+id+'/status').set('open').catch(()=>{});
+  try {
+    const tickets = await FortizedSocial.adminGetSupportTickets();
+    if (tickets[id]) { tickets[id].status = 'open'; delete tickets[id].closedBy; delete tickets[id].closedAt; }
+    await FortizedSocial.adminSaveSupportTickets(tickets);
+  } catch {}
   toast('Ticket reopened','success');
   _loadAdminSupportTickets();
 }
 
 async function _deleteTicket(id) {
   if (!isSuperAdmin()) { toast('Only superadmins can delete tickets','error'); return; }
-  await firebase.database().ref('support/tickets/'+id).remove().catch(()=>{});
+  try {
+    const tickets = await FortizedSocial.adminGetSupportTickets();
+    delete tickets[id];
+    await FortizedSocial.adminSaveSupportTickets(tickets);
+  } catch {}
   toast('Ticket deleted','success');
   _loadAdminSupportTickets();
 }
@@ -18133,12 +18097,11 @@ async function _broadcastAnnouncement() {
   const msg = (document.getElementById('_broadcast-msg')?.value?.trim()) || (document.getElementById('gs-announcement')?.value?.trim());
   if (!msg) { toast('Enter a message first','error'); return; }
   try {
-    await firebase.database().ref('admin/global_settings/announcement').set(msg);
-    FortizedSocial.socketEmit('announcement:broadcast', { text: msg });
-    // Also update localStorage so the broadcast center shows current state
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
     gs.announcement = msg;
     localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
+    await FortizedSocial.adminSaveGlobalSettings(gs);
+    FortizedSocial.socketEmit('announcement:broadcast', { text: msg });
     logAudit('broadcast', 'all', msg.slice(0,80));
     toast('Announcement broadcast!','success');
     // Refresh the broadcast tab if it's open
@@ -18147,11 +18110,11 @@ async function _broadcastAnnouncement() {
 }
 async function _clearAnnouncement() {
   try {
-    await firebase.database().ref('admin/global_settings/announcement').remove();
-    FortizedSocial.socketEmit('announcement:clear', {});
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
     delete gs.announcement;
     localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
+    await FortizedSocial.adminSaveGlobalSettings(gs);
+    FortizedSocial.socketEmit('announcement:clear', {});
     logAudit('clear_broadcast', 'all', '');
     toast('Announcement cleared','success');
     _loadAdminPage('broadcast');
@@ -18160,10 +18123,10 @@ async function _clearAnnouncement() {
 async function _updatePlatformStatus() {
   const msg = document.getElementById('_status-msg')?.value?.trim() || '';
   try {
-    await firebase.database().ref('admin/global_settings/platformStatus').set(msg);
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
     gs.platformStatus = msg;
     localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
+    await FortizedSocial.adminSaveGlobalSettings(gs);
     logAudit('platform_status', 'system', msg.slice(0,80));
     toast('Status updated','success');
     // Refresh the broadcast tab
@@ -18175,7 +18138,7 @@ function _exportAdminData(type) {
   if (type === 'audit') data = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
   else if (type === 'reports') data = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
   else if (type === 'bans') data = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
-  else if (type === 'users') { toast('Exporting user data from Firebase…','info'); firebase.database().ref('users').get().then(s=>{const d=s.exists()?Object.values(s.val()).map(u=>({username:u.username,displayName:u.displayName,createdAt:u.createdAt,onyx:u.onyx||0})):[];_downloadJSON(d,'fortized_users_'+Date.now()+'.json');}).catch(()=>toast('Export failed','error')); return; }
+  else if (type === 'users') { toast('Exporting user data…','info'); FortizedSocial.getUsers().then(users=>{const d=users.map(u=>({username:u.username,displayName:u.displayName,createdAt:u.createdAt,onyx:u.onyx||0}));_downloadJSON(d,'fortized_users_'+Date.now()+'.json');}).catch(()=>toast('Export failed','error')); return; }
   else return;
   _downloadJSON(data, 'fortized_'+type+'_'+Date.now()+'.json');
 }
@@ -18192,17 +18155,17 @@ function _showScheduleActionModal() {
       const executeAt = new Date(timeStr).toISOString();
       const parts = actionStr.trim().split(/\s+/);
       const action = { type: parts[0]||'custom', target: parts.slice(1).join(' ')||'', executeAt, createdBy: CU.username, createdAt: new Date().toISOString(), status: 'pending' };
-      try { await firebase.database().ref('admin/scheduled_actions').push(action); logAudit('schedule_action', action.target, action.type+' at '+timeStr); toast('Action scheduled','success'); _loadAdminPage('scheduled_actions'); } catch { toast('Failed to schedule','error'); }
+      try { const acts = await FortizedSocial.adminGetScheduledActions(); acts.push(action); await FortizedSocial.adminSaveScheduledActions(acts); logAudit('schedule_action', action.target, action.type+' at '+timeStr); toast('Action scheduled','success'); _loadAdminPage('scheduled_actions'); } catch { toast('Failed to schedule','error'); }
     });
   });
 }
 async function _cancelScheduledAction(key) {
   if (!confirm('Cancel this scheduled action?')) return;
-  try { await firebase.database().ref('admin/scheduled_actions/'+key).remove(); toast('Action cancelled','success'); _loadAdminPage('scheduled_actions'); } catch { toast('Failed','error'); }
+  try { const acts = await FortizedSocial.adminGetScheduledActions(); acts.splice(key, 1); await FortizedSocial.adminSaveScheduledActions(acts); toast('Action cancelled','success'); _loadAdminPage('scheduled_actions'); } catch { toast('Failed','error'); }
 }
 
 async function _resetAllSessions() {
-  try { await firebase.database().ref('statuses').remove(); logAudit('reset_sessions', 'all', 'All sessions reset'); toast('All sessions reset','success'); } catch { toast('Failed','error'); }
+  try { await FortizedSocial.adminSetSignal('reset_sessions', Date.now()); logAudit('reset_sessions', 'all', 'All sessions reset'); toast('All sessions reset','success'); } catch { toast('Failed','error'); }
 }
 
 async function deleteReportForever(idx) {
@@ -18214,36 +18177,32 @@ async function deleteReportForever(idx) {
   // Remove from localStorage
   reports.splice(idx, 1);
   localStorage.setItem('ftz_reports', JSON.stringify(reports));
-  // Remove from Firebase
-  if (reportId) {
-    try { await firebase.database().ref('reports/' + reportId).remove(); } catch(e) { console.warn('Report delete from Firebase failed:', e); }
-  }
+  // Sync updated reports to Supabase
+  try {
+    for (const r of reports) { await FortizedSocial.adminSaveReport(r); }
+  } catch(e) { console.warn('Report sync failed:', e); }
   logAudit('report_deleted', reportId||'unknown', 'Permanently deleted by super admin');
   toast('Report permanently deleted', 'success');
   _loadAdminPage(adminTab);
 }
 
 async function loadAllReportsFromFirebase() {
-  toast('Syncing reports from Firebase…', 'info');
+  toast('Syncing reports from Supabase…', 'info');
   try {
-    const snap = await firebase.database().ref('reports').get();
-    if (snap.exists()) {
-      const fb = Object.values(snap.val());
-      const local = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
-      // Firebase is source of truth — Firebase data wins on conflicts
-      const fbMap = new Map();
-      fb.forEach(r => { if (r.id) fbMap.set(r.id, r); });
-      const merged = [...fb];
-      local.forEach(lr => { if (lr.id && !fbMap.has(lr.id)) merged.push(lr); });
-      localStorage.setItem('ftz_reports', JSON.stringify(merged));
-      // Push any local-only reports to Firebase
-      local.forEach(lr => {
-        if (lr.id && !fbMap.has(lr.id)) {
-          try { firebase.database().ref('reports/' + lr.id).set(lr); } catch {}
-        }
-      });
-      toast('Reports synced: '+merged.length+' total', 'success');
+    const remote = await FortizedSocial.adminGetReports();
+    const local = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
+    const remoteMap = new Map();
+    remote.forEach(r => { if (r.id) remoteMap.set(r.id, r); });
+    const merged = [...remote];
+    local.forEach(lr => { if (lr.id && !remoteMap.has(lr.id)) merged.push(lr); });
+    localStorage.setItem('ftz_reports', JSON.stringify(merged));
+    // Push any local-only reports to Supabase
+    for (const lr of local) {
+      if (lr.id && !remoteMap.has(lr.id)) {
+        try { await FortizedSocial.adminSaveReport(lr); } catch {}
+      }
     }
+    toast('Reports synced: '+merged.length+' total', 'success');
   } catch(e) { toast('Sync failed','error'); }
   _loadAdminPage('reports');
 }
@@ -18255,7 +18214,7 @@ async function adminGiveOnyx() {
   try {
     const u = await FortizedSocial.getUserByName(username);
     if (!u) { toast('User not found','error'); return; }
-    await firebase.database().ref('users/'+username+'/onyx').set((u.onyx||0)+amount);
+    await FortizedSocial.adminUpdateUserField(username, 'onyx', (u.onyx||0)+amount);
     logAudit('give_onyx', username, '+'+amount);
     toast('Gave '+amount+' Onyx to '+username,'success');
     document.getElementById('eco-username').value = '';
@@ -18281,8 +18240,8 @@ function _updateGlobalSetting(key, value) {
   gs[key] = value;
   localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
   _globalSettings = gs;
-  // Persist to Firebase for cross-device sync
-  try { firebase.database().ref('admin/global_settings').set(gs); } catch {}
+  // Persist to Supabase for cross-device sync
+  try { FortizedSocial.adminSaveGlobalSettings(gs); } catch {}
   // Apply side effects
   if (key === 'maintenanceMode') {
     if (value) {
@@ -18313,7 +18272,7 @@ function _updateGlobalSetting(key, value) {
 function _forceRefreshAllUsers() {
   showCustomConfirm('Force ALL connected users to refresh their page? This is useful after deploying updates.', async () => {
     try {
-      await firebase.database().ref('admin/force_refresh').set(Date.now());
+      await FortizedSocial.adminSetSignal('force_refresh', Date.now());
       logAudit('force_refresh', 'system', 'Force refresh triggered by ' + CU.username);
       toast('Force refresh signal sent — all users will reload within seconds.', 'success');
     } catch(e) {
@@ -18325,7 +18284,7 @@ function _forceRefreshAllUsers() {
 function _clearAllSessions() {
   showCustomConfirm('Clear all active sessions? Users will need to log in again.', async () => {
     try {
-      await firebase.database().ref('admin/clear_sessions').set(Date.now());
+      await FortizedSocial.adminSetSignal('clear_sessions', Date.now());
       logAudit('clear_sessions', 'system', 'All sessions cleared by ' + CU.username);
       toast('Session clear signal sent.', 'success');
     } catch(e) {
@@ -18349,18 +18308,18 @@ function _purgeDeletedMessages() {
 }
 
 function _syncAllToFirebase() {
-  showCustomConfirm('Sync all local admin data (reports, bans, settings) to Firebase?', async () => {
+  showCustomConfirm('Sync all local admin data (reports, bans, settings) to Supabase?', async () => {
     try {
       const reports = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
       const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
       const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
       const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
-      await firebase.database().ref('admin/reports').set(reports);
-      await firebase.database().ref('admin/bans').set(bans);
-      await firebase.database().ref('admin/global_settings').set(gs);
-      await firebase.database().ref('admin/staff').set(staff);
-      logAudit('sync_firebase', 'system', 'Full local→Firebase sync by ' + CU.username);
-      toast('All admin data synced to Firebase', 'success');
+      for (const r of reports) { await FortizedSocial.adminSaveReport(r); }
+      for (const b of bans) { await FortizedSocial.adminSaveBan(b); }
+      await FortizedSocial.adminSaveGlobalSettings(gs);
+      await FortizedSocial.adminSaveStaff(staff);
+      logAudit('sync_supabase', 'system', 'Full local→Supabase sync by ' + CU.username);
+      toast('All admin data synced to Supabase', 'success');
     } catch(e) {
       toast('Sync failed: ' + e.message, 'error');
     }
@@ -18383,10 +18342,9 @@ function _exportAuditLog() {
 
 // ── Maintenance Mode Enforcement ──
 function checkMaintenanceMode() {
-  // Load settings from Firebase first
-  firebase.database().ref('admin/global_settings').get().then(snap => {
-    if (snap.exists()) {
-      const gs = snap.val();
+  // Load settings from Supabase first
+  FortizedSocial.adminGetGlobalSettings().then(gs => {
+    if (gs && Object.keys(gs).length) {
       localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
       _globalSettings = gs;
       if (gs.maintenanceMode && !hasStaffAccess()) {
@@ -18420,37 +18378,45 @@ function _showMaintenanceScreen() {
   document.body.appendChild(overlay);
 }
 
-// Listen for maintenance mode changes in real-time
+// Poll for maintenance mode changes
 function _listenMaintenanceMode() {
-  firebase.database().ref('admin/global_settings/maintenanceMode').on('value', snap => {
-    const enabled = snap.val();
-    if (enabled && !hasStaffAccess()) {
-      _showMaintenanceScreen();
-    } else {
-      document.getElementById('maintenance-overlay')?.remove();
-    }
-  });
+  setInterval(async () => {
+    try {
+      const gs = await FortizedSocial.adminGetGlobalSettings();
+      if (gs.maintenanceMode && !hasStaffAccess()) {
+        _showMaintenanceScreen();
+      } else {
+        document.getElementById('maintenance-overlay')?.remove();
+      }
+    } catch {}
+  }, 30000);
 }
 
 // ── System Announcement Banner (real-time) ──────────────
 let _dismissedAnnouncement = null;
 function _listenAnnouncement() {
-  firebase.database().ref('admin/global_settings/announcement').on('value', snap => {
-    const text = snap.val();
-    const existing = document.getElementById('sys-announce-bar');
-    if (!text) {
-      if (existing) { existing.style.opacity='0'; existing.style.transform='translateY(-100%)'; setTimeout(()=>existing.remove(),300); }
-      _dismissedAnnouncement = null;
-      return;
-    }
-    if (text === _dismissedAnnouncement) return;
-    if (existing) existing.remove();
-    const bar = document.createElement('div');
-    bar.className = 'sys-announce-bar';
-    bar.id = 'sys-announce-bar';
-    bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()" title="Dismiss"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="sa-body"><div class="sa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.08"/></svg></div><span class="sa-label">BROADCAST</span><span class="sa-divider"></span><span class="sa-text">${escapeHTML(text)}</span></div>`;
-    document.body.appendChild(bar);
-  });
+  let _lastAnnText = null;
+  setInterval(async () => {
+    try {
+      const gs = await FortizedSocial.adminGetGlobalSettings();
+      const text = gs.announcement || null;
+      if (text === _lastAnnText) return;
+      _lastAnnText = text;
+      const existing = document.getElementById('sys-announce-bar');
+      if (!text) {
+        if (existing) { existing.style.opacity='0'; existing.style.transform='translateY(-100%)'; setTimeout(()=>existing.remove(),300); }
+        _dismissedAnnouncement = null;
+        return;
+      }
+      if (text === _dismissedAnnouncement) return;
+      if (existing) existing.remove();
+      const bar = document.createElement('div');
+      bar.className = 'sys-announce-bar';
+      bar.id = 'sys-announce-bar';
+      bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()" title="Dismiss"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="sa-body"><div class="sa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.08"/></svg></div><span class="sa-label">BROADCAST</span><span class="sa-divider"></span><span class="sa-text">${escapeHTML(text)}</span></div>`;
+      document.body.appendChild(bar);
+    } catch {}
+  }, 30000);
 }
 function _dismissAnnouncement() {
   const bar = document.getElementById('sys-announce-bar');
@@ -18510,7 +18476,7 @@ function _submitFeedback(rating, actionType, btn) {
       rating,
       ts: new Date().toISOString()
     };
-    firebase.database().ref('feedback/' + Date.now()).set(fb);
+    FortizedSocial.adminPushFeedback(fb);
   } catch(e) { console.warn('[feedback]', e); }
   // Animate out
   if (toast_el) {
@@ -18520,101 +18486,86 @@ function _submitFeedback(rating, actionType, btn) {
   }
 }
 
-// Listen for real-time staff changes so sidebar button appears/disappears dynamically
+// Poll for staff changes so sidebar button appears/disappears dynamically
 function _listenStaffChanges() {
-  firebase.database().ref('admin/staff').on('value', snap => {
-    if (snap.exists()) {
-      localStorage.setItem('ftz_staff', JSON.stringify(snap.val()));
-    } else {
-      localStorage.setItem('ftz_staff', JSON.stringify({ admins: [], moderators: [] }));
-    }
-    // Dynamically add/remove the staff console button
-    const rail = document.getElementById('rail');
-    const existingBtn = document.getElementById('admin-rail-btn');
-    const existingSep = existingBtn?.previousElementSibling;
-    if (hasStaffAccess()) {
-      if (!existingBtn && rail) {
-        const role = getStaffRole(CU.username);
-        const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
-        const btn = document.createElement('div');
-        btn.id = 'admin-rail-btn'; btn.className = 'rail-btn';
-        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Staff Console</span>`;
-        btn.dataset.tip = roleLabel + ' Panel';
-        btn.style.cssText = 'border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);margin-top:6px;background:rgba(248,113,113,.04);';
-        btn.onclick = tryOpenAdmin;
-        const sep = document.createElement('div');
-        sep.className = 'rail-sep'; sep.style.margin = '8px 12px'; sep.id = 'admin-rail-sep';
-        const createBtn = rail.querySelector('[onclick*="modal-create-bastion"]');
-        if (createBtn) { rail.insertBefore(sep, createBtn); rail.insertBefore(btn, createBtn); }
-        else rail.appendChild(btn);
+  setInterval(async () => {
+    try {
+      const staffData = await FortizedSocial.adminGetStaff();
+      if (staffData && (staffData.admins || staffData.moderators)) {
+        localStorage.setItem('ftz_staff', JSON.stringify(staffData));
+      } else {
+        localStorage.setItem('ftz_staff', JSON.stringify({ admins: [], moderators: [] }));
       }
-    } else {
-      // Remove sidebar button
-      if (existingBtn) existingBtn.remove();
-      if (existingSep && existingSep.id === 'admin-rail-sep') existingSep.remove();
-      // If user is currently in the staff console, kick them out immediately
-      if (_currentView === 'admin') {
-        adminAuthed = false;
-        _closeAdminPanel();
-        toast('Your staff access has been revoked.', 'error');
-      }
-      adminAuthed = false;
-    }
-  });
-  // Listen for staff revocation signal targeting this user specifically
-  if (CU?.username) {
-    firebase.database().ref('admin/staff_revoked/' + CU.username).on('value', snap => {
-      if (!snap.exists()) return;
-      const ts = snap.val();
-      if (Date.now() - ts < 60000) {
-        // Revocation just happened — force close admin if open
-        if (!hasStaffAccess()) {
-          adminAuthed = false;
-          if (_currentView === 'admin') {
-            _closeAdminPanel();
-            toast('Your staff access has been revoked.', 'error');
-          }
+      // Dynamically add/remove the staff console button
+      const rail = document.getElementById('rail');
+      const existingBtn = document.getElementById('admin-rail-btn');
+      const existingSep = existingBtn?.previousElementSibling;
+      if (hasStaffAccess()) {
+        if (!existingBtn && rail) {
+          const role = getStaffRole(CU.username);
+          const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
+          const btn = document.createElement('div');
+          btn.id = 'admin-rail-btn'; btn.className = 'rail-btn';
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Staff Console</span>`;
+          btn.dataset.tip = roleLabel + ' Panel';
+          btn.style.cssText = 'border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);margin-top:6px;background:rgba(248,113,113,.04);';
+          btn.onclick = tryOpenAdmin;
+          const sep = document.createElement('div');
+          sep.className = 'rail-sep'; sep.style.margin = '8px 12px'; sep.id = 'admin-rail-sep';
+          const createBtn = rail.querySelector('[onclick*="modal-create-bastion"]');
+          if (createBtn) { rail.insertBefore(sep, createBtn); rail.insertBefore(btn, createBtn); }
+          else rail.appendChild(btn);
         }
-        // Clean up the signal
-        firebase.database().ref('admin/staff_revoked/' + CU.username).remove().catch(()=>{});
+      } else {
+        if (existingBtn) existingBtn.remove();
+        if (existingSep && existingSep.id === 'admin-rail-sep') existingSep.remove();
+        if (_currentView === 'admin') {
+          adminAuthed = false;
+          _closeAdminPanel();
+          toast('Your staff access has been revoked.', 'error');
+        }
+        adminAuthed = false;
       }
-    });
-  }
+    } catch {}
+  }, 20000);
 }
 
-// Listen for force-refresh signal from admin
+// Poll for force-refresh signal from admin
 function _listenForceRefresh() {
-  firebase.database().ref('admin/force_refresh').on('value', snap => {
-    const ts = snap.val();
-    if (!ts) return;
-    const stored = parseInt(localStorage.getItem('ftz_last_force_refresh') || '0');
-    if (ts > stored) {
-      localStorage.setItem('ftz_last_force_refresh', String(ts));
-      // Only refresh if the signal is recent (within 60 seconds)
-      if (Date.now() - ts < 60000) {
-        toast('Platform update — refreshing…', 'info');
-        setTimeout(() => location.reload(), 2000);
+  setInterval(async () => {
+    try {
+      const ts = await FortizedSocial.adminGetSignal('force_refresh');
+      if (!ts) return;
+      const stored = parseInt(localStorage.getItem('ftz_last_force_refresh') || '0');
+      if (ts > stored) {
+        localStorage.setItem('ftz_last_force_refresh', String(ts));
+        if (Date.now() - ts < 60000) {
+          toast('Platform update — refreshing…', 'info');
+          setTimeout(() => location.reload(), 2000);
+        }
       }
-    }
-  });
+    } catch {}
+  }, 15000);
 }
 
-// Listen for session-clear signal from admin
+// Poll for session-clear signal from admin
 function _listenClearSessions() {
-  firebase.database().ref('admin/clear_sessions').on('value', snap => {
-    const ts = snap.val();
-    if (!ts) return;
-    const stored = parseInt(localStorage.getItem('ftz_last_clear_sessions') || '0');
-    if (ts > stored && Date.now() - ts < 60000) {
-      localStorage.setItem('ftz_last_clear_sessions', String(ts));
-      if (!hasStaffAccess()) {
-        localStorage.removeItem('ftz_current');
-        localStorage.removeItem('fortized_current_user');
-        toast('Session expired — please log in again.', 'info');
-        setTimeout(() => { window.location.href = '/login'; }, 2000);
+  setInterval(async () => {
+    try {
+      const ts = await FortizedSocial.adminGetSignal('clear_sessions');
+      if (!ts) return;
+      const stored = parseInt(localStorage.getItem('ftz_last_clear_sessions') || '0');
+      if (ts > stored && Date.now() - ts < 60000) {
+        localStorage.setItem('ftz_last_clear_sessions', String(ts));
+        if (!hasStaffAccess()) {
+          localStorage.removeItem('ftz_current');
+          localStorage.removeItem('fortized_current_user');
+          toast('Session expired — please log in again.', 'info');
+          setTimeout(() => { window.location.href = '/login'; }, 2000);
+        }
       }
-    }
-  });
+    } catch {}
+  }, 15000);
 }
 
 // Real-time bastion data sync — listens for changes to bastions the user belongs to
@@ -18798,6 +18749,7 @@ async function adminSearchUser() {
           <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Give Onyx</button>
           <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','radiance')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Radiance</button>
           <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="border-color:rgba(168,85,247,.12);background:rgba(168,85,247,.03);color:rgba(168,85,247,.5);">Radiance+</button>
+          ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','force_logout')" style="border-color:rgba(248,113,113,.12);background:rgba(248,113,113,.03);color:rgba(248,113,113,.5);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Force Logout</button>`:''}
         `}
         <button class="hq-quick-btn" onclick="openDMView('${escapeHTML(username)}');_closeAdminPanel();" style="border-color:rgba(96,165,250,.15);background:rgba(96,165,250,.04);color:rgba(96,165,250,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</button>
         <button class="hq-quick-btn" onclick="viewUserProfile('${escapeHTML(username)}');_closeAdminPanel();" style="border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.02);color:rgba(255,255,255,.4);">View Profile</button>
@@ -18918,8 +18870,7 @@ function adminActionUser(username, action) {
   } else if (action === 'warn') {
     showCustomInput('Warning Message', 'Enter warning reason:', async (reason) => {
       if (!reason?.trim()) return;
-      // Push warning directly to user's screen via Firebase
-      await firebase.database().ref('users/'+username+'/activeWarning').set({ reason, issuedBy: CU.username, issuedAt: new Date().toISOString() }).catch(()=>{});
+      await FortizedSocial.adminWarnUser(username, { reason, issuedBy: CU.username, issuedAt: new Date().toISOString() }).catch(()=>{});
       await FortizedSocial.addNotification(username, { type: 'system', text: 'Admin Warning: ' + reason }).catch(()=>{});
       logAudit('warn', username, reason);
       toast(`Warning issued to ${username}`, 'success');
@@ -18976,8 +18927,7 @@ function adminActionUser(username, action) {
         _reportSuspendTarget = null;
         _reportContentData = null;
       }
-      await firebase.database().ref('users/'+username+'/suspension').set(suspObj).catch(()=>{});
-      await firebase.database().ref('users/'+username+'/suspendedUntil').set(until).catch(()=>{});
+      await FortizedSocial.adminSuspendUser(username, suspObj).catch(()=>{});
       logAudit('suspend',username,`${amount} ${unit} — ${reason}`);
       toast(`${username} suspended for ${amount} ${unit}`,'success');
       _suspDialog.remove();
@@ -18988,7 +18938,7 @@ function adminActionUser(username, action) {
       if (!n || n <= 0) { toast('Enter a valid amount','error'); return; }
       const u = await FortizedSocial.getUserByName(username).catch(()=>null);
       if (!u) { toast('User not found','error'); return; }
-      await firebase.database().ref('users/'+username+'/onyx').set((u.onyx||0)+n);
+      await FortizedSocial.adminUpdateUserField(username, 'onyx', (u.onyx||0)+n);
       logAudit('give_onyx', username, `+${n} Onyx`);
       toast(`Gave ${n} Onyx to ${username}`, 'success');
       if (username===CU.username) await refreshCU();
@@ -18999,7 +18949,7 @@ function adminActionUser(username, action) {
       const n = parseInt(days);
       if (!n || n <= 0) { toast('Enter valid days','error'); return; }
       const until = new Date(Date.now() + n*86400000).toISOString();
-      await firebase.database().ref('users/'+username+'/radianceUntil').set(until);
+      await FortizedSocial.adminUpdateUserField(username, 'radianceUntil', until);
       logAudit('grant_radiance', username, `${n} days`);
       toast(`Granted ${n} days Radiance to ${username}`, 'success');
       if (username===CU.username) await refreshCU();
@@ -19010,15 +18960,19 @@ function adminActionUser(username, action) {
       const n = parseInt(days);
       if (!n || n <= 0) { toast('Enter valid days','error'); return; }
       const until = new Date(Date.now() + n*86400000).toISOString();
-      await Promise.all([
-        firebase.database().ref('users/'+username+'/radiancePlus').set(until),
-        firebase.database().ref('users/'+username+'/radianceUntil').set(until),
-      ]);
+      await FortizedSocial.adminUpdateUserField(username, 'radiancePlus', until);
+      await FortizedSocial.adminUpdateUserField(username, 'radianceUntil', until);
       logAudit('grant_radiance_plus', username, `${n} days`);
       toast(`Granted ${n} days Radiance+ to ${username}`, 'success');
       if (username===CU.username) await refreshCU();
       adminSearchUser();
     });
+  } else if (action === 'force_logout') {
+    if (!confirm(`Force logout ${username}? They will be logged out on their next page load.`)) return;
+    FortizedSocial.adminForceLogout(username).then(() => {
+      logAudit('force_logout', username, 'Forced logout by admin');
+      toast(`${username} will be logged out on next load`, 'success');
+    }).catch(() => toast('Failed to force logout', 'error'));
   }
 }
 
@@ -19031,7 +18985,7 @@ function reviewNSFW(idx, action) {
     logAudit('nsfw_'+action, target||'?', note||action);
 
     if (action === 'warn' && target) {
-      await firebase.database().ref('users/'+target+'/activeWarning').set({
+      await FortizedSocial.adminWarnUser(target, {
         reason: note || 'NSFW content violation',
         issuedBy: CU.username,
         issuedAt: new Date().toISOString()
@@ -19046,8 +19000,6 @@ function reviewNSFW(idx, action) {
       bans.push(banObj);
       localStorage.setItem('ftz_bans', JSON.stringify(bans));
       _saveBanToFirebase(banObj);
-      await firebase.database().ref('users/'+target+'/banned').set(true).catch(()=>{});
-      await firebase.database().ref('users/'+target+'/banReason').set(note || 'NSFW content violation').catch(()=>{});
       logAudit('ban', target, note || 'NSFW content');
       toast(target + ' has been banned', 'success');
     }
@@ -19056,14 +19008,14 @@ function reviewNSFW(idx, action) {
     if ((action === 'ban' || action === 'remove') && item.hash) {
       _nsfwBannedHashes.push(item.hash);
       localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(_nsfwBannedHashes));
-      try { firebase.database().ref('admin/nsfw_banned_hashes').set(_nsfwBannedHashes); } catch {}
+      try { FortizedSocial.adminSaveNsfwBannedHashes(_nsfwBannedHashes); } catch {}
     }
 
     // Remove from queue
     const itemId = item.id;
     queue.splice(idx, 1);
     localStorage.setItem('ftz_nsfw_queue', JSON.stringify(queue));
-    try { firebase.database().ref('admin/nsfw_queue/' + itemId).remove(); } catch {}
+    try { await FortizedSocial.adminSaveNsfwQueue(queue); } catch {}
     toast(action === 'approve' ? 'Content approved' : action === 'delete' ? 'Deleted forever' : 'Content ' + action + 'd', 'success');
     _loadAdminPage('nsfw_queue');
   });
@@ -19084,10 +19036,10 @@ async function nsfwAIFeedback(idx, aiWasCorrect) {
   };
   // Store feedback in Firebase for AI learning
   try {
-    await firebase.database().ref('admin/nsfw_ai_feedback').push(feedback);
+    await FortizedSocial.adminPushNsfwAIFeedback(feedback);
     // If AI was wrong, store hash as safe so model can learn
     if (!aiWasCorrect && item.hash) {
-      await firebase.database().ref('admin/nsfw_safe_hashes/' + item.hash.replace(/[.#$/\[\]]/g,'_')).set({
+      await FortizedSocial.adminSaveNsfwSafeHash(item.hash.replace(/[.#$/\[\]]/g,'_'), {
         hash: item.hash,
         markedSafeBy: CU.username,
         markedAt: new Date().toISOString()
@@ -19098,7 +19050,7 @@ async function nsfwAIFeedback(idx, aiWasCorrect) {
       if (!_nsfwBannedHashes.includes(item.hash)) {
         _nsfwBannedHashes.push(item.hash);
         localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(_nsfwBannedHashes));
-        try { firebase.database().ref('admin/nsfw_banned_hashes').set(_nsfwBannedHashes); } catch {}
+        try { FortizedSocial.adminSaveNsfwBannedHashes(_nsfwBannedHashes); } catch {}
       }
     }
   } catch(e) { console.warn('AI feedback save failed:', e); }
@@ -19151,7 +19103,7 @@ function removeStaff(role, idx) {
     localStorage.setItem('ftz_staff', JSON.stringify(staff));
     _saveStaffToFirebase(staff);
     // Revoke their staff console access by clearing their auth flag via Firebase signal
-    firebase.database().ref('admin/staff_revoked/' + username).set(Date.now()).catch(()=>{});
+    FortizedSocial.adminSetSignal('staff_revoked_' + username, Date.now()).catch(()=>{});
     logAudit('remove_'+role, username, 'Removed by super admin');
     toast(`${username} removed from ${roleLabel}s`, 'success');
     loadAdminTab('staff');
@@ -19172,7 +19124,7 @@ async function adjustOnyx(direction) {
     const u = await FortizedSocial.getUserByName(username);
     if (!u) { toast('User not found', 'error'); return; }
     const newOnyx = Math.max(0, (u.onyx || 0) + finalAmount);
-    await firebase.database().ref('users/' + username + '/onyx').set(newOnyx);
+    await FortizedSocial.adminUpdateUserField(username, 'onyx', newOnyx);
     logAudit('onyx_adjust', username, `${direction>0?'+':''}${finalAmount} Onyx — ${reason}`);
     toast(`${finalAmount > 0 ? 'Gave' : 'Removed'} ${Math.abs(finalAmount)} Onyx ${direction>0?'to':'from'} ${username} (new balance: ${newOnyx})`, 'success');
     if (username === CU.username) await refreshCU();
@@ -19594,8 +19546,8 @@ function _flagNsfwContent(fileData, fileName, uploader, fileType, aiLabel, aiSco
   queue.push(item);
   localStorage.setItem('ftz_nsfw_queue', JSON.stringify(queue));
 
-  // Sync to Firebase
-  try { firebase.database().ref('admin/nsfw_queue/' + item.id).set(item); } catch {}
+  // Sync to Supabase
+  try { FortizedSocial.adminSaveNsfwQueue(queue); } catch {}
 
   logAudit('nsfw_flagged', uploader, `AI flagged ${mediaType} "${fileName}" as ${aiLabel} (score: ${aiScore})`);
 }
@@ -20826,8 +20778,8 @@ function generateTrialLink() {
   const existing = JSON.parse(localStorage.getItem('ftz_trial_links')||'[]');
   existing.push(trialData);
   localStorage.setItem('ftz_trial_links', JSON.stringify(existing));
-  // Persist to Firebase for cross-device access
-  try { firebase.database().ref('admin/trial_links/' + code).set(trialData); } catch {}
+  // Persist to Supabase for cross-device access
+  try { FortizedSocial.adminSetSignal('trial_link_' + code, trialData); } catch {}
   const el = document.getElementById('trial-link-result');
   if (el) {
     el.innerHTML = `
@@ -28363,8 +28315,8 @@ async function adminGrantRadiance() {
   if (!username) { toast('Enter a username', 'error'); return; }
   try {
     const until = new Date(Date.now() + days*86400000).toISOString();
-    await firebase.database().ref('users/'+username+'/radianceUntil').set(until);
-    toast(`✨ Radiance granted to ${username} for ${days} days`, 'success');
+    await FortizedSocial.adminUpdateUserField(username, 'radianceUntil', until);
+    toast(`Radiance granted to ${username} for ${days} days`, 'success');
     logAudit('grant_radiance', username, `${days} days`);
     document.getElementById('radiance-username').value = '';
   } catch(e) {
@@ -28378,9 +28330,9 @@ async function adminGrantRadiancePlus() {
   if (!username) { toast('Enter a username', 'error'); return; }
   try {
     const until = new Date(Date.now() + days*86400000).toISOString();
-    await firebase.database().ref('users/'+username+'/radiancePlus').set(until);
-    await firebase.database().ref('users/'+username+'/radianceUntil').set(until);
-    toast(`🌟 Radiance+ granted to ${username} for ${days} days`, 'success');
+    await FortizedSocial.adminUpdateUserField(username, 'radiancePlus', until);
+    await FortizedSocial.adminUpdateUserField(username, 'radianceUntil', until);
+    toast(`Radiance+ granted to ${username} for ${days} days`, 'success');
     logAudit('grant_radiance_plus', username, `${days} days`);
   } catch(e) {
     toast('Could not grant Radiance+: '+e.message, 'error');
@@ -29508,8 +29460,8 @@ async function giftRadianceTo(friendUsername) {
       const until = new Date(Date.now() + 30 * 86400000).toISOString();
       CU.giftedRadiance[friendUsername] = { until, cost };
       try {
-        await firebase.database().ref('users/' + friendUsername + '/radianceUntil').set(until);
-        await firebase.database().ref('notifications/' + friendUsername).push({
+        await FortizedSocial.adminUpdateUserField(friendUsername, 'radianceUntil', until);
+        await FortizedSocial.addNotification(friendUsername, {
           type: 'gift', from: CU.username,
           msg: `${CU.username} gifted you 30 days of Radiance! ✨`,
           time: new Date().toISOString()
@@ -29527,7 +29479,7 @@ async function giftRadianceTo(friendUsername) {
 async function cancelGiftRadiance(friendUsername) {
   showCustomConfirm(`Cancel ${friendUsername}'s gifted Radiance?`, async () => {
     if (CU.giftedRadiance) delete CU.giftedRadiance[friendUsername];
-    try { await firebase.database().ref('users/' + friendUsername + '/radianceUntil').remove(); } catch {}
+    try { await FortizedSocial.adminUpdateUserField(friendUsername, 'radianceUntil', null); } catch {}
     await saveUser();
     toast('Gift cancelled.', 'info');
     renderAtelierTab('radiance');

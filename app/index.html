@@ -4349,6 +4349,22 @@ async function refreshCU() {
       if (!fresh.pfp && prevPfp) fresh.pfp = prevPfp;
       // Preserve locally-known live status (Socket.IO is source of truth, not stale DB)
       if (prevStatus && prevStatus !== 'offline') fresh.status = prevStatus;
+      // Preserve quest/onyx data — local is source of truth since saves may be in-flight
+      const prevOnyx = CU.onyx;
+      const prevLastDaily = CU.lastDailyReward || CU.lastDaily;
+      if (prevOnyx !== undefined && (fresh.onyx === undefined || fresh.onyx < prevOnyx)) fresh.onyx = prevOnyx;
+      if (CU.lastDailyReward && !fresh.lastDailyReward) fresh.lastDailyReward = CU.lastDailyReward;
+      if (CU.lastDaily && !fresh.lastDaily) fresh.lastDaily = CU.lastDaily;
+      if (CU.dailyStreak && !fresh.dailyStreak) fresh.dailyStreak = CU.dailyStreak;
+      if (CU.questsDailyLog) fresh.questsDailyLog = { ...(fresh.questsDailyLog||{}), ...CU.questsDailyLog };
+      if (CU.completedQuests?.length) {
+        const merged = new Set([...(fresh.completedQuests||[]), ...CU.completedQuests]);
+        fresh.completedQuests = [...merged];
+      }
+      if (CU.questsRewarded?.length) {
+        const merged = new Set([...(fresh.questsRewarded||[]), ...CU.questsRewarded]);
+        fresh.questsRewarded = [...merged];
+      }
       CU = fresh; saveLocal();
     }
   } catch {}
@@ -10104,9 +10120,17 @@ function initFortizedUXResilience() {
         // (migration safety — ensures we never lose radiance on refresh)
         if(!fresh.radianceUntil && CU.radianceUntil && new Date(CU.radianceUntil)>new Date()) fresh.radianceUntil=CU.radianceUntil;
         if(!fresh.radiancePlus && CU.radiancePlus && new Date(CU.radiancePlus)>new Date()) fresh.radiancePlus=CU.radiancePlus;
+        // Preserve quest/onyx data — local is source of truth since saves may be in-flight
+        if (CU.onyx !== undefined && (fresh.onyx === undefined || fresh.onyx < CU.onyx)) fresh.onyx = CU.onyx;
+        if (CU.lastDailyReward && !fresh.lastDailyReward) fresh.lastDailyReward = CU.lastDailyReward;
+        if (CU.lastDaily && !fresh.lastDaily) fresh.lastDaily = CU.lastDaily;
+        if (CU.dailyStreak && !fresh.dailyStreak) fresh.dailyStreak = CU.dailyStreak;
+        if (CU.questsDailyLog) fresh.questsDailyLog = { ...(fresh.questsDailyLog||{}), ...CU.questsDailyLog };
+        if (CU.completedQuests?.length) { const m = new Set([...(fresh.completedQuests||[]), ...CU.completedQuests]); fresh.completedQuests = [...m]; }
+        if (CU.questsRewarded?.length) { const m = new Set([...(fresh.questsRewarded||[]), ...CU.questsRewarded]); fresh.questsRewarded = [...m]; }
         CU=fresh;saveLocal();updateUserbar();renderRailBastions();updateOnyxDisplay();
-        // Re-persist radiance to DB if it was preserved from local cache
-        if(CU.radianceUntil||CU.radiancePlus) saveUser().catch(()=>{});
+        // Re-persist radiance/quest data to DB if it was preserved from local cache
+        if(CU.radianceUntil||CU.radiancePlus||CU.completedQuests?.length) saveUser().catch(()=>{});
       }
     }catch{}
   },1000);
@@ -19970,8 +19994,8 @@ function animateOnyxGain(amount) {
   // Pulse the balance counter
   balEl.style.transition = 'transform .2s,color .2s';
   balEl.style.transform = 'scale(1.25)';
-  balEl.style.color = 'var(--accent)';
-  setTimeout(() => { balEl.style.transform = ''; balEl.style.color = ''; }, 400);
+  balEl.style.color = '#fff';
+  setTimeout(() => { balEl.style.transform = ''; balEl.style.color = 'var(--accent)'; }, 400);
 }
 
 // ════════════════════════════════════════════

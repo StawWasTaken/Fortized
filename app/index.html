@@ -23921,7 +23921,7 @@ async function _connectSpotify() {
   // Send the PKCE verifier to the SERVER so it can do the token exchange
   // (the callback may run in a different browser/context than this app)
   try {
-    await fetch('/api/spotify-auth-init', {
+    await fetch('https://fortized.onrender.com/api/spotify-auth-init', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state, codeVerifier, clientId, redirectUri })
@@ -23948,7 +23948,7 @@ async function _connectSpotify() {
   const _spotifyPoll = setInterval(async () => {
     if (_resolved) return;
     try {
-      const r = await fetch('/api/spotify-tokens/' + encodeURIComponent(state));
+      const r = await fetch('https://fortized.onrender.com/api/spotify-tokens/' + encodeURIComponent(state));
       const d = await r.json();
       if (d.tokens) {
         _resolved = true;

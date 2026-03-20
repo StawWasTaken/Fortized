@@ -29,7 +29,7 @@ p{font-size:14px;color:rgba(255,255,255,.5);}
 
   if (code && state) {
     // Send the code + state to the server for token exchange
-    fetch('/api/spotify-code', {
+    fetch('https://fortized.onrender.com/api/spotify-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state: state, code: code })

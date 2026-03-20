@@ -23815,7 +23815,8 @@ function renderProfileWidgetsOnCard(u, containerEl) {
           </div>
         </div>`;
       } else if (isOwnProfile) {
-        const isConnected = !!u.spotifyConnected;
+        const hasValidToken = !!(u.spotifyToken && u.spotifyRefreshToken);
+        const isConnected = !!u.spotifyConnected && hasValidToken;
         html += `<div class="pw-widget" style="border-left:3px solid #1DB954;padding:12px 14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
             <div class="pw-widget-title" style="color:#1DB954;margin-bottom:0;">${_spotifySvg} Spotify</div>
@@ -23901,6 +23902,13 @@ async function _generateCodeChallenge(verifier) {
 }
 
 async function _connectSpotify() {
+  // Clear any stale connection data from previous broken attempts
+  CU.spotifyConnected = false;
+  CU.spotifyToken = null;
+  CU.spotifyRefreshToken = null;
+  CU.spotifyTokenExpiry = null;
+  CU.spotifyNowPlaying = null;
+
   const clientId = 'a632e938880e4e84b27d73a5d32be42e';
   // Must EXACTLY match the redirect URI registered in Spotify Developer Dashboard
   const redirectUri = 'https://fortized.com/spotify-callback.html';

@@ -23910,11 +23910,11 @@ async function _connectSpotify() {
   // Use PKCE Authorization Code flow (response_type=code)
   const codeVerifier = _generateCodeVerifier();
   const codeChallenge = await _generateCodeChallenge(codeVerifier);
-  // Store verifier and details in localStorage (shared between app and callback)
+  // Store verifier locally (stays in THIS app's context for the exchange later)
   localStorage.setItem('spotify_code_verifier', codeVerifier);
   localStorage.setItem('spotify_client_id', clientId);
   localStorage.setItem('spotify_redirect_uri', redirectUri);
-  // Clear any old callback code
+  localStorage.setItem('spotify_auth_state', state);
   localStorage.removeItem('spotify_auth_code');
 
   const authUrl = 'https://accounts.spotify.com/authorize?client_id=' + encodeURIComponent(clientId)
@@ -23925,30 +23925,37 @@ async function _connectSpotify() {
     + '&code_challenge_method=S256'
     + '&code_challenge=' + encodeURIComponent(codeChallenge);
 
-  // Open in a new window (works in both browser and Electron without leaving the app)
+  // Open in a new window (stays in the app, no redirect away)
   const authWin = window.open(authUrl, '_blank', 'width=500,height=700');
   toast('Connect your Spotify account in the new window', 'info');
 
-  // Poll localStorage for the code (the callback page writes it there)
-  const _spotifyPoll = setInterval(() => {
-    const code = localStorage.getItem('spotify_auth_code');
-    if (code) {
-      clearInterval(_spotifyPoll);
-      localStorage.removeItem('spotify_auth_code');
-      try { if (authWin && !authWin.closed) authWin.close(); } catch {}
-      _exchangeSpotifyCode(code);
-      return;
-    }
-    // Also stop polling if user closed the window without completing
+  let _resolved = false;
+  function _onSpotifyCode(code) {
+    if (_resolved) return;
+    _resolved = true;
+    clearInterval(_spotifyPoll);
+    localStorage.removeItem('spotify_auth_code');
+    localStorage.removeItem('spotify_auth_state');
+    try { if (authWin && !authWin.closed) authWin.close(); } catch {}
+    _exchangeSpotifyCode(code);
+  }
+
+  // Poll BOTH localStorage (same-context) AND server relay (cross-context / Electron)
+  const _spotifyPoll = setInterval(async () => {
+    if (_resolved) return;
+    // Check localStorage (works when callback is same browser context)
+    const lsCode = localStorage.getItem('spotify_auth_code');
+    if (lsCode) { _onSpotifyCode(lsCode); return; }
+    // Check server relay (works when callback opens in a different browser / Electron)
     try {
-      if (authWin && authWin.closed) {
-        clearInterval(_spotifyPoll);
-      }
+      const r = await fetch('/api/spotify-code/' + encodeURIComponent(state));
+      const d = await r.json();
+      if (d.code) { _onSpotifyCode(d.code); return; }
     } catch {}
-  }, 500);
+  }, 1500);
 
   // Safety: stop polling after 5 minutes
-  setTimeout(() => clearInterval(_spotifyPoll), 300000);
+  setTimeout(() => { if (!_resolved) clearInterval(_spotifyPoll); }, 300000);
 }
 
 async function _exchangeSpotifyCode(code) {

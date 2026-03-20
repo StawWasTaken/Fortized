@@ -172,6 +172,34 @@ app.post('/api/presence/offline', async (req, res) => {
   res.status(204).end();
 });
 
+// ── Spotify OAuth code relay ──────────────────────
+// The callback page POSTs the auth code here, and the app GETs it.
+// This bridges the gap between browser callback and Electron app.
+const _spotifyCodes = new Map(); // state -> { code, ts }
+// Cleanup old codes every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of _spotifyCodes) {
+    if (now - v.ts > 300000) _spotifyCodes.delete(k);
+  }
+}, 300000);
+
+app.post('/api/spotify-code', (req, res) => {
+  const { state, code } = req.body;
+  if (!state || !code) return res.status(400).json({ error: 'Missing state or code' });
+  _spotifyCodes.set(state, { code, ts: Date.now() });
+  res.json({ ok: true });
+});
+
+app.get('/api/spotify-code/:state', (req, res) => {
+  const entry = _spotifyCodes.get(req.params.state);
+  if (entry) {
+    _spotifyCodes.delete(req.params.state);
+    return res.json({ code: entry.code });
+  }
+  res.json({ code: null });
+});
+
 // ── Serve static frontend ──────────────────────────
 // Disable caching for HTML files so code updates are picked up immediately
 app.use((req, res, next) => {

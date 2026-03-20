@@ -471,7 +471,8 @@ io.on('connection', (socket) => {
     if (typeof callback !== 'function') return;
     const result = {};
     (usernames || []).forEach(u => {
-      const entry = onlineUsers.get(u);
+      const normalized = (u || '').trim().toLowerCase();
+      const entry = onlineUsers.get(normalized);
       if (entry) {
         const s = entry.status === 'invisible' ? 'offline' : entry.status;
         const ga = entry.status === 'invisible' ? null : entry.gameActivity;

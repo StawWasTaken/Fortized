@@ -3805,6 +3805,7 @@ function setFaviconNotif(hasNotif) {
 // ════════════════════════════════════════════
 let CU = null;
 const _pfpCache = {};
+const _liveStatusCache = {}; // username -> status, updated by real-time presence events
 let curBastion = null;
 let curChannel = null;
 let curDM = null;
@@ -8904,12 +8905,13 @@ async function renderMemberList() {
       const presenceData = await FortizedSocial.queryPresence(othersToQuery);
       if (presenceData) {
         othersToQuery.forEach(u => {
-          statusMap[u] = presenceData[u]?.status || 'offline';
+          statusMap[u] = presenceData[u]?.status || _liveStatusCache[u] || 'offline';
         });
       } else {
-        othersToQuery.forEach(u => { statusMap[u] = 'offline'; });
+        // Socket query failed — use live status cache from real-time events as fallback
+        othersToQuery.forEach(u => { statusMap[u] = _liveStatusCache[u] || 'offline'; });
       }
-    } catch { othersToQuery.forEach(u => { statusMap[u] = 'offline'; }); }
+    } catch { othersToQuery.forEach(u => { statusMap[u] = _liveStatusCache[u] || 'offline'; }); }
   }
 
   const isOnlineStatus = (st) => st === 'online' || st === 'away' || st === 'dnd';
@@ -8995,7 +8997,7 @@ function _debouncedMemberListResort() {
   _memberResortTimer = setTimeout(() => {
     _memberResortTimer = null;
     if (curBastion !== null) renderMemberList();
-  }, 500);
+  }, 150);
 }
 function _filterMemberList(query) {
   const q = query.toLowerCase().trim();
@@ -9029,7 +9031,8 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
             existingImg.src = ud.pfp;
             existingImg.onerror = function() { this.src = _defaultPfpUrl(u); };
           } else {
-            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(status)};border:2.5px solid rgba(12,14,24,.98);"></span>`;
+            const currentStatus = _liveStatusCache[u] || entry.dataset.status || status;
+            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(currentStatus)};border:2.5px solid rgba(12,14,24,.98);"></span>`;
           }
         }
         const badgesEl = entry.querySelector('.ml-badges');
@@ -9839,6 +9842,8 @@ function initFortizedUXResilience() {
       initialGameActivity: CU.gameActivity || null,
       onStatusChange: function(data) {
         if (!data || !data.username) return;
+        // Cache the live status for use in renderMemberList fallback
+        _liveStatusCache[data.username] = data.status;
         const color = typeof FtzStatus !== 'undefined' ? FtzStatus.color(data.status) : (data.status==='online'?'#3ecf6e':data.status==='away'?'#f59e0b':data.status==='dnd'?'#f87171':'rgba(255,255,255,.15)');
         const isOnline = data.status==='online'||data.status==='away'||data.status==='dnd';
 

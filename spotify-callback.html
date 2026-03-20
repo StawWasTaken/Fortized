@@ -20,14 +20,25 @@ p{font-size:14px;color:rgba(255,255,255,.5);}
 <p>This window will close automatically.</p>
 </div>
 <script>
-// Store the authorization code in localStorage so the app can pick it up
 (function() {
   var params = new URLSearchParams(window.location.search);
   var code = params.get('code');
-  if (code) {
-    localStorage.setItem('spotify_auth_code', code);
-    // Auto-close after a short delay
-    setTimeout(function() { window.close(); }, 1500);
+  var state = params.get('state');
+  if (code && state) {
+    // Send the code to the server relay so the app can pick it up
+    fetch('/api/spotify-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state: state, code: code })
+    }).then(function() {
+      // Also try localStorage in case we're in the same context (browser)
+      try { localStorage.setItem('spotify_auth_code', code); } catch(e) {}
+      setTimeout(function() { window.close(); }, 1500);
+    }).catch(function() {
+      // Server relay failed, fall back to localStorage only
+      try { localStorage.setItem('spotify_auth_code', code); } catch(e) {}
+      setTimeout(function() { window.close(); }, 1500);
+    });
   } else {
     document.querySelector('h2').textContent = 'Connection Failed';
     document.querySelector('p').textContent = 'No authorization code received. Please try again.';

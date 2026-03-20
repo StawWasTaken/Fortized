@@ -14697,7 +14697,7 @@ function buildProfileView(tab) {
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:12px;">Avatar</div>
               <div style="display:flex;gap:8px;">
                 <label style="cursor:pointer;"><div class="settings-save-btn">Change Avatar</div><input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event);markSettingsDirty()"></label>
-                ${CU.pfp ? '<button onclick="CU.pfp=\\'\\';markSettingsDirty();buildProfileView(\\'myprofile\\')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Avatar</button>' : ''}
+                ${CU.pfp ? '<button onclick="CU.pfp=&#39;&#39;;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Avatar</button>' : ''}
               </div>
             </div>
             ${sep}
@@ -14718,7 +14718,7 @@ function buildProfileView(tab) {
               <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event);markSettingsDirty()">
               <div style="display:flex;gap:8px;">
                 <button onclick="${hasRadiance?"document.getElementById('banner-file-inp').click()":"toast('Custom banners require Radiance','error')"}" class="settings-save-btn">Change Banner</button>
-                ${hasRadiance && CU.banner ? '<button onclick="CU.banner=\\'\\';markSettingsDirty();buildProfileView(\\'myprofile\\')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Banner</button>' : ''}
+                ${hasRadiance && CU.banner ? '<button onclick="CU.banner=&#39;&#39;;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Banner</button>' : ''}
               </div>
             </div>
             ${sep}

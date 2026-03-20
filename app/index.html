@@ -10428,6 +10428,16 @@ function initFortizedUXResilience() {
         if (CU.displayColor && !fresh.displayColor) fresh.displayColor = CU.displayColor;
         if (CU.profileTheme && !fresh.profileTheme) fresh.profileTheme = CU.profileTheme;
       if (CU.wantToPlay?.length && !fresh.wantToPlay?.length) fresh.wantToPlay = CU.wantToPlay;
+      // Preserve profile widgets
+      if (CU.profileWidgets?.length && !fresh.profileWidgets?.length) fresh.profileWidgets = CU.profileWidgets;
+      // Preserve Spotify connection data
+      if (CU.spotifyConnected && !fresh.spotifyConnected) fresh.spotifyConnected = CU.spotifyConnected;
+      if (CU.spotifyToken && !fresh.spotifyToken) fresh.spotifyToken = CU.spotifyToken;
+      if (CU.spotifyRefreshToken && !fresh.spotifyRefreshToken) fresh.spotifyRefreshToken = CU.spotifyRefreshToken;
+      if (CU.spotifyTokenExpiry && !fresh.spotifyTokenExpiry) fresh.spotifyTokenExpiry = CU.spotifyTokenExpiry;
+      if (CU.spotifyNowPlaying && !fresh.spotifyNowPlaying) fresh.spotifyNowPlaying = CU.spotifyNowPlaying;
+      // Preserve game collection
+      if (CU.gameCollection?.length && (!fresh.gameCollection?.length || fresh.gameCollection.length < CU.gameCollection.length)) fresh.gameCollection = CU.gameCollection;
         CU=fresh;saveLocal();updateUserbar();renderRailBastions();updateOnyxDisplay();
         // Re-persist radiance/quest data to DB if it was preserved from local cache
         if(CU.radianceUntil||CU.radiancePlus||CU.completedQuests?.length) saveUser().catch(()=>{});
@@ -10446,6 +10456,17 @@ function initFortizedUXResilience() {
     });
   } catch {}
   try { initIdleDetection(); } catch(e) { console.warn('[init] initIdleDetection:', e); }
+  // Check for Spotify callback code in URL hash (redirect-based flow)
+  try {
+    const _hash = window.location.hash;
+    if (_hash.includes('spotify_code=')) {
+      const _spotifyCode = decodeURIComponent(_hash.split('spotify_code=')[1].split('&')[0]);
+      window.location.hash = ''; // Clean up the hash
+      if (_spotifyCode) _exchangeSpotifyCode(_spotifyCode);
+    }
+  } catch(e) { console.warn('[init] spotifyCallback:', e); }
+  // Start Spotify polling if already connected
+  try { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); } catch {}
   // Auto-detect game activity in Tauri desktop app (Discord-style)
   try { _startAutoActivityDetection(); } catch(e) { console.warn('[init] autoActivityDetection:', e); }
   try { restoreCustomStatusTimer(); } catch(e) { console.warn('[init] restoreCustomStatusTimer:', e); }
@@ -23354,9 +23375,9 @@ const PROFILE_WIDGET_DEFS = [
 function _getProfileWidgets() {
   return CU.profileWidgets || PROFILE_WIDGET_DEFS.map(w => ({id:w.id,enabled:w.id==='game_collection',config:{}}));
 }
-function _setProfileWidgets(widgets, skipSave) {
+function _setProfileWidgets(widgets) {
   CU.profileWidgets = widgets;
-  if (!skipSave) saveUser().catch(()=>{});
+  saveUser(true).catch(()=>{});
 }
 
 function renderProfileWidgetsTab(main) {
@@ -23891,19 +23912,17 @@ async function _generateCodeChallenge(verifier) {
 async function _connectSpotify() {
   const clientId = 'a632e938880e4e84b27d73a5d32be42e';
   // Must EXACTLY match the redirect URI registered in Spotify Developer Dashboard
-  const redirectUri = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? window.location.origin + '/spotify-callback.html'
-    : 'https://fortized.com/spotify-callback.html';
+  const redirectUri = 'https://fortized.com/spotify-callback.html';
   const scope = 'user-read-private user-read-playback-state user-read-currently-playing';
   const state = CU?.username ? CU.username + '_' + Date.now() : 'ftz_' + Date.now();
 
   // Use PKCE Authorization Code flow (response_type=code)
   const codeVerifier = _generateCodeVerifier();
   const codeChallenge = await _generateCodeChallenge(codeVerifier);
-  // Store verifier for the callback to use
-  sessionStorage.setItem('spotify_code_verifier', codeVerifier);
-  sessionStorage.setItem('spotify_client_id', clientId);
-  sessionStorage.setItem('spotify_redirect_uri', redirectUri);
+  // Store verifier in localStorage so it persists across the redirect
+  localStorage.setItem('spotify_code_verifier', codeVerifier);
+  localStorage.setItem('spotify_client_id', clientId);
+  localStorage.setItem('spotify_redirect_uri', redirectUri);
 
   const authUrl = 'https://accounts.spotify.com/authorize?client_id=' + encodeURIComponent(clientId)
     + '&response_type=code'
@@ -23913,41 +23932,14 @@ async function _connectSpotify() {
     + '&code_challenge_method=S256'
     + '&code_challenge=' + encodeURIComponent(codeChallenge);
 
-  const popup = window.open(authUrl, 'spotify_auth', 'width=500,height=700');
-  toast('Connect your Spotify account in the popup window', 'info');
-
-  // Listen for the authorization code via postMessage from the callback page
-  function _onSpotifyMsg(e) {
-    if (e.data?.type === 'spotify-callback' && e.data.code) {
-      window.removeEventListener('message', _onSpotifyMsg);
-      clearInterval(_spotifyFallback);
-      if (popup && !popup.closed) popup.close();
-      _exchangeSpotifyCode(e.data.code);
-    }
-  }
-  window.addEventListener('message', _onSpotifyMsg);
-
-  // Fallback: also poll popup location in case postMessage doesn't work
-  const _spotifyFallback = setInterval(() => {
-    try {
-      if (!popup || popup.closed) { clearInterval(_spotifyFallback); window.removeEventListener('message', _onSpotifyMsg); return; }
-      const search = popup.location.search;
-      if (search && search.includes('code=')) {
-        const params = new URLSearchParams(search);
-        const code = params.get('code');
-        clearInterval(_spotifyFallback);
-        window.removeEventListener('message', _onSpotifyMsg);
-        popup.close();
-        if (code) _exchangeSpotifyCode(code);
-      }
-    } catch (e) { /* cross-origin, keep polling */ }
-  }, 500);
+  // Redirect the full page to Spotify auth (no popup — more reliable)
+  window.location.href = authUrl;
 }
 
 async function _exchangeSpotifyCode(code) {
-  const clientId = sessionStorage.getItem('spotify_client_id') || 'a632e938880e4e84b27d73a5d32be42e';
-  const redirectUri = sessionStorage.getItem('spotify_redirect_uri') || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? window.location.origin + '/spotify-callback.html' : 'https://fortized.com/spotify-callback.html');
-  const codeVerifier = sessionStorage.getItem('spotify_code_verifier');
+  const clientId = localStorage.getItem('spotify_client_id') || 'a632e938880e4e84b27d73a5d32be42e';
+  const redirectUri = localStorage.getItem('spotify_redirect_uri') || 'https://fortized.com/spotify-callback.html';
+  const codeVerifier = localStorage.getItem('spotify_code_verifier');
   if (!codeVerifier) { toast('Spotify auth failed — missing PKCE verifier', 'error'); return; }
 
   try {
@@ -23968,11 +23960,19 @@ async function _exchangeSpotifyCode(code) {
       CU.spotifyToken = data.access_token;
       if (data.refresh_token) CU.spotifyRefreshToken = data.refresh_token;
       if (data.expires_in) CU.spotifyTokenExpiry = Date.now() + (data.expires_in * 1000);
+      // Auto-enable the Spotify widget if not already enabled
+      const widgets = _getProfileWidgets();
+      let sw = widgets.find(w => w.id === 'spotify');
+      if (!sw) { sw = {id:'spotify',enabled:true,config:{}}; widgets.push(sw); }
+      if (!sw.enabled) sw.enabled = true;
+      CU.profileWidgets = widgets;
       await saveUser(true);
       toast('Spotify connected!', 'success');
       _pollSpotifyNowPlaying();
       const wc = document.getElementById('up-widgets-container');
       if (wc) renderProfileWidgetsOnCard(CU, wc);
+      // Re-render profile view if open
+      try { buildProfileView('myprofile'); } catch {}
     } else {
       toast('Spotify auth failed: ' + (data.error_description || data.error || 'Unknown error'), 'error');
     }
@@ -23980,9 +23980,9 @@ async function _exchangeSpotifyCode(code) {
     toast('Failed to connect Spotify: ' + e.message, 'error');
   }
   // Cleanup
-  sessionStorage.removeItem('spotify_code_verifier');
-  sessionStorage.removeItem('spotify_client_id');
-  sessionStorage.removeItem('spotify_redirect_uri');
+  localStorage.removeItem('spotify_code_verifier');
+  localStorage.removeItem('spotify_client_id');
+  localStorage.removeItem('spotify_redirect_uri');
 }
 
 // Refresh Spotify token using refresh_token

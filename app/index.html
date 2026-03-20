@@ -23910,20 +23910,26 @@ async function _connectSpotify() {
   CU.spotifyNowPlaying = null;
 
   const clientId = 'a632e938880e4e84b27d73a5d32be42e';
-  // Must EXACTLY match the redirect URI registered in Spotify Developer Dashboard
   const redirectUri = 'https://fortized.com/spotify-callback.html';
   const scope = 'user-read-private user-read-playback-state user-read-currently-playing';
-  const state = CU?.username ? CU.username + '_' + Date.now() : 'ftz_' + Date.now();
+  const state = (CU?.username || 'ftz') + '_' + Date.now() + '_' + Math.random().toString(36).slice(2);
 
-  // Use PKCE Authorization Code flow (response_type=code)
+  // PKCE
   const codeVerifier = _generateCodeVerifier();
   const codeChallenge = await _generateCodeChallenge(codeVerifier);
-  // Store verifier locally (stays in THIS app's context for the exchange later)
-  localStorage.setItem('spotify_code_verifier', codeVerifier);
-  localStorage.setItem('spotify_client_id', clientId);
-  localStorage.setItem('spotify_redirect_uri', redirectUri);
-  localStorage.setItem('spotify_auth_state', state);
-  localStorage.removeItem('spotify_auth_code');
+
+  // Send the PKCE verifier to the SERVER so it can do the token exchange
+  // (the callback may run in a different browser/context than this app)
+  try {
+    await fetch('/api/spotify-auth-init', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state, codeVerifier, clientId, redirectUri })
+    });
+  } catch (e) {
+    toast('Failed to start Spotify auth — server unreachable', 'error');
+    return;
+  }
 
   const authUrl = 'https://accounts.spotify.com/authorize?client_id=' + encodeURIComponent(clientId)
     + '&response_type=code'
@@ -23933,86 +23939,50 @@ async function _connectSpotify() {
     + '&code_challenge_method=S256'
     + '&code_challenge=' + encodeURIComponent(codeChallenge);
 
-  // Open in a new window (stays in the app, no redirect away)
-  const authWin = window.open(authUrl, '_blank', 'width=500,height=700');
+  // Open Spotify auth in a new window
+  window.open(authUrl, '_blank', 'width=500,height=700');
   toast('Connect your Spotify account in the new window', 'info');
 
+  // Poll the server for tokens (the server exchanges the code automatically)
   let _resolved = false;
-  function _onSpotifyCode(code) {
-    if (_resolved) return;
-    _resolved = true;
-    clearInterval(_spotifyPoll);
-    localStorage.removeItem('spotify_auth_code');
-    localStorage.removeItem('spotify_auth_state');
-    try { if (authWin && !authWin.closed) authWin.close(); } catch {}
-    _exchangeSpotifyCode(code);
-  }
-
-  // Poll BOTH localStorage (same-context) AND server relay (cross-context / Electron)
   const _spotifyPoll = setInterval(async () => {
     if (_resolved) return;
-    // Check localStorage (works when callback is same browser context)
-    const lsCode = localStorage.getItem('spotify_auth_code');
-    if (lsCode) { _onSpotifyCode(lsCode); return; }
-    // Check server relay (works when callback opens in a different browser / Electron)
     try {
-      const r = await fetch('/api/spotify-code/' + encodeURIComponent(state));
+      const r = await fetch('/api/spotify-tokens/' + encodeURIComponent(state));
       const d = await r.json();
-      if (d.code) { _onSpotifyCode(d.code); return; }
+      if (d.tokens) {
+        _resolved = true;
+        clearInterval(_spotifyPoll);
+        if (d.tokens.error) {
+          toast('Spotify auth failed: ' + d.tokens.error, 'error');
+        } else {
+          _onSpotifyTokens(d.tokens);
+        }
+      }
     } catch {}
-  }, 1500);
+  }, 2000);
 
   // Safety: stop polling after 5 minutes
-  setTimeout(() => { if (!_resolved) clearInterval(_spotifyPoll); }, 300000);
+  setTimeout(() => { if (!_resolved) { clearInterval(_spotifyPoll); toast('Spotify connection timed out. Please try again.', 'error'); } }, 300000);
 }
 
-async function _exchangeSpotifyCode(code) {
-  const clientId = localStorage.getItem('spotify_client_id') || 'a632e938880e4e84b27d73a5d32be42e';
-  const redirectUri = localStorage.getItem('spotify_redirect_uri') || 'https://fortized.com/spotify-callback.html';
-  const codeVerifier = localStorage.getItem('spotify_code_verifier');
-  if (!codeVerifier) { toast('Spotify auth failed — missing PKCE verifier', 'error'); return; }
-
-  try {
-    const res = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code: code,
-        redirect_uri: redirectUri,
-        client_id: clientId,
-        code_verifier: codeVerifier
-      })
-    });
-    const data = await res.json();
-    if (data.access_token) {
-      CU.spotifyConnected = true;
-      CU.spotifyToken = data.access_token;
-      if (data.refresh_token) CU.spotifyRefreshToken = data.refresh_token;
-      if (data.expires_in) CU.spotifyTokenExpiry = Date.now() + (data.expires_in * 1000);
-      // Auto-enable the Spotify widget if not already enabled
-      const widgets = _getProfileWidgets();
-      let sw = widgets.find(w => w.id === 'spotify');
-      if (!sw) { sw = {id:'spotify',enabled:true,config:{}}; widgets.push(sw); }
-      if (!sw.enabled) sw.enabled = true;
-      CU.profileWidgets = widgets;
-      await saveUser(true);
-      toast('Spotify connected!', 'success');
-      _pollSpotifyNowPlaying();
-      const wc = document.getElementById('up-widgets-container');
-      if (wc) renderProfileWidgetsOnCard(CU, wc);
-      // Re-render profile view if open
-      try { buildProfileView('myprofile'); } catch {}
-    } else {
-      toast('Spotify auth failed: ' + (data.error_description || data.error || 'Unknown error'), 'error');
-    }
-  } catch (e) {
-    toast('Failed to connect Spotify: ' + e.message, 'error');
-  }
-  // Cleanup
-  localStorage.removeItem('spotify_code_verifier');
-  localStorage.removeItem('spotify_client_id');
-  localStorage.removeItem('spotify_redirect_uri');
+async function _onSpotifyTokens(tokens) {
+  CU.spotifyConnected = true;
+  CU.spotifyToken = tokens.access_token;
+  if (tokens.refresh_token) CU.spotifyRefreshToken = tokens.refresh_token;
+  if (tokens.expires_in) CU.spotifyTokenExpiry = Date.now() + (tokens.expires_in * 1000);
+  // Auto-enable the Spotify widget
+  const widgets = _getProfileWidgets();
+  let sw = widgets.find(w => w.id === 'spotify');
+  if (!sw) { sw = {id:'spotify',enabled:true,config:{}}; widgets.push(sw); }
+  if (!sw.enabled) sw.enabled = true;
+  CU.profileWidgets = widgets;
+  await saveUser(true);
+  toast('Spotify connected!', 'success');
+  _pollSpotifyNowPlaying();
+  const wc = document.getElementById('up-widgets-container');
+  if (wc) renderProfileWidgetsOnCard(CU, wc);
+  try { buildProfileView('myprofile'); } catch {}
 }
 
 // Refresh Spotify token using refresh_token

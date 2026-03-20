@@ -172,32 +172,75 @@ app.post('/api/presence/offline', async (req, res) => {
   res.status(204).end();
 });
 
-// ── Spotify OAuth code relay ──────────────────────
-// The callback page POSTs the auth code here, and the app GETs it.
-// This bridges the gap between browser callback and Electron app.
-const _spotifyCodes = new Map(); // state -> { code, ts }
-// Cleanup old codes every 5 minutes
+// ── Spotify OAuth (server-side exchange) ──────────
+// The server holds the PKCE verifier and does the full token exchange
+// so the app and callback don't need to share localStorage.
+const _spotifyAuth = new Map(); // state -> { codeVerifier, clientId, redirectUri, ts, tokens }
+// Cleanup old entries every 5 minutes
 setInterval(() => {
   const now = Date.now();
-  for (const [k, v] of _spotifyCodes) {
-    if (now - v.ts > 300000) _spotifyCodes.delete(k);
+  for (const [k, v] of _spotifyAuth) {
+    if (now - v.ts > 600000) _spotifyAuth.delete(k);
   }
 }, 300000);
 
-app.post('/api/spotify-code', (req, res) => {
-  const { state, code } = req.body;
-  if (!state || !code) return res.status(400).json({ error: 'Missing state or code' });
-  _spotifyCodes.set(state, { code, ts: Date.now() });
+// Step 1: App sends PKCE verifier before opening Spotify auth
+app.post('/api/spotify-auth-init', (req, res) => {
+  const { state, codeVerifier, clientId, redirectUri } = req.body;
+  if (!state || !codeVerifier) return res.status(400).json({ error: 'Missing state or codeVerifier' });
+  _spotifyAuth.set(state, { codeVerifier, clientId, redirectUri, ts: Date.now(), tokens: null });
   res.json({ ok: true });
 });
 
-app.get('/api/spotify-code/:state', (req, res) => {
-  const entry = _spotifyCodes.get(req.params.state);
-  if (entry) {
-    _spotifyCodes.delete(req.params.state);
-    return res.json({ code: entry.code });
+// Step 2: Callback page sends the authorization code
+app.post('/api/spotify-code', async (req, res) => {
+  const { state, code } = req.body;
+  if (!state || !code) return res.status(400).json({ error: 'Missing state or code' });
+  const entry = _spotifyAuth.get(state);
+  if (!entry) return res.status(404).json({ error: 'Unknown state' });
+
+  // Exchange the code for tokens right here on the server
+  try {
+    const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: entry.redirectUri || 'https://fortized.com/spotify-callback.html',
+        client_id: entry.clientId || 'a632e938880e4e84b27d73a5d32be42e',
+        code_verifier: entry.codeVerifier,
+      }).toString(),
+    });
+    const data = await tokenRes.json();
+    if (data.access_token) {
+      entry.tokens = {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token || null,
+        expires_in: data.expires_in || 3600,
+      };
+      res.json({ ok: true });
+    } else {
+      console.error('[Spotify] Token exchange failed:', data);
+      entry.tokens = { error: data.error_description || data.error || 'Token exchange failed' };
+      res.json({ ok: false, error: entry.tokens.error });
+    }
+  } catch (e) {
+    console.error('[Spotify] Token exchange error:', e);
+    entry.tokens = { error: e.message };
+    res.json({ ok: false, error: e.message });
   }
-  res.json({ code: null });
+});
+
+// Step 3: App polls for the tokens
+app.get('/api/spotify-tokens/:state', (req, res) => {
+  const entry = _spotifyAuth.get(req.params.state);
+  if (!entry) return res.json({ tokens: null });
+  if (entry.tokens) {
+    _spotifyAuth.delete(req.params.state); // One-time read
+    return res.json({ tokens: entry.tokens });
+  }
+  res.json({ tokens: null }); // Not ready yet
 });
 
 // ── Serve static frontend ──────────────────────────

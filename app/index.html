@@ -1112,7 +1112,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .profile-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 14px;}
 /* Main settings area */
 .profile-main{flex:1;overflow-y:auto;background:var(--bg);scroll-behavior:smooth;}
-.settings-panel{max-width:960px;padding:0 48px 60px;margin:0;}
+.settings-panel{max-width:100%;padding:0 48px 60px;margin:0;}
 .settings-section-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.04);}
 .settings-row{display:flex;align-items:flex-start;gap:16px;padding:14px;border:1px solid transparent;border-radius:12px;margin-bottom:2px;transition:all .12s;}
 .settings-row:hover{background:rgba(255,255,255,.02);}
@@ -4935,7 +4935,7 @@ function updateSidebar(v) {
   } else if (v==='profile') {
     if (hdr) hdr.style.display = 'none';
     // Snapshot user data before editing so we can detect real changes
-    _settingsOriginal = CU ? JSON.parse(JSON.stringify({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings})) : null;
+    _settingsOriginal = CU ? JSON.parse(JSON.stringify({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme})) : null;
     clearSettingsDirty();
     buildProfileNav(document.getElementById('profile-nav'));
     buildProfileView('myprofile');
@@ -14087,6 +14087,16 @@ function renderEmojiTab(tabId) {
   
   if (tabId === 'personal') {
     grid.style.gridTemplateColumns = 'repeat(6,1fr)';
+    const isRadiance = _hasActiveRadiance();
+    if (!isRadiance) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:28px 16px;">
+        <div style="font-size:28px;margin-bottom:8px;opacity:.3;">✨</div>
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">Radiance Required</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,.25);line-height:1.5;margin-bottom:12px;">Personal emojis and stickers are available with Radiance. Radiance users can also use bastion emojis everywhere.</div>
+        <button onclick="showView('atelier')" class="settings-save-btn" style="padding:8px 18px;font-size:11px;">Get Radiance</button>
+      </div>`;
+      return;
+    }
     const personalEmojis = CU?.personalEmojis || [];
     const personalStickers = CU?.personalStickers || [];
     let html = '';
@@ -14104,9 +14114,6 @@ function renderEmojiTab(tabId) {
     }
     if (personalEmojis.length < PERSONAL_EMOJI_LIMIT) {
       html += `<div onclick="openPersonalEmojiUpload()" style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;color:rgba(255,255,255,.3);border:1.5px dashed rgba(255,255,255,.1);transition:all .12s;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.3)'">+</div>`;
-    }
-    if (!_hasActiveRadiance()) {
-      html += `<div style="grid-column:1/-1;font-size:10.5px;color:rgba(255,255,255,.25);padding:6px 4px;">Get <span style="color:var(--accent);font-weight:700;">Radiance</span> to upload animated GIF emojis.</div>`;
     }
     grid.innerHTML = html;
     return;
@@ -14144,16 +14151,16 @@ function renderEmojiTab(tabId) {
              onerror="this.parentElement.innerHTML='<span style=\'font-size:9px;color:rgba(255,255,255,.2);text-align:center;word-break:break-all;padding:2px;\'>${escapeHTML(e.name.replace('knight_','').replace('joyster_','').replace('leafen_',''))}</span>'">
       </div>`).join('');
 
-    // Section: Per-Bastion Custom Emojis
+    // Section: Per-Bastion Custom Emojis (Radiance only for usage)
     if (curBastion !== null) {
       const bName = escapeHTML(CU?.bastions?.[curBastion]?.name || 'Bastion');
-      html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:10px 4px 4px;">${bName}</div>`;
+      html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:10px 4px 4px;">${bName}${!isRadiance ? ' <span style="font-size:8px;color:#ff9d3e;background:rgba(255,160,62,.1);border:1px solid rgba(255,160,62,.15);border-radius:4px;padding:1px 5px;vertical-align:1px;margin-left:4px;">RADIANCE</span>' : ''}</div>`;
       if (bastionCustom.length) {
         html += bastionCustom.map(ce => `
-          <div onclick="insertFortizedEmoji('${escapeHTML(ce.name)}','${escapeHTML(ce.data)}')"
+          <div onclick="${isRadiance ? "insertFortizedEmoji('"+escapeHTML(ce.name)+"','"+escapeHTML(ce.data)+"')" : "toast('Bastion emojis require Radiance','error')"}"
                onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:'"
                title=":${escapeHTML(ce.name)}:"
-               style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
+               style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;${!isRadiance ? 'opacity:.4;filter:grayscale(.5);' : ''}"
                onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
             <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
           </div>`).join('');
@@ -14635,7 +14642,7 @@ function buildProfileView(tab) {
     const sep = `<div style="height:1px;background:rgba(255,255,255,.05);margin:22px 0;"></div>`;
 
     main.innerHTML = `
-      <div style="padding:0 48px 60px;max-width:920px;">
+      <div style="padding:0 48px 60px;max-width:100%;">
 
         <!-- Tab bar -->
         <div style="display:flex;gap:0;padding-top:28px;margin-bottom:24px;border-bottom:1px solid rgba(255,255,255,.07);">
@@ -14645,10 +14652,11 @@ function buildProfileView(tab) {
 
         <!-- Promo Banner -->
         <div style="position:relative;border-radius:14px;overflow:hidden;margin-bottom:28px;border:1px solid rgba(254,248,61,.1);">
-          <div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(8,12,22,1) 0%,rgba(16,24,44,1) 60%,rgba(8,18,34,1) 100%);"></div>
+          <div style="position:absolute;inset:0;background:url('https://cdn.theatlantic.com/thumbor/EmW-E0FwUa0MhOoGk0BXYyBiBm0=/0x0:1718x1718/1718x1718/media/files/est/space-calculator/background6.jpg') center/cover no-repeat;"></div>
+          <div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(8,12,22,.85) 0%,rgba(16,24,44,.65) 60%,rgba(8,18,34,.7) 100%);"></div>
           <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 50%,rgba(254,248,61,.09) 0%,transparent 55%),radial-gradient(ellipse at 85% 50%,rgba(62,207,110,.07) 0%,transparent 55%);pointer-events:none;"></div>
           <div style="position:relative;display:flex;align-items:center;gap:18px;padding:16px 22px;">
-            <div style="font-size:32px;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(254,248,61,.3));">&#x2728;</div>
+            <div style="flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(254,248,61,.3));"><img src="${FORTIZED_EMOJI_MAP['knight_nyancat']||''}" style="width:38px;height:38px;object-fit:contain;" onerror="this.outerHTML='<span style=font-size:32px>✨</span>'"></div>
             <div style="flex:1;min-width:0;">
               <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:3px;">Give your profile a fresh look</div>
               <div style="font-size:11.5px;color:rgba(255,255,255,.4);line-height:1.5;">Explore avatar decorations, profile themes and Radiance styles in the Atelier.</div>
@@ -14670,14 +14678,18 @@ function buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- Display Name Styles (Radiance) -->
+            <!-- Display Name Style & Effects (Free for all) -->
             <div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                <div style="font-size:14px;font-weight:700;color:#fff;">Display Name Styles</div>
-                ${hasRadiance ? '' : '<span style="font-size:9px;font-weight:700;background:rgba(255,160,62,.1);color:#ff9d3e;border:1px solid rgba(255,160,62,.2);border-radius:5px;padding:2px 7px;letter-spacing:.03em;">RADIANCE</span>'}
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <div style="font-size:14px;font-weight:700;color:#fff;">Display Name Style</div>
               </div>
-              ${hasRadiance ? renderRadianceFontPicker() : '<div style="font-size:12.5px;color:rgba(255,255,255,.3);margin-bottom:12px;">Unlock custom display name fonts with Radiance.</div>'}
-              ${hasRadiance ? '' : '<div style="display:flex;gap:8px;"><button onclick="showView(\'atelier\')" class="settings-save-btn" style="padding:8px 18px;font-size:12px;">Get Radiance</button></div>'}
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Customise your display name font, effect, and colour. Free for everyone!</div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                <div style="padding:8px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;flex:1;">
+                  <span id="dn-style-preview" style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};font-size:16px;font-weight:700;${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</span>
+                </div>
+                <button onclick="_openDisplayNameStyleModal()" class="settings-save-btn" style="padding:8px 18px;font-size:12px;">Change Style</button>
+              </div>
             </div>
             ${sep}
 
@@ -14689,13 +14701,6 @@ function buildProfileView(tab) {
             </div>
             ${sep}
 
-            <!-- Profile Widgets -->
-            <div>
-              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Profile Widgets</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Customise your full profile by adding Widgets to your Board.</div>
-              <button onclick="buildProfileView('profile_widgets')" class="settings-save-btn">Add Widgets</button>
-            </div>
-            ${sep}
 
             <!-- Avatar -->
             <div>
@@ -14709,7 +14714,10 @@ function buildProfileView(tab) {
 
             <!-- Avatar Decoration -->
             <div>
-              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Avatar Decoration</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <div style="font-size:14px;font-weight:700;color:#fff;">Avatar Decoration</div>
+                <span style="font-size:9px;font-weight:700;background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.15);border-radius:5px;padding:2px 7px;">ATELIER</span>
+              </div>
               <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" class="settings-save-btn">Change Decoration</button>
             </div>
             ${sep}
@@ -14730,12 +14738,16 @@ function buildProfileView(tab) {
 
             <!-- Profile Theme -->
             <div>
-              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Profile Theme</div>
-              <div style="display:flex;gap:14px;align-items:flex-end;margin-bottom:12px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <div style="font-size:14px;font-weight:700;color:#fff;">Profile Theme</div>
+                <span style="font-size:9px;font-weight:700;background:linear-gradient(90deg,rgba(255,160,62,.1),rgba(167,139,250,.1));color:#c084fc;border:1px solid rgba(167,139,250,.2);border-radius:5px;padding:2px 7px;">RADIANCE+</span>
+              </div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Customise the colours of your profile card border, banner gradient, and accents. Visible to others with Radiance+.</div>
+              <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;">
                 <div style="text-align:center;">
                   <label style="cursor:pointer;display:block;">
-                    <div style="width:60px;height:60px;border-radius:10px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;">
-                      <input type="color" value="${themeC1||'#6366f1'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color1=this.value;markSettingsDirty()">
+                    <div style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeC1?themeC1+'55':'rgba(255,255,255,.1)'};overflow:hidden;position:relative;transition:border-color .15s;">
+                      <input type="color" value="${themeC1||'#6366f1'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;this.closest('div[style*=border]').style.borderColor=this.value+'55';if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color1=this.value;_updateProfileThemePreview();markSettingsDirty()">
                       <div style="width:100%;height:100%;background:${themeC1||'#6366f1'};display:flex;align-items:center;justify-content:center;">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </div>
@@ -14745,8 +14757,8 @@ function buildProfileView(tab) {
                 </div>
                 <div style="text-align:center;">
                   <label style="cursor:pointer;display:block;">
-                    <div style="width:60px;height:60px;border-radius:10px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;">
-                      <input type="color" value="${themeC2||themeC1||'#8b5cf6'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color2=this.value;markSettingsDirty()">
+                    <div style="width:60px;height:60px;border-radius:12px;border:2px solid ${(themeC2||themeC1)?((themeC2||themeC1)+'55'):'rgba(255,255,255,.1)'};overflow:hidden;position:relative;transition:border-color .15s;">
+                      <input type="color" value="${themeC2||themeC1||'#8b5cf6'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;this.closest('div[style*=border]').style.borderColor=this.value+'55';if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color2=this.value;_updateProfileThemePreview();markSettingsDirty()">
                       <div style="width:100%;height:100%;background:${themeC2||themeC1||'#8b5cf6'};display:flex;align-items:center;justify-content:center;">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </div>
@@ -14754,7 +14766,16 @@ function buildProfileView(tab) {
                     <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;">Accent</div>
                   </label>
                 </div>
+                <div style="flex:1;min-width:0;">
+                  <div id="profile-theme-mini-preview" style="height:60px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);">
+                    <div style="height:100%;background:${themeC1?'linear-gradient(135deg,'+themeC1+'ee,'+(themeC2||themeC1)+'bb)':'linear-gradient(135deg,#6366f1ee,#8b5cf6bb)'};display:flex;align-items:center;justify-content:center;">
+                      <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7);">Profile Border Preview</span>
+                    </div>
+                  </div>
+                  <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;text-align:center;">Preview</div>
+                </div>
               </div>
+              ${themeC1 ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(248,113,113,.2)\';this.style.color=\'rgba(248,113,113,.6)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.08)\';this.style.color=\'rgba(255,255,255,.4)\'">Reset Theme</button>' : ''}
             </div>
             ${sep}
 
@@ -15838,7 +15859,7 @@ async function viewUserProfile(username) {
         <div class="up-left-name" ${u.displayFont&&u.displayFont!=='default'?`style="font-family:${getDisplayFont(u)};"`:''}>
           ${escapeHTML(u.displayName||u.username)}
         </div>
-        <div class="up-left-uname">@${escapeHTML(u.username)}</div>
+        <div class="up-left-uname">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.25);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
       </div>
       <!-- Status -->
       <div class="up-left-status">
@@ -15891,14 +15912,14 @@ async function viewUserProfile(username) {
       <div class="up-right-content">
         <!-- Board tab: widgets, games, general info -->
         <div id="up-tab-activity">
-          ${(isOwn || (u.profileWidgets||[]).some(w=>w.enabled)) ? `<div class="up-right-section" id="up-widgets-container"></div>${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;"></div>` : ''}` : ''}
-          ${games.length ? `<div class="up-right-section">
+          <div class="up-right-section" id="up-widgets-container"></div>
+          ${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;"></div>` : ''}
+          ${games.length && !(u.profileWidgets||[]).some(w=>w.enabled && w.id==='game_collection') ? `<div class="up-right-section">
             <div class="up-right-section-title">Game Collection</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;">
               ${games.map(g=>`<div style="display:flex;align-items:center;gap:9px;padding:11px 13px;background:rgba(255,255,255,.022);border:1px solid rgba(255,255,255,.04);border-radius:11px;cursor:default;transition:all .14s;" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.borderColor='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.022)';this.style.borderColor='rgba(255,255,255,.04)'"><span style="font-size:17px;">${g.coverUrl ? `<img src='${escapeHTML(g.coverUrl)}' style='width:24px;height:32px;border-radius:4px;object-fit:cover;'>` : (g.icon||ftzIcon('gamepad','15'))}</span><span style="font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</span></div>`).join('')}
             </div>
           </div>` : ''}
-          ${!games.length && !(isOwn || (u.profileWidgets||[]).some(w=>w.enabled)) ? `<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">📋</div><div style="color:rgba(255,255,255,.15);font-size:12.5px;font-weight:500;">Nothing on the board yet</div></div>` : ''}
         </div>
         <!-- Activity tab: current game activity -->
         <div id="up-tab-activity-detail" style="display:none;">${_activityContent.join('')}</div>
@@ -20374,7 +20395,6 @@ function _connIcon(key, size) {
 const _CONN_PLATFORMS = [
   {key:'youtube', label:'YouTube', pattern:'youtube.com', color:'#FF4444', placeholder:'https://youtube.com/@channel'},
   {key:'roblox',  label:'Roblox',  pattern:'roblox.com',  color:'#00B2FF', placeholder:'https://roblox.com/users/...'},
-  {key:'spotify', label:'Spotify', pattern:'spotify.com', color:'#1DB954', placeholder:'https://open.spotify.com/user/...'},
   {key:'twitter', label:'X / Twitter', pattern:'x.com', color:'#1d9bf0', placeholder:'https://x.com/username'},
   {key:'tiktok',  label:'TikTok',  pattern:'tiktok.com',  color:'#ff0050', placeholder:'https://tiktok.com/@username'},
 ];
@@ -21741,33 +21761,225 @@ const RADIANCE_FONTS = [
 
 function getDisplayFont(user) {
   if (!user?.displayFont) return RADIANCE_FONTS[0].css;
-  const f = RADIANCE_FONTS.find(f => f.id === user.displayFont);
+  const f = RADIANCE_FONTS.find(f => f.id === user.displayFont) || (typeof DISPLAY_NAME_FONTS !== 'undefined' ? DISPLAY_NAME_FONTS.find(f => f.id === user.displayFont) : null);
   return f ? f.css : RADIANCE_FONTS[0].css;
 }
 
+function _updateProfileThemePreview() {
+  const c1 = CU.profileTheme?.color1 || '#6366f1';
+  const c2 = CU.profileTheme?.color2 || c1;
+  const prev = document.getElementById('profile-theme-mini-preview');
+  if (prev) prev.innerHTML = '<div style="height:100%;background:linear-gradient(135deg,'+c1+'ee,'+c2+'bb);display:flex;align-items:center;justify-content:center;"><span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7);">Profile Border Preview</span></div>';
+}
+
+const DISPLAY_NAME_FONTS = [
+  {id:'default', name:'Default', css:"'DM Sans',sans-serif", weight:'400', sample:'Gg'},
+  {id:'syne',    name:'Bold',    css:"'Syne',sans-serif",    weight:'800', sample:'Gg'},
+  {id:'serif',   name:'Serif',   css:"Georgia,serif",        weight:'600', sample:'Gg'},
+  {id:'mono',    name:'Mono',    css:"'Courier New',monospace", weight:'600', sample:'Gg'},
+  {id:'cursive', name:'Script',  css:"cursive",              weight:'600', sample:'Gg'},
+  {id:'rounded', name:'Round',   css:"'Comic Sans MS','Comic Sans',cursive", weight:'700', sample:'Qg'},
+  {id:'gothic',  name:'Gothic',  css:"'Palatino Linotype','Book Antiqua',Palatino,serif", weight:'700', sample:'Gg'},
+  {id:'block',   name:'Block',   css:"Impact,'Arial Black',sans-serif", weight:'900', sample:'Bg'},
+];
+
+const DISPLAY_NAME_EFFECTS = [
+  {id:'solid',    name:'Solid'},
+  {id:'gradient', name:'Gradient'},
+  {id:'neon',     name:'Neon'},
+  {id:'toon',     name:'Toon'},
+  {id:'pop',      name:'Pop'},
+];
+
+const DISPLAY_NAME_COLORS = [
+  '#FF1744','#FF9100','#FFEA00','#76FF03','#00E676','#1DE9B6','#00E5FF','#2979FF',
+  '#651FFF','#D500F9','#FF4081','#FF6E40','#EEFF41','#69F0AE','#18FFFF','#448AFF',
+  '#7C4DFF','#E040FB','#FF80AB','#FFAB40','#B2FF59','#64FFDA','#40C4FF','#536DFE',
+];
+
+function _getDisplayFontCSS(fontId) {
+  const f = DISPLAY_NAME_FONTS.find(f => f.id === fontId);
+  return f ? f.css : DISPLAY_NAME_FONTS[0].css;
+}
+
+function _getDisplayEffectCSS(effect, color) {
+  color = color || '#fff';
+  if (effect === 'gradient') return `background:linear-gradient(90deg,${color},#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;`;
+  if (effect === 'neon') return `color:${color};text-shadow:0 0 7px ${color}88,0 0 14px ${color}44,0 0 28px ${color}22;`;
+  if (effect === 'toon') return `color:${color};text-shadow:-1px -1px 0 rgba(0,0,0,.5),1px -1px 0 rgba(0,0,0,.5),-1px 1px 0 rgba(0,0,0,.5),1px 1px 0 rgba(0,0,0,.5);`;
+  if (effect === 'pop') return `color:${color};text-shadow:2px 2px 0 rgba(0,0,0,.3),-1px -1px 0 rgba(255,255,255,.1);`;
+  return `color:${color};`;
+}
+
+function _openDisplayNameStyleModal() {
+  const curFont = CU.displayFont || 'default';
+  const curEffect = CU.displayEffect || 'solid';
+  const curColor = CU.displayColor || '#fff';
+
+  document.querySelector('.dns-modal-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'dns-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+
+  overlay.innerHTML = `<div style="background:var(--panel,#161a23);border:1px solid rgba(255,255,255,.06);border-radius:20px;width:92%;max-width:720px;max-height:85vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5);display:flex;">
+    <!-- Left: Controls -->
+    <div style="flex:1;padding:28px 24px;overflow-y:auto;">
+      <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:24px;">Change Display Name Style</div>
+
+      <!-- Choose Font -->
+      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:10px;display:flex;align-items:center;gap:6px;">Choose Font <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.3;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;" id="dns-font-grid">
+        ${DISPLAY_NAME_FONTS.map(f => `
+          <div class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')" style="padding:12px 8px;border-radius:10px;border:1.5px solid ${curFont===f.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curFont===f.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;text-align:center;transition:all .12s;" onmouseover="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.06)'">
+            <div style="font-family:${f.css};font-weight:${f.weight};font-size:20px;color:#fff;margin-bottom:4px;">${f.sample}</div>
+          </div>`).join('')}
+      </div>
+
+      <!-- Choose Effect -->
+      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:10px;display:flex;align-items:center;gap:6px;">Choose Effect <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.3;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;" id="dns-effect-grid">
+        ${DISPLAY_NAME_EFFECTS.map(e => `
+          <div class="dns-effect-tile ${curEffect===e.id?'sel':''}" data-effect="${e.id}" onclick="_dnSelectEffect('${e.id}')" style="padding:8px 18px;border-radius:10px;border:1.5px solid ${curEffect===e.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curEffect===e.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;font-size:13px;font-weight:600;transition:all .12s;${_getDisplayEffectCSS(e.id,curColor)}" onmouseover="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.06)'">${e.name}</div>`).join('')}
+      </div>
+
+      <!-- Choose Colour -->
+      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:10px;display:flex;align-items:center;gap:6px;">Choose Colour <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.3;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;" id="dns-color-grid">
+        ${DISPLAY_NAME_COLORS.map(c => `
+          <div class="dns-color-tile" data-color="${c}" onclick="_dnSelectColor('${c}')" style="width:28px;height:28px;border-radius:8px;background:${c};cursor:pointer;border:2px solid ${curColor===c?'#fff':'transparent'};transition:all .1s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform=''">
+            ${curColor===c ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+          </div>`).join('')}
+      </div>
+
+      <div style="font-size:10.5px;color:rgba(255,255,255,.2);line-height:1.5;margin-top:8px;">Note: Display name colours and effects will not appear in servers. Styles may also look different across Discord and light/dark mode.</div>
+    </div>
+
+    <!-- Right: Preview -->
+    <div style="width:300px;background:rgba(0,0,0,.15);border-left:1px solid rgba(255,255,255,.04);padding:28px 20px;display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);">Preview</div>
+        <button onclick="this.closest('.dns-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
+      </div>
+
+      <!-- Profile card preview -->
+      <div style="background:var(--accent);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+        <div style="height:80px;display:flex;align-items:center;justify-content:center;">
+          <div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;color:#060810;">Fortized</div>
+        </div>
+        <div style="background:var(--panel);padding:12px 14px;border-radius:0 0 14px 14px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;">${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-weight:800;color:#060810;font-size:14px;">'+(CU.displayName||CU.username)[0].toUpperCase()+'</div>'}</div>
+            <div>
+              <div id="dns-preview-name" style="font-size:14px;font-weight:700;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(CU.displayName||CU.username)}</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.3);">@${escapeHTML(CU.username)}${CU.pronouns ? ' &middot; '+escapeHTML(CU.pronouns) : ''}</div>
+            </div>
+          </div>
+
+          <!-- Chat message preview -->
+          <div style="background:rgba(255,255,255,.02);border-radius:10px;padding:10px 12px;margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+              <span id="dns-preview-chat-name" style="font-size:12px;font-weight:700;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(CU.displayName||CU.username)}</span>
+              <span style="font-size:9px;color:rgba(255,255,255,.2);">08:33</span>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);">does anyone read this?</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;"></div>
+
+      <!-- Bottom actions -->
+      <div style="display:flex;gap:10px;">
+        <button onclick="_dnSurpriseMe()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.6);font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">🎲 Surprise Me</button>
+        <button onclick="_dnApplyStyle()" style="flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:Syne,sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .12s;" onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter=''">Apply</button>
+      </div>
+    </div>
+  </div>`;
+
+  document.body.appendChild(overlay);
+}
+
+let _dnTempFont = null, _dnTempEffect = null, _dnTempColor = null;
+
+function _dnSelectFont(fontId) {
+  _dnTempFont = fontId;
+  const grid = document.getElementById('dns-font-grid');
+  if (grid) grid.querySelectorAll('.dns-font-tile').forEach(el => {
+    const isSel = el.dataset.font === fontId;
+    el.classList.toggle('sel', isSel);
+    el.style.borderColor = isSel ? 'var(--accent)' : 'rgba(255,255,255,.06)';
+    el.style.background = isSel ? 'rgba(255,249,62,.06)' : 'rgba(255,255,255,.02)';
+  });
+  _dnUpdatePreview();
+}
+
+function _dnSelectEffect(effectId) {
+  _dnTempEffect = effectId;
+  const color = _dnTempColor || CU.displayColor || '#fff';
+  const grid = document.getElementById('dns-effect-grid');
+  if (grid) grid.querySelectorAll('.dns-effect-tile').forEach(el => {
+    const isSel = el.dataset.effect === effectId;
+    el.classList.toggle('sel', isSel);
+    el.style.borderColor = isSel ? 'var(--accent)' : 'rgba(255,255,255,.06)';
+    el.style.background = isSel ? 'rgba(255,249,62,.06)' : 'rgba(255,255,255,.02)';
+  });
+  _dnUpdatePreview();
+}
+
+function _dnSelectColor(color) {
+  _dnTempColor = color;
+  const grid = document.getElementById('dns-color-grid');
+  if (grid) grid.querySelectorAll('.dns-color-tile').forEach(el => {
+    const isSel = el.dataset.color === color;
+    el.style.borderColor = isSel ? '#fff' : 'transparent';
+    el.innerHTML = isSel ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+  });
+  _dnUpdatePreview();
+}
+
+function _dnUpdatePreview() {
+  const font = _dnTempFont || CU.displayFont || 'default';
+  const effect = _dnTempEffect || CU.displayEffect || 'solid';
+  const color = _dnTempColor || CU.displayColor || '#fff';
+  const fontCSS = _getDisplayFontCSS(font);
+  const effectCSS = _getDisplayEffectCSS(effect, color);
+  const nameEl = document.getElementById('dns-preview-name');
+  const chatEl = document.getElementById('dns-preview-chat-name');
+  if (nameEl) { nameEl.style.cssText = 'font-size:14px;font-weight:700;font-family:'+fontCSS+';'+effectCSS; }
+  if (chatEl) { chatEl.style.cssText = 'font-size:12px;font-weight:700;font-family:'+fontCSS+';'+effectCSS; }
+}
+
+function _dnSurpriseMe() {
+  const rFont = DISPLAY_NAME_FONTS[Math.floor(Math.random()*DISPLAY_NAME_FONTS.length)].id;
+  const rEffect = DISPLAY_NAME_EFFECTS[Math.floor(Math.random()*DISPLAY_NAME_EFFECTS.length)].id;
+  const rColor = DISPLAY_NAME_COLORS[Math.floor(Math.random()*DISPLAY_NAME_COLORS.length)];
+  _dnSelectFont(rFont);
+  _dnSelectEffect(rEffect);
+  _dnSelectColor(rColor);
+}
+
+async function _dnApplyStyle() {
+  CU.displayFont = _dnTempFont || CU.displayFont || 'default';
+  CU.displayEffect = _dnTempEffect || CU.displayEffect || 'solid';
+  CU.displayColor = _dnTempColor || CU.displayColor || '#fff';
+  await saveUser();
+  applyRadianceFont();
+  updateUserbar();
+  document.querySelector('.dns-modal-overlay')?.remove();
+  buildProfileView('myprofile');
+  toast('Display name style updated!', 'success');
+  _dnTempFont = null; _dnTempEffect = null; _dnTempColor = null;
+}
+
 function renderRadianceFontPicker() {
-  const hasR = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
-  if (!hasR) return '';
-  const fonts = [
-    {id:'default', name:'Default', css:"'DM Sans',sans-serif", weight:'400'},
-    {id:'syne',    name:'Bold Syne', css:"'Syne',sans-serif", weight:'800'},
-    {id:'serif',   name:'Elegant Serif', css:"Georgia,serif", weight:'600'},
-    {id:'mono',    name:'Monospace', css:"'Courier New',monospace", weight:'600'},
-    {id:'cursive', name:'Cursive', css:"cursive", weight:'600'},
-  ];
-  return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-    ${fonts.map(f => `
-      <div class="font-tile ${(CU.displayFont||'default')===f.id?'sel':''}" onclick="previewFont('${f.id}')">
-        <div class="font-tile-preview" style="font-family:${f.css};font-weight:${f.weight};">${escapeHTML(CU.displayName||CU.username)}</div>
-        <div class="font-tile-name">${f.name}</div>
-      </div>`).join('')}
-  </div>
-  `;
+  // Legacy: now replaced by _openDisplayNameStyleModal
+  return '<button onclick="_openDisplayNameStyleModal()" class="settings-save-btn" style="padding:8px 18px;font-size:12px;">Change Style</button>';
 }
 
 function previewFont(fontId) {
   CU.displayFont = fontId;
-  buildProfileView('myprofile'); // re-render to show selection
+  buildProfileView('myprofile');
 }
 
 async function saveDisplayFont() {
@@ -21785,13 +21997,24 @@ function applyRadianceFont() {
   document.documentElement.style.setProperty('--radiance-font', font);
   const styleEl = document.getElementById('radiance-font-style');
   if (styleEl) {
-    if (CU?.displayFont && CU.displayFont !== 'default') {
+    const hasFont = CU?.displayFont && CU.displayFont !== 'default';
+    const hasEffect = CU?.displayEffect && CU.displayEffect !== 'solid';
+    const hasColor = CU?.displayColor && CU.displayColor !== '#fff';
+    if (hasFont || hasEffect || hasColor) {
       const u = CU.username ? CSS.escape(CU.username) : '';
+      let effectCSS = '';
+      const color = CU.displayColor || '#fff';
+      if (CU.displayEffect === 'neon') effectCSS = `text-shadow: 0 0 7px ${color}88, 0 0 14px ${color}44, 0 0 28px ${color}22 !important;`;
+      else if (CU.displayEffect === 'toon') effectCSS = `text-shadow: -1px -1px 0 rgba(0,0,0,.5), 1px -1px 0 rgba(0,0,0,.5), -1px 1px 0 rgba(0,0,0,.5), 1px 1px 0 rgba(0,0,0,.5) !important;`;
+      else if (CU.displayEffect === 'pop') effectCSS = `text-shadow: 2px 2px 0 rgba(0,0,0,.3), -1px -1px 0 rgba(255,255,255,.1) !important;`;
+      else if (CU.displayEffect === 'gradient') effectCSS = `background: linear-gradient(90deg, ${color}, #fff) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; background-clip: text !important;`;
+      const colorCSS = hasColor && CU.displayEffect !== 'gradient' ? `color: ${color} !important;` : '';
+      const fontCSS = hasFont ? `font-family: ${font} !important;` : '';
       styleEl.textContent = `
-        .ua-name { font-family: ${font} !important; }
-        .msg-author[data-author="${u}"] { font-family: ${font} !important; }
-        .ml-name { font-family: ${font} !important; }
-        .profile-display-name { font-family: ${font} !important; }
+        .ua-name { ${fontCSS} ${colorCSS} ${effectCSS} }
+        .msg-author[data-author="${u}"] { ${fontCSS} ${colorCSS} ${effectCSS} }
+        .ml-name { ${fontCSS} }
+        .profile-display-name { ${fontCSS} ${colorCSS} ${effectCSS} }
       `;
     } else {
       styleEl.textContent = '';
@@ -22409,7 +22632,7 @@ function renderGameCollectionTab(main) {
     + '<div style="font-size:13px;font-weight:700;color:#fff;">Detected Apps</div>'
     + '<button onclick="_refreshInlineDetectedApps()" style="background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;">Refresh</button>'
     + '</div>'
-    + '<div id="inline-detected-apps" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:12px;max-height:240px;overflow-y:auto;">'
+    + '<div id="inline-detected-apps" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;max-height:240px;overflow-y:auto;">'
     + '<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--muted);font-size:12px;">Scanning...</div>'
     + '</div>'
     + '<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">'
@@ -22423,27 +22646,31 @@ function renderGameCollectionTab(main) {
     + '</div>'
     + '</div>';
 
-  // ── Added Games section (cover art grid) ──
+  // ── Added Games section (list with cover art left, name/description right) ──
   let gamesListHtml = '';
   if (games.length) {
     gamesListHtml = '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Your Games</div>'
       + '<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Cover art provided by <a href="https://www.igdb.com" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;font-weight:600;">IGDB</a>.</div>'
-      + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:16px;">';
+      + '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
     games.forEach((g, i) => {
       const isPlaying = currentGame?.name === g.name;
       const cover = g.coverUrl || g.coverThumb || _getManualCover(g.name);
-      gamesListHtml += '<div style="position:relative;border-radius:12px;overflow:hidden;border:1.5px solid ' + (isPlaying ? 'rgba(62,207,110,.3)' : 'var(--border)') + ';background:var(--panel);transition:all .15s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.querySelector(\'.game-card-overlay\').style.opacity=\'1\'" onmouseout="this.style.transform=\'\';this.querySelector(\'.game-card-overlay\').style.opacity=\'0\'">'
-        + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block;" onerror="this.outerHTML=\'<div style=width:100%;aspect-ratio:3/4;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:32px;>' + (g.icon||'🎮') + '</div>\'">'
-          : '<div style="width:100%;aspect-ratio:3/4;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:32px;">' + (g.icon||'🎮') + '</div>')
-        + (isPlaying ? '<div style="position:absolute;top:6px;left:6px;background:rgba(62,207,110,.9);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.03em;">Playing</div>' : '')
-        + (g.hidden ? '<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);padding:3px;border-radius:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>' : '')
-        + '<div class="game-card-overlay" style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.3) 40%,transparent 100%);opacity:0;transition:opacity .15s;display:flex;flex-direction:column;justify-content:flex-end;padding:8px;">'
-        + '<div style="display:flex;gap:4px;justify-content:flex-end;margin-bottom:6px;">'
-        + '<button onclick="event.stopPropagation();_toggleGameVisibility(' + i + ',this)" title="Toggle visibility" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + (g.hidden ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>') + '</svg></button>'
-        + '<button onclick="event.stopPropagation();removeGameFromCollection(' + i + ')" title="Remove" style="background:rgba(248,113,113,.2);border:none;color:#f87171;width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      const lastPlayed = _formatLastPlayed(g.lastPlayed);
+      gamesListHtml += '<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;border:1.5px solid ' + (isPlaying ? 'rgba(62,207,110,.25)' : 'rgba(255,255,255,.05)') + ';background:' + (isPlaying ? 'rgba(62,207,110,.04)' : 'rgba(255,255,255,.02)') + ';transition:all .15s;" onmouseover="this.style.background=\'' + (isPlaying ? 'rgba(62,207,110,.07)' : 'rgba(255,255,255,.04)') + '\';this.style.borderColor=\'' + (isPlaying ? 'rgba(62,207,110,.35)' : 'rgba(255,255,255,.1)') + '\'" onmouseout="this.style.background=\'' + (isPlaying ? 'rgba(62,207,110,.04)' : 'rgba(255,255,255,.02)') + '\';this.style.borderColor=\'' + (isPlaying ? 'rgba(62,207,110,.25)' : 'rgba(255,255,255,.05)') + '\'">'
+        + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:48px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.06);" onerror="this.style.display=\'none\'">'
+          : '<div style="width:48px;height:64px;border-radius:8px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">' + (g.icon||'🎮') + '</div>')
+        + '<div style="flex:1;min-width:0;">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">'
+        + '<span style="font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(g.name) + '</span>'
+        + (isPlaying ? '<span style="font-size:9px;font-weight:700;color:#3ecf6e;background:rgba(62,207,110,.12);padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.03em;flex-shrink:0;">Playing</span>' : '')
+        + (g.hidden ? '<span style="flex-shrink:0;opacity:.4;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></span>' : '')
         + '</div>'
-        + '<div style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(g.name) + '</div>'
-        + (g.genre ? '<div style="font-size:9px;color:rgba(255,255,255,.5);">' + escapeHTML(g.genre) + '</div>' : '')
+        + (g.genre ? '<div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:2px;">' + escapeHTML(g.genre) + '</div>' : '')
+        + (lastPlayed ? '<div style="font-size:10.5px;color:rgba(255,255,255,.2);">Last played ' + lastPlayed + '</div>' : '')
+        + '</div>'
+        + '<div style="display:flex;gap:4px;flex-shrink:0;">'
+        + '<button onclick="event.stopPropagation();_toggleGameVisibility(' + i + ',this)" title="' + (g.hidden ? 'Show' : 'Hide') + '" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.35);width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(255,255,255,.15)\';this.style.color=\'rgba(255,255,255,.6)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.06)\';this.style.color=\'rgba(255,255,255,.35)\'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + (g.hidden ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>') + '</svg></button>'
+        + '<button onclick="event.stopPropagation();removeGameFromCollection(' + i + ')" title="Remove" style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);color:rgba(248,113,113,.45);width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(248,113,113,.25)\';this.style.color=\'#f87171\'" onmouseout="this.style.borderColor=\'rgba(248,113,113,.1)\';this.style.color=\'rgba(248,113,113,.45)\'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
         + '</div></div>';
     });
     gamesListHtml += '</div>';
@@ -22548,11 +22775,12 @@ async function _refreshInlineDetectedApps() {
 
   container.innerHTML = enrichedApps.map(app => {
     const cover = app.coverUrl || app.coverThumb;
-    return '<div onclick="_addDetectedGame(\'' + escapeHTML(app.name).replace(/'/g,"\\'") + '\')" style="cursor:pointer;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);transition:all .15s;background:var(--panel);" onmouseover="this.style.borderColor=\'rgba(62,207,110,.3)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.transform=\'\'">'
-      + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block;" onerror="this.outerHTML=\'<div style=width:100%;aspect-ratio:3/4;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:28px;>' + (app.icon||'🎮') + '</div>\'">'
-        : '<div style="width:100%;aspect-ratio:3/4;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:28px;">' + (app.icon||'🎮') + '</div>')
-      + '<div style="padding:6px 8px;"><div style="font-size:10px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(app.name) + '</div>'
-      + '<div style="font-size:9px;color:rgba(62,207,110,.6);font-weight:600;">+ Add</div></div></div>';
+    return '<div onclick="_addDetectedGame(\'' + escapeHTML(app.name).replace(/'/g,"\\'") + '\')" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.06);transition:all .15s;background:rgba(255,255,255,.02);" onmouseover="this.style.borderColor=\'rgba(62,207,110,.25)\';this.style.background=\'rgba(62,207,110,.04)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.06)\';this.style.background=\'rgba(255,255,255,.02)\'">'
+      + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:40px;height:54px;border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
+        : '<div style="width:40px;height:54px;border-radius:6px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">' + (app.icon||'🎮') + '</div>')
+      + '<div style="flex:1;min-width:0;"><div style="font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(app.name) + '</div>'
+      + (app.genre ? '<div style="font-size:10.5px;color:rgba(255,255,255,.3);">' + escapeHTML(app.genre) + '</div>' : '')
+      + '</div><div style="font-size:11px;color:rgba(62,207,110,.7);font-weight:700;flex-shrink:0;">+ Add</div></div>';
   }).join('');
 }
 
@@ -22824,6 +23052,7 @@ const PROFILE_WIDGET_DEFS = [
   {id:'favourite_game',label:'Favourite Game',desc:'Feature one game as a large showcase card',icon:'⭐',color:'#f59e0b',preview:'card'},
   {id:'games_rotation',label:'Games in Rotation',desc:'Scrollable carousel of games you currently play',icon:'🔄',color:'#60a5fa',preview:'carousel'},
   {id:'primary_bastion',label:'Primary Bastion',desc:'Feature a public bastion with a join button',icon:'🏰',color:'#a78bfa',preview:'bastion'},
+  {id:'spotify',label:'Connect Spotify',desc:'Show what you\'re listening to on your profile',icon:'🎵',color:'#1DB954',preview:'spotify'},
 ];
 
 function _getProfileWidgets() {
@@ -23165,19 +23394,53 @@ function renderProfileWidgetsOnCard(u, containerEl) {
         </div>`;
       }
     }
+
+    if (w.id === 'spotify') {
+      const spotifyData = u.spotifyNowPlaying || null;
+      if (spotifyData?.isPlaying) {
+        html += `<div class="pw-widget" style="border-left:3px solid #1DB954;padding:12px 14px;">
+          <div class="pw-widget-title" style="color:#1DB954;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Listening on Spotify</div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            ${spotifyData.albumArt ? `<img src="${escapeHTML(spotifyData.albumArt)}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(29,185,84,.15);">` : `<div style="width:48px;height:48px;border-radius:8px;background:rgba(29,185,84,.08);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🎵</div>`}
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(spotifyData.track||'Unknown')}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(spotifyData.artist||'Unknown artist')}</div>
+            </div>
+          </div>
+        </div>`;
+      } else if (isOwnProfile) {
+        const isConnected = !!u.spotifyConnected;
+        html += `<div class="pw-widget" style="border-left:3px solid #1DB954;padding:12px 14px;">
+          <div class="pw-widget-title" style="color:#1DB954;">🎵 Spotify</div>
+          ${isConnected
+            ? '<div style="font-size:11.5px;color:rgba(255,255,255,.3);">Not currently playing anything.</div>'
+            : '<button onclick="_connectSpotify()" style="padding:8px 16px;background:#1DB954;color:#fff;border:none;border-radius:8px;font-family:Syne,sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Connect Spotify</button>'}
+        </div>`;
+      }
+    }
   });
 
   // Show "Add Widget" prompt on own empty profile
   if (isOwnProfile && !html) {
     html = `<div style="text-align:center;padding:20px 14px;">
       <div style="font-size:11px;color:rgba(255,255,255,.2);margin-bottom:8px;">No widgets added yet</div>
-      <button onclick="showView('profile');setTimeout(()=>buildProfileView('profile_widgets'),100)" style="padding:8px 18px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.1)'" onmouseout="this.style.background='rgba(255,249,62,.06)'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Widget
+      <button onclick="_openAddWidgetPanel()" style="padding:8px 18px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.1)'" onmouseout="this.style.background='rgba(255,249,62,.06)'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Widgets
       </button>
     </div>`;
   }
 
   containerEl.innerHTML = html;
+}
+
+function _connectSpotify() {
+  const clientId = '0f78f47360a748f09a66bbfb400cafa0';
+  const redirectUri = encodeURIComponent(window.location.origin + '/api/connections/spotify/callback');
+  const scope = encodeURIComponent('user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing');
+  const state = CU?.username ? CU.username + '_' + Date.now() : 'ftz_' + Date.now();
+  const authUrl = 'https://accounts.spotify.com/authorize?client_id=' + clientId + '&response_type=code&redirect_uri=' + redirectUri + '&scope=' + scope + '&state=' + encodeURIComponent(state);
+  window.open(authUrl, '_blank', 'width=500,height=700');
+  toast('Connect your Spotify account in the popup window', 'info');
 }
 
 async function _removeGameFromCollection(gameName) {
@@ -23268,9 +23531,19 @@ function _renderProfileWidgetManager(mgr) {
   const widgets = _getProfileWidgets();
   const games = CU.gameCollection || [];
   const bastions = CU.bastions || [];
+  const hasAnyEnabled = widgets.some(w => w.enabled);
 
   let html = '<div style="border-top:1px solid rgba(255,255,255,.06);padding-top:12px;">';
-  html += '<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:10px;">Manage Widgets</div>';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
+  html += '<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);">Manage Widgets</div>';
+  html += '<button onclick="_openAddWidgetPanel()" style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:6px;padding:3px 10px;cursor:pointer;transition:all .12s;" onmouseover="this.style.background=\'rgba(255,249,62,.1)\'" onmouseout="this.style.background=\'rgba(255,249,62,.06)\'">+ Add</button>';
+  html += '</div>';
+
+  if (!hasAnyEnabled) {
+    html += '<div style="text-align:center;padding:20px 10px;"><div style="font-size:22px;opacity:.15;margin-bottom:6px;">🧩</div><div style="color:rgba(255,255,255,.2);font-size:11.5px;font-weight:500;margin-bottom:10px;">No widgets on your board</div><button onclick="_openAddWidgetPanel()" style="padding:8px 18px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-family:Syne,sans-serif;font-size:11px;font-weight:800;cursor:pointer;">Add Widgets</button></div></div>';
+    mgr.innerHTML = html;
+    return;
+  }
 
   PROFILE_WIDGET_DEFS.forEach(def => {
     const wState = widgets.find(w => w.id === def.id) || {id:def.id,enabled:false,config:{}};
@@ -27633,6 +27906,7 @@ function renderAtelierTab(tab) {
       { id:'onyx_pure', name:'Onyx Pure', desc:'The darkest appearance. A subtle gradient towards dark purple. Pure immersion.', price:150, gradient:'linear-gradient(135deg,#010103,#08061a,#0e0a22)', borderColor:'rgba(140,100,220,.18)', hoverBorder:'rgba(140,100,220,.35)', labelColor:'rgba(140,100,220,.55)', previewBg:'linear-gradient(170deg,#010103 0%,#0c0820 50%,#14102a 100%)', sidebarBg:'#020206' },
       { id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress under twilight. Blue backgrounds with the signature Fortized yellow accent.', price:185, gradient:'linear-gradient(135deg,#050812,#0a1220,#101a38)', borderColor:'rgba(255,249,62,.18)', hoverBorder:'rgba(255,249,62,.35)', labelColor:'rgba(255,249,62,.55)', previewBg:'linear-gradient(170deg,#050812 0%,#0a1428 50%,#101e40 100%)', sidebarBg:'#080e1a' },
       { id:'sunset', name:'Sunset', desc:'Deep plum melting into golden amber. Watch the sun set over your fortress.', price:100, gradient:'linear-gradient(135deg,#1a0410,#4a1228,#f5d978)', borderColor:'rgba(245,217,120,.18)', hoverBorder:'rgba(245,217,120,.4)', labelColor:'rgba(245,217,120,.6)', previewBg:'linear-gradient(170deg,#1a0410 0%,#2e0820 15%,#4a1228 30%,#742a2c 45%,#a65035 58%,#c77a3a 70%,#dba040 82%,#f5d978 100%)', sidebarBg:'#1a0412' },
+      { id:'kingdom_of_god', name:'Kingdom of God', desc:'White and gold — the light of the kingdom. A radiant light theme with divine elegance.', price:200, gradient:'linear-gradient(135deg,#faf9f6,#f0ead4,#d4a017)', borderColor:'rgba(212,160,23,.2)', hoverBorder:'rgba(212,160,23,.45)', labelColor:'rgba(212,160,23,.7)', previewBg:'linear-gradient(170deg,#faf9f6 0%,#f0ead4 100%)', sidebarBg:'#eae7df' },
     ];
 
     const onyxTier = CU?.onyxBadge ? _getOnyxTier(CU.onyxBadgeSpent||0) : null;
@@ -29981,9 +30255,14 @@ function markSettingsDirty() {
     const inp = document.getElementById('social-' + key);
     if (inp && inp.value.trim() !== ((_settingsOriginal.socials || {})[key] || '')) hasChanges = true;
   });
+  // Check pronouns
+  const pronounsInp = document.getElementById('pronouns-input');
+  if (pronounsInp && pronounsInp.value.trim() !== (_settingsOriginal.pronouns || '')) hasChanges = true;
   // Check if pfp/banner changed (from crop modal)
   if (CU.pfp !== _settingsOriginal.pfp) hasChanges = true;
   if (CU.banner !== _settingsOriginal.banner) hasChanges = true;
+  // Check profileTheme
+  if (JSON.stringify(CU.profileTheme||null) !== JSON.stringify(_settingsOriginal.profileTheme||null)) hasChanges = true;
 
   if (hasChanges && !_settingsDirty) {
     _settingsDirty = true;
@@ -30010,6 +30289,8 @@ function resetSettingsChanges() {
     CU.socials = _settingsOriginal.socials ? JSON.parse(JSON.stringify(_settingsOriginal.socials)) : {};
     CU.password = _settingsOriginal.password;
     CU.notifSettings = _settingsOriginal.notifSettings ? JSON.parse(JSON.stringify(_settingsOriginal.notifSettings)) : {};
+    CU.pronouns = _settingsOriginal.pronouns || '';
+    CU.profileTheme = _settingsOriginal.profileTheme ? JSON.parse(JSON.stringify(_settingsOriginal.profileTheme)) : null;
     notifSettings = CU.notifSettings;
     saveLocal();
     updateUserbar();
@@ -30042,8 +30323,11 @@ async function saveAllSettings() {
   }
   // Save notification settings
   CU.notifSettings = notifSettings;
+  // Save pronouns
+  const pronounsInp = document.getElementById('pronouns-input');
+  if (pronounsInp) CU.pronouns = pronounsInp.value.trim().slice(0,40);
   // Save socials if present
-  ['youtube','roblox','spotify','twitter'].forEach(key => {
+  ['youtube','roblox','twitter'].forEach(key => {
     const inp = document.getElementById('social-' + key);
     if (inp) {
       CU.socials = CU.socials || {};
@@ -30055,7 +30339,7 @@ async function saveAllSettings() {
   updateUserbar();
   applyRadianceFont();
   // Update snapshot so future edits compare against saved state
-  _settingsOriginal = CU ? JSON.parse(JSON.stringify({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings})) : null;
+  _settingsOriginal = CU ? JSON.parse(JSON.stringify({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme})) : null;
   clearSettingsDirty();
   toast('Settings saved!', 'success');
   buildProfileView('myprofile');
@@ -30398,7 +30682,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- Identity -->
     <div class="mpp-identity">
       <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" ${u.displayFont&&u.displayFont!=='default'?`style="font-family:${getDisplayFont(u)};"`:''}>${escapeHTML(u.displayName||u.username)}</div>
-      <div class="mpp-username">@${escapeHTML(u.username)}</div>
+      <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.2);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
     </div>
     <!-- Status -->
     <div class="mpp-status-row">
@@ -31013,7 +31297,7 @@ function saveCustomMood() {
 async function buyAppearance(themeId, cost) {
   const bal = CU?.onyx||0;
   if (bal < cost) { toast('Not enough Onyx! Need '+cost+' ⬡','error'); return; }
-  const names = {onyx_pure:'Onyx Pure', midnight_citadel:'Midnight Citadel', sunset:'Sunset'};
+  const names = {onyx_pure:'Onyx Pure', midnight_citadel:'Midnight Citadel', sunset:'Sunset', kingdom_of_god:'Kingdom of God'};
   showCustomConfirm(`Buy ${names[themeId]||themeId} for ${cost} Onyx?`, async () => {
     CU.onyx = bal - cost;
     CU.unlockedAppearances = [...(CU.unlockedAppearances||[]), themeId];

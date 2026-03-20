@@ -16,32 +16,39 @@ p{font-size:14px;color:rgba(255,255,255,.5);}
 <body>
 <div class="wrap">
 <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
-<h2>Spotify Connected!</h2>
-<p>This window will close automatically.</p>
+<h2 id="title">Connecting...</h2>
+<p id="msg">Please wait while we link your Spotify account.</p>
 </div>
 <script>
 (function() {
   var params = new URLSearchParams(window.location.search);
   var code = params.get('code');
   var state = params.get('state');
+  var titleEl = document.getElementById('title');
+  var msgEl = document.getElementById('msg');
+
   if (code && state) {
-    // Send the code to the server relay so the app can pick it up
+    // Send the code + state to the server for token exchange
     fetch('/api/spotify-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state: state, code: code })
-    }).then(function() {
-      // Also try localStorage in case we're in the same context (browser)
-      try { localStorage.setItem('spotify_auth_code', code); } catch(e) {}
-      setTimeout(function() { window.close(); }, 1500);
-    }).catch(function() {
-      // Server relay failed, fall back to localStorage only
-      try { localStorage.setItem('spotify_auth_code', code); } catch(e) {}
-      setTimeout(function() { window.close(); }, 1500);
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (data.ok) {
+        titleEl.textContent = 'Spotify Connected!';
+        msgEl.textContent = 'You can close this window now.';
+      } else {
+        titleEl.textContent = 'Connection Failed';
+        msgEl.textContent = data.error || 'Token exchange failed. Please try again.';
+      }
+      setTimeout(function() { window.close(); }, 2000);
+    }).catch(function(err) {
+      titleEl.textContent = 'Connection Failed';
+      msgEl.textContent = 'Could not reach the server. Please try again.';
     });
   } else {
-    document.querySelector('h2').textContent = 'Connection Failed';
-    document.querySelector('p').textContent = 'No authorization code received. Please try again.';
+    titleEl.textContent = 'Connection Failed';
+    msgEl.textContent = 'No authorization code received from Spotify.';
   }
 })();
 </script>

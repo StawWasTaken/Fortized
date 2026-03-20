@@ -4550,6 +4550,16 @@ async function refreshCU() {
       if (CU.displayColor && !fresh.displayColor) fresh.displayColor = CU.displayColor;
       if (CU.profileTheme && !fresh.profileTheme) fresh.profileTheme = CU.profileTheme;
       if (CU.wantToPlay?.length && !fresh.wantToPlay?.length) fresh.wantToPlay = CU.wantToPlay;
+      // Preserve profile widgets
+      if (CU.profileWidgets?.length && !fresh.profileWidgets?.length) fresh.profileWidgets = CU.profileWidgets;
+      // Preserve Spotify connection data
+      if (CU.spotifyConnected && !fresh.spotifyConnected) fresh.spotifyConnected = CU.spotifyConnected;
+      if (CU.spotifyToken && !fresh.spotifyToken) fresh.spotifyToken = CU.spotifyToken;
+      if (CU.spotifyRefreshToken && !fresh.spotifyRefreshToken) fresh.spotifyRefreshToken = CU.spotifyRefreshToken;
+      if (CU.spotifyTokenExpiry && !fresh.spotifyTokenExpiry) fresh.spotifyTokenExpiry = CU.spotifyTokenExpiry;
+      if (CU.spotifyNowPlaying && !fresh.spotifyNowPlaying) fresh.spotifyNowPlaying = CU.spotifyNowPlaying;
+      // Preserve game collection
+      if (CU.gameCollection?.length && (!fresh.gameCollection?.length || fresh.gameCollection.length < CU.gameCollection.length)) fresh.gameCollection = CU.gameCollection;
       CU = fresh; saveLocal();
       // Check for admin force-logout flag
       _checkForceLogout(fresh);
@@ -23906,16 +23916,28 @@ async function _connectSpotify() {
   const popup = window.open(authUrl, 'spotify_auth', 'width=500,height=700');
   toast('Connect your Spotify account in the popup window', 'info');
 
-  // Listen for the authorization code from the popup
-  const _spotifyInterval = setInterval(() => {
+  // Listen for the authorization code via postMessage from the callback page
+  function _onSpotifyMsg(e) {
+    if (e.data?.type === 'spotify-callback' && e.data.code) {
+      window.removeEventListener('message', _onSpotifyMsg);
+      clearInterval(_spotifyFallback);
+      if (popup && !popup.closed) popup.close();
+      _exchangeSpotifyCode(e.data.code);
+    }
+  }
+  window.addEventListener('message', _onSpotifyMsg);
+
+  // Fallback: also poll popup location in case postMessage doesn't work
+  const _spotifyFallback = setInterval(() => {
     try {
-      if (!popup || popup.closed) { clearInterval(_spotifyInterval); return; }
+      if (!popup || popup.closed) { clearInterval(_spotifyFallback); window.removeEventListener('message', _onSpotifyMsg); return; }
       const search = popup.location.search;
       if (search && search.includes('code=')) {
         const params = new URLSearchParams(search);
         const code = params.get('code');
+        clearInterval(_spotifyFallback);
+        window.removeEventListener('message', _onSpotifyMsg);
         popup.close();
-        clearInterval(_spotifyInterval);
         if (code) _exchangeSpotifyCode(code);
       }
     } catch (e) { /* cross-origin, keep polling */ }

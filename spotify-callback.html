@@ -20,11 +20,18 @@ p{font-size:14px;color:rgba(255,255,255,.5);}
 <p>You can close this window now.</p>
 </div>
 <script>
-// The parent window will read our URL search params containing the authorization code
-// This page just needs to exist for the redirect
-if (window.opener) {
-  setTimeout(function() { window.close(); }, 3000);
-}
+// Send the authorization code back to the opener via postMessage
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('code');
+  if (code && window.opener) {
+    // Send to opener — use '*' for target origin since opener could be localhost or production
+    window.opener.postMessage({ type: 'spotify-callback', code: code }, '*');
+  }
+  if (window.opener) {
+    setTimeout(function() { window.close(); }, 3000);
+  }
+})();
 </script>
 </body>
 </html>

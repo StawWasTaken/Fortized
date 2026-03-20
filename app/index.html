@@ -23819,7 +23819,7 @@ async function _generateCodeChallenge(verifier) {
 }
 
 async function _connectSpotify() {
-  const clientId = '0f78f47360a748f09a66bbfb400cafa0';
+  const clientId = 'a632e938880e4e84b27d73a5d32be42e';
   // Must EXACTLY match the redirect URI registered in Spotify Developer Dashboard
   const redirectUri = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? window.location.origin + '/spotify-callback.html'
@@ -23863,7 +23863,7 @@ async function _connectSpotify() {
 }
 
 async function _exchangeSpotifyCode(code) {
-  const clientId = sessionStorage.getItem('spotify_client_id') || '0f78f47360a748f09a66bbfb400cafa0';
+  const clientId = sessionStorage.getItem('spotify_client_id') || 'a632e938880e4e84b27d73a5d32be42e';
   const redirectUri = sessionStorage.getItem('spotify_redirect_uri') || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? window.location.origin + '/spotify-callback.html' : 'https://fortized.com/spotify-callback.html');
   const codeVerifier = sessionStorage.getItem('spotify_code_verifier');
   if (!codeVerifier) { toast('Spotify auth failed — missing PKCE verifier', 'error'); return; }
@@ -23913,7 +23913,7 @@ async function _refreshSpotifyToken() {
       body: new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: CU.spotifyRefreshToken,
-        client_id: '0f78f47360a748f09a66bbfb400cafa0'
+        client_id: 'a632e938880e4e84b27d73a5d32be42e'
       })
     });
     const data = await res.json();

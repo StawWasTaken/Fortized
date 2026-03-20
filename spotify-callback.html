@@ -33,7 +33,10 @@ p{font-size:14px;color:rgba(255,255,255,.5);}
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state: state, code: code })
-    }).then(function(r) { return r.json(); }).then(function(data) {
+    }).then(function(r) {
+      if (!r.ok) throw new Error('Server returned ' + r.status);
+      return r.json();
+    }).then(function(data) {
       if (data.ok) {
         titleEl.textContent = 'Spotify Connected!';
         msgEl.textContent = 'You can close this window now.';
@@ -44,7 +47,7 @@ p{font-size:14px;color:rgba(255,255,255,.5);}
       setTimeout(function() { window.close(); }, 2000);
     }).catch(function(err) {
       titleEl.textContent = 'Connection Failed';
-      msgEl.textContent = 'Could not reach the server. Please try again.';
+      msgEl.textContent = 'Could not reach the server (' + (err.message || 'unknown error') + '). The server may need to be restarted.';
     });
   } else {
     titleEl.textContent = 'Connection Failed';

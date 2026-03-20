@@ -260,7 +260,7 @@ app.use(express.static(path.join(__dirname), {
 // SPA-style fallback for /app, /login, etc.
 ['app', 'login', 'signup', 'blog', 'support', 'download', 'privacy', 'terms', 'legal'].forEach(route => {
   app.get(`/${route}`, (_req, res) => res.sendFile(path.join(__dirname, route, 'index.html')));
-  app.get(`/${route}/*`, (_req, res) => res.sendFile(path.join(__dirname, route, 'index.html')));
+  app.get(`/${route}/{*rest}`, (_req, res) => res.sendFile(path.join(__dirname, route, 'index.html')));
 });
 
 // ── Custom 404 page for unknown routes ────────────

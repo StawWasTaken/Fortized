@@ -2295,7 +2295,8 @@ body.is-desktop-app .notif-panel{top:0;}
 .mpp-btn-primary:focus-visible,.mpp-btn-secondary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .up-mutual-av:focus-visible,.up-mutual-row:focus-visible,.up-social-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px;}
 /* ── Profile Widgets ── */
-.pw-widget{background:rgba(255,255,255,.022);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:14px 16px;transition:all .18s;position:relative;}
+.pw-widget{background:rgba(255,255,255,.022);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:14px 16px;transition:all .18s;position:relative;margin-bottom:8px;}
+.pw-widget:last-child{margin-bottom:0;}
 .pw-widget:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08);}
 .pw-widget-title{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 .pw-widget-title svg{opacity:.4;}
@@ -6997,6 +6998,10 @@ async function showGCMemberPanel(meta) {
         if (!entry) return;
         const nameEl = entry.querySelector('.ml-name');
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
+        if (nameEl) {
+          if (ud.displayFont && ud.displayFont !== 'default') nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont);
+          if (ud.displayColor && ud.displayColor !== '#fff') nameEl.style.cssText += _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor);
+        }
         if (ud.pfp) {
           const avWrap = entry.querySelector('.gc-ml-av');
           if (avWrap) {
@@ -9078,6 +9083,14 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
         if (!entry) return;
         const nameEl = entry.querySelector('.ml-name');
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
+        // Apply display name styles (font, effect, color) for other users
+        if (nameEl) {
+          if (ud.displayFont && ud.displayFont !== 'default') nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont);
+          if (ud.displayColor && ud.displayColor !== '#fff') {
+            const _eCss = _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor);
+            nameEl.style.cssText += _eCss;
+          }
+        }
         const avWrap = entry.querySelector('.ml-av-wrap');
         if (ud.pfp && avWrap) {
           const existingImg = avWrap.querySelector('img:not(.profile-status-dot):not(.profile-decoration-overlay-ml)');
@@ -9791,9 +9804,14 @@ function initFortizedUXResilience() {
     if (lbl) lbl.textContent = 'Offline — loading from cache…';
   }
 
-  // Detect Electron desktop app and add body class for CSS
-  if (window.fortizedDesktop?.isDesktopApp) {
+  // Detect Electron desktop app via preload bridge OR User-Agent string
+  const _isElectronApp = !!(window.fortizedDesktop?.isDesktopApp || navigator.userAgent.includes('FortizedApp') || navigator.userAgent.includes('Electron'));
+  if (_isElectronApp) {
     document.body.classList.add('is-desktop-app');
+    // Ensure the fortizedDesktop bridge is available for feature checks
+    if (!window.fortizedDesktop) {
+      window.fortizedDesktop = { isDesktopApp: true };
+    }
   }
 
   // Get username — FortizedSocial stores plain string
@@ -10147,6 +10165,24 @@ function initFortizedUXResilience() {
           // DM friends home display name
           const dmHomeDn = document.getElementById('dm-home-dn-'+data.username);
           if (dmHomeDn) dmHomeDn.textContent = data.displayName;
+        }
+        // ── APPLY DISPLAY NAME STYLES (font/effect/color) EVERYWHERE ──
+        if (data.displayFont || data.displayEffect || data.displayColor) {
+          const _styleEls = [
+            ...document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-name'),
+            ...document.querySelectorAll('.msg-author[data-author="'+data.username+'"]')
+          ];
+          const _dmDnStyle = document.getElementById('dm-dn-'+data.username);
+          if (_dmDnStyle) _styleEls.push(_dmDnStyle);
+          _styleEls.forEach(el => {
+            if (data.displayFont && data.displayFont !== 'default') {
+              el.style.fontFamily = _getDisplayFontCSS(data.displayFont);
+            }
+            if (data.displayColor && data.displayColor !== '#fff') {
+              const _eCss = _getDisplayEffectCSS(data.displayEffect || 'solid', data.displayColor);
+              el.style.cssText += _eCss;
+            }
+          });
         }
       },
       onBastionUpdate: function(data) {
@@ -16053,7 +16089,7 @@ async function viewUserProfile(username) {
         <!-- Board tab: widgets, games, general info -->
         <div id="up-tab-activity">
           <div class="up-right-section" id="up-widgets-container"></div>
-          ${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;text-align:center;"><button onclick="_openAddWidgetPanel()" style="padding:8px 20px;background:rgba(255,249,62,.06);border:1.5px solid rgba(255,249,62,.12);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:6px;" onmouseover="this.style.background='rgba(255,249,62,.1)';this.style.borderColor='rgba(255,249,62,.2)'" onmouseout="this.style.background='rgba(255,249,62,.06)';this.style.borderColor='rgba(255,249,62,.12)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Widgets</button></div>` : ''}
+          ${isOwn ? `<div id="up-widget-manager-inline" style="margin-top:8px;"></div>` : ''}
           ${games.length && !(u.profileWidgets||[]).some(w=>w.enabled && w.id==='game_collection') ? `<div class="up-right-section">
             <div class="up-right-section-title">Game Collection</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;">
@@ -16081,7 +16117,8 @@ async function viewUserProfile(username) {
   // Render profile widgets if the user has any enabled
   const widgetsContainer = document.getElementById('up-widgets-container');
   if (widgetsContainer) renderProfileWidgetsOnCard(u, widgetsContainer);
-  // Widget manager is now just an "Add Widgets" button (already in HTML above)
+  // Render inline widget manager for own profile
+  if (isOwn) _renderInlineWidgetManager();
 }
 
 function _upSwitchTab(tabEl, panelId) {
@@ -23324,48 +23361,7 @@ function _openAddWidgetPanel() {
   const games = CU.gameCollection || [];
   const bastions = CU.bastions || [];
 
-  // Featured game widgets (shown as preview cards with artwork)
-  const featuredGames = [
-    {name:'Marvel Rivals', emoji:'🎮', coverUrl:'https://images.igdb.com/igdb/image/upload/t_cover_big/co8l53.jpg', color:'#e53e3e'},
-    {name:'Wuthering Waves', emoji:'🎵', coverUrl:'https://images.igdb.com/igdb/image/upload/t_cover_big/co7qlp.jpg', color:'#7c3aed'},
-    {name:'League of Legends', emoji:'⚔️', coverUrl:'https://images.igdb.com/igdb/image/upload/t_cover_big/co49wj.jpg', color:'#d4a017'},
-    {name:'Valorant', emoji:'🎯', coverUrl:'https://images.igdb.com/igdb/image/upload/t_cover_big/co8hv1.jpg', color:'#ef4444'},
-  ];
-
   let cardsHtml = '';
-
-  // Featured game widget cards
-  featuredGames.forEach(fg => {
-    const has = games.some(g => g.name.toLowerCase() === fg.name.toLowerCase());
-    cardsHtml += `<div class="pw-awp-game-card" style="position:relative;border-radius:16px;overflow:hidden;border:1.5px solid rgba(255,255,255,.06);background:var(--panel2,rgba(255,255,255,.02));cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='rgba(255,255,255,.15)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.transform=''" onclick="_addGameWidgetFromPanel('${escapeHTML(fg.name)}','${fg.emoji}','Game',${fg.coverUrl?`'${escapeHTML(fg.coverUrl)}'`:'null'})">
-      <div style="height:120px;position:relative;background:linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.01));">
-        <img src="${escapeHTML(fg.coverUrl)}" style="position:absolute;right:0;bottom:0;height:110%;max-width:50%;object-fit:cover;opacity:.35;mask-image:linear-gradient(to left,rgba(0,0,0,.8),transparent);-webkit-mask-image:linear-gradient(to left,rgba(0,0,0,.8),transparent);" onerror="this.style.display='none'">
-        <div style="position:absolute;inset:0;padding:16px;display:flex;flex-direction:column;justify-content:center;">
-          <div style="display:flex;flex-direction:column;gap:4px;">
-            <div style="display:flex;gap:4px;flex-wrap:wrap;">
-              <div style="width:44px;height:8px;border-radius:4px;background:rgba(255,255,255,.08);"></div>
-              <div style="width:30px;height:8px;border-radius:4px;background:rgba(255,255,255,.05);"></div>
-            </div>
-            <div style="display:flex;gap:4px;margin-top:4px;">
-              <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.06);"></div>
-              <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.06);"></div>
-              <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.06);"></div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </div>
-            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">${escapeHTML(fg.name)} ${fg.emoji}</div>
-          </div>
-        </div>
-      </div>
-      <div style="padding:10px 16px;border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:6px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(62,207,110,.6)" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>
-        <span style="font-size:11.5px;color:rgba(255,255,255,.4);"><span style="color:#3ecf6e;font-weight:600;">Connect your account</span> to show off your game stats</span>
-      </div>
-    </div>`;
-  });
 
   // Standard widget definitions
   PROFILE_WIDGET_DEFS.forEach(def => {
@@ -23452,6 +23448,52 @@ async function _addWidgetFromPanel(widgetId) {
 
 // Legacy alias
 function _openAddWidgetModal() { _openAddWidgetPanel(); }
+
+// Inline widget manager rendered directly inside the profile card Board tab
+function _renderInlineWidgetManager() {
+  const container = document.getElementById('up-widget-manager-inline');
+  if (!container) return;
+  const widgets = _getProfileWidgets();
+  const enabledIds = widgets.filter(w => w.enabled).map(w => w.id);
+
+  let html = `<div style="border-top:1px solid rgba(255,255,255,.04);padding-top:14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.04em;">Manage Widgets</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;">`;
+
+  PROFILE_WIDGET_DEFS.forEach(def => {
+    const isOn = enabledIds.includes(def.id);
+    html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,.02);border:1px solid ${isOn ? def.color+'33' : 'rgba(255,255,255,.04)'};border-radius:10px;transition:all .15s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(255,255,255,.1)'" onmouseout="this.style.borderColor='${isOn ? def.color+'33' : 'rgba(255,255,255,.04)'}'" onclick="_toggleInlineWidget('${def.id}')">
+      <div style="width:30px;height:30px;border-radius:8px;background:${def.color}12;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${def.color};">${def.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.7);">${def.label}</div>
+        <div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-top:1px;">${def.desc}</div>
+      </div>
+      <div style="width:36px;height:20px;border-radius:10px;background:${isOn ? def.color : 'rgba(255,255,255,.08)'};transition:all .2s;position:relative;">
+        <div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;${isOn ? 'right:2px;' : 'left:2px;'}transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+      </div>
+    </div>`;
+  });
+
+  html += `</div></div>`;
+  container.innerHTML = html;
+}
+
+async function _toggleInlineWidget(widgetId) {
+  const widgets = _getProfileWidgets();
+  let w = widgets.find(w => w.id === widgetId);
+  if (!w) { w = {id:widgetId,enabled:false,config:{}}; widgets.push(w); }
+  w.enabled = !w.enabled;
+  if (!w.enabled) w.config = {};
+  _setProfileWidgets(widgets);
+  await saveUser();
+  // Re-render widgets and inline manager
+  const wc = document.getElementById('up-widgets-container');
+  if (wc) renderProfileWidgetsOnCard(CU, wc);
+  _renderInlineWidgetManager();
+  toast(w.enabled ? 'Widget added' : 'Widget removed', 'success');
+}
 
 async function _addWidgetFromModal(widgetId) {
   const widgets = _getProfileWidgets();
@@ -23764,7 +23806,10 @@ async function _generateCodeChallenge(verifier) {
 
 async function _connectSpotify() {
   const clientId = '0f78f47360a748f09a66bbfb400cafa0';
-  const redirectUri = window.location.origin + '/spotify-callback.html';
+  // Must EXACTLY match the redirect URI registered in Spotify Developer Dashboard
+  const redirectUri = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? window.location.origin + '/spotify-callback.html'
+    : 'https://fortized.com/spotify-callback.html';
   const scope = 'user-read-private user-read-playback-state user-read-currently-playing';
   const state = CU?.username ? CU.username + '_' + Date.now() : 'ftz_' + Date.now();
 
@@ -23805,7 +23850,7 @@ async function _connectSpotify() {
 
 async function _exchangeSpotifyCode(code) {
   const clientId = sessionStorage.getItem('spotify_client_id') || '0f78f47360a748f09a66bbfb400cafa0';
-  const redirectUri = sessionStorage.getItem('spotify_redirect_uri') || (window.location.origin + '/spotify-callback.html');
+  const redirectUri = sessionStorage.getItem('spotify_redirect_uri') || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? window.location.origin + '/spotify-callback.html' : 'https://fortized.com/spotify-callback.html');
   const codeVerifier = sessionStorage.getItem('spotify_code_verifier');
   if (!codeVerifier) { toast('Spotify auth failed — missing PKCE verifier', 'error'); return; }
 
@@ -31166,7 +31211,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     </div>
     <!-- Identity -->
     <div class="mpp-identity">
-      <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" ${u.displayFont&&u.displayFont!=='default'?`style="font-family:${getDisplayFont(u)};"`:''}>${escapeHTML(u.displayName||u.username)}</div>
+      <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
       <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.2);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
     </div>
     <!-- Status -->

@@ -236,6 +236,7 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
     <a href="/" class="nav-pill">Home</a>
     <a href="/blog" class="nav-pill active">Blog</a>
     <a href="/support" class="nav-pill">Support</a>
+    <a href="/download" class="nav-pill">Download</a>
     <a href="/legal" class="nav-pill">Legal</a>
   </div>
   <div class="nav-sp"></div>
@@ -256,12 +257,12 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
       </div>
       <div class="hero-stats fade-up d2">
         <div class="hero-stat">
-          <div class="hero-stat-num">8</div>
+          <div class="hero-stat-num">17</div>
           <div class="hero-stat-label">Articles</div>
         </div>
         <div class="hero-stat-divider"></div>
         <div class="hero-stat">
-          <div class="hero-stat-num">4</div>
+          <div class="hero-stat-num">5</div>
           <div class="hero-stat-label">Authors</div>
         </div>
         <div class="hero-stat-divider"></div>
@@ -330,10 +331,11 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
     </div>
   </div>
   <div class="footer-center">
-    <p class="copy">&copy; 2026 Fortized &middot; Stawdio Group</p>
+    <p class="copy">&copy; 2025 Fortized &middot; Stawdio Group</p>
   </div>
   <div class="footer-links">
     <a href="/app">App</a>
+    <a href="/blog">Blog</a>
     <a href="/support">Support</a>
     <a href="/legal">Legal</a>
   </div>
@@ -341,6 +343,87 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
 
 <script>
 const ARTICLES = {
+  roadmap2025: {
+    category:'Company', date:'March 19, 2025', readTime:'5 min read',
+    authorInitial:'S', authorPillLabel:'Stawdio Group',
+    title:'The Fortized Roadmap — Where We\'re Headed in 2025', bylineName:'Staw',
+    bylineRole:'Chief Executive Officer, Stawdio Group',
+    tagClass:'tag-announce', tagLabel:'Company',
+    banner:'/Fortized banner.png',
+    content:`<p class="lead">A letter to the community. As we close out Q1, I want to share where Fortized is going — and what you can expect from us in the months ahead.</p><p>When we launched Fortized, we had a vision: build a platform where communities are sovereign, identity is earned, and nobody has to pay to belong. That vision hasn't changed — it's only grown sharper.</p><h2>What We've Built So Far</h2><p>In just a few months, we've shipped Bastions 2.0, a complete Atelier economy, the Desktop app, Living Bastions with mood and reputation systems, and a full safety infrastructure led by our Security Department. That's a lot of ground covered in a short time.</p><h2>What's Coming Next</h2><ul><li><strong>Mobile App (iOS & Android)</strong> — Native apps are in active development. Expect a beta this summer.</li><li><strong>Voice & Video Overhaul</strong> — We're rebuilding Party Rooms from the ground up with spatial audio and screen sharing.</li><li><strong>Bastion Discovery</strong> — A curated directory to find public Bastions by interest, game, and community type.</li><li><strong>Creator Tools</strong> — Streaming integration, subscriber channels, and monetisation features for content creators.</li><li><strong>API v2</strong> — A complete developer platform with webhooks, bot hosting, and marketplace.</li></ul><div class="highlight-box"><strong>Community-first, always.</strong> Every feature we ship is designed to strengthen communities — not extract value from them.</div><p>We're still small. We're still scrappy. But we're building something that matters. Thank you for being part of this fortress.</p><p class="sign-off">— Staw, Chief Executive Officer · Stawdio Group</p>`
+  },
+  encryption_update: {
+    category:'Security', date:'March 17, 2025', readTime:'6 min read',
+    authorInitial:'W', authorPillLabel:'Stawdio Safety Department',
+    title:'End-to-End Encryption: Our Approach to Private Messaging', bylineName:'Weaverdant',
+    bylineRole:'Chief Security Officer, Stawdio Group',
+    tagClass:'tag-safety', tagLabel:'Security',
+    banner:'/Fortized banner4.png',
+    content:`<p class="lead">Privacy isn't a feature — it's a foundation. Today I want to walk through how Fortized handles encryption, what we're building next, and what our commitments are to your data.</p><h2>How DMs Work Today</h2><p>Direct messages on Fortized are encrypted in transit using TLS 1.3. Messages stored on-device use browser localStorage with no server-side persistence in the current architecture. This means your conversations never leave your machine unless you explicitly share them.</p><h2>What We're Building</h2><p>As we transition to server-backed infrastructure, we're implementing full end-to-end encryption for direct messages. This means:</p><ul><li><strong>Only you and the recipient can read messages</strong> — not Fortized, not Stawdio Group, not anyone else</li><li><strong>Forward secrecy</strong> — each message session uses ephemeral keys, so compromising one session doesn't expose others</li><li><strong>Verified identities</strong> — users can verify each other's encryption keys to prevent impersonation</li><li><strong>Zero-knowledge architecture</strong> — we cannot decrypt your messages even if compelled to</li></ul><div class="highlight-box"><strong>Your messages are yours.</strong> We designed our system so that we literally cannot read your private conversations. That's not a policy — it's a technical guarantee.</div><h2>Bastion Messages</h2><p>Community channels in Bastions use a different model. Since these are shared spaces, messages are encrypted in transit but readable by authorised moderators and admins. This is necessary for content moderation and community safety — but we're transparent about it.</p><h2>Third-Party Auditing</h2><p>We're in the process of engaging an independent security firm to audit our encryption implementation. Results will be published publicly. We believe transparency in security is just as important as the security itself.</p><p class="sign-off">— Weaverdant, Chief Security Officer · Stawdio Safety Department</p>`
+  },
+  game_detection: {
+    category:'R&D', date:'March 15, 2025', readTime:'4 min read',
+    authorInitial:'T', authorPillLabel:'Stawdio R&D Department',
+    title:'How Game Detection Works — Behind the Scenes', bylineName:'Tyrianum',
+    bylineRole:'Chief Research & Development Officer, Stawdio Group',
+    tagClass:'tag-rd', tagLabel:'R&D',
+    banner:'/Fortized banner3.png',
+    content:`<p class="lead">One of the most-loved features in Fortized Desktop is automatic game detection. Today I want to pull back the curtain on how it actually works.</p><h2>The Detection Pipeline</h2><p>When you launch the Fortized Desktop app, a lightweight process monitor runs in the background. It scans your running processes every 15 seconds, comparing them against our curated game database and IGDB's catalogue of over 200,000 titles.</p><ul><li><strong>Process Matching</strong> — We match executable names against known game binaries. No file content is ever read.</li><li><strong>IGDB Enrichment</strong> — When a match is found, we pull cover art, genre info, and metadata from IGDB to display on your profile.</li><li><strong>Privacy First</strong> — The process list never leaves your machine. Detection runs entirely client-side.</li></ul><h2>Cover Art Integration</h2><p>We partnered with IGDB to bring high-quality cover art to your game collection. When you add a game — whether manually or through detection — we fetch artwork automatically. This makes your profile's game collection look polished without any extra effort.</p><div class="highlight-box"><strong>Zero telemetry.</strong> Your running processes are never sent to our servers. Game detection is 100% local.</div><h2>What's Next</h2><p>We're working on time-tracking integration, so you can see how many hours you've spent in each game. We're also building a "Currently Playing" status that automatically updates when you launch a game — visible to your friends on the platform.</p><p class="sign-off">— Tyrianum, Chief Research & Development Officer · Stawdio R&D Department</p>`
+  },
+  community_growth: {
+    category:'Company', date:'March 12, 2025', readTime:'4 min read',
+    authorInitial:'S', authorPillLabel:'Stawdio Group',
+    title:'Growing the Fortress — Our Community Philosophy', bylineName:'Staw',
+    bylineRole:'Chief Executive Officer, Stawdio Group',
+    tagClass:'tag-announce', tagLabel:'Company',
+    banner:'/Fortized banner2.png',
+    content:`<p class="lead">Communities are the heart of Fortized. Today I want to share how we think about growth — and why we do things differently.</p><h2>Quality Over Quantity</h2><p>We've seen what happens when platforms optimise for user count above all else. Communities get noisy. Moderation breaks down. Identity gets lost in the crowd. At Fortized, we measure success differently.</p><p>Our growth metrics focus on <strong>engagement depth</strong> — how many meaningful conversations happen, how many Bastions are actively moderated, how many members earn reputation through genuine participation.</p><h2>The Onyx Economy</h2><p>Our Onyx system is designed to make growth sustainable. When existing members invite new allies, both parties earn Onyx. This creates a natural incentive for bringing in people who will actually engage — not just inflate numbers.</p><ul><li><strong>Recruitment rewards</strong> — Earn Onyx for every friend who joins and stays active</li><li><strong>Daily engagement</strong> — Consistent participation earns daily Onyx bonuses</li><li><strong>Quest system</strong> — Community challenges that drive meaningful engagement</li></ul><div class="highlight-box"><strong>Growth that matters.</strong> We'd rather have 10,000 engaged members than 100,000 silent accounts.</div><h2>Partnerships</h2><p>We're actively building partnerships with gaming communities, content creators, and esports organisations. If you're interested in bringing your community to Fortized, reach out to us through our Support page.</p><p class="sign-off">— Staw, Chief Executive Officer · Stawdio Group</p>`
+  },
+  security_audit: {
+    category:'Security', date:'March 10, 2025', readTime:'5 min read',
+    authorInitial:'W', authorPillLabel:'Stawdio Safety Department',
+    title:'Q1 Security Report — Protecting the Fortress', bylineName:'Weaverdant',
+    bylineRole:'Chief Security Officer, Stawdio Group',
+    tagClass:'tag-safety', tagLabel:'Security',
+    banner:'/Fortized banner4.png',
+    content:`<p class="lead">Transparency is a core value of the Stawdio Safety Department. Here's our first quarterly security report — what we've done, what we've found, and what we're improving.</p><h2>Infrastructure Hardening</h2><p>Over the past quarter, we've made significant improvements to our security posture:</p><ul><li><strong>Content Security Policy</strong> — Strict CSP headers now prevent XSS attacks across all Fortized web properties</li><li><strong>Rate Limiting</strong> — API endpoints are now protected with intelligent rate limiting that adapts to traffic patterns</li><li><strong>Session Management</strong> — Sessions now expire after 30 days of inactivity and support forced revocation</li><li><strong>Input Sanitisation</strong> — All user inputs are sanitised at both client and server level</li></ul><h2>AutoMod Performance</h2><p>Since deploying AutoMod 2.0, we've seen significant improvements in automated moderation:</p><ul><li>Spam detection accuracy: 97.3%</li><li>Raid prevention: 12 attacks blocked in the first month</li><li>False positive rate: under 0.4%</li></ul><h2>Bug Bounty Programme</h2><p>We're launching a responsible disclosure programme for security researchers. If you find a vulnerability in Fortized, we want to hear about it — and we'll reward you for it.</p><div class="highlight-box"><strong>Security is everyone's job.</strong> We encourage all Bastion admins to enable AutoMod, use strong passwords, and report suspicious activity through the in-app reporting system.</div><h2>What's Next</h2><p>In Q2, we're focusing on two-factor authentication, login notifications, and advanced audit logging for Bastion owners. Your fortress will be even more defensible.</p><p class="sign-off">— Weaverdant, Chief Security Officer · Stawdio Safety Department</p>`
+  },
+  performance: {
+    category:'R&D', date:'March 7, 2025', readTime:'5 min read',
+    authorInitial:'T', authorPillLabel:'Stawdio R&D Department',
+    title:'Under the Hood — Performance Improvements in March', bylineName:'Tyrianum',
+    bylineRole:'Chief Research & Development Officer, Stawdio Group',
+    tagClass:'tag-rd', tagLabel:'R&D',
+    banner:'/Fortized banner5.png',
+    content:`<p class="lead">Speed matters. This month, we shipped a series of performance optimisations that make Fortized feel significantly faster. Here's a technical overview of what we changed and why.</p><h2>Rendering Pipeline</h2><p>We rebuilt the message rendering pipeline to use virtual scrolling. Previously, all visible messages were rendered as DOM nodes. Now, only messages in the viewport (plus a buffer of 20 above and below) are rendered. The result:</p><ul><li><strong>70% reduction</strong> in DOM node count for channels with 1000+ messages</li><li><strong>Smooth 60fps scrolling</strong> even in the busiest Bastions</li><li><strong>Lower memory usage</strong> — particularly noticeable on devices with limited RAM</li></ul><h2>Asset Loading</h2><p>Profile pictures, cover art, and emoji are now loaded with intersection observers — meaning they only fetch when they're about to become visible. Combined with aggressive caching, this reduces initial load times by approximately 40%.</p><h2>WebSocket Optimisation</h2><p>Our real-time messaging layer now uses binary WebSocket frames instead of JSON text frames. This reduces bandwidth per message by roughly 35% and improves parsing speed on the client.</p><div class="highlight-box"><strong>Engineering philosophy:</strong> We don't add features and worry about performance later. We optimise continuously so the platform stays fast as it grows.</div><h2>The Atelier</h2><p>The Atelier shop now uses lazy rendering for item grids. Shop categories load on demand, and appearance previews are generated using CSS custom properties instead of full re-renders. The shop opens 3x faster than before.</p><p class="sign-off">— Tyrianum, Chief Research & Development Officer · Stawdio R&D Department</p>`
+  },
+  data_protection: {
+    category:'Security', date:'March 4, 2025', readTime:'4 min read',
+    authorInitial:'W', authorPillLabel:'Stawdio Safety Department',
+    title:'Your Data, Your Rules — How We Handle Privacy', bylineName:'Weaverdant',
+    bylineRole:'Chief Security Officer, Stawdio Group',
+    tagClass:'tag-safety', tagLabel:'Security',
+    banner:'/Fortized banner.png',
+    content:`<p class="lead">Data privacy isn't just a checkbox for us — it's embedded in every decision we make. Here's exactly how Fortized handles your personal information.</p><h2>What We Collect</h2><p>Fortized collects the minimum data necessary to provide the service:</p><ul><li><strong>Account data</strong> — username, email, display name, and password (hashed, never stored in plain text)</li><li><strong>Profile data</strong> — avatar, bio, pronouns, connections, and customisation preferences</li><li><strong>Activity data</strong> — Bastion memberships, friends list, and message metadata</li><li><strong>Technical data</strong> — browser type, session tokens, and error logs</li></ul><h2>What We Don't Collect</h2><ul><li>We don't track your browsing outside of Fortized</li><li>We don't sell or share data with advertisers</li><li>We don't use data for targeted advertising</li><li>We don't read your DMs — ever</li></ul><h2>Local-First Architecture</h2><p>In the current architecture, most user data lives in your browser's localStorage. This gives you direct control — you can inspect, export, or delete your data at any time through your browser's developer tools or through your Fortized account settings.</p><div class="highlight-box"><strong>Compliant everywhere.</strong> Our data practices are designed to comply with privacy regulations in every jurisdiction where Fortized is available, including GDPR, CCPA, and LGPD.</div><h2>Your Rights</h2><p>Regardless of where you live, you have the right to access your data, correct inaccuracies, request deletion, and export a copy. These rights are available through your account settings or by contacting our support team.</p><p class="sign-off">— Weaverdant, Chief Security Officer · Stawdio Safety Department</p>`
+  },
+  atelier_evolution: {
+    category:'R&D', date:'March 1, 2025', readTime:'4 min read',
+    authorInitial:'T', authorPillLabel:'Stawdio R&D Department',
+    title:'The Atelier Evolves — New Themes, Decorations & Effects', bylineName:'Tyrianum',
+    bylineRole:'Chief Research & Development Officer, Stawdio Group',
+    tagClass:'tag-rd', tagLabel:'R&D',
+    banner:'/Onyx banner.png',
+    content:`<p class="lead">The Atelier is growing. Today we're shipping a wave of new content and features that expand what you can do with your Fortized identity.</p><h2>New Appearance Themes</h2><p>Two new appearance themes join the shop today:</p><ul><li><strong>Sunset</strong> — A warm gradient from deep plum to golden amber. Watch the sun set over your fortress as warm tones blend through every panel and sidebar.</li><li><strong>Kingdom of God</strong> — Our first light theme. White and gold with divine elegance. A radiant experience for those who prefer light mode done right.</li></ul><p>Both themes are available in the Atelier shop for Onyx. They join our existing collection of Onyx Pure, Midnight Citadel, and Dark Realm.</p><h2>Avatar Decorations</h2><p>Profile decorations are now available — animated frames that surround your avatar, visible across all of Fortized. Launch decorations include seasonal frames, achievement badges, and exclusive designs for early supporters.</p><h2>Display Name Styles</h2><p>We've unlocked display name customisation for everyone — not just Radiance members. You can now choose your font, colour, and effect. Available effects include Solid, Gradient, Neon, Toon, and Pop. Your chosen style appears everywhere: in chat, on your profile, and on your nameplate.</p><div class="highlight-box"><strong>Free for everyone.</strong> Display name styles are not locked behind any paywall. We believe self-expression should be accessible to all.</div><h2>Profile Widgets</h2><p>Your profile card now supports widgets — modular sections that showcase your interests. Launch widgets include Games I Like, Favourite Game, Games in Rotation, Primary Bastion, and Spotify integration. More widgets are coming soon.</p><p class="sign-off">— Tyrianum, Chief Research & Development Officer · Stawdio R&D Department</p>`
+  },
+  milestone_launch: {
+    category:'Company', date:'February 29, 2025', readTime:'3 min read',
+    authorInitial:'S', authorPillLabel:'Stawdio Group',
+    title:'From Zero to Fortress — Our Journey So Far', bylineName:'Staw',
+    bylineRole:'Chief Executive Officer, Stawdio Group',
+    tagClass:'tag-launch', tagLabel:'Company',
+    banner:'/Fortized banner3.png',
+    content:`<p class="lead">Every fortress starts with a single stone. Here's how Fortized went from an idea to a living platform.</p><h2>The Beginning</h2><p>Fortized started as a conversation between friends frustrated with existing platforms. We wanted something that put communities first — not advertisers, not shareholders, not algorithms. Just people building spaces together.</p><p>The name "Fortized" comes from "fortified" — because we believe communities should be strong, defensible, and owned by the people who build them. That's why we call servers "Bastions." That's why admins have complete sovereignty. That's why our economy is earned, not bought.</p><h2>Key Milestones</h2><ul><li><strong>Concept & Design</strong> — Architecture planning, UI design language, brand identity</li><li><strong>Core Platform</strong> — Bastions, channels, roles, messaging, friend system</li><li><strong>The Atelier</strong> — Onyx economy, Radiance system, cosmetic marketplace</li><li><strong>Safety Infrastructure</strong> — AutoMod, raid protection, reporting system</li><li><strong>Desktop App</strong> — Native desktop client for Windows, macOS, and Linux</li><li><strong>Living Bastions</strong> — Mood, reputation, Joyster, focus mode</li></ul><div class="highlight-box"><strong>Built by the community, for the community.</strong> Every feature request, bug report, and piece of feedback during Beta has directly shaped what Fortized is today.</div><h2>Thank You</h2><p>To everyone who joined early, tested features, reported bugs, and helped shape this platform — thank you. You're not just users. You're builders. And the fortress is stronger because of you.</p><p>We're just getting started.</p><p class="sign-off">— Staw, Chief Executive Officer · Stawdio Group</p>`
+  },
   desktop: {
     category:'Announcement', date:'March 3, 2026', readTime:'3 min read',
     authorInitial:'S', authorPillLabel:'Stawdio Group',
@@ -478,7 +561,7 @@ window.addEventListener('popstate', function(e) {
 });
 
 // ── Dynamic blog grid (sorted by date, pinned excluded) ──
-const PINNED_ID = 'whatisfortized';
+const PINNED_ID = 'roadmap2025';
 function getExcerpt(content) {
   const tmp = document.createElement('div');
   tmp.innerHTML = content;

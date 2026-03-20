@@ -19,6 +19,7 @@
 <link rel="icon" type="image/png" href="/Fortized icon2.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet"/>
 <style>
+::selection{background:rgba(255,249,62,.2);}
 :root{
   --acc:#fff93e;--acc-dim:rgba(255,249,62,.08);--acc-b:rgba(255,249,62,.18);--acc-g:rgba(255,249,62,.3);
   --bg:#080a0f;--panel:#0c0f1a;--panel-r:#0f1220;--bd:rgba(255,255,255,.06);--bd2:#1a2030;
@@ -119,7 +120,8 @@ a{text-decoration:none;color:inherit}
 .side-card-excerpt{font-size:12px;color:var(--mu-l);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
 /* ── Section Divider ── */
-.section-divider{display:flex;align-items:center;gap:14px;margin:8px 0 20px}
+.section-divider{display:flex;align-items:center;gap:14px;margin:36px 0 20px}
+.section-divider:first-of-type{margin-top:0}
 .section-divider-label{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);white-space:nowrap}
 .section-divider-line{flex:1;height:1px;background:var(--bd)}
 
@@ -257,7 +259,7 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
       </div>
       <div class="hero-stats fade-up d2">
         <div class="hero-stat">
-          <div class="hero-stat-num">17</div>
+          <div class="hero-stat-num" id="article-count">17</div>
           <div class="hero-stat-label">Articles</div>
         </div>
         <div class="hero-stat-divider"></div>
@@ -282,26 +284,24 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
     </div>
 
     <!-- Pinned: What is Fortized? -->
-    <div class="pinned-card fade-up d2" id="pinned-card" onclick="openArticle('whatisfortized')">
-      <div class="pinned-card-img"></div>
-      <div class="pinned-card-body">
-        <div class="pinned-badge">📌 Pinned</div>
-        <div class="card-meta">
-          <span class="card-tag tag-rd">R&amp;D</span>
-          <span class="card-date">February 22, 2026</span>
-          <span class="card-readtime">⏱ 2 min</span>
-        </div>
-        <div class="pinned-card-title">What is Fortized?</div>
-        <div class="pinned-card-excerpt">Fortized started with a simple question: why does building a community feel harder than it should? Here's the structure and identity that makes it different.</div>
-        <div class="card-meta" style="margin-bottom:0;">
-          <div class="author-chip"><div class="author-chip-av">T</div>Tyrianum · R&amp;D</div>
-          <span class="read-link" style="margin-left:auto;">Read Article →</span>
-        </div>
-      </div>
-    </div>
+    <div class="pinned-card fade-up d1" id="pinned-card"></div>
 
-    <!-- Dynamic post grid (sorted by date, excluding pinned) -->
+    <!-- Most Recent -->
+    <div class="section-divider fade-up d2"><span class="section-divider-label">Most Recent</span><div class="section-divider-line"></div></div>
+    <div id="most-recent-grid" class="featured-row fade-up d3"></div>
+
+    <!-- All Posts (sorted by date, excluding pinned & most recent) -->
+    <div class="section-divider fade-up d4" id="all-posts-divider"><span class="section-divider-label">All Posts</span><div class="section-divider-line"></div></div>
     <div class="post-grid" id="post-grid"></div>
+
+    <!-- For Newbies -->
+    <div class="section-divider fade-up" id="newbies-divider"><span class="section-divider-label">New to Fortized?</span><div class="section-divider-line"></div></div>
+    <div class="secondary-row fade-up" id="newbies-grid"></div>
+
+    <!-- Relevant / Popular -->
+    <div class="section-divider fade-up" id="relevant-divider"><span class="section-divider-label">Relevant &amp; Popular</span><div class="section-divider-line"></div></div>
+    <div class="secondary-row fade-up" id="relevant-grid"></div>
+
     <div class="blog-no-results" id="blog-no-results">
       <span>🔍</span>
       No posts found matching your search.
@@ -331,7 +331,7 @@ img.emoji{height:1.15em;width:1.15em;margin:0 .05em;vertical-align:-0.15em}
     </div>
   </div>
   <div class="footer-center">
-    <p class="copy">&copy; 2025 Fortized &middot; <img src="/SwiftawLogo.png" alt="Swiftaw" style="height:14px;vertical-align:middle;margin-right:3px;">Swiftaw</p>
+    <p class="copy">&copy; 2026 Fortized &middot; <img src="/SwiftawLogo.png" alt="Swiftaw" style="height:14px;vertical-align:middle;margin-right:3px;">Swiftaw</p>
   </div>
   <div class="footer-links">
     <a href="/app">App</a>
@@ -560,8 +560,10 @@ window.addEventListener('popstate', function(e) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// ── Dynamic blog grid (sorted by date, pinned excluded) ──
-const PINNED_ID = 'roadmap2025';
+// ── Dynamic blog grid with sections ──
+const PINNED_ID = 'whatisfortized';
+const NEWBIE_IDS = ['whatisfortized', 'betalive', 'milestone_launch', 'gates'];
+const RELEVANT_IDS = ['bastions2', 'atelier', 'encryption_update', 'safety', 'desktop', 'livingbastions'];
 function getExcerpt(content) {
   const tmp = document.createElement('div');
   tmp.innerHTML = content;
@@ -573,46 +575,75 @@ function parseDate(str) {
 }
 function renderPostGrid(filter) {
   const grid = document.getElementById('post-grid');
+  const recentGrid = document.getElementById('most-recent-grid');
+  const newbiesGrid = document.getElementById('newbies-grid');
+  const relevantGrid = document.getElementById('relevant-grid');
   const noResults = document.getElementById('blog-no-results');
   const pinned = document.getElementById('pinned-card');
   const q = (filter || '').toLowerCase().trim();
+
+  // Show/hide section dividers based on search
+  const sectionEls = ['all-posts-divider','newbies-divider','newbies-grid','relevant-divider','relevant-grid','most-recent-grid'];
+  const recentDivider = document.querySelector('.section-divider.fade-up.d2');
+
   const sorted = Object.entries(ARTICLES)
     .filter(([id]) => id !== PINNED_ID)
     .sort((a, b) => parseDate(b[1].date) - parseDate(a[1].date));
+
   const filtered = q
     ? sorted.filter(([id, a]) => a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q) || a.bylineName.toLowerCase().includes(q))
     : sorted;
+
   const pinnedA = ARTICLES[PINNED_ID];
   const pinnedMatch = !q || pinnedA.title.toLowerCase().includes(q) || pinnedA.category.toLowerCase().includes(q);
   if (pinned) pinned.style.display = pinnedMatch ? '' : 'none';
+
   if (filtered.length === 0 && !pinnedMatch) {
-    grid.innerHTML = '';
+    grid.innerHTML = ''; recentGrid.innerHTML = ''; newbiesGrid.innerHTML = ''; relevantGrid.innerHTML = '';
+    sectionEls.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+    if (recentDivider) recentDivider.style.display = 'none';
     noResults.style.display = 'block';
     return;
   }
   noResults.style.display = 'none';
 
-  if (!q && filtered.length >= 3) {
-    grid.classList.remove('search-grid');
-    const [hero, side1, side2, ...rest] = filtered;
-    let html = '';
-    html += `<div class="featured-row fade-up d1">`;
-    html += buildHeroCard(hero[0], hero[1]);
-    html += `<div class="side-stack">`;
-    html += buildSideCard(side1[0], side1[1], 0);
-    html += buildSideCard(side2[0], side2[1], 1);
-    html += `</div></div>`;
-    if (rest.length > 0) {
-      html += `<div class="section-divider fade-up d3"><span class="section-divider-label">More Articles</span><div class="section-divider-line"></div></div>`;
-      html += `<div class="secondary-row fade-up d4">`;
-      html += rest.map(([id, a]) => buildRegCard(id, a)).join('');
-      html += `</div>`;
-    }
-    grid.innerHTML = html;
-  } else {
+  if (q) {
+    // Search mode: flat grid, hide sections
+    sectionEls.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+    if (recentDivider) recentDivider.style.display = 'none';
+    document.getElementById('all-posts-divider').style.display = '';
     grid.classList.add('search-grid');
     grid.innerHTML = filtered.map(([id, a], i) => buildRegCard(id, a, i)).join('');
+    return;
   }
+
+  // Full page mode: show all sections
+  sectionEls.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
+  if (recentDivider) recentDivider.style.display = '';
+  grid.classList.remove('search-grid');
+
+  // Most Recent: top 3
+  const [hero, side1, side2, ...rest] = filtered;
+  let recentHtml = '';
+  recentHtml += buildHeroCard(hero[0], hero[1]);
+  recentHtml += `<div class="side-stack">`;
+  recentHtml += buildSideCard(side1[0], side1[1], 0);
+  recentHtml += buildSideCard(side2[0], side2[1], 1);
+  recentHtml += `</div>`;
+  recentGrid.innerHTML = recentHtml;
+
+  // All Posts: the rest (excluding newbie/relevant duplicates still shown)
+  const allPostsIds = new Set([hero[0], side1[0], side2[0], PINNED_ID]);
+  const allPosts = rest.filter(([id]) => !allPostsIds.has(id));
+  grid.innerHTML = `<div class="secondary-row">${allPosts.map(([id, a]) => buildRegCard(id, a)).join('')}</div>`;
+
+  // Newbies section
+  const newbiePosts = NEWBIE_IDS.filter(id => ARTICLES[id]).map(id => [id, ARTICLES[id]]);
+  newbiesGrid.innerHTML = newbiePosts.map(([id, a]) => buildRegCard(id, a)).join('');
+
+  // Relevant section
+  const relevantPosts = RELEVANT_IDS.filter(id => ARTICLES[id]).map(id => [id, ARTICLES[id]]);
+  relevantGrid.innerHTML = relevantPosts.map(([id, a]) => buildRegCard(id, a)).join('');
 }
 
 function buildHeroCard(id, a) {
@@ -679,7 +710,37 @@ function buildRegCard(id, a, i) {
     </div>`;
 }
 function filterBlogPosts(val) { renderPostGrid(val); }
+
+// Render pinned card dynamically
+(function renderPinned() {
+  const a = ARTICLES[PINNED_ID]; if (!a) return;
+  const el = document.getElementById('pinned-card');
+  if (!el) return;
+  el.onclick = function() { openArticle(PINNED_ID); };
+  const imgStyle = a.banner ? `style="background-image:linear-gradient(145deg,rgba(255,249,62,.1) 0%,rgba(255,249,62,.02) 40%,transparent 70%),linear-gradient(to bottom,rgba(8,10,15,.1),rgba(8,10,15,.6)),url('${a.banner}') center/cover;"` : '';
+  el.innerHTML = `
+    <div class="pinned-card-img" ${imgStyle}></div>
+    <div class="pinned-card-body">
+      <div class="pinned-badge">📌 Pinned</div>
+      <div class="card-meta">
+        <span class="card-tag ${a.tagClass}">${a.tagLabel}</span>
+        <span class="card-date">${a.date}</span>
+        <span class="card-readtime">⏱ ${a.readTime}</span>
+      </div>
+      <div class="pinned-card-title">${a.title}</div>
+      <div class="pinned-card-excerpt">${getExcerpt(a.content)}</div>
+      <div class="card-meta" style="margin-bottom:0;">
+        <div class="author-chip"><div class="author-chip-av">${a.authorInitial}</div>${a.bylineName} · ${a.authorPillLabel}</div>
+        <span class="read-link" style="margin-left:auto;">Read Article →</span>
+      </div>
+    </div>`;
+})();
+
 renderPostGrid();
+
+// Update article count
+const countEl = document.getElementById('article-count');
+if (countEl) countEl.textContent = Object.keys(ARTICLES).length;
 
 (function() {
   const params = new URLSearchParams(window.location.search);

@@ -1112,7 +1112,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .profile-nav-sep{height:1px;background:rgba(255,255,255,.04);margin:8px 14px;}
 /* Main settings area */
 .profile-main{flex:1;overflow-y:auto;background:var(--bg);scroll-behavior:smooth;}
-.settings-panel{max-width:720px;padding:0 40px 60px;margin:0 auto;}
+.settings-panel{max-width:960px;padding:0 48px 60px;margin:0;}
 .settings-section-title{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.04);}
 .settings-row{display:flex;align-items:flex-start;gap:16px;padding:14px;border:1px solid transparent;border-radius:12px;margin-bottom:2px;transition:all .12s;}
 .settings-row:hover{background:rgba(255,255,255,.02);}
@@ -14629,236 +14629,206 @@ function buildProfileView(tab) {
   if (tab === 'myprofile') {
     const cs = CU.customStatus;
     const sc = FtzStatus.color(CU.status||'online');
+    const themeC1 = CU.profileTheme?.color1 || null;
+    const themeC2 = CU.profileTheme?.color2 || themeC1 || null;
+    const previewBg = themeC1 ? `linear-gradient(135deg,${themeC1}ee,${themeC2||themeC1}bb)` : `linear-gradient(135deg,#141a2e,#1a1035,#0f1828)`;
+    const sep = `<div style="height:1px;background:rgba(255,255,255,.05);margin:22px 0;"></div>`;
 
     main.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 320px;height:100%;min-height:0;">
-        <!-- LEFT: settings form -->
-        <div style="overflow-y:auto;padding:0 40px 60px;border-right:1px solid rgba(255,255,255,.05);">
+      <div style="padding:0 48px 60px;max-width:920px;">
 
-          <!-- Page Hero -->
-          <div style="margin:0 -40px 28px;padding:36px 40px 22px;border-bottom:1px solid rgba(255,255,255,.05);background:linear-gradient(180deg,rgba(255,249,62,.015) 0%,transparent 100%);">
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;">My Profile</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:5px;">Customize how others see you on Fortized</div>
-          </div>
+        <!-- Tab bar -->
+        <div style="display:flex;gap:0;padding-top:28px;margin-bottom:24px;border-bottom:1px solid rgba(255,255,255,.07);">
+          <div style="padding:10px 20px 10px 0;font-size:14px;font-weight:700;color:#fff;border-bottom:2px solid var(--accent);margin-bottom:-1px;cursor:default;">Main Profile</div>
+          <div onclick="buildProfileView('profile_widgets')" style="padding:10px 20px;font-size:14px;font-weight:600;color:rgba(255,255,255,.35);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s;" onmouseover="this.style.color='rgba(255,255,255,.65)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">Profile Widgets</div>
+        </div>
 
-          <!-- SECTION: Profile -->
-          <div class="settings-section-title">PROFILE</div>
-
-          <!-- Banner -->
-          <div class="settings-row" style="padding-top:0;">
-            <div class="settings-row-label">
-              <div class="srl-name">Banner</div>
-              <div class="srl-desc">Shown on your profile card</div>
+        <!-- Promo Banner -->
+        <div style="position:relative;border-radius:14px;overflow:hidden;margin-bottom:28px;border:1px solid rgba(254,248,61,.1);">
+          <div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(8,12,22,1) 0%,rgba(16,24,44,1) 60%,rgba(8,18,34,1) 100%);"></div>
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 50%,rgba(254,248,61,.09) 0%,transparent 55%),radial-gradient(ellipse at 85% 50%,rgba(62,207,110,.07) 0%,transparent 55%);pointer-events:none;"></div>
+          <div style="position:relative;display:flex;align-items:center;gap:18px;padding:16px 22px;">
+            <div style="font-size:32px;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(254,248,61,.3));">&#x2728;</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;margin-bottom:3px;">Give your profile a fresh look</div>
+              <div style="font-size:11.5px;color:rgba(255,255,255,.4);line-height:1.5;">Explore avatar decorations, profile themes and Radiance styles in the Atelier.</div>
             </div>
-            <div class="settings-row-content">
-              <div style="height:100px;border-radius:10px;overflow:hidden;cursor:${hasRadiance?'pointer':'default'};position:relative;background:linear-gradient(135deg,#0f1830,#1a0f30);" onclick="${hasRadiance?`document.getElementById('banner-file-inp').click()`:`toast('Custom banners require Basic Radiance or Radiance+','error')`}">
-                ${CU.banner ? `<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;">` : `<img src="/Profile Banner.png" style="width:100%;height:100%;object-fit:cover;opacity:.6;">`}
-                <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
-                  ${hasRadiance
-                    ? `<span style="font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:5px 12px;border-radius:6px;">Change Banner</span>`
-                    : `<span style="font-size:11px;font-weight:700;color:#ffd93e;background:rgba(0,0,0,.7);padding:6px 14px;border-radius:8px;">✨ Requires Radiance</span>`}
-                </div>
-              </div>
-              <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event);markSettingsDirty()">
-              <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;">${hasRadiance ? 'Click to upload · Recommended 960×200' : '✨ Subscribe to Basic Radiance or Radiance+ to customize your banner'}</div>
-            </div>
-          </div>
-
-          <!-- Avatar + Display Name row -->
-          <div class="settings-row">
-            <div class="settings-row-label">
-              <div class="srl-name">Avatar</div>
-              <div class="srl-desc">Your profile picture</div>
-            </div>
-            <div class="settings-row-content" style="display:flex;align-items:center;gap:14px;">
-              <label style="cursor:pointer;position:relative;flex-shrink:0;">
-                <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;background:var(--panel2);border:3px solid var(--border);">
-                  ${CU.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(CU.displayName||CU.username)}'">` : `<img src="${_defaultPfpUrl(CU.displayName||CU.username)}" style="width:100%;height:100%;object-fit:cover;">`}
-                </div>
-                <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                </div>
-                <input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event);markSettingsDirty()">
-              </label>
-              <div style="flex:1;">
-                <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px;">Supports PNG, JPG, GIF · Max 8MB</div>
-                <div style="display:flex;gap:8px;">${renderBadgesHTML(CU)}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Display Name -->
-          <div class="settings-row">
-            <div class="settings-row-label">
-              <div class="srl-name">Display Name</div>
-            </div>
-            <div class="settings-row-content" style="display:flex;gap:8px;align-items:center;">
-              <input class="settings-input" id="dn-input" value="${escapeHTML(CU.displayName||CU.username)}" maxlength="32" style="flex:1;" placeholder="Your display name" oninput="markSettingsDirty()">
-              
-            </div>
-          </div>
-
-          <!-- Username -->
-          <div class="settings-row">
-            <div class="settings-row-label">
-              <div class="srl-name">Username</div>
-              <div class="srl-desc">Cannot be changed</div>
-            </div>
-            <div class="settings-row-content">
-              <input class="settings-input" value="@${escapeHTML(CU.username)}" disabled>
-            </div>
-          </div>
-
-          <!-- Bio -->
-          <div class="settings-row">
-            <div class="settings-row-label">
-              <div class="srl-name">About Me</div>
-              <div class="srl-desc">Max 300 characters</div>
-            </div>
-            <div class="settings-row-content">
-              <textarea class="settings-input" id="bio-input" rows="3" maxlength="300" style="resize:vertical;" oninput="markSettingsDirty()">${escapeHTML(CU.bio||'')}</textarea>
-              
-            </div>
-          </div>
-
-
-
-          ${hasRadiance ? `
-          <!-- Font Picker (Radiance) -->
-          <div class="settings-row">
-            <div class="settings-row-label">
-              <div class="srl-name">Display Font</div>
-              <div class="srl-desc" style="color:rgba(255,215,62,.5);">Radiance</div>
-            </div>
-            <div class="settings-row-content">
-              ${renderRadianceFontPicker()}
-            </div>
-          </div>` : ''}
-
-          <!-- SECTION: Profile Decoration -->
-          <div class="settings-section-title" style="margin-top:32px;">PROFILE DECORATION</div>
-          <div style="background:rgba(255,255,255,.02);border:1px solid rgba(254,248,61,.04);border-radius:16px;padding:16px;">
-            <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;">Choose a decoration to display around your avatar. Buy more in the <span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')">Atelier Shop</span>.</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <div style="width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.04);border:2px solid ${!CU.activeDecoration?'var(--accent)':'rgba(255,255,255,.08)'};display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-size:11px;color:var(--muted);" onclick="equipDecoration(null);renderSettingsTab('myprofile')" title="None">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </div>
-              ${(CU.ownedDecorations||[]).map(decoId => {
-                const d = PROFILE_DECORATIONS.find(d=>d.id===decoId);
-                if (!d) return '';
-                const isEquipped = CU.activeDecoration === decoId;
-                return `<div style="position:relative;width:58px;height:58px;cursor:pointer;" onclick="equipDecoration('${decoId}');renderSettingsTab('myprofile')" title="${d.name}">
-                  <div style="width:58px;height:58px;border-radius:50%;overflow:hidden;border:2px solid ${isEquipped?d.color:'rgba(255,255,255,.08)'};background:var(--panel2);transition:all .15s;">
-                    ${CU.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:`<div style="width:100%;height:100%;background:${d.color}22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:Syne,sans-serif;font-weight:800;color:${d.color};">${(CU.displayName||CU.username||'U')[0].toUpperCase()}</div>`}
-                  </div>
-                  <img src="${d.src}" style="position:absolute;inset:-5px;width:calc(100% + 10px);height:calc(100% + 10px);object-fit:contain;pointer-events:none;" onerror="this.style.display='none'">
-                </div>`;
-              }).join('')}
-              ${!(CU.ownedDecorations||[]).length ? '<div style="font-size:12px;color:var(--muted);padding:8px;">No decorations owned yet</div>' : ''}
-            </div>
-          </div>
-
-          <!-- SECTION: Connections -->
-          <div class="settings-section-title" style="margin-top:32px;">CONNECTIONS</div>
-          <div style="background:rgba(255,255,255,.02);border:1px solid rgba(254,248,61,.04);border-radius:16px;padding:4px 14px;">
-            ${_CONN_PLATFORMS.map(p => `
-              <div class="connected-row">
-                <div class="connected-icon" style="background:${p.color}18;color:${p.color};">${_connIcon(p.key)}</div>
-                <div class="connected-label">${p.label}</div>
-                <input class="settings-input" id="social-${p.key}" value="${escapeHTML((CU.socials||{})[p.key]||'')}" placeholder="${p.placeholder}" style="flex:1;font-size:12.5px;padding:7px 12px;" oninput="markSettingsDirty();validateSocialLink('${p.key}','${p.pattern||p.key+'.com'}',this)">
-              </div>`).join('')}
+            <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="flex-shrink:0;padding:9px 18px;background:rgba(255,255,255,.9);color:#060810;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap;" onmouseover="this.style.background='#fff';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='rgba(255,255,255,.9)';this.style.transform=''">Go to Atelier</button>
           </div>
         </div>
 
-        <!-- RIGHT: Live profile preview -->
-        <div style="overflow-y:auto;padding:28px 24px;background:var(--panel2);border-left:1px solid var(--border);">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);">Live Preview</div>
-          </div>
-          <div class="profile-preview-card" style="border-radius:18px;overflow:hidden;border:2px solid ${CU.profileTheme?.color1 ? `transparent;background-image:linear-gradient(135deg,${CU.profileTheme.color1}0a,var(--panel) 40%,${CU.profileTheme.color2}08),linear-gradient(135deg,${CU.profileTheme.color1},${CU.profileTheme.color2||CU.profileTheme.color1});background-origin:border-box;background-clip:padding-box,border-box` : 'var(--border)'};box-shadow:0 8px 40px rgba(0,0,0,.25)${CU.profileTheme?.color1 ? `,0 0 20px ${CU.profileTheme.color1}15` : ''};">
-            <!-- Banner -->
-            <div style="height:120px;position:relative;background:linear-gradient(135deg,#141a2e,#1a1030,#0f1828);overflow:hidden;">
-              ${CU.banner ? `<img src="${CU.banner}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${CU.profileTheme?.color1||'#1e2340'}88,${CU.profileTheme?.color2||'#1a1535'}66);"></div>`}
-              <div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,transparent 50%);"></div>
-              ${CU.profileTheme?.color1 ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${CU.profileTheme.color1},${CU.profileTheme.color2});opacity:.6;z-index:1;"></div>` : ''}
+        <!-- Two-column grid -->
+        <div style="display:grid;grid-template-columns:1fr 292px;gap:32px;align-items:start;">
+
+          <!-- LEFT: form fields -->
+          <div>
+
+            <!-- Display Name -->
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Display Name</div>
+              <input class="settings-input" id="dn-input" value="${escapeHTML(CU.displayName||CU.username)}" maxlength="32" placeholder="Your display name" oninput="markSettingsDirty()">
             </div>
-            <div style="padding:0 20px 22px;">
-              <!-- Profile picture + Badge row -->
-              <div style="display:flex;align-items:flex-end;gap:14px;margin-top:-38px;margin-bottom:16px;position:relative;z-index:2;">
-                <div style="width:76px;height:76px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 20px rgba(0,0,0,.6);flex-shrink:0;">
-                  ${CU.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-family:'Syne',sans-serif;font-weight:800;">${(CU.displayName||CU.username)[0].toUpperCase()}</span>`}
-                </div>
-                <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px;">${renderBadgesHTML(CU)}</div>
+            ${sep}
+
+            <!-- Display Name Styles (Radiance) -->
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <div style="font-size:14px;font-weight:700;color:#fff;">Display Name Styles</div>
+                ${hasRadiance ? '' : '<span style="font-size:9px;font-weight:700;background:rgba(255,160,62,.1);color:#ff9d3e;border:1px solid rgba(255,160,62,.2);border-radius:5px;padding:2px 7px;letter-spacing:.03em;">RADIANCE</span>'}
               </div>
-              <!-- Identity section -->
-              <div style="margin-bottom:14px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                  <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;line-height:1;">${escapeHTML(CU.displayName||CU.username)}</div>
-                  <span style="width:10px;height:10px;border-radius:50%;background:${sc};flex-shrink:0;box-shadow:0 0 6px ${sc}55;"></span>
-                </div>
-                <div style="font-size:12px;color:rgba(255,255,255,.35);">@${escapeHTML(CU.username)}</div>
+              ${hasRadiance ? renderRadianceFontPicker() : '<div style="font-size:12.5px;color:rgba(255,255,255,.3);margin-bottom:12px;">Unlock custom display name fonts with Radiance.</div>'}
+              ${hasRadiance ? '' : '<div style="display:flex;gap:8px;"><button onclick="showView(\'atelier\')" class="settings-save-btn" style="padding:8px 18px;font-size:12px;">Get Radiance</button></div>'}
+            </div>
+            ${sep}
+
+            <!-- Pronouns -->
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Pronouns</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px;">Shown on your public profile.</div>
+              <input class="settings-input" id="pronouns-input" value="${escapeHTML(CU.pronouns||'')}" maxlength="40" placeholder="e.g. he/him, she/her, they/them" oninput="markSettingsDirty()">
+            </div>
+            ${sep}
+
+            <!-- Profile Widgets -->
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Profile Widgets</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Customise your full profile by adding Widgets to your Board.</div>
+              <button onclick="buildProfileView('profile_widgets')" class="settings-save-btn">Add Widgets</button>
+            </div>
+            ${sep}
+
+            <!-- Avatar -->
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:12px;">Avatar</div>
+              <div style="display:flex;gap:8px;">
+                <label style="cursor:pointer;"><div class="settings-save-btn">Change Avatar</div><input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event);markSettingsDirty()"></label>
+                ${CU.pfp ? '<button onclick="CU.pfp=\\'\\';markSettingsDirty();buildProfileView(\\'myprofile\\')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Avatar</button>' : ''}
               </div>
-              <!-- Custom Status Bubble -->
-              ${cs?.text ? `<div style="display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:16px;font-size:12.5px;color:rgba(255,255,255,.55);margin-bottom:14px;backdrop-filter:blur(4px);">${cs.emoji ? `<img src="${emojiToTwemojiUrl(cs.emoji)}" style="width:16px;height:16px;object-fit:contain;" onerror="this.outerHTML='${escapeHTML(cs.emoji)}'">` : ''} ${escapeHTML(cs.text)}</div>` : ''}
-              <!-- About Me block -->
-              ${CU.bio ? `<div style="margin-bottom:14px;">
-                <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:6px;">About Me</div>
-                <div style="font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.6;">${escapeHTML(CU.bio.slice(0,150))}${CU.bio.length>150?'...':''}</div>
-              </div>` : ''}
-              <!-- Member Since -->
-              <div style="margin-bottom:14px;">
-                <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:6px;">Member Since</div>
-                <div style="font-size:12px;color:rgba(255,255,255,.45);">${CU.createdAt ? new Date(CU.createdAt).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'Unknown'}</div>
+            </div>
+            ${sep}
+
+            <!-- Avatar Decoration -->
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Avatar Decoration</div>
+              <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" class="settings-save-btn">Change Decoration</button>
+            </div>
+            ${sep}
+
+            <!-- Profile Banner -->
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <div style="font-size:14px;font-weight:700;color:#fff;">Profile Banner</div>
+                ${hasRadiance ? '' : '<span style="font-size:9px;font-weight:700;background:rgba(255,160,62,.1);color:#ff9d3e;border:1px solid rgba(255,160,62,.2);border-radius:5px;padding:2px 7px;">RADIANCE</span>'}
               </div>
-              <!-- Game Collection -->
-              ${(CU.gameCollection && CU.gameCollection.length) ? `<div style="margin-bottom:14px;">
-                <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:6px;">Games</div>
-                <div style="display:flex;gap:4px;flex-wrap:wrap;">${CU.gameCollection.map(g=>`<div style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:14px;overflow:hidden;" title="${escapeHTML(g.name||'')}">${g.coverThumb ? `<img src="${escapeHTML(g.coverThumb)}" style="width:100%;height:100%;object-fit:cover;">` : (g.icon||ftzIcon('gamepad','14'))}</div>`).join('')}</div>
-              </div>` : ''}
-              <!-- Profile Widgets Preview -->
-              <div id="preview-widgets-container"></div>
-              <!-- Connections block -->
-              ${(()=>{
-                const socials = CU.socials||{};
-                const conns = _CONN_PLATFORMS.filter(c=>socials[c.key]);
-                if(!conns.length) return '';
-                return '<div style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:6px;">Connections</div><div style="display:flex;flex-direction:column;gap:4px;">'+conns.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='rgba(255,255,255,.06)'" onmouseleave="this.style.background='rgba(255,255,255,.03)'"><span style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:${c.color};">${_connIcon(c.key)} ${c.label}</span><span style="font-size:12px;color:rgba(255,255,255,.25);">→</span></div>`).join('')+'</div></div>';
-              })()}
-              <!-- Action buttons -->
-              <div style="display:flex;gap:8px;margin-top:4px;">
-                <button onclick="buildProfileView('myprofile')" style="flex:1;padding:9px;background:${CU.profileTheme?.accent||'var(--accent)'};border:none;border-radius:10px;color:#080a0f;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Edit Profile</button>
-                <button onclick="viewUserProfile(CU.username)" style="flex:1;padding:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.6);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">View Full Profile</button>
+              <input id="banner-file-inp" type="file" accept="image/*" style="display:none;" onchange="updateBanner(event);markSettingsDirty()">
+              <div style="display:flex;gap:8px;">
+                <button onclick="${hasRadiance?"document.getElementById('banner-file-inp').click()":"toast('Custom banners require Radiance','error')"}" class="settings-save-btn">Change Banner</button>
+                ${hasRadiance && CU.banner ? '<button onclick="CU.banner=\\'\\';markSettingsDirty();buildProfileView(\\'myprofile\\')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Banner</button>' : ''}
               </div>
-              <!-- Status Controls -->
-              <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,.05);padding-top:12px;">
-                <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;">Quick Actions</div>
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                  <!-- Switch Status -->
-                  <div style="position:relative;">
-                    <button id="preview-status-btn" onclick="document.getElementById('preview-status-dropdown').style.display=document.getElementById('preview-status-dropdown').style.display==='none'?'block':'none'" style="width:100%;padding:8px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:background .15s;" onmouseenter="this.style.background='rgba(255,255,255,.06)'" onmouseleave="this.style.background='rgba(255,255,255,.03)'">
-                      <span style="width:8px;height:8px;border-radius:50%;background:${sc};box-shadow:0 0 6px ${sc}55;flex-shrink:0;"></span>
-                      <span>Switch Status</span>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:auto;opacity:.4;"><polyline points="6 9 12 15 18 9"/></svg>
-                    </button>
-                    <div id="preview-status-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:10px;z-index:10;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.5);">
-                      ${['online','idle','dnd','invisible'].map(s => {
-                        const sColor = FtzStatus.color(s);
-                        const sLabel = s==='dnd'?'Do Not Disturb':s==='invisible'?'Invisible':s.charAt(0).toUpperCase()+s.slice(1);
-                        return '<div onclick="setUserStatus(\''+s+'\');setTimeout(()=>buildProfileView(\'myprofile\'),200)" style="padding:9px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:background .12s;font-size:12px;color:rgba(255,255,255,.6);font-weight:500;" onmouseenter="this.style.background=\'rgba(255,255,255,.05)\'" onmouseleave="this.style.background=\'\'"><span style="width:8px;height:8px;border-radius:50%;background:'+sColor+';box-shadow:0 0 6px '+sColor+'55;flex-shrink:0;"></span>'+sLabel+'</div>';
-                      }).join('')}
+            </div>
+            ${sep}
+
+            <!-- Profile Theme -->
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Profile Theme</div>
+              <div style="display:flex;gap:14px;align-items:flex-end;margin-bottom:12px;">
+                <div style="text-align:center;">
+                  <label style="cursor:pointer;display:block;">
+                    <div style="width:60px;height:60px;border-radius:10px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;">
+                      <input type="color" value="${themeC1||'#6366f1'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color1=this.value;markSettingsDirty()">
+                      <div style="width:100%;height:100%;background:${themeC1||'#6366f1'};display:flex;align-items:center;justify-content:center;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </div>
                     </div>
-                  </div>
-                  <!-- Edit Custom Status -->
-                  <button onclick="openStatusPicker()" style="width:100%;padding:8px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:background .15s;" onmouseenter="this.style.background='rgba(255,255,255,.06)'" onmouseleave="this.style.background='rgba(255,255,255,.03)'">
-                    ${cs?.text ? '<span style="font-size:13px;">'+(cs.emoji||'')+'</span>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>'}
-                    <span>${cs?.text ? 'Edit Custom Status' : 'Set Custom Status'}</span>
-                  </button>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;">Primary</div>
+                  </label>
+                </div>
+                <div style="text-align:center;">
+                  <label style="cursor:pointer;display:block;">
+                    <div style="width:60px;height:60px;border-radius:10px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;">
+                      <input type="color" value="${themeC2||themeC1||'#8b5cf6'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color2=this.value;markSettingsDirty()">
+                      <div style="width:100%;height:100%;background:${themeC2||themeC1||'#8b5cf6'};display:flex;align-items:center;justify-content:center;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </div>
+                    </div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;">Accent</div>
+                  </label>
                 </div>
               </div>
             </div>
+            ${sep}
+
+            <!-- Bio -->
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Bio</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px;">You can use markdown and links if you'd like.</div>
+              <div style="position:relative;">
+                <textarea class="settings-input" id="bio-input" rows="4" maxlength="300" style="resize:none;padding-bottom:28px;" oninput="markSettingsDirty();document.getElementById('bio-char-count').textContent=(300-this.value.length)">${escapeHTML(CU.bio||'')}</textarea>
+                <span id="bio-char-count" style="position:absolute;bottom:10px;right:12px;font-size:11px;color:rgba(255,255,255,.25);">${300-(CU.bio||'').length}</span>
+              </div>
+            </div>
+            ${sep}
+
+            <!-- Connections -->
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Connections</div>
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:4px 14px;">
+                ${_CONN_PLATFORMS.map(p => '<div class="connected-row"><div class="connected-icon" style="background:'+p.color+'18;color:'+p.color+';">'+_connIcon(p.key)+'</div><div class="connected-label">'+p.label+'</div><input class="settings-input" id="social-'+p.key+'" value="'+escapeHTML((CU.socials||{})[p.key]||'')+'" placeholder="'+p.placeholder+'" style="flex:1;font-size:12.5px;padding:7px 12px;" oninput="markSettingsDirty();validateSocialLink(\''+p.key+'\',\''+( p.pattern||p.key+'.com')+'\',this)"></div>').join('')}
+              </div>
+            </div>
+
           </div>
-          <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.2);line-height:1.5;">Profile card updates live as you edit.</div>
+
+          <!-- RIGHT: sticky preview -->
+          <div style="position:sticky;top:20px;">
+
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-bottom:10px;">Preview</div>
+            <div style="border-radius:16px;overflow:hidden;border:1.5px solid ${themeC1?'transparent':'rgba(255,255,255,.08)'};${themeC1?'background-image:linear-gradient(var(--panel),var(--panel)),linear-gradient(135deg,'+themeC1+','+( themeC2||themeC1)+');background-origin:border-box;background-clip:padding-box,border-box':''};box-shadow:0 8px 40px rgba(0,0,0,.35)${themeC1?',0 0 28px '+themeC1+'15':''};margin-bottom:18px;">
+              <!-- Banner -->
+              <div style="height:100px;position:relative;overflow:hidden;${CU.banner?'':'background:'+previewBg};">
+                ${CU.banner ? '<img src="'+escapeHTML(CU.banner)+'" style="width:100%;height:100%;object-fit:cover;">' : ''}
+                <div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,transparent 60%);"></div>
+                ${themeC1 ? '<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,'+themeC1+','+(themeC2||themeC1)+');opacity:.8;"></div>' : ''}
+              </div>
+              <div style="padding:0 16px 16px;">
+                <div style="display:flex;align-items:flex-end;gap:8px;margin-top:-38px;margin-bottom:12px;position:relative;z-index:2;">
+                  <div style="width:76px;height:76px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(0,0,0,.6);flex-shrink:0;position:relative;">
+                    ${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:22px;color:'+(themeC1||'var(--accent)')+';">'+(CU.displayName||CU.username)[0].toUpperCase()+'</span>'}
+                    ${CU.activeDecoration ? (function(){var d=PROFILE_DECORATIONS.find(function(d){return d.id===CU.activeDecoration});return d?'<img src="'+escapeHTML(d.src)+'" style="position:absolute;inset:-9px;width:calc(100%+18px);height:calc(100%+18px);object-fit:contain;pointer-events:none;z-index:2;" onerror="this.style.display=\'none\'">':'';})() : ''}
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;">${renderBadgesHTML(CU)}</div>
+                </div>
+                <div style="margin-bottom:8px;">
+                  <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
+                    <div style="font-family:Syne,sans-serif;font-size:17px;font-weight:800;color:#fff;line-height:1;">${escapeHTML(CU.displayName||CU.username)}</div>
+                    <span style="width:8px;height:8px;border-radius:50%;background:${sc};flex-shrink:0;box-shadow:0 0 6px ${sc}66;"></span>
+                  </div>
+                  <div style="font-size:11px;color:rgba(255,255,255,.3);">@${escapeHTML(CU.username)}${CU.pronouns ? ' &middot; <span style="color:rgba(255,255,255,.2);">'+escapeHTML(CU.pronouns)+'</span>' : ''}</div>
+                </div>
+                ${cs&&cs.text ? '<div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:8px;">'+(cs.emoji?'<img src="'+emojiToTwemojiUrl(cs.emoji)+'" style="width:13px;height:13px;object-fit:contain;" onerror="this.outerHTML=\''+escapeHTML(cs.emoji)+'\'">':'')+' '+escapeHTML(cs.text)+'</div>' : ''}
+                ${CU.bio ? '<div style="margin-bottom:10px;"><div style="font-size:8.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:4px;">About Me</div><div style="font-size:11px;color:rgba(255,255,255,.45);line-height:1.55;">'+escapeHTML(CU.bio.slice(0,120))+(CU.bio.length>120?'&hellip;':'')+'</div></div>' : ''}
+                <div id="preview-widgets-container"></div>
+                <div style="display:flex;gap:6px;margin-top:10px;">
+                  <button style="flex:1;padding:8px;background:${themeC1||'var(--accent)'};border:none;border-radius:8px;color:${themeC1?'#fff':'#080a0f'};font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">Edit Profile</button>
+                  <button onclick="viewUserProfile(CU.username)" style="flex:1;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:8px;color:rgba(255,255,255,.55);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;">View Profile</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-bottom:10px;">Nameplate</div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+              <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--panel2);flex-shrink:0;">
+                ${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<div style="width:100%;height:100%;background:'+(themeC1||'rgba(255,255,255,.06)')+';display:flex;align-items:center;justify-content:center;font-size:12px;font-family:Syne,sans-serif;font-weight:800;color:'+(themeC1?'#fff':'var(--accent)')+';">'+(CU.displayName||CU.username)[0].toUpperCase()+'</div>'}
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:Syne,sans-serif;font-size:13px;font-weight:800;color:${themeC1||'#fff'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(CU.displayName||CU.username)}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,.25);">@${escapeHTML(CU.username)}</div>
+              </div>
+              <span style="width:8px;height:8px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
+            </div>
+
+          </div>
+
         </div>
       </div>`;
     // Render widgets in live preview
@@ -15104,76 +15074,130 @@ function buildProfileView(tab) {
     // Selected theme for preview (start with current)
     const selTheme = allThemes.find(t => t.id === currentTheme) || allThemes[0];
 
-    // Build a rich chat-preview mockup for a given theme
+    // Build a rich, accurate app preview for a given theme
     function buildChatPreview(t, label) {
       const uName = CU?.displayName || CU?.username || 'You';
       const uInitial = uName[0].toUpperCase();
       const isLight = !!t.light;
-      const textMain = isLight ? 'rgba(0,0,0,.75)' : 'rgba(255,255,255,.55)';
+      const textMain = isLight ? 'rgba(0,0,0,.7)' : 'rgba(255,255,255,.55)';
       const textStrong = isLight ? '#1a1a1a' : '#fff';
       const textDim = isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)';
       const textDim2 = isLight ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.04)';
+      const textMuted = isLight ? 'rgba(0,0,0,.35)' : 'rgba(255,255,255,.3)';
       const pfpHtml = CU?.pfp
         ? '<img src="'+CU.pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
-        : '<div style="width:100%;height:100%;border-radius:50%;background:'+t.panel+';display:flex;align-items:center;justify-content:center;font-size:11px;font-family:Syne,sans-serif;font-weight:800;color:'+t.accent+';">'+uInitial+'</div>';
+        : '<div style="width:100%;height:100%;border-radius:50%;background:'+t.panel+';display:flex;align-items:center;justify-content:center;font-size:10px;font-family:Syne,sans-serif;font-weight:800;color:'+t.accent+';">'+uInitial+'</div>';
       return `
       <div style="flex:1;min-width:0;">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:10px;">${label}</div>
-        <div style="border-radius:16px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};">
+        <div style="border-radius:14px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};box-shadow:0 8px 32px rgba(0,0,0,.25);">
           <!-- Titlebar -->
-          <div style="height:32px;background:${t.sidebar};display:flex;align-items:center;padding:0 12px;gap:6px;border-bottom:1px solid ${t.border};">
-            <div style="font-size:10px;font-weight:700;color:${isLight?'rgba(0,0,0,.4)':'rgba(255,255,255,.35)'};"># general</div>
+          <div style="height:28px;background:${t.sidebar};display:flex;align-items:center;padding:0 10px;gap:6px;border-bottom:1px solid ${t.border};">
+            <div style="display:flex;gap:4px;align-items:center;">
+              <div style="width:8px;height:8px;border-radius:50%;background:${t.accent};opacity:.5;"></div>
+              <span style="font-size:9px;font-weight:800;color:${textMuted};font-family:Syne,sans-serif;letter-spacing:-.02em;">Fortized</span>
+            </div>
             <div style="flex:1;"></div>
-            <div style="width:6px;height:6px;border-radius:50%;background:${t.muted};opacity:.4;"></div>
-            <div style="width:6px;height:6px;border-radius:50%;background:${t.muted};opacity:.4;"></div>
+            <div style="display:flex;gap:5px;">
+              <div style="width:8px;height:8px;border-radius:2px;background:${textDim};"></div>
+              <div style="width:8px;height:8px;border-radius:2px;background:${textDim};"></div>
+              <div style="width:8px;height:8px;border-radius:2px;background:${textDim};"></div>
+            </div>
           </div>
-          <div style="display:flex;height:155px;">
-            <!-- Sidebar mock -->
-            <div style="width:44px;background:${t.sidebar};border-right:1px solid ${t.border};padding:8px 6px;display:flex;flex-direction:column;gap:4px;">
-              <div style="height:5px;background:${t.accent};border-radius:3px;width:80%;opacity:.6;"></div>
-              <div style="height:5px;background:${textDim};border-radius:3px;width:65%;"></div>
-              <div style="height:5px;background:${textDim};border-radius:3px;width:90%;"></div>
-              <div style="height:5px;background:${textDim2};border-radius:3px;width:50%;"></div>
+          <div style="display:flex;height:220px;">
+            <!-- Server list -->
+            <div style="width:48px;background:${isLight ? 'rgba(0,0,0,.03)' : 'rgba(0,0,0,.15)'};display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:5px;">
+              <div style="width:32px;height:32px;border-radius:12px;background:${t.accent};opacity:.15;"></div>
+              <div style="width:20px;height:1px;background:${textDim};margin:2px 0;"></div>
+              <div style="width:32px;height:32px;border-radius:50%;background:${textDim};"></div>
+              <div style="width:32px;height:32px;border-radius:50%;background:${textDim2};"></div>
+              <div style="width:32px;height:32px;border-radius:50%;background:${textDim2};"></div>
+            </div>
+            <!-- Channel sidebar -->
+            <div style="width:140px;background:${t.sidebar};border-right:1px solid ${t.border};padding:10px 8px;display:flex;flex-direction:column;gap:2px;overflow:hidden;">
+              <div style="font-size:9px;font-weight:800;color:${textMuted};text-transform:uppercase;letter-spacing:.05em;padding:4px 6px;margin-bottom:2px;">Bastion Name</div>
+              <div style="font-size:8px;font-weight:700;color:${isLight ? 'rgba(0,0,0,.2)' : 'rgba(255,255,255,.15)'};text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;margin-top:6px;">Text Channels</div>
+              <div style="display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:4px;background:${isLight ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.06)'};"><span style="font-size:8px;color:${textMuted};">#</span><span style="font-size:9px;font-weight:600;color:${textStrong};">general</span></div>
+              <div style="display:flex;align-items:center;gap:4px;padding:4px 6px;"><span style="font-size:8px;color:${textMuted};">#</span><span style="font-size:9px;color:${textMuted};">off-topic</span></div>
+              <div style="display:flex;align-items:center;gap:4px;padding:4px 6px;"><span style="font-size:8px;color:${textMuted};">#</span><span style="font-size:9px;color:${textMuted};">media</span></div>
+              <div style="font-size:8px;font-weight:700;color:${isLight ? 'rgba(0,0,0,.2)' : 'rgba(255,255,255,.15)'};text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;margin-top:6px;">Voice</div>
+              <div style="display:flex;align-items:center;gap:4px;padding:4px 6px;"><span style="font-size:8px;color:${textMuted};">🔊</span><span style="font-size:9px;color:${textMuted};">Lounge</span></div>
+              <div style="flex:1;"></div>
+              <!-- User bar -->
+              <div style="display:flex;align-items:center;gap:6px;padding:6px;border-radius:6px;background:${isLight ? 'rgba(0,0,0,.04)' : 'rgba(0,0,0,.2)'};">
+                <div style="width:22px;height:22px;border-radius:50%;overflow:hidden;flex-shrink:0;">${pfpHtml}</div>
+                <div style="min-width:0;flex:1;"><div style="font-size:8px;font-weight:700;color:${textStrong};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${uName}</div><div style="font-size:7px;color:${textMuted};">Online</div></div>
+              </div>
             </div>
             <!-- Chat area -->
-            <div style="flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:${t.channel};overflow:hidden;">
-              <!-- Message 1 -->
-              <div style="display:flex;gap:8px;align-items:flex-start;">
-                <div style="width:26px;height:26px;border-radius:50%;background:${textDim};flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:9px;color:${t.muted};">F</div>
-                <div style="min-width:0;">
-                  <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
-                    <span style="font-size:10px;font-weight:700;color:${t.accent};">Fortized</span>
-                    <span style="font-size:8px;color:${t.muted};">Today 14:32</span>
+            <div style="flex:1;display:flex;flex-direction:column;background:${t.channel};overflow:hidden;">
+              <!-- Channel header -->
+              <div style="height:28px;border-bottom:1px solid ${t.border};display:flex;align-items:center;padding:0 10px;gap:6px;">
+                <span style="font-size:9px;color:${textMuted};">#</span>
+                <span style="font-size:9px;font-weight:700;color:${textStrong};">general</span>
+                <div style="width:1px;height:14px;background:${t.border};margin:0 4px;"></div>
+                <span style="font-size:8px;color:${textMuted};">Welcome to the bastion!</span>
+              </div>
+              <!-- Messages -->
+              <div style="flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:8px;overflow:hidden;">
+                <div style="display:flex;gap:7px;align-items:flex-start;">
+                  <div style="width:24px;height:24px;border-radius:50%;background:${t.accent}22;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:${t.accent};">F</div>
+                  <div style="min-width:0;">
+                    <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:1px;">
+                      <span style="font-size:9px;font-weight:700;color:${t.accent};">Fortized</span>
+                      <span style="font-size:7px;color:${t.muted};">Today 14:32</span>
+                    </div>
+                    <div style="font-size:9px;color:${textMain};line-height:1.45;">Welcome to the bastion! Hope everyone's having a great day.</div>
                   </div>
-                  <div style="font-size:10px;color:${textMain};line-height:1.4;">Welcome to the bastion! 🏰</div>
+                </div>
+                <div style="display:flex;gap:7px;align-items:flex-start;">
+                  <div style="width:24px;height:24px;border-radius:50%;flex-shrink:0;overflow:hidden;">${pfpHtml}</div>
+                  <div style="min-width:0;">
+                    <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:1px;">
+                      <span style="font-size:9px;font-weight:700;color:${textStrong};">${uName}</span>
+                      <span style="font-size:7px;color:${t.muted};">Today 14:33</span>
+                    </div>
+                    <div style="font-size:9px;color:${textMain};line-height:1.45;">This looks amazing! Love the new theme.</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:7px;align-items:flex-start;">
+                  <div style="width:24px;height:24px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#a78bfa;">K</div>
+                  <div style="min-width:0;">
+                    <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:1px;">
+                      <span style="font-size:9px;font-weight:700;color:#a78bfa;">Knight</span>
+                      <span style="font-size:7px;color:${t.muted};">Today 14:34</span>
+                    </div>
+                    <div style="font-size:9px;color:${textMain};line-height:1.45;">Hey, welcome aboard! 🎉</div>
+                  </div>
                 </div>
               </div>
-              <!-- Message 2: user's own message -->
-              <div style="display:flex;gap:8px;align-items:flex-start;">
-                <div style="width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;">${pfpHtml}</div>
-                <div style="min-width:0;">
-                  <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
-                    <span style="font-size:10px;font-weight:700;color:${textStrong};">${uName}</span>
-                    <span style="font-size:8px;color:${t.muted};">Today 14:33</span>
+              <!-- Chat input -->
+              <div style="padding:0 10px 8px;">
+                <div style="height:26px;background:${t.panel};border-radius:8px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 10px;gap:6px;">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${t.muted}" stroke-width="2" style="opacity:.4;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  <div style="font-size:8px;color:${t.muted};opacity:.5;">Message #general</div>
+                  <div style="flex:1;"></div>
+                  <div style="display:flex;gap:4px;">
+                    <div style="width:10px;height:10px;border-radius:3px;background:${textDim};"></div>
+                    <div style="width:10px;height:10px;border-radius:3px;background:${textDim};"></div>
                   </div>
-                  <div style="font-size:10px;color:${textMain};line-height:1.4;">This looks amazing!</div>
                 </div>
               </div>
-              <!-- Message 3 -->
-              <div style="display:flex;gap:8px;align-items:flex-start;">
-                <div style="width:26px;height:26px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#a78bfa;">K</div>
-                <div style="min-width:0;">
-                  <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
-                    <span style="font-size:10px;font-weight:700;color:#a78bfa;">Knight</span>
-                    <span style="font-size:8px;color:${t.muted};">Today 14:34</span>
-                  </div>
-                  <div style="font-size:10px;color:${textMain};line-height:1.4;">Hey, welcome aboard!</div>
-                </div>
+            </div>
+            <!-- Members panel -->
+            <div style="width:100px;background:${t.sidebar};border-left:1px solid ${t.border};padding:8px 6px;display:flex;flex-direction:column;gap:2px;overflow:hidden;">
+              <div style="font-size:7px;font-weight:700;color:${textMuted};text-transform:uppercase;letter-spacing:.05em;padding:2px 4px;">Online — 3</div>
+              <div style="display:flex;align-items:center;gap:4px;padding:3px 4px;border-radius:4px;">
+                <div style="width:16px;height:16px;border-radius:50%;background:${t.accent}22;flex-shrink:0;"></div>
+                <span style="font-size:8px;color:${t.accent};font-weight:600;">Fortized</span>
               </div>
-              <div style="flex:1;"></div>
-              <!-- Chat input mock -->
-              <div style="height:24px;background:${t.panel};border-radius:8px;border:1px solid ${t.border};display:flex;align-items:center;padding:0 8px;">
-                <div style="font-size:8.5px;color:${t.muted};opacity:.5;">Message #general</div>
+              <div style="display:flex;align-items:center;gap:4px;padding:3px 4px;border-radius:4px;">
+                <div style="width:16px;height:16px;border-radius:50%;overflow:hidden;flex-shrink:0;">${pfpHtml}</div>
+                <span style="font-size:8px;color:${textStrong};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${uName}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;padding:3px 4px;border-radius:4px;">
+                <div style="width:16px;height:16px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;"></div>
+                <span style="font-size:8px;color:#a78bfa;font-weight:600;">Knight</span>
               </div>
             </div>
           </div>
@@ -15181,7 +15205,7 @@ function buildProfileView(tab) {
       </div>`;
     }
 
-    // Build an appearance card
+    // Build an appearance card with accurate mini app preview
     function buildAppearanceCard(t) {
       const isActive = currentTheme===t.id;
       const isLocked = t.locked;
@@ -15190,53 +15214,61 @@ function buildProfileView(tab) {
       const bgCol = isActive ? 'rgba(254,248,61,.04)' : 'rgba(255,255,255,.015)';
       const txtCol = isActive ? '#fef83d' : '#fff';
       const mockDim = isLight ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.06)';
-      const mockDim2 = isLight ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.04)';
-      const mockText = isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.08)';
-      const mockText2 = isLight ? 'rgba(0,0,0,.14)' : 'rgba(255,255,255,.12)';
+      const mockDim2 = isLight ? 'rgba(0,0,0,.04)' : 'rgba(255,255,255,.03)';
+      const textMuted = isLight ? 'rgba(0,0,0,.25)' : 'rgba(255,255,255,.2)';
+      const textStrong = isLight ? 'rgba(0,0,0,.6)' : 'rgba(255,255,255,.6)';
       const clickAction = isLocked ? "buyAppearance('" + t.id + "'," + t.cost + ")" : "selectAppearancePreview('" + t.id + "')";
       const opac = isLocked ? 'opacity:.55;' : '';
       return `
-      <div onclick="${clickAction}" style="border:1.5px solid ${borderCol};border-radius:18px;overflow:hidden;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);background:${bgCol};${opac}position:relative;" onmouseover="if(!${isActive})this.style.borderColor='rgba(254,248,61,.15)';this.style.transform='translateY(-2px)'" onmouseout="if(!${isActive})this.style.borderColor='${borderCol}';this.style.transform=''">
-        <!-- Rich mini preview -->
-        <div style="height:105px;${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};display:flex;overflow:hidden;position:relative;border-radius:16px 16px 0 0;">
-          <!-- Mini sidebar -->
-          <div style="width:28px;background:${t.sidebar};border-right:1px solid ${t.border};padding:8px 5px;display:flex;flex-direction:column;gap:4px;">
-            <div style="height:4px;background:${t.accent};border-radius:3px;width:70%;opacity:.5;"></div>
-            <div style="height:4px;background:${mockDim};border-radius:3px;width:85%;"></div>
-            <div style="height:4px;background:${mockDim2};border-radius:3px;width:55%;"></div>
+      <div onclick="${clickAction}" style="border:1.5px solid ${borderCol};border-radius:16px;overflow:hidden;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);background:${bgCol};${opac}position:relative;" onmouseover="if(!${isActive})this.style.borderColor='rgba(254,248,61,.15)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.2)'" onmouseout="if(!${isActive})this.style.borderColor='${borderCol}';this.style.transform='';this.style.boxShadow=''">
+        <!-- Accurate mini app preview -->
+        <div style="height:130px;${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};display:flex;overflow:hidden;position:relative;border-radius:14px 14px 0 0;">
+          <!-- Server icons -->
+          <div style="width:20px;background:${isLight ? 'rgba(0,0,0,.03)' : 'rgba(0,0,0,.15)'};display:flex;flex-direction:column;align-items:center;padding:5px 0;gap:3px;">
+            <div style="width:14px;height:14px;border-radius:5px;background:${t.accent};opacity:.15;"></div>
+            <div style="width:8px;height:1px;background:${mockDim};"></div>
+            <div style="width:14px;height:14px;border-radius:50%;background:${mockDim};"></div>
+            <div style="width:14px;height:14px;border-radius:50%;background:${mockDim2};"></div>
           </div>
-          <!-- Mini chat area -->
-          <div style="flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:5px;background:${t.channel};">
-            <div style="display:flex;gap:5px;align-items:center;">
-              <div style="width:14px;height:14px;border-radius:50%;background:${mockDim};flex-shrink:0;"></div>
-              <div style="flex:1;">
-                <div style="height:3px;background:${t.accent};border-radius:3px;width:35%;margin-bottom:3px;opacity:.6;"></div>
-                <div style="height:3px;background:${mockText};border-radius:2px;width:65%;"></div>
+          <!-- Channel sidebar -->
+          <div style="width:58px;background:${t.sidebar};border-right:1px solid ${t.border};padding:6px 4px;display:flex;flex-direction:column;gap:1px;overflow:hidden;">
+            <div style="font-size:5px;font-weight:800;color:${textMuted};text-transform:uppercase;padding:2px 3px;margin-bottom:2px;">Bastion</div>
+            <div style="display:flex;align-items:center;gap:2px;padding:2px 3px;border-radius:3px;background:${isLight ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.06)'};"><span style="font-size:5px;color:${textMuted};">#</span><span style="font-size:5.5px;font-weight:600;color:${textStrong};">general</span></div>
+            <div style="display:flex;align-items:center;gap:2px;padding:2px 3px;"><span style="font-size:5px;color:${textMuted};">#</span><span style="font-size:5.5px;color:${textMuted};">off-topic</span></div>
+            <div style="display:flex;align-items:center;gap:2px;padding:2px 3px;"><span style="font-size:5px;color:${textMuted};">#</span><span style="font-size:5.5px;color:${textMuted};">media</span></div>
+          </div>
+          <!-- Chat area -->
+          <div style="flex:1;display:flex;flex-direction:column;background:${t.channel};overflow:hidden;">
+            <div style="height:16px;border-bottom:1px solid ${t.border};display:flex;align-items:center;padding:0 6px;"><span style="font-size:5.5px;font-weight:700;color:${textStrong};"># general</span></div>
+            <div style="flex:1;padding:5px 6px;display:flex;flex-direction:column;gap:4px;">
+              <div style="display:flex;gap:4px;align-items:flex-start;">
+                <div style="width:12px;height:12px;border-radius:50%;background:${t.accent}22;flex-shrink:0;"></div>
+                <div><div style="height:2px;background:${t.accent};border-radius:2px;width:22px;margin-bottom:2px;opacity:.6;"></div><div style="height:2px;background:${mockDim};border-radius:2px;width:40px;"></div></div>
+              </div>
+              <div style="display:flex;gap:4px;align-items:flex-start;">
+                <div style="width:12px;height:12px;border-radius:50%;background:${mockDim};flex-shrink:0;"></div>
+                <div><div style="height:2px;background:${textMuted};border-radius:2px;width:18px;margin-bottom:2px;"></div><div style="height:2px;background:${mockDim};border-radius:2px;width:35px;"></div></div>
+              </div>
+              <div style="display:flex;gap:4px;align-items:flex-start;">
+                <div style="width:12px;height:12px;border-radius:50%;background:rgba(140,100,220,.12);flex-shrink:0;"></div>
+                <div><div style="height:2px;background:rgba(167,139,250,.4);border-radius:2px;width:15px;margin-bottom:2px;"></div><div style="height:2px;background:${mockDim};border-radius:2px;width:30px;"></div></div>
               </div>
             </div>
-            <div style="display:flex;gap:5px;align-items:center;">
-              <div style="width:14px;height:14px;border-radius:50%;background:rgba(140,100,220,.12);flex-shrink:0;"></div>
-              <div style="flex:1;">
-                <div style="height:3px;background:${mockText2};border-radius:3px;width:28%;margin-bottom:3px;"></div>
-                <div style="height:3px;background:${mockDim};border-radius:2px;width:55%;"></div>
-              </div>
-            </div>
-            <div style="flex:1;"></div>
-            <div style="height:14px;background:${t.panel};border-radius:5px;border:1px solid ${t.border};"></div>
+            <div style="padding:0 5px 4px;"><div style="height:12px;background:${t.panel};border-radius:4px;border:1px solid ${t.border};"></div></div>
           </div>
-          ${isActive ? '<div style="position:absolute;top:8px;right:8px;background:rgba(254,248,61,.15);border:1px solid rgba(254,248,61,.25);border-radius:8px;padding:2px 8px;font-size:9px;font-weight:700;color:#fef83d;backdrop-filter:blur(8px);">Active</div>' : ''}
-          ${isLocked ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(1px);"><div style="font-size:20px;">🔒</div></div>' : ''}
+          ${isActive ? '<div style="position:absolute;top:6px;right:6px;background:rgba(254,248,61,.15);border:1px solid rgba(254,248,61,.25);border-radius:6px;padding:2px 7px;font-size:8px;font-weight:700;color:#fef83d;backdrop-filter:blur(8px);">Active</div>' : ''}
+          ${isLocked ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(1px);"><div style="font-size:18px;">🔒</div></div>' : ''}
         </div>
         <!-- Card footer -->
-        <div style="padding:12px 14px;display:flex;align-items:center;gap:10px;">
+        <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;">
           ${isActive ? '<div style="width:14px;height:14px;border-radius:50%;background:#fef83d;flex-shrink:0;box-shadow:0 0 8px rgba(254,248,61,.4);display:flex;align-items:center;justify-content:center;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#060810" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' : '<div style="width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.15);flex-shrink:0;"></div>'}
           <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:700;color:${txtCol};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.name}</div>
-            <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:1px;">${t.desc}</div>
+            <div style="font-size:12px;font-weight:700;color:${txtCol};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.name}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.desc}</div>
           </div>
-          ${t.free ? '<div style="font-size:9px;font-weight:700;color:rgba(62,207,110,.7);background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.12);border-radius:8px;padding:3px 8px;white-space:nowrap;">FREE</div>' : ''}
-          ${(!t.free && !isLocked) ? '<div style="font-size:9px;font-weight:700;color:rgba(62,207,110,.7);background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.12);border-radius:8px;padding:3px 8px;white-space:nowrap;">OWNED</div>' : ''}
-          ${isLocked ? '<div style="font-size:9px;font-weight:700;color:rgba(254,248,61,.6);background:rgba(254,248,61,.06);border:1px solid rgba(254,248,61,.1);border-radius:8px;padding:3px 8px;display:flex;align-items:center;gap:3px;white-space:nowrap;"><img src="/Onyx.png" style="width:10px;height:10px;object-fit:contain;">'+t.cost+'</div>' : ''}
+          ${t.free ? '<div style="font-size:8px;font-weight:700;color:rgba(62,207,110,.7);background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.12);border-radius:6px;padding:2px 7px;white-space:nowrap;">FREE</div>' : ''}
+          ${(!t.free && !isLocked) ? '<div style="font-size:8px;font-weight:700;color:rgba(62,207,110,.7);background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.12);border-radius:6px;padding:2px 7px;white-space:nowrap;">OWNED</div>' : ''}
+          ${isLocked ? '<div style="font-size:8px;font-weight:700;color:rgba(254,248,61,.6);background:rgba(254,248,61,.06);border:1px solid rgba(254,248,61,.1);border-radius:6px;padding:2px 7px;display:flex;align-items:center;gap:3px;white-space:nowrap;"><img src="/Onyx.png" style="width:9px;height:9px;object-fit:contain;">'+t.cost+'</div>' : ''}
         </div>
       </div>`;
     }
@@ -15267,7 +15299,7 @@ function buildProfileView(tab) {
       <!-- Default Appearances -->
       <div class="settings-section-title">DEFAULT APPEARANCES</div>
       <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:-12px;margin-bottom:16px;">Free appearances included with every account</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:32px;">
         ${defaultThemes.map(t => buildAppearanceCard(t)).join('')}
       </div>
 
@@ -15275,7 +15307,7 @@ function buildProfileView(tab) {
       <div class="settings-section-title">YOUR COLLECTION</div>
       ${hasOwnedThemes ? `
         <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:-12px;margin-bottom:16px;">Appearances you've unlocked from the Atelier</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:32px;">
           ${ownedThemes.map(t => buildAppearanceCard(t)).join('')}
         </div>
       ` : `
@@ -15291,7 +15323,7 @@ function buildProfileView(tab) {
       ${lockedThemes.length > 0 ? `
         <div class="settings-section-title">AVAILABLE IN SHOP</div>
         <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:-12px;margin-bottom:16px;">Purchase these appearances in the Atelier</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:20px;">
           ${lockedThemes.map(t => buildAppearanceCard(t)).join('')}
         </div>
       ` : ''}
@@ -22366,51 +22398,53 @@ function renderGameCollectionTab(main) {
       + '</div>';
   }
 
-  // ── Add Game inline dropdown ──
-  let addGameHtml = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:24px;">'
+  // ── Add Game — Electron-powered app detection with cover art ──
+  let addGameHtml = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">'
     + '<span style="font-size:13px;color:var(--muted);">Not seeing your game?</span>'
     + '<span style="font-size:13px;color:var(--accent);cursor:pointer;text-decoration:underline;font-weight:600;" onclick="_toggleInlineGamePicker()">Add it!</span>'
     + '</div>'
     + '<div id="inline-game-picker" style="display:none;margin-bottom:24px;">'
-    + '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">'
-    + '<div style="position:relative;flex:1;">'
-    + '<select id="inline-game-select" class="settings-input" style="width:100%;padding:10px 14px;font-size:13px;appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:32px;">'
-    + '<option value="">Select</option>'
-    + '</select>'
-    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);"><polyline points="6 9 12 15 18 9"/></svg>'
+    + '<div style="padding:16px;background:var(--panel);border:1px solid var(--border);border-radius:14px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">'
+    + '<div style="font-size:13px;font-weight:700;color:#fff;">Detected Apps</div>'
+    + '<button onclick="_refreshInlineDetectedApps()" style="background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;">Refresh</button>'
     + '</div>'
+    + '<div id="inline-detected-apps" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:12px;max-height:240px;overflow-y:auto;">'
+    + '<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--muted);font-size:12px;">Scanning...</div>'
     + '</div>'
-    + '<div style="display:flex;gap:8px;justify-content:flex-end;">'
-    + '<button class="btn-g" onclick="document.getElementById(\'inline-game-picker\').style.display=\'none\'" style="font-size:12px;padding:8px 16px;">Cancel</button>'
-    + '<button class="btn-a" onclick="_addGameFromInlinePicker()" style="font-size:12px;padding:8px 16px;">Add Game</button>'
+    + '<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">'
+    + '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Or search manually:</div>'
+    + '<div style="display:flex;gap:8px;">'
+    + '<input class="settings-input" id="inline-game-search" placeholder="Search games..." style="flex:1;font-size:12px;padding:8px 12px;" oninput="_filterInlineGameSearch(this.value)">'
+    + '<button class="btn-a" onclick="_addGameFromInlineSearch()" style="font-size:12px;padding:8px 16px;white-space:nowrap;">Add</button>'
+    + '</div>'
+    + '<div id="inline-game-search-results" style="display:none;margin-top:8px;max-height:160px;overflow-y:auto;"></div>'
+    + '</div>'
     + '</div>'
     + '</div>';
 
-  // ── Added Games section (card style with cover art) ──
+  // ── Added Games section (cover art grid) ──
   let gamesListHtml = '';
   if (games.length) {
     gamesListHtml = '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Your Games</div>'
       + '<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Cover art provided by <a href="https://www.igdb.com" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;font-weight:600;">IGDB</a>.</div>'
-      + '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:16px;">';
     games.forEach((g, i) => {
       const isPlaying = currentGame?.name === g.name;
-      const lastPlayedStr = isPlaying ? 'Now playing!' : (g.lastPlayed ? _formatLastPlayed(g.lastPlayed) : null);
       const cover = g.coverUrl || g.coverThumb || _getManualCover(g.name);
-      gamesListHtml += '<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:' + (isPlaying ? 'rgba(62,207,110,.04)' : 'var(--panel)') + ';border:1px solid ' + (isPlaying ? 'rgba(62,207,110,.15)' : 'var(--border)') + ';border-radius:12px;transition:all .15s;">'
-        + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:36px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML=\'<div style=width:36px;height:48px;border-radius:6px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;>' + (g.icon||'🎮') + '</div>\'">' : '<div style="width:36px;height:48px;border-radius:6px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">' + (g.icon||'🎮') + '</div>')
-        + '<div style="flex:1;min-width:0;">'
-        + '<div style="display:flex;align-items:center;gap:6px;">'
-        + '<span style="font-size:14px;font-weight:700;color:#fff;">' + escapeHTML(g.name) + '</span>'
-        + (g._igdb || cover ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="#60a5fa" style="flex-shrink:0;"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>' : '')
+      gamesListHtml += '<div style="position:relative;border-radius:12px;overflow:hidden;border:1.5px solid ' + (isPlaying ? 'rgba(62,207,110,.3)' : 'var(--border)') + ';background:var(--panel);transition:all .15s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.querySelector(\'.game-card-overlay\').style.opacity=\'1\'" onmouseout="this.style.transform=\'\';this.querySelector(\'.game-card-overlay\').style.opacity=\'0\'">'
+        + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block;" onerror="this.outerHTML=\'<div style=width:100%;aspect-ratio:3/4;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:32px;>' + (g.icon||'🎮') + '</div>\'">'
+          : '<div style="width:100%;aspect-ratio:3/4;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:32px;">' + (g.icon||'🎮') + '</div>')
+        + (isPlaying ? '<div style="position:absolute;top:6px;left:6px;background:rgba(62,207,110,.9);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.03em;">Playing</div>' : '')
+        + (g.hidden ? '<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);padding:3px;border-radius:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>' : '')
+        + '<div class="game-card-overlay" style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.3) 40%,transparent 100%);opacity:0;transition:opacity .15s;display:flex;flex-direction:column;justify-content:flex-end;padding:8px;">'
+        + '<div style="display:flex;gap:4px;justify-content:flex-end;margin-bottom:6px;">'
+        + '<button onclick="event.stopPropagation();_toggleGameVisibility(' + i + ',this)" title="Toggle visibility" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + (g.hidden ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>') + '</svg></button>'
+        + '<button onclick="event.stopPropagation();removeGameFromCollection(' + i + ')" title="Remove" style="background:rgba(248,113,113,.2);border:none;color:#f87171;width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
         + '</div>'
-        + (g.genre ? '<div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-top:1px;">' + escapeHTML(g.genre) + '</div>' : '')
-        + (lastPlayedStr ? '<div style="font-size:11px;color:' + (isPlaying ? 'rgba(62,207,110,.7)' : 'var(--muted)') + ';margin-top:2px;">' + (isPlaying ? 'Now playing!' : 'Last played <strong>' + lastPlayedStr + '</strong>') + '</div>' : '')
-        + '</div>'
-        + '<div style="display:flex;align-items:center;gap:6px;">'
-        + '<button onclick="_toggleGameVisibility(' + i + ',this)" title="Toggle profile visibility" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:' + (g.hidden ? 'rgba(255,255,255,.2)' : 'var(--muted)') + ';width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(255,255,255,.15)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.06)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + (g.hidden ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>') + '</svg></button>'
-        + '<button onclick="removeGameFromCollection(' + i + ')" title="Remove" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:var(--muted);width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(248,113,113,.2)\';this.style.color=\'var(--red)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.06)\';this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></button>'
-        + '</div>'
-        + '</div>';
+        + '<div style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(g.name) + '</div>'
+        + (g.genre ? '<div style="font-size:9px;color:rgba(255,255,255,.5);">' + escapeHTML(g.genre) + '</div>' : '')
+        + '</div></div>';
     });
     gamesListHtml += '</div>';
   } else {
@@ -22462,50 +22496,114 @@ function _toggleInlineGamePicker() {
   const isHidden = picker.style.display === 'none';
   picker.style.display = isHidden ? 'block' : 'none';
   if (isHidden) {
-    _populateInlineGameSelect();
+    _refreshInlineDetectedApps();
   }
 }
 
-async function _populateInlineGameSelect() {
-  const sel = document.getElementById('inline-game-select');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">Select</option>';
-  // Add KNOWN_GAMES + running processes
+async function _refreshInlineDetectedApps() {
+  const container = document.getElementById('inline-detected-apps');
+  if (!container) return;
   const owned = new Set((CU.gameCollection||[]).map(g => g.name.toLowerCase()));
-  // Add detected apps from Electron
+  let detectedApps = [];
+
+  // Detect running apps via Electron
   if (window.fortizedDesktop?.isDesktopApp) {
     try {
       const procs = await window.fortizedDesktop.getProcesses();
-      if (procs) {
-        const apps = _matchAllRunningApps(procs);
-        apps.forEach(a => {
-          if (!owned.has(a.name.toLowerCase())) {
-            const opt = document.createElement('option');
-            opt.value = a.name;
-            opt.textContent = a.name;
-            sel.appendChild(opt);
-          }
-        });
+      if (procs) detectedApps = _matchAllRunningApps(procs).filter(a => !owned.has(a.name.toLowerCase()));
+    } catch {}
+  }
+
+  // Enrich detected apps with IGDB cover art
+  const enrichedApps = [];
+  for (const app of detectedApps) {
+    let enriched = {...app, coverUrl: null, coverThumb: null};
+    const manual = _getManualCover(app.name);
+    if (manual) { enriched.coverUrl = manual; enriched.coverThumb = manual; }
+    else {
+      try {
+        const results = await _searchIGDB(app.name);
+        if (results.length > 0) {
+          enriched.coverUrl = results[0].coverUrl || null;
+          enriched.coverThumb = results[0].coverThumb || null;
+          enriched.genre = results[0].genre || 'App';
+        }
+      } catch {}
+    }
+    enrichedApps.push(enriched);
+  }
+
+  if (!enrichedApps.length && !window.fortizedDesktop?.isDesktopApp) {
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:12px;">'
+      + '<div style="font-size:24px;margin-bottom:8px;">🖥️</div>'
+      + '<div>Requires the <strong>Fortized Desktop</strong> app to detect running games.</div></div>';
+    return;
+  }
+  if (!enrichedApps.length) {
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:12px;">'
+      + '<div style="font-size:24px;margin-bottom:8px;">🔍</div>'
+      + '<div>No new apps detected. Try opening a game!</div></div>';
+    return;
+  }
+
+  container.innerHTML = enrichedApps.map(app => {
+    const cover = app.coverUrl || app.coverThumb;
+    return '<div onclick="_addDetectedGame(\'' + escapeHTML(app.name).replace(/'/g,"\\'") + '\')" style="cursor:pointer;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);transition:all .15s;background:var(--panel);" onmouseover="this.style.borderColor=\'rgba(62,207,110,.3)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.transform=\'\'">'
+      + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block;" onerror="this.outerHTML=\'<div style=width:100%;aspect-ratio:3/4;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:28px;>' + (app.icon||'🎮') + '</div>\'">'
+        : '<div style="width:100%;aspect-ratio:3/4;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:28px;">' + (app.icon||'🎮') + '</div>')
+      + '<div style="padding:6px 8px;"><div style="font-size:10px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(app.name) + '</div>'
+      + '<div style="font-size:9px;color:rgba(62,207,110,.6);font-weight:600;">+ Add</div></div></div>';
+  }).join('');
+}
+
+async function _addDetectedGame(name) {
+  const catalogEntry = GAME_CATALOG.find(g => g.name === name);
+  let cover = _getManualCover(name) || catalogEntry?.coverUrl || null;
+  let coverThumb = catalogEntry?.coverThumb || null;
+  let genre = catalogEntry?.genre || 'App';
+  if (!cover) {
+    try {
+      const results = await _searchIGDB(name);
+      if (results.length > 0) {
+        cover = results[0].coverUrl || null;
+        coverThumb = results[0].coverThumb || null;
+        genre = results[0].genre || genre;
       }
     } catch {}
   }
-  // Add catalog games not already in collection
-  GAME_CATALOG.forEach(g => {
-    if (!owned.has(g.name.toLowerCase())) {
-      const opt = document.createElement('option');
-      opt.value = g.name;
-      opt.textContent = g.name;
-      sel.appendChild(opt);
-    }
-  });
+  addGameToCollection(name, catalogEntry?.icon || '🎮', genre, cover, coverThumb);
+  // Refresh the picker to remove the added game
+  setTimeout(() => _refreshInlineDetectedApps(), 200);
 }
 
-function _addGameFromInlinePicker() {
-  const sel = document.getElementById('inline-game-select');
-  if (!sel || !sel.value) { toast('Select a game first', 'error'); return; }
-  const name = sel.value;
-  const catalogEntry = GAME_CATALOG.find(g => g.name === name);
-  addGameToCollection(name, catalogEntry?.icon || '\uD83C\uDFAE', catalogEntry?.genre || 'Game', catalogEntry?.coverUrl || null, catalogEntry?.coverThumb || null);
+function _filterInlineGameSearch(query) {
+  const container = document.getElementById('inline-game-search-results');
+  if (!container) return;
+  if (!query || query.length < 2) { container.style.display = 'none'; return; }
+  container.style.display = 'block';
+  const owned = new Set((CU.gameCollection||[]).map(g => g.name.toLowerCase()));
+  const q = query.toLowerCase();
+  const matches = GAME_CATALOG.filter(g => !owned.has(g.name.toLowerCase()) && g.name.toLowerCase().includes(q)).slice(0, 8);
+  if (!matches.length) {
+    container.innerHTML = '<div style="padding:8px;font-size:12px;color:var(--muted);">No matches. Press Add to add "' + escapeHTML(query) + '" as custom.</div>';
+    return;
+  }
+  container.innerHTML = matches.map(g => {
+    const cover = _getManualCover(g.name);
+    return '<div onclick="_addDetectedGame(\'' + escapeHTML(g.name).replace(/'/g,"\\'") + '\');document.getElementById(\'inline-game-search\').value=\'\';document.getElementById(\'inline-game-search-results\').style.display=\'none\'" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;transition:background .12s;" onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'\'">'
+      + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:28px;height:38px;border-radius:4px;object-fit:cover;flex-shrink:0;">' : '<div style="width:28px;height:38px;border-radius:4px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">' + (g.icon||'🎮') + '</div>')
+      + '<div><div style="font-size:12px;font-weight:600;color:#fff;">' + escapeHTML(g.name) + '</div>'
+      + '<div style="font-size:10px;color:var(--muted);">' + escapeHTML(g.genre||'Game') + '</div></div></div>';
+  }).join('');
+}
+
+function _addGameFromInlineSearch() {
+  const input = document.getElementById('inline-game-search');
+  if (!input || !input.value.trim()) { toast('Type a game name first', 'error'); return; }
+  const name = input.value.trim();
+  _addDetectedGame(name);
+  input.value = '';
+  document.getElementById('inline-game-search-results').style.display = 'none';
   document.getElementById('inline-game-picker').style.display = 'none';
 }
 

@@ -183,14 +183,24 @@ function createWindow() {
     backgroundColor: '#0c0f16',
     webPreferences: {
       preload: path.join(__dirname, 'electron-preload.js'),
-      contextIsolation: true,
+      contextIsolation: false,
       nodeIntegration: false,
+      sandbox: false,
     },
   });
 
-  // Load the web app
-  const serverPort = process.env.PORT || 3000;
-  mainWindow.loadURL(`http://localhost:${serverPort}/app`);
+  // Append "FortizedApp" to the User-Agent so the web app can detect the desktop client.
+  // We spoof a mainstream browser UA to avoid site compatibility issues, but KEEP
+  // "FortizedApp" and "Electron" markers so the web app can identify the desktop wrapper.
+  const defaultUA = mainWindow.webContents.getUserAgent();
+  const fortizedUA = defaultUA + ' FortizedApp';
+  mainWindow.webContents.setUserAgent(fortizedUA);
+
+  // Load the web app — use production URL, or localhost in dev
+  const appUrl = process.env.FORTIZED_URL || (process.env.NODE_ENV === 'development'
+    ? `http://localhost:${process.env.PORT || 3000}/app`
+    : 'https://fortized.com/app');
+  mainWindow.loadURL(appUrl);
 
   mainWindow.on('closed', () => { mainWindow = null; });
   mainWindow.on('close', (e) => {
@@ -226,13 +236,31 @@ function setupIPC() {
     return await detectRunningGames();
   });
 
-  // Window controls
+  // Window controls (from window:* events)
   ipcMain.on('window:minimize', () => mainWindow?.minimize());
   ipcMain.on('window:maximize', () => {
     if (mainWindow?.isMaximized()) mainWindow.unmaximize();
     else mainWindow?.maximize();
   });
   ipcMain.on('window:close', () => mainWindow?.close());
+
+  // Window controls from titlebar buttons (fortized-window events)
+  ipcMain.on('fortized-window', (event, action) => {
+    if (!mainWindow) return;
+    switch (action) {
+      case 'minimize': mainWindow.minimize(); break;
+      case 'maximize':
+        if (mainWindow.isMaximized()) mainWindow.restore();
+        else mainWindow.maximize();
+        break;
+      case 'close': mainWindow.close(); break;
+    }
+  });
+
+  // Notification badge from preload
+  ipcMain.on('fortized-notification', () => {
+    // Could implement badge/tray notification count here
+  });
 
   // Get raw process list (for renderer-side matching)
   ipcMain.handle('get-processes', async () => {

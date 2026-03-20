@@ -410,6 +410,9 @@ io.on('connection', (socket) => {
       username,
       pfp: data.pfp || null,
       displayName: data.displayName || null,
+      displayFont: data.displayFont || null,
+      displayEffect: data.displayEffect || null,
+      displayColor: data.displayColor || null,
       field: data.field || 'pfp',
     });
   });

@@ -1802,7 +1802,7 @@ body.is-desktop-app .notif-panel{top:0;}
 .ftz-embed-avatar img{width:100%;height:100%;object-fit:cover;}
 /* GIF variant */
 .ftz-embed-gif{margin:8px 0;max-width:400px;border-radius:12px;overflow:hidden;display:inline-block;position:relative;cursor:pointer;}
-.ftz-embed-gif img{width:100%;max-height:360px;object-fit:contain;display:block;}
+.ftz-embed-gif img{width:100%;max-height:360px;object-fit:contain;display:block;image-rendering:auto;-webkit-image-smoothing:high;}
 .ftz-embed-gif .chat-gif-fav-btn{position:absolute;top:6px;right:6px;}
 /* Clickable embed cursor */
 .ftz-embed[onclick],.ftz-embed a{cursor:pointer;}
@@ -6263,7 +6263,11 @@ async function renderDMSidebar(scroll) {
         const avEl = document.getElementById('dm-av-'+f);
         if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
         const dnEl = document.getElementById('dm-dn-'+f);
-        if (dnEl) dnEl.textContent = u.displayName || f;
+        if (dnEl) {
+          dnEl.textContent = u.displayName || f;
+          if (u.displayFont && u.displayFont !== 'default') dnEl.style.fontFamily = _getDisplayFontCSS(u.displayFont);
+          if (u.displayColor && u.displayColor !== '#fff') dnEl.style.cssText += _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor);
+        }
         // Use live Socket.IO presence, fallback to DB status only if Socket.IO unavailable
         const liveSt = _dmPresenceMap[f]?.status;
         const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : (u.status || 'offline'));
@@ -16089,7 +16093,7 @@ async function viewUserProfile(username) {
         <!-- Board tab: widgets, games, general info -->
         <div id="up-tab-activity">
           <div class="up-right-section" id="up-widgets-container"></div>
-          ${isOwn ? `<div id="up-widget-manager-inline" style="margin-top:8px;"></div>` : ''}
+          ${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;text-align:center;"><button onclick="_openAddWidgetPanel()" style="padding:8px 20px;background:rgba(255,249,62,.06);border:1.5px solid rgba(255,249,62,.12);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:6px;" onmouseover="this.style.background='rgba(255,249,62,.1)';this.style.borderColor='rgba(255,249,62,.2)'" onmouseout="this.style.background='rgba(255,249,62,.06)';this.style.borderColor='rgba(255,249,62,.12)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Widgets</button></div>` : ''}
           ${games.length && !(u.profileWidgets||[]).some(w=>w.enabled && w.id==='game_collection') ? `<div class="up-right-section">
             <div class="up-right-section-title">Game Collection</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;">
@@ -16117,8 +16121,7 @@ async function viewUserProfile(username) {
   // Render profile widgets if the user has any enabled
   const widgetsContainer = document.getElementById('up-widgets-container');
   if (widgetsContainer) renderProfileWidgetsOnCard(u, widgetsContainer);
-  // Render inline widget manager for own profile
-  if (isOwn) _renderInlineWidgetManager();
+  // Widget manager is the "Add Widgets" button (already in HTML above)
 }
 
 function _upSwitchTab(tabEl, panelId) {
@@ -21125,11 +21128,11 @@ function searchGiphy(q, targetInputId) {
       const gifs = data.data?.data || data.data || [];
       if (!gifs.length) { results.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">No GIFs found</div>'; return; }
       results.innerHTML = gifs.map(gif => {
-        const thumb = _klipyGifUrl(gif, 'md') || _klipyGifUrl(gif, 'sm') || _klipyGifUrl(gif, 'xs');
+        const thumb = _klipyGifUrl(gif, 'hd') || _klipyGifUrl(gif, 'md') || _klipyGifUrl(gif, 'sm') || _klipyGifUrl(gif, 'xs');
         const fullUrl = _klipyGifUrl(gif, 'hd') || _klipyGifUrl(gif, 'md') || thumb;
         const gid = gif.slug || gif.id || '';
-        return `<div style="border-radius:10px;overflow:hidden;cursor:pointer;aspect-ratio:1;background:var(--panel2);" onclick="sendGifDirectly('${escapeHTML(String(gid))}','${targetInputId}','${escapeHTML(fullUrl)}')">
-          <img src="${escapeHTML(thumb)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+        return `<div style="border-radius:10px;overflow:hidden;cursor:pointer;aspect-ratio:4/3;background:var(--panel2);" onclick="sendGifDirectly('${escapeHTML(String(gid))}','${targetInputId}','${escapeHTML(fullUrl)}')">
+          <img src="${escapeHTML(thumb)}" style="width:100%;height:100%;object-fit:cover;image-rendering:auto;" loading="lazy">
         </div>`;
       }).join('');
     } catch {
@@ -21988,103 +21991,126 @@ function _openDisplayNameStyleModal() {
   const curFont = CU.displayFont || 'default';
   const curEffect = CU.displayEffect || 'solid';
   const curColor = CU.displayColor || '#fff';
+  const dn = CU.displayName || CU.username;
+  const avHtml = CU.pfp
+    ? `<img src="${escapeHTML(CU.pfp)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+    : `<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-weight:800;color:#060810;border-radius:50%;">${dn[0].toUpperCase()}</div>`;
+  const profileTheme = (CU.radiancePlus && new Date(CU.radiancePlus) > new Date()) ? CU.profileTheme : null;
 
   document.querySelector('.dns-modal-overlay')?.remove();
   const overlay = document.createElement('div');
   overlay.className = 'dns-modal-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);animation:fadeIn .15s;';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 
-  overlay.innerHTML = `<div style="background:var(--panel,#161a23);border:1px solid rgba(255,255,255,.06);border-radius:20px;width:92%;max-width:720px;max-height:85vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5);display:flex;">
+  overlay.innerHTML = `<div style="background:var(--panel,#161a23);border:1px solid rgba(255,255,255,.06);border-radius:20px;width:92%;max-width:800px;max-height:88vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);display:flex;">
     <!-- Left: Controls -->
-    <div style="flex:1;padding:28px 24px;overflow-y:auto;">
-      <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:24px;">Change Display Name Style</div>
+    <div style="flex:1;padding:28px 24px;overflow-y:auto;min-width:0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+        <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:#fff;">Display Name Style</div>
+        <button onclick="this.closest('.dns-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.4);cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
+      </div>
 
       <!-- Choose Font -->
-      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:10px;">Choose Font</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;" id="dns-font-grid">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Font</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:20px;" id="dns-font-grid">
         ${DISPLAY_NAME_FONTS.map(f => `
-          <div class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')" style="padding:12px 8px;border-radius:10px;border:1.5px solid ${curFont===f.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curFont===f.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;text-align:center;transition:all .12s;" onmouseover="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.06)'">
-            <div style="font-family:${f.css};font-weight:${f.weight};font-size:20px;color:#fff;margin-bottom:4px;">${f.sample}</div>
+          <div class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')" style="padding:10px 6px;border-radius:10px;border:1.5px solid ${curFont===f.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curFont===f.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;text-align:center;transition:all .12s;" onmouseover="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.06)'">
+            <div style="font-family:${f.css};font-weight:${f.weight};font-size:18px;color:#fff;margin-bottom:2px;">${f.sample}</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.3);font-weight:600;">${f.name}</div>
           </div>`).join('')}
       </div>
 
       <!-- Choose Effect -->
-      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:10px;">Choose Effect</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;" id="dns-effect-grid">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Effect</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;" id="dns-effect-grid">
         ${DISPLAY_NAME_EFFECTS.map(e => `
-          <div class="dns-effect-tile ${curEffect===e.id?'sel':''}" data-effect="${e.id}" onclick="_dnSelectEffect('${e.id}')" style="padding:8px 18px;border-radius:10px;border:1.5px solid ${curEffect===e.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curEffect===e.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;font-size:13px;font-weight:600;transition:all .12s;${_getDisplayEffectCSS(e.id,curColor)}" onmouseover="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.06)'">${e.name}</div>`).join('')}
+          <div class="dns-effect-tile ${curEffect===e.id?'sel':''}" data-effect="${e.id}" onclick="_dnSelectEffect('${e.id}')" style="padding:7px 16px;border-radius:10px;border:1.5px solid ${curEffect===e.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curEffect===e.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;font-size:12px;font-weight:600;transition:all .12s;${_getDisplayEffectCSS(e.id,curColor)}" onmouseover="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.06)'">${e.name}</div>`).join('')}
       </div>
 
       <!-- Choose Colour -->
-      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:10px;">Choose Colour</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;" id="dns-color-grid">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Colour</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="dns-color-grid">
         ${DISPLAY_NAME_COLORS.map(c => `
-          <div class="dns-color-tile" data-color="${c}" onclick="_dnSelectColor('${c}')" style="width:28px;height:28px;border-radius:8px;background:${c};cursor:pointer;border:2px solid ${curColor===c?'#fff':'transparent'};transition:all .1s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform=''">
-            ${curColor===c ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+          <div class="dns-color-tile" data-color="${c}" onclick="_dnSelectColor('${c}')" style="width:26px;height:26px;border-radius:7px;background:${c};cursor:pointer;border:2px solid ${curColor===c?'#fff':'transparent'};transition:all .1s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform=''">
+            ${curColor===c ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
           </div>`).join('')}
       </div>
-
-      <!-- Custom colour picker -->
-      <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <div style="position:relative;width:28px;height:28px;border-radius:8px;overflow:hidden;border:2px solid rgba(255,255,255,.15);background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red);">
-            <input type="color" value="${curColor}" style="position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);cursor:pointer;opacity:0;" oninput="_dnSelectColor(this.value)">
-          </div>
-          <span style="font-size:11.5px;color:rgba(255,255,255,.35);font-weight:600;">Custom colour</span>
-        </label>
-      </div>
-
-      <div style="font-size:10.5px;color:rgba(255,255,255,.2);line-height:1.5;margin-top:12px;">Your display name style is applied across all of Fortized — chats, profile, nameplates, and more.</div>
+      <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;margin-top:4px;">
+        <div style="position:relative;width:26px;height:26px;border-radius:7px;overflow:hidden;border:2px solid rgba(255,255,255,.15);background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red);">
+          <input type="color" value="${curColor}" style="position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);cursor:pointer;opacity:0;" oninput="_dnSelectColor(this.value)">
+        </div>
+        <span style="font-size:11px;color:rgba(255,255,255,.3);font-weight:600;">Custom</span>
+      </label>
     </div>
 
-    <!-- Right: Preview -->
-    <div style="width:300px;background:rgba(0,0,0,.15);border-left:1px solid rgba(255,255,255,.04);padding:28px 20px;display:flex;flex-direction:column;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);">Preview</div>
-        <button onclick="this.closest('.dns-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
-      </div>
+    <!-- Right: Real Previews -->
+    <div style="width:320px;background:rgba(0,0,0,.2);border-left:1px solid rgba(255,255,255,.04);padding:20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);">Live Preview</div>
 
-      <!-- Profile card preview -->
-      <div style="background:var(--accent);border-radius:14px;overflow:hidden;margin-bottom:16px;">
-        <div style="height:80px;display:flex;align-items:center;justify-content:center;">
-          <div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;color:#060810;">Fortized</div>
+      <!-- 1: Profile Card Preview (mini replica) -->
+      <div style="border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:var(--panel,#161a23);">
+        <div style="height:60px;background:${profileTheme ? `linear-gradient(135deg,${profileTheme.color1}66,${profileTheme.color2}44)` : 'linear-gradient(135deg,#1a1a2e,#0f3460)'};position:relative;">
+          ${CU.banner ? `<img src="${escapeHTML(CU.banner)}" style="width:100%;height:100%;object-fit:cover;">` : ''}
+          ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.6;"></div>` : ''}
         </div>
-        <div style="background:var(--panel);padding:12px 14px;border-radius:0 0 14px 14px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;">${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-weight:800;color:#060810;font-size:14px;">'+(CU.displayName||CU.username)[0].toUpperCase()+'</div>'}</div>
-            <div>
-              <div id="dns-preview-name" style="font-size:14px;font-weight:700;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(CU.displayName||CU.username)}</div>
-              <div style="font-size:10px;color:rgba(255,255,255,.3);">@${escapeHTML(CU.username)}${CU.pronouns ? ' &middot; '+escapeHTML(CU.pronouns) : ''}</div>
+        <div style="padding:0 14px 14px;margin-top:-20px;position:relative;">
+          <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:8px;">
+            <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:3px solid var(--panel,#161a23);flex-shrink:0;background:var(--panel);">${avHtml}</div>
+            <div style="padding-bottom:4px;">
+              <div id="dns-preview-name" style="font-size:14px;font-weight:700;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</div>
+              <div style="font-size:9.5px;color:rgba(255,255,255,.25);">@${escapeHTML(CU.username)}${CU.pronouns ? ' &middot; '+escapeHTML(CU.pronouns) : ''}</div>
             </div>
           </div>
-
-          <!-- Chat message preview -->
-          <div style="background:rgba(255,255,255,.02);border-radius:10px;padding:10px 12px;margin-top:8px;">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-              <span id="dns-preview-chat-name" style="font-size:12px;font-weight:700;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(CU.displayName||CU.username)}</span>
-              <span style="font-size:9px;color:rgba(255,255,255,.2);">08:33</span>
-            </div>
-            <div style="font-size:12px;color:rgba(255,255,255,.5);">does anyone read this?</div>
+          <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:100px;">
+            <span style="width:7px;height:7px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px rgba(62,207,110,.4);"></span>
+            <span style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600;">Online</span>
           </div>
         </div>
       </div>
 
-      <!-- Nameplate preview -->
-      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
-        <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--panel2);flex-shrink:0;">${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-family:Syne,sans-serif;font-weight:800;color:#060810;">'+(CU.displayName||CU.username)[0].toUpperCase()+'</div>'}</div>
-        <div style="flex:1;min-width:0;">
-          <div id="dns-preview-nameplate" style="font-family:Syne,sans-serif;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(CU.displayName||CU.username)}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.25);">@${escapeHTML(CU.username)}</div>
+      <!-- 2: Chat Message Preview -->
+      <div style="border-radius:12px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.015);padding:10px 12px;">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.2);margin-bottom:8px;">Chat Message</div>
+        <div style="display:flex;gap:10px;">
+          <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;">${avHtml}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:3px;">
+              <span id="dns-preview-chat-name" style="font-size:12.5px;font-weight:700;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</span>
+              <span style="font-size:9px;color:rgba(255,255,255,.15);">Today at 20:33</span>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.45;">hey, has anyone tried this new game?</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3: Member List / Nameplate Preview -->
+      <div style="border-radius:12px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.015);padding:10px 12px;">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.2);margin-bottom:8px;">Member List</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.02);">
+          <div style="position:relative;width:30px;height:30px;flex-shrink:0;">
+            <div style="width:30px;height:30px;border-radius:50%;overflow:hidden;">${avHtml}</div>
+            <span style="position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:#3ecf6e;border:2px solid rgba(12,14,24,.98);"></span>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div id="dns-preview-nameplate" style="font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</div>
+          </div>
+        </div>
+        <!-- Second member for context -->
+        <div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;margin-top:4px;opacity:.35;">
+          <div style="position:relative;width:30px;height:30px;flex-shrink:0;">
+            <div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(255,255,255,.3);">A</div>
+            <span style="position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:#999;border:2px solid rgba(12,14,24,.98);"></span>
+          </div>
+          <div style="flex:1;"><div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.4);">AnotherUser</div></div>
         </div>
       </div>
 
       <div style="flex:1;"></div>
-
-      <!-- Bottom actions -->
-      <div style="display:flex;gap:10px;">
-        <button onclick="_dnSurpriseMe()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.6);font-family:Syne,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">🎲 Surprise Me</button>
-        <button onclick="_dnApplyStyle()" style="flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:Syne,sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .12s;" onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter=''">Apply</button>
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button onclick="_dnSurpriseMe()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-family:Syne,sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg> Randomise</button>
+        <button onclick="_dnApplyStyle()" style="flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:Syne,sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .12s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">Apply Style</button>
       </div>
     </div>
   </div>`;
@@ -22164,9 +22190,18 @@ async function _dnApplyStyle() {
   CU.displayFont = _dnTempFont || CU.displayFont || 'default';
   CU.displayEffect = _dnTempEffect || CU.displayEffect || 'solid';
   CU.displayColor = _dnTempColor || CU.displayColor || '#fff';
-  await saveUser();
+  await saveUser(true);
   applyRadianceFont();
   updateUserbar();
+  // Broadcast style change to other users via Socket.IO
+  if (typeof FortizedSocial !== 'undefined' && FortizedSocial._socket) {
+    FortizedSocial._socket.emit('profile:update', {
+      displayFont: CU.displayFont,
+      displayEffect: CU.displayEffect,
+      displayColor: CU.displayColor,
+      displayName: CU.displayName || CU.username,
+    });
+  }
   document.querySelector('.dns-modal-overlay')?.remove();
   buildProfileView('myprofile');
   toast('Display name style updated!', 'success');
@@ -23363,31 +23398,53 @@ function _openAddWidgetPanel() {
 
   let cardsHtml = '';
 
-  // Standard widget definitions
+  // Build widget cards that look like real mini-widgets
   PROFILE_WIDGET_DEFS.forEach(def => {
     const wState = widgets.find(w => w.id === def.id);
     const isOn = wState?.enabled;
 
-    // Get cover image for favourite game / games rotation cards
-    let coverImg = '';
-    if (def.id === 'favourite_game' && games.length) {
-      const fg = games[0];
-      coverImg = fg.coverUrl || fg.coverThumb || _getManualCover(fg.name) || '';
+    // Mini-preview content based on widget type
+    let previewHtml = '';
+    if (def.id === 'spotify') {
+      previewHtml = `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(29,185,84,.06);border:1px solid rgba(29,185,84,.12);border-radius:8px;margin-top:8px;">
+        <div style="width:28px;height:28px;border-radius:6px;background:rgba(29,185,84,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_WIDGET_SVGS.spotify.replace('currentColor','#1DB954')}</div>
+        <div style="flex:1;min-width:0;"><div style="width:60%;height:6px;border-radius:3px;background:rgba(255,255,255,.08);"></div><div style="width:40%;height:5px;border-radius:3px;background:rgba(255,255,255,.05);margin-top:4px;"></div></div>
+      </div>`;
+    } else if (def.id === 'games_rotation') {
+      previewHtml = `<div style="display:flex;gap:6px;margin-top:8px;overflow:hidden;">${[1,2,3].map(() => `<div style="width:40px;height:52px;border-radius:6px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.1);flex-shrink:0;"></div>`).join('')}</div>`;
+    } else if (def.id === 'game_collection') {
+      previewHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px;">${[1,2,3,4].map(() => `<div style="aspect-ratio:3/4;border-radius:5px;background:rgba(62,207,110,.06);border:1px solid rgba(62,207,110,.08);"></div>`).join('')}</div>`;
+    } else if (def.id === 'favourite_game') {
+      const fgCover = games.length ? (games[0].coverUrl || _getManualCover(games[0].name)) : null;
+      previewHtml = `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px;background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.1);border-radius:8px;">
+        ${fgCover ? `<img src="${escapeHTML(fgCover)}" style="width:28px;height:38px;border-radius:5px;object-fit:cover;" onerror="this.style.display='none'">` : `<div style="width:28px;height:38px;border-radius:5px;background:rgba(245,158,11,.1);"></div>`}
+        <div style="flex:1;"><div style="width:50%;height:6px;border-radius:3px;background:rgba(255,255,255,.08);"></div><div style="width:30%;height:5px;border-radius:3px;background:rgba(255,255,255,.05);margin-top:3px;"></div></div>
+      </div>`;
+    } else if (def.id === 'primary_bastion') {
+      previewHtml = `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px;background:rgba(167,139,250,.04);border:1px solid rgba(167,139,250,.1);border-radius:8px;">
+        <div style="width:28px;height:28px;border-radius:8px;background:rgba(167,139,250,.1);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">🏰</div>
+        <div style="flex:1;"><div style="width:60%;height:6px;border-radius:3px;background:rgba(255,255,255,.08);"></div><div style="width:35%;height:5px;border-radius:3px;background:rgba(255,255,255,.05);margin-top:3px;"></div></div>
+      </div>`;
+    } else if (def.id === 'want_to_play') {
+      previewHtml = `<div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">${[1,2].map(() => `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(244,114,182,.04);border:1px solid rgba(244,114,182,.08);border-radius:6px;"><div style="width:20px;height:26px;border-radius:4px;background:rgba(244,114,182,.1);flex-shrink:0;"></div><div style="width:50%;height:5px;border-radius:3px;background:rgba(255,255,255,.06);"></div></div>`).join('')}</div>`;
+    } else if (def.id === 'player_archetype') {
+      previewHtml = `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">${['Strategist','Explorer','Competitive'].map(t => `<span style="font-size:9px;padding:3px 8px;border-radius:6px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.12);color:rgba(251,191,36,.6);font-weight:600;">${t}</span>`).join('')}</div>`;
     }
 
-    cardsHtml += `<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(255,255,255,.02);border:1.5px solid ${isOn ? def.color+'33' : 'rgba(255,255,255,.06)'};border-radius:14px;transition:all .18s;cursor:pointer;${isOn ? 'box-shadow:0 0 0 1px '+def.color+'11;' : ''}" onmouseover="this.style.borderColor='rgba(255,255,255,.12)'" onmouseout="this.style.borderColor='${isOn ? def.color+'33' : 'rgba(255,255,255,.06)'}'" onclick="${isOn ? `toggleProfileWidget('${def.id}',null);setTimeout(()=>_openAddWidgetPanel(),200)` : `_addWidgetFromPanel('${def.id}');setTimeout(()=>_openAddWidgetPanel(),200)`}">
-      ${coverImg ? `<img src="${escapeHTML(coverImg)}" style="width:52px;height:68px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.06);" onerror="this.style.display='none'">` : `<div style="width:44px;height:44px;border-radius:12px;background:${def.color}12;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid ${def.color}20;">${def.icon}</div>`}
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    cardsHtml += `<div class="pw-widget-card" style="padding:16px;background:${isOn ? def.color+'08' : 'rgba(255,255,255,.02)'};border:1.5px solid ${isOn ? def.color+'30' : 'rgba(255,255,255,.06)'};border-radius:14px;transition:all .2s;cursor:pointer;${isOn ? `box-shadow:inset 0 0 0 1px ${def.color}08;` : ''}" onmouseover="this.style.borderColor='${def.color}50';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='${isOn ? def.color+'30' : 'rgba(255,255,255,.06)'}';this.style.transform='';this.style.boxShadow='${isOn ? `inset 0 0 0 1px ${def.color}08` : 'none'}'" onclick="${isOn ? `toggleProfileWidget('${def.id}',null);setTimeout(()=>_openAddWidgetPanel(),250)` : `_addWidgetFromPanel('${def.id}');setTimeout(()=>_openAddWidgetPanel(),250)`}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:${def.color}15;display:flex;align-items:center;justify-content:center;color:${def.color};border:1px solid ${def.color}20;">${def.icon}</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:#fff;">${def.label}</div>
+            <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:1px;">${def.desc}</div>
           </div>
-          <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:#fff;">${def.label}</div>
         </div>
+        ${isOn
+          ? `<span style="font-size:9px;font-weight:700;color:#3ecf6e;background:rgba(62,207,110,.1);padding:4px 10px;border-radius:6px;letter-spacing:.03em;text-transform:uppercase;">Active</span>`
+          : `<span style="font-size:9px;font-weight:700;color:rgba(255,255,255,.25);background:rgba(255,255,255,.04);padding:4px 10px;border-radius:6px;letter-spacing:.03em;text-transform:uppercase;">Add</span>`}
       </div>
-      ${isOn
-        ? `<span style="font-size:10px;font-weight:700;color:#3ecf6e;background:rgba(62,207,110,.1);padding:4px 10px;border-radius:6px;">Active</span>`
-        : ''}
+      ${previewHtml}
     </div>`;
   });
 
@@ -23395,14 +23452,17 @@ function _openAddWidgetPanel() {
   const overlay = document.createElement('div');
   overlay.className = 'pw-add-widget-modal-overlay';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  overlay.innerHTML = `<div class="pw-add-widget-modal" style="max-width:480px;width:92%;max-height:85vh;overflow-y:auto;">
+  overlay.innerHTML = `<div class="pw-add-widget-modal" style="max-width:520px;width:92%;max-height:85vh;overflow-y:auto;">
     <div class="pwm-header" style="position:sticky;top:0;z-index:2;background:var(--panel,rgba(16,18,28,.98));backdrop-filter:blur(20px);padding:20px 24px 16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <h3 style="margin:0;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">Add Profile Widget</h3>
+        <div>
+          <h3 style="margin:0;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">Add Widgets</h3>
+          <p style="margin:4px 0 0;font-size:11.5px;color:rgba(255,255,255,.3);">Choose widgets to display on your profile</p>
+        </div>
         <button onclick="this.closest('.pw-add-widget-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.4);cursor:pointer;width:34px;height:34px;display:flex;align-items:center;justify-content:center;transition:all .12s;font-size:16px;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:12px;padding:4px 20px 24px;">
+    <div style="display:flex;flex-direction:column;gap:10px;padding:4px 20px 24px;">
       ${cardsHtml}
     </div>
   </div>`;
@@ -23448,52 +23508,6 @@ async function _addWidgetFromPanel(widgetId) {
 
 // Legacy alias
 function _openAddWidgetModal() { _openAddWidgetPanel(); }
-
-// Inline widget manager rendered directly inside the profile card Board tab
-function _renderInlineWidgetManager() {
-  const container = document.getElementById('up-widget-manager-inline');
-  if (!container) return;
-  const widgets = _getProfileWidgets();
-  const enabledIds = widgets.filter(w => w.enabled).map(w => w.id);
-
-  let html = `<div style="border-top:1px solid rgba(255,255,255,.04);padding-top:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.04em;">Manage Widgets</div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:6px;">`;
-
-  PROFILE_WIDGET_DEFS.forEach(def => {
-    const isOn = enabledIds.includes(def.id);
-    html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,.02);border:1px solid ${isOn ? def.color+'33' : 'rgba(255,255,255,.04)'};border-radius:10px;transition:all .15s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(255,255,255,.1)'" onmouseout="this.style.borderColor='${isOn ? def.color+'33' : 'rgba(255,255,255,.04)'}'" onclick="_toggleInlineWidget('${def.id}')">
-      <div style="width:30px;height:30px;border-radius:8px;background:${def.color}12;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${def.color};">${def.icon}</div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.7);">${def.label}</div>
-        <div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-top:1px;">${def.desc}</div>
-      </div>
-      <div style="width:36px;height:20px;border-radius:10px;background:${isOn ? def.color : 'rgba(255,255,255,.08)'};transition:all .2s;position:relative;">
-        <div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;${isOn ? 'right:2px;' : 'left:2px;'}transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
-      </div>
-    </div>`;
-  });
-
-  html += `</div></div>`;
-  container.innerHTML = html;
-}
-
-async function _toggleInlineWidget(widgetId) {
-  const widgets = _getProfileWidgets();
-  let w = widgets.find(w => w.id === widgetId);
-  if (!w) { w = {id:widgetId,enabled:false,config:{}}; widgets.push(w); }
-  w.enabled = !w.enabled;
-  if (!w.enabled) w.config = {};
-  _setProfileWidgets(widgets);
-  await saveUser();
-  // Re-render widgets and inline manager
-  const wc = document.getElementById('up-widgets-container');
-  if (wc) renderProfileWidgetsOnCard(CU, wc);
-  _renderInlineWidgetManager();
-  toast(w.enabled ? 'Widget added' : 'Widget removed', 'success');
-}
 
 async function _addWidgetFromModal(widgetId) {
   const widgets = _getProfileWidgets();
@@ -24902,12 +24916,12 @@ function renderGiphyResults(gifs, inputId) {
     return;
   }
   grid.innerHTML = gifs.map(g => {
-    const thumb = _klipyGifUrl(g, 'md') || _klipyGifUrl(g, 'sm') || _klipyGifUrl(g, 'xs');
+    const thumb = _klipyGifUrl(g, 'hd') || _klipyGifUrl(g, 'md') || _klipyGifUrl(g, 'sm') || _klipyGifUrl(g, 'xs');
     const fullUrl = _klipyGifUrl(g, 'hd') || _klipyGifUrl(g, 'md') || thumb;
     const gid = g.slug || g.id || ('klipy-' + Math.random().toString(36).slice(2,8));
     if (!thumb && !fullUrl) return '';
     return `<div class="gif-card" data-id="${escapeHTML(String(gid))}" data-url="${escapeHTML(fullUrl)}" data-input="${escapeHTML(inputId)}" style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);break-inside:avoid;margin-bottom:8px;transition:all .2s cubic-bezier(.22,1,.36,1);">
-      <img src="${escapeHTML(thumb)}" style="width:100%;display:block;border-radius:9px;" loading="lazy" draggable="false">
+      <img src="${escapeHTML(thumb)}" style="width:100%;display:block;border-radius:9px;image-rendering:auto;" loading="lazy" draggable="false">
       <div class="gif-hover-overlay" style="position:absolute;inset:0;opacity:0;transition:.18s;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 45%);display:flex;align-items:flex-end;justify-content:space-between;padding:10px;pointer-events:none;border-radius:10px;">
         <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,.6);max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(g.title||'')}</div>
       </div>

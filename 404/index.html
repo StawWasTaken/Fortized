@@ -195,19 +195,18 @@
             </div>
         </div>
     </div>
+  </div>
 
-    <script>
-        // Track mouse for spotlight effect
-        const spotlight = document.getElementById('spotlight');
-        window.addEventListener('mousemove', e => {
-            const x = (e.clientX / window.innerWidth) * 100;
-            const y = (e.clientY / window.innerHeight) * 100;
-            spotlight.style.setProperty('--x', `${x}%`);
-            spotlight.style.setProperty('--y', `${y}%`);
-        });
+  <!-- Footer -->
+  <div class="error-footer">
+    <p>Lost? <a href="/support">Contact support</a> &middot; <a href="/legal">Legal</a></p>
+  </div>
+</div>
 
-        // Set path display
-        document.getElementById('path-display').textContent = window.location.pathname;
-    </script>
+<script>
+  // Show the attempted path
+  var pathEl = document.getElementById('error-path');
+  if (pathEl) pathEl.textContent = window.location.pathname;
+</script>
 </body>
 </html>

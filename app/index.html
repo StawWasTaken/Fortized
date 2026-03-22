@@ -15260,7 +15260,7 @@ function buildProfileView(tab) {
         ${[
           {label:'Privacy Policy', url:'/privacy', desc:'How we handle your data and privacy', color:'62,207,110'},
           {label:'Terms of Service', url:'/terms', desc:'Our terms and community guidelines', color:'167,139,250'},
-          {label:'Fortized Blog', url:'/blog', desc:'News, updates, and announcements', color:'254,248,61'},
+          {label:'Fortized Blog', url:'https://swiftaw.com/blog/c/fortized', desc:'News, updates, and announcements', color:'254,248,61'},
         ].map(link => `
           <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:16px;padding:18px 20px;background:rgba(${link.color},.02);border:1.5px solid rgba(${link.color},.08);border-radius:16px;text-decoration:none;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(${link.color},.22)';this.style.background='rgba(${link.color},.04)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(${link.color},.08)';this.style.background='rgba(${link.color},.02)';this.style.transform=''">
             <div style="flex:1;min-width:0;">

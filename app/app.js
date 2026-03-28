@@ -8518,9 +8518,81 @@ async function saveOverviewConfig() {
 // ════════════════════════════════════════════
 function openBastionSettings(tab='overview') {
   if (curBastion === null) return;
+  // Boost and events open as their own modals accessible to everyone
+  if (tab === 'boost') { openBoostModal(); return; }
+  if (tab === 'events') { openEventsModal(); return; }
   showView('bsettings');
   renderBSettingsNav(tab);
   renderBSettingsMain(tab);
+}
+
+function openBoostModal() {
+  if (curBastion === null) return;
+  const b = CU.bastions[curBastion];
+  if (!b) return;
+  const body = document.getElementById('boost-modal-body');
+  if (!body) return;
+  const level = b.boostLevel || 0;
+  const boostCost = 90;
+  const tiers = [
+    {name:'Reinforced',perks:['25 custom emoji slots','Animated bastion icon','Custom invite background','128kbps voice quality'],color:'#60a5fa'},
+    {name:'Fortified',perks:['35 custom emoji slots','HD banner (1920×480)','256kbps HD voice quality','15 minute voice message limit','Custom role icons'],color:'#a78bfa'},
+    {name:'Sovereign',perks:['50 custom emoji slots','384kbps voice quality','Custom bastion splash screen','Priority support badge'],color:'#fbbf24'},
+  ];
+  const tierCards = tiers.map((t,i)=>{
+    const lv=i+1;
+    const isActive=level>=lv;
+    const isNext=level===lv-1;
+    const monthlyCost=boostCost*lv;
+    return `<div style="padding:16px;border-radius:14px;border:1.5px solid ${isActive?t.color+'55':'var(--border)'};background:${isActive?t.color+'10':'var(--panel)'};position:relative;${isNext?'box-shadow:0 0 20px '+t.color+'20;':''}">
+      ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span style="font-size:20px;">⚡</span>
+        <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
+          <div style="font-size:11px;color:var(--muted);">${monthlyCost} Onyx/month</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
+        ${t.perks.map(p=>`<div style="font-size:12.5px;color:var(--muted-light);display:flex;align-items:center;gap:6px;"><span style="color:${isActive?'var(--green)':'var(--muted)'};">${isActive?'✓':'○'}</span>${p}</div>`).join('')}
+      </div>
+      ${!isActive&&isNext?`<button class="btn-a" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;">⚡ Boost for ${monthlyCost} Onyx</button>`:''}
+      ${!isActive&&!isNext?`<div style="font-size:11px;color:var(--muted);text-align:center;">Requires Level ${lv-1} first</div>`:''}
+    </div>`;
+  }).join('');
+  body.innerHTML = `
+    <div class="modal-title">⚡ Boost ${escapeHTML(b.name)}</div>
+    <div class="modal-sub">Boost with Onyx to unlock perks for everyone.</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;">
+      <span style="font-size:20px;">💎</span>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Your Onyx Balance</div><div style="font-size:11px;color:var(--muted);">Available to spend</div></div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">${CU.onyx||0}</div>
+    </div>
+    <div style="display:grid;gap:12px;">${tierCards}</div>
+    ${level>=3?`<div style="text-align:center;margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:14px;">
+      <span style="font-size:22px;">👑</span>
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fbbf24;margin-top:6px;">Sovereign Level — Maximum Boost!</div>
+    </div>`:''}
+    <div class="modal-actions" style="margin-top:18px;">
+      <button class="btn-g" onclick="closeModal('modal-boost')">Close</button>
+    </div>`;
+  openModal('modal-boost');
+}
+
+function openEventsModal() {
+  if (curBastion === null) return;
+  const b = CU.bastions[curBastion];
+  if (!b) return;
+  const body = document.getElementById('events-modal-body');
+  if (!body) return;
+  const bastionId = b.globalId||b.name;
+  body.innerHTML = `
+    <div class="modal-title">📅 Events — ${escapeHTML(b.name)}</div>
+    <div class="modal-sub">Schedule and manage community events.</div>
+    <div id="events-modal-container"></div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="btn-g" onclick="closeModal('modal-events')">Close</button>
+    </div>`;
+  _renderEventsPanel(document.getElementById('events-modal-container'), bastionId);
+  openModal('modal-events');
 }
 
 function renderBSettingsNav(activeTab) {
@@ -8532,7 +8604,6 @@ function renderBSettingsNav(activeTab) {
     {label:escapeHTML(b.name).toUpperCase()},
     {id:'overview',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',label:'Bastion Profile'},
     {id:'channels',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',label:'Rooms'},
-    {id:'boost',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',label:'Boost Perks'},
     {label:'EXPRESSION'},
     {id:'emojis',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',label:'Emoji & Stickers'},
     {id:'templates',icon:ftzIcon('clipboard','15'),label:'Templates'},
@@ -8551,7 +8622,6 @@ function renderBSettingsNav(activeTab) {
     {id:'announcements',icon:ftzIcon('megaphone','15'),label:'Announcements'},
     {id:'insights',icon:ftzIcon('chartUp','15'),label:'Insights'},
     {id:'starboard',icon:ftzIcon('star','15'),label:'Starboard'},
-    {id:'events',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',label:'Events'},
     {label:'LIVING BASTION'},
     {id:'mood',icon:ftzIcon('castle','15'),label:'Bastion Mood'},
     {id:'reputation',icon:ftzIcon('shield','15'),label:'Reputation'},
@@ -9729,7 +9799,7 @@ async function boostBastion(level, cost) {
   showCustomConfirm(`Boost to Level ${level} for ${cost} Onyx?`, async ()=>{
     CU.onyx=(CU.onyx||0)-cost;
     CU.bastions[curBastion].boostLevel=level;
-    await saveUser(); updateOnyxDisplay(); renderBSettingsMain('boost');
+    await saveUser(); updateOnyxDisplay(); openBoostModal();
     distributeOnyxRevenue(cost);
     toast(`⚡ Boosted to Level ${level}!`,'success');
   });

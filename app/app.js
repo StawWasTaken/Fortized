@@ -38,14 +38,25 @@ const _svgIcons = {
   dumbbell:   `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>`,
   addUser:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>`,
   construction:`<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/></svg>`,
+  onyx:        `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M2 9h20"/><path d="m10 3 2 6"/><path d="m14 3-2 6"/><path d="m6 3 6 6 6-6"/></svg>`,
+  radiance:    `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+  radiancePlus:`<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  boost:       `<svg width="1em" height="1em" viewBox="0 0 15 15" fill="currentColor" stroke="none"><path d="M12.5547,1c-2.1441,0-5.0211,1.471-6.9531,4H4C2.8427,5,2.1794,5.8638,1.7227,6.7773L1.1113,8h1.4434H4l1.5,1.5L7,11v1.4453v1.4434l1.2227-0.6113C9.1362,12.8206,10,12.1573,10,11V9.3984c2.529-1.932,4-4.809,4-6.9531V1H12.5547z M10,4c0.5523,0,1,0.4477,1,1l0,0c0,0.5523-0.4477,1-1,1l0,0C9.4477,6,9,5.5523,9,5v0C9,4.4477,9.4477,4,10,4L10,4z M3.5,10L3,10.5C2.2778,11.2222,2,13,2,13s1.698-0.198,2.5-1L5,11.5L3.5,10z"/></svg>`,
 };
 
-function ftzIcon(name, size) {
+function ftzIcon(name, size, color) {
   const svg = _svgIcons[name];
   if (!svg) return '';
-  if (!size) return svg;
-  return svg.replace(/width="1em"/, `width="${size}"`).replace(/height="1em"/, `height="${size}"`);
+  let out = svg;
+  if (size) out = out.replace(/width="1em"/, `width="${size}"`).replace(/height="1em"/, `height="${size}"`);
+  if (color) out = out.replace(/stroke="currentColor"/g, `stroke="${color}"`).replace(/fill="currentColor"/g, `fill="${color}"`);
+  return out;
 }
+// Shorthand SVG icon helpers for Onyx, Radiance, and Boost
+function _onyxSvg(size){return ftzIcon('onyx',size||'18','#ffd93e');}
+function _radianceSvg(size){return ftzIcon('radiance',size||'16','#ff9d3e');}
+function _radiancePlusSvg(size){return ftzIcon('radiancePlus',size||'16','#ffd93e');}
+function _boostSvg(size){return ftzIcon('boost',size||'18','currentColor');}
 
 // ══════════════════════════════════════════════════════════
 // COMPANION BRIDGE  (localhost process scanner)
@@ -2314,7 +2325,7 @@ function toggleBastionDropdown(e, idx) {
     <div class="bd-info">
       <span class="bd-chip">${visIcon} ${visLabel}</span>
       <span class="bd-chip">👥 ${memberCount} member${memberCount!==1?'s':''}</span>
-      ${boostLv > 0 ? `<span class="bd-chip" style="color:rgba(255,249,62,.7);background:rgba(255,249,62,.06);">⚡ Level ${boostLv}</span>` : '<span class="bd-chip">⚡ No Boost</span>'}
+      ${boostLv > 0 ? `<span class="bd-chip" style="color:rgba(255,249,62,.7);background:rgba(255,249,62,.06);display:inline-flex;align-items:center;gap:4px;">${_boostSvg('12')} Level ${boostLv}</span>` : `<span class="bd-chip" style="display:inline-flex;align-items:center;gap:4px;">${_boostSvg('12')} No Boost</span>`}
     </div>
     <div class="bd-actions">
       <div class="bd-action" onclick="openBastion(${idx});document.querySelector('.bastion-dropdown')?.remove()">
@@ -2327,7 +2338,7 @@ function toggleBastionDropdown(e, idx) {
         <span class="bd-icon">🔗</span> Invite Friends
       </div>
       <div class="bd-action" onclick="openBastion(${idx});openBastionSettings('boost');document.querySelector('.bastion-dropdown')?.remove()">
-        <span class="bd-icon">⚡</span> Boost
+        <span class="bd-icon">${_boostSvg('16')}</span> Boost
       </div>
       ${b.owner===CU.username?`<div class="bd-action" onclick="openBastion(${idx});openBastionSettings();document.querySelector('.bastion-dropdown')?.remove()">
         <span class="bd-icon">⚙️</span> Settings
@@ -4137,7 +4148,7 @@ function renderBastionSidebar(scroll) {
     <span>Events</span>
   </div>`;
   html+=`<div class="ch-sidebar-action" onclick="openBastionSettings('boost')">
-    <span class="sa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+    <span class="sa-icon">${_boostSvg('16')}</span>
     <span>Bastion Boosts</span>
   </div>`;
 
@@ -4282,12 +4293,12 @@ function toggleBastionNameDropdown(e) {
     <div class="bnd-info">
       <span class="bnd-chip">${visIcon} ${visLabel}</span>
       <span class="bnd-chip">👥 ${memberCount} member${memberCount!==1?'s':''}</span>
-      <span class="bnd-chip">${boostLv>0?'⚡ Lv.'+boostLv:'⚡ No Boost'}</span>
+      <span class="bnd-chip" style="display:inline-flex;align-items:center;gap:3px;">${_boostSvg('11')} ${boostLv>0?'Lv.'+boostLv:'No Boost'}</span>
     </div>
     <div class="bnd-actions">
       <div class="bnd-action" onclick="closeBastionNameDD();openOverviewRoom()"><span class="bnd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span> Overview</div>
       <div class="bnd-action" onclick="closeBastionNameDD();showBastionInviteUI()"><span class="bnd-icon">🔗</span> Invite Friends</div>
-      <div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('boost')"><span class="bnd-icon">⚡</span> Boost</div>
+      <div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('boost')"><span class="bnd-icon">${_boostSvg('14')}</span> Boost</div>
       ${(isOwner||hasPerm('manage_channels'))?`<div class="bnd-action" onclick="closeBastionNameDD();showCreateRoomModal(curBastion)"><span class="bnd-icon">➕</span> Create Room</div>`:''}
       ${isOwner?`<div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings('templates')"><span class="bnd-icon">📋</span> Save as Template</div>`:''}
       ${isOwner?`<div class="bnd-action" onclick="closeBastionNameDD();openBastionSettings()"><span class="bnd-icon">⚙️</span> Settings</div>`:''}
@@ -8061,7 +8072,7 @@ function renderBastionHub() {
     <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;">
       <div class="bhub-stat"><span>👥</span> <span class="bhub-stat-val">${memberCount}</span> member${memberCount!==1?'s':''}</div>
       <div class="bhub-stat"><span>${b.public!==false?'🌍':'🔒'}</span> ${b.public!==false?'Public':'Private'}</div>
-      <div class="bhub-stat"><span>⚡</span> <span class="bhub-stat-val" style="color:${tierColors[boostLv]};">${tierNames[boostLv]}</span></div>
+      <div class="bhub-stat"><span>${_boostSvg('16')}</span> <span class="bhub-stat-val" style="color:${tierColors[boostLv]};">${tierNames[boostLv]}</span></div>
     </div>
 
     ${b.desc ? `<div class="bhub-card">
@@ -8085,7 +8096,7 @@ function renderBastionHub() {
         <span style="font-size:13px;font-weight:700;color:${tierColors[boostLv]};">Level ${boostLv} — ${tierNames[boostLv]}</span>
       </div>
       <div class="bhub-action-row">
-        <button class="btn-a" style="font-size:12.5px;padding:8px 16px;" onclick="openBastionSettings('boost')">⚡ Boost Bastion</button>
+        <button class="btn-a" style="font-size:12.5px;padding:8px 16px;" onclick="openBastionSettings('boost')" style="font-size:12.5px;padding:8px 16px;display:inline-flex;align-items:center;gap:6px;">${_boostSvg('14')} Boost Bastion</button>
       </div>
     </div>
 
@@ -8234,7 +8245,7 @@ function renderOverviewRoom() {
   html += `<div class="ov-badges" style="${isLeftLayout?'justify-content:flex-start;padding-left:40px;':''}">
     <span class="ov-badge">👥 ${memberCount} member${memberCount!==1?'s':''}</span>
     <span class="ov-badge">${b.public!==false?'🌍 Public':'🔒 Private'}</span>
-    ${boostLv > 0 ? `<span class="ov-badge" style="${badgeAccStyle||'color:var(--accent);border-color:rgba(255,249,62,.15);background:rgba(255,249,62,.05);'}">⚡ ${tierNames[boostLv]}</span>` : ''}
+    ${boostLv > 0 ? `<span class="ov-badge" style="${badgeAccStyle||'color:var(--accent);border-color:rgba(255,249,62,.15);background:rgba(255,249,62,.05);'};display:inline-flex;align-items:center;gap:4px;">${_boostSvg('12')} ${tierNames[boostLv]}</span>` : ''}
     <span class="ov-badge">📂 ${channelCount} room${channelCount!==1?'s':''}</span>
     <span class="ov-badge" onclick="viewUserProfile('${escapeHTML(ownerName)}')" style="cursor:pointer;">👑 ${escapeHTML(ownerName)}</span>
   </div>`;
@@ -8547,22 +8558,22 @@ function openBoostModal() {
     return `<div style="padding:16px;border-radius:14px;border:1.5px solid ${isActive?t.color+'55':'var(--border)'};background:${isActive?t.color+'10':'var(--panel)'};position:relative;${isNext?'box-shadow:0 0 20px '+t.color+'20;':''}">
       ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <span style="font-size:20px;">⚡</span>
+        ${_boostSvg('20')}
         <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
-          <div style="font-size:11px;color:var(--muted);">${monthlyCost} Onyx/month</div></div>
+          <div style="font-size:11px;color:var(--muted);">${monthlyCost} ${_onyxSvg('13')}/month</div></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
         ${t.perks.map(p=>`<div style="font-size:12.5px;color:var(--muted-light);display:flex;align-items:center;gap:6px;"><span style="color:${isActive?'var(--green)':'var(--muted)'};">${isActive?'✓':'○'}</span>${p}</div>`).join('')}
       </div>
-      ${!isActive&&isNext?`<button class="btn-a" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;">⚡ Boost for ${monthlyCost} Onyx</button>`:''}
+      ${!isActive&&isNext?`<button class="btn-a" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">${_boostSvg('15')} Boost for ${monthlyCost} ${_onyxSvg('14')}</button>`:''}
       ${!isActive&&!isNext?`<div style="font-size:11px;color:var(--muted);text-align:center;">Requires Level ${lv-1} first</div>`:''}
     </div>`;
   }).join('');
   body.innerHTML = `
-    <div class="modal-title">⚡ Boost ${escapeHTML(b.name)}</div>
-    <div class="modal-sub">Boost with Onyx to unlock perks for everyone.</div>
+    <div class="modal-title" style="display:flex;align-items:center;gap:8px;">${_boostSvg('22')} Boost ${escapeHTML(b.name)}</div>
+    <div class="modal-sub">Boost with ${_onyxSvg('14')} Onyx to unlock perks for everyone.</div>
     <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;">
-      <span style="font-size:20px;">💎</span>
+      ${_onyxSvg('22')}
       <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Your Onyx Balance</div><div style="font-size:11px;color:var(--muted);">Available to spend</div></div>
       <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">${CU.onyx||0}</div>
     </div>
@@ -8995,22 +9006,22 @@ function renderBSettingsMain(tab) {
       return `<div style="padding:16px;border-radius:14px;border:1.5px solid ${isActive?t.color+'55':'var(--border)'};background:${isActive?t.color+'10':'var(--panel)'};position:relative;${isNext?'box-shadow:0 0 20px '+t.color+'20;':''}">
         ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-          <span style="font-size:20px;">⚡</span>
+          ${_boostSvg('20')}
           <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
-            <div style="font-size:11px;color:var(--muted);">${monthlyCost} Onyx/month</div></div>
+            <div style="font-size:11px;color:var(--muted);">${monthlyCost} ${_onyxSvg('13')}/month</div></div>
         </div>
         <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
           ${t.perks.map(p=>`<div style="font-size:12.5px;color:var(--muted-light);display:flex;align-items:center;gap:6px;"><span style="color:${isActive?'var(--green)':'var(--muted)'};">${isActive?'✓':'○'}</span>${p}</div>`).join('')}
         </div>
-        ${!isActive&&isNext?`<button class="btn-a" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;">⚡ Boost for ${monthlyCost} Onyx</button>`:''}
+        ${!isActive&&isNext?`<button class="btn-a" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">${_boostSvg('15')} Boost for ${monthlyCost} ${_onyxSvg('14')}</button>`:''}
         ${!isActive&&!isNext?`<div style="font-size:11px;color:var(--muted);text-align:center;">Requires Level ${lv-1} first</div>`:''}
       </div>`;
     }).join('');
     main.innerHTML = `
-      <div class="bs-section-title">Boost Perks</div>
-      <div class="bs-section-desc">Boost your bastion with Onyx to unlock perks. 90 Onyx per level per month.</div>
+      <div class="bs-section-title" style="display:flex;align-items:center;gap:6px;">${_boostSvg('16')} Boost Perks</div>
+      <div class="bs-section-desc">Boost your bastion with ${_onyxSvg('13')} Onyx to unlock perks. 90 ${_onyxSvg('12')} per level per month.</div>
       <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;">
-        <span style="font-size:20px;">💎</span>
+        ${_onyxSvg('22')}
         <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Your Onyx Balance</div><div style="font-size:11px;color:var(--muted);">Available to spend</div></div>
         <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">${CU.onyx||0}</div>
       </div>
@@ -9067,7 +9078,7 @@ function renderBSettingsMain(tab) {
           <input class="field-input" id="custom-mood-label" placeholder="Mood name" value="${escapeHTML(b.customMood?.label||'')}" style="flex:1;">
         </div>
         <button class="btn-a" onclick="saveCustomMood()" style="font-size:12px;">Save Custom Mood</button>
-      </div>`:'<div style="padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--muted);">⚡ Custom Moods require Boost Level 2+</div>'}`;
+      </div>`:'<div style="padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--muted);">${_boostSvg('13')} Custom Moods require Boost Level 2+</div>'}`;
   }
   else if (tab==='reputation') {
     const bastionId = b.globalId||b.name;
@@ -9097,7 +9108,7 @@ function renderBSettingsMain(tab) {
           📝 Messages: +1 per message (capped at 30/day)<br>
           ❤️ Reactions received: +2 per reaction<br>
           🗳 Poll participation: +5 per vote<br>
-          ⚡ Boosting: +25 per boost<br>
+          ${_boostSvg('12')} Boosting: +25 per boost<br>
           📣 Mentions: +3 per positive mention
         </div>
       </div>
@@ -9203,7 +9214,7 @@ function renderBSettingsMain(tab) {
           {label:'Members',val:memberCount,icon:'👥',color:'#60a5fa'},
           {label:'Channels',val:channelCount,icon:'#️⃣',color:'#3ecf6e'},
           {label:'Roles',val:roleCount,icon:'🛡️',color:'#a78bfa'},
-          {label:'Boost Level',val:boostLevel,icon:'⚡',color:'#ffd93e'},
+          {label:'Boost Level',val:boostLevel,icon:_boostSvg('14'),color:'#ffd93e'},
           {label:'Custom Emojis',val:emojiCount,icon:'😊',color:'#fb923c'},
           {label:'Created',val:createdAt,icon:'📅',color:'#f472b6'},
         ].map(s=>`<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:18px;text-align:center;position:relative;overflow:hidden;">
@@ -9801,7 +9812,7 @@ async function boostBastion(level, cost) {
     CU.bastions[curBastion].boostLevel=level;
     await saveUser(); updateOnyxDisplay(); openBoostModal();
     distributeOnyxRevenue(cost);
-    toast(`⚡ Boosted to Level ${level}!`,'success');
+    toast('Boosted to Level '+level+'!','success');
   });
 }
 async function confirmLeaveBastion() {
@@ -17817,7 +17828,7 @@ function renderAdminBastionsList(bastions) {
           <span style="font-weight:700;font-size:13.5px;">${escapeHTML(b.name||'Unnamed')}</span>
           ${b.public===false?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);">PRIVATE</span>':''}
           ${nsfwChannels?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:#f87171;">${nsfwChannels} NSFW</span>`:''}
-          ${boostLv?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(255,249,62,.08);color:#ffd93e;">⚡ Lv${boostLv}</span>`:''}
+          ${boostLv?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(255,249,62,.08);color:#ffd93e;display:inline-flex;align-items:center;gap:2px;">${_boostSvg('9')} Lv${boostLv}</span>`:''}
         </div>
         <div style="font-size:11px;color:var(--muted);">Owner: <strong>${escapeHTML(b.owner||'?')}</strong> · ${memberCount} members · ${channelCount} channels</div>
       </div>
@@ -19517,12 +19528,13 @@ function radianceBadgeHTML(user) {
   const active = user.radianceUntil && new Date(user.radianceUntil) > new Date();
   const totalDays = user.radianceTotalMs ? Math.floor(user.radianceTotalMs / 86400000) : 0;
   if (!active && totalDays < 1) return '';
-  const label = active ? '\u2728 Radiance Active' : ('\u2728 ' + totalDays + 'd Radiance');
   const isPlus = user.radiancePlus && new Date(user.radiancePlus) > new Date();
+  const icon = isPlus ? _radiancePlusSvg('12') : _radianceSvg('12');
+  const label = active ? ' Radiance Active' : (' ' + totalDays + 'd Radiance');
   const badgeColor = isPlus ? '#ffd93e' : '#ff9d3e';
   const badgeBg = isPlus ? 'rgba(255,220,62,.15),rgba(255,249,62,.1)' : 'rgba(255,160,62,.15),rgba(255,180,62,.1)';
   const badgeBorder = isPlus ? 'rgba(255,220,62,.3)' : 'rgba(255,160,62,.3)';
-  return '<span style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,'+badgeBg+');border:1px solid '+badgeBorder+';border-radius:100px;padding:2px 9px;font-size:10px;font-weight:700;color:'+badgeColor+';">' + label + '</span>';
+  return '<span style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,'+badgeBg+');border:1px solid '+badgeBorder+';border-radius:100px;padding:2px 9px;font-size:10px;font-weight:700;color:'+badgeColor+';">' + icon + label + '</span>';
 }
 
 // ════════════════════════════════════════════
@@ -24923,10 +24935,10 @@ function renderAtelierTab(tab) {
 
       <!-- Radiance status pill -->
       ${hasPlus?`<div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(255,220,62,.06),rgba(255,249,62,.03));border:1.5px solid rgba(255,220,62,.15);border-radius:16px;padding:14px 20px;margin-bottom:24px;">
-        <img src="/fortized badges/radiance+.png" style="width:22px;height:22px;object-fit:contain;"><span style="font-size:13px;font-weight:700;color:#ffd93e;">Radiance+ Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysPlus} days left</span>
+        ${_radiancePlusSvg('22')}<span style="font-size:13px;font-weight:700;color:#ffd93e;">Radiance+ Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysPlus} days left</span>
         <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:rgba(255,220,62,.08);border:1px solid rgba(255,220,62,.15);border-radius:10px;color:#ffd93e;font-size:11px;font-weight:600;padding:6px 14px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,220,62,.14)'" onmouseout="this.style.background='rgba(255,220,62,.08)'">Manage</button>
       </div>`:hasRad?`<div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(255,160,62,.06),rgba(255,140,62,.03));border:1.5px solid rgba(255,160,62,.15);border-radius:16px;padding:14px 20px;margin-bottom:24px;">
-        <img src="/fortized badges/basic radiance.png" style="width:22px;height:22px;object-fit:contain;"><span style="font-size:13px;font-weight:700;color:#ff9d3e;">Radiance Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysRad} days left</span>
+        ${_radianceSvg('22')}<span style="font-size:13px;font-weight:700;color:#ff9d3e;">Radiance Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysRad} days left</span>
         <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:rgba(255,160,62,.08);border:1px solid rgba(255,160,62,.15);border-radius:10px;color:#ff9d3e;font-size:11px;font-weight:600;padding:6px 14px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,160,62,.14)'" onmouseout="this.style.background='rgba(255,160,62,.08)'">Manage</button>
       </div>`:''}
 
@@ -25034,8 +25046,8 @@ function renderAtelierTab(tab) {
 
   // ── RADIANCE DWELLING ─────────────────────────────────────
   else if (tab === 'radiance') {
-    const PLAN_BASIC = ['✨ Profile Glow','🖼️ Custom Banner','📎 45MB Uploads','💎 Radiance Badge','🔔 Priority Notifs'];
-    const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance','⚡ Bastion Boost','🌟 Animated Badge'];
+    const PLAN_BASIC = ['✨ Profile Glow','🖼️ Custom Banner','📎 45MB Uploads','${_radianceSvg('14')} Radiance Badge','🔔 Priority Notifs'];
+    const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance','${_boostSvg('14')} Bastion Boost','🌟 Animated Badge'];
     const PRICES = {basic:[{days:7,onyx:200},{days:30,onyx:600},{days:90,onyx:1500}], plus:[{days:30,onyx:1200},{days:90,onyx:3000}]};
 
     el.style.padding = '0';
@@ -25045,7 +25057,7 @@ function renderAtelierTab(tab) {
         <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 30%,rgba(255,160,62,.05),transparent 55%),radial-gradient(ellipse at 85% 65%,rgba(255,220,62,.04),transparent 50%);pointer-events:none;"></div>
         <div style="position:relative;display:flex;align-items:center;gap:14px;">
           <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,180,62,.06);border:1px solid rgba(255,180,62,.12);display:flex;align-items:center;justify-content:center;">
-            <img src="/fortized badges/${hasPlus?'radiance+':'basic radiance'}.png" style="width:26px;height:26px;object-fit:contain;">
+            ${hasPlus ? _radiancePlusSvg('26') : _radianceSvg('26')}
           </div>
           <div>
             <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.4);margin-bottom:3px;">ATELIER</div>
@@ -25058,12 +25070,12 @@ function renderAtelierTab(tab) {
 
       <!-- Active subscription status -->
       ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,220,62,.1),rgba(255,249,62,.05));border:1.5px solid rgba(255,220,62,.2);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
-        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.1);display:flex;align-items:center;justify-content:center;"><img src="/fortized badges/radiance+.png" style="width:32px;height:32px;object-fit:contain;"></div>
+        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.1);display:flex;align-items:center;justify-content:center;">${_radiancePlusSvg('32')}</div>
         <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ffd93e;">Radiance+ Active</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:3px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
         <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:12px;color:var(--red);font-size:12px;padding:8px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
       </div>`:hasRad?`<div style="background:rgba(255,160,62,.07);border:1.5px solid rgba(255,160,62,.18);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
-        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;"><img src="/fortized badges/basic radiance.png" style="width:32px;height:32px;object-fit:contain;"></div>
+        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;">${_radianceSvg('32')}</div>
         <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ff9d3e;">Radiance Active</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:3px;">${daysRad} days remaining · Auto-renews · 600 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
         <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:12px;color:var(--red);font-size:12px;padding:8px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
@@ -25076,7 +25088,7 @@ function renderAtelierTab(tab) {
         <!-- Basic Radiance (orange) -->
         <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,160,62,.15);border-radius:22px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,160,62,.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,160,62,.15)';this.style.transform=''">
           <div style="padding:24px 24px 18px;">
-            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><img src="/fortized badges/basic radiance.png" style="width:32px;height:32px;object-fit:contain;"></div>
+            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">${_radianceSvg('32')}</div>
             <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ff9d3e;margin-bottom:5px;">Radiance</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Core perks for Fortized fans</div>
             <!-- Perk chips -->
@@ -25100,7 +25112,7 @@ function renderAtelierTab(tab) {
         <div style="background:linear-gradient(160deg,rgba(255,220,62,.06),rgba(255,249,62,.03),rgba(255,255,255,.015));border:1.5px solid rgba(255,220,62,.22);border-radius:22px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,220,62,.4)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(255,220,62,.08)'" onmouseout="this.style.borderColor='rgba(255,220,62,.22)';this.style.transform='';this.style.boxShadow='none'">
           <div class="best-ribbon">BEST VALUE</div>
           <div style="padding:24px 24px 18px;">
-            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><img src="/fortized badges/radiance+.png" style="width:32px;height:32px;object-fit:contain;"></div>
+            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">${_radiancePlusSvg('32')}</div>
             <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ffd93e;margin-bottom:5px;">Radiance+</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Everything unlocked</div>
             <!-- Perk chips — basic + plus -->
@@ -25616,8 +25628,8 @@ const BADGE_DEFS = {
   admin:      { img:'/fortized badges/admin.png', tooltip:'Admin - Platform administrator with elevated permissions.', cls:'badge-admin', order:1 },
   moderator:  { img:'/fortized badges/moderator.png', tooltip:'Moderator - Helps maintain safety and order.', cls:'badge-moderator', order:2 },
   bot:        { img:'/fortized badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:3 },
-  'radiance-plus': { img:'/fortized badges/radiance+.png', tooltip:'Radiance+ - Active Radiance+ subscriber.', cls:'badge-radiance-plus', order:4 },
-  radiance:   { img:'/fortized badges/basic radiance.png', tooltip:'Basic Radiance - Active Basic Radiance subscriber.', cls:'badge-radiance', order:5 },
+  'radiance-plus': { svg:true, tooltip:'Radiance+ - Active Radiance+ subscriber.', cls:'badge-radiance-plus', order:4 },
+  radiance:   { svg:true, tooltip:'Basic Radiance - Active Basic Radiance subscriber.', cls:'badge-radiance', order:5 },
   beta:       { img:'/fortized badges/beta user.png', tooltip:'Beta User - Early supporter of Fortized.', cls:'badge-beta', order:6 },
   quest:      { img:'/fortized badges/quest.png', tooltip:'Quest Completed - Successfully completed a Fortized quest.', cls:'badge-quest', order:7 },
   onyx:       { img:'/fortized badges/onyx.png', cls:'badge-onyx', order:8 },
@@ -25715,9 +25727,10 @@ function getUserBadges(user) {
 function renderBadgesHTML(user) {
   const badges = getUserBadges(user);
   if (!badges.length) return '';
-  return '<span class="ftz-badge-row">' + badges.map(b =>
-    `<span class="ftz-badge ${b.cls}"><img src="${b.img}" alt="${b.id}"><span class="badge-tooltip">${escapeHTML(b.tooltip||'')}</span></span>`
-  ).join('') + '</span>';
+  return '<span class="ftz-badge-row">' + badges.map(b => {
+    const icon = b.svg ? (b.id==='radiance-plus' ? _radiancePlusSvg('16') : _radianceSvg('16')) : `<img src="${b.img}" alt="${b.id}">`;
+    return `<span class="ftz-badge ${b.cls}">${icon}<span class="badge-tooltip">${escapeHTML(b.tooltip||'')}</span></span>`;
+  }).join('') + '</span>';
 }
 
 function spawnHeartAnimation(x, y) {

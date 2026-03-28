@@ -29651,6 +29651,8 @@ function _renderEventCard(ev, bastionId, canManage, now, isPast) {
     + '<div class="ec-title-row"><div class="ec-title">'+escapeHTML(ev.title||'')+'</div>'
     + '<button class="ec-menu-btn" onclick="_showEventMenu(event,\''+escapeHTML(bastionId)+'\',\''+ev._key+'\','+(canManage||isCreator?'true':'false')+')">⋯</button></div>'
     + (ev.description ? '<div class="ec-desc">'+escapeHTML(ev.description.slice(0,200))+'</div>' : '')
+    + (ev.location ? '<div class="ec-location"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;opacity:.5;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> <span>'+escapeHTML(ev.location)+'</span></div>' : '')
+    + (ev.frequency && ev.frequency !== 'once' ? '<div class="ec-frequency">↻ '+({daily:'Daily',weekly:'Weekly',biweekly:'Bi-weekly',monthly:'Monthly'}[ev.frequency]||'')+'</div>' : '')
     + '<div class="ec-meta">'
     + '<span>'+rsvps+' interested</span>'
     + '<div class="event-countdown">'+countdown+'</div>'
@@ -29705,14 +29707,15 @@ function _showEventMenu(e, bastionId, eventKey, canManage) {
 }
 
 // ── Event creation / edit form ──
+var _evFormBannerData = '';
 function _openEventForm(editKey) {
   const b = CU.bastions?.[curBastion];
   if (!b) return;
   const bastionId = b.globalId||b.name;
   const existing = editKey ? window._eventsCache?.events?.find(ev=>ev._key===editKey) : null;
   const isEdit = !!existing;
+  _evFormBannerData = existing?.banner || '';
 
-  // Close any existing context menu
   document.querySelectorAll('.ev-ctx-menu').forEach(m=>m.remove());
 
   const ov = document.createElement('div');
@@ -29726,47 +29729,92 @@ function _openEventForm(editKey) {
   const endDateVal = existing?.endDate ? new Date(existing.endDate) : null;
   const endDStr = endDateVal ? endDateVal.getFullYear()+'-'+String(endDateVal.getMonth()+1).padStart(2,'0')+'-'+String(endDateVal.getDate()).padStart(2,'0') : '';
   const endTStr = endDateVal ? String(endDateVal.getHours()).padStart(2,'0')+':'+String(endDateVal.getMinutes()).padStart(2,'0') : '';
+  const freqVal = existing?.frequency || 'once';
+  const locVal = existing?.location || '';
 
   ov.innerHTML = '<div class="ev-form-card">'
     + '<div class="modal-bar"></div>'
-    + '<div class="ev-form-title">'+(isEdit ? 'Edit Event' : 'Create Event')+'</div>'
+    + '<div class="ev-form-title">' + (isEdit ? 'Edit Event' : 'Create Event') + '</div>'
     + '<div class="ev-form-body">'
     + '<label class="ev-form-label">Event Name <span style="color:var(--red);">*</span></label>'
-    + '<input class="field-input ev-form-input" id="ev-f-title" placeholder="e.g. Game Night, Community Hangout…" maxlength="100" value="'+escapeHTML(existing?.title||'')+'">'
+    + '<input class="field-input ev-form-input" id="ev-f-title" placeholder="e.g. Game Night, Community Hangout…" maxlength="100" value="' + escapeHTML(existing?.title||'') + '">'
     + '<label class="ev-form-label">Description</label>'
-    + '<textarea class="field-input ev-form-input" id="ev-f-desc" placeholder="What\'s the event about?" rows="3" maxlength="500" style="resize:vertical;">'+escapeHTML(existing?.description||'')+'</textarea>'
+    + '<textarea class="field-input ev-form-input" id="ev-f-desc" placeholder="What\'s the event about?" rows="3" maxlength="500" style="resize:vertical;">' + escapeHTML(existing?.description||'') + '</textarea>'
+    + '<label class="ev-form-label">Banner Image <span style="font-size:10px;color:var(--muted);">(optional)</span></label>'
+    + '<div class="ev-banner-upload" id="ev-f-banner-zone">'
+    + '<input type="file" id="ev-f-banner-file" accept="image/*" style="display:none;">'
+    + '<div id="ev-f-banner-preview" class="ev-banner-preview' + (_evFormBannerData ? ' has-img' : '') + '">'
+    + (_evFormBannerData ? '<img src="' + escapeHTML(_evFormBannerData) + '">' : '')
+    + '</div>'
+    + '<div class="ev-banner-actions">'
+    + '<button type="button" class="btn-g ev-banner-btn" onclick="document.getElementById(\'ev-f-banner-file\').click()">' + (_evFormBannerData ? 'Change Image' : 'Upload Image') + '</button>'
+    + (_evFormBannerData ? '<button type="button" class="btn-g ev-banner-btn ev-banner-remove" onclick="_evRemoveBanner()">Remove</button>' : '')
+    + '</div></div>'
+    + '<label class="ev-form-label">Location <span style="font-size:10px;color:var(--muted);">(optional)</span></label>'
+    + '<input class="field-input ev-form-input" id="ev-f-location" placeholder="e.g. Voice Channel, Discord Stage, Twitch…" maxlength="150" value="' + escapeHTML(locVal) + '">'
     + '<div class="ev-form-row">'
-    + '<div style="flex:1;"><label class="ev-form-label">Start Date <span style="color:var(--red);">*</span></label><input type="date" class="field-input ev-form-input" id="ev-f-date" value="'+dateVal+'"></div>'
-    + '<div style="flex:1;"><label class="ev-form-label">Start Time <span style="color:var(--red);">*</span></label><input type="time" class="field-input ev-form-input" id="ev-f-time" value="'+timeVal+'"></div>'
+    + '<div style="flex:1;"><label class="ev-form-label">Start Date <span style="color:var(--red);">*</span></label><input type="date" class="field-input ev-form-input" id="ev-f-date" value="' + dateVal + '"></div>'
+    + '<div style="flex:1;"><label class="ev-form-label">Start Time <span style="color:var(--red);">*</span></label><input type="time" class="field-input ev-form-input" id="ev-f-time" value="' + timeVal + '"></div>'
     + '</div>'
     + '<div class="ev-form-row">'
-    + '<div style="flex:1;"><label class="ev-form-label">End Date <span style="font-size:10px;color:var(--muted);">(optional)</span></label><input type="date" class="field-input ev-form-input" id="ev-f-end-date" value="'+endDStr+'"></div>'
-    + '<div style="flex:1;"><label class="ev-form-label">End Time</label><input type="time" class="field-input ev-form-input" id="ev-f-end-time" value="'+endTStr+'"></div>'
+    + '<div style="flex:1;"><label class="ev-form-label">End Date <span style="font-size:10px;color:var(--muted);">(optional)</span></label><input type="date" class="field-input ev-form-input" id="ev-f-end-date" value="' + endDStr + '"></div>'
+    + '<div style="flex:1;"><label class="ev-form-label">End Time</label><input type="time" class="field-input ev-form-input" id="ev-f-end-time" value="' + endTStr + '"></div>'
     + '</div>'
-    + '<label class="ev-form-label">Banner Image URL <span style="font-size:10px;color:var(--muted);">(optional)</span></label>'
-    + '<input class="field-input ev-form-input" id="ev-f-banner" placeholder="https://example.com/banner.png" value="'+escapeHTML(existing?.banner||'')+'">'
-    + '<div id="ev-f-banner-preview">'+(existing?.banner ? '<img src="'+escapeHTML(existing.banner)+'" style="width:100%;height:80px;object-fit:cover;border-radius:10px;margin-top:6px;" onerror="this.style.display=\'none\'">' : '')+'</div>'
-    + '<label class="ev-form-label">Emoji Icon</label>'
-    + '<input class="field-input ev-form-input" id="ev-f-emoji" placeholder="📅" maxlength="4" value="'+escapeHTML(existing?.emoji||'📅')+'" style="width:60px;text-align:center;">'
+    + '<label class="ev-form-label">Event Frequency</label>'
+    + '<select class="field-input ev-form-input" id="ev-f-freq">'
+    + '<option value="once"' + (freqVal==='once' ? ' selected' : '') + '>One-time</option>'
+    + '<option value="daily"' + (freqVal==='daily' ? ' selected' : '') + '>Daily</option>'
+    + '<option value="weekly"' + (freqVal==='weekly' ? ' selected' : '') + '>Weekly</option>'
+    + '<option value="biweekly"' + (freqVal==='biweekly' ? ' selected' : '') + '>Bi-weekly</option>'
+    + '<option value="monthly"' + (freqVal==='monthly' ? ' selected' : '') + '>Monthly</option>'
+    + '</select>'
     + '</div>'
     + '<div class="ev-form-actions">'
     + '<button class="btn-g" onclick="this.closest(\'.input-dialog-overlay\').remove()">Cancel</button>'
-    + '<button class="btn-a" onclick="_submitEventForm(\''+escapeHTML(bastionId)+'\','+(isEdit ? '\''+editKey+'\'' : 'null')+')">'+(isEdit?'Save Changes':'Create Event')+'</button>'
+    + '<button class="btn-a" onclick="_reviewEvent(\'' + escapeHTML(bastionId) + '\',' + (isEdit ? '\'' + editKey + '\'' : 'null') + ')">' + (isEdit ? 'Review Changes' : 'Review Event') + '</button>'
     + '</div></div>';
 
   document.body.appendChild(ov);
   ov.onclick = e => { if (e.target === ov) ov.remove(); };
   document.getElementById('ev-f-title')?.focus();
 
-  // Live banner preview
-  const bannerInput = document.getElementById('ev-f-banner');
-  if (bannerInput) bannerInput.addEventListener('input', () => {
-    const prev = document.getElementById('ev-f-banner-preview');
-    if (prev) prev.innerHTML = bannerInput.value ? '<img src="'+escapeHTML(bannerInput.value)+'" style="width:100%;height:80px;object-fit:cover;border-radius:10px;margin-top:6px;" onerror="this.style.display=\'none\'">' : '';
+  // Banner file upload handler
+  const fileInput = document.getElementById('ev-f-banner-file');
+  if (fileInput) fileInput.addEventListener('change', function() {
+    const file = this.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { toast('Image must be under 2MB','error'); this.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      _evFormBannerData = e.target.result;
+      const prev = document.getElementById('ev-f-banner-preview');
+      if (prev) { prev.innerHTML = '<img src="' + _evFormBannerData + '">'; prev.classList.add('has-img'); }
+      const zone = document.getElementById('ev-f-banner-zone');
+      if (zone) {
+        var acts = zone.querySelector('.ev-banner-actions');
+        if (acts) acts.innerHTML = '<button type="button" class="btn-g ev-banner-btn" onclick="document.getElementById(\'ev-f-banner-file\').click()">Change Image</button>'
+          + '<button type="button" class="btn-g ev-banner-btn ev-banner-remove" onclick="_evRemoveBanner()">Remove</button>';
+      }
+    };
+    reader.readAsDataURL(file);
   });
 }
 
-async function _submitEventForm(bastionId, editKey) {
+function _evRemoveBanner() {
+  _evFormBannerData = '';
+  var prev = document.getElementById('ev-f-banner-preview');
+  if (prev) { prev.innerHTML = ''; prev.classList.remove('has-img'); }
+  var fileInput = document.getElementById('ev-f-banner-file');
+  if (fileInput) fileInput.value = '';
+  var zone = document.getElementById('ev-f-banner-zone');
+  if (zone) {
+    var acts = zone.querySelector('.ev-banner-actions');
+    if (acts) acts.innerHTML = '<button type="button" class="btn-g ev-banner-btn" onclick="document.getElementById(\'ev-f-banner-file\').click()">Upload Image</button>';
+  }
+}
+
+// ── Review event preview ──
+function _reviewEvent(bastionId, editKey) {
   const title = document.getElementById('ev-f-title')?.value?.trim();
   if (!title) { toast('Event name is required','error'); return; }
   const desc = document.getElementById('ev-f-desc')?.value?.trim() || '';
@@ -29777,26 +29825,94 @@ async function _submitEventForm(bastionId, editKey) {
   if (isNaN(startDate.getTime())) { toast('Invalid date/time','error'); return; }
   const endDateStr = document.getElementById('ev-f-end-date')?.value;
   const endTimeStr = document.getElementById('ev-f-end-time')?.value;
-  let endDate = null;
+  var endDate = null;
   if (endDateStr && endTimeStr) {
     endDate = new Date(endDateStr + 'T' + endTimeStr);
     if (isNaN(endDate.getTime())) endDate = null;
   }
-  const banner = document.getElementById('ev-f-banner')?.value?.trim() || '';
-  const emoji = document.getElementById('ev-f-emoji')?.value?.trim() || '📅';
+  const location = document.getElementById('ev-f-location')?.value?.trim() || '';
+  const frequency = document.getElementById('ev-f-freq')?.value || 'once';
+  const banner = _evFormBannerData;
+
+  // Build preview
+  const d = startDate;
+  const bannerBg = banner ? 'background-image:url(' + escapeHTML(banner) + ');background-size:cover;background-position:center;' : 'background:linear-gradient(135deg,rgba(255,249,62,.08),rgba(96,165,250,.06));';
+  const freqLabels = {once:'One-time',daily:'Daily',weekly:'Weekly',biweekly:'Bi-weekly',monthly:'Monthly'};
+  const freqLabel = freqLabels[frequency] || 'One-time';
+
+  // Hide form, show preview
+  const formCard = document.querySelector('.ev-form-card');
+  if (formCard) formCard.style.display = 'none';
+
+  const previewCard = document.createElement('div');
+  previewCard.className = 'ev-form-card ev-preview-card';
+  previewCard.innerHTML = '<div class="modal-bar"></div>'
+    + '<div class="ev-form-title">Event Preview</div>'
+    + '<div style="padding:14px 22px 0;">'
+    + '<div class="event-card" style="margin-bottom:0;pointer-events:none;">'
+    + '<div class="ec-banner" style="' + bannerBg + '">'
+    + (banner ? '' : '<span style="font-size:32px;">📅</span>')
+    + '<div class="ec-date-badge"><div class="edb-month">' + d.toLocaleString('en',{month:'short'}) + '</div><div class="edb-day">' + d.getDate() + '</div></div>'
+    + '</div>'
+    + '<div class="ec-body">'
+    + '<div class="ec-title">' + escapeHTML(title) + '</div>'
+    + (desc ? '<div class="ec-desc">' + escapeHTML(desc.slice(0,200)) + '</div>' : '')
+    + (location ? '<div class="ec-location"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;opacity:.5;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> <span>' + escapeHTML(location) + '</span></div>' : '')
+    + '<div class="ec-meta">'
+    + '<span>0 interested</span>'
+    + '<span style="color:var(--accent);font-weight:700;">' + d.toLocaleString('en',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) + '</span>'
+    + '</div>'
+    + (endDate ? '<div style="font-size:10px;color:var(--muted);margin-top:4px;">Ends ' + endDate.toLocaleString('en',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) + '</div>' : '')
+    + (frequency !== 'once' ? '<div style="font-size:10px;color:var(--accent);margin-top:4px;font-weight:700;">↻ ' + freqLabel + '</div>' : '')
+    + '</div></div></div>'
+    + '<div class="ev-form-actions">'
+    + '<button class="btn-g" onclick="_evBackToForm()">Back</button>'
+    + '<button class="btn-a" id="ev-publish-btn" onclick="_publishEvent(\'' + escapeHTML(bastionId) + '\',' + (editKey ? '\'' + editKey + '\'' : 'null') + ')">Publish Event</button>'
+    + '</div>';
+
+  const ov = document.querySelector('.input-dialog-overlay');
+  if (ov) ov.appendChild(previewCard);
+}
+
+function _evBackToForm() {
+  var preview = document.querySelector('.ev-preview-card');
+  if (preview) preview.remove();
+  var form = document.querySelector('.ev-form-card');
+  if (form) form.style.display = '';
+}
+
+async function _publishEvent(bastionId, editKey) {
+  const btn = document.getElementById('ev-publish-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+
+  const title = document.getElementById('ev-f-title')?.value?.trim();
+  const desc = document.getElementById('ev-f-desc')?.value?.trim() || '';
+  const dateStr = document.getElementById('ev-f-date')?.value;
+  const timeStr = document.getElementById('ev-f-time')?.value;
+  const startDate = new Date(dateStr + 'T' + timeStr);
+  const endDateStr = document.getElementById('ev-f-end-date')?.value;
+  const endTimeStr = document.getElementById('ev-f-end-time')?.value;
+  var endDate = null;
+  if (endDateStr && endTimeStr) {
+    endDate = new Date(endDateStr + 'T' + endTimeStr);
+    if (isNaN(endDate.getTime())) endDate = null;
+  }
+  const location = document.getElementById('ev-f-location')?.value?.trim() || '';
+  const frequency = document.getElementById('ev-f-freq')?.value || 'once';
+  const banner = _evFormBannerData;
 
   const ev = {
-    title, description: desc, date: startDate.toISOString(),
-    emoji, banner, createdBy: CU.username, createdAt: new Date().toISOString()
+    title: title, description: desc, date: startDate.toISOString(),
+    banner: banner, location: location, frequency: frequency,
+    createdBy: CU.username, createdAt: new Date().toISOString()
   };
   if (endDate) ev.endDate = endDate.toISOString();
-  // Generate share code
   if (!editKey) ev.shareCode = Math.random().toString(36).slice(2,8).toUpperCase();
 
   try {
+    var savedKey = editKey;
     if (editKey) {
-      // Preserve existing fields not in form
-      const old = window._eventsCache?.events?.find(e=>e._key===editKey);
+      const old = window._eventsCache?.events?.find(function(e){return e._key===editKey;});
       if (old?.rsvps) ev.rsvps = old.rsvps;
       if (old?.shareCode) ev.shareCode = old.shareCode;
       if (old?.status) ev.status = old.status;
@@ -29805,12 +29921,49 @@ async function _submitEventForm(bastionId, editKey) {
       await firebase.database().ref('events/' + bastionId + '/' + editKey).set(ev);
       toast('Event updated!','success');
     } else {
-      await firebase.database().ref('events/' + bastionId).push(ev);
+      const ref = await firebase.database().ref('events/' + bastionId).push(ev);
+      savedKey = ref.key;
       toast('Event created!','success');
     }
-    document.querySelector('.input-dialog-overlay')?.remove();
+
+    // Show success with copy link
+    var shareCode = ev.shareCode;
+    var link = window.location.origin + '/app?event=' + shareCode + '&bastion=' + encodeURIComponent(bastionId);
+    _showEventPublished(link, editKey);
     _loadEvents(bastionId);
-  } catch { toast('Failed to save event','error'); }
+  } catch(err) {
+    toast('Failed to save event','error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Publish Event'; }
+  }
+}
+
+function _showEventPublished(link, wasEdit) {
+  // Replace preview with success
+  var ov = document.querySelector('.input-dialog-overlay');
+  if (!ov) return;
+  ov.innerHTML = '<div class="ev-form-card ev-published-card">'
+    + '<div class="modal-bar"></div>'
+    + '<div style="padding:30px 28px;text-align:center;">'
+    + '<div style="font-size:40px;margin-bottom:10px;">🎉</div>'
+    + '<div class="ev-form-title" style="padding:0;margin-bottom:6px;">' + (wasEdit ? 'Event Updated!' : 'Event Published!') + '</div>'
+    + '<div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Share this link so others can find your event</div>'
+    + '<div class="ev-share-link-box">'
+    + '<input type="text" class="field-input ev-form-input ev-share-input" id="ev-share-link" value="' + escapeHTML(link) + '" readonly onclick="this.select()">'
+    + '<button class="btn-a ev-copy-link-btn" onclick="_evCopyPublishedLink()">Copy</button>'
+    + '</div>'
+    + '<div style="margin-top:18px;">'
+    + '<button class="btn-g" onclick="this.closest(\'.input-dialog-overlay\').remove()">Done</button>'
+    + '</div></div></div>';
+}
+
+function _evCopyPublishedLink() {
+  var input = document.getElementById('ev-share-link');
+  if (!input) return;
+  navigator.clipboard.writeText(input.value).then(function() {
+    toast('Link copied!','success');
+    var btn = input.parentElement?.querySelector('.ev-copy-link-btn');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(function(){ btn.textContent = 'Copy'; }, 1500); }
+  }).catch(function() { input.select(); document.execCommand('copy'); toast('Link copied!','success'); });
 }
 
 // ── RSVP ──

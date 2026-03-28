@@ -2083,6 +2083,26 @@ body.is-desktop-app .notif-panel{top:0;}
 .ev-form-input{width:100%;box-sizing:border-box;}
 .ev-form-row{display:flex;gap:10px;}
 .ev-form-actions{display:flex;gap:8px;justify-content:flex-end;padding:14px 22px 18px;}
+/* ── Banner upload ──── */
+.ev-banner-upload{display:flex;flex-direction:column;gap:8px;}
+.ev-banner-preview{width:100%;height:80px;border-radius:10px;overflow:hidden;background:var(--surface-1);border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;}
+.ev-banner-preview.has-img{border-style:solid;border-color:rgba(255,249,62,.12);}
+.ev-banner-preview img{width:100%;height:100%;object-fit:cover;display:block;}
+.ev-banner-actions{display:flex;gap:6px;}
+.ev-banner-btn{padding:5px 14px!important;font-size:11px!important;border-radius:8px!important;}
+.ev-banner-remove{color:var(--red)!important;border-color:rgba(239,68,68,.2)!important;}
+.ev-banner-remove:hover{background:rgba(239,68,68,.08)!important;}
+/* ── Event location / frequency in card ──── */
+.ec-location{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted-light);margin-bottom:6px;}
+.ec-frequency{font-size:10px;color:var(--accent);font-weight:700;margin-bottom:6px;}
+/* ── Event preview card ──── */
+.ev-preview-card{animation:evFormIn .15s ease;}
+@keyframes evFormIn{from{opacity:0;transform:scale(.97);}to{opacity:1;transform:none;}}
+/* ── Published success ──── */
+.ev-published-card{text-align:center;}
+.ev-share-link-box{display:flex;gap:6px;align-items:center;}
+.ev-share-input{flex:1;font-size:11px!important;background:var(--surface-1)!important;cursor:text;}
+.ev-copy-link-btn{padding:8px 18px!important;font-size:12px!important;border-radius:10px!important;white-space:nowrap;}
 /* ── Notification badge on sidebar events button ──── */
 .ev-notif-badge{background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:100px;margin-left:auto;min-width:14px;text-align:center;line-height:1.4;}
 .ev-live-highlight{background:rgba(239,68,68,.08)!important;border-color:rgba(239,68,68,.2)!important;}

@@ -10781,44 +10781,20 @@ function _getChatInputRight() {
 function toggleEmojiPicker(targetId) {
   activeEmojiTarget = targetId;
   document.getElementById('giphy-picker')?.remove();
+  document.getElementById('sticker-picker')?.remove();
+  document.getElementById('botcmd-picker')?.remove();
   const panel = document.getElementById('emoji-picker');
   if (panel.classList.contains('show')) { panel.classList.remove('show'); return; }
   buildEmojiPicker();
 
-  // Temporarily show off-screen to measure height
-  panel.style.visibility = 'hidden';
-  panel.style.top = '-9999px';
-  panel.style.left = '-9999px';
+  // Position exactly like the GIF picker: right-aligned with chatbar
+  const refEl = document.getElementById(targetId);
+  const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
+  const rect = outerEl ? outerEl.getBoundingClientRect() : (refEl ? refEl.getBoundingClientRect() : {right:400, top:300});
+  const emojiLeft = Math.max(8, _getChatInputRight() - 460);
+  panel.style.cssText = `left:${emojiLeft}px;bottom:${window.innerHeight - rect.top + 8}px;`;
   panel.classList.add('show');
-
-  requestAnimationFrame(() => {
-    const PW = panel.offsetWidth || 460;
-    const PH = panel.offsetHeight || 480;
-    const btnId = 'emoji-btn-' + (targetId.includes('dm')?'dm':targetId.includes('gc')?'gc':'ch');
-    const btn = document.getElementById(btnId);
-    const WW = window.innerWidth, WH = window.innerHeight;
-
-    let top, left;
-    const inputRight = _getChatInputRight();
-    if (btn) {
-      const r = btn.getBoundingClientRect();
-      if (r.top - PH - 8 >= 8) {
-        top = r.top - PH - 8;
-      } else {
-        top = Math.min(r.bottom + 8, WH - PH - 8);
-      }
-      left = inputRight - PW;
-    } else {
-      top = WH - PH - 90;
-      left = inputRight - PW;
-    }
-    if (left < 8) left = 8;
-    panel.style.top = Math.max(8, top) + 'px';
-    panel.style.left = Math.max(8, left) + 'px';
-    panel.style.bottom = 'auto';
-    panel.style.visibility = 'visible';
-    setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
-  });
+  setTimeout(() => panel.querySelector('.epp-search-inp')?.focus(), 80);
 }
 
 function _pickerTopTabs(active) {

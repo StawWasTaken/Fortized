@@ -5094,14 +5094,31 @@ function updateTopbar(v) {
   if (acts) acts.innerHTML = '';
   const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'Settings',bsettings:'Bastion Settings',bhub:'Overview',bastion:'Bastions'};
   if (labels[v]) title.textContent = labels[v];
-  // Update document title for subpage
-  const docTitles = {home:'Fortized',dms:'Messages | Fortized',friends:'Messages | Fortized',discover:'Discover | Fortized',atelier:'Atelier | Fortized',bastion:'Bastions | Fortized',profile:'Settings | Fortized'};
-  document.title = docTitles[v] || 'Fortized';
+  // Update document title for subpage (Discord-style: Fortized | Page)
+  const docTitles = {home:null,dms:'Friends',friends:'Friends',discover:'Discover',atelier:'Atelier',profile:'Settings',bsettings:'Bastion Settings',bhub:'Overview'};
+  if (v === 'bastion') {
+    _updateBastionTitle();
+  } else {
+    document.title = docTitles[v] ? 'Fortized | ' + docTitles[v] : 'Fortized';
+  }
   // On mobile, add member list toggle for bastion views
   if (_isMobile() && v === 'bastion' && acts) {
     acts.innerHTML += '<button class="tb-act-btn" title="Members" onclick="toggleMobileMemberPanel()" style="position:relative;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></button>';
   }
   updateOnyxDisplay();
+}
+// Update document title for bastion view: Fortized | #room | Bastion Name
+function _updateBastionTitle() {
+  const b = CU?.bastions?.[curBastion];
+  if (!b) { document.title = 'Fortized'; return; }
+  const bName = b.name || 'Bastion';
+  if (curChannel === 'overview' || curChannel === null) {
+    document.title = 'Fortized | ' + bName;
+  } else {
+    const ch = b.channels?.[curChannel];
+    const chName = ch?.name || 'channel';
+    document.title = 'Fortized | #' + chName + ' | ' + bName;
+  }
 }
 function setTopbarDMActions() {
   const acts = document.getElementById('tb-actions');
@@ -6774,6 +6791,8 @@ function openDMView(username) {
   document.getElementById('gc-member-panel')?.remove();
   closeModal('modal-new-dm');
   showView('dms');
+  // Update title: Fortized | @username
+  document.title = 'Fortized | @' + username;
   // Close mobile drawer when opening a DM chat
   if (window.innerWidth <= 768) closeMobileSidebar();
   // Hide Active Now sidebar when in a DM chat
@@ -7857,6 +7876,8 @@ function selectChannel(idx) {
       _ftzRouter.replaceState('bastion', { bastionId: b.globalId, roomId: String(idx) });
     }
   }
+  // Update document title: Fortized | #room | Bastion
+  _updateBastionTitle();
   document.querySelectorAll('.ch-item,.ch-item-2027,.vc-item-2027,.ch-overview-item').forEach(el=>el.classList.remove('active'));
   const el=document.getElementById('ch-sb-'+idx);
   if (el) el.classList.add('active');
@@ -11640,6 +11661,8 @@ function openOverviewRoom() {
   }
   // Ensure we're in bastion view
   if (_currentView !== 'bastion') showView('bastion', true);
+  // Update document title: Fortized | Bastion Name
+  _updateBastionTitle();
   // Update sidebar active states
   document.querySelectorAll('.ch-item,.ch-item-2027,.vc-item-2027').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.ch-overview-item').forEach(el=>el.classList.add('active'));

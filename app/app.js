@@ -10807,15 +10807,14 @@ function toggleEmojiPicker(targetId) {
       } else {
         top = Math.min(r.bottom + 8, WH - PH - 8);
       }
-      const chatRight = _getChatContentRight();
-      // Right-align to chat content area
-      left = chatRight - PW - 8;
+      // Right-align picker to the button's right edge
+      left = r.right - PW;
     } else {
-      // Fallback: lower-left area above chat bar
       top = WH - PH - 90;
-      left = _getChatContentRight() - PW - 8;
+      left = WW - PW - 90;
     }
     if (left < 8) left = 8;
+    if (left + PW > WW - 8) left = WW - PW - 8;
     panel.style.top = Math.max(8, top) + 'px';
     panel.style.left = Math.max(8, left) + 'px';
     panel.style.bottom = 'auto';
@@ -21469,12 +21468,10 @@ function openGiphyPicker(inputId) {
   const refEl = document.getElementById(_giphyInput);
   const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
   const rect = outerEl ? outerEl.getBoundingClientRect() : (refEl ? refEl.getBoundingClientRect() : {right:400, top:300});
-  const chatRight = _getChatContentRight();
-
   const picker = document.createElement('div');
   picker.id = 'giphy-picker';
   picker.className = 'chat-picker-base';
-  const pickerLeft = Math.max(8, chatRight - 460 - 8);
+  const pickerLeft = Math.max(8, rect.right - 460);
   picker.style.cssText = `left:${pickerLeft}px;bottom:${window.innerHeight-rect.top+8}px;width:460px;max-height:560px;`;
 
   const esc = escapeHTML(_giphyInput);
@@ -21792,12 +21789,10 @@ function openStickerPicker(inputId) {
   const refEl = document.getElementById(_stickerInput);
   const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
   const rect = outerEl ? outerEl.getBoundingClientRect() : {right:400, top:300};
-  const chatRight = _getChatContentRight();
-
   const picker = document.createElement('div');
   picker.id = 'sticker-picker';
   picker.className = 'chat-picker-base sticker-picker-panel';
-  const stickerLeft = Math.max(8, chatRight - 420 - 8);
+  const stickerLeft = Math.max(8, rect.right - 420);
   picker.style.cssText = `left:${stickerLeft}px;bottom:${window.innerHeight-rect.top+6}px;`;
 
   // Gather stickers: personal + current bastion + other bastions (Radiance only)
@@ -21931,12 +21926,10 @@ function openBotCommandPanel(inputId, context) {
   const refEl = document.getElementById(inputId);
   const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
   const rect = outerEl ? outerEl.getBoundingClientRect() : {right:400, top:300};
-  const chatRight = _getChatContentRight();
-
   const picker = document.createElement('div');
   picker.id = 'botcmd-picker';
   picker.className = 'chat-picker-base botcmd-panel';
-  const botLeft = Math.max(8, chatRight - 420 - 8);
+  const botLeft = Math.max(8, rect.right - 420);
   picker.style.cssText = `left:${botLeft}px;bottom:${window.innerHeight-rect.top+6}px;`;
 
   // Gather bot commands from current bastion

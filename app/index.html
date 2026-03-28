@@ -16808,7 +16808,6 @@ function handleContextMenu(e) {
     const isOwner = b?.owner === CU?.username;
 
     const items = [
-      { icon: _ctxSvg('refresh'), label: 'Refresh', action: () => location.reload() },
       { icon: _ctxSvg('markRead'), label: 'Mark All as Read', action: () => toast('All read!', 'success') },
     ];
 
@@ -16840,7 +16839,6 @@ function handleContextMenu(e) {
   // ── 7) Fallback — generic context menu ──
   const fallbackItems = [
     { icon: _ctxSvg('home'), label: 'Go Home', action: () => showView('home') },
-    { icon: _ctxSvg('refresh'), label: 'Refresh', action: () => location.reload() },
   ];
   if (window.getSelection()?.toString()) {
     fallbackItems.unshift({ icon: _ctxSvg('copy'), label: 'Copy Selection', action: () => navigator.clipboard.writeText(window.getSelection().toString()), copyFeedback: true });

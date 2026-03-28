@@ -8166,9 +8166,9 @@ function renderOverviewRoom() {
   // ── Banner + emblem ──
   if (bannerSrc) {
     html += '<div class="ov-banner" style="height:140px;">'
-      + '<img src="' + escapeHTML(bannerSrc) + '" onerror="this.parentElement.style.display=\'none\'" alt="" style="height:140px;">'
-      + '<div class="ov-emblem"><div class="ov-icon">' + emblemHTML + '</div></div>'
-      + '</div>';
+      + '<img src="' + escapeHTML(bannerSrc) + '" onerror="this.style.display=\'none\'" alt="" style="height:140px;">'
+      + '</div>'
+      + '<div class="ov-emblem"><div class="ov-icon">' + emblemHTML + '</div></div>';
   }
 
   // ── Identity: name, tagline, badge ──

@@ -1068,11 +1068,12 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Banner area */
 .overview-modal .ov-banner{height:140px!important;flex-shrink:0;position:relative;}
 .overview-modal .ov-banner img{height:140px!important;}
-.overview-modal .ov-emblem{bottom:-34px!important;left:50%!important;transform:translateX(-50%)!important;}
+.overview-modal .ov-banner + .ov-emblem{position:relative!important;bottom:auto!important;left:auto!important;transform:none!important;display:flex;justify-content:center;margin-top:-42px;z-index:3;}
 .overview-modal .ov-icon{width:68px!important;height:68px!important;border-radius:16px!important;border-width:4px!important;}
 .overview-modal .ov-icon img{border-radius:12px!important;}
 /* Identity */
-.overview-modal .ov-identity{padding-top:42px!important;padding-bottom:2px!important;text-align:center!important;}
+.overview-modal .ov-identity{padding-top:24px!important;padding-bottom:2px!important;text-align:center!important;}
+.overview-modal .ov-emblem + .ov-identity{padding-top:8px!important;}
 .overview-modal .ov-name{font-size:18px!important;}
 .overview-modal .ov-tagline{font-size:11.5px!important;margin-top:2px!important;}
 /* Badges */

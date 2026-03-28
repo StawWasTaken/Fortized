@@ -1177,8 +1177,8 @@ document.addEventListener('keydown', function(e) {
   if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); history.back(); return; }
   // Alt+ArrowRight = Forward
   if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); history.forward(); return; }
-  // Ctrl+R = Soft refresh (prevent hard reload)
-  if (e.ctrlKey && !e.shiftKey && e.key === 'r') { e.preventDefault(); _ftzSoftRefresh(); return; }
+  // Ctrl+R = Full page reload
+  if (e.ctrlKey && !e.shiftKey && e.key === 'r') { e.preventDefault(); location.reload(); return; }
 });
 
 // ════════════════════════════════════════════
@@ -1930,6 +1930,7 @@ function renderRailBastions() {
   _initBastionDrag();
   _initRailTooltips();
   _initRailNavTooltips();
+  _initGlobalTooltips();
 }
 
 function _renderRailBastion(b, i) {
@@ -2063,6 +2064,81 @@ function _showRailNavTip(e) {
 function _hideRailNavTip() {
   if (_railNavTipEl) { _railNavTipEl.remove(); _railNavTipEl = null; }
 }
+
+// ── Global custom tooltip system (replaces browser title tooltips) ──
+let _ftzTipEl = null, _ftzTipTimer = null;
+function _initGlobalTooltips() {
+  // Strip all title attrs → data-tip, so the browser never shows its own tooltip
+  document.querySelectorAll('[title]').forEach(el => {
+    if (!el.dataset.tip) el.dataset.tip = el.getAttribute('title');
+    el.removeAttribute('title');
+  });
+  // Also observe future title additions
+  const obs = new MutationObserver(muts => {
+    for (const m of muts) {
+      if (m.type === 'attributes' && m.attributeName === 'title') {
+        const el = m.target;
+        const t = el.getAttribute('title');
+        if (t) { el.dataset.tip = t; el.removeAttribute('title'); }
+      }
+      if (m.type === 'childList') {
+        m.addedNodes.forEach(n => {
+          if (n.nodeType === 1) {
+            n.querySelectorAll?.('[title]').forEach(c => {
+              if (!c.dataset.tip) c.dataset.tip = c.getAttribute('title');
+              c.removeAttribute('title');
+            });
+            if (n.getAttribute?.('title')) {
+              if (!n.dataset.tip) n.dataset.tip = n.getAttribute('title');
+              n.removeAttribute('title');
+            }
+          }
+        });
+      }
+    }
+  });
+  obs.observe(document.body, { attributes: true, attributeFilter: ['title'], childList: true, subtree: true });
+  // Global hover listeners via delegation
+  document.addEventListener('mouseover', _ftzTipShow);
+  document.addEventListener('mouseout', _ftzTipHide);
+}
+function _ftzTipShow(e) {
+  const el = e.target.closest?.('[data-tip]');
+  if (!el || el.closest('.rail-btn[data-nav-tip]') || el.classList.contains('rail-bastion')) return; // skip rail items (they have their own tooltip)
+  clearTimeout(_ftzTipTimer);
+  _ftzTipTimer = setTimeout(() => {
+    _ftzTipRemove();
+    const text = el.dataset.tip;
+    if (!text) return;
+    const tip = document.createElement('div');
+    tip.className = 'ftz-tooltip';
+    tip.textContent = text;
+    document.body.appendChild(tip);
+    _ftzTipEl = tip;
+    const rect = el.getBoundingClientRect();
+    const tipRect = tip.getBoundingClientRect();
+    let left = rect.left + rect.width / 2 - tipRect.width / 2;
+    let top = rect.bottom + 8;
+    // If tooltip goes below viewport, show above
+    if (top + tipRect.height > window.innerHeight) top = rect.top - tipRect.height - 8;
+    // Clamp to viewport
+    if (left < 4) left = 4;
+    if (left + tipRect.width > window.innerWidth - 4) left = window.innerWidth - tipRect.width - 4;
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+    requestAnimationFrame(() => tip.classList.add('visible'));
+  }, 400);
+}
+function _ftzTipHide(e) {
+  const el = e.target.closest?.('[data-tip]');
+  if (!el) return;
+  clearTimeout(_ftzTipTimer);
+  _ftzTipRemove();
+}
+function _ftzTipRemove() {
+  if (_ftzTipEl) { _ftzTipEl.remove(); _ftzTipEl = null; }
+}
+
 function _railNavCtxMenu(e, viewId) {
   e.preventDefault();
   e.stopPropagation();
@@ -29058,7 +29134,7 @@ const _defaultKeybinds = [
   {id:'mute',label:'Toggle Mute',desc:'Mute/unmute notifications',keys:['Ctrl','Shift','M'],section:'Navigation',action:()=>toast('Notifications toggled','info')},
   {id:'nav-back',label:'Go Back',desc:'Navigate to previous page',keys:['Alt','←'],section:'Navigation',action:()=>history.back()},
   {id:'nav-forward',label:'Go Forward',desc:'Navigate to next page',keys:['Alt','→'],section:'Navigation',action:()=>history.forward()},
-  {id:'nav-refresh',label:'Refresh',desc:'Refresh the current view',keys:['Ctrl','R'],section:'Navigation',action:()=>_ftzSoftRefresh()},
+  {id:'nav-refresh',label:'Refresh',desc:'Reload the page',keys:['Ctrl','R'],section:'Navigation',action:()=>location.reload()},
   {id:'home',label:'Go Home',desc:'Navigate to the home view',keys:['Ctrl','H'],section:'Navigation',action:()=>showView('home')},
   {id:'dms',label:'Open DMs',desc:'Navigate to direct messages',keys:['Ctrl','D'],section:'Navigation',action:()=>showView('dms')},
   {id:'settings',label:'Open Settings',desc:'Navigate to settings',keys:['Ctrl',','],section:'Navigation',action:()=>showView('profile')},
@@ -29675,6 +29751,7 @@ if (typeof window !== 'undefined') setInterval(_updateLastSeen, 120000);
 function _initNewFeatures() {
   _initKeyboardShortcuts();
   _initRailNavTooltips();
+  _initGlobalTooltips();
   _renderFavourites();
 }
 // Hook into existing init — call after page loads

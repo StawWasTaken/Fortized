@@ -4133,13 +4133,11 @@ function renderBastionSidebar(scroll) {
 
   html+=`<div class="sidebar-divider"></div>`;
 
-  // ── Overview Room (always on top, not deletable) ──
-  html+=`<div class="ch-overview-item${curChannel==='overview'?' active':''}" onclick="openOverviewRoom()">
-    <span class="ov-sidebar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+  // ── Overview, Events & Bastion Boosts (modal cards) ──
+  html+=`<div class="ch-sidebar-action" onclick="openOverviewRoom()">
+    <span class="sa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
     <span>Overview</span>
   </div>`;
-
-  // ── Events & Bastion Boosts quick-nav ──
   html+=`<div class="ch-sidebar-action" onclick="openBastionSettings('events')" id="sidebar-events-btn">
     <span class="sa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
     <span>Events</span>
@@ -4361,7 +4359,7 @@ function selectChannel(idx) {
   }
   // Update document title: Fortized | #room | Bastion
   _updateBastionTitle();
-  document.querySelectorAll('.ch-item,.ch-item-2027,.vc-item-2027,.ch-overview-item').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.ch-item,.ch-item-2027,.vc-item-2027').forEach(el=>el.classList.remove('active'));
   const el=document.getElementById('ch-sb-'+idx);
   if (el) el.classList.add('active');
 
@@ -8132,23 +8130,6 @@ function renderBastionHub() {
 // ════════════════════════════════════════════
 function openOverviewRoom() {
   if (curBastion === null) return;
-  curChannel = 'overview';
-  // Close mobile drawer when selecting overview
-  if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
-  // Remember last channel as overview
-  const b = CU.bastions?.[curBastion];
-  if (b) localStorage.setItem('ftz_last_ch_' + (b.globalId||b.name||curBastion), 'overview');
-  // Update URL to reflect overview room
-  if (b && b.globalId && typeof _ftzRouter !== 'undefined') {
-    _ftzRouter.replaceState('bastion', { bastionId: b.globalId, roomId: 'overview' });
-  }
-  // Ensure we're in bastion view
-  if (_currentView !== 'bastion') showView('bastion', true);
-  _updateBastionTitle();
-  // Update sidebar active states
-  document.querySelectorAll('.ch-item,.ch-item-2027,.vc-item-2027').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.ch-overview-item').forEach(el=>el.classList.add('active'));
-  // Render into modal and open it
   renderOverviewRoom();
   openModal('modal-overview');
 }

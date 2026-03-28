@@ -1313,6 +1313,27 @@ window.addEventListener('popstate', function(e) {
   showView(state.view || 'home', true);
 });
 function showView(v, _skipPush) {
+  // ── Settings & bastion settings open as modals over the current page ──
+  if (v === 'profile') {
+    closeModal('modal-bsettings'); // close other if open
+    openModal('modal-settings');
+    _settingsOriginal = CU ? JSON.parse(JSON.stringify({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme})) : null;
+    clearSettingsDirty();
+    buildProfileNav(document.getElementById('profile-nav'));
+    buildProfileView('myprofile');
+    return;
+  }
+  if (v === 'bsettings') {
+    closeModal('modal-settings'); // close other if open
+    openModal('modal-bsettings');
+    return;
+  }
+
+  // Close settings/bsettings modals when navigating to a normal view
+  closeModal('modal-settings');
+  closeModal('modal-bsettings');
+  clearSettingsDirty();
+
   _currentView = v;
   // Update URL (skip for bastion — openBastion handles that)
   if (!_skipPush && v !== 'bastion' && typeof _ftzRouter !== 'undefined') {
@@ -1323,12 +1344,8 @@ function showView(v, _skipPush) {
   if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
   // Sync mobile tab bar
   setTimeout(() => { try { _syncMobileTabBar(); } catch {} }, 50);
-  // Hide mobile tab bar on settings view — unsaved bar was overlapping it
   const _mtb = document.getElementById('mobile-tab-bar');
-  if (_mtb) _mtb.style.display = (v === 'profile') ? 'none' : '';
-  // Clear the unsaved-settings bar when leaving the profile view so it
-  // doesn't float over other views and block button clicks
-  if (v !== 'profile') clearSettingsDirty();
+  if (_mtb) _mtb.style.display = '';
   // Stop admin polling when leaving admin view
   if (v !== 'admin' && _reportPollInterval) { clearInterval(_reportPollInterval); _reportPollInterval = null; }
   // Stop Joyster bubbles when leaving home — Joyster only lives on the homepage
@@ -1487,22 +1504,9 @@ function updateSidebar(v) {
     if (ab) ab.textContent = CU?.onyx||0;
     const db = document.getElementById('daily-btn');
     if (db) { const today=new Date().toDateString(); if(CU?.lastDaily===today)db.classList.add('claimed'); else db.classList.remove('claimed'); }
-  } else if (v==='profile') {
-    if (hdr) hdr.style.display = 'none';
-    // Snapshot user data before editing so we can detect real changes
-    _settingsOriginal = CU ? JSON.parse(JSON.stringify({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme})) : null;
-    clearSettingsDirty();
-    buildProfileNav(document.getElementById('profile-nav'));
-    buildProfileView('myprofile');
-    return;
   } else if (v==='bastion') {
     // Header hidden — bastion sidebar renders its own hero banner
     renderBastionSidebar(scroll);
-  } else if (v==='bsettings') {
-    // bsettings has its own nav inside view-bsettings; hide sidebar-ctx
-    if (ctx) ctx.style.display = 'none';
-    updateUserbarWidth();
-    renderBSettingsNav();
   } else if (v==='bhub') {
     // bastion hub: hide sidebar-ctx, render hub
     if (ctx) ctx.style.display = 'none';
@@ -8561,7 +8565,7 @@ function renderBSettingsNav(activeTab) {
     return `<div class="bsettings-nav-item${activeTab===s.id?' active':''}${s.danger?' danger':''}" onclick="renderBSettingsMain('${s.id}')">${s.icon} <span>${s.label}</span></div>`;
   }).join('');
   html += `<div class="bsettings-nav-sep"></div>`;
-  html += `<div class="bsettings-nav-back" onclick="openBastion(curBastion)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Bastion</div>`;
+  html += `<div class="bsettings-nav-back" onclick="closeModal('modal-bsettings')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Bastion</div>`;
   html += '</div>';
   nav.innerHTML = html;
 }
@@ -12483,6 +12487,7 @@ async function toggleNotifPanel() {
   panel.className = 'notif-panel-v2';
   panel.id = 'notif-panel-v2';
   panel.innerHTML = `
+    <div class="modal-bar" style="flex-shrink:0;border-radius:18px 18px 0 0;"></div>
     <div class="npv-header">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       <h3>Inbox</h3>
@@ -13373,12 +13378,12 @@ function showCustomConfirm(message,callback){
 function openModal(id){
   if (id === 'modal-new-dm') { setTimeout(() => switchNewDMTab('dm'), 10); }
   const el=document.getElementById(id);if(el){el.classList.add('open');_trapFocusInOverlay(el);}}
-function closeModal(id){const el=document.getElementById(id);if(el){el.classList.remove('open');_releaseFocusTrap(el);}}
-document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay')){e.target.classList.remove('open');_releaseFocusTrap(e.target);}});
+function closeModal(id){const el=document.getElementById(id);if(el){el.classList.remove('open');_releaseFocusTrap(el);if(id==='modal-settings')clearSettingsDirty();}}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay')){e.target.classList.remove('open');_releaseFocusTrap(e.target);if(e.target.id==='modal-settings')clearSettingsDirty();}});
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   const top = [...document.querySelectorAll('.modal-overlay.open')].pop();
-  if (top) { top.classList.remove('open'); _releaseFocusTrap(top); }
+  if (top) { top.classList.remove('open'); _releaseFocusTrap(top); if(top.id==='modal-settings')clearSettingsDirty(); }
 });
 
 function _trapFocusInOverlay(overlay){

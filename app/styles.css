@@ -1058,6 +1058,9 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .hq-quick-btn{padding:7px var(--space-md);border-radius:var(--radius-sm);border:1px solid var(--surface-border);background:var(--surface-1);color:rgba(255,255,255,.5);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
 .hq-quick-btn:hover{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);}
 @media(max-width:768px){.admin-nav{width:56px;min-width:56px;}.adm-tab span:last-child,.adm-sec-label{display:none;}.adm-tab{justify-content:center;padding:10px;}}
+/* ── Settings modal (large modal for settings/bsettings) ──── */
+.settings-modal{max-width:900px!important;width:calc(100vw - 80px)!important;height:calc(100vh - 100px);max-height:85vh;display:flex;flex-direction:column;overflow:hidden;}
+@media(max-width:768px){.settings-modal{width:calc(100vw - 24px)!important;height:calc(100vh - 48px);max-height:95vh;}}
 .profile-wrap{flex:1;display:flex;overflow:hidden;background:var(--bg);}
 /* Settings sidebar — Discord-style clean nav */
 .profile-nav{width:232px;min-width:232px;background:var(--sidebar-ctx);display:flex;flex-direction:column;padding:12px 8px 12px;overflow-y:auto;border-right:1px solid rgba(255,255,255,.04);}

@@ -4140,10 +4140,12 @@ function renderBastionSidebar(scroll) {
   </div>`;
 
   // ── Events & Bastion Boosts quick-nav ──
-  html+=`<div class="ch-sidebar-action" onclick="openBastionSettings('events')">
+  html+=`<div class="ch-sidebar-action" onclick="openBastionSettings('events')" id="sidebar-events-btn">
     <span class="sa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
     <span>Events</span>
   </div>`;
+  // Update events badge after sidebar renders
+  setTimeout(()=>_updateEventsBadge(),100);
   html+=`<div class="ch-sidebar-action" onclick="openBastionSettings('boost')">
     <span class="sa-icon">${_boostSvg('16')}</span>
     <span>Bastion Boosts</span>
@@ -8575,22 +8577,50 @@ function openBoostModal() {
   openModal('modal-boost');
 }
 
+// ── Events modal: tabbed (Events / Calendar) ──
+let _eventsTab = 'events';
+let _calMonth = new Date().getMonth();
+let _calYear = new Date().getFullYear();
+
 function openEventsModal() {
   if (curBastion === null) return;
   const b = CU.bastions[curBastion];
   if (!b) return;
   const body = document.getElementById('events-modal-body');
   if (!body) return;
-  const bastionId = b.globalId||b.name;
-  body.innerHTML = `
-    <div class="modal-title">📅 Events — ${escapeHTML(b.name)}</div>
-    <div class="modal-sub">Schedule and manage community events.</div>
-    <div id="events-modal-container"></div>
-    <div class="modal-actions" style="margin-top:14px;">
-      <button class="btn-g" onclick="closeModal('modal-events')">Close</button>
-    </div>`;
-  _renderEventsPanel(document.getElementById('events-modal-container'), bastionId);
+  _eventsTab = 'events';
+  _calMonth = new Date().getMonth();
+  _calYear = new Date().getFullYear();
+  _renderEventsModalContent();
   openModal('modal-events');
+}
+
+function _renderEventsModalContent() {
+  const b = CU.bastions?.[curBastion];
+  if (!b) return;
+  const body = document.getElementById('events-modal-body');
+  if (!body) return;
+  const bastionId = b.globalId||b.name;
+  const isOwner = b.owner === CU.username;
+  const hasAdmin = hasPerm('administrator') || hasPerm('manage_channels');
+  const canManage = isOwner || hasAdmin;
+  body.innerHTML = `
+    <div class="ev-modal-header">
+      <div class="ev-tabs">
+        <button class="ev-tab ${_eventsTab==='events'?'active':''}" onclick="_eventsTab='events';_renderEventsModalContent()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Events
+        </button>
+        <button class="ev-tab ${_eventsTab==='calendar'?'active':''}" onclick="_eventsTab='calendar';_renderEventsModalContent()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="7" y="13" width="3" height="3" rx=".5"/></svg>
+          Calendar
+        </button>
+      </div>
+      ${canManage ? '<button class="btn-a ev-create-btn" onclick="_openEventForm()">+ Create Event</button>' : ''}
+    </div>
+    <div id="ev-tab-content"></div>`;
+  if (_eventsTab === 'events') _loadEvents(bastionId);
+  else _renderCalendar(bastionId);
 }
 
 function renderBSettingsNav(activeTab) {
@@ -9259,9 +9289,8 @@ function renderBSettingsMain(tab) {
       <button class="btn-a" onclick="saveBastionStarboard()">Save Starboard Settings</button>`;
   }
   else if (tab==='events') {
-    const bastionId = b.globalId||b.name;
-    main.innerHTML = `<div class="bs-section-title">Events</div><div class="bs-section-desc">Schedule and manage community events.</div><div id="bastion-events-container"></div>`;
-    _renderEventsPanel(document.getElementById('bastion-events-container'), bastionId);
+    // Events now open in their own modal
+    openEventsModal();
   }
   else if (tab==='slowmode') {
     const bastionId = b.globalId||b.name;
@@ -29568,74 +29597,242 @@ function _uploadSoundClip() {
 }
 
 // ════════════════════════════════════════════
-// EVENTS / CALENDAR SYSTEM
+// EVENTS / CALENDAR SYSTEM (full rework)
 // ════════════════════════════════════════════
-function _renderEventsPanel(container, bastionId) {
-  if (!container) return;
-  container.innerHTML = `
-    <div class="events-panel">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">Events</div>
-        <button class="btn-a" style="padding:6px 14px;font-size:11px;" onclick="_createEvent('${escapeHTML(bastionId)}')">+ Create Event</button>
-      </div>
-      <div id="events-list"><div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">Loading events…</div></div>
-    </div>`;
-  _loadEvents(bastionId);
-}
+
+// ── Load & render events list ──
 async function _loadEvents(bastionId) {
-  const list = document.getElementById('events-list');
-  if (!list) return;
+  const container = document.getElementById('ev-tab-content');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">Loading events…</div>';
   try {
     const snap = await firebase.database().ref('events/' + bastionId).get();
-    if (!snap.exists()) { list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">No upcoming events</div>'; return; }
+    if (!snap.exists()) {
+      container.innerHTML = '<div class="ev-empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="opacity:.2;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><div>No events yet</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">Create one to get started!</div></div>';
+      return;
+    }
     const events = [];
     snap.forEach(c => { const v = c.val(); v._key = c.key; events.push(v); });
     events.sort((a,b) => new Date(a.date||0) - new Date(b.date||0));
+    window._eventsCache = { bastionId, events };
     const now = new Date();
-    list.innerHTML = events.map(ev => {
-      const d = new Date(ev.date);
-      const isPast = d < now;
-      const rsvps = ev.rsvps ? Object.keys(ev.rsvps).length : 0;
-      const userRsvp = ev.rsvps?.[CU.username];
-      const diff = d - now;
-      const days = Math.floor(diff / 86400000);
-      const hours = Math.floor((diff % 86400000) / 3600000);
-      const countdown = isPast ? 'Ended' : days > 0 ? days+'d '+hours+'h' : hours > 0 ? hours+'h' : 'Starting soon!';
-      return `<div class="event-card" ${isPast?'style="opacity:.6;"':''}>
-        <div class="ec-banner">${ev.emoji||'📅'}
-          <div class="ec-date-badge"><div class="edb-month">${d.toLocaleString('en',{month:'short'})}</div><div class="edb-day">${d.getDate()}</div></div>
-        </div>
-        <div class="ec-body">
-          <div class="ec-title">${escapeHTML(ev.title||'')}</div>
-          <div class="ec-desc">${escapeHTML((ev.description||'').slice(0,150))}</div>
-          <div class="ec-meta">
-            <span>${rsvps} interested</span>
-            <div class="event-countdown">⏱ ${countdown}</div>
-            <div class="ec-rsvp">
-              <button class="rsvp-yes ${userRsvp?'active':''}" onclick="_rsvpEvent('${escapeHTML(bastionId)}','${ev._key}')">
-                ${userRsvp?'✓ Going':'Interested'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-  } catch { list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">Failed to load events</div>'; }
+    const b = CU.bastions?.[curBastion];
+    const isOwner = b?.owner === CU.username;
+    const hasAdmin = hasPerm('administrator') || hasPerm('manage_channels');
+    const canManage = isOwner || hasAdmin;
+
+    // Split into live/upcoming and past
+    const upcoming = events.filter(ev => !ev.cancelled && new Date(ev.date) >= now || ev.status === 'live');
+    const past = events.filter(ev => ev.cancelled || (new Date(ev.date) < now && ev.status !== 'live'));
+
+    let html = '<div class="ev-list">';
+    if (upcoming.length) {
+      html += upcoming.map(ev => _renderEventCard(ev, bastionId, canManage, now)).join('');
+    }
+    if (past.length) {
+      html += '<div class="ev-section-label">Past & Cancelled</div>';
+      html += past.map(ev => _renderEventCard(ev, bastionId, canManage, now, true)).join('');
+    }
+    if (!upcoming.length && !past.length) {
+      html += '<div class="ev-empty">No events</div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+    _updateEventsBadge(bastionId);
+  } catch { container.innerHTML = '<div class="ev-empty">Failed to load events</div>'; }
 }
-function _createEvent(bastionId) {
-  showCustomInput('Create Event','Event title:', (title) => {
-    if (!title) return;
-    showCustomInput('Event Description','Description (optional):', (desc) => {
-      showCustomInput('Event Date','Date (YYYY-MM-DD HH:MM):', async (dateStr) => {
-        if (!dateStr) return;
-        const parsedDate = new Date(dateStr);
-        if (isNaN(parsedDate.getTime())) { toast('Invalid date format. Use YYYY-MM-DD HH:MM','error'); return; }
-        const ev = { title, description: desc||'', date: parsedDate.toISOString(), emoji:'📅', createdBy: CU.username, createdAt: new Date().toISOString() };
-        try { await firebase.database().ref('events/' + bastionId).push(ev); toast('Event created!','success'); _loadEvents(bastionId); } catch { toast('Failed','error'); }
-      });
-    });
+
+function _renderEventCard(ev, bastionId, canManage, now, isPast) {
+  const d = new Date(ev.date);
+  const endD = ev.endDate ? new Date(ev.endDate) : null;
+  const rsvps = ev.rsvps ? Object.keys(ev.rsvps).length : 0;
+  const userRsvp = ev.rsvps?.[CU.username];
+  const isLive = ev.status === 'live';
+  const isCancelled = !!ev.cancelled;
+  const isCreator = ev.createdBy === CU.username;
+  const diff = d - now;
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  const countdown = isCancelled ? 'Cancelled' : isLive ? '🔴 LIVE NOW' : isPast ? 'Ended' : days > 0 ? days+'d '+hours+'h' : hours > 0 ? hours+'h '+mins+'m' : mins > 0 ? mins+'m' : 'Starting soon!';
+  const bannerBg = ev.banner ? 'background-image:url('+escapeHTML(ev.banner)+');background-size:cover;background-position:center;' : 'background:linear-gradient(135deg,rgba(255,249,62,.08),rgba(96,165,250,.06));';
+  const liveClass = isLive ? ' ev-card-live' : '';
+  const cancelClass = isCancelled ? ' ev-card-cancelled' : '';
+  const pastClass = isPast ? ' ev-card-past' : '';
+
+  return '<div class="event-card'+liveClass+cancelClass+pastClass+'">'
+    + '<div class="ec-banner" style="'+bannerBg+'">'
+    + (ev.banner ? '' : '<span style="font-size:32px;">'+(ev.emoji||'📅')+'</span>')
+    + '<div class="ec-date-badge"><div class="edb-month">'+d.toLocaleString('en',{month:'short'})+'</div><div class="edb-day">'+d.getDate()+'</div></div>'
+    + (isLive ? '<div class="ec-live-badge">🔴 LIVE</div>' : '')
+    + '</div>'
+    + '<div class="ec-body">'
+    + '<div class="ec-title-row"><div class="ec-title">'+escapeHTML(ev.title||'')+'</div>'
+    + '<button class="ec-menu-btn" onclick="_showEventMenu(event,\''+escapeHTML(bastionId)+'\',\''+ev._key+'\','+(canManage||isCreator?'true':'false')+')">⋯</button></div>'
+    + (ev.description ? '<div class="ec-desc">'+escapeHTML(ev.description.slice(0,200))+'</div>' : '')
+    + '<div class="ec-meta">'
+    + '<span>'+rsvps+' interested</span>'
+    + '<div class="event-countdown">'+countdown+'</div>'
+    + '<div class="ec-rsvp">'
+    + '<button class="rsvp-yes '+(userRsvp?'active':'')+'" onclick="_rsvpEvent(\''+escapeHTML(bastionId)+'\',\''+ev._key+'\')">'
+    + (userRsvp ? '✓ Going' : 'Interested')
+    + '</button></div></div>'
+    + (endD ? '<div style="font-size:10px;color:var(--muted);margin-top:4px;">Ends '+endD.toLocaleString('en',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</div>' : '')
+    + '</div></div>';
+}
+
+// ── Event context menu ──
+function _showEventMenu(e, bastionId, eventKey, canManage) {
+  e.stopPropagation();
+  document.querySelectorAll('.ev-ctx-menu').forEach(m=>m.remove());
+  const cached = window._eventsCache?.events?.find(ev=>ev._key===eventKey);
+  const isLive = cached?.status === 'live';
+  const isCancelled = !!cached?.cancelled;
+  const isPast = cached ? new Date(cached.date) < new Date() && !isLive : false;
+
+  const menu = document.createElement('div');
+  menu.className = 'ev-ctx-menu';
+  let items = '';
+  items += '<div class="ev-ctx-item" onclick="_addEventToCalendar(\''+eventKey+'\')"><span>Add to Calendar</span><span style="opacity:.4;">›</span></div>';
+  if (canManage && !isLive && !isCancelled && !isPast) {
+    items += '<div class="ev-ctx-item" onclick="_startEventEarly(\''+escapeHTML(bastionId)+'\',\''+eventKey+'\')"><span>Start Event</span></div>';
+  }
+  if (canManage && !isCancelled) {
+    items += '<div class="ev-ctx-item ev-ctx-highlight" onclick="_openEventForm(\''+eventKey+'\')"><span>Edit Event</span></div>';
+  }
+  if (canManage && !isCancelled) {
+    items += '<div class="ev-ctx-item ev-ctx-danger" onclick="_cancelEvent(\''+escapeHTML(bastionId)+'\',\''+eventKey+'\')"><span>Cancel Event</span></div>';
+  }
+  items += '<div class="ev-ctx-item" onclick="_copyEventLink(\''+escapeHTML(bastionId)+'\',\''+eventKey+'\')"><span>Copy Event Link</span></div>';
+  items += '<div class="ev-ctx-item ev-ctx-report" onclick="_reportEvent(\''+escapeHTML(bastionId)+'\',\''+eventKey+'\')"><span>Report Event</span><span style="color:var(--red);">🚩</span></div>';
+  menu.innerHTML = items;
+
+  document.body.appendChild(menu);
+  const btn = e.target.closest('.ec-menu-btn');
+  if (btn) {
+    const rect = btn.getBoundingClientRect();
+    menu.style.top = rect.bottom + 4 + 'px';
+    menu.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
+  } else {
+    menu.style.top = e.clientY + 'px';
+    menu.style.left = e.clientX + 'px';
+  }
+  setTimeout(() => {
+    const close = (ev) => { if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener('click', close); } };
+    document.addEventListener('click', close);
+  }, 10);
+}
+
+// ── Event creation / edit form ──
+function _openEventForm(editKey) {
+  const b = CU.bastions?.[curBastion];
+  if (!b) return;
+  const bastionId = b.globalId||b.name;
+  const existing = editKey ? window._eventsCache?.events?.find(ev=>ev._key===editKey) : null;
+  const isEdit = !!existing;
+
+  // Close any existing context menu
+  document.querySelectorAll('.ev-ctx-menu').forEach(m=>m.remove());
+
+  const ov = document.createElement('div');
+  ov.className = 'input-dialog-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9950;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  const now = new Date();
+  const defDate = existing ? new Date(existing.date) : new Date(now.getTime() + 3600000);
+  const dateVal = defDate.getFullYear() + '-' + String(defDate.getMonth()+1).padStart(2,'0') + '-' + String(defDate.getDate()).padStart(2,'0');
+  const timeVal = String(defDate.getHours()).padStart(2,'0') + ':' + String(defDate.getMinutes()).padStart(2,'0');
+  const endDateVal = existing?.endDate ? new Date(existing.endDate) : null;
+  const endDStr = endDateVal ? endDateVal.getFullYear()+'-'+String(endDateVal.getMonth()+1).padStart(2,'0')+'-'+String(endDateVal.getDate()).padStart(2,'0') : '';
+  const endTStr = endDateVal ? String(endDateVal.getHours()).padStart(2,'0')+':'+String(endDateVal.getMinutes()).padStart(2,'0') : '';
+
+  ov.innerHTML = '<div class="ev-form-card">'
+    + '<div class="modal-bar"></div>'
+    + '<div class="ev-form-title">'+(isEdit ? 'Edit Event' : 'Create Event')+'</div>'
+    + '<div class="ev-form-body">'
+    + '<label class="ev-form-label">Event Name <span style="color:var(--red);">*</span></label>'
+    + '<input class="field-input ev-form-input" id="ev-f-title" placeholder="e.g. Game Night, Community Hangout…" maxlength="100" value="'+escapeHTML(existing?.title||'')+'">'
+    + '<label class="ev-form-label">Description</label>'
+    + '<textarea class="field-input ev-form-input" id="ev-f-desc" placeholder="What\'s the event about?" rows="3" maxlength="500" style="resize:vertical;">'+escapeHTML(existing?.description||'')+'</textarea>'
+    + '<div class="ev-form-row">'
+    + '<div style="flex:1;"><label class="ev-form-label">Start Date <span style="color:var(--red);">*</span></label><input type="date" class="field-input ev-form-input" id="ev-f-date" value="'+dateVal+'"></div>'
+    + '<div style="flex:1;"><label class="ev-form-label">Start Time <span style="color:var(--red);">*</span></label><input type="time" class="field-input ev-form-input" id="ev-f-time" value="'+timeVal+'"></div>'
+    + '</div>'
+    + '<div class="ev-form-row">'
+    + '<div style="flex:1;"><label class="ev-form-label">End Date <span style="font-size:10px;color:var(--muted);">(optional)</span></label><input type="date" class="field-input ev-form-input" id="ev-f-end-date" value="'+endDStr+'"></div>'
+    + '<div style="flex:1;"><label class="ev-form-label">End Time</label><input type="time" class="field-input ev-form-input" id="ev-f-end-time" value="'+endTStr+'"></div>'
+    + '</div>'
+    + '<label class="ev-form-label">Banner Image URL <span style="font-size:10px;color:var(--muted);">(optional)</span></label>'
+    + '<input class="field-input ev-form-input" id="ev-f-banner" placeholder="https://example.com/banner.png" value="'+escapeHTML(existing?.banner||'')+'">'
+    + '<div id="ev-f-banner-preview">'+(existing?.banner ? '<img src="'+escapeHTML(existing.banner)+'" style="width:100%;height:80px;object-fit:cover;border-radius:10px;margin-top:6px;" onerror="this.style.display=\'none\'">' : '')+'</div>'
+    + '<label class="ev-form-label">Emoji Icon</label>'
+    + '<input class="field-input ev-form-input" id="ev-f-emoji" placeholder="📅" maxlength="4" value="'+escapeHTML(existing?.emoji||'📅')+'" style="width:60px;text-align:center;">'
+    + '</div>'
+    + '<div class="ev-form-actions">'
+    + '<button class="btn-g" onclick="this.closest(\'.input-dialog-overlay\').remove()">Cancel</button>'
+    + '<button class="btn-a" onclick="_submitEventForm(\''+escapeHTML(bastionId)+'\','+(isEdit ? '\''+editKey+'\'' : 'null')+')">'+(isEdit?'Save Changes':'Create Event')+'</button>'
+    + '</div></div>';
+
+  document.body.appendChild(ov);
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  document.getElementById('ev-f-title')?.focus();
+
+  // Live banner preview
+  const bannerInput = document.getElementById('ev-f-banner');
+  if (bannerInput) bannerInput.addEventListener('input', () => {
+    const prev = document.getElementById('ev-f-banner-preview');
+    if (prev) prev.innerHTML = bannerInput.value ? '<img src="'+escapeHTML(bannerInput.value)+'" style="width:100%;height:80px;object-fit:cover;border-radius:10px;margin-top:6px;" onerror="this.style.display=\'none\'">' : '';
   });
 }
+
+async function _submitEventForm(bastionId, editKey) {
+  const title = document.getElementById('ev-f-title')?.value?.trim();
+  if (!title) { toast('Event name is required','error'); return; }
+  const desc = document.getElementById('ev-f-desc')?.value?.trim() || '';
+  const dateStr = document.getElementById('ev-f-date')?.value;
+  const timeStr = document.getElementById('ev-f-time')?.value;
+  if (!dateStr || !timeStr) { toast('Start date and time are required','error'); return; }
+  const startDate = new Date(dateStr + 'T' + timeStr);
+  if (isNaN(startDate.getTime())) { toast('Invalid date/time','error'); return; }
+  const endDateStr = document.getElementById('ev-f-end-date')?.value;
+  const endTimeStr = document.getElementById('ev-f-end-time')?.value;
+  let endDate = null;
+  if (endDateStr && endTimeStr) {
+    endDate = new Date(endDateStr + 'T' + endTimeStr);
+    if (isNaN(endDate.getTime())) endDate = null;
+  }
+  const banner = document.getElementById('ev-f-banner')?.value?.trim() || '';
+  const emoji = document.getElementById('ev-f-emoji')?.value?.trim() || '📅';
+
+  const ev = {
+    title, description: desc, date: startDate.toISOString(),
+    emoji, banner, createdBy: CU.username, createdAt: new Date().toISOString()
+  };
+  if (endDate) ev.endDate = endDate.toISOString();
+  // Generate share code
+  if (!editKey) ev.shareCode = Math.random().toString(36).slice(2,8).toUpperCase();
+
+  try {
+    if (editKey) {
+      // Preserve existing fields not in form
+      const old = window._eventsCache?.events?.find(e=>e._key===editKey);
+      if (old?.rsvps) ev.rsvps = old.rsvps;
+      if (old?.shareCode) ev.shareCode = old.shareCode;
+      if (old?.status) ev.status = old.status;
+      ev.createdBy = old?.createdBy || CU.username;
+      ev.createdAt = old?.createdAt || ev.createdAt;
+      await firebase.database().ref('events/' + bastionId + '/' + editKey).set(ev);
+      toast('Event updated!','success');
+    } else {
+      await firebase.database().ref('events/' + bastionId).push(ev);
+      toast('Event created!','success');
+    }
+    document.querySelector('.input-dialog-overlay')?.remove();
+    _loadEvents(bastionId);
+  } catch { toast('Failed to save event','error'); }
+}
+
+// ── RSVP ──
 async function _rsvpEvent(bastionId, eventKey) {
   const path = 'events/' + bastionId + '/' + eventKey + '/rsvps/' + CU.username;
   try {
@@ -29644,6 +29841,199 @@ async function _rsvpEvent(bastionId, eventKey) {
     else { await firebase.database().ref(path).set(true); toast('RSVP confirmed!','success'); }
     _loadEvents(bastionId);
   } catch { toast('Failed','error'); }
+}
+
+// ── Start event early ──
+async function _startEventEarly(bastionId, eventKey) {
+  showCustomConfirm('Start this event now? It will be marked as LIVE.', async () => {
+    try {
+      await firebase.database().ref('events/' + bastionId + '/' + eventKey + '/status').set('live');
+      toast('Event is now LIVE!','success');
+      _loadEvents(bastionId);
+      _updateEventsBadge(bastionId);
+    } catch { toast('Failed','error'); }
+  });
+}
+
+// ── Cancel event ──
+async function _cancelEvent(bastionId, eventKey) {
+  showCustomConfirm('Cancel this event? This cannot be undone.', async () => {
+    try {
+      await firebase.database().ref('events/' + bastionId + '/' + eventKey + '/cancelled').set(true);
+      await firebase.database().ref('events/' + bastionId + '/' + eventKey + '/status').remove();
+      toast('Event cancelled','info');
+      _loadEvents(bastionId);
+      _updateEventsBadge(bastionId);
+    } catch { toast('Failed','error'); }
+  });
+}
+
+// ── Copy event link ──
+function _copyEventLink(bastionId, eventKey) {
+  const cached = window._eventsCache?.events?.find(ev=>ev._key===eventKey);
+  const code = cached?.shareCode || eventKey;
+  const link = location.origin + '/app?event=' + code + '&bastion=' + encodeURIComponent(bastionId);
+  navigator.clipboard.writeText(link).then(() => toast('Event link copied!','success')).catch(() => toast('Failed to copy','error'));
+  document.querySelectorAll('.ev-ctx-menu').forEach(m=>m.remove());
+}
+
+// ── Add to external calendar ──
+function _addEventToCalendar(eventKey) {
+  const cached = window._eventsCache?.events?.find(ev=>ev._key===eventKey);
+  if (!cached) return;
+  document.querySelectorAll('.ev-ctx-menu').forEach(m=>m.remove());
+  const d = new Date(cached.date);
+  const end = cached.endDate ? new Date(cached.endDate) : new Date(d.getTime() + 3600000);
+  const fmt = dt => dt.toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const gcalUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(cached.title)+'&dates='+fmt(d)+'/'+fmt(end)+'&details='+encodeURIComponent(cached.description||'');
+  window.open(gcalUrl, '_blank');
+}
+
+// ── Report event ──
+function _reportEvent(bastionId, eventKey) {
+  document.querySelectorAll('.ev-ctx-menu').forEach(m=>m.remove());
+  showCustomInput('Report Event','Reason for reporting:', async (reason) => {
+    if (!reason) return;
+    try {
+      await firebase.database().ref('reports/events').push({
+        bastionId, eventKey, reporter: CU.username, reason, at: new Date().toISOString()
+      });
+      toast('Event reported. Thank you!','success');
+    } catch { toast('Failed to report','error'); }
+  });
+}
+
+// ── Events notification badge ──
+async function _updateEventsBadge(bastionId) {
+  if (!bastionId) {
+    const b = CU.bastions?.[curBastion];
+    if (!b) return;
+    bastionId = b.globalId||b.name;
+  }
+  try {
+    const snap = await firebase.database().ref('events/' + bastionId).get();
+    if (!snap.exists()) { _setEventsBadge(0, false); return; }
+    const now = new Date();
+    let liveCount = 0;
+    let upcomingSoon = 0;
+    snap.forEach(c => {
+      const ev = c.val();
+      if (ev.cancelled) return;
+      if (ev.status === 'live') liveCount++;
+      const d = new Date(ev.date);
+      const diff = d - now;
+      if (diff > 0 && diff < 3600000) upcomingSoon++; // within 1 hour
+    });
+    _setEventsBadge(liveCount + upcomingSoon, liveCount > 0);
+  } catch {}
+}
+
+function _setEventsBadge(count, isLive) {
+  const sidebarBtn = document.querySelector('.ch-sidebar-action[onclick*="events"]');
+  if (!sidebarBtn) return;
+  // Remove old badge
+  const oldBadge = sidebarBtn.querySelector('.ev-notif-badge');
+  if (oldBadge) oldBadge.remove();
+  // Add badge if count > 0
+  if (count > 0) {
+    const badge = document.createElement('span');
+    badge.className = 'ev-notif-badge';
+    badge.textContent = count;
+    sidebarBtn.appendChild(badge);
+  }
+  // Red highlight for live events
+  if (isLive) {
+    sidebarBtn.classList.add('ev-live-highlight');
+  } else {
+    sidebarBtn.classList.remove('ev-live-highlight');
+  }
+}
+
+// ── Calendar view ──
+async function _renderCalendar(bastionId) {
+  const container = document.getElementById('ev-tab-content');
+  if (!container) return;
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  // Load events for this month
+  let events = [];
+  try {
+    const snap = await firebase.database().ref('events/' + bastionId).get();
+    if (snap.exists()) {
+      snap.forEach(c => { const v = c.val(); v._key = c.key; events.push(v); });
+    }
+    window._eventsCache = { bastionId, events };
+  } catch {}
+
+  const firstDay = new Date(_calYear, _calMonth, 1).getDay();
+  const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
+  const today = new Date();
+
+  let html = '<div class="ev-cal">';
+  html += '<div class="ev-cal-nav">';
+  html += '<button class="ev-cal-arrow" onclick="_calMonth--;if(_calMonth<0){_calMonth=11;_calYear--;}; _renderCalendar(\''+escapeHTML(bastionId)+'\')">&lt;</button>';
+  html += '<div class="ev-cal-month">'+monthNames[_calMonth]+' '+_calYear+'</div>';
+  html += '<button class="ev-cal-arrow" onclick="_calMonth++;if(_calMonth>11){_calMonth=0;_calYear++;}; _renderCalendar(\''+escapeHTML(bastionId)+'\')">&gt;</button>';
+  html += '</div>';
+
+  html += '<div class="ev-cal-grid">';
+  // Day headers
+  dayNames.forEach(d => { html += '<div class="ev-cal-dayname">'+d+'</div>'; });
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) html += '<div class="ev-cal-cell ev-cal-empty"></div>';
+  // Day cells
+  for (let day = 1; day <= daysInMonth; day++) {
+    const cellDate = new Date(_calYear, _calMonth, day);
+    const isToday = cellDate.toDateString() === today.toDateString();
+    const dayEvents = events.filter(ev => {
+      if (ev.cancelled) return false;
+      const ed = new Date(ev.date);
+      return ed.getFullYear() === _calYear && ed.getMonth() === _calMonth && ed.getDate() === day;
+    });
+    const hasEvents = dayEvents.length > 0;
+    const hasLive = dayEvents.some(ev => ev.status === 'live');
+    html += '<div class="ev-cal-cell'+(isToday?' ev-cal-today':'')+(hasEvents?' ev-cal-has-event':'')+(hasLive?' ev-cal-has-live':'')+'" onclick="_showCalDayEvents('+day+',\''+escapeHTML(bastionId)+'\')">';
+    html += '<div class="ev-cal-day">'+day+'</div>';
+    if (hasEvents) {
+      html += '<div class="ev-cal-dots">';
+      dayEvents.slice(0,3).forEach(ev => {
+        html += '<div class="ev-cal-dot'+(ev.status==='live'?' live':'')+'"></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Event list below calendar for selected day
+  html += '<div id="ev-cal-day-detail"></div>';
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function _showCalDayEvents(day, bastionId) {
+  const detail = document.getElementById('ev-cal-day-detail');
+  if (!detail) return;
+  const events = window._eventsCache?.events || [];
+  const dayEvents = events.filter(ev => {
+    if (ev.cancelled) return false;
+    const ed = new Date(ev.date);
+    return ed.getFullYear() === _calYear && ed.getMonth() === _calMonth && ed.getDate() === day;
+  });
+  // Highlight selected day
+  document.querySelectorAll('.ev-cal-cell.selected').forEach(c=>c.classList.remove('selected'));
+  const cells = document.querySelectorAll('.ev-cal-cell:not(.ev-cal-empty):not(.ev-cal-dayname)');
+  if (cells[day-1]) cells[day-1].classList.add('selected');
+
+  if (!dayEvents.length) {
+    detail.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">No events on this day</div>';
+    return;
+  }
+  const b = CU.bastions?.[curBastion];
+  const canManage = b?.owner === CU.username || hasPerm('administrator') || hasPerm('manage_channels');
+  const now = new Date();
+  detail.innerHTML = '<div class="ev-cal-day-list">' + dayEvents.map(ev => _renderEventCard(ev, bastionId, canManage, now)).join('') + '</div>';
 }
 
 // ════════════════════════════════════════════

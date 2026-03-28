@@ -266,7 +266,12 @@ app.use(express.static(path.join(__dirname), {
   extensions: ['html'],
   index: 'index.html',
 }));
-// SPA-style fallback for /app, /login, etc.
+// SPA-style fallback for /app (all subpages), /login, etc.
+// /app sub-routes must come first — catch /app/messages, /app/discover, /app/atelier, /app/bastion etc.
+app.get('/app/messages', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'index.html')));
+app.get('/app/discover', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'index.html')));
+app.get('/app/atelier', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'index.html')));
+app.get('/app/bastion', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'index.html')));
 ['app', 'login', 'signup', 'blog', 'support', 'download', 'privacy', 'terms', 'legal'].forEach(route => {
   app.get(`/${route}`, (_req, res) => res.sendFile(path.join(__dirname, route, 'index.html')));
   app.get(`/${route}/{*rest}`, (_req, res) => res.sendFile(path.join(__dirname, route, 'index.html')));

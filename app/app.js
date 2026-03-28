@@ -25046,8 +25046,8 @@ function renderAtelierTab(tab) {
 
   // ── RADIANCE DWELLING ─────────────────────────────────────
   else if (tab === 'radiance') {
-    const PLAN_BASIC = ['✨ Profile Glow','🖼️ Custom Banner','📎 45MB Uploads','${_radianceSvg('14')} Radiance Badge','🔔 Priority Notifs'];
-    const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance','${_boostSvg('14')} Bastion Boost','🌟 Animated Badge'];
+    const PLAN_BASIC = ['✨ Profile Glow','🖼️ Custom Banner','📎 45MB Uploads',_radianceSvg('14')+' Radiance Badge','🔔 Priority Notifs'];
+    const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance',_boostSvg('14')+' Bastion Boost','🌟 Animated Badge'];
     const PRICES = {basic:[{days:7,onyx:200},{days:30,onyx:600},{days:90,onyx:1500}], plus:[{days:30,onyx:1200},{days:90,onyx:3000}]};
 
     el.style.padding = '0';

@@ -309,7 +309,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 .notif-panel-header{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;}
 .notif-mark-read-btn{font-size:11px;padding:4px 10px;}
 /* ── Userbar (bottom of sidebar-ctx, parallel with chatbar) ── */
-.userbar{display:flex;flex-direction:column;flex-shrink:0;padding:0 8px 8px;gap:0;box-sizing:border-box;z-index:15;width:100%;}
+.userbar{display:flex;flex-direction:column;flex-shrink:0;padding:0 12px 8px;gap:0;box-sizing:border-box;z-index:15;width:100%;}
 .ub-activity-row{display:none;align-items:center;gap:7px;padding:6px 10px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.08);border-radius:10px 10px 0 0;margin:0 2px;}
 .ub-activity-row.active{display:flex;}
 .ub-activity-icon{width:26px;height:26px;border-radius:7px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.18);flex-shrink:0;font-size:14px;display:flex;align-items:center;justify-content:center;color:#3ecf6e;}
@@ -632,7 +632,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .reply-bar-text strong{color:var(--accent);}
 .reply-bar button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}
 /* Chat input */
-.chat-input-wrap{padding:0 12px 10px;flex-shrink:0;}
+.chat-input-wrap{padding:0 12px 10px;flex-shrink:0;box-sizing:border-box;}
 /* Typing indicator — minimal redesign */
 .typing-indicator{display:flex;align-items:center;gap:8px;padding:4px 20px 6px;min-height:20px;font-size:11px;color:rgba(255,255,255,.3);transition:opacity .25s;letter-spacing:.01em;}
 .typing-dots{display:flex;gap:3px;align-items:center;}

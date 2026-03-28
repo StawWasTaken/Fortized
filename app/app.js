@@ -9078,7 +9078,7 @@ function renderBSettingsMain(tab) {
           <input class="field-input" id="custom-mood-label" placeholder="Mood name" value="${escapeHTML(b.customMood?.label||'')}" style="flex:1;">
         </div>
         <button class="btn-a" onclick="saveCustomMood()" style="font-size:12px;">Save Custom Mood</button>
-      </div>`:'<div style="padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--muted);">${_boostSvg('13')} Custom Moods require Boost Level 2+</div>'}`;
+      </div>`:('<div style="padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--muted);">'+_boostSvg('13')+' Custom Moods require Boost Level 2+</div>')}`;
   }
   else if (tab==='reputation') {
     const bastionId = b.globalId||b.name;

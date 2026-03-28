@@ -8197,7 +8197,7 @@ function renderOverviewRoom() {
   });
   const inviteCode = activeInvite ? activeInvite.code : null;
 
-  let html = '<div class="overview-room">';
+  let html = '<div class="overview-room" style="height:100%;overflow:hidden;">';
 
   // Edit bar for owners/admins
   if (canEdit) {
@@ -8237,7 +8237,7 @@ function renderOverviewRoom() {
     <span class="ov-badge" onclick="viewUserProfile('${escapeHTML(ownerName)}')" style="cursor:pointer;">👑 ${escapeHTML(ownerName)}</span>
   </div>`;
 
-  html += '<div class="ov-content">';
+  html += '<div class="ov-content" style="flex:1;overflow:hidden;">';
 
   // Quick Actions row
   const textCh0 = chs.find(c => c.type === 'text' || !c.type);

@@ -66,17 +66,19 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 /* ── Sidebar (vertical, left) ─────────────────────── */
 .sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:0;align-items:center;border-right:none;}
 .sidebar-ctx{padding-bottom:0!important;}
-.sidebar-logo{width:100%;padding:12px 0 8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
-.sidebar-logo-icon{width:48px;height:48px;border-radius:16px;background:transparent;display:flex;align-items:center;justify-content:center;transition:transform .2s cubic-bezier(.22,1,.36,1),filter .2s,border-radius .2s;flex-shrink:0;}
-.sidebar-logo:hover .sidebar-logo-icon{transform:scale(1.06);}
-.sidebar-logo-icon img{width:48px;height:48px;object-fit:contain;border-radius:16px;}
+.sidebar-logo{display:none;}
+.sidebar-logo-icon{display:none;}
+.sidebar-logo-icon img{display:none;}
 .sidebar-logo-text{display:none;}
 .sidebar-logo.active .sidebar-logo-icon{}
-.sidebar-nav{padding:6px 0;display:flex;flex-direction:column;gap:2px;flex-shrink:0;align-items:center;width:100%;}
+.sidebar-nav{padding:6px 0;display:flex;flex-direction:column;gap:2px;flex-shrink:0;align-items:center;width:100%;padding-top:12px;}
 .rail-sep{height:2px;width:32px;background:rgba(255,255,255,.06);margin:6px auto;flex-shrink:0;border-radius:1px;}
 .rail-btn{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;flex-shrink:0;font-size:0;font-weight:600;color:rgba(255,255,255,.45);}
 .rail-btn span{display:none;}
 .rail-btn svg{width:20px;height:20px;flex-shrink:0;transition:transform .16s cubic-bezier(.22,1,.36,1);}
+.rail-home-logo{width:22px;height:22px;-webkit-mask:url('/Fortized logo.png') center/contain no-repeat;mask:url('/Fortized logo.png') center/contain no-repeat;background-color:rgba(255,255,255,.45);transition:transform .16s cubic-bezier(.22,1,.36,1),background-color .2s;}
+.rail-home-btn:hover .rail-home-logo{background-color:rgba(255,255,255,.9);transform:scale(1.06);}
+.rail-home-btn.active .rail-home-logo{background-color:#060810;}
 .rail-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border-radius:12px;}
 .rail-btn:hover svg{transform:scale(1.06);}
 .rail-btn.active{background:var(--accent);color:#060810;box-shadow:0 2px 12px rgba(255,249,62,.18);border-radius:12px;}
@@ -3015,15 +3017,12 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
 <!-- Mobile sidebar overlay -->
 <div class="mobile-overlay" id="mobile-overlay" onclick="closeMobileSidebar()"></div>
 <div class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
-  <!-- Fortized logo = Home -->
-  <div class="sidebar-logo" id="rb-home" onclick="showView('home')" data-href="/app/">
-    <div class="sidebar-logo-icon">
-      <img src="/Fortized icon.png" onerror="this.outerHTML='<span style=\'font-size:16px;\'>⚔️</span>'">
-    </div>
-    <span class="sidebar-logo-text">Fortized</span>
-  </div>
   <!-- Navigation -->
   <div class="sidebar-nav" id="rail">
+    <div class="rail-btn rail-home-btn" id="rb-home" onclick="showView('home')" data-href="/app/" data-nav-tip="Home" aria-label="Home">
+      <div class="rail-home-logo"></div>
+    </div>
+    <div class="rail-sep" style="margin:6px 10px;"></div>
     <div class="rail-btn" id="rb-dms" onclick="showView('dms')" data-href="/app/messages" data-nav-tip="Direct Messages" data-nav-ctx="Mark all read,Open DM list" aria-label="Direct Messages" oncontextmenu="_railNavCtxMenu(event,'dms')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       <span>Direct Messages</span>
@@ -5069,7 +5068,7 @@ function showView(v, _skipPush) {
   // Nav active state
   document.querySelectorAll('.rail-btn').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.rail-bastion').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.sidebar-logo').forEach(el => el.classList.remove('active'));
+  // (home btn is now a rail-btn, handled by the loop above)
   const rBtn = document.getElementById('rb-' + v);
   if (rBtn) rBtn.classList.add('active');
 

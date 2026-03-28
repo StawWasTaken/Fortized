@@ -10,14 +10,14 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 @keyframes msgFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .embed-link-card,.embed-x-card,.embed-invite-card,.embed-spotify-card{content-visibility:auto;contain-intrinsic-size:auto 120px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
-.sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:0;padding-top:56px;align-items:center;border-right:none;}
+.sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:0;align-items:center;border-right:none;}
 .sidebar-ctx{padding-bottom:0!important;}
 .sidebar-logo{display:none;}
 .sidebar-logo-icon{display:none;}
 .sidebar-logo-icon img{display:none;}
 .sidebar-logo-text{display:none;}
 .sidebar-logo.active .sidebar-logo-icon{}
-.sidebar-nav{padding:0;display:flex;flex-direction:column;gap:2px;flex-shrink:0;align-items:center;width:100%;}
+.sidebar-nav{padding:6px 0;display:flex;flex-direction:column;gap:2px;flex-shrink:0;align-items:center;width:100%;padding-top:12px;}
 .rail-sep{height:2px;width:32px;background:rgba(255,255,255,.06);margin:6px auto;flex-shrink:0;border-radius:1px;}
 .rail-btn{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;flex-shrink:0;font-size:0;font-weight:600;color:rgba(255,255,255,.45);}
 .rail-btn span{display:none;}
@@ -251,11 +251,11 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .sidebar-ctx{width:380px;min-width:380px;background:var(--sidebar-ctx);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid rgba(255,255,255,.04);}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
-.topbar{height:44px;background:var(--sidebar);display:flex;align-items:center;padding:0 191px 0 18px;gap:12px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;}
+.topbar{height:44px;background:var(--sidebar);display:flex;align-items:center;padding:0 191px 0 12px;gap:10px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;}
 .topbar button,.topbar input,.topbar .tb-actions,.topbar .tb-onyx-pill,.topbar .tb-search,.topbar .tb-notif-btn,.topbar .tb-win-controls,.topbar .tb-nav-controls{-webkit-app-region:no-drag;}
-/* Navigation controls (back / forward / refresh) — in topbar, before title */
-.tb-nav-controls{display:flex;align-items:center;justify-content:center;gap:4px;position:absolute;top:0;left:0;width:72px;height:44px;z-index:11;}
-.tb-nav-btn{width:24px;height:24px;background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .12s,color .12s;padding:0;}
+/* Navigation controls (back / forward / refresh) — sits above sidebar rail */
+.tb-nav-controls{display:flex;align-items:center;justify-content:center;gap:2px;flex-shrink:0;padding:10px 0 4px;width:100%;}
+.tb-nav-btn{width:22px;height:22px;background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:5px;transition:background .12s,color .12s;padding:0;}
 .tb-nav-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);}
 .tb-nav-btn:active{background:rgba(255,255,255,.1);color:#fff;}
 .tb-nav-btn.spinning svg{animation:navRefreshSpin .5s ease;}

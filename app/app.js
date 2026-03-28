@@ -1941,9 +1941,25 @@ function _renderRailBastion(b, i) {
     data-rail-tip="${escapeHTML(b.name)}" data-rail-icon="${escapeHTML(b.icon||'')}" data-rail-emblem=""
     style="margin-bottom:4px;">
     <div class="bastion-icon">${b.icon
-      ? `<img src="${b.icon}">`
+      ? (b.icon.toLowerCase().endsWith('.gif') ? `<img src="${b.icon}" class="gif-emblem" onload="_freezeGifEmblem(this)">` : `<img src="${b.icon}">`)
       : `<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}</div>
   </div>`;
+}
+
+// Freeze GIF emblem: render first frame to a canvas, show canvas by default, GIF on hover (via CSS)
+function _freezeGifEmblem(img) {
+  try {
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth || 48;
+    c.height = img.naturalHeight || 48;
+    c.className = 'gif-still';
+    c.style.width = '100%';
+    c.style.height = '100%';
+    c.style.objectFit = 'cover';
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    img.parentElement.insertBefore(c, img);
+  } catch(e) { /* cross-origin or other error — just show the GIF */ }
 }
 
 function _initBastionDrag() {

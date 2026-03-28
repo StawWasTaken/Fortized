@@ -10,7 +10,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 @keyframes msgFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .embed-link-card,.embed-x-card,.embed-invite-card,.embed-spotify-card{content-visibility:auto;contain-intrinsic-size:auto 120px;}
 /* ── Sidebar (vertical, left) ─────────────────────── */
-.sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:0;align-items:center;border-right:none;}
+.sidebar{width:72px;min-width:72px;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden;z-index:10;flex-shrink:0;padding-bottom:0;padding-top:44px;align-items:center;border-right:none;}
 .sidebar-ctx{padding-bottom:0!important;}
 .sidebar-logo{display:none;}
 .sidebar-logo-icon{display:none;}

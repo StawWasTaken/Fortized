@@ -251,8 +251,13 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .sidebar-ctx{width:380px;min-width:380px;background:var(--sidebar-ctx);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid rgba(255,255,255,.04);}
 /* ── Main Wrapper (right side: topbar + content) ──── */
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
-.topbar{height:44px;background:var(--sidebar);display:flex;align-items:center;padding:0 191px 0 18px;gap:18px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;}
-.topbar button,.topbar input,.topbar .tb-actions,.topbar .tb-onyx-pill,.topbar .tb-search,.topbar .tb-notif-btn,.topbar .tb-win-controls{-webkit-app-region:no-drag;}
+.topbar{height:44px;background:var(--sidebar);display:flex;align-items:center;padding:0 191px 0 12px;gap:10px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;}
+.topbar button,.topbar input,.topbar .tb-actions,.topbar .tb-onyx-pill,.topbar .tb-search,.topbar .tb-notif-btn,.topbar .tb-win-controls,.topbar .tb-nav-controls{-webkit-app-region:no-drag;}
+/* Navigation controls (back / forward) */
+.tb-nav-controls{display:flex;align-items:center;gap:2px;flex-shrink:0;}
+.tb-nav-btn{width:28px;height:28px;background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .12s,color .12s;padding:0;}
+.tb-nav-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);}
+.tb-nav-btn:active{background:rgba(255,255,255,.1);color:#fff;}
 /* Electron window controls */
 .tb-win-controls{display:none;align-items:center;gap:0;margin-left:auto;flex-shrink:0;}
 body.is-desktop-app .tb-win-controls{display:flex;}
@@ -2530,6 +2535,7 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .mobile-settings-drawer{display:block;}
   .mobile-menu-btn{display:flex!important;}
   .mobile-back-btn{display:none!important;}
+  .tb-nav-controls{display:none!important;}
   /* ══════ MAIN LAYOUT: full-width ══════ */
   .main-wrap{flex:1;min-width:0;min-height:0;width:100%;}
   .main{border-radius:0;border:none;flex-direction:column;}

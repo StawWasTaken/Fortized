@@ -326,7 +326,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 .ua-clickable:hover{background:rgba(255,255,255,.05);}
 .ua{width:34px;height:34px;border-radius:50%;background:var(--panel);font-size:12px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.3);}
 .ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
-.ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--sidebar-ctx);flex-shrink:0;}
+.ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .ua-info{display:block;min-width:0;flex:1;}
 .ua-name{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;font-family:'Syne',sans-serif;line-height:1.2;}
 .ua-status-text{font-size:9.5px;color:rgba(255,255,255,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;line-height:1.2;}
@@ -345,7 +345,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 .rail-ub-clickable:hover{background:rgba(255,255,255,.05);}
 .rail-ub-avatar{width:34px;height:34px;border-radius:50%;background:var(--panel);cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:visible;position:relative;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.3);}
 .rail-ub-avatar img,.rail-ub-avatar>div{width:100%;height:100%;object-fit:cover;border-radius:50%;}
-.rail-ub-avatar .ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--sidebar);}
+.rail-ub-avatar .ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;}
 .rail-ub-info{display:block;min-width:0;flex:1;}
 .rail-ub-name{font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;font-family:'Syne',sans-serif;line-height:1.2;}
 .rail-ub-status{font-size:9px;color:rgba(255,255,255,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;line-height:1.2;}
@@ -405,7 +405,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 .active-now-item:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.25),0 0 8px rgba(255,249,62,.03);}
 .active-now-item .an-avatar{position:relative;flex-shrink:0;}
 .active-now-item .an-avatar .fa{width:36px;height:36px;border-radius:50%;overflow:hidden;font-size:13px;}
-.active-now-item .an-status-dot{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;border-radius:50%;border:2.5px solid var(--channel);box-shadow:0 0 6px rgba(0,0,0,.3);}
+.active-now-item .an-status-dot{position:absolute;bottom:-1px;right:-1px;width:13px;height:13px;display:flex;align-items:center;justify-content:center;}
 .active-now-item .an-info{flex:1;min-width:0;}
 .active-now-item .an-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'DM Sans',sans-serif;}
 .active-now-item .an-activity{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;margin-top:2px;}
@@ -439,7 +439,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 .realm-friend .rf-av{position:relative;width:46px;height:46px;border-radius:50%;overflow:visible;}
 .realm-friend .rf-av img,.realm-friend .rf-av .fa{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.08);transition:border-color .18s;}
 .realm-friend:hover .rf-av img,.realm-friend:hover .rf-av .fa{border-color:rgba(255,249,62,.2);}
-.realm-friend .rf-status{position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;border:2.5px solid var(--panel);z-index:1;}
+.realm-friend .rf-status{position:absolute;bottom:0;right:0;width:14px;height:14px;z-index:1;display:flex;align-items:center;justify-content:center;}
 .realm-friend .rf-name{font-size:10.5px;color:rgba(255,255,255,.55);max-width:68px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .18s;}
 .realm-friend:hover .rf-name{color:rgba(255,255,255,.8);}
 /* Scrolled DYK — medieval parchment style */
@@ -810,7 +810,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .ml-entry:active{transform:scale(.98);}
 .ml-av{width:34px;height:34px;border-radius:50%;background:var(--panel);border:1.5px solid rgba(255,255,255,.06);font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;}
 .ml-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
-.ml-status{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2.5px solid rgba(12,14,24,.98);}
+.ml-status{position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;display:flex;align-items:center;justify-content:center;}
 .ml-name{font-size:13px;font-weight:600;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .12s;}
 .ml-entry:hover .ml-name{color:rgba(255,255,255,.9);}
 .ml-badges{display:flex;align-items:center;gap:3px;margin-top:1px;}
@@ -2329,7 +2329,7 @@ body.is-desktop-app .notif-panel{top:0;}
 .mpp-username{font-size:11.5px;color:rgba(255,255,255,.22);font-weight:500;margin-top:3px;}
 .mpp-status-row{display:flex;align-items:center;gap:6px;padding:10px 18px 0;flex-wrap:wrap;}
 .mpp-status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);}
-.mpp-status-pill .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.mpp-status-pill .sdot{width:10px;height:10px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;}
 .mpp-badges-row{display:flex;flex-wrap:wrap;gap:3px;padding:8px 18px 0;}
 .mpp-divider{height:1px;background:rgba(255,255,255,.05);margin:12px 18px;}
 .mpp-section{padding:3px 18px 5px;}

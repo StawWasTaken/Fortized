@@ -224,6 +224,47 @@ const FtzStatus = (() => {
   // Sort comparator for friend lists (online first)
   function sortOrder(s) { return (MODES[s] || MODES.offline).order; }
 
+  // ── Status icon SVGs ────────────────────────────────────
+  const _STATUS_ICONS = Object.freeze({
+    online:    { vb:'0 0 16 16', path:'<circle cx="8" cy="8" r="8"/>' },
+    away:      { vb:'0 0 24 24', path:'<path d="M12,2h-.46a1,1,0,0,0-.9.77,1,1,0,0,0,.46,1.09A5.92,5.92,0,0,1,14,9,6,6,0,0,1,3.93,13.4a1,1,0,0,0-1.65,1A10,10,0,1,0,12,2Z"/>' },
+    dnd:       { vb:'0 0 296 296', path:'<path d="M148,0C66.393,0,0,66.393,0,148s66.393,148,148,148s148-66.393,148-148S229.607,0,148,0z M223.407,110.008l-11.011,53.934c-2.817,13.799-4.237,27.848-4.237,41.932c0,20.493-16.673,37.166-37.166,37.166H137.34c-11.397,0-21.539-5.459-27.961-13.895l-55.675-57.829c-5.375-5.583-5.207-14.466,0.377-19.842c5.584-5.375,14.467-5.206,19.842,0.377l23.462,24.369c0.837,0.869,2.135,1.107,3.226,0.591c1.091-0.516,1.73-1.671,1.589-2.869L91.241,80.953c-0.907-7.697,4.597-14.672,12.294-15.579c7.697-0.909,14.672,4.598,15.579,12.294l5.315,45.108c0.116,0.987,0.982,1.712,1.974,1.654c0.992-0.058,1.767-0.88,1.767-1.874V66.993c0-7.75,6.283-14.033,14.033-14.033c7.75,0,14.033,6.283,14.033,14.033v56.453c0,1.214,0.957,2.212,2.17,2.264c1.213,0.052,2.251-0.862,2.354-2.071l3.929-46.159c0.658-7.722,7.456-13.45,15.173-12.792c7.722,0.658,13.45,7.451,12.792,15.173l-4.614,54.201c-0.097,1.14,0.711,2.157,1.844,2.321c1.132,0.163,2.195-0.585,2.424-1.705l6.079-29.775c1.411-6.909,8.162-11.358,15.063-9.956C220.359,96.356,224.816,103.1,223.407,110.008z"/>' },
+    invisible: { vb:'0 0 512 512', path:'<g transform="translate(42.667,42.667)"><path d="M213.333,0C331.154,0,426.667,95.513,426.667,213.333c0,117.821-95.513,213.333-213.333,213.333C95.513,426.667,0,331.154,0,213.333C0,95.513,95.513,0,213.333,0z M213.333,106.667c-58.91,0-106.667,47.756-106.667,106.667s47.756,106.667,106.667,106.667s106.667-47.756,106.667-106.667S272.244,106.667,213.333,106.667z"/></g>' },
+    offline:   { vb:'0 0 512 512', path:'<g transform="translate(42.667,42.667)"><path d="M213.333,0C331.154,0,426.667,95.513,426.667,213.333c0,117.821-95.513,213.333-213.333,213.333C95.513,426.667,0,331.154,0,213.333C0,95.513,95.513,0,213.333,0z M213.333,106.667c-58.91,0-106.667,47.756-106.667,106.667s47.756,106.667,106.667,106.667s106.667-47.756,106.667-106.667S272.244,106.667,213.333,106.667z"/></g>' },
+  });
+
+  function dotSvg(st, sz) {
+    var s = sanitize(st);
+    var i = _STATUS_ICONS[s] || _STATUS_ICONS.offline;
+    return '<svg width="'+sz+'" height="'+sz+'" viewBox="'+i.vb+'" fill="'+color(s)+'" xmlns="http://www.w3.org/2000/svg">'+i.path+'</svg>';
+  }
+
+  function updateDots(username, st) {
+    var s = sanitize(st);
+    var c = color(s);
+    document.querySelectorAll('.profile-status-dot[data-for="'+username+'"]').forEach(function(el) {
+      el.dataset.dotStatus = s;
+      el.innerHTML = dotSvg(s, el.dataset.dotSize || '12');
+      el.style.background = 'none';
+      el.style.filter = 'drop-shadow(0 0 3px '+c+'55)';
+    });
+    // ML status dots
+    document.querySelectorAll('.ml-entry[data-member="'+username+'"] .ml-status').forEach(function(el) {
+      el.innerHTML = dotSvg(s, el.dataset.dotSize || '12');
+      el.style.background = 'none';
+    });
+    // MPP status dots
+    document.querySelectorAll('.mpp-status-dot[data-for="'+username+'"]').forEach(function(el) {
+      el.innerHTML = dotSvg(s, el.dataset.dotSize || '10');
+      el.style.background = 'none';
+    });
+    // DM sidebar status dots
+    document.querySelectorAll('.dm-home-status[data-for="'+username+'"]').forEach(function(el) {
+      el.innerHTML = dotSvg(s, el.dataset.dotSize || '12');
+      el.style.background = 'none';
+    });
+  }
+
   // ── Duration helpers for custom status ──────────────────
   function durationMs(id) {
     if (id === 'today') {
@@ -455,7 +496,7 @@ const FtzStatus = (() => {
     MODES, VALID, CUSTOM_DURATIONS,
     IDLE_TIMEOUT_ACTIVE, IDLE_TIMEOUT_HIDDEN,
     isValid, sanitize, color, label, visible, publicLabel, isPresent, sortOrder,
-    durationMs,
+    durationMs, dotSvg, updateDots,
     set, initIdle, restoreManualStatus, broadcast: _broadcast,
     setCustom, clearCustom, restoreCustomTimer,
   });
@@ -1552,11 +1593,14 @@ function updateUserbar() {
     if (!ua.querySelector('#ua-status-dot')) {
       const d = document.createElement('span');
       d.id = 'ua-status-dot'; d.className = 'ua-status-dot';
+      d.dataset.dotSize = '11';
       ua.appendChild(d);
     }
   }
   if (document.getElementById('ua-status-dot')) {
-    document.getElementById('ua-status-dot').style.background = FtzStatus.color(st);
+    const uaDotEl = document.getElementById('ua-status-dot');
+    uaDotEl.innerHTML = FtzStatus.dotSvg(st, 11);
+    uaDotEl.style.background = 'none';
   }
   if (uaName) {
     uaName.textContent = CU.displayName || CU.username;
@@ -1584,7 +1628,8 @@ function updateUserbar() {
     railUbAvatar.innerHTML = railInner;
     const railDot = document.createElement('span');
     railDot.id = 'rail-ub-status-dot'; railDot.className = 'ua-status-dot';
-    railDot.style.background = FtzStatus.color(st);
+    railDot.dataset.dotSize = '11';
+    railDot.innerHTML = FtzStatus.dotSvg(st, 11);
     railUbAvatar.appendChild(railDot);
   }
   // Sync rail userbar name & status text
@@ -2456,7 +2501,7 @@ async function _loadRealmFriends(friends, container, countEl) {
     return `<div class="realm-friend" onclick="openDMView('${escapeHTML(r.username)}')" title="${escapeHTML(r.displayName)}">
       <div class="rf-av">
         <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:16px;">${buildAvatarHTML(r.pfp,r.displayName,44)}</div>
-        <span class="rf-status profile-status-dot" data-for="${escapeHTML(r.username)}" style="background:${FtzStatus.color(r.status)};"></span>
+        <span class="rf-status profile-status-dot" data-for="${escapeHTML(r.username)}" data-dot-size="14">${FtzStatus.dotSvg(r.status, 14)}</span>
       </div>
       <div class="rf-name">${escapeHTML(r.displayName)}</div>
     </div>`;
@@ -2488,7 +2533,7 @@ async function _loadRPFriends(friends, container, countEl) {
     return `<div class="rp-friend-item" onclick="openDMView('${escapeHTML(r.username)}')" title="${escapeHTML(activity)}">
       <div class="rp-friend-av">
         <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--panel);font-size:12px;">${buildAvatarHTML(r.pfp,r.displayName,28)}</div>
-        <span class="rp-friend-status profile-status-dot" data-for="${escapeHTML(r.username)}" style="background:${FtzStatus.color(r.status)};"></span>
+        <span class="rp-friend-status profile-status-dot" data-for="${escapeHTML(r.username)}" data-dot-size="12">${FtzStatus.dotSvg(r.status, 12)}</span>
       </div>
       <div style="flex:1;min-width:0;">
         <div class="rp-friend-name">${escapeHTML(r.displayName)}</div>
@@ -2881,7 +2926,7 @@ async function renderDMSidebar(scroll) {
       <div class="friend-item dm-sortable" id="dm-fi-${escapeHTML(f)}" data-dm-id="dm_${escapeHTML(f)}" data-last-time="0" onclick="openDMView('${escapeHTML(f)}')" oncontextmenu="event.preventDefault();showDMCtxMenu(event,'${escapeHTML(f)}')">
         <div style="position:relative;flex-shrink:0;">
           <div class="fa" id="dm-av-${escapeHTML(f)}" style="width:34px;height:34px;font-size:13px;overflow:hidden;">${buildAvatarHTML(null,f,34)}</div>
-          <span class="profile-status-dot" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:#6b7280;border:2px solid var(--channel);"></span>
+          <span class="profile-status-dot" data-for="${escapeHTML(f)}" data-dot-size="12" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;">${FtzStatus.dotSvg('offline', 12)}</span>
         </div>
         <div class="fi-info" style="min-width:0;flex:1;">
           <div class="fi-name" id="dm-dn-${escapeHTML(f)}" style="font-weight:600;">${escapeHTML(f)}</div>
@@ -2941,7 +2986,7 @@ async function renderDMSidebar(scroll) {
         // Use live Socket.IO presence, fallback to DB status only if Socket.IO unavailable
         const liveSt = _dmPresenceMap[f]?.status;
         const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : (u.status || 'offline'));
-        document.querySelectorAll(`.profile-status-dot[data-for="${f}"]`).forEach(d=>{d.style.background=FtzStatus.color(st);d.style.boxShadow='0 0 8px '+FtzStatus.color(st)+'55';});
+        FtzStatus.updateDots(f, st);
       }
       let lastTime = 0;
       if (dmMsgs && dmMsgs.length > 0) {
@@ -3190,7 +3235,7 @@ async function renderActiveNowSidebar(containerId) {
     return `<div class="active-now-item" onclick="openDMView('${escapeHTML(u.username)}')">
       <div class="an-avatar">
         <div class="fa" style="width:36px;height:36px;border-radius:50%;overflow:hidden;font-size:13px;">${buildAvatarHTML(u.pfp, u.displayName, 36)}</div>
-        <span class="an-status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" style="background:${FtzStatus.color(u.status)};box-shadow:0 0 6px ${FtzStatus.color(u.status)}55;"></span>
+        <span class="an-status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="13" style="filter:drop-shadow(0 0 3px ${FtzStatus.color(u.status)}55);">${FtzStatus.dotSvg(u.status, 13)}</span>
       </div>
       <div class="an-info">
         <div class="an-name">${escapeHTML(u.displayName)}</div>
@@ -3683,8 +3728,8 @@ async function showGCMemberPanel(meta) {
           if (avWrap) {
             // Preserve existing status dot color instead of hardcoding offline
             const existingDot = avWrap.querySelector('.profile-status-dot');
-            const dotColor = existingDot ? existingDot.style.background : FtzStatus.color('offline');
-            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(m)}'"><span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:${dotColor};border:2px solid var(--channel);z-index:3;"></span>`;
+            const dotStatus = existingDot?.dataset.dotStatus || 'offline';
+            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(m)}'"><span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${dotStatus}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(dotStatus, 10)}</span>`;
           }
         }
       }).catch(()=>{});
@@ -3699,7 +3744,7 @@ function _buildGCMemberEntry(m, meta, isOwner, statusMap) {
   const st = statusMap ? (statusMap[m] || 'offline') : (isMe ? (CU.status||'online') : 'offline');
   const isOnline = st === 'online' || st === 'away' || st === 'dnd';
   return `<div class="ml-entry" data-member="${escapeHTML(m)}" data-status="${st}" onclick="showMiniProfilePreview('${escapeHTML(m)}',this)" style="${isOnline?'':'opacity:.4;'}">
-    <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" style="position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;background:${FtzStatus.color(st)};border:2px solid var(--channel);z-index:3;"></span></div>
+    <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${st}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(st, 10)}</span></div>
     <div style="flex:1;min-width:0;">
       <div style="display:flex;align-items:center;gap:4px;">
         <div class="ml-name" style="color:${isGCOwner?'var(--accent)':'rgba(255,255,255,.6)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
@@ -5787,7 +5832,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
             existingImg.onerror = function() { this.src = _defaultPfpUrl(u); };
           } else {
             const currentStatus = _liveStatusCache[u] || entry.dataset.status || status;
-            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(currentStatus)};border:2.5px solid rgba(12,14,24,.98);"></span>`;
+            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="12" data-dot-status="${currentStatus}" style="position:absolute;bottom:0;right:0;width:12px;height:12px;">${FtzStatus.dotSvg(currentStatus, 12)}</span>`;
           }
         }
         const badgesEl = entry.querySelector('.ml-badges');
@@ -5822,7 +5867,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
   return `<div class="ml-entry" data-member="${escapeHTML(u)}" data-status="${status}" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)" style="${dimStyle}">
     <div class="ml-av-wrap profile-decoration-wrap" style="position:relative;display:inline-flex;flex-shrink:0;">
       ${buildAvatarHTML(pfpSrc, displayN, 34)}
-      <span class="profile-status-dot" data-for="${escapeHTML(u)}" style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${FtzStatus.color(status)};border:2.5px solid rgba(12,14,24,.98);z-index:3;"></span>
+      <span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="12" data-dot-status="${status}" style="position:absolute;bottom:0;right:0;width:12px;height:12px;z-index:3;">${FtzStatus.dotSvg(status, 12)}</span>
       ${isMe && CU.profileDecoration ? `<img src="${escapeHTML(CU.profileDecoration)}" class="profile-decoration-overlay-ml">` : ''}
     </div>
     <div class="ml-info" style="min-width:0;flex:1;">
@@ -6621,20 +6666,12 @@ function initFortizedUXResilience() {
         }
 
         // ── UPDATE ALL STATUS DOTS EVERYWHERE ──
-        document.querySelectorAll('.profile-status-dot[data-for="'+data.username+'"]').forEach(el => {
-          el.style.background = color;
-          el.style.boxShadow = '0 0 8px '+color+'55';
-        });
+        FtzStatus.updateDots(data.username, data.status);
         document.querySelectorAll('.profile-status-label[data-for="'+data.username+'"]').forEach(el => {
           el.textContent = typeof FtzStatus !== 'undefined' ? FtzStatus.publicLabel(data.status) : data.status;
         });
-        // DM sidebar status dots + text
-        document.querySelectorAll('.dm-home-status[data-for="'+data.username+'"]').forEach(el => { el.style.background = color; });
+        // DM sidebar status text
         document.querySelectorAll('.dm-home-status-text[data-for="'+data.username+'"]').forEach(el => { el.textContent = typeof FtzStatus !== 'undefined' ? FtzStatus.publicLabel(data.status) : data.status; });
-        // Member list status dots (.ml-status class)
-        document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-status').forEach(el => { el.style.background = color; });
-        // Mini profile preview dots
-        document.querySelectorAll('.mpp-status-dot[data-for="'+data.username+'"]').forEach(el => { el.style.background = color; });
         // Friend Activity status text
         document.querySelectorAll('.act-status-text[data-for="'+data.username+'"]').forEach(el => {
           el.innerHTML = '<span style="color:'+color+';">'+(typeof FtzStatus!=='undefined'?FtzStatus.publicLabel(data.status):data.status)+'</span>';
@@ -12782,7 +12819,7 @@ async function viewUserProfile(username) {
         <div class="profile-decoration-wrap" style="position:relative;">
           <div class="up-left-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 88)}</div>
           ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay-lg" onerror="this.style.display='none'">` : ''}
-          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="position:absolute;bottom:3px;right:3px;width:20px;height:20px;border-radius:50%;background:${sc};border:3.5px solid var(--panel);z-index:3;"></span>
+          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22" style="position:absolute;bottom:3px;right:3px;width:22px;height:22px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 22)}</span>
         </div>
       </div>
       <!-- Name -->
@@ -12795,7 +12832,7 @@ async function viewUserProfile(username) {
       <!-- Status -->
       <div class="up-left-status">
         <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;">
-          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" style="width:8px;height:8px;border-radius:50%;background:${sc};box-shadow:0 0 8px ${sc}55;"></span>
+          <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="10" style="width:10px;height:10px;display:inline-flex;filter:drop-shadow(0 0 3px ${sc}55);">${FtzStatus.dotSvg(u.status||'offline', 10)}</span>
           <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
         </div>
         ${customStatus?.text ? `<div style="font-size:10.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;color:rgba(255,255,255,.4);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text)}</div>` : `<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></div>`}
@@ -21373,7 +21410,7 @@ async function showDMUserPanel(username) {
     + '<div style="padding:0 16px;margin-top:-36px;margin-bottom:8px;position:relative;z-index:2;">'
     + '<div style="position:relative;display:inline-block;">'
     + '<div style="width:72px;height:72px;border-radius:50%;background:var(--panel2);border:4px solid var(--channel);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.6);">' + buildAvatarHTML(u.pfp,u.displayName||u.username,64) + '</div>'
-    + '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" style="position:absolute;bottom:3px;right:3px;width:14px;height:14px;border-radius:50%;background:' + sc + ';border:3px solid var(--channel);box-shadow:0 0 8px '+sc+'55;"></span>'
+    + '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" data-dot-size="16" style="position:absolute;bottom:3px;right:3px;width:16px;height:16px;filter:drop-shadow(0 0 3px '+sc+'55);">'+FtzStatus.dotSvg(u.status||'offline', 16)+'</span>'
     + '</div>'
     + '</div>'
     // Display Name
@@ -21385,7 +21422,7 @@ async function showDMUserPanel(username) {
     // Status
     + '<div style="padding:6px 16px 0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
     + '<div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,255,255,.03);border-radius:100px;">'
-    + '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" style="width:8px;height:8px;border-radius:50%;background:'+sc+';box-shadow:0 0 6px '+sc+'55;"></span>'
+    + '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" data-dot-size="10" style="width:10px;height:10px;display:inline-flex;filter:drop-shadow(0 0 3px '+sc+'55);">'+FtzStatus.dotSvg(u.status||'offline', 10)+'</span>'
     + '<span class="profile-status-label" data-for="'+escapeHTML(u.username)+'" style="font-size:11px;color:rgba(255,255,255,.45);font-weight:600;">' + FtzStatus.publicLabel(status) + '</span>'
     + '</div>'
     // Custom Status Bubble
@@ -22206,7 +22243,7 @@ function openStatusPicker() {
         <div id="status-preview-card" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;margin-bottom:18px;">
           <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel2);position:relative;">
             ${CU?.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<div style="width:100%;height:100%;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--accent);">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
-            <span style="position:absolute;bottom:0;right:0;width:14px;height:14px;border-radius:50%;background:${FtzStatus.color(status)};border:3px solid #0f1219;"></span>
+            <span style="position:absolute;bottom:0;right:0;width:14px;height:14px;">${FtzStatus.dotSvg(status, 14)}</span>
           </div>
           <div style="min-width:0;flex:1;">
             <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">${escapeHTML(CU?.displayName||CU?.username||'User')}</div>
@@ -22222,7 +22259,7 @@ function openStatusPicker() {
         <div class="sp-mode-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;">
           ${STATUS_MODES.map(m=>`
             <div class="sp-mode-opt ${status===m.id?'sel':''}" onclick="pickStatusMode('${m.id}',this)" data-mode="${m.id}" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid ${status===m.id?'rgba(254,248,61,.2)':'rgba(255,255,255,.06)'};border-radius:12px;cursor:pointer;transition:all .15s;background:${status===m.id?'rgba(254,248,61,.04)':'transparent'};" onmouseover="this.style.borderColor='rgba(254,248,61,.15)';this.style.background='rgba(254,248,61,.03)'" onmouseout="if(!this.classList.contains('sel')){this.style.borderColor='rgba(255,255,255,.06)';this.style.background='transparent'}">
-              <div style="width:10px;height:10px;border-radius:50%;background:${m.color};box-shadow:0 0 6px ${m.color}55;flex-shrink:0;"></div>
+              <div style="width:12px;height:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 3px ${m.color}55);">${FtzStatus.dotSvg(m.id, 12)}</div>
               <span style="font-size:12.5px;font-weight:600;color:${status===m.id?'#fff':'rgba(255,255,255,.55)'};">${m.label}</span>
             </div>`).join('')}
         </div>
@@ -23637,12 +23674,8 @@ function subscribeProfileStatus(username) {
       const st = FtzStatus.sanitize(row.status || 'offline');
       const color = FtzStatus.color(st);
       // Update ALL status dots across the entire app for this user
-      document.querySelectorAll('.profile-status-dot[data-for="'+username+'"]').forEach(el=>{el.style.background=color;el.style.boxShadow='0 0 8px '+color+'55';});
+      FtzStatus.updateDots(username, st);
       document.querySelectorAll('.profile-status-label[data-for="'+username+'"]').forEach(el=>{el.textContent=FtzStatus.publicLabel(st);});
-      // Member list status dots
-      document.querySelectorAll('.ml-entry[data-member="'+username+'"] .ml-status, .ml-entry[data-member="'+username+'"] .profile-status-dot').forEach(el=>{el.style.background=color;});
-      // DM sidebar status dots
-      document.querySelectorAll('.dm-home-status[data-for="'+username+'"]').forEach(el=>{el.style.background=color;});
       document.querySelectorAll('.dm-home-status-text[data-for="'+username+'"]').forEach(el=>{el.textContent=FtzStatus.publicLabel(st);});
       // Mini profile preview dots
       document.querySelectorAll('.mpp-status-dot[data-for="'+username+'"]').forEach(el=>{el.style.background=color;});
@@ -26038,7 +26071,7 @@ async function loadFriendActivity() {
       return `<div class="activity-item" onclick="openDMView('${escapeHTML(s.username)}')">
         <div class="act-icon" style="position:relative;border-radius:50%;">
           ${buildAvatarHTML(s.pfp, s.displayName, 38)}
-          <span class="profile-status-dot" data-for="${escapeHTML(s.username)}" style="position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:${col};border:2px solid var(--panel);"></span>
+          <span class="profile-status-dot" data-for="${escapeHTML(s.username)}" data-dot-size="12" style="position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;">${FtzStatus.dotSvg(s.status, 12)}</span>
         </div>
         <div class="act-text">
           <p><strong>${escapeHTML(s.displayName)}</strong></p>
@@ -27860,10 +27893,7 @@ function _subscribeFriendStatuses() {
           const st = FtzStatus.sanitize(row.status || 'offline');
           const color = FtzStatus.color(st);
           // Update all status dots for this user across the entire app
-          document.querySelectorAll('.profile-status-dot[data-for="'+f+'"]').forEach(el => {
-            el.style.background = color;
-            el.style.boxShadow = '0 0 8px '+color+'55';
-          });
+          FtzStatus.updateDots(f, st);
           document.querySelectorAll('.profile-status-label[data-for="'+f+'"]').forEach(el => {
             el.textContent = FtzStatus.publicLabel(st);
           });
@@ -28053,7 +28083,7 @@ async function showMiniProfilePreview(username, anchorEl) {
       <div class="profile-decoration-wrap" style="flex-shrink:0;cursor:pointer;" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')">
         <div class="mpp-av">${buildAvatarHTML(u.pfp, u.displayName||u.username, 64)}</div>
         ${u.activeDecoration ? `<img src="${getDecorationSrc(u.activeDecoration)||''}" class="profile-decoration-overlay" onerror="this.style.display='none'">` : ''}
-        <span class="profile-status-dot" data-for="${escapeHTML(username)}" style="position:absolute;bottom:2px;right:2px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid var(--panel);z-index:3;"></span>
+        <span class="profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="18" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;z-index:3;">${FtzStatus.dotSvg(u.status||'offline', 18)}</span>
       </div>
     </div>
     <!-- Identity -->
@@ -28064,7 +28094,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- Status -->
     <div class="mpp-status-row">
       <div class="mpp-status-pill">
-        <span class="sdot profile-status-dot" data-for="${escapeHTML(username)}" style="background:${sc};box-shadow:0 0 8px ${sc}55;"></span>
+        <span class="sdot profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="10" style="display:inline-flex;filter:drop-shadow(0 0 3px ${sc}55);">${FtzStatus.dotSvg(u.status||'offline', 10)}</span>
         <span class="profile-status-label" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
       </div>
       <div class="profile-custom-status cloud-status-bubble" data-for="${escapeHTML(username)}" style="${customStatus?.text ? 'display:inline-flex;' : 'display:none;'}font-size:10.5px;padding:4px 10px;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;color:rgba(255,255,255,.45);">${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,30)}</span>` : ''}</div>

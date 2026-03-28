@@ -2182,6 +2182,39 @@ function _rTipRemove() {
   if (_rTipEl) { _rTipEl.remove(); _rTipEl = null; }
 }
 
+// ── Badge tooltip (fixed-positioned to escape overflow:hidden containers) ──
+let _badgeTipEl = null;
+document.addEventListener('mouseover', function(e) {
+  const badge = e.target.closest?.('.ftz-badge');
+  if (!badge) return;
+  const tooltipEl = badge.querySelector('.badge-tooltip');
+  if (!tooltipEl) return;
+  _badgeTipRemove();
+  const tip = document.createElement('div');
+  tip.className = 'ftz-badge-tip';
+  tip.textContent = tooltipEl.textContent;
+  document.body.appendChild(tip);
+  _badgeTipEl = tip;
+  const rect = badge.getBoundingClientRect();
+  const tipRect = tip.getBoundingClientRect();
+  let left = rect.left + rect.width / 2 - tipRect.width / 2;
+  let top = rect.top - tipRect.height - 8;
+  if (top < 4) top = rect.bottom + 8;
+  if (left < 4) left = 4;
+  if (left + tipRect.width > window.innerWidth - 4) left = window.innerWidth - tipRect.width - 4;
+  tip.style.left = left + 'px';
+  tip.style.top = top + 'px';
+  requestAnimationFrame(() => tip.classList.add('visible'));
+});
+document.addEventListener('mouseout', function(e) {
+  const badge = e.target.closest?.('.ftz-badge');
+  if (!badge) return;
+  _badgeTipRemove();
+});
+function _badgeTipRemove() {
+  if (_badgeTipEl) { _badgeTipEl.remove(); _badgeTipEl = null; }
+}
+
 function _railNavCtxMenu(e, viewId) {
   e.preventDefault();
   e.stopPropagation();

@@ -21,8 +21,8 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .rail-sep{height:2px;width:32px;background:rgba(255,255,255,.06);margin:6px auto;flex-shrink:0;border-radius:1px;}
 .rail-btn{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;flex-shrink:0;font-size:0;font-weight:600;color:rgba(255,255,255,.45);}
 .rail-btn span{display:none;}
-.rail-btn svg{width:54px;height:54px;flex-shrink:0;transition:transform .16s cubic-bezier(.22,1,.36,1);}
-.rail-home-logo{width:54px;height:54px;-webkit-mask:url('/Fortized logo.png') center/contain no-repeat;mask:url('/Fortized logo.png') center/contain no-repeat;background-color:rgba(255,255,255,.45);transition:transform .16s cubic-bezier(.22,1,.36,1),background-color .2s;}
+.rail-btn svg{width:46px;height:46px;flex-shrink:0;transition:transform .16s cubic-bezier(.22,1,.36,1);}
+.rail-home-logo{width:46px;height:46px;-webkit-mask:url('/Fortized logo.png') center/contain no-repeat;mask:url('/Fortized logo.png') center/contain no-repeat;background-color:rgba(255,255,255,.45);transition:transform .16s cubic-bezier(.22,1,.36,1),background-color .2s;}
 .rail-home-btn:hover .rail-home-logo{background-color:rgba(255,255,255,.9);transform:scale(1.06);}
 .rail-home-btn.active .rail-home-logo{background-color:#060810;}
 .rail-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border-radius:12px;}

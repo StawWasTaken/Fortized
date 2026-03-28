@@ -326,7 +326,8 @@ body.is-desktop-app .topbar{padding-right:0;}
 .ua-clickable:hover{background:rgba(255,255,255,.05);}
 .ua{width:34px;height:34px;border-radius:50%;background:var(--panel);font-size:12px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.3);}
 .ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
-.ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.ua-status-dot{position:absolute;bottom:-2px;right:-2px;width:13px;height:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.ua-status-dot svg,.profile-status-dot svg,.an-status-dot svg,.rf-status svg,.ml-status svg,.sdot svg{transition:all .2s ease;}
 .ua-info{display:block;min-width:0;flex:1;}
 .ua-name{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;font-family:'Syne',sans-serif;line-height:1.2;}
 .ua-status-text{font-size:9.5px;color:rgba(255,255,255,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;line-height:1.2;}
@@ -345,7 +346,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 .rail-ub-clickable:hover{background:rgba(255,255,255,.05);}
 .rail-ub-avatar{width:34px;height:34px;border-radius:50%;background:var(--panel);cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:visible;position:relative;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.3);}
 .rail-ub-avatar img,.rail-ub-avatar>div{width:100%;height:100%;object-fit:cover;border-radius:50%;}
-.rail-ub-avatar .ua-status-dot{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;}
+.rail-ub-avatar .ua-status-dot{position:absolute;bottom:-2px;right:-2px;width:13px;height:13px;}
 .rail-ub-info{display:block;min-width:0;flex:1;}
 .rail-ub-name{font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;font-family:'Syne',sans-serif;line-height:1.2;}
 .rail-ub-status{font-size:9px;color:rgba(255,255,255,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;line-height:1.2;}

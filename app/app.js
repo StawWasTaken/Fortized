@@ -8143,7 +8143,7 @@ function renderOverviewRoom() {
   const canEdit = isOwner || hasAdmin;
   const ov = b.overview || {};
   const bannerSrc = b.banner || b.icon || '';
-  const emblemHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" onerror="this.outerHTML='🏰'">` : `<span style="font-size:36px;">${b.emblem||'🏰'}</span>`;
+  const emblemHTML = b.icon ? '<img src="' + escapeHTML(b.icon) + '" onerror="this.outerHTML=\'🏰\'">' : '<span style="font-size:28px;">' + (b.emblem||'🏰') + '</span>';
   const memberCount = Object.keys(b.memberRoles||{}).length || (b.members||[]).length || 1;
   const channelCount = (b.channels||[]).length;
   const boostLv = b.boostLevel || 0;
@@ -8151,218 +8151,184 @@ function renderOverviewRoom() {
   const chs = b.channels || [];
   const roles = b.roles || [];
 
-  // Gather latest announcements from announcement channels
-  const annChs = chs.filter(c => c.type === 'announcement');
-  // Gather forums
-  const forumChs = chs.filter(c => c.type === 'forum');
+  const annChs = chs.filter(function(c){ return c.type === 'announcement'; });
+  const forumChs = chs.filter(function(c){ return c.type === 'forum'; });
 
-  // Custom welcome text
   const welcomeText = ov.welcomeText || b.desc || '';
-  // Custom sections visibility
   const showAnnouncements = ov.showAnnouncements !== false;
   const showForums = ov.showForums !== false;
-  const showStats = ov.showStats !== false;
   const showRoles = ov.showRoles !== false;
   const showInvite = ov.showInvite !== false;
-  const showRooms = ov.showRooms !== false;
-  // Layout customization
   const ovAccent = ov.accentColor || '';
-  const ovBannerH = ov.bannerHeight || 'default';
-  const ovLayout = ov.layoutStyle || 'centered';
-  const bannerHeightPx = ovBannerH === 'compact' ? '120px' : ovBannerH === 'tall' ? '320px' : '220px';
 
-  // Invites
-  const invites = b.invites || [];
-  const activeInvite = invites.find(inv => {
-    if (inv.expires && new Date(inv.expires) < new Date()) return false;
-    if (inv.maxUses && inv.uses >= inv.maxUses) return false;
-    return true;
-  });
-  const inviteCode = activeInvite ? activeInvite.code : null;
+  var html = '<div class="overview-room">';
 
-  let html = '<div class="overview-room">';
-
-  // Edit bar for owners/admins
-  if (canEdit) {
-    html += `<div class="ov-edit-bar">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      <span class="ov-eb-label">Overview Room — Editable</span>
-      <button class="btn-g" style="font-size:11px;padding:5px 12px;" onclick="openOverviewEditor()">Customize</button>
-    </div>`;
-  }
-
-  // Banner
-  const isLeftLayout = ovLayout === 'left-aligned';
+  // ── Banner + emblem ──
   if (bannerSrc) {
-    html += `<div class="ov-banner" style="height:${bannerHeightPx};">
-      <img src="${escapeHTML(bannerSrc)}" onerror="this.parentElement.style.display='none'" alt="" style="height:${bannerHeightPx};">
-      <div class="ov-emblem" style="${isLeftLayout?'left:40px;transform:none;':''}"><div class="ov-icon">${emblemHTML}</div></div>
-    </div>`;
+    html += '<div class="ov-banner" style="height:140px;">'
+      + '<img src="' + escapeHTML(bannerSrc) + '" onerror="this.parentElement.style.display=\'none\'" alt="" style="height:140px;">'
+      + '<div class="ov-emblem"><div class="ov-icon">' + emblemHTML + '</div></div>'
+      + '</div>';
   }
 
-  // Identity
-  html += `<div class="ov-identity" style="${bannerSrc?'':'padding-top:24px;'}${isLeftLayout?'text-align:left;align-items:flex-start;padding-left:40px;':''}">
-    ${bannerSrc ? '' : `<div class="ov-emblem" style="position:relative;margin-bottom:12px;${isLeftLayout?'margin-left:0;':''}"><div class="ov-icon">${emblemHTML}</div></div>`}
-    <div class="ov-name">${escapeHTML(b.name)}</div>
-    ${b.tagline ? `<div class="ov-tagline" style="${isLeftLayout?'margin-left:0;margin-right:0;':''}">${escapeHTML(b.tagline)}</div>` : ''}
-  </div>`;
+  // ── Identity: name, tagline, badge ──
+  html += '<div class="ov-identity" style="' + (bannerSrc ? '' : 'padding-top:24px;') + '">'
+    + (bannerSrc ? '' : '<div class="ov-emblem" style="position:relative;margin-bottom:12px;"><div class="ov-icon">' + emblemHTML + '</div></div>')
+    + '<div class="ov-name">' + escapeHTML(b.name) + '</div>'
+    + (b.tagline ? '<div class="ov-tagline">' + escapeHTML(b.tagline) + '</div>' : '')
+    + '</div>';
 
-  // Owner info
-  const ownerName = b.owner || 'Unknown';
-
-  // Badges row
-  const badgeAccStyle = ovAccent ? `color:${ovAccent};border-color:${ovAccent}33;background:${ovAccent}0d;` : '';
-  html += `<div class="ov-badges" style="${isLeftLayout?'justify-content:flex-start;padding-left:40px;':''}">
-    <span class="ov-badge">👥 ${memberCount} member${memberCount!==1?'s':''}</span>
-    <span class="ov-badge">${b.public!==false?'🌍 Public':'🔒 Private'}</span>
-    ${boostLv > 0 ? `<span class="ov-badge" style="${badgeAccStyle||'color:var(--accent);border-color:rgba(255,249,62,.15);background:rgba(255,249,62,.05);'};display:inline-flex;align-items:center;gap:4px;">${_boostSvg('12')} ${tierNames[boostLv]}</span>` : ''}
-    <span class="ov-badge">📂 ${channelCount} room${channelCount!==1?'s':''}</span>
-    <span class="ov-badge" onclick="viewUserProfile('${escapeHTML(ownerName)}')" style="cursor:pointer;">👑 ${escapeHTML(ownerName)}</span>
-  </div>`;
+  // ── Badges row ──
+  var ownerName = b.owner || 'Unknown';
+  var badgeAccStyle = ovAccent ? 'color:' + ovAccent + ';border-color:' + ovAccent + '33;background:' + ovAccent + '0d;' : '';
+  html += '<div class="ov-badges">'
+    + '<span class="ov-badge">👥 ' + memberCount + ' member' + (memberCount!==1?'s':'') + '</span>'
+    + '<span class="ov-badge">' + (b.public!==false?'🌍 Public':'🔒 Private') + '</span>'
+    + (boostLv > 0 ? '<span class="ov-badge" style="' + (badgeAccStyle||'color:var(--accent);border-color:rgba(255,249,62,.15);background:rgba(255,249,62,.05);') + 'display:inline-flex;align-items:center;gap:4px;">' + _boostSvg('12') + ' ' + tierNames[boostLv] + '</span>' : '')
+    + '<span class="ov-badge">📂 ' + channelCount + ' room' + (channelCount!==1?'s':'') + '</span>'
+    + '<span class="ov-badge" onclick="viewUserProfile(\'' + escapeHTML(ownerName) + '\')" style="cursor:pointer;">👑 ' + escapeHTML(ownerName) + '</span>'
+    + '</div>';
 
   html += '<div class="ov-content">';
 
-  // Quick Actions row
-  const textCh0 = chs.find(c => c.type === 'text' || !c.type);
-  const textCh0Idx = textCh0 ? chs.indexOf(textCh0) : -1;
-  html += `<div class="ov-section">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      ${textCh0Idx >= 0 ? `<button class="ov-quick-action" onclick="selectChannel(${textCh0Idx})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Start Chatting</button>` : ''}
-      ${canEdit ? `<button class="ov-quick-action" onclick="openBastionSettings('channels')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Settings</button>` : ''}
-      <button class="ov-quick-action" onclick="openBastionSettings('members')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Members</button>
-    </div>
-  </div>`;
-
-  // Welcome / About card
-  if (welcomeText) {
-    html += `<div class="ov-section">
-      <div class="ov-welcome-card">
-        <div class="ov-wc-text">${escapeHTML(welcomeText)}</div>
-      </div>
-    </div>`;
+  // ── Edit bar (top of content for admins) ──
+  if (canEdit) {
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+      + '<button class="btn-g" style="font-size:10px;padding:4px 10px;display:flex;align-items:center;gap:5px;" onclick="openOverviewEditor()">'
+      + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+      + ' Customize</button></div>';
   }
 
-  // Stats grid
-  if (showStats) {
-    html += `<div class="ov-section">
-      <div class="ov-section-header">
-        <span class="ov-section-title">Community Stats</span>
-      </div>
-      <div class="ov-stats-grid">
-        <div class="ov-stat-card"><div class="ov-sc-val">${memberCount}</div><div class="ov-sc-label">Members</div></div>
-        <div class="ov-stat-card"><div class="ov-sc-val">${channelCount}</div><div class="ov-sc-label">Rooms</div></div>
-        <div class="ov-stat-card"><div class="ov-sc-val">${roles.length}</div><div class="ov-sc-label">Roles</div></div>
-        <div class="ov-stat-card"><div class="ov-sc-val">Lv.${boostLv}</div><div class="ov-sc-label">Boost</div></div>
-      </div>
-    </div>`;
-  }
+  // ── Upcoming Events (Guilded-style horizontal cards) ──
+  var bastionId = b.globalId || b.name;
+  html += '<div class="ov-section" id="ov-events-section">'
+    + '<div class="ov-section-header">'
+    + '<span class="ov-section-title">Upcoming events</span>'
+    + '<span class="ov-section-link" onclick="openBastionSettings(\'events\')">See all</span>'
+    + '</div>'
+    + '<div class="ov-ev-row" id="ov-events-row"><div style="font-size:11px;color:var(--muted);padding:10px;">Loading…</div></div>'
+    + '</div>';
 
-  // CTA Button
-  if (ov.ctaLabel) {
-    const ctaAccent = ovAccent || 'var(--accent)';
-    html += `<div class="ov-section">
-      <div style="display:flex;justify-content:${isLeftLayout?'flex-start':'center'};">
-        <button class="btn-a" style="font-size:13px;padding:10px 24px;${ovAccent?`background:${ovAccent};color:#060810;box-shadow:0 2px 12px ${ovAccent}30;`:''}" ${ov.ctaUrl?`onclick="window.open('${escapeHTML(ov.ctaUrl)}','_blank')"`:''}>${escapeHTML(ov.ctaLabel)}</button>
-      </div>
-    </div>`;
-  }
+  // Load events async into the row
+  setTimeout(function(){ _loadOverviewEvents(bastionId); }, 50);
 
-  // Rooms quick-access
-  if (showRooms && chs.length > 0) {
-    const roomIcons = {text:'#',voice:ftzIcon('mic','12'),forum:ftzIcon('chat','12'),announcement:ftzIcon('megaphone','12'),poll:ftzIcon('ballot','12')};
-    const roomLimit = chs.slice(0, 8);
-    html += `<div class="ov-section">
-      <div class="ov-section-header">
-        <span class="ov-section-title">Rooms</span>
-        <span class="ov-section-link" onclick="openBastionSettings('channels')">See all</span>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        ${roomLimit.map((ch, i) => {
-          const ri = chs.indexOf(ch);
-          const icon = roomIcons[ch.type] || '#';
-          const onclick = ch.type==='voice' ? `selectChannel(${ri})` : ch.type==='forum' ? `openForumChannel(${ri})` : ch.type==='poll' ? `openPollChannel(${ri})` : `selectChannel(${ri})`;
-          return `<button class="ov-room-chip" onclick="${onclick}"><span style="opacity:.5;">${icon}</span> ${escapeHTML(ch.name)}</button>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }
-
-  // Latest announcements
+  // ── Latest Announcements ──
   if (showAnnouncements && annChs.length > 0) {
-    html += `<div class="ov-section">
-      <div class="ov-section-header">
-        <span class="ov-section-title">Latest announcements</span>
-        <span class="ov-section-link" onclick="selectChannel(${chs.indexOf(annChs[0])})">See all</span>
-      </div>
-      <div class="ov-card-row">
-        ${annChs.map(ch => {
-          const ri = chs.indexOf(ch);
-          return `<div class="ov-ann-card" onclick="selectChannel(${ri})">
-            <div class="ov-ac-title">📢 ${escapeHTML(ch.name)}</div>
-            <div class="ov-ac-meta"><span>in #${escapeHTML(ch.name)}</span></div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
+    html += '<div class="ov-section">'
+      + '<div class="ov-section-header">'
+      + '<span class="ov-section-title">Latest announcements</span>'
+      + '<span class="ov-section-link" onclick="selectChannel(' + chs.indexOf(annChs[0]) + ')">See all</span>'
+      + '</div><div class="ov-card-row">';
+    annChs.forEach(function(ch){
+      var ri = chs.indexOf(ch);
+      html += '<div class="ov-ann-card" onclick="selectChannel(' + ri + ');closeModal(\'modal-overview\')">'
+        + '<div class="ov-ac-title">📢 ' + escapeHTML(ch.name) + '</div>'
+        + '<div class="ov-ac-meta"><span>in #' + escapeHTML(ch.name) + '</span></div>'
+        + '</div>';
+    });
+    html += '</div></div>';
   }
 
-  // Recent forum activity
+  // ── Recent Forum Activity ──
   if (showForums && forumChs.length > 0) {
-    html += `<div class="ov-section">
-      <div class="ov-section-header">
-        <span class="ov-section-title">Recent forum activity</span>
-        <span class="ov-section-link" onclick="selectChannel(${chs.indexOf(forumChs[0])})">See all</span>
-      </div>
-      <div class="ov-card-row">
-        ${forumChs.map(ch => {
-          const ri = chs.indexOf(ch);
-          return `<div class="ov-ann-card" onclick="openForumChannel(${ri})">
-            <div class="ov-ac-title">${ftzIcon('chat','14')} ${escapeHTML(ch.name)}</div>
-            <div class="ov-ac-meta"><span>Forum room</span></div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
+    html += '<div class="ov-section">'
+      + '<div class="ov-section-header">'
+      + '<span class="ov-section-title">Recent forum activity</span>'
+      + '<span class="ov-section-link" onclick="selectChannel(' + chs.indexOf(forumChs[0]) + ')">See all</span>'
+      + '</div><div class="ov-card-row">';
+    forumChs.forEach(function(ch){
+      var ri = chs.indexOf(ch);
+      html += '<div class="ov-ann-card" onclick="openForumChannel(' + ri + ');closeModal(\'modal-overview\')">'
+        + '<div class="ov-ac-title">' + ftzIcon('chat','14') + ' ' + escapeHTML(ch.name) + '</div>'
+        + '<div class="ov-ac-meta"><span>Forum room</span></div>'
+        + '</div>';
+    });
+    html += '</div></div>';
   }
 
-  // Your Roles
+  // ── Your Roles ──
   if (showRoles) {
-    const myRoles = ((b.memberRoles||{})[CU.username]||[]).map(rid => roles.find(r=>r.id===rid)).filter(Boolean);
-    html += `<div class="ov-section">
-      <div class="ov-section-header">
-        <span class="ov-section-title">Your Roles</span>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        ${myRoles.length ? myRoles.map(r => `<span class="role-tag" style="color:${r.color};background:${r.color}22;border:1px solid ${r.color}44;">${escapeHTML(r.name)}</span>`).join('') : '<span style="font-size:12.5px;color:var(--muted);">No roles assigned yet.</span>'}
-      </div>
-    </div>`;
+    var myRoles = ((b.memberRoles||{})[CU.username]||[]).map(function(rid){ return roles.find(function(r){return r.id===rid;}); }).filter(Boolean);
+    if (myRoles.length) {
+      html += '<div class="ov-section">'
+        + '<div class="ov-section-header"><span class="ov-section-title">Your Roles</span></div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
+      myRoles.forEach(function(r){
+        html += '<span class="role-tag" style="color:' + r.color + ';background:' + r.color + '22;border:1px solid ' + r.color + '44;">' + escapeHTML(r.name) + '</span>';
+      });
+      html += '</div></div>';
+    }
   }
 
-  // Invite section
+  // ── Invite section ──
   if (showInvite) {
-    html += `<div class="ov-section">
-      <div class="ov-section-header">
-        <span class="ov-section-title">Invite Friends</span>
-      </div>
-      <div class="ov-welcome-card">
-        <div class="ov-wc-text" style="margin-bottom:10px;">Share an invite link to bring people into ${escapeHTML(b.name)}.</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          ${inviteCode ? `<button class="btn-a" style="font-size:12px;padding:7px 14px;" onclick="copyInvite('${inviteCode}')">Copy Invite Link</button>` : ''}
-          <button class="btn-g" style="font-size:12px;padding:7px 14px;" onclick="showBastionInviteUI()">Invite Friends</button>
-        </div>
-      </div>
-    </div>`;
+    var invites = b.invites || [];
+    var activeInvite = invites.find(function(inv){
+      if (inv.expires && new Date(inv.expires) < new Date()) return false;
+      if (inv.maxUses && inv.uses >= inv.maxUses) return false;
+      return true;
+    });
+    var inviteCode = activeInvite ? activeInvite.code : null;
+    html += '<div class="ov-section">'
+      + '<div class="ov-section-header"><span class="ov-section-title">Invite Friends</span></div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+      + (inviteCode ? '<button class="btn-a" style="font-size:11px;padding:6px 14px;" onclick="copyInvite(\'' + inviteCode + '\')">Copy Invite Link</button>' : '')
+      + '<button class="btn-g" style="font-size:11px;padding:6px 14px;" onclick="showBastionInviteUI()">Invite Friends</button>'
+      + '</div></div>';
   }
 
-  // Footer text
+  // ── Footer ──
   if (ov.footerText) {
-    html += `<div class="ov-section" style="margin-top:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,.04);">
-      <div style="font-size:12px;color:var(--muted);text-align:${isLeftLayout?'left':'center'};line-height:1.5;">${escapeHTML(ov.footerText)}</div>
-    </div>`;
+    html += '<div style="margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);">'
+      + '<div style="font-size:11px;color:var(--muted);text-align:center;line-height:1.5;">' + escapeHTML(ov.footerText) + '</div></div>';
   }
 
-  html += '</div></div>';
+  html += '</div>'; // close ov-content
+
+  // ── Post an announcement bar (like Guilded) ──
+  if (canEdit && annChs.length > 0) {
+    var annIdx = chs.indexOf(annChs[0]);
+    html += '<div class="ov-post-bar">'
+      + '<input type="text" placeholder="Post an announcement…" readonly onclick="selectChannel(' + annIdx + ');closeModal(\'modal-overview\')" style="cursor:pointer;">'
+      + '</div>';
+  }
+
+  html += '</div>'; // close overview-room
   wrap.innerHTML = html;
+}
+
+// Load upcoming events into overview mini-cards
+async function _loadOverviewEvents(bastionId) {
+  var row = document.getElementById('ov-events-row');
+  if (!row) return;
+  try {
+    var snap = await firebase.database().ref('events/' + bastionId).get();
+    if (!snap.exists()) { row.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px;">No upcoming events</div>'; return; }
+    var events = [];
+    snap.forEach(function(c){ var v = c.val(); v._key = c.key; events.push(v); });
+    var now = new Date();
+    var upcoming = events.filter(function(ev){ return !ev.cancelled && (new Date(ev.date) >= now || ev.status === 'live'); });
+    upcoming.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+    if (!upcoming.length) { row.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px;">No upcoming events</div>'; return; }
+    var html = '';
+    upcoming.slice(0, 8).forEach(function(ev) {
+      var d = new Date(ev.date);
+      var rsvps = ev.rsvps ? Object.keys(ev.rsvps).length : 0;
+      var userRsvp = ev.rsvps?.[CU.username];
+      var isLive = ev.status === 'live';
+      var dateStr = d.toLocaleString('en',{weekday:'short'}) + ', ' + d.toLocaleString('en',{month:'short',day:'numeric'}) + ' at ' + d.toLocaleString('en',{hour:'numeric',minute:'2-digit'});
+      html += '<div class="ov-ev-mini' + (isLive ? ' ev-card-live' : '') + '">'
+        + '<div class="ov-evm-title">' + (isLive ? '🔴 ' : '') + escapeHTML(ev.title||'Event') + '</div>'
+        + '<div class="ov-evm-going">' + rsvps + ' are going</div>'
+        + '<div class="ov-evm-date"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ' + dateStr + '</div>'
+        + '<div class="ov-evm-actions">'
+        + '<button class="ov-evm-btn' + (userRsvp ? ' active' : '') + '" onclick="event.stopPropagation();_rsvpEvent(\'' + escapeHTML(bastionId) + '\',\'' + ev._key + '\')" title="Going">✓</button>'
+        + '<button class="ov-evm-btn" onclick="event.stopPropagation();_rsvpEvent(\'' + escapeHTML(bastionId) + '\',\'' + ev._key + '\')" title="Maybe">?</button>'
+        + '<button class="ov-evm-btn" title="Not interested" style="color:var(--muted);">✕</button>'
+        + '</div></div>';
+    });
+    row.innerHTML = html;
+  } catch(e) { row.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px;">Could not load events</div>'; }
 }
 
 // Overview editor for owners/admins

@@ -1061,16 +1061,31 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* ── Settings modal (large modal for settings/bsettings) ──── */
 .settings-modal{max-width:none!important;width:calc(100vw / 1.5)!important;height:calc(100vh / 1.5);max-height:none;display:flex;flex-direction:column;overflow:hidden;border-radius:18px;}
 @media(max-width:768px){.settings-modal{width:calc(100vw - 12px)!important;height:calc(100vh - 12px);border-radius:14px;}}
-/* ── Overview modal (matches chat content ratio, no scroll) ──── */
+/* ── Overview modal ──── */
 .overview-modal{max-width:none!important;width:calc(100vw / 1.5)!important;height:calc(100vh / 1.5);max-height:none;display:flex;flex-direction:column;overflow:hidden;border-radius:18px;}
-.overview-modal .modal-body{overflow:hidden!important;}
-.overview-modal .ov-banner{height:120px!important;}
-.overview-modal .ov-banner img{height:120px!important;}
-.overview-modal .ov-identity{padding-top:12px!important;padding-bottom:0!important;}
-.overview-modal .ov-badges{padding:4px 32px 8px!important;}
-.overview-modal .ov-name{font-size:18px!important;}
-.overview-modal .ov-emblem{bottom:-32px!important;}
-.overview-modal .ov-icon{width:52px!important;height:52px!important;}
+.overview-modal .modal-body{overflow-y:auto!important;}
+.overview-modal .overview-room{overflow-y:auto!important;height:auto!important;}
+.overview-modal .ov-banner{height:100px!important;flex-shrink:0;}
+.overview-modal .ov-banner img{height:100px!important;}
+.overview-modal .ov-identity{padding-top:8px!important;padding-bottom:0!important;}
+.overview-modal .ov-badges{padding:4px 28px 6px!important;gap:4px!important;flex-wrap:wrap;}
+.overview-modal .ov-badges .ov-badge{font-size:10px!important;padding:3px 8px!important;}
+.overview-modal .ov-name{font-size:17px!important;}
+.overview-modal .ov-emblem{bottom:-28px!important;}
+.overview-modal .ov-icon{width:46px!important;height:46px!important;}
+.overview-modal .ov-content{padding:8px 24px 14px!important;gap:6px!important;}
+.overview-modal .ov-section-header{margin-bottom:4px!important;}
+.overview-modal .ov-section-title{font-size:12px!important;}
+.overview-modal .ov-stats-grid{gap:4px!important;}
+.overview-modal .ov-stat-card{padding:8px 10px!important;}
+.overview-modal .ov-stat-card .ov-sc-val{font-size:16px!important;}
+.overview-modal .ov-stat-card .ov-sc-label{font-size:9px!important;}
+.overview-modal .ov-welcome-card{padding:10px 14px!important;}
+.overview-modal .ov-welcome-card .ov-wc-text{font-size:12px!important;line-height:1.4!important;}
+.overview-modal .ov-quick-action{padding:6px 12px!important;font-size:11px!important;}
+.overview-modal .ov-room-chip{padding:4px 10px!important;font-size:11px!important;}
+.overview-modal .ov-ann-card{min-width:160px!important;padding:10px 12px!important;}
+.overview-modal .ov-edit-bar{padding:4px 16px!important;font-size:10px!important;}
 @media(max-width:768px){.overview-modal{max-width:calc(100vw - 12px)!important;height:calc(100vh - 12px);border-radius:14px;}}
 .profile-wrap{flex:1;display:flex;overflow:hidden;background:var(--bg);}
 /* Settings sidebar — Discord-style clean nav */

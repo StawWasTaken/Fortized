@@ -10770,6 +10770,14 @@ function buildEmojiTabBar() {
   // Legacy — now uses sidebar instead
   return '';
 }
+// Helper: get the right edge of the chat content area (not the window)
+function _getChatContentRight() {
+  const chatWrap = document.querySelector('.chat-wrap');
+  if (chatWrap) return chatWrap.getBoundingClientRect().right;
+  const main = document.querySelector('.main');
+  if (main) return main.getBoundingClientRect().right;
+  return window.innerWidth;
+}
 function toggleEmojiPicker(targetId) {
   activeEmojiTarget = targetId;
   document.getElementById('giphy-picker')?.remove();
@@ -10799,12 +10807,15 @@ function toggleEmojiPicker(targetId) {
       } else {
         top = Math.min(r.bottom + 8, WH - PH - 8);
       }
-      left = Math.max(8, Math.min(r.left, WW - PW - 8));
+      const chatRight = _getChatContentRight();
+      left = Math.max(8, Math.min(r.left, chatRight - PW - 8));
     } else {
       // Fallback: lower-left area above chat bar
       top = WH - PH - 90;
       left = 90;
     }
+    const maxRight = _getChatContentRight();
+    if (left + PW > maxRight - 8) left = maxRight - PW - 8;
     panel.style.top = Math.max(8, top) + 'px';
     panel.style.left = Math.max(8, left) + 'px';
     panel.style.bottom = 'auto';
@@ -11065,6 +11076,14 @@ const EMOJI_NAMES = {
   '👍':'thumbs up','👎':'thumbs down','👊':'oncoming fist','✊':'raised fist','🤛':'left-facing fist','🤜':'right-facing fist','👏':'clapping hands','🙌':'raising hands','👐':'open hands','🤲':'palms up together','🤝':'handshake','🙏':'folded hands','✌️':'victory hand','🤞':'crossed fingers','🤟':'love-you gesture','🤘':'sign of the horns','👌':'OK hand','🤌':'pinched fingers','🤏':'pinching hand','👈':'backhand index pointing left','👉':'backhand index pointing right','👆':'backhand index pointing up','👇':'backhand index pointing down','☝️':'index pointing up','✋':'raised hand','🤚':'raised back of hand','🖐️':'hand with fingers splayed','🖖':'vulcan salute','👋':'waving hand','🤙':'call me hand','💪':'flexed biceps','🦾':'mechanical arm','🖕':'middle finger',
   '🎮':'video game','🎵':'musical note','🎶':'musical notes','💻':'laptop','📚':'books','😴':'sleeping face','🍕':'pizza','✈️':'airplane','🏋️':'person lifting weights','🎨':'artist palette','🔮':'crystal ball','🪐':'ringed planet','🌸':'cherry blossom','🐾':'paw prints','🍂':'fallen leaf','🎧':'headphone','🌍':'globe showing Europe-Africa','☕':'hot beverage','🎯':'bullseye','🏆':'trophy','💎':'gem stone','🌺':'hibiscus','🍜':'steaming bowl','🍿':'popcorn','🎶':'musical notes','🐉':'dragon','🧁':'cupcake','🎲':'game die','🌈':'rainbow','🦋':'butterfly',
   '👑':'crown','💰':'money bag','🔑':'key','📱':'mobile phone','💡':'light bulb','🔔':'bell','📌':'pushpin','🏠':'house','🌙':'crescent moon','☀️':'sun','⚡':'high voltage','🌊':'water wave','🍀':'four leaf clover','🌻':'sunflower','🍎':'red apple','🍔':'hamburger','🎂':'birthday cake','🍩':'doughnut','🍦':'soft ice cream','🥤':'cup with straw',
+  '🥹':'face holding back tears','🫶':'heart hands','🫵':'index pointing at viewer','🫱':'rightwards hand','🫲':'leftwards hand','🫳':'palm down hand','🫴':'palm up hand','🫰':'hand with index finger and thumb crossed',
+  '🐶':'dog face','🐱':'cat face','🐭':'mouse face','🐹':'hamster','🐰':'rabbit face','🦊':'fox','🐻':'bear','🐼':'panda','🐨':'koala','🐯':'tiger face','🦁':'lion','🐮':'cow face','🐷':'pig face','🐸':'frog','🐵':'monkey face','🐔':'chicken','🐧':'penguin','🐦':'bird','🦆':'duck','🦅':'eagle','🦉':'owl','🦇':'bat','🐺':'wolf','🐗':'boar','🦄':'unicorn','🐝':'honeybee','🐛':'bug','🐌':'snail','🐞':'ladybug','🐜':'ant','🐢':'turtle','🐍':'snake','🐊':'crocodile','🐙':'octopus','🦈':'shark','🐬':'dolphin','🐳':'whale','🐋':'blue whale','🐘':'elephant','🦏':'rhinoceros','🦛':'hippopotamus','🐪':'camel','🐫':'two-hump camel','🦒':'giraffe','🦘':'kangaroo','🐻‍❄️':'polar bear','🐈‍⬛':'black cat',
+  '🍇':'grapes','🍈':'melon','🍉':'watermelon','🍊':'tangerine','🍋':'lemon','🍌':'banana','🍍':'pineapple','🍐':'pear','🍑':'peach','🍒':'cherries','🍓':'strawberry','🥝':'kiwi fruit','🍅':'tomato','🥑':'avocado','🍆':'eggplant','🥔':'potato','🥕':'carrot','🌽':'ear of corn','🌶️':'hot pepper','🥒':'cucumber','🥦':'broccoli','🍞':'bread','🧀':'cheese','🥚':'egg','🍳':'cooking','🥓':'bacon','🥩':'cut of meat','🍗':'poultry leg','🍖':'meat on bone','🍟':'french fries','🌭':'hot dog','🌮':'taco','🌯':'burrito','🥙':'pita','🍣':'sushi','🍤':'shrimp','🍱':'bento box','🍛':'curry rice','🍜':'steaming bowl','🍝':'spaghetti','🍪':'cookie','🍫':'chocolate bar','🍬':'candy','🍭':'lollipop','🍮':'custard','🍯':'honey pot','🍼':'baby bottle','🥛':'glass of milk','🍵':'teacup','🍶':'sake','🍾':'bottle with popping cork','🍷':'wine glass','🍸':'cocktail glass','🍹':'tropical drink','🍺':'beer mug','🍻':'clinking beer mugs','🥂':'clinking glasses','🥃':'tumbler glass','🧋':'bubble tea','🧃':'beverage box','🧊':'ice',
+  '🚗':'automobile','🚕':'taxi','🚙':'sport utility vehicle','🚌':'bus','🏎️':'racing car','🚓':'police car','🚑':'ambulance','🚒':'fire engine','🚐':'minibus','🛻':'pickup truck','🚚':'delivery truck','🏍️':'motorcycle','🛵':'motor scooter','🚲':'bicycle','🛴':'kick scooter','🛹':'skateboard','🚀':'rocket','🛸':'flying saucer','🚁':'helicopter','⛵':'sailboat','🚤':'speedboat','🚢':'ship','⛲':'fountain','🗼':'Tokyo tower','🗽':'Statue of Liberty','🏰':'castle','🏯':'Japanese castle','🏟️':'stadium','🏖️':'beach','🏔️':'snow-capped mountain','🌋':'volcano','🏕️':'camping','🏜️':'desert','🏝️':'desert island',
+  '⚽':'soccer ball','🏀':'basketball','🏈':'football','⚾':'baseball','🎾':'tennis','🏐':'volleyball','🏉':'rugby','🏓':'ping pong','🏸':'badminton','🥊':'boxing glove','🥋':'martial arts uniform','🎿':'skis','🏂':'snowboarder','🏋️':'person lifting weights','🤸':'person cartwheeling','🤺':'person fencing','🏄':'person surfing','🏊':'person swimming','🚴':'person biking','🏇':'horse racing','🎰':'slot machine','🧩':'puzzle piece','♟️':'chess pawn','🎭':'performing arts','🎪':'circus tent','🎁':'wrapped gift','🎀':'ribbon','🎈':'balloon','🎗️':'reminder ribbon','🎖️':'military medal','🏅':'sports medal','🥇':'1st place medal','🥈':'2nd place medal','🥉':'3rd place medal',
+  '👓':'glasses','🕶️':'sunglasses','🥽':'goggles','👔':'necktie','👕':'t-shirt','👖':'jeans','🧣':'scarf','🧤':'gloves','🧥':'coat','🧦':'socks','👗':'dress','👘':'kimono','👙':'bikini','👚':'blouse','👛':'purse','👜':'handbag','🎒':'backpack','👞':'shoe','👟':'running shoe','👠':'high-heeled shoe','👡':'sandal','👢':'boot','👑':'crown','👒':'hat','🎩':'top hat','🎓':'graduation cap','🧢':'billed cap','⛑️':'rescue helmet','💄':'lipstick','💍':'ring','💎':'gem stone',
+  '🔒':'locked','🔓':'unlocked','🔑':'key','🗝️':'old key','🔨':'hammer','🔧':'wrench','⚙️':'gear','🔩':'nut and bolt','🔫':'water pistol','💣':'bomb','🔪':'kitchen knife','🗡️':'dagger','⚔️':'crossed swords','🛡️':'shield','🔮':'crystal ball','🧿':'nazar amulet','🔬':'microscope','🔭':'telescope','💊':'pill','💉':'syringe',
+  '♾️':'infinity','💲':'dollar sign','🔱':'trident emblem','📛':'name badge','🔰':'Japanese symbol for beginner','⭕':'hollow red circle','✅':'check mark button','☑️':'check box','✔️':'check mark','❌':'cross mark','❎':'cross mark button','➕':'plus','➖':'minus','➗':'division','❓':'question mark','❔':'white question mark','❕':'white exclamation mark','❗':'exclamation mark','‼️':'double exclamation mark','⁉️':'exclamation question mark','⚠️':'warning','🚫':'prohibited','⛔':'no entry','🛑':'stop sign','♻️':'recycling symbol',
 };
 
 // Emoji category mapping (for tooltip display — renamed to avoid conflict with EMOJI_CATEGORIES array)
@@ -11190,8 +11209,18 @@ document.addEventListener('click', function(e) {
 function renderEmojiCell(emoji) {
   const safe = escapeHTML(emoji);
   const url = emojiToTwemojiUrl(emoji);
-  return `<div onclick="insertEmoji('${safe}')" oncontextmenu="event.preventDefault();_showEmojiInfoPopover('${safe}','unicode',event)" title="${safe}"
-    onmouseenter="document.getElementById('epp-hover-label').textContent='${safe}'"
+  // Look up a readable name: EMOJI_NAMES first, then reverse EMOJI_SHORTCODES
+  let label = EMOJI_NAMES[emoji] || '';
+  if (!label) {
+    for (const [code, em] of Object.entries(EMOJI_SHORTCODES)) {
+      if (em === emoji) { label = code.replace(/_/g, ' '); break; }
+    }
+  }
+  if (!label) label = emoji;
+  const shortcode = Object.entries(EMOJI_SHORTCODES).find(([,em]) => em === emoji)?.[0] || '';
+  const displayName = shortcode ? ':' + shortcode + ':' : label;
+  return `<div onclick="insertEmoji('${safe}')" oncontextmenu="event.preventDefault();_showEmojiInfoPopover('${safe}','unicode',event)" data-tip="${escapeHTML(displayName)}"
+    onmouseenter="document.getElementById('epp-hover-label').textContent='${escapeHTML(displayName)}'"
     style="width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;padding:3px;"
     onmouseover="this.style.background='rgba(255,255,255,.07)';this.style.transform='scale(1.15)'"
     onmouseout="this.style.background='transparent';this.style.transform=''">
@@ -21440,12 +21469,14 @@ function openGiphyPicker(inputId) {
   const refEl = document.getElementById(_giphyInput);
   const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
   const rect = outerEl ? outerEl.getBoundingClientRect() : (refEl ? refEl.getBoundingClientRect() : {right:400, top:300});
-  const rightOffset = Math.max(8, window.innerWidth - rect.right);
+  const chatRight = _getChatContentRight();
+  const rightOffset = Math.max(8, window.innerWidth - Math.min(rect.right, chatRight));
 
   const picker = document.createElement('div');
   picker.id = 'giphy-picker';
   picker.className = 'chat-picker-base';
-  picker.style.cssText = `right:${rightOffset}px;bottom:${window.innerHeight-rect.top+8}px;width:460px;max-height:560px;`;
+  const pickerLeft = Math.min(rect.right - 460, chatRight - 460 - 8);
+  picker.style.cssText = `left:${Math.max(8, pickerLeft)}px;bottom:${window.innerHeight-rect.top+8}px;width:460px;max-height:560px;`;
 
   const esc = escapeHTML(_giphyInput);
   const favCount = getFavGifs().length;
@@ -21762,12 +21793,13 @@ function openStickerPicker(inputId) {
   const refEl = document.getElementById(_stickerInput);
   const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
   const rect = outerEl ? outerEl.getBoundingClientRect() : {right:400, top:300};
-  const rightOffset = Math.max(8, window.innerWidth - rect.right);
+  const chatRight = _getChatContentRight();
 
   const picker = document.createElement('div');
   picker.id = 'sticker-picker';
   picker.className = 'chat-picker-base sticker-picker-panel';
-  picker.style.cssText = `right:${rightOffset}px;bottom:${window.innerHeight-rect.top+6}px;`;
+  const stickerLeft = Math.max(8, Math.min(rect.right - 420, chatRight - 420 - 8));
+  picker.style.cssText = `left:${stickerLeft}px;bottom:${window.innerHeight-rect.top+6}px;`;
 
   // Gather stickers: personal + current bastion + other bastions (Radiance only)
   const allStickers = [];
@@ -21900,12 +21932,13 @@ function openBotCommandPanel(inputId, context) {
   const refEl = document.getElementById(inputId);
   const outerEl = refEl ? refEl.closest('.chat-input-outer') : null;
   const rect = outerEl ? outerEl.getBoundingClientRect() : {right:400, top:300};
-  const rightOffset = Math.max(8, window.innerWidth - rect.right);
+  const chatRight = _getChatContentRight();
 
   const picker = document.createElement('div');
   picker.id = 'botcmd-picker';
   picker.className = 'chat-picker-base botcmd-panel';
-  picker.style.cssText = `right:${rightOffset}px;bottom:${window.innerHeight-rect.top+6}px;`;
+  const botLeft = Math.max(8, Math.min(rect.right - 420, chatRight - 420 - 8));
+  picker.style.cssText = `left:${botLeft}px;bottom:${window.innerHeight-rect.top+6}px;`;
 
   // Gather bot commands from current bastion
   let commands = [];

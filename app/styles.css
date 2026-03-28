@@ -254,7 +254,7 @@ body{background:var(--sidebar);color:var(--text);font-family:'DM Sans',sans-seri
 .topbar{height:44px;background:var(--sidebar);display:flex;align-items:center;padding:0 191px 0 18px;gap:12px;flex-shrink:0;border-bottom:none;-webkit-app-region:drag;}
 .topbar button,.topbar input,.topbar .tb-actions,.topbar .tb-onyx-pill,.topbar .tb-search,.topbar .tb-notif-btn,.topbar .tb-win-controls,.topbar .tb-nav-controls{-webkit-app-region:no-drag;}
 /* Navigation controls (back / forward / refresh) — in topbar, before title */
-.tb-nav-controls{display:flex;align-items:center;justify-content:center;gap:4px;flex-shrink:0;height:44px;width:100%;}
+.tb-nav-controls{display:flex;align-items:center;justify-content:center;gap:4px;position:absolute;top:0;left:0;width:72px;height:44px;z-index:11;}
 .tb-nav-btn{width:24px;height:24px;background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .12s,color .12s;padding:0;}
 .tb-nav-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);}
 .tb-nav-btn:active{background:rgba(255,255,255,.1);color:#fff;}

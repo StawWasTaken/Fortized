@@ -1384,8 +1384,11 @@ function updateTopbar(v) {
   if (sep) sep.style.display = 'none';
   if (desc) desc.textContent = '';
   if (acts) acts.innerHTML = '';
-  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'Settings',bsettings:'Bastion Settings',bhub:'Overview',bastion:'Bastions'};
-  if (labels[v]) title.textContent = labels[v];
+  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'Settings',bsettings:'Bastion Settings',bhub:'Overview'};
+  if (v === 'bastion') {
+    const b = CU?.bastions?.[curBastion];
+    title.textContent = b?.name || 'Bastion';
+  } else if (labels[v]) title.textContent = labels[v];
   // Update document title for subpage (Discord-style: Fortized | Page)
   const docTitles = {home:null,dms:'Friends',friends:'Friends',discover:'Discover',atelier:'Atelier',profile:'Settings',bsettings:'Bastion Settings',bhub:'Overview'};
   if (v === 'bastion') {
@@ -1404,6 +1407,8 @@ function _updateBastionTitle() {
   const b = CU?.bastions?.[curBastion];
   if (!b) { document.title = 'Fortized'; return; }
   const bName = b.name || 'Bastion';
+  const tbTitle = document.getElementById('topbar-title');
+  if (tbTitle) tbTitle.textContent = bName;
   if (curChannel === 'overview' || curChannel === null) {
     document.title = 'Fortized | ' + bName;
   } else {

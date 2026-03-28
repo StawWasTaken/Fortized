@@ -1058,17 +1058,6 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .hq-quick-btn{padding:7px var(--space-md);border-radius:var(--radius-sm);border:1px solid var(--surface-border);background:var(--surface-1);color:rgba(255,255,255,.5);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
 .hq-quick-btn:hover{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);}
 @media(max-width:768px){.admin-nav{width:56px;min-width:56px;}.adm-tab span:last-child,.adm-sec-label{display:none;}.adm-tab{justify-content:center;padding:10px;}}
-/* ── SETTINGS OVERLAY (Discord-style full-screen popup) ──── */
-.settings-overlay{display:none;position:fixed;inset:0;z-index:900;background:var(--bg);}
-.settings-overlay.open{display:flex;}
-.settings-overlay-inner{display:flex;flex:1;position:relative;overflow:hidden;}
-.settings-overlay-close{position:absolute;top:16px;right:16px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;opacity:.4;transition:opacity .15s;}
-.settings-overlay-close:hover{opacity:1;}
-.settings-overlay-close svg{width:36px;height:36px;padding:8px;border:2px solid rgba(255,255,255,.2);border-radius:50%;color:rgba(255,255,255,.6);transition:all .15s;}
-.settings-overlay-close:hover svg{border-color:rgba(255,255,255,.5);color:#fff;}
-.settings-overlay-close-hint{font-size:10px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.05em;}
-@keyframes settings-overlay-in{from{opacity:0;transform:scale(.98);}to{opacity:1;transform:none;}}
-.settings-overlay.open .settings-overlay-inner{animation:settings-overlay-in .2s cubic-bezier(.22,1,.36,1);}
 .profile-wrap{flex:1;display:flex;overflow:hidden;background:var(--bg);}
 /* Settings sidebar — Discord-style clean nav */
 .profile-nav{width:232px;min-width:232px;background:var(--sidebar-ctx);display:flex;flex-direction:column;padding:12px 8px 12px;overflow-y:auto;border-right:1px solid rgba(255,255,255,.04);}
@@ -2607,10 +2596,6 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .own-profile-panel{left:50%!important;transform:translateX(-50%);bottom:68px!important;width:calc(100vw - 24px)!important;max-width:340px;}
   /* ══════ NOTIFICATION PANEL: full width ══════ */
   .notif-panel{width:100vw!important;border-radius:0!important;top:0!important;max-height:100vh!important;right:0!important;left:0!important;}
-  /* ══════ SETTINGS OVERLAY ══════ */
-  .settings-overlay-close{top:6px!important;right:6px!important;}
-  .settings-overlay-close svg{width:28px!important;height:28px!important;padding:6px!important;}
-  .settings-overlay-close-hint{display:none!important;}
   /* ══════ PROFILE/SETTINGS VIEW ══════ */
   .profile-wrap{flex-direction:column;}
   .profile-nav{width:100%!important;min-width:100%!important;max-height:44px;overflow:hidden;flex-direction:row;padding:0;border-right:none;border-bottom:1px solid rgba(254,248,61,.04);}

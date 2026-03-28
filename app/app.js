@@ -1312,67 +1312,7 @@ window.addEventListener('popstate', function(e) {
   }
   showView(state.view || 'home', true);
 });
-/* ── Settings overlay system (Discord-style full-screen popups) ── */
-let _viewBeforeOverlay = null;
-let _activeSettingsOverlay = null;
-
-function openSettingsOverlay(type) {
-  // type: 'profile' or 'bsettings'
-  // Remember current view so we can restore it on close
-  if (!_activeSettingsOverlay) {
-    _viewBeforeOverlay = _currentView;
-  }
-  _activeSettingsOverlay = type;
-  const overlay = document.getElementById('overlay-' + type);
-  if (overlay) overlay.classList.add('open');
-  // Hide mobile tab bar when settings are open
-  const _mtb = document.getElementById('mobile-tab-bar');
-  if (_mtb) _mtb.style.display = 'none';
-  document.body.style.overflow = 'hidden';
-}
-
-function closeSettingsOverlay(type) {
-  const overlay = document.getElementById('overlay-' + (type || _activeSettingsOverlay));
-  if (overlay) overlay.classList.remove('open');
-  // Clear unsaved settings when closing profile
-  if (type === 'profile' || _activeSettingsOverlay === 'profile') clearSettingsDirty();
-  _activeSettingsOverlay = null;
-  document.body.style.overflow = '';
-  // Restore mobile tab bar
-  const _mtb = document.getElementById('mobile-tab-bar');
-  if (_mtb) _mtb.style.display = '';
-}
-
-// Close settings overlay on Escape key
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && _activeSettingsOverlay) {
-    closeSettingsOverlay(_activeSettingsOverlay);
-  }
-});
-
 function showView(v, _skipPush) {
-  // Handle profile and bsettings as overlays instead of regular views
-  if (v === 'profile') {
-    // Close bsettings overlay if open
-    if (_activeSettingsOverlay === 'bsettings') closeSettingsOverlay('bsettings');
-    openSettingsOverlay('profile');
-    // Snapshot user data before editing so we can detect real changes
-    _settingsOriginal = CU ? JSON.parse(JSON.stringify({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme})) : null;
-    clearSettingsDirty();
-    buildProfileNav(document.getElementById('profile-nav'));
-    buildProfileView('myprofile');
-    return;
-  }
-  if (v === 'bsettings') {
-    // Close profile overlay if open
-    if (_activeSettingsOverlay === 'profile') closeSettingsOverlay('profile');
-    openSettingsOverlay('bsettings');
-    return;
-  }
-
-  // Close any open settings overlay when navigating to a regular view
-  if (_activeSettingsOverlay) closeSettingsOverlay(_activeSettingsOverlay);
-
   _currentView = v;
   // Update URL (skip for bastion — openBastion handles that)
   if (!_skipPush && v !== 'bastion' && typeof _ftzRouter !== 'undefined') {
@@ -1385,10 +1325,10 @@ function showView(v, _skipPush) {
   setTimeout(() => { try { _syncMobileTabBar(); } catch {} }, 50);
   // Hide mobile tab bar on settings view — unsaved bar was overlapping it
   const _mtb = document.getElementById('mobile-tab-bar');
-  if (_mtb) _mtb.style.display = '';
+  if (_mtb) _mtb.style.display = (v === 'profile') ? 'none' : '';
   // Clear the unsaved-settings bar when leaving the profile view so it
   // doesn't float over other views and block button clicks
-  clearSettingsDirty();
+  if (v !== 'profile') clearSettingsDirty();
   // Stop admin polling when leaving admin view
   if (v !== 'admin' && _reportPollInterval) { clearInterval(_reportPollInterval); _reportPollInterval = null; }
   // Stop Joyster bubbles when leaving home — Joyster only lives on the homepage
@@ -1547,9 +1487,22 @@ function updateSidebar(v) {
     if (ab) ab.textContent = CU?.onyx||0;
     const db = document.getElementById('daily-btn');
     if (db) { const today=new Date().toDateString(); if(CU?.lastDaily===today)db.classList.add('claimed'); else db.classList.remove('claimed'); }
+  } else if (v==='profile') {
+    if (hdr) hdr.style.display = 'none';
+    // Snapshot user data before editing so we can detect real changes
+    _settingsOriginal = CU ? JSON.parse(JSON.stringify({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme})) : null;
+    clearSettingsDirty();
+    buildProfileNav(document.getElementById('profile-nav'));
+    buildProfileView('myprofile');
+    return;
   } else if (v==='bastion') {
     // Header hidden — bastion sidebar renders its own hero banner
     renderBastionSidebar(scroll);
+  } else if (v==='bsettings') {
+    // bsettings has its own nav inside view-bsettings; hide sidebar-ctx
+    if (ctx) ctx.style.display = 'none';
+    updateUserbarWidth();
+    renderBSettingsNav();
   } else if (v==='bhub') {
     // bastion hub: hide sidebar-ctx, render hub
     if (ctx) ctx.style.display = 'none';

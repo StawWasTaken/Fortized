@@ -2139,6 +2139,49 @@ function _ftzTipRemove() {
   if (_ftzTipEl) { _ftzTipEl.remove(); _ftzTipEl = null; }
 }
 
+// ── Reaction tooltip (Discord-style: emoji + "reacted by" users) ──
+let _rTipEl = null, _rTipTimer = null;
+document.addEventListener('mouseover', function(e) {
+  const pill = e.target.closest?.('.r-pill[data-r-emoji]');
+  if (!pill) return;
+  clearTimeout(_rTipTimer);
+  _rTipTimer = setTimeout(() => {
+    _rTipRemove();
+    const emoji = pill.dataset.rEmoji;
+    const usersStr = pill.dataset.rUsers || '';
+    const users = usersStr ? usersStr.split(',') : [];
+    if (!users.length) return;
+    const tip = document.createElement('div');
+    tip.className = 'ftz-reaction-tip';
+    const shown = users.slice(0, 5);
+    const rest = users.length - shown.length;
+    let namesHTML = shown.map(u => `<span class="rt-user">${escapeHTML(u)}</span>`).join(', ');
+    if (rest > 0) namesHTML += ` and <span class="rt-more">${rest} other${rest > 1 ? 's' : ''}</span>`;
+    tip.innerHTML = `<div class="rt-header"><span class="rt-emoji">${emoji}</span><span class="rt-label">reacted by</span></div><div class="rt-names">${namesHTML}</div>`;
+    document.body.appendChild(tip);
+    _rTipEl = tip;
+    const rect = pill.getBoundingClientRect();
+    const tipRect = tip.getBoundingClientRect();
+    let left = rect.left + rect.width / 2 - tipRect.width / 2;
+    let top = rect.top - tipRect.height - 8;
+    if (top < 4) top = rect.bottom + 8;
+    if (left < 4) left = 4;
+    if (left + tipRect.width > window.innerWidth - 4) left = window.innerWidth - tipRect.width - 4;
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+    requestAnimationFrame(() => tip.classList.add('visible'));
+  }, 300);
+});
+document.addEventListener('mouseout', function(e) {
+  const pill = e.target.closest?.('.r-pill[data-r-emoji]');
+  if (!pill) return;
+  clearTimeout(_rTipTimer);
+  _rTipRemove();
+});
+function _rTipRemove() {
+  if (_rTipEl) { _rTipEl.remove(); _rTipEl = null; }
+}
+
 function _railNavCtxMenu(e, viewId) {
   e.preventDefault();
   e.stopPropagation();
@@ -4785,9 +4828,8 @@ function appendMessage(container, msg, context, prevAuthor) {
     const arr=Array.isArray(users)?users:Object.values(users);
     if (!arr.length) return '';
     const isMine = arr.includes(CU?.username);
-    const tooltip = arr.slice(0,5).join(', ') + (arr.length > 5 ? ` +${arr.length-5} more` : '');
-    return `<span class="r-pill${isMine?' mine':''}" onclick="toggleReaction('${escapeHTML(id)}','${emoji}','${context}')" onmousedown="_reactionIntensityStart(this,'${escapeHTML(id)}','${emoji}','${context}')" onmouseup="_reactionIntensityEnd()" onmouseleave="_reactionIntensityEnd()" title="${escapeHTML(tooltip)}"><span class="r-emoji">${emoji}</span><span class="r-count">${arr.length}</span></span>`;
-  }).join('')+`<span class="r-pill r-add-btn" onclick="addReactionUI(event,'${escapeHTML(id)}','${context}')" title="Add Reaction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></span>`:'';
+    return `<span class="r-pill${isMine?' mine':''}" onclick="toggleReaction('${escapeHTML(id)}','${emoji}','${context}')" onmousedown="_reactionIntensityStart(this,'${escapeHTML(id)}','${emoji}','${context}')" onmouseup="_reactionIntensityEnd()" onmouseleave="_reactionIntensityEnd()" data-r-emoji="${escapeHTML(emoji)}" data-r-users="${escapeHTML(arr.join(','))}"><span class="r-emoji">${emoji}</span><span class="r-count">${arr.length}</span></span>`;
+  }).join('')+`<span class="r-pill r-add-btn" onclick="addReactionUI(event,'${escapeHTML(id)}','${context}')" data-tip="Add Reaction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></span>`:'';
 
   const safeId=escapeHTML(id);
   const safeText=escapeHTML((msg.text||'').slice(0,100).replace(/'/g,' '));
@@ -5468,8 +5510,8 @@ function updateReactionUI(msgId, emoji, users, context) {
     container.appendChild(pill);
   }
   pill.className = 'r-pill' + (isMine ? ' mine' : '');
-  const tooltip = users.slice(0,5).join(', ') + (users.length > 5 ? ` +${users.length-5} more` : '');
-  pill.title = tooltip;
+  pill.dataset.rEmoji = emoji;
+  pill.dataset.rUsers = users.join(',');
   pill.innerHTML = `<span class="r-emoji">${emoji}</span><span class="r-count">${users.length}</span>`;
   // Super reaction animation (Radiance / Radiance+ users)
   const tier = CU?.radianceTier || CU?.subscription || '';

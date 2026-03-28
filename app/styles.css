@@ -2346,6 +2346,15 @@ body.is-desktop-app .notif-panel{top:0;}
 /* Global custom tooltip (replaces browser title) */
 .ftz-tooltip{position:fixed;left:0;top:0;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;z-index:9999;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.45);font-size:12px;font-weight:600;color:rgba(255,255,255,.9);transform:translateY(2px);}
 .ftz-tooltip.visible{opacity:1;transform:translateY(0);}
+/* Reaction tooltip (Discord-style) */
+.ftz-reaction-tip{position:fixed;left:0;top:0;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:9999;box-shadow:0 8px 28px rgba(0,0,0,.5);max-width:260px;transform:translateY(4px);}
+.ftz-reaction-tip.visible{opacity:1;transform:translateY(0);}
+.ftz-reaction-tip .rt-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.ftz-reaction-tip .rt-emoji{font-size:22px;line-height:1;}
+.ftz-reaction-tip .rt-label{font-size:11px;color:rgba(255,255,255,.35);font-weight:600;}
+.ftz-reaction-tip .rt-names{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);line-height:1.5;}
+.ftz-reaction-tip .rt-user{color:#fff;}
+.ftz-reaction-tip .rt-more{color:var(--accent);font-weight:700;}
 
 /* ── Redesigned Notification Panel ── */
 .notif-panel-v2{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:580px;max-width:90vw;max-height:75vh;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:18px;z-index:7000;display:flex;flex-direction:column;animation:mppSlideIn .2s cubic-bezier(.22,1,.36,1);box-shadow:0 24px 64px rgba(0,0,0,.6);}

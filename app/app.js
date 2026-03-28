@@ -1155,6 +1155,33 @@ function toast(msg, type='info') {
 }
 
 // ════════════════════════════════════════════
+// SOFT REFRESH + NAV KEYBINDS
+// ════════════════════════════════════════════
+// Soft refresh: re-render current view without full page reload
+function _ftzSoftRefresh() {
+  if (_currentView === 'home') { try { renderHomePanel(); } catch {} }
+  else if (_currentView === 'dms' || _currentView === 'friends') { try { showDMFriendsHome(); } catch {} }
+  else if (_currentView === 'discover') { try { renderDiscoverGrid(); } catch {} }
+  else if (_currentView === 'atelier') { try { refreshCU().then(()=>{ updateAtelierSidebar(); renderAtelierTab(_atelierTab||'overview'); }).catch(()=>{ renderAtelierTab(_atelierTab||'overview'); }); } catch {} }
+  else if (_currentView === 'bastion' && curBastion !== null) {
+    try { if (curChannel === 'overview') renderOverviewRoom(); else if (curChannel !== null) selectChannel(curChannel); } catch {}
+  }
+  // Spin the refresh icon
+  const btn = document.getElementById('tb-nav-refresh');
+  if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 600); }
+}
+
+// Keybinds: Alt+← (back), Alt+→ (forward), Ctrl+R (soft refresh)
+document.addEventListener('keydown', function(e) {
+  // Alt+ArrowLeft = Back
+  if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); history.back(); return; }
+  // Alt+ArrowRight = Forward
+  if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); history.forward(); return; }
+  // Ctrl+R = Soft refresh (prevent hard reload)
+  if (e.ctrlKey && !e.shiftKey && e.key === 'r') { e.preventDefault(); _ftzSoftRefresh(); return; }
+});
+
+// ════════════════════════════════════════════
 // VIEW MANAGEMENT + CLIENT-SIDE ROUTING
 // ════════════════════════════════════════════
 let _currentView = 'home';
@@ -29024,6 +29051,9 @@ const _defaultKeybinds = [
   {id:'search',label:'Quick Search',desc:'Open the deep search panel',keys:['Ctrl','K'],section:'Navigation',action:()=>openAdvancedSearch()},
   {id:'shortcuts',label:'Shortcut List',desc:'Show keyboard shortcuts overlay',keys:['Ctrl','/'],section:'Navigation',action:()=>_showKbdShortcuts()},
   {id:'mute',label:'Toggle Mute',desc:'Mute/unmute notifications',keys:['Ctrl','Shift','M'],section:'Navigation',action:()=>toast('Notifications toggled','info')},
+  {id:'nav-back',label:'Go Back',desc:'Navigate to previous page',keys:['Alt','←'],section:'Navigation',action:()=>history.back()},
+  {id:'nav-forward',label:'Go Forward',desc:'Navigate to next page',keys:['Alt','→'],section:'Navigation',action:()=>history.forward()},
+  {id:'nav-refresh',label:'Refresh',desc:'Refresh the current view',keys:['Ctrl','R'],section:'Navigation',action:()=>_ftzSoftRefresh()},
   {id:'home',label:'Go Home',desc:'Navigate to the home view',keys:['Ctrl','H'],section:'Navigation',action:()=>showView('home')},
   {id:'dms',label:'Open DMs',desc:'Navigate to direct messages',keys:['Ctrl','D'],section:'Navigation',action:()=>showView('dms')},
   {id:'settings',label:'Open Settings',desc:'Navigate to settings',keys:['Ctrl',','],section:'Navigation',action:()=>showView('profile')},

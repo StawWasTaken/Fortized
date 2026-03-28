@@ -175,6 +175,18 @@ window._cdnReady.then(function() {
 <!-- Mobile sidebar overlay -->
 <div class="mobile-overlay" id="mobile-overlay" onclick="closeMobileSidebar()"></div>
 <div class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+  <!-- Navigation controls (back / forward / refresh) — above the rail -->
+  <div class="tb-nav-controls" id="tb-nav-controls">
+    <button class="tb-nav-btn" id="tb-nav-back" onclick="history.back()" title="Back (Alt+←)" aria-label="Go back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    </button>
+    <button class="tb-nav-btn" id="tb-nav-forward" onclick="history.forward()" title="Forward (Alt+→)" aria-label="Go forward">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+    </button>
+    <button class="tb-nav-btn" id="tb-nav-refresh" onclick="_ftzSoftRefresh()" title="Refresh (Ctrl+R)" aria-label="Refresh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+    </button>
+  </div>
   <!-- Navigation -->
   <div class="sidebar-nav" id="rail">
     <div class="rail-btn rail-home-btn" id="rb-home" onclick="showView('home')" data-href="/app/" data-nav-tip="Home" aria-label="Home">
@@ -257,15 +269,6 @@ window._cdnReady.then(function() {
   <div class="topbar" id="topbar">
     <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileSidebar()">☰</button>
     <button class="mobile-back-btn" id="mobile-back-btn" onclick="toggleMobileCtxSidebar()" style="display:none;">◀</button>
-    <!-- Navigation controls (back / forward / refresh) -->
-    <div class="tb-nav-controls" id="tb-nav-controls">
-      <button class="tb-nav-btn" id="tb-nav-back" onclick="history.back()" title="Back" aria-label="Go back">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-      </button>
-      <button class="tb-nav-btn" id="tb-nav-forward" onclick="history.forward()" title="Forward" aria-label="Go forward">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-      </button>
-    </div>
     <div class="topbar-title" id="topbar-title">Home</div>
     <div class="tb-sep" id="tb-sep" style="display:none;"></div>
     <div class="tb-desc" id="tb-desc"></div>

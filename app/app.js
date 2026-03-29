@@ -2974,13 +2974,18 @@ async function renderDMSidebar(scroll) {
     if (presenceResult) _dmPresenceMap = presenceResult;
   } catch {}
 
+  // Batch-fetch all friend profiles in ONE query instead of N separate queries
+  let _friendProfileMap = {};
+  try {
+    const profiles = await (FortizedSocial.getUsersByNames ? FortizedSocial.getUsersByNames(visibleFriends) : Promise.all(visibleFriends.map(f => FortizedSocial.getUserByName(f))));
+    (profiles || []).forEach(u => { if (u) _friendProfileMap[u.username] = u; });
+  } catch {}
+
   const friendPromises = visibleFriends.map(async f => {
     try {
-      // Fetch user profile + last DM from Supabase (NOT Firebase)
-      const [u, dmMsgs] = await Promise.all([
-        FortizedSocial.getUserByName(f),
-        FortizedSocial.getDMMessages(CU.username, f)
-      ]);
+      // Use batch-fetched profile, fetch only latest 1 DM for preview
+      const u = _friendProfileMap[f] || _friendProfileMap[f.toLowerCase()] || null;
+      const dmMsgs = await FortizedSocial.getDMMessages(CU.username, f, 1);
       if (u) {
         const avEl = document.getElementById('dm-av-'+f);
         if (avEl) avEl.innerHTML = buildAvatarHTML(u.pfp||null, u.displayName||f, 34);
@@ -3127,10 +3132,17 @@ async function renderDMFriendsHome() {
     if (presenceResult) _friendPresenceMap = presenceResult;
   } catch {}
 
+  // Batch-fetch all friend/pending profiles in ONE query instead of N separate queries
+  let _homeProfileMap = {};
+  try {
+    const profiles = await (FortizedSocial.getUsersByNames ? FortizedSocial.getUsersByNames(allUsers) : Promise.all(allUsers.map(f => FortizedSocial.getUserByName(f))));
+    (profiles || []).forEach(u => { if (u) _homeProfileMap[u.username] = u; });
+  } catch {}
+
   let _onlineCount = 0;
   allUsers.forEach(async f => {
     try {
-      const u = await FortizedSocial.getUserByName(f);
+      const u = _homeProfileMap[f] || _homeProfileMap[f.toLowerCase()] || null;
       if (!u) return;
 
       // Update friend row avatar + display name
@@ -6246,10 +6258,10 @@ async function promptJoinPublicBastion(bastionId){
     if (!b) b = Object.values(all).find(x => (x.id||'').toLowerCase() === bidLower);
     // Priority 3: Name match (only as last resort for direct name lookups)
     if (!b) b = Object.values(all).find(x => (x.name||'').toLowerCase() === bidLower);
-    // Fallback: try searching user bastions if not in global
+    // Fallback: check current user's bastions only (no longer fetches ALL users)
     if(!b){
       try{
-        const users=await FortizedSocial.getUsers();
+        const users=[CU];
         for(const u of users){
           // Prefer globalId match over name match
           const found=(u.bastions||[]).find(ub=>(ub.globalId||'').toLowerCase()===bidLower) ||
@@ -7026,8 +7038,7 @@ function initFortizedUXResilience() {
   setTimeout(_postInitSetup, 500);
   // Check & listen for maintenance mode
   try { checkMaintenanceMode(); } catch(e) { console.warn('[init] checkMaintenanceMode:', e); }
-  try { _listenMaintenanceMode(); } catch(e) { console.warn('[init] _listenMaintenanceMode:', e); }
-  try { _listenAnnouncement(); } catch(e) { console.warn('[init] _listenAnnouncement:', e); }
+  try { _listenGlobalSettingsConsolidated(); } catch(e) { console.warn('[init] _listenGlobalSettingsConsolidated:', e); }
   // Listen for force-refresh and session-clear signals from admin
   try { _listenForceRefresh(); } catch(e) { console.warn('[init] _listenForceRefresh:', e); }
   try { _listenClearSessions(); } catch(e) { console.warn('[init] _listenClearSessions:', e); }
@@ -7037,7 +7048,7 @@ function initFortizedUXResilience() {
   try {
     setInterval(async () => {
       try {
-        const u = await FortizedSocial.getUserByName(CU.username);
+        const u = await FortizedSocial.getUserByName(CU.username, { columns: 'username,banned,ban_reason,suspension,suspended_until,active_warning,raw' });
         if (!u) return;
         // Ban check
         if (u.banned) { _wasBanned = true; _showBanScreen({ reason: u.banReason || 'You have been banned.' }); }
@@ -7055,7 +7066,7 @@ function initFortizedUXResilience() {
         // Force logout check
         _checkForceLogout(u);
       } catch {}
-    }, 15000);
+    }, 30000);
   } catch(e) { console.warn('[init] enforcement poller:', e); }
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling for all staff
@@ -12538,16 +12549,8 @@ async function buyRadiancePlus(days, cost) {
 async function updateNotifBadge() {
   const badge=document.getElementById('notif-badge');
   const tbBadge=document.getElementById('tb-notif-badge');
-  let notifs=[];
-  try { notifs=await FortizedSocial.getNotifications(CU.username)||[]; } catch {}
-  // Normalize: Firebase may return object instead of array
-  if (!Array.isArray(notifs)) {
-    if (notifs && typeof notifs === 'object') notifs = Object.values(notifs);
-    else notifs = [];
-  }
-  // Filter out any null/undefined entries
-  notifs = notifs.filter(n => n && typeof n === 'object');
-  const unread=notifs.filter(n=>!n.read).length;
+  let unread = 0;
+  try { unread = await FortizedSocial.getUnreadCount(CU.username) || 0; } catch {}
   if(badge){badge.textContent=unread;badge.style.display=unread>0?'flex':'none';}
   if(tbBadge){tbBadge.textContent=unread;tbBadge.style.display=unread>0?'block':'none';}
   setFaviconNotif(unread>0);
@@ -13841,7 +13844,7 @@ function _closeAdminPanel() {
 let _adminLiveSyncInterval = null;
 function _setupAdminLiveSync() {
   _teardownAdminLiveSync();
-  // Poll Supabase every 10 seconds for admin data updates
+  // Poll Supabase for admin data updates (reduced from 10s to 60s to limit egress)
   _adminLiveSyncInterval = setInterval(async () => {
     try {
       await _syncAdminDataFromFirebase();
@@ -13850,7 +13853,7 @@ function _setupAdminLiveSync() {
         _loadAdminPage(adminTab, true);
       }
     } catch {}
-  }, 10000);
+  }, 60000);
 }
 function _teardownAdminLiveSync() {
   if (_adminLiveSyncInterval) { clearInterval(_adminLiveSyncInterval); _adminLiveSyncInterval = null; }
@@ -13945,7 +13948,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     _adminAutoRefresh = setInterval(() => {
       if (adminTab !== tab) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; return; }
       _loadAdminPage(tab, true);
-    }, 5000);
+    }, 30000);
   }
 
   if (tab === 'dashboard') {
@@ -15491,46 +15494,43 @@ function _showMaintenanceScreen() {
   document.body.appendChild(overlay);
 }
 
-// Poll for maintenance mode changes
-function _listenMaintenanceMode() {
+// ── Consolidated global settings poller (maintenance + announcement) ──
+// Instead of separate intervals each fetching global settings, use ONE.
+let _dismissedAnnouncement = null;
+let _lastAnnText = null;
+function _listenGlobalSettingsConsolidated() {
   setInterval(async () => {
     try {
       const gs = await FortizedSocial.adminGetGlobalSettings();
+      // Maintenance mode check
       if (gs.maintenanceMode && !hasStaffAccess()) {
         _showMaintenanceScreen();
       } else {
         document.getElementById('maintenance-overlay')?.remove();
       }
-    } catch {}
-  }, 30000);
-}
-
-// ── System Announcement Banner (real-time) ──────────────
-let _dismissedAnnouncement = null;
-function _listenAnnouncement() {
-  let _lastAnnText = null;
-  setInterval(async () => {
-    try {
-      const gs = await FortizedSocial.adminGetGlobalSettings();
+      // Announcement check
       const text = gs.announcement || null;
-      if (text === _lastAnnText) return;
-      _lastAnnText = text;
-      const existing = document.getElementById('sys-announce-bar');
-      if (!text) {
-        if (existing) { existing.style.opacity='0'; existing.style.transform='translateY(-100%)'; setTimeout(()=>existing.remove(),300); }
-        _dismissedAnnouncement = null;
-        return;
+      if (text !== _lastAnnText) {
+        _lastAnnText = text;
+        const existing = document.getElementById('sys-announce-bar');
+        if (!text) {
+          if (existing) { existing.style.opacity='0'; existing.style.transform='translateY(-100%)'; setTimeout(()=>existing.remove(),300); }
+          _dismissedAnnouncement = null;
+        } else if (text !== _dismissedAnnouncement) {
+          if (existing) existing.remove();
+          const bar = document.createElement('div');
+          bar.className = 'sys-announce-bar';
+          bar.id = 'sys-announce-bar';
+          bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()" title="Dismiss"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="sa-body"><div class="sa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.08"/></svg></div><span class="sa-label">BROADCAST</span><span class="sa-divider"></span><span class="sa-text">${escapeHTML(text)}</span></div>`;
+          document.body.appendChild(bar);
+        }
       }
-      if (text === _dismissedAnnouncement) return;
-      if (existing) existing.remove();
-      const bar = document.createElement('div');
-      bar.className = 'sys-announce-bar';
-      bar.id = 'sys-announce-bar';
-      bar.innerHTML = `<button class="sa-close" onclick="_dismissAnnouncement()" title="Dismiss"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="sa-body"><div class="sa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.08"/></svg></div><span class="sa-label">BROADCAST</span><span class="sa-divider"></span><span class="sa-text">${escapeHTML(text)}</span></div>`;
-      document.body.appendChild(bar);
     } catch {}
-  }, 30000);
+  }, 60000);
 }
+// Keep old function names as no-ops since init code calls them separately
+function _listenMaintenanceMode() { /* consolidated into _listenGlobalSettingsConsolidated */ }
+function _listenAnnouncement() { /* consolidated into _listenGlobalSettingsConsolidated */ }
 function _dismissAnnouncement() {
   const bar = document.getElementById('sys-announce-bar');
   if (bar) {
@@ -15603,7 +15603,7 @@ function _submitFeedback(rating, actionType, btn) {
 function _listenStaffChanges() {
   setInterval(async () => {
     try {
-      const staffData = await FortizedSocial.adminGetStaff();
+      const staffData = await FortizedSocial.adminGetStaff(); // Reduced from 20s to 60s
       if (staffData && (staffData.admins || staffData.moderators)) {
         localStorage.setItem('ftz_staff', JSON.stringify(staffData));
       } else {
@@ -15640,7 +15640,7 @@ function _listenStaffChanges() {
         adminAuthed = false;
       }
     } catch {}
-  }, 20000);
+  }, 60000);
 }
 
 // Poll for force-refresh signal from admin
@@ -15658,7 +15658,7 @@ function _listenForceRefresh() {
         }
       }
     } catch {}
-  }, 15000);
+  }, 30000);
 }
 
 // Poll for session-clear signal from admin
@@ -15678,7 +15678,7 @@ function _listenClearSessions() {
         }
       }
     } catch {}
-  }, 15000);
+  }, 30000);
 }
 
 // Real-time bastion data sync — listens for changes to bastions the user belongs to
@@ -17731,7 +17731,7 @@ function startReportPolling() {
         _loadAdminPage(adminTab);
       }).catch(()=>{});
     }
-  }, 20000); // refresh every 20s when panel open
+  }, 60000); // refresh every 60s when panel open (reduced from 20s to limit egress)
 }
 
 

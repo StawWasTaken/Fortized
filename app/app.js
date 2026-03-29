@@ -28261,7 +28261,7 @@ function applyAppearance(themeId) {
   if (themeId === 'dark_realm') {
     canvasColor = '#030407';
     sidebarColor = '#050710';
-    glassHeavy = 'rgba(3,4,7,.82)'; glassMid = 'rgba(3,4,7,.68)'; glassLight = 'rgba(3,4,7,.52)';
+    glassHeavy = 'rgba(3,4,7,.94)'; glassMid = 'rgba(3,4,7,.88)'; glassLight = 'rgba(3,4,7,.82)';
     document.documentElement.style.setProperty('--bg',         '#030407');
     document.documentElement.style.setProperty('--rail',       '#020304');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
@@ -28275,7 +28275,7 @@ function applyAppearance(themeId) {
   } else if (themeId === 'midnight_citadel') {
     canvasColor = '#050812';
     sidebarColor = '#080e1a';
-    glassHeavy = 'rgba(5,8,18,.82)'; glassMid = 'rgba(5,8,18,.68)'; glassLight = 'rgba(5,8,18,.52)';
+    glassHeavy = 'rgba(5,8,18,.94)'; glassMid = 'rgba(5,8,18,.88)'; glassLight = 'rgba(5,8,18,.82)';
     document.documentElement.style.setProperty('--bg',         '#050812');
     document.documentElement.style.setProperty('--rail',       '#030610');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
@@ -28289,7 +28289,7 @@ function applyAppearance(themeId) {
   } else if (themeId === 'onyx_pure') {
     canvasColor = 'linear-gradient(170deg, #010103 0%, #08061a 100%)';
     sidebarColor = '#020206';
-    glassHeavy = 'rgba(1,1,3,.82)'; glassMid = 'rgba(1,1,3,.68)'; glassLight = 'rgba(1,1,3,.52)';
+    glassHeavy = 'rgba(1,1,3,.94)'; glassMid = 'rgba(1,1,3,.88)'; glassLight = 'rgba(1,1,3,.82)';
     document.documentElement.style.setProperty('--bg',         '#010103');
     document.documentElement.style.setProperty('--rail',       '#010102');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
@@ -28303,7 +28303,7 @@ function applyAppearance(themeId) {
   } else if (themeId === 'sunset') {
     canvasColor = 'linear-gradient(170deg, #1a0410 0%, #2e0820 15%, #4a1228 30%, #742a2c 45%, #a65035 58%, #c77a3a 70%, #dba040 82%, #f5d978 100%)';
     sidebarColor = '#13161d';
-    glassHeavy = 'rgba(10,13,20,.82)'; glassMid = 'rgba(10,13,20,.65)'; glassLight = 'rgba(10,13,20,.48)';
+    glassHeavy = 'rgba(10,13,20,.92)'; glassMid = 'rgba(10,13,20,.84)'; glassLight = 'rgba(10,13,20,.74)';
     document.documentElement.style.setProperty('--bg',         'rgba(10,13,20,0.72)');
     document.documentElement.style.setProperty('--rail',       'rgba(6,8,16,0.78)');
     document.documentElement.style.setProperty('--sidebar',    'rgba(19,22,29,0.82)');
@@ -28318,7 +28318,7 @@ function applyAppearance(themeId) {
   } else if (themeId === 'kingdom_of_god') {
     canvasColor = 'linear-gradient(170deg, #faf9f6 0%, #f0ead4 100%)';
     sidebarColor = '#eae7df';
-    glassHeavy = 'rgba(240,237,228,.88)'; glassMid = 'rgba(240,237,228,.72)'; glassLight = 'rgba(240,237,228,.55)';
+    glassHeavy = 'rgba(240,237,228,.94)'; glassMid = 'rgba(240,237,228,.88)'; glassLight = 'rgba(240,237,228,.82)';
     document.documentElement.style.setProperty('--bg',         '#f5f3ee');
     document.documentElement.style.setProperty('--rail',       '#e4e0d6');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
@@ -28337,7 +28337,7 @@ function applyAppearance(themeId) {
     // Fortized Classic (default)
     canvasColor = '#0a0d14';
     sidebarColor = '#13161d';
-    glassHeavy = 'rgba(10,13,20,.82)'; glassMid = 'rgba(10,13,20,.68)'; glassLight = 'rgba(10,13,20,.52)';
+    glassHeavy = 'rgba(10,13,20,.94)'; glassMid = 'rgba(10,13,20,.88)'; glassLight = 'rgba(10,13,20,.82)';
     document.documentElement.style.setProperty('--bg',         '#0a0d14');
     document.documentElement.style.setProperty('--rail',       '#060810');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);

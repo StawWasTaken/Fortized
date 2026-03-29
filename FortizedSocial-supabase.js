@@ -26,6 +26,75 @@ const FortizedSocial = (() => {
   // ── Helpers ──────────────────────────────────────────
   function norm(u) { return (u || '').trim().toLowerCase(); }
 
+  // ── Aggressive Cache Layer ──────────────────────────
+  // Serves data from memory/localStorage to minimize Supabase egress.
+  // Critical: Supabase egress is at 620% of free tier limit — every
+  // query avoided keeps the site alive.
+  const _cache = {};
+  const _CACHE_TTL = {
+    user: 120000,           // 2 min — user profiles
+    userEnforce: 60000,     // 1 min — ban/suspension checks
+    notifications: 120000,  // 2 min — notification list
+    unreadCount: 60000,     // 1 min — unread badge count
+    dmMessages: 60000,      // 1 min — DM message lists
+    bastionMsgs: 60000,     // 1 min — bastion channel messages
+    globalBastions: 300000, // 5 min — global bastion registry
+    globalBastion: 120000,  // 2 min — single bastion data
+    bastionMembers: 120000, // 2 min — bastion member lists
+    dmIndex: 60000,         // 1 min — DM partner index
+    adminKV: 120000,        // 2 min — admin key-value data
+    globalSettings: 300000, // 5 min — admin global settings
+    status: 30000,          // 30s  — user status
+    reports: 120000,        // 2 min — admin reports
+    staff: 300000,          // 5 min — staff list
+  };
+
+  function _cacheGet(key) {
+    const entry = _cache[key];
+    if (!entry) return undefined;
+    if (Date.now() - entry.ts > (entry.ttl || 60000)) {
+      delete _cache[key];
+      return undefined;
+    }
+    return entry.val;
+  }
+
+  function _cacheSet(key, val, ttl) {
+    _cache[key] = { val, ts: Date.now(), ttl: ttl || 60000 };
+    // Also persist critical data to localStorage for offline fallback
+    try {
+      if (key.startsWith('user:') || key === 'globalBastions' || key.startsWith('staff')) {
+        localStorage.setItem('ftz_cache_' + key, JSON.stringify({ val, ts: Date.now() }));
+      }
+    } catch {}
+  }
+
+  function _cacheDel(key) { delete _cache[key]; }
+
+  // Try localStorage fallback if memory cache is empty (page reload scenario)
+  function _cacheGetWithFallback(key, ttl) {
+    const mem = _cacheGet(key);
+    if (mem !== undefined) return mem;
+    try {
+      const stored = localStorage.getItem('ftz_cache_' + key);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Use longer TTL for localStorage fallback (5 min) to keep site alive when throttled
+        if (Date.now() - parsed.ts < Math.max(ttl || 60000, 300000)) {
+          _cache[key] = { val: parsed.val, ts: parsed.ts, ttl: ttl || 60000 };
+          return parsed.val;
+        }
+      }
+    } catch {}
+    return undefined;
+  }
+
+  function _cacheInvalidatePrefix(prefix) {
+    for (const key of Object.keys(_cache)) {
+      if (key.startsWith(prefix)) delete _cache[key];
+    }
+  }
+
   // ── Session ──────────────────────────────────────────
   function getCurrentUsername() {
     return localStorage.getItem('ftz_current') ||
@@ -47,15 +116,26 @@ const FortizedSocial = (() => {
   const _USER_ENFORCE_COLS = 'username,banned,ban_reason,suspension,suspended_until,active_warning,raw';
 
   async function getUsers() {
+    const cached = _cacheGet('allUsers');
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('users').select(_USER_LIST_COLS);
-    return (data || []).map(_userFromRow);
+    const result = (data || []).map(_userFromRow);
+    _cacheSet('allUsers', result, _CACHE_TTL.user);
+    return result;
   }
 
   async function getUserByName(username, opts) {
     if (!username) return null;
     const cols = (opts && opts.columns) ? opts.columns : '*';
+    const isEnforce = cols === _USER_ENFORCE_COLS;
+    const cacheKey = isEnforce ? 'userEnf:' + norm(username) : 'user:' + norm(username);
+    const ttl = isEnforce ? _CACHE_TTL.userEnforce : _CACHE_TTL.user;
+    const cached = _cacheGetWithFallback(cacheKey, ttl);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('users').select(cols).eq('username', norm(username)).maybeSingle();
-    return data ? _userFromRow(data) : null;
+    const result = data ? _userFromRow(data) : null;
+    _cacheSet(cacheKey, result, ttl);
+    return result;
   }
 
   // Batch fetch multiple users in a single query
@@ -63,8 +143,23 @@ const FortizedSocial = (() => {
     if (!usernames || !usernames.length) return [];
     const normed = usernames.map(norm).filter(Boolean);
     if (!normed.length) return [];
-    const { data } = await sb.from('users').select(cols || _USER_LIST_COLS).in('username', normed);
-    return (data || []).map(_userFromRow);
+    // Check which users are already cached
+    const uncached = [];
+    const results = [];
+    for (const u of normed) {
+      const cached = _cacheGet('user:' + u);
+      if (cached !== undefined) results.push(cached);
+      else uncached.push(u);
+    }
+    if (uncached.length > 0) {
+      const { data } = await sb.from('users').select(cols || _USER_LIST_COLS).in('username', uncached);
+      (data || []).forEach(r => {
+        const user = _userFromRow(r);
+        _cacheSet('user:' + norm(user.username), user, _CACHE_TTL.user);
+        results.push(user);
+      });
+    }
+    return results;
   }
 
   // Convert DB row → Firebase-shaped user object for compatibility
@@ -179,6 +274,8 @@ const FortizedSocial = (() => {
 
   async function saveUserObject(user) {
     if (!user?.username) return;
+    _cacheDel('user:' + norm(user.username));
+    _cacheDel('userEnf:' + norm(user.username));
     const row = _userToRow(user);
     await sb.from('users').upsert(row, { onConflict: 'username' });
   }
@@ -264,14 +361,20 @@ const FortizedSocial = (() => {
   const VALID_STATUSES = new Set(['online','away','dnd','invisible','offline']);
 
   async function getStatus(username) {
+    const cacheKey = 'status:' + norm(username);
+    const cached = _cacheGet(cacheKey);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('statuses').select('status').eq('username', norm(username)).maybeSingle();
     const val = data?.status;
-    return (val && VALID_STATUSES.has(val)) ? val : 'offline';
+    const result = (val && VALID_STATUSES.has(val)) ? val : 'offline';
+    _cacheSet(cacheKey, result, _CACHE_TTL.status);
+    return result;
   }
 
   async function setStatus(username, status) {
     username = norm(username);
     if (!VALID_STATUSES.has(status)) status = 'offline';
+    _cacheSet('status:' + username, status, _CACHE_TTL.status);
     await Promise.all([
       sb.from('statuses').upsert({ username, status }, { onConflict: 'username' }),
       sb.from('users').update({ status }).eq('username', username),
@@ -280,23 +383,30 @@ const FortizedSocial = (() => {
 
   // ── Notifications ────────────────────────────────────
   async function getNotifications(username) {
+    const cacheKey = 'notifs:' + norm(username);
+    const cached = _cacheGet(cacheKey);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('notifications').select('id,type,from,time,read,data')
       .eq('username', norm(username))
       .order('time', { ascending: false })
       .limit(50);
-    if (!data || !data.length) return [];
-    return data.map(r => ({
+    if (!data || !data.length) { _cacheSet(cacheKey, [], _CACHE_TTL.notifications); return []; }
+    const result = data.map(r => ({
       ...(r.data || {}),
       id: r.id, type: r.type, from: r.from, time: r.time,
       read: r.read,
       data: r.data,
     }));
+    _cacheSet(cacheKey, result, _CACHE_TTL.notifications);
+    return result;
   }
 
   async function addNotification(toUsername, notif) {
     notif.id   = Date.now().toString(36) + Math.random().toString(36).slice(2);
     notif.time = new Date().toISOString();
     notif.read = false;
+    _cacheDel('notifs:' + norm(toUsername));
+    _cacheDel('unread:' + norm(toUsername));
     await sb.from('notifications').insert({
       id: notif.id,
       username: norm(toUsername),
@@ -309,10 +419,14 @@ const FortizedSocial = (() => {
   }
 
   async function markNotificationsRead(username) {
+    _cacheDel('notifs:' + norm(username));
+    _cacheDel('unread:' + norm(username));
     await sb.from('notifications').update({ read: true }).eq('username', norm(username));
   }
 
   async function markNotificationReadBySource(username, type, from) {
+    _cacheDel('notifs:' + norm(username));
+    _cacheDel('unread:' + norm(username));
     let q = sb.from('notifications').update({ read: true }).eq('username', norm(username)).eq('read', false);
     if (type) q = q.eq('type', type);
     if (from) q = q.eq('from', norm(from));
@@ -320,14 +434,20 @@ const FortizedSocial = (() => {
   }
 
   async function getUnreadCount(username) {
+    const cacheKey = 'unread:' + norm(username);
+    const cached = _cacheGet(cacheKey);
+    if (cached !== undefined) return cached;
     const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('username', norm(username)).eq('read', false);
-    return count || 0;
+    const result = count || 0;
+    _cacheSet(cacheKey, result, _CACHE_TTL.unreadCount);
+    return result;
   }
 
   // ── Friend System ────────────────────────────────────
   async function sendFriendRequest(fromUsername, toUsername) {
     fromUsername = norm(fromUsername);
     toUsername   = norm(toUsername);
+    _cacheDel('user:' + fromUsername); _cacheDel('user:' + toUsername);
     if (!toUsername) return { ok: false, msg: 'Enter a username.' };
     if (fromUsername === toUsername) return { ok: false, msg: "Can't add yourself." };
 
@@ -359,7 +479,7 @@ const FortizedSocial = (() => {
   async function acceptFriendRequest(myUsername, fromUsername) {
     myUsername   = norm(myUsername);
     fromUsername = norm(fromUsername);
-
+    _cacheDel('user:' + myUsername); _cacheDel('user:' + fromUsername);
     const [mu, fu] = await Promise.all([getUserByName(myUsername), getUserByName(fromUsername)]);
     if (!mu || !fu) return { ok: false, msg: 'User not found.' };
 
@@ -417,12 +537,17 @@ const FortizedSocial = (() => {
   async function getDMMessages(user1, user2, limit) {
     const key = _dmKey(user1, user2);
     const max = limit || 100;
+    const cacheKey = 'dm:' + key + ':' + max;
+    const cached = _cacheGet(cacheKey);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('dms').select('id,from,text,time,timestamp,edited,new_text,reactions,forwarded,forwarded_by')
       .eq('dm_key', key)
       .order('timestamp', { ascending: false })
       .limit(max);
     // Reverse to chronological order after fetching latest N
-    return (data || []).reverse().map(_dmFromRow);
+    const result = (data || []).reverse().map(_dmFromRow);
+    _cacheSet(cacheKey, result, _CACHE_TTL.dmMessages);
+    return result;
   }
 
   function _dmFromRow(r) {
@@ -433,6 +558,7 @@ const FortizedSocial = (() => {
     fromUsername = norm(fromUsername);
     toUsername   = norm(toUsername);
     const key = _dmKey(fromUsername, toUsername);
+    _cacheInvalidatePrefix('dm:' + key); // Clear DM cache for this conversation
     const now = new Date();
     const msg = {
       id:        Date.now().toString(36) + Math.random().toString(36).slice(2),
@@ -488,8 +614,13 @@ const FortizedSocial = (() => {
   }
 
   async function _getDMIndex(username) {
+    const cacheKey = 'dmIdx:' + norm(username);
+    const cached = _cacheGet(cacheKey);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('dm_index').select('partners').eq('username', norm(username)).maybeSingle();
-    return data?.partners || [];
+    const result = data?.partners || [];
+    _cacheSet(cacheKey, result, _CACHE_TTL.dmIndex);
+    return result;
   }
 
   async function getRecentDMPartners(username) {
@@ -498,6 +629,9 @@ const FortizedSocial = (() => {
 
   // ── Bastion Messages ─────────────────────────────────
   async function getBastionChannelMessages(bastionId, channelId) {
+    const cacheKey = 'bm:' + bastionId + ':' + channelId;
+    const cached = _cacheGet(cacheKey);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('bastion_msgs')
       .select('id,from,text,time,timestamp,edited,reactions')
       .eq('bastion_id', bastionId)
@@ -505,11 +639,13 @@ const FortizedSocial = (() => {
       .order('timestamp', { ascending: false })
       .limit(100);
     // Reverse to chronological after fetching latest 100
-    return (data || []).reverse().map(r => ({
+    const result = (data || []).reverse().map(r => ({
       id: r.id, from: r.from, text: r.text, time: r.time,
       timestamp: r.timestamp, edited: r.edited || false,
       reactions: r.reactions || undefined,
     }));
+    _cacheSet(cacheKey, result, _CACHE_TTL.bastionMsgs);
+    return result;
   }
 
   async function sendBastionChannelMessage(bastionId, channelId, fromUsername, text) {
@@ -556,25 +692,41 @@ const FortizedSocial = (() => {
 
   // ── Global Bastions ──────────────────────────────────
   async function getGlobalBastions() {
+    const cached = _cacheGetWithFallback('globalBastions', _CACHE_TTL.globalBastions);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('global_bastions').select('id,data');
     const result = {};
     (data || []).forEach(r => { result[r.id] = r.data; });
+    _cacheSet('globalBastions', result, _CACHE_TTL.globalBastions);
     return result;
   }
   async function saveGlobalBastion(id, bdata) {
+    _cacheDel('globalBastions');
+    _cacheDel('gb:' + id);
     await sb.from('global_bastions').upsert({ id, data: bdata }, { onConflict: 'id' });
   }
   async function getGlobalBastion(id) {
+    const cacheKey = 'gb:' + id;
+    const cached = _cacheGet(cacheKey);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('global_bastions').select('data').eq('id', id).maybeSingle();
-    return data?.data || null;
+    const result = data?.data || null;
+    _cacheSet(cacheKey, result, _CACHE_TTL.globalBastion);
+    return result;
   }
 
   // ── Bastion Members ──────────────────────────────────
   async function getBastionMembers(bastionId) {
+    const cacheKey = 'bMembers:' + bastionId;
+    const cached = _cacheGet(cacheKey);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('bastion_members').select('members').eq('bastion_id', bastionId).maybeSingle();
-    return data?.members || [];
+    const result = data?.members || [];
+    _cacheSet(cacheKey, result, _CACHE_TTL.bastionMembers);
+    return result;
   }
   async function addBastionMember(bastionId, username) {
+    _cacheDel('bMembers:' + bastionId);
     const members = await getBastionMembers(bastionId);
     const u = norm(username);
     if (!members.includes(u)) members.push(u);
@@ -596,8 +748,13 @@ const FortizedSocial = (() => {
 
   // ── Invites ──────────────────────────────────────────
   async function getInvite(code) {
+    const cacheKey = 'inv:' + code;
+    const cached = _cacheGet(cacheKey);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('invites').select('data').eq('code', code).maybeSingle();
-    return data?.data || null;
+    const result = data?.data || null;
+    _cacheSet(cacheKey, result, 120000);
+    return result;
   }
   async function saveInvite(code, idata) {
     await sb.from('invites').upsert({ code, data: idata }, { onConflict: 'code' });
@@ -776,40 +933,11 @@ const FortizedSocial = (() => {
   function startSupabasePolling(username, callbacks) {
     _callbacks = callbacks || {};
     stopSupabasePolling();
-    username = norm(username);
-
-    // Listen for new notifications
-    const notifSub = sb.channel('notifs-' + username)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: 'username=eq.' + username,
-      }, payload => {
-        const n = payload.new;
-        if (!n || n.read) return;
-        const notif = { ...(n.data || {}), id: n.id, type: n.type, from: n.from, time: n.time, read: n.read };
-        _callbacks.onNewNotification?.(notif);
-        updateNotifBadgeExternal(username);
-      })
-      .subscribe();
-    _subscriptions.push(notifSub);
-
-    // Status changes are handled by Socket.io presence system
-    // Removed overly broad Supabase subscription that listened to ALL users' status changes
-
-    // Listen for DM index changes
-    const dmIdxSub = sb.channel('dmidx-' + username)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'dm_index',
-        filter: 'username=eq.' + username,
-      }, () => {
-        _callbacks.onDMIndexChange?.();
-      })
-      .subscribe();
-    _subscriptions.push(dmIdxSub);
+    // ── EGRESS EMERGENCY: All Supabase real-time subscriptions disabled ──
+    // Socket.io already handles notifications, DMs, and presence.
+    // Supabase real-time subscriptions generate continuous egress that is
+    // killing the free tier. Only Socket.io is used for real-time now.
+    console.log('[Fortized] Supabase real-time disabled — using Socket.io only');
   }
 
   function startPolling(username, callbacks) {
@@ -835,84 +963,23 @@ const FortizedSocial = (() => {
     _subscriptions = [];
   }
 
+  // ── EGRESS EMERGENCY: Supabase real-time subscriptions replaced with Socket.io ──
+  // These functions still join Socket.io rooms for real-time updates,
+  // but no longer create Supabase postgres_changes subscriptions.
   function listenBastionChannel(bastionId, channelId, callback) {
     joinRoom('bastion', bastionId, channelId);
-    const uid = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const sub = sb.channel('bastion-' + bastionId + '-' + channelId + '-' + uid)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'bastion_msgs',
-        filter: 'channel_id=eq.' + channelId,
-      }, payload => {
-        const r = payload.new;
-        if (r && r.bastion_id === bastionId) {
-          callback?.({ id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, reactions: r.reactions });
-        }
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'bastion_msgs',
-        filter: 'channel_id=eq.' + channelId,
-      }, payload => {
-        const r = payload.new;
-        if (r && r.bastion_id === bastionId) {
-          callback?.({ id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, reactions: r.reactions, _event: 'update' });
-        }
-      })
-      .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'bastion_msgs',
-        filter: 'channel_id=eq.' + channelId,
-      }, payload => {
-        const r = payload.old;
-        if (r && r.id) {
-          callback?.({ id: r.id, _event: 'delete' });
-        }
-      })
-      .subscribe();
+    // Socket.io 'message:new', 'message:edited', 'message:deleted' events
+    // handle real-time bastion messages — no Supabase subscription needed
     return () => {
-      sb.removeChannel(sub);
       leaveRoom('bastion', bastionId, channelId);
     };
   }
 
   function listenDM(user1, user2, callback) {
-    const key = _dmKey(user1, user2);
     joinRoom('dm', norm(user1), norm(user2));
-    const sub = sb.channel('dm-' + key)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'dms',
-        filter: 'dm_key=eq.' + key,
-      }, payload => {
-        const r = payload.new;
-        if (r) callback?.(_dmFromRow(r));
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'dms',
-        filter: 'dm_key=eq.' + key,
-      }, payload => {
-        const r = payload.new;
-        if (r) { const m = _dmFromRow(r); m._event = 'update'; callback?.(m); }
-      })
-      .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'dms',
-        filter: 'dm_key=eq.' + key,
-      }, payload => {
-        const r = payload.old;
-        if (r && r.id) callback?.({ id: r.id, _event: 'delete' });
-      })
-      .subscribe();
+    // Socket.io 'message:new', 'message:edited', 'message:deleted' events
+    // handle real-time DM messages — no Supabase subscription needed
     return () => {
-      sb.removeChannel(sub);
       leaveRoom('dm', norm(user1), norm(user2));
     };
   }
@@ -942,8 +1009,12 @@ const FortizedSocial = (() => {
 
   // ── Internal helpers for admin global settings ───────
   async function _getGlobalSettings() {
+    const cached = _cacheGetWithFallback('globalSettings', _CACHE_TTL.globalSettings);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('admin_global_settings').select('data').eq('id', 1).maybeSingle();
-    return data?.data || {};
+    const result = data?.data || {};
+    _cacheSet('globalSettings', result, _CACHE_TTL.globalSettings);
+    return result;
   }
 
   // ── Admin CRUD helpers (Supabase-native) ────────────
@@ -952,20 +1023,31 @@ const FortizedSocial = (() => {
   // and the existing 'reports' table and 'users' table columns.
 
   async function _adminKVGet(key) {
+    const cacheKey = 'akv:' + key;
+    const cached = _cacheGetWithFallback(cacheKey, _CACHE_TTL.adminKV);
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('admin_kv').select('data').eq('key', key).maybeSingle();
-    return data?.data ?? null;
+    const result = data?.data ?? null;
+    _cacheSet(cacheKey, result, _CACHE_TTL.adminKV);
+    return result;
   }
   async function _adminKVSet(key, val) {
+    _cacheDel('akv:' + key);
     await sb.from('admin_kv').upsert({ key, data: val }, { onConflict: 'key' });
   }
 
   // -- Reports --
   async function adminGetReports() {
+    const cached = _cacheGet('reports');
+    if (cached !== undefined) return cached;
     const { data } = await sb.from('reports').select('id,data').limit(200);
-    return (data || []).map(r => r.data || r);
+    const result = (data || []).map(r => r.data || r);
+    _cacheSet('reports', result, _CACHE_TTL.reports);
+    return result;
   }
   async function adminSaveReport(report) {
     if (!report?.id) return;
+    _cacheDel('reports');
     await sb.from('reports').upsert({ id: report.id, data: report }, { onConflict: 'id' });
   }
 
@@ -1048,6 +1130,7 @@ const FortizedSocial = (() => {
     return await _getGlobalSettings();
   }
   async function adminSaveGlobalSettings(settings) {
+    _cacheDel('globalSettings');
     await sb.from('admin_global_settings').upsert({ id: 1, data: settings }, { onConflict: 'id' });
   }
 
@@ -1119,9 +1202,12 @@ const FortizedSocial = (() => {
     _dmKey,
     register, login, logout, getCurrentUsername,
     getUsers, getAllUsers: async () => {
+      const cached = _cacheGet('allUsersMap');
+      if (cached !== undefined) return cached;
       const { data } = await sb.from('users').select(_USER_LIST_COLS);
       const result = {};
       (data || []).forEach(r => { const u = _userFromRow(r); result[u.username] = u; });
+      _cacheSet('allUsersMap', result, _CACHE_TTL.user);
       return result;
     },
     getUsersByNames,

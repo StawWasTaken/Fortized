@@ -7066,7 +7066,7 @@ function initFortizedUXResilience() {
         // Force logout check
         _checkForceLogout(u);
       } catch {}
-    }, 30000);
+    }, 120000); // Reduced to 2min (was 15s) — egress emergency
   } catch(e) { console.warn('[init] enforcement poller:', e); }
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling for all staff
@@ -7143,7 +7143,7 @@ function initFortizedUXResilience() {
     }catch{}
   },1000);
 
-  setInterval(async()=>{try{await updateNotifBadge();}catch{}},30000);
+  setInterval(async()=>{try{await updateNotifBadge();}catch{}},120000); // Reduced to 2min (was 30s) — egress emergency
   // Real-time notification listener
   try {
     firebase.database().ref('notifications/' + CU.username).on('value', async () => {
@@ -20844,8 +20844,8 @@ async function _disconnectSpotify() {
   toast('Spotify disconnected', 'success');
 }
 
-// Auto-poll Spotify every 30 seconds if connected
-setInterval(() => { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); }, 30000);
+// Auto-poll Spotify every 60 seconds if connected (reduced from 30s)
+setInterval(() => { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); }, 60000);
 
 async function _removeGameFromCollection(gameName) {
   if (!CU.gameCollection) return;
@@ -26178,7 +26178,7 @@ function _postInitSetup() {
   setInterval(() => {
     const statO = document.getElementById('stat-onyx');
     if (statO) statO.textContent = CU?.onyx||0;
-  }, 5000);
+  }, 30000);
   // Show the daily quest popup after a short delay (let the UI settle)
   setTimeout(() => { try { _showDailyQuestPopup(); } catch(e) { console.warn('[quest-popup]', e); } }, 2000);
   // Check for pending quest rewards that haven't been granted yet

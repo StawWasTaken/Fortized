@@ -41,15 +41,30 @@ const FortizedSocial = (() => {
   }
 
   // ── User CRUD ────────────────────────────────────────
+  // Lightweight columns for list views (no heavy arrays/JSON)
+  const _USER_LIST_COLS = 'username,display_name,pfp,banner,status,onyx,custom_status,bio,badges,radiance_until,radiance_plus,active_decoration,profile_theme,game_activity,last_seen,created_at';
+  // Columns needed for enforcement checks only
+  const _USER_ENFORCE_COLS = 'username,banned,ban_reason,suspension,suspended_until,active_warning,raw';
+
   async function getUsers() {
-    const { data } = await sb.from('users').select('*');
+    const { data } = await sb.from('users').select(_USER_LIST_COLS);
     return (data || []).map(_userFromRow);
   }
 
-  async function getUserByName(username) {
+  async function getUserByName(username, opts) {
     if (!username) return null;
-    const { data } = await sb.from('users').select('*').eq('username', norm(username)).maybeSingle();
+    const cols = (opts && opts.columns) ? opts.columns : '*';
+    const { data } = await sb.from('users').select(cols).eq('username', norm(username)).maybeSingle();
     return data ? _userFromRow(data) : null;
+  }
+
+  // Batch fetch multiple users in a single query
+  async function getUsersByNames(usernames, cols) {
+    if (!usernames || !usernames.length) return [];
+    const normed = usernames.map(norm).filter(Boolean);
+    if (!normed.length) return [];
+    const { data } = await sb.from('users').select(cols || _USER_LIST_COLS).in('username', normed);
+    return (data || []).map(_userFromRow);
   }
 
   // Convert DB row → Firebase-shaped user object for compatibility
@@ -265,14 +280,17 @@ const FortizedSocial = (() => {
 
   // ── Notifications ────────────────────────────────────
   async function getNotifications(username) {
-    const { data } = await sb.from('notifications').select('*').eq('username', norm(username));
+    const { data } = await sb.from('notifications').select('id,type,from,time,read,data')
+      .eq('username', norm(username))
+      .order('time', { ascending: false })
+      .limit(50);
     if (!data || !data.length) return [];
     return data.map(r => ({
       ...(r.data || {}),
       id: r.id, type: r.type, from: r.from, time: r.time,
       read: r.read,
       data: r.data,
-    })).sort((a, b) => new Date(b.time) - new Date(a.time));
+    }));
   }
 
   async function addNotification(toUsername, notif) {
@@ -302,7 +320,7 @@ const FortizedSocial = (() => {
   }
 
   async function getUnreadCount(username) {
-    const { count } = await sb.from('notifications').select('*', { count: 'exact', head: true }).eq('username', norm(username)).eq('read', false);
+    const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('username', norm(username)).eq('read', false);
     return count || 0;
   }
 
@@ -396,10 +414,15 @@ const FortizedSocial = (() => {
   // ── Direct Messages ──────────────────────────────────
   function _dmKey(u1, u2) { return [norm(u1), norm(u2)].sort().join('__'); }
 
-  async function getDMMessages(user1, user2) {
+  async function getDMMessages(user1, user2, limit) {
     const key = _dmKey(user1, user2);
-    const { data } = await sb.from('dms').select('*').eq('dm_key', key).order('timestamp', { ascending: true });
-    return (data || []).map(_dmFromRow);
+    const max = limit || 100;
+    const { data } = await sb.from('dms').select('id,from,text,time,timestamp,edited,new_text,reactions,forwarded,forwarded_by')
+      .eq('dm_key', key)
+      .order('timestamp', { ascending: false })
+      .limit(max);
+    // Reverse to chronological order after fetching latest N
+    return (data || []).reverse().map(_dmFromRow);
   }
 
   function _dmFromRow(r) {
@@ -476,11 +499,13 @@ const FortizedSocial = (() => {
   // ── Bastion Messages ─────────────────────────────────
   async function getBastionChannelMessages(bastionId, channelId) {
     const { data } = await sb.from('bastion_msgs')
-      .select('*')
+      .select('id,from,text,time,timestamp,edited,reactions')
       .eq('bastion_id', bastionId)
       .eq('channel_id', channelId)
-      .order('timestamp', { ascending: true });
-    return (data || []).map(r => ({
+      .order('timestamp', { ascending: false })
+      .limit(100);
+    // Reverse to chronological after fetching latest 100
+    return (data || []).reverse().map(r => ({
       id: r.id, from: r.from, text: r.text, time: r.time,
       timestamp: r.timestamp, edited: r.edited || false,
       reactions: r.reactions || undefined,
@@ -531,7 +556,7 @@ const FortizedSocial = (() => {
 
   // ── Global Bastions ──────────────────────────────────
   async function getGlobalBastions() {
-    const { data } = await sb.from('global_bastions').select('*');
+    const { data } = await sb.from('global_bastions').select('id,data');
     const result = {};
     (data || []).forEach(r => { result[r.id] = r.data; });
     return result;
@@ -770,18 +795,8 @@ const FortizedSocial = (() => {
       .subscribe();
     _subscriptions.push(notifSub);
 
-    // Listen for status changes
-    const statusSub = sb.channel('statuses-all')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'statuses',
-      }, payload => {
-        const row = payload.new;
-        if (row) _callbacks.onStatusChange?.({ username: row.username, status: row.status });
-      })
-      .subscribe();
-    _subscriptions.push(statusSub);
+    // Status changes are handled by Socket.io presence system
+    // Removed overly broad Supabase subscription that listened to ALL users' status changes
 
     // Listen for DM index changes
     const dmIdxSub = sb.channel('dmidx-' + username)
@@ -828,10 +843,10 @@ const FortizedSocial = (() => {
         event: 'INSERT',
         schema: 'public',
         table: 'bastion_msgs',
-        filter: 'bastion_id=eq.' + bastionId,
+        filter: 'channel_id=eq.' + channelId,
       }, payload => {
         const r = payload.new;
-        if (r && r.channel_id === channelId) {
+        if (r && r.bastion_id === bastionId) {
           callback?.({ id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, reactions: r.reactions });
         }
       })
@@ -839,10 +854,10 @@ const FortizedSocial = (() => {
         event: 'UPDATE',
         schema: 'public',
         table: 'bastion_msgs',
-        filter: 'bastion_id=eq.' + bastionId,
+        filter: 'channel_id=eq.' + channelId,
       }, payload => {
         const r = payload.new;
-        if (r && r.channel_id === channelId) {
+        if (r && r.bastion_id === bastionId) {
           callback?.({ id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, reactions: r.reactions, _event: 'update' });
         }
       })
@@ -850,7 +865,7 @@ const FortizedSocial = (() => {
         event: 'DELETE',
         schema: 'public',
         table: 'bastion_msgs',
-        filter: 'bastion_id=eq.' + bastionId,
+        filter: 'channel_id=eq.' + channelId,
       }, payload => {
         const r = payload.old;
         if (r && r.id) {
@@ -946,7 +961,7 @@ const FortizedSocial = (() => {
 
   // -- Reports --
   async function adminGetReports() {
-    const { data } = await sb.from('reports').select('*');
+    const { data } = await sb.from('reports').select('id,data').limit(200);
     return (data || []).map(r => r.data || r);
   }
   async function adminSaveReport(report) {
@@ -1104,11 +1119,12 @@ const FortizedSocial = (() => {
     _dmKey,
     register, login, logout, getCurrentUsername,
     getUsers, getAllUsers: async () => {
-      const { data } = await sb.from('users').select('*');
+      const { data } = await sb.from('users').select(_USER_LIST_COLS);
       const result = {};
       (data || []).forEach(r => { const u = _userFromRow(r); result[u.username] = u; });
       return result;
     },
+    getUsersByNames,
     getUserByName, saveUserObject,
     getStatus, setStatus,
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,

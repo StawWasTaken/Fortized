@@ -361,7 +361,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 /* Own profile mini panel — redesigned */
 .own-profile-panel{position:fixed;bottom:70px;left:80px;width:320px;background:var(--glass-heavy);border:1px solid var(--glass-border);border-radius:14px;z-index:3000;box-shadow:0 24px 80px rgba(0,0,0,.9),0 0 1px rgba(255,255,255,.06);overflow:hidden;animation:ownPanelIn .2s cubic-bezier(.22,1,.36,1);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);}
 @keyframes ownPanelIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
-.main{flex:1;min-width:0;display:flex;flex-direction:row;background:var(--glass-light);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);border-top-left-radius:16px;overflow:hidden;border:1px solid var(--glass-border);border-right:none;border-bottom:none;}
+.main{flex:1;min-width:0;display:flex;flex-direction:row;background:var(--glass-light);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);border-top-left-radius:16px;overflow:hidden;}
 .tb-sep{width:1px;height:18px;background:var(--border);margin:0 2px;}
 .tb-desc{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
 .tb-actions{margin-left:auto;display:flex;align-items:center;gap:6px;}

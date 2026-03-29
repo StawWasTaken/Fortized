@@ -28255,9 +28255,13 @@ function applyAppearance(themeId) {
   document.documentElement.style.setProperty('--accent',     '#fff93e');
   document.documentElement.style.setProperty('--accent-dim', 'rgba(255,249,62,.1)');
   document.documentElement.style.setProperty('--accent-mid', 'rgba(255,249,62,.22)');
+  const canvasEl = document.getElementById('global-canvas');
+  let canvasColor, glassHeavy, glassMid, glassLight;
   let sidebarColor;
   if (themeId === 'dark_realm') {
+    canvasColor = '#030407';
     sidebarColor = '#050710';
+    glassHeavy = 'rgba(3,4,7,.82)'; glassMid = 'rgba(3,4,7,.68)'; glassLight = 'rgba(3,4,7,.52)';
     document.documentElement.style.setProperty('--bg',         '#030407');
     document.documentElement.style.setProperty('--rail',       '#020304');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
@@ -28269,7 +28273,9 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--muted',      '#3a4458');
     document.documentElement.style.setProperty('--muted-light','#5a6a7e');
   } else if (themeId === 'midnight_citadel') {
+    canvasColor = '#050812';
     sidebarColor = '#080e1a';
+    glassHeavy = 'rgba(5,8,18,.82)'; glassMid = 'rgba(5,8,18,.68)'; glassLight = 'rgba(5,8,18,.52)';
     document.documentElement.style.setProperty('--bg',         '#050812');
     document.documentElement.style.setProperty('--rail',       '#030610');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
@@ -28281,7 +28287,9 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--muted',      '#3a5080');
     document.documentElement.style.setProperty('--muted-light','#6088b8');
   } else if (themeId === 'onyx_pure') {
+    canvasColor = 'linear-gradient(170deg, #010103 0%, #08061a 100%)';
     sidebarColor = '#020206';
+    glassHeavy = 'rgba(1,1,3,.82)'; glassMid = 'rgba(1,1,3,.68)'; glassLight = 'rgba(1,1,3,.52)';
     document.documentElement.style.setProperty('--bg',         '#010103');
     document.documentElement.style.setProperty('--rail',       '#010102');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
@@ -28292,11 +28300,10 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--border',     '#0e0e1e');
     document.documentElement.style.setProperty('--muted',      '#2a2a3e');
     document.documentElement.style.setProperty('--muted-light','#44445e');
-    // Low gradient towards dark purple
-    document.body.style.background = 'linear-gradient(170deg, #010103 0%, #08061a 100%)';
   } else if (themeId === 'sunset') {
-    // Sunset: Fortized Classic base with semi-transparent elements over sunset gradient
+    canvasColor = 'linear-gradient(170deg, #1a0410 0%, #2e0820 15%, #4a1228 30%, #742a2c 45%, #a65035 58%, #c77a3a 70%, #dba040 82%, #f5d978 100%)';
     sidebarColor = '#13161d';
+    glassHeavy = 'rgba(10,13,20,.82)'; glassMid = 'rgba(10,13,20,.65)'; glassLight = 'rgba(10,13,20,.48)';
     document.documentElement.style.setProperty('--bg',         'rgba(10,13,20,0.72)');
     document.documentElement.style.setProperty('--rail',       'rgba(6,8,16,0.78)');
     document.documentElement.style.setProperty('--sidebar',    'rgba(19,22,29,0.82)');
@@ -28307,10 +28314,11 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--border',     'rgba(37,45,61,0.55)');
     document.documentElement.style.setProperty('--muted',      '#4e5a6f');
     document.documentElement.style.setProperty('--muted-light','#7d8a9e');
-    document.body.style.background = 'linear-gradient(170deg, #1a0410 0%, #2e0820 15%, #4a1228 30%, #742a2c 45%, #a65035 58%, #c77a3a 70%, #dba040 82%, #f5d978 100%)';
     document.documentElement.classList.add('theme-sunset');
   } else if (themeId === 'kingdom_of_god') {
+    canvasColor = 'linear-gradient(170deg, #faf9f6 0%, #f0ead4 100%)';
     sidebarColor = '#eae7df';
+    glassHeavy = 'rgba(240,237,228,.88)'; glassMid = 'rgba(240,237,228,.72)'; glassLight = 'rgba(240,237,228,.55)';
     document.documentElement.style.setProperty('--bg',         '#f5f3ee');
     document.documentElement.style.setProperty('--rail',       '#e4e0d6');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
@@ -28324,11 +28332,12 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--accent',     '#d4a017');
     document.documentElement.style.setProperty('--accent-dim', 'rgba(212,160,23,.1)');
     document.documentElement.style.setProperty('--accent-mid', 'rgba(212,160,23,.22)');
-    document.body.style.background = 'linear-gradient(170deg, #faf9f6 0%, #f0ead4 100%)';
     document.documentElement.classList.add('theme-light');
   } else {
     // Fortized Classic (default)
+    canvasColor = '#0a0d14';
     sidebarColor = '#13161d';
+    glassHeavy = 'rgba(10,13,20,.82)'; glassMid = 'rgba(10,13,20,.68)'; glassLight = 'rgba(10,13,20,.52)';
     document.documentElement.style.setProperty('--bg',         '#0a0d14');
     document.documentElement.style.setProperty('--rail',       '#060810');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
@@ -28340,12 +28349,21 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--muted',      '#4e5a6f');
     document.documentElement.style.setProperty('--muted-light','#7d8a9e');
   }
+  // ── Layered Depth Architecture: update the Global Canvas ──
+  if (canvasEl) canvasEl.style.background = canvasColor;
+  document.documentElement.style.setProperty('--canvas-color', canvasColor);
+  if (glassHeavy) {
+    document.documentElement.style.setProperty('--glass-heavy', glassHeavy);
+    document.documentElement.style.setProperty('--glass-mid', glassMid);
+    document.documentElement.style.setProperty('--glass-light', glassLight);
+    document.documentElement.style.setProperty('--glass-ultra-light', glassMid.replace(/[\d.]+\)$/, m => (parseFloat(m) * 0.55).toFixed(2) + ')'));
+  }
   // Secondary sidebar is 18.8% darker than the main sidebar color
   document.documentElement.style.setProperty('--sidebar-ctx', _darkenHex(sidebarColor, 0.188));
   // For sunset, override sidebar-ctx to be semi-transparent so gradient bleeds through
   if (themeId === 'sunset') document.documentElement.style.setProperty('--sidebar-ctx', 'rgba(15,18,23,0.8)');
-  // Reset body gradient if not a gradient theme
-  if (themeId !== 'onyx_pure' && themeId !== 'sunset' && themeId !== 'kingdom_of_god') document.body.style.background = '';
+  // Reset body gradient — canvas now handles it
+  document.body.style.background = '';
   // Remove light theme class if not light theme
   if (themeId !== 'kingdom_of_god') document.documentElement.classList.remove('theme-light');
   // Remove sunset theme class if not sunset

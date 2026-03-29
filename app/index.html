@@ -52,6 +52,9 @@ window._cdnReady.then(function() {
 <style id="radiance-font-style"></style>
 <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous" async></script>
 <body>
+<!-- GLOBAL CANVAS — the 'source of truth' for theme colour -->
+<div class="global-canvas" id="global-canvas"></div>
+
 <!-- APP LOADING -->
 <div class="app-loading" id="app-loading">
   <img src="/fortized loading animation.gif" class="app-loading-anim" alt="" onerror="this.src='/Fortized icon.png';this.style.width='50px';this.style.height='50px';this.style.filter='drop-shadow(0 0 16px rgba(255,249,62,.4))';">

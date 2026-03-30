@@ -28277,17 +28277,17 @@ function applyAppearance(themeId) {
     document.documentElement.style.setProperty('--muted-light','#44445e');
   } else {
     // Fortized Classic (default)
-    canvasColor = '#0a0d14';
-    sidebarColor = '#13161d';
-    glassHeavy = 'rgba(10,13,20,.94)'; glassMid = 'rgba(10,13,20,.88)'; glassLight = 'rgba(10,13,20,.82)';
-    document.documentElement.style.setProperty('--bg',         '#0a0d14');
-    document.documentElement.style.setProperty('--rail',       '#060810');
+    canvasColor = '#13161d';
+    sidebarColor = '#181a1f';
+    glassHeavy = 'rgba(19,22,29,.94)'; glassMid = 'rgba(19,22,29,.88)'; glassLight = 'rgba(19,22,29,.82)';
+    document.documentElement.style.setProperty('--bg',         '#13161d');
+    document.documentElement.style.setProperty('--rail',       '#0f1119');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
-    document.documentElement.style.setProperty('--channel',    '#0f1219');
-    document.documentElement.style.setProperty('--panel',      '#161a23');
-    document.documentElement.style.setProperty('--panel2',     '#1a1f29');
-    document.documentElement.style.setProperty('--panel3',     '#1e2430');
-    document.documentElement.style.setProperty('--border',     '#252d3d');
+    document.documentElement.style.setProperty('--channel',    '#15171e');
+    document.documentElement.style.setProperty('--panel',      '#1b1e25');
+    document.documentElement.style.setProperty('--panel2',     '#1f232b');
+    document.documentElement.style.setProperty('--panel3',     '#23272f');
+    document.documentElement.style.setProperty('--border',     '#252b3a');
     document.documentElement.style.setProperty('--muted',      '#4e5a6f');
     document.documentElement.style.setProperty('--muted-light','#7d8a9e');
   }

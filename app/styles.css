@@ -2952,6 +2952,13 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 .chron-detail-phase{padding:14px 18px;border-radius:var(--radius-sm);background:var(--surface-1);border:1px solid var(--glass-border);}
 .chron-detail-phase h4{font-family:var(--font-display);font-size:var(--font-md);font-weight:700;color:#daa520;margin:0 0 6px;}
 .chron-detail-phase p{font-size:var(--font-sm);color:rgba(200,180,140,.45);margin:0;line-height:1.5;}
+/* ── Event assets (documents, paintings) ── */
+.chron-detail-assets{display:flex;gap:12px;flex-wrap:wrap;}
+.chron-asset{margin:0;flex:1;min-width:180px;max-width:320px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid rgba(120,90,40,.12);background:rgba(0,0,0,.2);box-shadow:var(--elev-1);}
+.chron-asset img{width:100%;display:block;filter:brightness(.9);transition:filter .2s,transform .3s;cursor:pointer;}
+.chron-asset img:hover{filter:brightness(1);transform:scale(1.02);}
+.chron-asset figcaption{padding:8px 12px;font-size:var(--font-xs);color:rgba(200,180,140,.5);font-style:italic;text-align:center;border-top:1px solid rgba(120,90,40,.08);}
+
 .chron-play-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#8b6914,#c4a35a);color:#1a1207;font-family:var(--font-display);font-size:14px;font-weight:800;border:none;cursor:pointer;margin-top:24px;transition:all .18s;letter-spacing:.01em;box-shadow:var(--elev-2);}
 .chron-play-btn:hover{background:linear-gradient(135deg,#c4a35a,#daa520);box-shadow:var(--elev-3);}
 .chron-play-btn.locked{background:var(--surface-1);color:var(--muted);cursor:not-allowed;border:1px solid var(--surface-border);box-shadow:none;}

@@ -30504,7 +30504,10 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'The Treaty of the Silver Stream — the fragile pact that held two great kingdoms in check — is no more. Summoned to the Royal Court, you witness the moment diplomacy dies and steel takes its place.',
     gameplay: ['Cinematic intro sequence — diplomatic collapse unfolds', 'Player receives first orders as a knight of Vastilly'],
-    tone: 'You do not decide. You are summoned.',
+    assets: [
+      { src: '/app/Chronicle/IRL Silver Stream Treaty 1450.png', caption: 'The Treaty of the Silver Stream, signed 1450' },
+      { src: '/app/Chronicle/IRL tear up Silver Stream Treaty 1450.png', caption: 'The Treaty — torn apart' }
+    ],
     phases: null
   },
   {
@@ -30515,7 +30518,7 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'A small-scale skirmish to disrupt enemy supply lines along the trade route. Strike fast, vanish faster.',
     gameplay: ['Sabotage Oakhaven caravans crossing the stream', 'Ambush mechanics — timing and positioning matter'],
-    tone: 'Introduces stealth and mobility.',
+    assets: null,
     phases: null
   },
   {
@@ -30526,7 +30529,7 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'Before Elowen can be taken, its supply lines must be severed. Strike the outskirts, burn the depots, and cripple the enemy\'s ability to sustain a defense.',
     gameplay: ['Fast strike mission with timed objectives', 'Destroy supply depots before reinforcements arrive'],
-    tone: 'Resource warfare introduction.',
+    assets: null,
     phases: null
   },
   {
@@ -30537,7 +30540,7 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'The dense forest roads controlled by Oakhaven become a battleground of ambush and counter-ambush. Use the terrain or be buried by it.',
     gameplay: ['Terrain advantage system — forest ambush bonuses', 'Escort vs interception: choose your role'],
-    tone: 'The forest fights for whoever knows it best.',
+    assets: null,
     phases: null
   },
   {
@@ -30548,7 +30551,7 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'The enemy strikes back. Vastilly\'s outer walls must hold. Man the towers, direct the archers, and prepare the early artillery. There is no retreat.',
     gameplay: ['Tower defense mechanics — place and upgrade defensive units', 'Archers and early artillery management', 'Wave-based enemy assault'],
-    tone: 'Hold the line. No retreat.',
+    assets: null,
     phases: null
   },
   {
@@ -30559,7 +30562,7 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'The canal network of Fenwick becomes a weapon in itself. Manipulate the waterways to flood enemy positions and control the battlefield.',
     gameplay: ['Water manipulation mechanics — open and close flood gates', 'Use flood zones as tactical weapons', 'Navigate treacherous canal terrain'],
-    tone: 'The water does not care whose side you are on.',
+    assets: null,
     phases: null
   },
   {
@@ -30570,7 +30573,7 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'War demands steel, gold, and contracts. In Ironstall, the great forges burn day and night. Secure the funding and equipment to push the campaign forward.',
     gameplay: ['Negotiate contracts for weapons, armor, and units', 'Unlock upgrades and new equipment tiers', 'Economic decisions with battlefield consequences'],
-    tone: 'Every sword has a price. Every contract, a consequence.',
+    assets: null,
     phases: null
   },
   {
@@ -30581,7 +30584,7 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'Cut the enemy\'s lifeline. Glassport\'s harbors are the arteries of Oakhaven trade. Block them, and the enemy starves.',
     gameplay: ['Naval disruption and blockade mechanics', 'Cut off enemy trade routes', 'Patrol and intercept supply ships'],
-    tone: 'No ships in. No ships out.',
+    assets: null,
     phases: null
   },
   {
@@ -30593,7 +30596,9 @@ const CHRONICLE_CHAPTER_1 = [
     quote: 'They came with eighty ships\u2026 and left as a bridge of wreckage.',
     desc: 'The defining battle of Chapter I. Port-Crest\'s harbor becomes a kill-zone of fire, iron, and shattered hulls. Four phases of escalating warfare — from cunning traps to desperate boarding defense.',
     gameplay: ['Four-phase naval siege — the largest event in Chapter I', 'Deploy sea-spikes, time the tides, unleash hellfire'],
-    tone: 'This is where legends are forged — or drowned.',
+    assets: [
+      { src: '/app/Chronicle/IRL The Siege of Port-Crest.png', caption: 'The Siege of Port-Crest — famous painting' }
+    ],
     phases: [
       { name: 'Phase 1 \u2014 The Snare', desc: 'Deploy hidden Sea-Spikes beneath the harbor surface. A tide timing system determines placement windows — strike too early and they surface; too late and the fleet passes.' },
       { name: 'Phase 2 \u2014 The Trap', desc: 'Enemy ships run aground on your spikes. Immobilized vessels become sitting targets as the harbor narrows into a bottleneck of shattered wood.' },
@@ -30609,7 +30614,7 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'The enemy does not relent. For fourteen in-game days, artillery pounds your positions. Endure the bombardment, manage dwindling ammunition, and hold morale together.',
     gameplay: ['Endurance survival mode — outlast the bombardment', 'Manage ammunition reserves and supply lines', 'Morale system — keep your forces from breaking'],
-    tone: 'War becomes exhaustion.',
+    assets: null,
     phases: null
   },
   {
@@ -30620,7 +30625,7 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'The battle is over. What remains is a graveyard of ships. Navigate the destroyed fleet, secure the harbor, and reclaim what the sea tried to swallow.',
     gameplay: ['Navigate through destroyed fleet wreckage', 'Secure final control of the harbor zone', 'Salvage resources from enemy vessels'],
-    tone: 'Slow. Eerie. The silence after the storm.',
+    assets: null,
     phases: null
   },
   {
@@ -30631,7 +30636,7 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'With Port-Crest secured and the enemy reeling, the full might of Vastilly marches on Oakhaven. A large-scale combined arms assault — infantry, cavalry, and artillery moving as one.',
     gameplay: ['Large-scale open battlefield', 'Combined arms coordination — infantry, cavalry, artillery', 'Dynamic frontline that shifts with your decisions'],
-    tone: 'The endgame begins.',
+    assets: null,
     phases: null
   },
   {
@@ -30642,7 +30647,7 @@ const CHRONICLE_CHAPTER_1 = [
     quote: null,
     desc: 'The final siege. Elowen\'s walls — once thought impregnable — must fall. Breach the defenses, storm the city, and write the last chapter of this war. Annexed lands will reshape the map in Chapter II.',
     gameplay: ['Full siege mechanics — battering rams, siege towers, sappers', 'Breach and capture the city district by district', 'Canonical ending: Elowen is annexed into Vastilly'],
-    tone: 'The war is over. The Realm stands unbroken. But the world\u2026 is watching.',
+    assets: null,
     phases: null
   }
 ];
@@ -30829,10 +30834,15 @@ function openChronicleEvent(id) {
     </div>`;
   }
 
-  if (ev.tone) {
+  if (ev.assets && ev.assets.length) {
     html += `<div class="chron-detail-section">
-      <h3>Tone</h3>
-      <p style="font-style:italic;color:rgba(196,163,90,.5);">${ev.tone}</p>
+      <h3>Documents &amp; Artifacts</h3>
+      <div class="chron-detail-assets">
+        ${ev.assets.map(a => `<figure class="chron-asset">
+          <img src="${a.src}" alt="${a.caption}" draggable="false" loading="lazy">
+          <figcaption>${a.caption}</figcaption>
+        </figure>`).join('')}
+      </div>
     </div>`;
   }
 

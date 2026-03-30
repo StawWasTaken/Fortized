@@ -952,7 +952,7 @@ window._cdnReady.then(function() {
 <div class="chronicle-overlay" id="chronicle-overlay">
   <div class="chronicle-container">
 
-    <!-- Top bar -->
+    <!-- Top bar (draggable for Electron) -->
     <div class="chronicle-topbar">
       <div class="chronicle-topbar-left">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -964,9 +964,21 @@ window._cdnReady.then(function() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <span id="chronicle-timer-text">Limited Time</span>
         </div>
-        <button class="chronicle-close-btn" onclick="closeChronicle()" title="Close">
+        <button class="chronicle-close-btn" onclick="closeChronicle()" title="Close Chronicle">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
+        <!-- Electron window controls (duplicated so desktop users can still minimize/maximize/close) -->
+        <div class="chronicle-win-controls">
+          <button class="tb-win-btn" onclick="window.fortizedDesktop?.minimizeWindow()" title="Minimize">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="5.5" width="10" height="1" fill="currentColor"/></svg>
+          </button>
+          <button class="tb-win-btn" onclick="window.fortizedDesktop?.maximizeWindow()" title="Maximize">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+          </button>
+          <button class="tb-win-btn tb-win-close" onclick="window.fortizedDesktop?.closeWindow()" title="Close Window">
+            <svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.3"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 

@@ -382,6 +382,11 @@ window._cdnReady.then(function() {
               <div class="hero-greeting">Welcome back, <span id="hero-username" style="color:var(--accent);font-weight:700;margin:0 4px;"></span> <span class="wave-emoji" style="font-size:18px;">👋</span></div>
               <h1>Your <em>Fortress</em><br>Awaits</h1>
               <div class="home-hero-actions">
+                <button class="hero-btn hero-btn-chronicle" onclick="openChronicle()" onmouseenter="_joysterReact('excited')" onmouseleave="_joysterReact('idle')">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M8 7h8M8 11h5"/></svg>
+                  The Grand Chronicle
+                  <span class="chronicle-badge-live">LIVE</span>
+                </button>
                 <button class="hero-btn hero-btn-primary" onclick="showView('discover')" onmouseenter="_joysterReact('wink')" onmouseleave="_joysterReact('idle')">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
                   Explore
@@ -942,6 +947,81 @@ window._cdnReady.then(function() {
   <button class="unsaved-bar-save" onclick="saveAllSettings()">Save Changes</button>
 </div>
 
+
+<!-- ═══════ THE FORTIZED GRAND CHRONICLE ═══════ -->
+<div class="chronicle-overlay" id="chronicle-overlay">
+  <div class="chronicle-container">
+
+    <!-- Top bar -->
+    <div class="chronicle-topbar">
+      <div class="chronicle-topbar-left">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <span class="chronicle-topbar-title">The Fortized Grand Chronicle</span>
+        <span class="chronicle-topbar-chapter">Chapter I</span>
+      </div>
+      <div class="chronicle-topbar-right">
+        <div class="chronicle-timer" id="chronicle-timer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="chronicle-timer-text">Limited Time</span>
+        </div>
+        <button class="chronicle-close-btn" onclick="closeChronicle()" title="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Intro video overlay (shows first time) -->
+    <div class="chronicle-intro" id="chronicle-intro">
+      <video id="chronicle-intro-video" preload="auto" playsinline>
+        <source src="/app/chronicle/FTZchap1-Intro.mp4" type="video/mp4">
+      </video>
+      <button class="chronicle-skip-btn" id="chronicle-skip-btn" onclick="skipChronicleIntro()">Skip Intro</button>
+    </div>
+
+    <!-- Main chronicle content (hidden during intro) -->
+    <div class="chronicle-body" id="chronicle-body">
+
+      <!-- Left: World map + chapter info -->
+      <div class="chronicle-left">
+        <div class="chronicle-map-wrap">
+          <img src="/app/chronicle/IRL Human World Map 1452.png" class="chronicle-map-img" alt="The Known World — 1452" id="chronicle-map" draggable="false">
+          <div class="chronicle-map-overlay"></div>
+          <div class="chronicle-map-legend">
+            <span class="cml-dot cml-vastilly"></span> Vastilly
+            <span class="cml-dot cml-oakhaven"></span> Oakhaven
+            <span class="cml-dot cml-neutral"></span> Neutral
+            <span class="cml-dot cml-contested"></span> Contested
+          </div>
+        </div>
+        <div class="chronicle-chapter-info">
+          <div class="chronicle-chapter-label">CHAPTER I</div>
+          <h2 class="chronicle-chapter-title">The War of the Shattered Pact</h2>
+          <p class="chronicle-chapter-desc">The Treaty of the Silver Stream lies broken. Vastilly's banners march east — and you, a knight of the realm, are called to serve. From the royal court to the fall of Elowen, witness the first great war of Fortized history.</p>
+          <div class="chronicle-progress-bar">
+            <div class="chronicle-progress-fill" id="chronicle-progress-fill" style="width:0%"></div>
+          </div>
+          <div class="chronicle-progress-label"><span id="chronicle-progress-text">0 / 14</span> Events Complete</div>
+        </div>
+      </div>
+
+      <!-- Right: Event list (scrollable) -->
+      <div class="chronicle-right" id="chronicle-event-list">
+        <!-- Events populated by JS -->
+      </div>
+
+    </div>
+
+    <!-- Event detail panel (slides in when an event is selected) -->
+    <div class="chronicle-detail" id="chronicle-detail">
+      <button class="chronicle-detail-back" onclick="chronicleBack()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <div class="chronicle-detail-inner" id="chronicle-detail-inner"></div>
+    </div>
+
+  </div>
+</div>
 
 <script src="/app/app.js"></script>
 <script>

@@ -1,6 +1,6 @@
 :root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.08);--accent-mid:rgba(255,249,62,.18);--bg:#0c0f16;--rail:#080a12;--sidebar:#111318;--sidebar-ctx:#0e1016;--channel:#0e1017;--panel:#14171e;--panel2:#181c24;--panel3:#1c2028;--border:#1e2433;--muted:#4e5a6f;--muted-light:#7d8a9e;--text:#dde3ed;--green:#3ecf6e;--red:#f87171;--yellow:#f59e0b;--blue:#60a5fa;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-xs:4px;--space-sm:8px;--space-md:14px;--space-lg:20px;--space-xl:28px;--space-2xl:40px;--space-3xl:56px;--font-ui:'DM Sans',sans-serif;--font-display:'Syne',sans-serif;--font-xs:10.5px;--font-sm:12px;--font-md:13.5px;--font-lg:16px;--font-xl:20px;--font-2xl:28px;--font-hdr:10px;--surface-1:rgba(255,255,255,.03);--surface-2:rgba(255,255,255,.05);--surface-3:rgba(255,255,255,.08);--surface-4:rgba(255,255,255,.12);--surface-border:rgba(255,255,255,.05);--surface-border-hover:rgba(255,255,255,.1);--state-success:var(--green);--state-danger:var(--red);--state-warning:var(--yellow);--state-info:var(--blue);--state-success-dim:rgba(62,207,110,.08);--state-danger-dim:rgba(248,113,113,.08);--state-warning-dim:rgba(245,158,11,.08);--state-info-dim:rgba(96,165,250,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:22px;--radius-pill:100px;--elev-1:0 1px 4px rgba(0,0,0,.2);--elev-2:0 4px 16px rgba(0,0,0,.25);--elev-3:0 8px 32px rgba(0,0,0,.4);--ease-out:cubic-bezier(.22,1,.36,1);--shadow-sm:0 1px 4px rgba(0,0,0,.15);--shadow-md:0 4px 16px rgba(0,0,0,.2);--shadow-lg:0 8px 32px rgba(0,0,0,.35);
 /* ── Layered Depth Architecture tokens ── */
---canvas-color:#0c0f16;--glass-heavy:rgba(10,13,20,.94);--glass-mid:rgba(10,13,20,.88);--glass-light:rgba(10,13,20,.82);--glass-ultra-light:rgba(10,13,20,.72);--glass-border:rgba(255,255,255,.06);--glass-border-hover:rgba(255,255,255,.12);--blur-heavy:blur(32px) saturate(160%);--blur-mid:blur(24px) saturate(150%);--blur-light:blur(18px) saturate(140%);}
+--canvas-color:#11151b;--glass-heavy:rgba(14,17,24,.94);--glass-mid:rgba(14,17,24,.88);--glass-light:rgba(14,17,24,.82);--glass-ultra-light:rgba(14,17,24,.72);--glass-border:rgba(255,255,255,.06);--glass-border-hover:rgba(255,255,255,.12);--blur-heavy:blur(32px) saturate(160%);--blur-mid:blur(24px) saturate(150%);--blur-light:blur(18px) saturate(140%);}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}img{-webkit-user-drag:none;user-select:none;pointer-events:auto;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;draggable:false;}html,body{height:100%;overflow:hidden;}
 body{background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:row;position:relative;}
 /* ── Global Canvas — the 'floor' of the entire app ── */
@@ -2843,17 +2843,14 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 .chronicle-body.hidden{display:none;}
 
 /* ── The Desk — dark wood surface over the canvas ── */
-.chronicle-desk{display:flex;height:100%;background:
-  radial-gradient(ellipse at 50% 80%, rgba(80,55,25,.14) 0%, transparent 60%),
-  linear-gradient(180deg, rgba(22,18,12,.6) 0%, rgba(26,22,16,.4) 40%, rgba(22,18,12,.5) 100%);
-  position:relative;overflow:hidden;}
-/* Subtle wood grain */
+.chronicle-desk{display:flex;height:100%;background:var(--glass-light);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);position:relative;overflow:hidden;}
+/* Subtle warm desk tint */
 .chronicle-desk::before{content:"";position:absolute;inset:0;background:
-  repeating-linear-gradient(92deg,transparent,transparent 120px,rgba(100,70,30,.025) 120px,rgba(100,70,30,.025) 121px),
-  repeating-linear-gradient(88deg,transparent,transparent 200px,rgba(80,55,20,.015) 200px,rgba(80,55,20,.015) 201px);
+  radial-gradient(ellipse at 50% 80%, rgba(80,55,25,.06) 0%, transparent 60%),
+  repeating-linear-gradient(92deg,transparent,transparent 120px,rgba(100,70,30,.015) 120px,rgba(100,70,30,.015) 121px);
   pointer-events:none;}
 /* Candlelight glow */
-.chronicle-desk::after{content:"";position:absolute;top:-40px;left:60px;width:400px;height:400px;background:radial-gradient(circle,rgba(255,180,60,.04) 0%,transparent 70%);pointer-events:none;}
+.chronicle-desk::after{content:"";position:absolute;top:-40px;left:60px;width:400px;height:400px;background:radial-gradient(circle,rgba(255,180,60,.03) 0%,transparent 70%);pointer-events:none;}
 
 /* ── Left: Map area ── */
 .chronicle-desk-map{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px 24px;overflow-y:auto;min-width:0;}
@@ -2888,7 +2885,7 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 .map-corner-br{bottom:0;right:0;background:linear-gradient(315deg,rgba(12,15,22,.7) 40%,transparent 41%);}
 
 /* Chapter parchment strip — glass panel */
-.chronicle-chapter-parchment{max-width:880px;width:100%;margin-top:16px;padding:16px 20px;border-radius:var(--radius-sm);background:var(--glass-mid);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border:1px solid var(--glass-border);box-shadow:var(--elev-1);}
+.chronicle-chapter-parchment{max-width:880px;width:100%;margin-top:16px;padding:16px 20px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--glass-border);}
 .chronicle-chapter-label{font-size:var(--font-hdr);font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#c4a35a;margin-bottom:4px;}
 .chronicle-chapter-title{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-.03em;color:#e8d5a8;margin:0 0 6px;line-height:1.15;}
 .chronicle-chapter-desc{font-size:var(--font-sm);line-height:1.55;color:rgba(200,180,140,.5);margin-bottom:14px;}
@@ -2932,7 +2929,7 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 .chron-event-lock{font-size:var(--font-hdr);color:rgba(255,255,255,.18);display:flex;align-items:center;gap:4px;margin-top:2px;}
 
 /* ── Event detail — glass over desk ── */
-.chronicle-detail{position:absolute;inset:0;top:44px;z-index:5;display:none;flex-direction:column;overflow-y:auto;background:var(--glass-heavy);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);}
+.chronicle-detail{position:absolute;inset:0;top:44px;z-index:5;display:none;flex-direction:column;overflow-y:auto;background:var(--glass-light);backdrop-filter:var(--blur-light);-webkit-backdrop-filter:var(--blur-light);}
 .chronicle-detail.open{display:flex;}
 .chronicle-detail-back{display:flex;align-items:center;gap:6px;padding:14px 24px;color:#c4a35a;font-family:var(--font-display);font-size:var(--font-md);font-weight:700;background:none;border:none;cursor:pointer;border-bottom:1px solid var(--glass-border);transition:color .15s;}
 .chronicle-detail-back:hover{color:#daa520;}

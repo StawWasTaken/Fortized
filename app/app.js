@@ -30505,8 +30505,7 @@ const CHRONICLE_CHAPTER_1 = [
     desc: 'The Treaty of the Silver Stream — the fragile pact that held two great kingdoms in check — is no more. Summoned to the Royal Court, you witness the moment diplomacy dies and steel takes its place.',
     gameplay: ['Cinematic intro sequence — diplomatic collapse unfolds', 'Player receives first orders as a knight of Vastilly'],
     assets: [
-      { src: '/app/Chronicle/IRL Silver Stream Treaty 1450.png', caption: 'The Treaty of the Silver Stream, signed 1450' },
-      { src: '/app/Chronicle/IRL tear up Silver Stream Treaty 1450.png', caption: 'The Treaty — torn apart' }
+      { src: '/app/Chronicle/IRL Silver Stream Treaty 1450.png', caption: 'The Treaty of the Silver Stream, signed 1450' }
     ],
     phases: null
   },

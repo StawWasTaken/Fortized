@@ -939,7 +939,7 @@ function _showLeavingFortizedModal(url, domain) {
   // Bold the domain in the displayed URL
   const displayUrl = escapeHTML(url.length > 120 ? url.slice(0,120)+'…' : url).replace(escapeHTML(domain), '<strong style="color:#fff;">'+escapeHTML(domain)+'</strong>');
   overlay.innerHTML = `
-    <div style="background:var(--panel,#0c0f18);border:1px solid rgba(255,249,62,.1);border-radius:16px;width:440px;max-width:92vw;box-shadow:0 24px 80px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.03) inset;animation:ftzSlideUp .2s ease;">
+    <div style="background:var(--panel,#13161d);border:1px solid rgba(255,249,62,.1);border-radius:16px;width:440px;max-width:92vw;box-shadow:0 24px 80px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.03) inset;animation:ftzSlideUp .2s ease;">
       <div style="padding:28px 28px 0;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -3481,7 +3481,7 @@ function switchNewDMTab(tab) {
   const dmPane = document.getElementById('ndm-pane-dm');
   const gcPane = document.getElementById('ndm-pane-gc');
   if (!dmBtn||!gcBtn||!dmPane||!gcPane) return;
-  const accentStyle = 'background:var(--accent);color:#060810;font-weight:700;';
+  const accentStyle = 'background:var(--accent);color:#0f1119;font-weight:700;';
   const inactiveStyle = 'background:transparent;color:var(--muted-light);font-weight:600;';
   if (tab === 'dm') {
     dmBtn.style.cssText += accentStyle; gcBtn.style.cssText += inactiveStyle;
@@ -3950,7 +3950,7 @@ async function addMembersToGC(gcId) {
 
   // Show a simple overlay to pick members
   const ov = document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;background:rgba(4,6,10,.85);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(12,14,20,.85);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
   ov.innerHTML=`
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:26px;max-width:380px;width:100%;">
       <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:14px;">Add Members</div>
@@ -3964,7 +3964,7 @@ async function addMembersToGC(gcId) {
       </div>
       <div style="display:flex;gap:8px;">
         <button onclick="this.closest('div[style]').closest('div[style]').remove()" style="flex:1;padding:9px;background:var(--panel2);border:1px solid var(--border);border-radius:11px;cursor:pointer;color:var(--muted-light);">Cancel</button>
-        <button id="add-gc-confirm" style="flex:1;padding:9px;background:var(--accent);color:#060810;font-weight:700;border:none;border-radius:11px;cursor:pointer;">Add</button>
+        <button id="add-gc-confirm" style="flex:1;padding:9px;background:var(--accent);color:#0f1119;font-weight:700;border:none;border-radius:11px;cursor:pointer;">Add</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
@@ -6346,8 +6346,8 @@ function _showBanScreen(ban) {
   const reason = ban.reason || ban.note || '';
   const category = ban.category || 'Account behavior';
   const bannedBy = ban.bannedBy || ban.by || 'Fortized Moderation';
-  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:99999;background:#080a0f;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
-    <div style="background:rgba(12,15,22,.95);border:1px solid #1a2030;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
+  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:99999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
+    <div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
       <div style="width:68px;height:68px;border-radius:18px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="12" r="11" stroke="#f87171" stroke-width="2" fill="none"/>
@@ -6356,7 +6356,7 @@ function _showBanScreen(ban) {
       </div>
       <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px;">Account Banned</div>
       <div style="font-size:14px;color:#8b95a8;margin-bottom:28px;line-height:1.7;">Our content monitors have determined that your behavior at Fortized has been in violation of our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Terms of Use</a>.</div>
-      <div style="background:#0c0f18;border:1px solid #1a2030;border-radius:14px;padding:20px 24px;text-align:left;margin-bottom:24px;">
+      <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:20px 24px;text-align:left;margin-bottom:24px;">
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="color:#5a6478;font-size:13px;">Reviewed</span>
           <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${_fmtDateEU(bannedAt)}</span>
@@ -6396,8 +6396,8 @@ function _showSuspendScreen(data) {
       setTimeout(() => { location.reload(); }, msLeft + 1000);
     }
   }
-  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:99999;background:#080a0f;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
-    <div style="background:rgba(12,15,22,.95);border:1px solid #1a2030;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
+  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:99999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
+    <div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
       <div style="width:68px;height:68px;border-radius:18px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="12" r="11" stroke="#f59e0b" stroke-width="2" fill="none"/>
@@ -6407,7 +6407,7 @@ function _showSuspendScreen(data) {
       </div>
       <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px;">Account Suspended</div>
       <div style="font-size:14px;color:#8b95a8;margin-bottom:28px;line-height:1.7;">Our content monitors have determined that your behavior at Fortized has been in violation of our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Terms of Use</a>. As a result, your account has been temporarily suspended.</div>
-      <div style="background:#0c0f18;border:1px solid #1a2030;border-radius:14px;padding:20px 24px;text-align:left;margin-bottom:24px;">
+      <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:20px 24px;text-align:left;margin-bottom:24px;">
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="color:#5a6478;font-size:13px;">Reviewed</span>
           <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${_fmtDateEU(suspendedAt)}</span>
@@ -6431,7 +6431,7 @@ function _showSuspendScreen(data) {
         </div>
       </div>
       <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">Your account will be reactivated on <span style="color:#fff93e;font-weight:600;">${durationText}</span>. To appeal, visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Fortized Support</a></div>
-      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f59e0b;border:none;border-radius:10px;color:#080a0f;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;" onmouseover="this.style.opacity='.85';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)'">Log Out</button>
+      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f59e0b;border:none;border-radius:10px;color:#0f1119;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;" onmouseover="this.style.opacity='.85';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)'">Log Out</button>
     </div>
   </div>`;
 }
@@ -6443,7 +6443,7 @@ function _showWarningOverlay(reason, issuedBy, contentData) {
   const overlay = document.createElement('div');
   overlay.id = 'ftz-warning-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(8,10,15,.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .3s ease;';
-  overlay.innerHTML = `<div style="background:rgba(12,15,22,.95);border:1px solid #1a2030;width:100%;max-width:520px;padding:40px 36px;text-align:center;border-radius:22px;box-shadow:0 32px 80px rgba(0,0,0,.7);">
+  overlay.innerHTML = `<div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;width:100%;max-width:520px;padding:40px 36px;text-align:center;border-radius:22px;box-shadow:0 32px 80px rgba(0,0,0,.7);">
     <div style="width:60px;height:60px;border-radius:16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
         <path d="M12 2L1 21h22L12 2z" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linejoin="round"/>
@@ -6453,7 +6453,7 @@ function _showWarningOverlay(reason, issuedBy, contentData) {
     </div>
     <div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.3px;">Warning</div>
     <div style="font-size:14px;color:#8b95a8;margin-bottom:24px;line-height:1.7;">You have been issued a warning by a Fortized moderator.</div>
-    <div style="background:#0c0f18;border:1px solid #1a2030;border-radius:14px;padding:18px 22px;text-align:left;margin-bottom:24px;">
+    <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:18px 22px;text-align:left;margin-bottom:24px;">
       <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
         <span style="color:#5a6478;font-size:13px;">Issued</span>
         <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${_fmtDateEU(new Date())}</span>
@@ -6469,7 +6469,7 @@ function _showWarningOverlay(reason, issuedBy, contentData) {
       </div>
     </div>
     <div style="font-size:12px;color:#5a6478;margin-bottom:20px;">Please review our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Terms of Use</a> to avoid further action on your account.</div>
-    <button onclick="document.getElementById('ftz-warning-overlay').remove()" style="padding:12px 48px;background:#fff93e;border:none;border-radius:10px;color:#080a0f;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;box-shadow:0 0 20px rgba(255,249,62,.2);" onmouseover="this.style.opacity='.85';this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 28px rgba(255,249,62,.35)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)';this.style.boxShadow='0 0 20px rgba(255,249,62,.2)'">Acknowledge</button>
+    <button onclick="document.getElementById('ftz-warning-overlay').remove()" style="padding:12px 48px;background:#fff93e;border:none;border-radius:10px;color:#0f1119;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;box-shadow:0 0 20px rgba(255,249,62,.2);" onmouseover="this.style.opacity='.85';this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 28px rgba(255,249,62,.35)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)';this.style.boxShadow='0 0 20px rgba(255,249,62,.2)'">Acknowledge</button>
   </div>`;
   document.body.appendChild(overlay);
 }
@@ -7900,7 +7900,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
     { id:'poll', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h2v5H7z"/><path d="M11 8h2v9h-2z"/><path d="M15 10h2v7h-2z"/></svg>`, label:'Poll', desc:'Create polls and gather opinions' },
   ];
   const selType = preselectedType || 'text';
-  overlay.innerHTML = `<div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.08);border-radius:20px;max-width:460px;width:92%;box-shadow:0 24px 80px rgba(0,0,0,.7);animation:embedIn .18s cubic-bezier(.22,1,.36,1) both;">
+  overlay.innerHTML = `<div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.08);border-radius:20px;max-width:460px;width:92%;box-shadow:0 24px 80px rgba(0,0,0,.7);animation:embedIn .18s cubic-bezier(.22,1,.36,1) both;">
     <div style="padding:26px 28px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
         <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;">Create Room</div>
@@ -7951,7 +7951,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;">
         <button id="crm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Cancel</button>
-        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:#060810;font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">Create Room</button>
+        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:#0f1119;font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">Create Room</button>
       </div>
     </div>
   </div>`;
@@ -8857,7 +8857,7 @@ function renderBSettingsMain(tab) {
 
       <!-- Sub-tabs for Emoji vs Stickers -->
       <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
-        <button id="bi-tab-emojis" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:#060810;border:none;" onclick="_switchBITab('emojis')">Custom Emojis</button>
+        <button id="bi-tab-emojis" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:#0f1119;border:none;" onclick="_switchBITab('emojis')">Custom Emojis</button>
         <button id="bi-tab-stickers" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBITab('stickers')">Stickers</button>
       </div>
 
@@ -9345,7 +9345,7 @@ function renderBSettingsMain(tab) {
 
       <!-- Sub-tabs: Deployed / My Bots / Marketplace -->
       <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
-        <button id="bots-tab-deployed" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:#060810;border:none;" onclick="_switchBotsSubTab('deployed')">Deployed</button>
+        <button id="bots-tab-deployed" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:#0f1119;border:none;" onclick="_switchBotsSubTab('deployed')">Deployed</button>
         <button id="bots-tab-mybots" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBotsSubTab('mybots')">My Bots</button>
         <button id="bots-tab-marketplace" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBotsSubTab('marketplace')">Marketplace</button>
       </div>
@@ -10083,12 +10083,12 @@ function _switchBITab(tab) {
   if (tab === 'emojis') {
     if (emojiSection) emojiSection.style.display = '';
     if (stickerSection) stickerSection.style.display = 'none';
-    if (emojiTab) { emojiTab.style.background = 'var(--accent)'; emojiTab.style.color = '#060810'; emojiTab.style.fontWeight = '700'; }
+    if (emojiTab) { emojiTab.style.background = 'var(--accent)'; emojiTab.style.color = '#0f1119'; emojiTab.style.fontWeight = '700'; }
     if (stickerTab) { stickerTab.style.background = 'transparent'; stickerTab.style.color = 'var(--muted-light)'; stickerTab.style.fontWeight = '600'; }
   } else {
     if (emojiSection) emojiSection.style.display = 'none';
     if (stickerSection) stickerSection.style.display = '';
-    if (stickerTab) { stickerTab.style.background = 'var(--accent)'; stickerTab.style.color = '#060810'; stickerTab.style.fontWeight = '700'; }
+    if (stickerTab) { stickerTab.style.background = 'var(--accent)'; stickerTab.style.color = '#0f1119'; stickerTab.style.fontWeight = '700'; }
     if (emojiTab) { emojiTab.style.background = 'transparent'; emojiTab.style.color = 'var(--muted-light)'; emojiTab.style.fontWeight = '600'; }
   }
 }
@@ -10101,7 +10101,7 @@ function _switchBotsSubTab(tab) {
     const btn = document.getElementById('bots-tab-'+t);
     if (section) section.style.display = (t===tab)?'':'none';
     if (btn) {
-      if (t===tab) { btn.style.background='var(--accent)'; btn.style.color='#060810'; btn.style.fontWeight='700'; }
+      if (t===tab) { btn.style.background='var(--accent)'; btn.style.color='#0f1119'; btn.style.fontWeight='700'; }
       else { btn.style.background='transparent'; btn.style.color='var(--muted-light)'; btn.style.fontWeight='600'; }
     }
   });
@@ -11635,7 +11635,7 @@ function buildProfileView(tab) {
               </div>
             </div>
             <!-- CTA -->
-            <button style="flex-shrink:0;padding:11px 24px;background:linear-gradient(135deg,var(--accent),#ffe566);color:#060810;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 4px 20px rgba(254,248,61,.2);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(254,248,61,.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(254,248,61,.2)'">
+            <button style="flex-shrink:0;padding:11px 24px;background:linear-gradient(135deg,var(--accent),#ffe566);color:#0f1119;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 4px 20px rgba(254,248,61,.2);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(254,248,61,.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(254,248,61,.2)'">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
               Explore
             </button>
@@ -11815,7 +11815,7 @@ function buildProfileView(tab) {
                   <div style="font-size:11.5px;color:rgba(255,255,255,.45);">This is how your messages look!</div>
                 </div>
                 <div style="display:flex;gap:6px;margin-top:10px;">
-                  <button style="flex:1;padding:8px;background:${themeC1||'var(--accent)'};border:none;border-radius:8px;color:${themeC1?'#fff':'#080a0f'};font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">Edit Profile</button>
+                  <button style="flex:1;padding:8px;background:${themeC1||'var(--accent)'};border:none;border-radius:8px;color:${themeC1?'#fff':'#0f1119'};font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">Edit Profile</button>
                   <button onclick="viewUserProfile(CU.username)" style="flex:1;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:8px;color:rgba(255,255,255,.55);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;">View Profile</button>
                 </div>
               </div>
@@ -12065,7 +12065,7 @@ function buildProfileView(tab) {
     const currentTheme = localStorage.getItem(_appearanceKey()) || 'fortized_classic';
     const unlocked = CU?.unlockedAppearances || [];
     const allThemes = [
-      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', bg:'#0a0d14', sidebar:'#13161d', channel:'#0f1219', panel:'#161a23', accent:'#fef83d', border:'#252d3d', muted:'#4e5a6f', bodyGrad:'', free:true},
+      {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', bg:'#13161d', sidebar:'#181a1f', channel:'#15171e', panel:'#1b1e25', accent:'#fef83d', border:'#252b3a', muted:'#4e5a6f', bodyGrad:'', free:true},
       {id:'dark_realm',       name:'Dark Realm',       desc:'Deeper darkness, yellow glow',   bg:'#030407', sidebar:'#050710', channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:'', free:true},
       {id:'midnight_citadel', name:'Midnight Citadel', desc:'Deep blue fortress at twilight', bg:'#050812', sidebar:'#080e1a', channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:'', cost:185, locked:!unlocked.includes('midnight_citadel')},
       {id:'onyx_pure',        name:'Onyx Pure',        desc:'Darkest theme with subtle purple gradient', bg:'#010103', sidebar:'#020206', channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)', cost:150, locked:!unlocked.includes('onyx_pure')},
@@ -12265,7 +12265,7 @@ function buildProfileView(tab) {
         </div>
         <!-- Card footer -->
         <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;">
-          ${isActive ? '<div style="width:14px;height:14px;border-radius:50%;background:#fef83d;flex-shrink:0;box-shadow:0 0 8px rgba(254,248,61,.4);display:flex;align-items:center;justify-content:center;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#060810" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' : '<div style="width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.15);flex-shrink:0;"></div>'}
+          ${isActive ? '<div style="width:14px;height:14px;border-radius:50%;background:#fef83d;flex-shrink:0;box-shadow:0 0 8px rgba(254,248,61,.4);display:flex;align-items:center;justify-content:center;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0f1119" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' : '<div style="width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.15);flex-shrink:0;"></div>'}
           <div style="flex:1;min-width:0;">
             <div style="font-size:12px;font-weight:700;color:${txtCol};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.name}</div>
             <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.desc}</div>
@@ -12319,7 +12319,7 @@ function buildProfileView(tab) {
           <div style="font-size:32px;margin-bottom:12px;opacity:.4;">🎨</div>
           <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:rgba(255,255,255,.6);margin-bottom:6px;">No owned appearances yet</div>
           <div style="font-size:12.5px;color:rgba(255,255,255,.3);max-width:300px;margin:0 auto 18px;line-height:1.55;">Visit the Atelier Shop to browse and purchase exclusive appearances with Onyx.</div>
-          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="background:#fef83d;color:#060810;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;padding:10px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 12px rgba(254,248,61,.15);" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(254,248,61,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 12px rgba(254,248,61,.15)'">Browse the Atelier Shop</button>
+          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="background:#fef83d;color:#0f1119;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;padding:10px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 12px rgba(254,248,61,.15);" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(254,248,61,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 12px rgba(254,248,61,.15)'">Browse the Atelier Shop</button>
         </div>
       `}
 
@@ -12394,7 +12394,7 @@ function buildProfileView(tab) {
           <div style="font-size:44px;margin-bottom:14px;">🔒</div>
           <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Radiance+ Required</div>
           <div style="font-size:13.5px;color:rgba(255,255,255,.4);max-width:320px;margin:0 auto 22px;line-height:1.6;">Profile themes let you add a gradient stroke and custom colors around your profile card and avatar.</div>
-          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" style="background:#fef83d;color:#060810;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:11px 24px;cursor:pointer;">Get Radiance+</button>
+          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" style="background:#fef83d;color:#0f1119;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:11px 24px;cursor:pointer;">Get Radiance+</button>
         </div>
       </div>`;
     } else {
@@ -13623,7 +13623,7 @@ function showReportModal() {
       : '';
 
   overlay.innerHTML = `
-    <div style="max-width:440px;width:100%;border-radius:24px;background:linear-gradient(165deg,#0f1219,#0a0d14);border:1.5px solid rgba(248,113,113,.08);box-shadow:0 24px 80px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .15s cubic-bezier(.22,1,.36,1);">
+    <div style="max-width:440px;width:100%;border-radius:24px;background:linear-gradient(165deg,#15171e,#13161d);border:1.5px solid rgba(248,113,113,.08);box-shadow:0 24px 80px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .15s cubic-bezier(.22,1,.36,1);">
       <!-- Header -->
       <div style="background:linear-gradient(135deg,rgba(248,113,113,.06),rgba(248,113,113,.02));padding:22px 26px 18px;border-bottom:1px solid rgba(255,255,255,.04);">
         <div style="display:flex;align-items:center;gap:12px;">
@@ -14159,7 +14159,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       const timeFull = r.createdAt ? new Date(r.createdAt).toLocaleString() : '–';
       const timeAgo = r.createdAt ? _relTime(r.createdAt) : '';
       const reportedAtFull = r.reportedAt ? new Date(r.reportedAt).toLocaleString() : '';
-      return `<div style="background:var(--panel,#101420);border:1px solid ${isPend?'rgba(248,113,113,.15)':'rgba(255,255,255,.06)'};border-radius:14px;overflow:hidden;${isPend?'box-shadow:0 0 0 1px rgba(248,113,113,.06),0 2px 12px rgba(248,113,113,.04);':''}">
+      return `<div style="background:var(--panel,#1b1e25);border:1px solid ${isPend?'rgba(248,113,113,.15)':'rgba(255,255,255,.06)'};border-radius:14px;overflow:hidden;${isPend?'box-shadow:0 0 0 1px rgba(248,113,113,.06),0 2px 12px rgba(248,113,113,.04);':''}">
         <!-- Report header bar -->
         <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;background:${isPend?'rgba(248,113,113,.04)':'rgba(255,255,255,.02)'};border-bottom:1px solid rgba(255,255,255,.04);">
           <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${_statusBg(r)};color:${_statusColor(r)};text-transform:uppercase;letter-spacing:.5px;">${r.status||'pending'}</span>
@@ -14299,7 +14299,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Bans (${bans.length})</div>
         <button onclick="showCustomInput('Ban User','Enter username to ban:',(name)=>{if(!name)return;showCustomInput('Ban Reason','Enter reason:',(reason)=>{if(!reason)return;const b=JSON.parse(localStorage.getItem('ftz_bans')||'[]');const obj={username:name.trim(),reason,bannedBy:CU.username,bannedAt:new Date().toISOString()};b.push(obj);localStorage.setItem('ftz_bans',JSON.stringify(b));_saveBanToFirebase(obj);logAudit('ban',name.trim(),reason);toast(name.trim()+' banned','success');_loadAdminPage('bans');})})" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;">+ Ban User</button>
       </div>
-      ${bans.length?`<div style="display:flex;flex-direction:column;gap:8px;">${bans.map((b,i)=>`<div style="background:var(--panel,#101420);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+      ${bans.length?`<div style="display:flex;flex-direction:column;gap:8px;">${bans.map((b,i)=>`<div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
         <div style="flex:1;">
           <div style="font-weight:600;">${escapeHTML(b.username)}</div>
           <div style="font-size:11.5px;color:rgba(255,255,255,.4);">Reason: ${escapeHTML(b.reason||'–')}</div>
@@ -14386,20 +14386,20 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:20px;">Economy</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;max-width:800px;margin-bottom:20px;">
-        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
+        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
           <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> Give Onyx</div>
           <input class="settings-input" id="eco-username" placeholder="Username" style="margin-bottom:9px;">
           <input class="settings-input" id="eco-amount" type="number" placeholder="Amount" style="margin-bottom:11px;">
           <button onclick="adminGiveOnyx()" style="width:100%;padding:8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:9px;color:var(--accent);cursor:pointer;font-weight:700;">Give Onyx</button>
         </div>
-        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
+        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
           <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Grant Radiance</div>
           <input class="settings-input" id="radiance-username" placeholder="Username" style="margin-bottom:9px;">
           <select class="settings-input" id="radiance-days" style="margin-bottom:11px;"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="180">180 days</option><option value="365">365 days</option></select>
           <button onclick="adminGrantRadiance()" style="width:100%;padding:8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:9px;color:var(--accent);cursor:pointer;font-weight:700;margin-bottom:8px;">Grant Radiance</button>
           <button onclick="adminGrantRadiancePlus()" style="width:100%;padding:8px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:9px;color:#a855f7;cursor:pointer;font-weight:700;">Grant Radiance+</button>
         </div>
-        <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
+        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
           <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;">🎟️ Trial Link</div>
           <select class="settings-input" id="trial-days" style="margin-bottom:11px;"><option value="7">7 days</option><option value="14">14 days</option><option value="30" selected>30 days</option></select>
           <button onclick="generateTrialLink()" style="width:100%;padding:8px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);border-radius:9px;color:#3ecf6e;cursor:pointer;font-weight:700;">Generate Trial Link</button>
@@ -14408,7 +14408,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>
       ${trialLinks.length?`
       <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:10px;">Recent Trial Links</div>
-      <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;max-width:800px;">
+      <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;max-width:800px;">
         ${trialLinks.slice(-5).reverse().map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
           <div style="flex:1;min-width:0;font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(t.code||t.link||'–')}</div>
           <div style="font-size:11px;color:rgba(255,255,255,.3);">${t.days}d · ${t.created||''}</div>
@@ -14446,7 +14446,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           </select>
         </div>
       </div>
-      <div id="audit-log-container" style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
+      <div id="audit-log-container" style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
         ${log.length?log.map(e=>`<div class="audit-row" data-action="${escapeHTML(e.action||'')}" data-text="${escapeHTML((e.action||'')+(e.target||'')+(e.by||'')+(e.note||''))}" style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
           <div style="font-size:10.5px;font-family:monospace;color:rgba(255,255,255,.22);flex-shrink:0;min-width:130px;">${e.at?new Date(e.at).toLocaleString():(e.timestamp?new Date(e.timestamp).toLocaleString():'')}</div>
           <div style="flex:1;font-size:12.5px;min-width:0;"><strong style="color:#f87171;">${escapeHTML(e.action||'?')}</strong> <span style="color:rgba(255,255,255,.5);">·</span> ${escapeHTML(e.target||'')}${e.note?` <span style="color:rgba(255,255,255,.3);">— ${escapeHTML(e.note)}</span>`:''}</div>
@@ -14471,7 +14471,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           const labelColor = item.aiLabel==='EXPLICIT'||item.aiLabel==='BANNED_CONTENT'?'#f87171':item.aiLabel==='SUGGESTIVE'?'#f59e0b':'#60a5fa';
           const target = item.uploader || null;
           const mediaSrc = item.thumbnail||item.url||item.dataUrl||'';
-          return `<div style="background:var(--panel,#101420);border:1px solid rgba(245,158,11,.15);border-radius:14px;overflow:hidden;">
+          return `<div style="background:var(--panel,#1b1e25);border:1px solid rgba(245,158,11,.15);border-radius:14px;overflow:hidden;">
           <!-- Header bar -->
           <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;background:rgba(245,158,11,.04);border-bottom:1px solid rgba(255,255,255,.04);">
             <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${labelColor}18;color:${labelColor};text-transform:uppercase;letter-spacing:.5px;">${escapeHTML(item.aiLabel||'FLAGGED')}</span>
@@ -14544,7 +14544,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
         <!-- Column 1: Controls & Moderation -->
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
+          <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
             <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Platform Controls</div>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.maintenanceMode?'checked':''} onchange="_updateGlobalSetting('maintenanceMode',this.checked)"><span style="font-size:12px;${gs.maintenanceMode?'color:#f87171;font-weight:600;':''}">Maintenance Mode</span></label>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.disableRegistration?'checked':''} onchange="_updateGlobalSetting('disableRegistration',this.checked)"><span style="font-size:12px;">Disable Registrations</span></label>
@@ -14552,7 +14552,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.disableBastionCreation?'checked':''} onchange="_updateGlobalSetting('disableBastionCreation',this.checked)"><span style="font-size:12px;">Disable Bastion Creation</span></label>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.requireEmailVerification?'checked':''} onchange="_updateGlobalSetting('requireEmailVerification',this.checked)"><span style="font-size:12px;">Require Email for Signup</span></label>
           </div>
-          <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
+          <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
             <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Moderation</div>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.autoModEnabled?'checked':''} onchange="_updateGlobalSetting('autoModEnabled',this.checked)"><span style="font-size:12px;">Auto-Mod (profanity filter)</span></label>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.linkPreviewEnabled!==false?'checked':''} onchange="_updateGlobalSetting('linkPreviewEnabled',this.checked)"><span style="font-size:12px;">Allow Link Previews</span></label>
@@ -14562,7 +14562,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         </div>
         <!-- Column 2: Announcement & Status -->
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="background:var(--panel,#101420);border:1px solid rgba(255,249,62,.1);border-radius:10px;padding:12px 14px;">
+          <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,249,62,.1);border-radius:10px;padding:12px 14px;">
             <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent,#fff93e);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 005 2.18"/><path d="M14 21a2 2 0 01-4 0"/><path d="M13.73 21a2 2 0 01-3.46 0"/><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg> System Announcement</div>
             <div style="font-size:10px;color:rgba(255,255,255,.3);margin-bottom:8px;">Broadcasts a banner to all users in real-time.</div>
             <textarea class="settings-input" id="gs-announcement" placeholder="Type announcement…" style="width:100%;font-size:12px;padding:8px;min-height:60px;resize:vertical;margin-bottom:8px;">${escapeHTML(gs.announcement||'')}</textarea>
@@ -14572,7 +14572,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             </div>
             ${gs.announcement?'<div style="margin-top:8px;padding:8px 12px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.08);border-radius:8px;font-size:11px;color:rgba(255,249,62,.6);"><strong>Active:</strong> '+escapeHTML(gs.announcement)+'</div>':''}
           </div>
-          <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
+          <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
             <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Platform Status</div>
             <div style="margin-bottom:6px;"><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Status Page Message</div><input class="settings-input" type="text" value="${escapeHTML(gs.statusMessage||'')}" placeholder="All systems operational" style="width:100%;font-size:12px;padding:6px 8px;" onchange="_updateGlobalSetting('statusMessage',this.value)"></div>
             <div style="margin-bottom:6px;"><div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px;">Platform Version</div><input class="settings-input" type="text" value="${escapeHTML(gs.platformVersion||'1.0.0')}" placeholder="1.0.0" style="width:100%;font-size:12px;padding:6px 8px;" onchange="_updateGlobalSetting('platformVersion',this.value)"></div>
@@ -14581,7 +14581,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         </div>
         <!-- Column 3: Deployment -->
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="background:var(--panel,#101420);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 14px;">
+          <div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 14px;">
             <div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;color:#f87171;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Deployment</div>
             <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;">Push updates and manage active sessions.</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
@@ -14589,7 +14589,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
               <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Reset All Sessions</button>
             </div>
           </div>
-          <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
+          <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
             <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Quick Actions</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
               <button onclick="_purgeDeletedMessages()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Purge Deleted Messages</button>
@@ -14610,7 +14610,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:18px;">Only super admins can manage staff roles.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:900px;">
         <!-- Super Admins -->
-        <div style="background:var(--panel,#101420);border:1px solid rgba(255,215,62,.15);border-radius:12px;padding:18px;">
+        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,215,62,.15);border-radius:12px;padding:18px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffd93e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-5 4-5-4-5 4-3-4z"/><path d="M5 16h14v3H5z"/></svg>
             <span style="font-weight:700;color:#ffd93e;">Super Admins</span>
@@ -14623,7 +14623,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           </div>`).join('')}
         </div>
         <!-- Admins -->
-        <div style="background:var(--panel,#101420);border:1px solid rgba(248,113,113,.15);border-radius:12px;padding:18px;">
+        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.15);border-radius:12px;padding:18px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <span style="font-weight:700;color:#f87171;">Admins</span>
@@ -14640,7 +14640,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           </div>
         </div>
         <!-- Moderators -->
-        <div style="background:var(--panel,#101420);border:1px solid rgba(96,165,250,.15);border-radius:12px;padding:18px;">
+        <div style="background:var(--panel,#1b1e25);border:1px solid rgba(96,165,250,.15);border-radius:12px;padding:18px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
             <span style="font-weight:700;color:#60a5fa;">Moderators</span>
@@ -14657,7 +14657,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           </div>
         </div>
       </div>
-      <div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;margin-top:16px;max-width:300px;">
+      <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;margin-top:16px;max-width:300px;">
         <div style="font-weight:700;margin-bottom:10px;">Staff Access Code</div>
         <div style="font-family:monospace;font-size:16px;color:var(--accent);margin-bottom:8px;">1478</div>
         <div style="font-size:11px;color:rgba(255,255,255,.35);">Share this code with staff members to grant console access.</div>
@@ -14683,7 +14683,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:3px;">${isSA ? 'All tickets & user feedback' : 'Non-sensitive tickets only'}</div>
         </div>
         <div style="display:flex;gap:8px;">
-          <select id="_ticket-filter" onchange="_filterTickets()" style="background:var(--channel,#0d1018);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;">
+          <select id="_ticket-filter" onchange="_filterTickets()" style="background:var(--channel,#15171e);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;">
             <option value="all">All</option>
             <option value="open">Open</option>
             <option value="closed">Closed</option>
@@ -15102,7 +15102,7 @@ async function _loadAdminSuspensions() {
     suspensions.sort((a,b) => (b.active?1:0) - (a.active?1:0) || new Date(b.suspendedAt||0) - new Date(a.suspendedAt||0));
     if (!suspensions.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">No suspensions found</div>'; return; }
     el.innerHTML = suspensions.map(s => `
-      <div style="background:var(--panel,#101420);border:1px solid ${s.active?'rgba(168,85,247,.15)':'rgba(255,255,255,.06)'};border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <div style="background:var(--panel,#1b1e25);border:1px solid ${s.active?'rgba(168,85,247,.15)':'rgba(255,255,255,.06)'};border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:6px;">
         <div style="width:8px;height:8px;border-radius:50%;background:${s.active?'#a855f7':'rgba(255,255,255,.15)'};${s.active?'box-shadow:0 0 6px rgba(168,85,247,.5);':''}flex-shrink:0;"></div>
         <div style="flex:1;">
           <div style="font-weight:600;font-size:13.5px;">${escapeHTML(s.username)} <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:100px;${s.active?'background:rgba(168,85,247,.1);color:#a855f7;':'background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);'}">${s.active?'ACTIVE':'EXPIRED'}</span></div>
@@ -15154,7 +15154,7 @@ function _renderTickets() {
     const catCol = catColors[t.category] || '#60a5fa';
     const isClosed = t.status === 'closed';
     const isSensitive = _sensitiveCategories.includes(t.category);
-    return `<div style="background:var(--panel,#101420);border:1px solid ${isSensitive?'rgba(248,113,113,.12)':'rgba(255,255,255,.06)'};border-radius:10px;padding:14px 18px;margin-bottom:8px;">
+    return `<div style="background:var(--panel,#1b1e25);border:1px solid ${isSensitive?'rgba(248,113,113,.12)':'rgba(255,255,255,.06)'};border-radius:10px;padding:14px 18px;margin-bottom:8px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <div style="width:8px;height:8px;border-radius:50%;background:${isClosed?'rgba(255,255,255,.15)':'#3ecf6e'};${isClosed?'':'box-shadow:0 0 6px rgba(62,207,110,.5);'}flex-shrink:0;"></div>
         <div style="flex:1;font-weight:700;font-size:14px;">${escapeHTML(t.subject||'No Subject')}</div>
@@ -15478,7 +15478,7 @@ function _showMaintenanceScreen() {
   document.getElementById('maintenance-overlay')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'maintenance-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:var(--bg,#07090e);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:40px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:var(--bg,#0f1119);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:40px;';
   const gs = _globalSettings || {};
   overlay.innerHTML = `
     <div style="width:80px;height:80px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;">🔧</div>
@@ -15990,13 +15990,13 @@ function adminActionUser(username, action) {
     // Show suspension dialog with duration unit picker
     const _suspDialog = document.createElement('div');
     _suspDialog.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;font-family:inherit;';
-    _suspDialog.innerHTML=`<div style="background:var(--panel,#101420);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px 32px;max-width:400px;width:90%;">
+    _suspDialog.innerHTML=`<div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px 32px;max-width:400px;width:90%;">
       <div style="font-size:18px;font-weight:800;margin-bottom:16px;color:#fff;">Suspend User</div>
       <div style="margin-bottom:12px;">
         <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px;">Duration</div>
         <div style="display:flex;gap:8px;">
           <input id="_susp-amount" class="settings-input" type="number" min="1" value="1" style="flex:1;">
-          <select id="_susp-unit" class="settings-input" style="flex:1;background:var(--channel,#0d1018);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px;">
+          <select id="_susp-unit" class="settings-input" style="flex:1;background:var(--channel,#15171e);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px;">
             <option value="minutes">Minutes</option>
             <option value="hours" selected>Hours</option>
             <option value="days">Days</option>
@@ -16259,10 +16259,10 @@ function showVerifyQuiz() {
   QUIZ_QUESTIONS = _pickQuizQuestions();
   const overlay = document.createElement('div');
   overlay.id = 'verify-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.98);backdrop-filter:blur(32px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.98);backdrop-filter:blur(32px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `
     <div style="width:100%;max-width:560px;">
-      <div id="verify-intro" style="background:rgba(12,15,22,.96);border:1px solid #1a2030;border-radius:24px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.8);">
+      <div id="verify-intro" style="background:rgba(19,22,29,.96);border:1px solid #252b3a;border-radius:24px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.8);">
         <div style="height:4px;background:linear-gradient(90deg,#f87171,var(--accent),#3ecf6e);"></div>
         <div style="padding:44px 40px 40px;text-align:center;">
           <img src="/FortizedSecurity logo.png" alt="Fortized Security" style="width:72px;height:72px;object-fit:contain;border-radius:18px;margin:0 auto 20px;display:block;" onerror="this.style.display='none'">
@@ -16277,10 +16277,10 @@ function showVerifyQuiz() {
           <div style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.12);border-left:3px solid #f87171;border-radius:10px;padding:12px 16px;text-align:left;font-size:12.5px;color:var(--muted-light);line-height:1.6;margin-bottom:28px;">
             <strong style="color:#f87171;">Required:</strong> This verification is mandatory. You cannot access Fortized until you pass the safety check. Questions are randomised from a pool.
           </div>
-          <button onclick="document.getElementById('verify-intro').style.display='none';document.getElementById('verify-quiz').style.display='';" style="padding:14px 36px;background:var(--accent);border:none;border-radius:12px;color:#080a0f;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .18s;box-shadow:0 0 24px rgba(255,249,62,.2);" onmouseover="this.style.boxShadow='0 0 36px rgba(255,249,62,.35)';this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 0 24px rgba(255,249,62,.2)';this.style.transform='translateY(0)'">Begin Verification</button>
+          <button onclick="document.getElementById('verify-intro').style.display='none';document.getElementById('verify-quiz').style.display='';" style="padding:14px 36px;background:var(--accent);border:none;border-radius:12px;color:#0f1119;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .18s;box-shadow:0 0 24px rgba(255,249,62,.2);" onmouseover="this.style.boxShadow='0 0 36px rgba(255,249,62,.35)';this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 0 24px rgba(255,249,62,.2)';this.style.transform='translateY(0)'">Begin Verification</button>
         </div>
       </div>
-      <div id="verify-quiz" style="display:none;background:rgba(12,15,22,.96);border:1px solid #1a2030;border-radius:24px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.8);">
+      <div id="verify-quiz" style="display:none;background:rgba(19,22,29,.96);border:1px solid #252b3a;border-radius:24px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.8);">
         <div style="height:4px;background:linear-gradient(90deg,#f87171,var(--accent),#3ecf6e);"></div>
         <div style="padding:32px 36px 36px;">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
@@ -16417,7 +16417,7 @@ function showDOBSetup() {
   if (CU.dateOfBirth) return; // already set
   const overlay = document.createElement('div');
   overlay.id = 'dob-setup-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.97);backdrop-filter:blur(20px);z-index:6000;display:flex;align-items:center;justify-content:center;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.97);backdrop-filter:blur(20px);z-index:6000;display:flex;align-items:center;justify-content:center;';
   overlay.innerHTML = `
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:40px;max-width:440px;width:90%;text-align:center;">
       <div style="width:70px;height:70px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 20px;">🛡️</div>
@@ -16725,7 +16725,7 @@ async function _showInviteFriendsPanel() {
   ov.className = 'input-dialog-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;animation:inviteOverlayIn .3s ease both;';
 
-  ov.innerHTML = `<div style="background:var(--panel,#0c0f18);border:1.5px solid rgba(255,249,62,.1);border-radius:18px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 80px rgba(255,249,62,.03);animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;overflow:hidden;">
+  ov.innerHTML = `<div style="background:var(--panel,#13161d);border:1.5px solid rgba(255,249,62,.1);border-radius:18px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 80px rgba(255,249,62,.03);animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;overflow:hidden;">
     <!-- Header -->
     <div style="padding:20px 20px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
@@ -16792,7 +16792,7 @@ function _renderInviteFriendsList(list) {
     return `<div class="invite-friend-row" data-username="${escapeHTML(r.username)}" data-displayname="${escapeHTML(r.displayName.toLowerCase())}" style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;transition:background .12s;cursor:default;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background='transparent'">
       <div style="position:relative;flex-shrink:0;">
         <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.04);">${buildAvatarHTML(r.pfp,r.displayName,32)}</div>
-        <span style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${statusColor};border:2.5px solid var(--panel,#0c0f18);"></span>
+        <span style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${statusColor};border:2.5px solid var(--panel,#13161d);"></span>
       </div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(r.displayName)}</div>
@@ -16838,7 +16838,7 @@ function _copyInviteLink(btn) {
     const orig = btn.textContent;
     btn.textContent = 'Copied!';
     btn.style.background = '#3ecf6e';
-    btn.style.color = '#080a0f';
+    btn.style.color = '#0f1119';
     setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.style.color = ''; }, 2000);
   }).catch(() => toast('Failed to copy', 'error'));
 }
@@ -16877,7 +16877,7 @@ async function showBastionInviteUI(bastionIdx) {
   ov.className = 'input-dialog-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;animation:inviteOverlayIn .3s ease both;';
 
-  ov.innerHTML = `<div style="background:var(--panel,#0c0f18);border:1.5px solid rgba(255,249,62,.1);border-radius:18px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 80px rgba(255,249,62,.03);animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;overflow:hidden;">
+  ov.innerHTML = `<div style="background:var(--panel,#13161d);border:1.5px solid rgba(255,249,62,.1);border-radius:18px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 80px rgba(255,249,62,.03);animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;overflow:hidden;">
     <div style="padding:20px 20px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <h3 style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite friends to ${escapeHTML(b.name)}</h3>
@@ -16943,7 +16943,7 @@ function _renderBastionInviteFriendsList(list) {
     return `<div class="bastion-invite-friend-row" data-username="${escapeHTML(r.username)}" data-displayname="${escapeHTML(r.displayName.toLowerCase())}" style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;transition:background .12s;cursor:default;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background='transparent'">
       <div style="position:relative;flex-shrink:0;">
         <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.04);">${buildAvatarHTML(r.pfp,r.displayName,32)}</div>
-        <span style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${statusColor};border:2.5px solid var(--panel,#0c0f18);"></span>
+        <span style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${statusColor};border:2.5px solid var(--panel,#13161d);"></span>
       </div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(r.displayName)}</div>
@@ -16990,7 +16990,7 @@ function _copyBastionInviteLink(btn) {
     const orig = btn.textContent;
     btn.textContent = 'Copied!';
     btn.style.background = '#3ecf6e';
-    btn.style.color = '#080a0f';
+    btn.style.color = '#0f1119';
     setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.style.color = ''; }, 2000);
   }).catch(() => toast('Failed to copy', 'error'));
 }
@@ -17277,7 +17277,7 @@ async function showBastionInviteDialog(bastion, inviterName, inviteCode) {
         ${actionsHTML}
       </div>
       <div class="invite-right"${bastion.banner ? ` style="background-image:url('${escapeHTML(bastion.banner)}');background-size:cover;background-position:center;"` : ''}>
-        ${bastion.banner ? `<div style="position:absolute;inset:0;background:rgba(10,13,20,.4);"></div>` : `<div class="invite-right-icons">${iconsSVG.map(s=>`<div>${s}</div>`).join('')}</div>`}
+        ${bastion.banner ? `<div style="position:absolute;inset:0;background:rgba(19,22,29,.4);"></div>` : `<div class="invite-right-icons">${iconsSVG.map(s=>`<div>${s}</div>`).join('')}</div>`}
         <div class="invite-right-logo">${bastionLogoInner}</div>
       </div>
     </div>`;
@@ -17680,7 +17680,7 @@ async function checkTrialLink() {
   const existing = JSON.parse(localStorage.getItem('ftz_trial_links')||'[]');
   const linkData = existing.find(l=>l.code===trial);
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.97);backdrop-filter:blur(24px);z-index:9500;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.97);backdrop-filter:blur(24px);z-index:9500;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `
     <div style="background:var(--panel);border:1px solid rgba(255,249,62,.2);border-radius:28px;max-width:460px;width:100%;overflow:hidden;text-align:center;">
       <div style="height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);"></div>
@@ -18785,7 +18785,7 @@ function _openDisplayNameStyleModal() {
   const dn = CU.displayName || CU.username;
   const avHtml = CU.pfp
     ? `<img src="${escapeHTML(CU.pfp)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-    : `<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-weight:800;color:#060810;border-radius:50%;">${dn[0].toUpperCase()}</div>`;
+    : `<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-weight:800;color:#0f1119;border-radius:50%;">${dn[0].toUpperCase()}</div>`;
   const profileTheme = (CU.radiancePlus && new Date(CU.radiancePlus) > new Date()) ? CU.profileTheme : null;
 
   document.querySelector('.dns-modal-overlay')?.remove();
@@ -18794,7 +18794,7 @@ function _openDisplayNameStyleModal() {
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);animation:fadeIn .15s;';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 
-  overlay.innerHTML = `<div style="background:var(--panel,#161a23);border:1px solid rgba(255,255,255,.06);border-radius:20px;width:92%;max-width:800px;max-height:88vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);display:flex;">
+  overlay.innerHTML = `<div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:20px;width:92%;max-width:800px;max-height:88vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);display:flex;">
     <!-- Left: Controls -->
     <div style="flex:1;padding:28px 24px;overflow-y:auto;min-width:0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
@@ -18840,14 +18840,14 @@ function _openDisplayNameStyleModal() {
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);">Live Preview</div>
 
       <!-- 1: Profile Card Preview (mini replica) -->
-      <div style="border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:var(--panel,#161a23);">
+      <div style="border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:var(--panel,#1b1e25);">
         <div style="height:60px;background:${profileTheme ? `linear-gradient(135deg,${profileTheme.color1}66,${profileTheme.color2}44)` : 'linear-gradient(135deg,#1a1a2e,#0f3460)'};position:relative;">
           ${CU.banner ? `<img src="${escapeHTML(CU.banner)}" style="width:100%;height:100%;object-fit:cover;">` : ''}
           ${profileTheme ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${profileTheme.color1},${profileTheme.color2});opacity:.6;"></div>` : ''}
         </div>
         <div style="padding:0 14px 14px;margin-top:-20px;position:relative;">
           <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:8px;">
-            <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:3px solid var(--panel,#161a23);flex-shrink:0;background:var(--panel);">${avHtml}</div>
+            <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:3px solid var(--panel,#1b1e25);flex-shrink:0;background:var(--panel);">${avHtml}</div>
             <div style="padding-bottom:4px;">
               <div id="dns-preview-name" style="font-size:14px;font-weight:700;font-family:${_getDisplayFontCSS(curFont)};${_getDisplayEffectCSS(curEffect,curColor)}">${escapeHTML(dn)}</div>
               <div style="font-size:9.5px;color:rgba(255,255,255,.25);">@${escapeHTML(CU.username)}${CU.pronouns ? ' &middot; '+escapeHTML(CU.pronouns) : ''}</div>
@@ -18901,7 +18901,7 @@ function _openDisplayNameStyleModal() {
       <!-- Actions -->
       <div style="display:flex;gap:8px;margin-top:4px;">
         <button onclick="_dnSurpriseMe()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-family:Syne,sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg> Randomise</button>
-        <button onclick="_dnApplyStyle()" style="flex:1;padding:10px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:Syne,sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .12s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">Apply Style</button>
+        <button onclick="_dnApplyStyle()" style="flex:1;padding:10px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:Syne,sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .12s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">Apply Style</button>
       </div>
     </div>
   </div>`;
@@ -19147,7 +19147,7 @@ async function detectRunningApps() {
 function addRegisteredGame() {
   // Show app picker overlay
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.9);backdrop-filter:blur(16px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.9);backdrop-filter:blur(16px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:480px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;">
       <div style="padding:20px 22px 14px;border-bottom:1px solid var(--border);">
@@ -19549,7 +19549,7 @@ function showBastionApplicationForm(b) {
   const questions = b.applicationQuestions || [];
   if (!questions.length) { promptJoinPublicBastion(b.id || b.name); return; }
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.92);backdrop-filter:blur(16px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.92);backdrop-filter:blur(16px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
   let qHtml = '';
   questions.forEach((q, i) => {
     qHtml += '<div style="margin-bottom:14px;">'
@@ -19949,7 +19949,7 @@ function openGameCollectionPicker() {
   document.getElementById('gc-overlay')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'gc-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.9);backdrop-filter:blur(14px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.9);backdrop-filter:blur(14px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:620px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);">'
     + '<div style="padding:20px 24px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">'
@@ -20864,7 +20864,7 @@ function _openWidgetGameSearch(e, target) {
   const rect = btn.getBoundingClientRect();
   const drop = document.createElement('div');
   drop.id = 'pw-game-search-drop';
-  drop.style.cssText = `position:fixed;top:${rect.bottom+6}px;left:${rect.left}px;width:280px;max-height:320px;background:var(--panel,#161a23);border:1.5px solid var(--border,rgba(255,255,255,.1));border-radius:14px;z-index:9600;box-shadow:0 16px 48px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden;animation:pickerSlideIn .18s cubic-bezier(.22,1,.36,1);`;
+  drop.style.cssText = `position:fixed;top:${rect.bottom+6}px;left:${rect.left}px;width:280px;max-height:320px;background:var(--panel,#1b1e25);border:1.5px solid var(--border,rgba(255,255,255,.1));border-radius:14px;z-index:9600;box-shadow:0 16px 48px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden;animation:pickerSlideIn .18s cubic-bezier(.22,1,.36,1);`;
   // Adjust if goes off right edge
   if (rect.left + 280 > window.innerWidth) drop.style.left = (window.innerWidth - 288) + 'px';
   const owned = new Set((CU.gameCollection||[]).map(g => g.name.toLowerCase()));
@@ -20958,7 +20958,7 @@ function _renderProfileWidgetManager(mgr) {
   html += '</div>';
 
   if (!hasAnyEnabled) {
-    html += '<div style="text-align:center;padding:20px 10px;"><div style="font-size:22px;opacity:.15;margin-bottom:6px;">🧩</div><div style="color:rgba(255,255,255,.2);font-size:11.5px;font-weight:500;margin-bottom:10px;">No widgets on your board</div><button onclick="_openAddWidgetPanel()" style="padding:8px 18px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-family:Syne,sans-serif;font-size:11px;font-weight:800;cursor:pointer;">Add Widgets</button></div></div>';
+    html += '<div style="text-align:center;padding:20px 10px;"><div style="font-size:22px;opacity:.15;margin-bottom:6px;">🧩</div><div style="color:rgba(255,255,255,.2);font-size:11.5px;font-weight:500;margin-bottom:10px;">No widgets on your board</div><button onclick="_openAddWidgetPanel()" style="padding:8px 18px;background:var(--accent);color:#0f1119;border:none;border-radius:8px;font-family:Syne,sans-serif;font-size:11px;font-weight:800;cursor:pointer;">Add Widgets</button></div></div>';
     mgr.innerHTML = html;
     return;
   }
@@ -20999,7 +20999,7 @@ function _renderProfileWidgetManager(mgr) {
         ${configHtml}
       </div>
       <button onclick="_toggleWidgetFromProfile('${def.id}')" style="width:34px;height:18px;border-radius:9px;border:none;cursor:pointer;position:relative;transition:background .2s;background:${isOn?'var(--accent)':'rgba(255,255,255,.1)'};">
-        <span style="position:absolute;top:2px;${isOn?'right:2px':'left:2px'};width:14px;height:14px;border-radius:50%;background:${isOn?'#060810':'rgba(255,255,255,.4)'};transition:all .2s;"></span>
+        <span style="position:absolute;top:2px;${isOn?'right:2px':'left:2px'};width:14px;height:14px;border-radius:50%;background:${isOn?'#0f1119':'rgba(255,255,255,.4)'};transition:all .2s;"></span>
       </button>
     </div>`;
   });
@@ -21263,7 +21263,7 @@ async function openAddGameModal() {
   _closeEl('add-game-modal');
   const modal = document.createElement('div');
   modal.id = 'add-game-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.8);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.8);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
   const box = document.createElement('div');
   box.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;width:420px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7);';
   box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0;">'
@@ -21409,7 +21409,7 @@ async function showDMUserPanel(username) {
     // Banner
     '<div style="position:relative;height:120px;background:'+bannerBg+';overflow:hidden;">'
     + (profileTheme ? '<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,'+profileTheme.color1+','+profileTheme.color2+');opacity:.6;z-index:1;"></div>' : '')
-    + '<div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--channel) 0%,rgba(4,6,10,.5) 40%,transparent 100%);"></div>'
+    + '<div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--channel) 0%,rgba(12,14,20,.5) 40%,transparent 100%);"></div>'
     + '</div>'
     // PFP
     + '<div style="padding:0 16px;margin-top:-36px;margin-bottom:8px;position:relative;z-index:2;">'
@@ -22294,7 +22294,7 @@ function openStatusPicker() {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px;">
-          <button onclick="saveCustomStatus()" style="flex:1;background:var(--accent);color:#060810;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''">Save Custom Status</button>
+          <button onclick="saveCustomStatus()" style="flex:1;background:var(--accent);color:#0f1119;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''">Save Custom Status</button>
           <button onclick="clearCustomStatus()" style="width:44px;height:44px;border-radius:14px;background:rgba(248,113,113,.06);border:1.5px solid rgba(248,113,113,.12);color:rgba(248,113,113,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;" onmouseover="this.style.borderColor='rgba(248,113,113,.25)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='rgba(248,113,113,.12)';this.style.color='rgba(248,113,113,.6)'" title="Clear status"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
         </div>
       </div>
@@ -22499,7 +22499,7 @@ function editForumPost(chIdx, postIdx) {
   const ch = b.channels&&b.channels[chIdx]; if (!ch) return;
   const p = ch.posts&&ch.posts[postIdx]; if (!p) return;
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.className = 'ftz-edit-post-overlay';
   overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:560px;width:100%;padding:26px;max-height:90vh;overflow-y:auto;">'
     +'<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:18px;">✏ Edit Post</div>'
@@ -22554,7 +22554,7 @@ async function deleteForumReply(chIdx, postIdx, replyIdx) {
 
 function openNewForumPost(chIdx) {
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;'; overlay.className='ftz-new-post-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;'; overlay.className='ftz-new-post-overlay';
   overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:560px;width:100%;padding:26px;max-height:90vh;overflow-y:auto;">'
     +'<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:18px;">📝 New Post</div>'
     +'<input id="fp-title" class="field-input" placeholder="Post title…" maxlength="120" style="margin-bottom:10px;font-size:14px;font-weight:600;">'
@@ -22825,7 +22825,7 @@ async function _deletePoll(pollKey, chIdx) {
 function openCreatePollModal(chIdx) {
   const overlay = document.createElement('div');
   overlay.className = 'ftz-poll-create-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:520px;width:100%;padding:28px;max-height:90vh;overflow-y:auto;">
     <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;">🗳 Create Poll</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Ask a question and let your community vote.</div>
@@ -23242,7 +23242,7 @@ function startWatchTogether() {
   document.getElementById('vc-watch-overlay')?.remove();
   const ov = document.createElement('div');
   ov.id = 'vc-watch-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.96);z-index:7500;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.96);z-index:7500;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;';
   ov.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:24px;max-width:440px;width:100%;">'
     +'<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;margin-bottom:4px;">▶ Watch Together</div>'
     +'<div style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Paste a YouTube link to watch in sync</div>'
@@ -23592,7 +23592,7 @@ async function showIncomingCall(caller, offerSdp) {
 
   const modal = document.createElement('div');
   modal.id = 'incoming-call-modal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:9600;background:rgba(4,6,10,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;backdrop-filter:blur(12px);animation:fadeIn .3s ease;';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9600;background:rgba(12,14,20,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;backdrop-filter:blur(12px);animation:fadeIn .3s ease;';
 
   // Pulsing avatar
   const avWrap = document.createElement('div');
@@ -24349,7 +24349,7 @@ async function openGameActivityPicker() {
   _userCustomApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
   const modal = document.createElement('div');
   modal.id = 'game-activity-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.8);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.8);z-index:9000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
   const box = document.createElement('div');
   box.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;width:400px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7);';
   box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0;">'
@@ -24927,7 +24927,7 @@ function renderAtelierTab(tab) {
         <div style="position:relative;">
           <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:-.02em;text-shadow:0 2px 16px rgba(0,0,0,.3);">WELCOME TO<br>YOUR ATELIER</div>
           <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:18px;max-width:400px;line-height:1.5;">Your personal hub for customization, rewards, and exclusive items. Claim daily Onyx and unlock premium features.</div>
-          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
+          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:var(--accent);color:#0f1119;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             Browse the Shop
           </button>
@@ -25101,7 +25101,7 @@ function renderAtelierTab(tab) {
           <div style="padding:0 18px 20px;">
             <div id="rad-price-sel-0" style="display:flex;flex-direction:column;gap:6px;">
               ${PRICES.basic.map((pl,i)=>`
-                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===1?'var(--accent)':'rgba(255,255,255,.04)'};color:${i===1?'#060810':'rgba(255,255,255,.6)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;" onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
+                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===1?'var(--accent)':'rgba(255,255,255,.04)'};color:${i===1?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;" onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
                   <span>${pl.days} Days</span>
                   <span>${pl.onyx} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">${i===1?' 🔥':''}</span>
                 </button>`).join('')}
@@ -25125,7 +25125,7 @@ function renderAtelierTab(tab) {
           <div style="padding:0 18px 20px;">
             <div style="display:flex;flex-direction:column;gap:6px;">
               ${PRICES.plus.map((pl,i)=>`
-                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===0?'linear-gradient(90deg,#ffd93e,#fff93e)':'rgba(255,255,255,.04)'};color:${i===0?'#060810':'rgba(255,255,255,.6)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;" onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
+                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===0?'linear-gradient(90deg,#ffd93e,#fff93e)':'rgba(255,255,255,.04)'};color:${i===0?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;" onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
                   <span>${pl.days} Days</span>
                   <span>${pl.onyx} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">${i===0?' 🔥':''}</span>
                 </button>`).join('')}
@@ -25187,7 +25187,7 @@ function renderAtelierTab(tab) {
       return `<div style="background:${q.done?'rgba(62,207,110,.025)':'rgba(255,255,255,.02)'};border:1.5px solid ${q.done?'rgba(62,207,110,.1)':'rgba(255,255,255,.05)'};border-radius:16px;padding:16px 18px;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:14px;" ${!q.done?`onmouseover="this.style.borderColor='rgba(255,249,62,.15)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(0,0,0,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'"`:''}>
         <div style="width:46px;height:46px;border-radius:14px;background:${q.done?'rgba(62,207,110,.08)':'rgba(255,255,255,.03)'};border:1px solid ${q.done?'rgba(62,207,110,.12)':'rgba(255,255,255,.06)'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative;">
           ${q.icon}
-          ${q.done?'<div style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;border:2px solid #0a0d14;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>':''}
+          ${q.done?'<div style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;border:2px solid #13161d;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>':''}
         </div>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
@@ -25422,7 +25422,7 @@ function renderAtelierTab(tab) {
                       </div>`
                       :`<div class="sic-price"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> 100</div>`}
                   </div>
-                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:#3ecf6e;flex-shrink:0;">Owned</div>'}
+                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:#3ecf6e;flex-shrink:0;">Owned</div>'}
                 </div>
               </div>
             </div>
@@ -25482,7 +25482,7 @@ function renderAtelierTab(tab) {
                     <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.4;margin-bottom:10px;">${a.desc}</div>
                     ${owned
                       ? '<div style="padding:7px 14px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:10px;color:#3ecf6e;font-size:11px;font-weight:700;text-align:center;">Owned</div>'
-                      : `<button onclick="event.stopPropagation();buyAppearance('${a.id}',${a.price})" style="width:100%;padding:8px 14px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> ${a.price} Onyx</button>`}
+                      : `<button onclick="event.stopPropagation();buyAppearance('${a.id}',${a.price})" style="width:100%;padding:8px 14px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> ${a.price} Onyx</button>`}
                   </div>
                 </div>`;
               }).join('')}
@@ -25498,7 +25498,7 @@ function renderAtelierTab(tab) {
                 <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">Onyx Badge</div>
                 <div style="font-size:11px;color:rgba(255,255,255,.3);">Evolves as you invest Onyx</div>
               </div>
-              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:8px 16px;background:var(--accent);color:#060810;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> 100</button>`:'<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>'}
+              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:8px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> 100</button>`:'<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>'}
             </div>` : ''}
             ${(shopCat==='All'||shopCat==='Decorations') ? `
             <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
@@ -25521,7 +25521,7 @@ function renderAtelierTab(tab) {
                     ? `<div style="font-size:10px;font-weight:700;color:${d.color};">Equipped</div>`
                     : owned
                       ? `<button onclick="event.stopPropagation();equipDecoration('${d.id}')" style="padding:4px 12px;background:${d.color}15;border:1px solid ${d.color}25;border-radius:8px;color:${d.color};font-size:10px;font-weight:700;cursor:pointer;">Equip</button>`
-                      : `<button onclick="event.stopPropagation();buyDecoration('${d.id}',${d.price})" style="padding:4px 12px;background:var(--accent);color:#060810;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:3px;"><img src='/Onyx.png' style='width:10px;height:10px;object-fit:contain;'> ${d.price}</button>`}
+                      : `<button onclick="event.stopPropagation();buyDecoration('${d.id}',${d.price})" style="padding:4px 12px;background:var(--accent);color:#0f1119;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:3px;"><img src='/Onyx.png' style='width:10px;height:10px;object-fit:contain;'> ${d.price}</button>`}
                 </div>`;
               }).join('')}
             </div>` : ''}
@@ -25554,7 +25554,7 @@ function renderAtelierTab(tab) {
                     </div>
                     ${bundleOwned
                       ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:#3ecf6e;font-size:12px;font-weight:700;text-align:center;">Owned</div>'
-                      : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:#060810;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:3px;">${bundle.origPrice}</span> ${bundle.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${bundle.id}','${bundle.name}',${bundle.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'" title="Gift"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
+                      : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:#0f1119;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:3px;">${bundle.origPrice}</span> ${bundle.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${bundle.id}','${bundle.name}',${bundle.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'" title="Gift"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
                   </div>
                 </div>`;
               }).join('')}
@@ -25831,7 +25831,7 @@ function showAddAccountModal() {
   document.getElementById('add-acct-modal')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'add-acct-modal';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.92);backdrop-filter:blur(18px);z-index:9800;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.92);backdrop-filter:blur(18px);z-index:9800;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:24px;max-width:400px;width:100%;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.8);">
       <div style="height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);"></div>
@@ -26974,7 +26974,7 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
         </div>
         <button onclick="resetCrop()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;padding:7px 14px;cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.08)'" onmouseleave="this.style.background='rgba(255,255,255,.05)'">Reset</button>
         <button onclick="document.getElementById('crop-modal-overlay').remove()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.6);font-size:12px;padding:7px 16px;cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.08)'" onmouseleave="this.style.background='rgba(255,255,255,.05)'">Cancel</button>
-        <button onclick="applyCrop()" style="background:linear-gradient(135deg,var(--accent),#e6e034);border:none;border-radius:10px;color:#060810;font-size:13px;font-weight:700;padding:8px 22px;cursor:pointer;font-family:'Syne',sans-serif;box-shadow:0 2px 10px rgba(255,249,62,.2);transition:all .15s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">Apply</button>
+        <button onclick="applyCrop()" style="background:linear-gradient(135deg,var(--accent),#e6e034);border:none;border-radius:10px;color:#0f1119;font-size:13px;font-weight:700;padding:8px 22px;cursor:pointer;font-family:'Syne',sans-serif;box-shadow:0 2px 10px rgba(255,249,62,.2);transition:all .15s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">Apply</button>
       </div>
     </div>`;
 
@@ -27238,13 +27238,13 @@ async function purchaseRadiance(isPlus, days, cost) {
   if (balance < cost) {
     // Not enough onyx — show dialog
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
     ov.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:380px;width:90%;text-align:center;">
       <div style="font-size:40px;margin-bottom:14px;">😕</div>
       <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Not Enough Onyx</div>
       <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong> but only have <strong>${balance} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong>.<br>Complete quests to earn more Onyx!</div>
       <div style="display:flex;gap:8px;">
-        <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:#060810;font-family:'Syne',sans-serif;font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
+        <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:#0f1119;font-family:'Syne',sans-serif;font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
         <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.06);color:var(--muted-light);border:1px solid var(--border);border-radius:10px;cursor:pointer;">Not Now</button>
       </div>
     </div>`;
@@ -28279,7 +28279,7 @@ function applyAppearance(themeId) {
     // Fortized Classic (default)
     canvasColor = '#13161d';
     sidebarColor = '#181a1f';
-    glassHeavy = 'rgba(19,22,29,.94)'; glassMid = 'rgba(19,22,29,.88)'; glassLight = 'rgba(19,22,29,.82)';
+    glassHeavy = 'rgba(19,22,29,.96)'; glassMid = 'rgba(19,22,29,.82)'; glassLight = 'rgba(19,22,29,.68)';
     document.documentElement.style.setProperty('--bg',         '#13161d');
     document.documentElement.style.setProperty('--rail',       '#0f1119');
     document.documentElement.style.setProperty('--sidebar',    sidebarColor);
@@ -28325,7 +28325,7 @@ function applyAppearance(themeId) {
 // Appearance preview helpers
 let _appearancePreviewId = null;
 const _appearanceThemeData = {
-  fortized_classic: {id:'fortized_classic', name:'Fortized Classic', bg:'#07090e', sidebar:'#13161d', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0d1018', panel:'#101420', accent:'#fef83d', border:'#1c2335', muted:'#4e5a6f', bodyGrad:''},
+  fortized_classic: {id:'fortized_classic', name:'Fortized Classic', bg:'#13161d', sidebar:'#181a1f', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#15171e', panel:'#1b1e25', accent:'#fef83d', border:'#252b3a', muted:'#4e5a6f', bodyGrad:''},
   dark_realm:       {id:'dark_realm',       name:'Dark Realm',       bg:'#030407', sidebar:'#050710', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#060810', panel:'#080b14', accent:'#fef83d', border:'#141a2a', muted:'#3a4458', bodyGrad:''},
   midnight_citadel: {id:'midnight_citadel', name:'Midnight Citadel', bg:'#050812', sidebar:'#080e1a', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#0a1120', panel:'#0d1528', accent:'#fef83d', border:'#1a2848', muted:'#3a5080', bodyGrad:''},
   onyx_pure:        {id:'onyx_pure',        name:'Onyx Pure',        bg:'#010103', sidebar:'#020206', get sidebarCtx(){return _darkenHex(this.sidebar,0.188);}, channel:'#030308', panel:'#04040c', accent:'#fef83d', border:'#0e0e1e', muted:'#2a2a3e', bodyGrad:'linear-gradient(170deg,#010103 0%,#08061a 100%)'},
@@ -28781,7 +28781,7 @@ function openThread(msgId, text, from) {
     </div>
     <div class="thread-compose" style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.05);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
       <textarea id="thread-input" placeholder="Reply to thread…" rows="1" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;padding:8px 12px;font-family:inherit;font-size:12.5px;resize:none;min-height:36px;max-height:100px;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_sendThreadReply();}" oninput="_broadcastThreadTyping()"></textarea>
-      <button onclick="_sendThreadReply()" style="padding:8px 14px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .12s;" onmouseover="this.style.background='var(--accent)';this.style.color='#060810'" onmouseout="this.style.background='var(--accent-dim)';this.style.color='var(--accent)'">Reply</button>
+      <button onclick="_sendThreadReply()" style="padding:8px 14px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .12s;" onmouseover="this.style.background='var(--accent)';this.style.color='#0f1119'" onmouseout="this.style.background='var(--accent-dim)';this.style.color='var(--accent)'">Reply</button>
     </div>`;
   document.body.appendChild(panel);
   _listenThreadReplies(bid, chName, msgId);
@@ -30310,7 +30310,7 @@ function _createPoll2(container, context) {
   let isAnonymous = false;
   let expiresIn = 0;
   const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.88);backdrop-filter:blur(12px);z-index:8000;display:flex;align-items:center;justify-content:center;';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(12px);z-index:8000;display:flex;align-items:center;justify-content:center;';
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
   const _renderPollCreate = () => {
     modal.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:420px;width:100%;padding:24px;">
@@ -30377,7 +30377,7 @@ function _showQuickModal(id, html) {
   document.getElementById(id)?.remove();
   const el = document.createElement('div');
   el.id = id;
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(4,6,10,.85);backdrop-filter:blur(12px);z-index:8000;display:flex;align-items:center;justify-content:center;';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.85);backdrop-filter:blur(12px);z-index:8000;display:flex;align-items:center;justify-content:center;';
   el.onclick = e => { if (e.target === el) el.remove(); };
   el.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;max-width:400px;width:100%;">${html}</div>`;
   document.body.appendChild(el);

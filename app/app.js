@@ -30491,3 +30491,324 @@ async function _ensureFortizedAccount() {
   } catch {}
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// THE FORTIZED GRAND CHRONICLE
+// ═══════════════════════════════════════════════════════════════════════
+
+const CHRONICLE_CHAPTER_1 = [
+  {
+    id: 1, title: 'The Breaking of the Treaty', location: 'Royal Court of Vastilly',
+    tags: ['cinematic'],
+    quote: null,
+    desc: 'The Treaty of the Silver Stream — the fragile pact that held two great kingdoms in check — is no more. Summoned to the Royal Court, you witness the moment diplomacy dies and steel takes its place.',
+    gameplay: ['Cinematic intro sequence — diplomatic collapse unfolds', 'Player receives first orders as a knight of Vastilly'],
+    tone: 'You do not decide. You are summoned.',
+    phases: null
+  },
+  {
+    id: 2, title: 'Raid on the Silver Stream', location: 'The Silver Stream Border',
+    tags: ['stealth', 'combat'],
+    quote: null,
+    desc: 'A small-scale skirmish to disrupt enemy supply lines. Strike fast, vanish faster.',
+    gameplay: ['Sabotage enemy caravans crossing the stream', 'Ambush mechanics — timing and positioning matter'],
+    tone: 'Introduces stealth and mobility.',
+    phases: null
+  },
+  {
+    id: 3, title: "The Burning of Elowen's Outskirts", location: 'Near Elowen',
+    tags: ['combat'],
+    quote: null,
+    desc: 'Before Elowen can be taken, its supply lines must be severed. Strike the outskirts, burn the depots, and cripple the enemy\'s ability to sustain a defense.',
+    gameplay: ['Fast strike mission with timed objectives', 'Destroy supply depots before reinforcements arrive'],
+    tone: 'Resource warfare introduction.',
+    phases: null
+  },
+  {
+    id: 4, title: 'Battle of the Timber Roads', location: 'Oakhaven Forest Routes',
+    tags: ['combat'],
+    quote: null,
+    desc: 'The dense forest roads controlled by Oakhaven become a battleground of ambush and counter-ambush. Use the terrain or be buried by it.',
+    gameplay: ['Terrain advantage system — forest ambush bonuses', 'Escort vs interception: choose your role'],
+    tone: 'The forest fights for whoever knows it best.',
+    phases: null
+  },
+  {
+    id: 5, title: 'Defense of Vastilly Outer Walls', location: 'Vastilly',
+    tags: ['defense', 'siege'],
+    quote: null,
+    desc: 'The enemy strikes back. Vastilly\'s outer walls must hold. Man the towers, direct the archers, and prepare the early artillery. There is no retreat.',
+    gameplay: ['Tower defense mechanics — place and upgrade defensive units', 'Archers and early artillery management', 'Wave-based enemy assault'],
+    tone: 'Hold the line. No retreat.',
+    phases: null
+  },
+  {
+    id: 6, title: 'The Fenwick Canal Skirmishes', location: 'Fenwick',
+    tags: ['combat'],
+    quote: null,
+    desc: 'The canal network of Fenwick becomes a weapon in itself. Manipulate the waterways to flood enemy positions and control the battlefield.',
+    gameplay: ['Water manipulation mechanics — open and close flood gates', 'Use flood zones as tactical weapons', 'Navigate treacherous canal terrain'],
+    tone: 'The water does not care whose side you are on.',
+    phases: null
+  },
+  {
+    id: 7, title: 'The Ironstall Contracts', location: 'Ironstall',
+    tags: ['economy'],
+    quote: null,
+    desc: 'War demands steel, gold, and contracts. In Ironstall, the great forges burn day and night. Secure the funding and equipment to push the campaign forward.',
+    gameplay: ['Negotiate contracts for weapons, armor, and units', 'Unlock upgrades and new equipment tiers', 'Economic decisions with battlefield consequences'],
+    tone: 'Every sword has a price. Every contract, a consequence.',
+    phases: null
+  },
+  {
+    id: 8, title: 'The March Through Vane', location: 'The High-March of Vane',
+    tags: ['combat', 'defense'],
+    quote: null,
+    desc: 'The mountain passes of Vane are narrow, treacherous, and decisive. Whoever controls the high ground controls the war\'s momentum.',
+    gameplay: ['Narrow mountain pass combat', 'Defensive choke-point mechanics', 'Elevation and positioning advantages'],
+    tone: 'One pass. One chance. Hold or fall.',
+    phases: null
+  },
+  {
+    id: 9, title: 'The Glassport Blockade', location: 'Glassport',
+    tags: ['naval'],
+    quote: null,
+    desc: 'Cut the enemy\'s lifeline. Glassport\'s harbors are the arteries of Oakhaven trade. Block them, and the enemy starves.',
+    gameplay: ['Naval disruption and blockade mechanics', 'Cut off enemy trade routes', 'Patrol and intercept supply ships'],
+    tone: 'No ships in. No ships out.',
+    phases: null
+  },
+  {
+    id: 10, title: 'The Siege of Port-Crest', location: 'Port-Crest',
+    tags: ['naval', 'siege', 'combat'],
+    mainEvent: true,
+    quote: 'They came with eighty ships\u2026 and left as a bridge of wreckage.',
+    desc: 'The defining battle of Chapter I. Port-Crest\'s harbor becomes a kill-zone of fire, iron, and shattered hulls. Four phases of escalating warfare — from cunning traps to desperate boarding defense.',
+    gameplay: ['Four-phase naval siege — the largest event in Chapter I', 'Deploy sea-spikes, time the tides, unleash hellfire'],
+    tone: 'This is where legends are forged — or drowned.',
+    phases: [
+      { name: 'Phase 1 \u2014 The Snare', desc: 'Deploy hidden Sea-Spikes beneath the harbor surface. A tide timing system determines placement windows — strike too early and they surface; too late and the fleet passes.' },
+      { name: 'Phase 2 \u2014 The Trap', desc: 'Enemy ships run aground on your spikes. Immobilized vessels become sitting targets as the harbor narrows into a bottleneck of shattered wood.' },
+      { name: 'Phase 3 \u2014 The Kill-Zone', desc: 'Cannons and archers rain fire from the cliffs. Fire spread mechanics turn the harbor into an inferno. Manage heat, reload, and target priority.' },
+      { name: 'Phase 4 \u2014 Boarding Defense', desc: 'Survivors attempt to breach your defenses. Repel wave after wave of desperate boarding parties in close-quarters combat.' }
+    ]
+  },
+  {
+    id: 11, title: 'The 14-Day Bombardment', location: 'Port-Crest Aftermath',
+    tags: ['defense', 'siege'],
+    quote: null,
+    desc: 'The enemy does not relent. For fourteen in-game days, artillery pounds your positions. Endure the bombardment, manage dwindling ammunition, and hold morale together.',
+    gameplay: ['Endurance survival mode — outlast the bombardment', 'Manage ammunition reserves and supply lines', 'Morale system — keep your forces from breaking'],
+    tone: 'War becomes exhaustion.',
+    phases: null
+  },
+  {
+    id: 12, title: 'The Harbor of Wrecks', location: 'Port-Crest Harbor',
+    tags: ['naval'],
+    quote: null,
+    desc: 'The battle is over. What remains is a graveyard of ships. Navigate the destroyed fleet, secure the harbor, and reclaim what the sea tried to swallow.',
+    gameplay: ['Navigate through destroyed fleet wreckage', 'Secure final control of the harbor zone', 'Salvage resources from enemy vessels'],
+    tone: 'Slow. Eerie. The silence after the storm.',
+    phases: null
+  },
+  {
+    id: 13, title: 'The Push into Oakhaven', location: 'Oakhaven Frontier',
+    tags: ['combat', 'siege'],
+    quote: null,
+    desc: 'With Port-Crest secured and the enemy reeling, the full might of Vastilly marches on Oakhaven. A large-scale combined arms assault — infantry, cavalry, and artillery moving as one.',
+    gameplay: ['Large-scale open battlefield', 'Combined arms coordination — infantry, cavalry, artillery', 'Dynamic frontline that shifts with your decisions'],
+    tone: 'The endgame begins.',
+    phases: null
+  },
+  {
+    id: 14, title: 'The Fall of Elowen', location: 'Elowen',
+    tags: ['siege', 'cinematic'],
+    quote: null,
+    desc: 'The final siege. Elowen\'s walls — once thought impregnable — must fall. Breach the defenses, storm the city, and write the last chapter of this war.',
+    gameplay: ['Full siege mechanics — battering rams, siege towers, sappers', 'Breach and capture the city district by district', 'Canonical ending: Elowen is annexed into Vastilly'],
+    tone: 'The war is over. The Realm stands unbroken. But the world\u2026 is watching.',
+    phases: null
+  }
+];
+
+const TAG_CLASS_MAP = {stealth:'tag-stealth',siege:'tag-siege',naval:'tag-naval',economy:'tag-economy',combat:'tag-combat',defense:'tag-defense',cinematic:'tag-cinematic'};
+
+let _chronicleOpen = false;
+let _chronicleIntroPlayed = false;
+let _chronicleProgress = {}; // {eventId: true} for completed events
+
+function openChronicle() {
+  const overlay = document.getElementById('chronicle-overlay');
+  if (!overlay) return;
+  _chronicleOpen = true;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Show intro if not yet played
+  const intro = document.getElementById('chronicle-intro');
+  const body = document.getElementById('chronicle-body');
+  const video = document.getElementById('chronicle-intro-video');
+
+  if (!_chronicleIntroPlayed && video && video.querySelector('source')?.src) {
+    intro.classList.remove('hidden');
+    body.classList.add('hidden');
+    video.currentTime = 0;
+    video.play().catch(() => {
+      // Video not available — skip to content
+      skipChronicleIntro();
+    });
+    video.onended = () => skipChronicleIntro();
+  } else {
+    intro.classList.add('hidden');
+    body.classList.remove('hidden');
+  }
+
+  renderChronicleEvents();
+  updateChronicleProgress();
+}
+
+function closeChronicle() {
+  const overlay = document.getElementById('chronicle-overlay');
+  if (!overlay) return;
+  _chronicleOpen = false;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  // Pause video if playing
+  const video = document.getElementById('chronicle-intro-video');
+  if (video) video.pause();
+  // Close detail if open
+  const detail = document.getElementById('chronicle-detail');
+  if (detail) detail.classList.remove('open');
+}
+
+function skipChronicleIntro() {
+  _chronicleIntroPlayed = true;
+  const intro = document.getElementById('chronicle-intro');
+  const body = document.getElementById('chronicle-body');
+  const video = document.getElementById('chronicle-intro-video');
+  if (video) video.pause();
+  if (intro) intro.classList.add('hidden');
+  if (body) body.classList.remove('hidden');
+}
+
+function renderChronicleEvents() {
+  const list = document.getElementById('chronicle-event-list');
+  if (!list) return;
+
+  list.innerHTML = CHRONICLE_CHAPTER_1.map(ev => {
+    const done = _chronicleProgress[ev.id];
+    const mainClass = ev.mainEvent ? ' main-event' : '';
+    const doneClass = done ? ' completed' : '';
+    const tags = (ev.tags || []).map(t =>
+      `<span class="chron-event-tag ${TAG_CLASS_MAP[t] || ''}">${t}</span>`
+    ).join('');
+
+    return `<div class="chron-event${mainClass}${doneClass}" onclick="openChronicleEvent(${ev.id})">
+      <div class="chron-event-num">${done ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ev.id}</div>
+      <div class="chron-event-body">
+        <div class="chron-event-title">${ev.title}</div>
+        <div class="chron-event-loc">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${ev.location}
+        </div>
+        <div class="chron-event-tags">${tags}</div>
+      </div>
+    </div>`;
+  }).join('') + `
+    <div class="chronicle-shop-banner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <div class="chronicle-shop-banner-text"><strong>Chapter I Collection</strong> will appear in the Atelier shop after the event ends. Limited edition items — once they're gone, they're gone.</div>
+    </div>`;
+}
+
+function openChronicleEvent(id) {
+  const ev = CHRONICLE_CHAPTER_1.find(e => e.id === id);
+  if (!ev) return;
+  const detail = document.getElementById('chronicle-detail');
+  const inner = document.getElementById('chronicle-detail-inner');
+  if (!detail || !inner) return;
+
+  let html = `<div class="chron-detail-header">
+    <div class="chron-detail-num">EVENT ${ev.id} OF 14</div>
+    <div class="chron-detail-title">${ev.title}</div>
+    <div class="chron-detail-loc">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      ${ev.location}
+    </div>
+  </div>`;
+
+  if (ev.quote) {
+    html += `<div class="chron-detail-quote">\u201C${ev.quote}\u201D</div>`;
+  }
+
+  html += `<div class="chron-detail-section">
+    <h3>Story</h3>
+    <p>${ev.desc}</p>
+  </div>`;
+
+  if (ev.gameplay && ev.gameplay.length) {
+    html += `<div class="chron-detail-section">
+      <h3>Gameplay</h3>
+      <ul>${ev.gameplay.map(g => `<li>${g}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  if (ev.phases && ev.phases.length) {
+    html += `<div class="chron-detail-section">
+      <h3>Battle Phases</h3>
+      <div class="chron-detail-phases">
+        ${ev.phases.map(p => `<div class="chron-detail-phase"><h4>${p.name}</h4><p>${p.desc}</p></div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  if (ev.tone) {
+    html += `<div class="chron-detail-section">
+      <h3>Tone</h3>
+      <p style="font-style:italic;color:rgba(218,165,32,.6);">${ev.tone}</p>
+    </div>`;
+  }
+
+  const done = _chronicleProgress[ev.id];
+  html += `<button class="chron-play-btn${done ? ' locked' : ''}" ${done ? 'disabled' : `onclick="launchChronicleEvent(${ev.id})"`}>
+    ${done
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Completed'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Begin Event'
+    }
+  </button>`;
+
+  inner.innerHTML = html;
+  detail.classList.add('open');
+}
+
+function chronicleBack() {
+  const detail = document.getElementById('chronicle-detail');
+  if (detail) detail.classList.remove('open');
+}
+
+function launchChronicleEvent(id) {
+  // Placeholder — will connect to actual mini-game engine
+  if (typeof showToast === 'function') {
+    showToast('Event launching soon \u2014 stay tuned, knight.', 'info');
+  }
+}
+
+function updateChronicleProgress() {
+  const completed = Object.keys(_chronicleProgress).length;
+  const fill = document.getElementById('chronicle-progress-fill');
+  const text = document.getElementById('chronicle-progress-text');
+  if (fill) fill.style.width = ((completed / 14) * 100) + '%';
+  if (text) text.textContent = completed + ' / 14';
+}
+
+// Close Chronicle on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && _chronicleOpen) {
+    const detail = document.getElementById('chronicle-detail');
+    if (detail && detail.classList.contains('open')) {
+      chronicleBack();
+    } else {
+      closeChronicle();
+    }
+  }
+});
+

@@ -30497,8 +30497,10 @@ async function _ensureFortizedAccount() {
 
 const CHRONICLE_CHAPTER_1 = [
   {
-    id: 1, title: 'The Breaking of the Treaty', location: 'Royal Court of Vastilly',
+    id: 1, title: 'The Breaking of the Treaty', location: 'Vastilly',
     tags: ['cinematic'],
+    // Map pin: Vastilly city, upper-left Fortized territory
+    mapX: 16.5, mapY: 24,
     quote: null,
     desc: 'The Treaty of the Silver Stream — the fragile pact that held two great kingdoms in check — is no more. Summoned to the Royal Court, you witness the moment diplomacy dies and steel takes its place.',
     gameplay: ['Cinematic intro sequence — diplomatic collapse unfolds', 'Player receives first orders as a knight of Vastilly'],
@@ -30506,17 +30508,21 @@ const CHRONICLE_CHAPTER_1 = [
     phases: null
   },
   {
-    id: 2, title: 'Raid on the Silver Stream', location: 'The Silver Stream Border',
+    id: 2, title: 'Raid on the Silver Stream', location: 'Silver Stream',
     tags: ['stealth', 'combat'],
+    // Map pin: river region between Fortized and Oakhaven
+    mapX: 24, mapY: 35,
     quote: null,
-    desc: 'A small-scale skirmish to disrupt enemy supply lines. Strike fast, vanish faster.',
-    gameplay: ['Sabotage enemy caravans crossing the stream', 'Ambush mechanics — timing and positioning matter'],
+    desc: 'A small-scale skirmish to disrupt enemy supply lines along the trade route. Strike fast, vanish faster.',
+    gameplay: ['Sabotage Oakhaven caravans crossing the stream', 'Ambush mechanics — timing and positioning matter'],
     tone: 'Introduces stealth and mobility.',
     phases: null
   },
   {
-    id: 3, title: "The Burning of Elowen's Outskirts", location: 'Near Elowen',
+    id: 3, title: "The Burning of Elowen's Outskirts", location: "Elowen Outskirts",
     tags: ['combat'],
+    // Map pin: outskirts of Elowen, central Oakhaven
+    mapX: 33, mapY: 30,
     quote: null,
     desc: 'Before Elowen can be taken, its supply lines must be severed. Strike the outskirts, burn the depots, and cripple the enemy\'s ability to sustain a defense.',
     gameplay: ['Fast strike mission with timed objectives', 'Destroy supply depots before reinforcements arrive'],
@@ -30524,8 +30530,10 @@ const CHRONICLE_CHAPTER_1 = [
     phases: null
   },
   {
-    id: 4, title: 'Battle of the Timber Roads', location: 'Oakhaven Forest Routes',
+    id: 4, title: 'Battle of the Timber Roads', location: 'Fortized–Oakhaven Border Forests',
     tags: ['combat'],
+    // Map pin: northwest edge of Oakhaven, forested timber zone
+    mapX: 25, mapY: 28,
     quote: null,
     desc: 'The dense forest roads controlled by Oakhaven become a battleground of ambush and counter-ambush. Use the terrain or be buried by it.',
     gameplay: ['Terrain advantage system — forest ambush bonuses', 'Escort vs interception: choose your role'],
@@ -30535,6 +30543,8 @@ const CHRONICLE_CHAPTER_1 = [
   {
     id: 5, title: 'Defense of Vastilly Outer Walls', location: 'Vastilly',
     tags: ['defense', 'siege'],
+    // Map pin: Vastilly outer walls, slightly south of city center
+    mapX: 14, mapY: 28,
     quote: null,
     desc: 'The enemy strikes back. Vastilly\'s outer walls must hold. Man the towers, direct the archers, and prepare the early artillery. There is no retreat.',
     gameplay: ['Tower defense mechanics — place and upgrade defensive units', 'Archers and early artillery management', 'Wave-based enemy assault'],
@@ -30542,8 +30552,10 @@ const CHRONICLE_CHAPTER_1 = [
     phases: null
   },
   {
-    id: 6, title: 'The Fenwick Canal Skirmishes', location: 'Fenwick',
+    id: 6, title: 'The Fenwick Canal Skirmishes', location: 'Fenwick Canals',
     tags: ['combat'],
+    // Map pin: canals between Lowlands and Oakhaven
+    mapX: 34, mapY: 17,
     quote: null,
     desc: 'The canal network of Fenwick becomes a weapon in itself. Manipulate the waterways to flood enemy positions and control the battlefield.',
     gameplay: ['Water manipulation mechanics — open and close flood gates', 'Use flood zones as tactical weapons', 'Navigate treacherous canal terrain'],
@@ -30553,6 +30565,8 @@ const CHRONICLE_CHAPTER_1 = [
   {
     id: 7, title: 'The Ironstall Contracts', location: 'Ironstall',
     tags: ['economy'],
+    // Map pin: Ironstall, small dark-green island top-right
+    mapX: 48, mapY: 8,
     quote: null,
     desc: 'War demands steel, gold, and contracts. In Ironstall, the great forges burn day and night. Secure the funding and equipment to push the campaign forward.',
     gameplay: ['Negotiate contracts for weapons, armor, and units', 'Unlock upgrades and new equipment tiers', 'Economic decisions with battlefield consequences'],
@@ -30560,17 +30574,10 @@ const CHRONICLE_CHAPTER_1 = [
     phases: null
   },
   {
-    id: 8, title: 'The March Through Vane', location: 'The High-March of Vane',
-    tags: ['combat', 'defense'],
-    quote: null,
-    desc: 'The mountain passes of Vane are narrow, treacherous, and decisive. Whoever controls the high ground controls the war\'s momentum.',
-    gameplay: ['Narrow mountain pass combat', 'Defensive choke-point mechanics', 'Elevation and positioning advantages'],
-    tone: 'One pass. One chance. Hold or fall.',
-    phases: null
-  },
-  {
-    id: 9, title: 'The Glassport Blockade', location: 'Glassport',
+    id: 8, title: 'The Glassport Blockade', location: 'Glassport',
     tags: ['naval'],
+    // Map pin: Glassport city, south Oakhaven near Aquila
+    mapX: 35, mapY: 40,
     quote: null,
     desc: 'Cut the enemy\'s lifeline. Glassport\'s harbors are the arteries of Oakhaven trade. Block them, and the enemy starves.',
     gameplay: ['Naval disruption and blockade mechanics', 'Cut off enemy trade routes', 'Patrol and intercept supply ships'],
@@ -30578,9 +30585,11 @@ const CHRONICLE_CHAPTER_1 = [
     phases: null
   },
   {
-    id: 10, title: 'The Siege of Port-Crest', location: 'Port-Crest',
+    id: 9, title: 'The Siege of Port-Crest', location: 'Port-Crest',
     tags: ['naval', 'siege', 'combat'],
     mainEvent: true,
+    // Map pin: Port-Crest, western coast of Fortized
+    mapX: 22, mapY: 26,
     quote: 'They came with eighty ships\u2026 and left as a bridge of wreckage.',
     desc: 'The defining battle of Chapter I. Port-Crest\'s harbor becomes a kill-zone of fire, iron, and shattered hulls. Four phases of escalating warfare — from cunning traps to desperate boarding defense.',
     gameplay: ['Four-phase naval siege — the largest event in Chapter I', 'Deploy sea-spikes, time the tides, unleash hellfire'],
@@ -30593,8 +30602,10 @@ const CHRONICLE_CHAPTER_1 = [
     ]
   },
   {
-    id: 11, title: 'The 14-Day Bombardment', location: 'Port-Crest Aftermath',
+    id: 10, title: 'The 14-Day Bombardment', location: 'Port-Crest Harbour',
     tags: ['defense', 'siege'],
+    // Map pin: Port-Crest harbour (same area, slightly offset)
+    mapX: 21, mapY: 23,
     quote: null,
     desc: 'The enemy does not relent. For fourteen in-game days, artillery pounds your positions. Endure the bombardment, manage dwindling ammunition, and hold morale together.',
     gameplay: ['Endurance survival mode — outlast the bombardment', 'Manage ammunition reserves and supply lines', 'Morale system — keep your forces from breaking'],
@@ -30602,8 +30613,10 @@ const CHRONICLE_CHAPTER_1 = [
     phases: null
   },
   {
-    id: 12, title: 'The Harbor of Wrecks', location: 'Port-Crest Harbor',
+    id: 11, title: 'The Harbour of Wrecks', location: 'Port-Crest Harbour',
     tags: ['naval'],
+    // Map pin: Port-Crest harbour
+    mapX: 23, mapY: 22,
     quote: null,
     desc: 'The battle is over. What remains is a graveyard of ships. Navigate the destroyed fleet, secure the harbor, and reclaim what the sea tried to swallow.',
     gameplay: ['Navigate through destroyed fleet wreckage', 'Secure final control of the harbor zone', 'Salvage resources from enemy vessels'],
@@ -30611,8 +30624,10 @@ const CHRONICLE_CHAPTER_1 = [
     phases: null
   },
   {
-    id: 13, title: 'The Push into Oakhaven', location: 'Oakhaven Frontier',
+    id: 12, title: 'The Push into Oakhaven', location: 'Timber Roads \u2192 Elowen',
     tags: ['combat', 'siege'],
+    // Map pin: path from timber roads toward central Oakhaven
+    mapX: 29, mapY: 31,
     quote: null,
     desc: 'With Port-Crest secured and the enemy reeling, the full might of Vastilly marches on Oakhaven. A large-scale combined arms assault — infantry, cavalry, and artillery moving as one.',
     gameplay: ['Large-scale open battlefield', 'Combined arms coordination — infantry, cavalry, artillery', 'Dynamic frontline that shifts with your decisions'],
@@ -30620,15 +30635,19 @@ const CHRONICLE_CHAPTER_1 = [
     phases: null
   },
   {
-    id: 14, title: 'The Fall of Elowen', location: 'Elowen',
+    id: 13, title: 'The Fall of Elowen', location: 'Elowen',
     tags: ['siege', 'cinematic'],
+    // Map pin: Elowen city center
+    mapX: 35, mapY: 28,
     quote: null,
-    desc: 'The final siege. Elowen\'s walls — once thought impregnable — must fall. Breach the defenses, storm the city, and write the last chapter of this war.',
+    desc: 'The final siege. Elowen\'s walls — once thought impregnable — must fall. Breach the defenses, storm the city, and write the last chapter of this war. Annexed lands will reshape the map in Chapter II.',
     gameplay: ['Full siege mechanics — battering rams, siege towers, sappers', 'Breach and capture the city district by district', 'Canonical ending: Elowen is annexed into Vastilly'],
     tone: 'The war is over. The Realm stands unbroken. But the world\u2026 is watching.',
     phases: null
   }
 ];
+
+const CHRONICLE_TOTAL = CHRONICLE_CHAPTER_1.length; // 13
 
 const TAG_CLASS_MAP = {stealth:'tag-stealth',siege:'tag-siege',naval:'tag-naval',economy:'tag-economy',combat:'tag-combat',defense:'tag-defense',cinematic:'tag-cinematic'};
 
@@ -30653,7 +30672,6 @@ function openChronicle() {
     body.classList.add('hidden');
     video.currentTime = 0;
     video.play().catch(() => {
-      // Video not available — skip to content
       skipChronicleIntro();
     });
     video.onended = () => skipChronicleIntro();
@@ -30663,6 +30681,7 @@ function openChronicle() {
   }
 
   renderChronicleEvents();
+  renderChronicleMapPins();
   updateChronicleProgress();
 }
 
@@ -30672,10 +30691,8 @@ function closeChronicle() {
   _chronicleOpen = false;
   overlay.classList.remove('open');
   document.body.style.overflow = '';
-  // Pause video if playing
   const video = document.getElementById('chronicle-intro-video');
   if (video) video.pause();
-  // Close detail if open
   const detail = document.getElementById('chronicle-detail');
   if (detail) detail.classList.remove('open');
 }
@@ -30688,19 +30705,44 @@ function skipChronicleIntro() {
   if (video) video.pause();
   if (intro) intro.classList.add('hidden');
   if (body) body.classList.remove('hidden');
+  renderChronicleMapPins();
 }
 
 function _isEventUnlocked(id) {
-  // Event 1 is always unlocked; others require the previous event to be completed
   if (id === 1) return true;
+  // Find the event with id-1 and check if completed
+  const prevEv = CHRONICLE_CHAPTER_1.find(e => e.id === id - 1);
+  if (!prevEv) return true;
   return !!_chronicleProgress[id - 1];
 }
 
 function _getNextEventId() {
-  for (let i = 1; i <= 14; i++) {
-    if (!_chronicleProgress[i]) return i;
+  for (const ev of CHRONICLE_CHAPTER_1) {
+    if (!_chronicleProgress[ev.id]) return ev.id;
   }
-  return null; // all done
+  return null;
+}
+
+// ── Interactive Map Pins ──
+function renderChronicleMapPins() {
+  const container = document.getElementById('chronicle-map-pins');
+  if (!container) return;
+  const nextId = _getNextEventId();
+
+  container.innerHTML = CHRONICLE_CHAPTER_1.map(ev => {
+    const done = _chronicleProgress[ev.id];
+    const unlocked = _isEventUnlocked(ev.id);
+    const isNext = ev.id === nextId;
+    const stateClass = done ? 'pin-done' : (!unlocked ? 'pin-locked' : (isNext ? 'pin-active' : 'pin-unlocked'));
+    const onclick = unlocked ? `onclick="openChronicleEvent(${ev.id})"` : '';
+    const tooltip = unlocked ? ev.title : 'Locked';
+
+    return `<button class="map-pin ${stateClass}${ev.mainEvent ? ' pin-main' : ''}" style="left:${ev.mapX}%;top:${ev.mapY}%" ${onclick} title="${tooltip}" aria-label="${tooltip}">
+      <span class="map-pin-dot"></span>
+      ${unlocked ? `<span class="map-pin-label">${ev.id}</span>` : ''}
+      ${isNext ? '<span class="map-pin-pulse"></span>' : ''}
+    </button>`;
+  }).join('');
 }
 
 function renderChronicleEvents() {
@@ -30752,10 +30794,9 @@ function openChronicleEvent(id) {
   if (!detail || !inner) return;
 
   const done = _chronicleProgress[ev.id];
-  const isLocked = !_isEventUnlocked(ev.id);
 
   let html = `<div class="chron-detail-header">
-    <div class="chron-detail-num">EVENT ${ev.id} OF 14</div>
+    <div class="chron-detail-num">EVENT ${ev.id} OF ${CHRONICLE_TOTAL}</div>
     <div class="chron-detail-title">${ev.title}</div>
     <div class="chron-detail-loc">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -30812,7 +30853,6 @@ function chronicleBack() {
 }
 
 function launchChronicleEvent(id) {
-  // Placeholder — will connect to actual mini-game engine
   if (typeof showToast === 'function') {
     showToast('Event launching soon \u2014 stay tuned, knight.', 'info');
   }
@@ -30822,8 +30862,8 @@ function updateChronicleProgress() {
   const completed = Object.keys(_chronicleProgress).length;
   const fill = document.getElementById('chronicle-progress-fill');
   const text = document.getElementById('chronicle-progress-text');
-  if (fill) fill.style.width = ((completed / 14) * 100) + '%';
-  if (text) text.textContent = completed + ' / 14';
+  if (fill) fill.style.width = ((completed / CHRONICLE_TOTAL) * 100) + '%';
+  if (text) text.textContent = completed + ' / ' + CHRONICLE_TOTAL;
 }
 
 // Close Chronicle on Escape

@@ -30690,42 +30690,69 @@ function skipChronicleIntro() {
   if (body) body.classList.remove('hidden');
 }
 
+function _isEventUnlocked(id) {
+  // Event 1 is always unlocked; others require the previous event to be completed
+  if (id === 1) return true;
+  return !!_chronicleProgress[id - 1];
+}
+
+function _getNextEventId() {
+  for (let i = 1; i <= 14; i++) {
+    if (!_chronicleProgress[i]) return i;
+  }
+  return null; // all done
+}
+
 function renderChronicleEvents() {
   const list = document.getElementById('chronicle-event-list');
   if (!list) return;
+  const nextId = _getNextEventId();
 
   list.innerHTML = CHRONICLE_CHAPTER_1.map(ev => {
     const done = _chronicleProgress[ev.id];
+    const unlocked = _isEventUnlocked(ev.id);
+    const isNext = ev.id === nextId;
     const mainClass = ev.mainEvent ? ' main-event' : '';
-    const doneClass = done ? ' completed' : '';
+    const stateClass = done ? ' completed' : (!unlocked ? ' locked' : (isNext ? ' active-event' : ''));
     const tags = (ev.tags || []).map(t =>
       `<span class="chron-event-tag ${TAG_CLASS_MAP[t] || ''}">${t}</span>`
     ).join('');
+    const onclick = unlocked ? `onclick="openChronicleEvent(${ev.id})"` : '';
 
-    return `<div class="chron-event${mainClass}${doneClass}" onclick="openChronicleEvent(${ev.id})">
-      <div class="chron-event-num">${done ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ev.id}</div>
+    let numContent;
+    if (done) {
+      numContent = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+    } else if (!unlocked) {
+      numContent = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
+    } else {
+      numContent = ev.id;
+    }
+
+    const lockLabel = !unlocked ? `<div class="chron-event-lock"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Complete Event ${ev.id - 1} first</div>` : '';
+
+    return `<div class="chron-event${mainClass}${stateClass}" ${onclick}>
+      <div class="chron-event-num">${numContent}</div>
       <div class="chron-event-body">
         <div class="chron-event-title">${ev.title}</div>
         <div class="chron-event-loc">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          ${ev.location}
+          ${unlocked ? ev.location : '???'}
         </div>
-        <div class="chron-event-tags">${tags}</div>
+        ${unlocked ? `<div class="chron-event-tags">${tags}</div>` : lockLabel}
       </div>
     </div>`;
-  }).join('') + `
-    <div class="chronicle-shop-banner">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-      <div class="chronicle-shop-banner-text"><strong>Chapter I Collection</strong> will appear in the Atelier shop after the event ends. Limited edition items — once they're gone, they're gone.</div>
-    </div>`;
+  }).join('');
 }
 
 function openChronicleEvent(id) {
   const ev = CHRONICLE_CHAPTER_1.find(e => e.id === id);
-  if (!ev) return;
+  if (!ev || !_isEventUnlocked(id)) return;
   const detail = document.getElementById('chronicle-detail');
   const inner = document.getElementById('chronicle-detail-inner');
   if (!detail || !inner) return;
+
+  const done = _chronicleProgress[ev.id];
+  const isLocked = !_isEventUnlocked(ev.id);
 
   let html = `<div class="chron-detail-header">
     <div class="chron-detail-num">EVENT ${ev.id} OF 14</div>
@@ -30764,11 +30791,10 @@ function openChronicleEvent(id) {
   if (ev.tone) {
     html += `<div class="chron-detail-section">
       <h3>Tone</h3>
-      <p style="font-style:italic;color:rgba(218,165,32,.6);">${ev.tone}</p>
+      <p style="font-style:italic;color:rgba(196,163,90,.5);">${ev.tone}</p>
     </div>`;
   }
 
-  const done = _chronicleProgress[ev.id];
   html += `<button class="chron-play-btn${done ? ' locked' : ''}" ${done ? 'disabled' : `onclick="launchChronicleEvent(${ev.id})"`}>
     ${done
       ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Completed'

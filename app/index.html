@@ -973,45 +973,58 @@ window._cdnReady.then(function() {
     <!-- Intro video overlay (shows first time) -->
     <div class="chronicle-intro" id="chronicle-intro">
       <video id="chronicle-intro-video" preload="auto" playsinline>
-        <source src="/app/FTZchap1-Intro.mp4" type="video/mp4">
+        <source src="/app/Chronicle/FTZchap1-Intro.mp4" type="video/mp4">
       </video>
       <button class="chronicle-skip-btn" id="chronicle-skip-btn" onclick="skipChronicleIntro()">Skip Intro</button>
     </div>
 
-    <!-- Main chronicle content (hidden during intro) -->
+    <!-- Main chronicle content — Medieval Desk -->
     <div class="chronicle-body" id="chronicle-body">
 
-      <!-- Left: World map + chapter info -->
-      <div class="chronicle-left">
-        <div class="chronicle-map-wrap">
-          <img src="/app/IRL Human World Map 1452.png" class="chronicle-map-img" alt="The Known World — 1452" id="chronicle-map" draggable="false">
-          <div class="chronicle-map-overlay"></div>
-          <div class="chronicle-map-legend">
-            <span class="cml-dot cml-vastilly"></span> Vastilly
-            <span class="cml-dot cml-oakhaven"></span> Oakhaven
-            <span class="cml-dot cml-neutral"></span> Neutral
-            <span class="cml-dot cml-contested"></span> Contested
+      <!-- The desk surface -->
+      <div class="chronicle-desk">
+
+        <!-- Map on the desk (left / center) -->
+        <div class="chronicle-desk-map">
+          <div class="chronicle-map-wrap">
+            <img src="/app/Chronicle/IRL Human World Map 1452.png" class="chronicle-map-img" alt="Earth, 1452" id="chronicle-map" draggable="false">
+            <!-- Parchment corner curls -->
+            <div class="map-corner map-corner-tl"></div>
+            <div class="map-corner map-corner-tr"></div>
+            <div class="map-corner map-corner-bl"></div>
+            <div class="map-corner map-corner-br"></div>
+          </div>
+          <!-- Chapter info parchment below map -->
+          <div class="chronicle-chapter-parchment">
+            <div class="chronicle-chapter-label">CHAPTER I</div>
+            <h2 class="chronicle-chapter-title">The War of the Shattered Pact</h2>
+            <p class="chronicle-chapter-desc">The Treaty of the Silver Stream lies broken. Vastilly's banners march east — and you, a knight of the realm, are called to serve.</p>
+            <div class="chronicle-progress-bar">
+              <div class="chronicle-progress-fill" id="chronicle-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="chronicle-progress-label"><span id="chronicle-progress-text">0 / 14</span> Events Complete</div>
           </div>
         </div>
-        <div class="chronicle-chapter-info">
-          <div class="chronicle-chapter-label">CHAPTER I</div>
-          <h2 class="chronicle-chapter-title">The War of the Shattered Pact</h2>
-          <p class="chronicle-chapter-desc">The Treaty of the Silver Stream lies broken. Vastilly's banners march east — and you, a knight of the realm, are called to serve. From the royal court to the fall of Elowen, witness the first great war of Fortized history.</p>
-          <div class="chronicle-progress-bar">
-            <div class="chronicle-progress-fill" id="chronicle-progress-fill" style="width:0%"></div>
+
+        <!-- Scroll / event list (right side, like a rolled-out scroll) -->
+        <div class="chronicle-scroll-panel">
+          <div class="chronicle-scroll-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            War Orders
           </div>
-          <div class="chronicle-progress-label"><span id="chronicle-progress-text">0 / 14</span> Events Complete</div>
+          <div class="chronicle-scroll-list" id="chronicle-event-list">
+            <!-- Events populated by JS -->
+          </div>
+          <div class="chronicle-shop-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            <div class="chronicle-shop-banner-text"><strong>Chapter I Collection</strong> will appear in the Atelier after the event ends.</div>
+          </div>
         </div>
-      </div>
 
-      <!-- Right: Event list (scrollable) -->
-      <div class="chronicle-right" id="chronicle-event-list">
-        <!-- Events populated by JS -->
       </div>
-
     </div>
 
-    <!-- Event detail panel (slides in when an event is selected) -->
+    <!-- Event detail panel -->
     <div class="chronicle-detail" id="chronicle-detail">
       <button class="chronicle-detail-back" onclick="chronicleBack()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>

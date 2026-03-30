@@ -30739,7 +30739,7 @@ function renderChronicleMapPins() {
 
     return `<button class="map-pin ${stateClass}${ev.mainEvent ? ' pin-main' : ''}" style="left:${ev.mapX}%;top:${ev.mapY}%" ${onclick} title="${tooltip}" aria-label="${tooltip}">
       <span class="map-pin-dot"></span>
-      ${unlocked ? `<span class="map-pin-label">${ev.id}</span>` : ''}
+      ${unlocked ? `<span class="map-pin-label">${ev.location}</span>` : ''}
       ${isNext ? '<span class="map-pin-pulse"></span>' : ''}
     </button>`;
   }).join('');

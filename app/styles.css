@@ -2856,11 +2856,31 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 .chronicle-desk::after{content:"";position:absolute;top:-40px;left:60px;width:400px;height:400px;background:radial-gradient(circle,rgba(255,180,60,.04) 0%,transparent 70%);pointer-events:none;}
 
 /* ── Left: Map area ── */
-.chronicle-desk-map{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 32px;overflow-y:auto;min-width:0;}
+.chronicle-desk-map{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px 24px;overflow-y:auto;min-width:0;}
 
-/* Map — parchment on desk */
-.chronicle-map-wrap{position:relative;max-width:720px;width:100%;border-radius:4px;box-shadow:var(--elev-3),inset 0 0 40px rgba(120,90,40,.04);border:2px solid rgba(120,90,40,.15);overflow:hidden;flex-shrink:0;}
+/* Map — parchment on desk (larger) */
+.chronicle-map-wrap{position:relative;max-width:880px;width:100%;border-radius:4px;box-shadow:var(--elev-3),inset 0 0 40px rgba(120,90,40,.04);border:2px solid rgba(120,90,40,.15);overflow:visible;flex-shrink:0;}
 .chronicle-map-img{width:100%;display:block;filter:brightness(.92) saturate(.9);}
+
+/* ── Interactive Map Pins ── */
+.chronicle-map-pins{position:absolute;inset:0;z-index:2;pointer-events:none;}
+.map-pin{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;background:none;border:none;cursor:pointer;padding:0;z-index:3;outline:none;display:flex;align-items:center;justify-content:center;}
+.map-pin .map-pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(12,15,22,.6);transition:all .2s var(--ease-out);box-shadow:0 1px 6px rgba(0,0,0,.5);}
+.map-pin .map-pin-label{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:var(--font-display);font-size:9px;font-weight:800;color:#fff;background:rgba(12,15,22,.75);padding:1px 6px;border-radius:8px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;backdrop-filter:blur(4px);}
+.map-pin:hover .map-pin-label{opacity:1;}
+.map-pin .map-pin-pulse{position:absolute;width:28px;height:28px;border-radius:50%;border:2px solid rgba(218,165,32,.4);animation:mapPinPulse 2s ease-out infinite;pointer-events:none;}
+@keyframes mapPinPulse{0%{transform:scale(.7);opacity:.8;}100%{transform:scale(1.8);opacity:0;}}
+/* Pin states */
+.map-pin.pin-active .map-pin-dot{background:#ffd700;border-color:rgba(255,215,0,.6);box-shadow:0 0 10px rgba(218,165,32,.5),0 1px 6px rgba(0,0,0,.5);}
+.map-pin.pin-active:hover .map-pin-dot{transform:scale(1.15);box-shadow:0 0 16px rgba(218,165,32,.6);}
+.map-pin.pin-unlocked .map-pin-dot{background:#c4a35a;border-color:rgba(196,163,90,.5);}
+.map-pin.pin-unlocked:hover .map-pin-dot{transform:scale(1.1);background:#daa520;}
+.map-pin.pin-done .map-pin-dot{background:var(--green);border-color:rgba(62,207,110,.4);box-shadow:0 0 6px rgba(62,207,110,.3),0 1px 4px rgba(0,0,0,.4);}
+.map-pin.pin-done:hover .map-pin-dot{transform:scale(1.1);}
+.map-pin.pin-locked{cursor:not-allowed;}
+.map-pin.pin-locked .map-pin-dot{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.08);box-shadow:none;}
+.map-pin.pin-main .map-pin-dot{width:18px;height:18px;}
+.map-pin.pin-main.pin-active .map-pin-dot{box-shadow:0 0 14px rgba(218,165,32,.6),0 0 28px rgba(218,165,32,.2),0 1px 6px rgba(0,0,0,.5);}
 .map-corner{position:absolute;width:24px;height:24px;pointer-events:none;}
 .map-corner-tl{top:0;left:0;background:linear-gradient(135deg,rgba(12,15,22,.7) 40%,transparent 41%);}
 .map-corner-tr{top:0;right:0;background:linear-gradient(225deg,rgba(12,15,22,.7) 40%,transparent 41%);}
@@ -2868,7 +2888,7 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 .map-corner-br{bottom:0;right:0;background:linear-gradient(315deg,rgba(12,15,22,.7) 40%,transparent 41%);}
 
 /* Chapter parchment strip — glass panel */
-.chronicle-chapter-parchment{max-width:720px;width:100%;margin-top:16px;padding:16px 20px;border-radius:var(--radius-sm);background:var(--glass-mid);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border:1px solid var(--glass-border);box-shadow:var(--elev-1);}
+.chronicle-chapter-parchment{max-width:880px;width:100%;margin-top:16px;padding:16px 20px;border-radius:var(--radius-sm);background:var(--glass-mid);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border:1px solid var(--glass-border);box-shadow:var(--elev-1);}
 .chronicle-chapter-label{font-size:var(--font-hdr);font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#c4a35a;margin-bottom:4px;}
 .chronicle-chapter-title{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-.03em;color:#e8d5a8;margin:0 0 6px;line-height:1.15;}
 .chronicle-chapter-desc{font-size:var(--font-sm);line-height:1.55;color:rgba(200,180,140,.5);margin-bottom:14px;}

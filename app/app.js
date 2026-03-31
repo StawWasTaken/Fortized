@@ -5007,7 +5007,8 @@ function appendMessage(container, msg, context, prevAuthor) {
     const arr=Array.isArray(users)?users:Object.values(users);
     if (!arr.length) return '';
     const isMine = arr.includes(CU?.username);
-    return `<span class="r-pill${isMine?' mine':''}" onclick="toggleReaction('${escapeHTML(id)}','${emoji}','${context}')" onmousedown="_reactionIntensityStart(this,'${escapeHTML(id)}','${emoji}','${context}')" onmouseup="_reactionIntensityEnd()" onmouseleave="_reactionIntensityEnd()" data-r-emoji="${escapeHTML(emoji)}" data-r-users="${escapeHTML(arr.join(','))}"><span class="r-emoji"><img src="${emojiToTwemojiUrl(emoji)}" alt="${emoji}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='${emoji}'"></span><span class="r-count">${arr.length}</span></span>`;
+    const hasSuperReaction = _hasActiveRadiance();
+    return `<span class="r-pill${isMine?' mine':''}" onclick="toggleReaction('${escapeHTML(id)}','${emoji}','${context}')" onmousedown="${hasSuperReaction?`_reactionIntensityStart(this,'${escapeHTML(id)}','${emoji}','${context}')`:''}" onmouseup="_reactionIntensityEnd()" onmouseleave="_reactionIntensityEnd()" data-r-emoji="${escapeHTML(emoji)}" data-r-users="${escapeHTML(arr.join(','))}"><span class="r-emoji"><img src="${emojiToTwemojiUrl(emoji)}" alt="${emoji}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='${emoji}'"></span><span class="r-count">${arr.length}</span>${hasSuperReaction?`<span class="r-super-btn" onclick="event.stopPropagation();triggerSuperReaction(this.closest('.r-pill'),'${escapeHTML(emoji)}')" title="Super Reaction" data-tip="✨ Super!"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>`:''}</span>`;
   }).join('')+`<span class="r-pill r-add-btn" onclick="addReactionUI(event,'${escapeHTML(id)}','${context}')" data-tip="Add Reaction"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></span>`:'';
 
   const safeId=escapeHTML(id);
@@ -11420,74 +11421,9 @@ function _hasActiveRadiance() {
          (CU?.radiancePlus && new Date(CU.radiancePlus) > new Date());
 }
 
-// ═══ Personal Custom Emojis & Stickers ═══
-// Users can upload up to 5 custom emojis and 5 custom stickers for themselves (usable everywhere).
-// Non-radiance users cannot upload GIF emojis/stickers.
-const PERSONAL_EMOJI_LIMIT = 5;
-const PERSONAL_STICKER_LIMIT = 5;
-
-function openPersonalEmojiUpload() {
-  const current = CU.personalEmojis || [];
-  if (current.length >= PERSONAL_EMOJI_LIMIT) { toast('You\'ve reached the max of '+PERSONAL_EMOJI_LIMIT+' personal emojis.','error'); return; }
-  const inp = document.createElement('input');
-  inp.type = 'file';
-  inp.accept = _hasActiveRadiance() ? 'image/*,image/gif' : 'image/png,image/jpeg,image/webp';
-  inp.onchange = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    if (!_hasActiveRadiance() && file.type === 'image/gif') { toast('Radiance required to upload animated (GIF) emojis.','error'); return; }
-    if (file.size > 256*1024) { toast('Max 256KB per emoji.','error'); return; }
-    const name = prompt('Emoji name (letters, numbers, underscores):');
-    if (!name || !/^[a-zA-Z0-9_]+$/.test(name)) { toast('Invalid name. Use only letters, numbers, underscores.','error'); return; }
-    if (current.find(em=>em.name===name)) { toast('Name already used.','error'); return; }
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      CU.personalEmojis = CU.personalEmojis || [];
-      CU.personalEmojis.push({ name, data: ev.target.result, type: file.type, uploadedAt: new Date().toISOString() });
-      await saveUser();
-      toast('Personal emoji :'+name+': added!','success');
-    };
-    reader.readAsDataURL(file);
-  };
-  inp.click();
-}
-
-function deletePersonalEmoji(idx) {
-  if (!CU.personalEmojis?.[idx]) return;
-  CU.personalEmojis.splice(idx, 1);
-  saveUser();
-  toast('Personal emoji removed.','success');
-}
-
-function openPersonalStickerUpload() {
-  const current = CU.personalStickers || [];
-  if (current.length >= PERSONAL_STICKER_LIMIT) { toast('You\'ve reached the max of '+PERSONAL_STICKER_LIMIT+' personal stickers.','error'); return; }
-  const inp = document.createElement('input');
-  inp.type = 'file';
-  inp.accept = _hasActiveRadiance() ? 'image/png,image/gif,image/webp' : 'image/png,image/webp';
-  inp.onchange = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    if (!_hasActiveRadiance() && file.type === 'image/gif') { toast('Radiance required to upload animated (GIF) stickers.','error'); return; }
-    if (file.size > 512*1024) { toast('Max 512KB per sticker.','error'); return; }
-    const name = prompt('Sticker name:');
-    if (!name || !name.trim()) { toast('Name required.','error'); return; }
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      CU.personalStickers = CU.personalStickers || [];
-      CU.personalStickers.push({ name: name.trim(), url: ev.target.result, data: ev.target.result, type: file.type, uploadedAt: new Date().toISOString() });
-      await saveUser();
-      toast('Personal sticker added!','success');
-    };
-    reader.readAsDataURL(file);
-  };
-  inp.click();
-}
-
-function deletePersonalSticker(idx) {
-  if (!CU.personalStickers?.[idx]) return;
-  CU.personalStickers.splice(idx, 1);
-  saveUser();
-  toast('Personal sticker removed.','success');
-}
+// ═══ Emoji & Sticker Usage ═══
+// Radiance Basic & Radiance+ users can use all emojis and stickers daily.
+// Non-Radiance users cannot access emoji/sticker reactions.
 
 function insertFortizedEmoji(name, url) {
   const ta = document.getElementById(activeEmojiTarget);
@@ -12448,10 +12384,29 @@ function buildProfileView(tab) {
         </div>
       </div>`;
     } else {
+      const PRESET_THEMES = [
+        {name:'Purple Flow', c1:'#a855f7', c2:'#3b82f6'},
+        {name:'Sunset Glow', c1:'#f97316', c2:'#f0abfc'},
+        {name:'Ocean Breeze', c1:'#06b6d4', c2:'#0ea5e9'},
+        {name:'Forest Vibes', c1:'#10b981', c2:'#6366f1'},
+        {name:'Crimson Burst', c1:'#ef4444', c2:'#f97316'},
+        {name:'Midnight Dream', c1:'#1e293b', c2:'#64748b'},
+        {name:'Pink Paradise', c1:'#ec4899', c2:'#f0abfc'},
+        {name:'Green Pulse', c1:'#22c55e', c2:'#84cc16'},
+      ];
       main.innerHTML = `<div class="settings-panel">
         ${ptHero}
-        <div class="settings-section-title">PROFILE THEME</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:20px;">Your profile card and avatar will have a gradient stroke matching these colors. <span style="color:rgba(255,200,62,.8);">Radiance+</span></div>
+        <div class="settings-section-title">PRESET THEMES</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:28px;">
+          ${PRESET_THEMES.map(t => `
+            <div onclick="applyPresetTheme('${t.c1}','${t.c2}')" style="cursor:pointer;padding:14px;border-radius:12px;border:2px solid ${pt.color1===t.c1&&pt.color2===t.c2?'var(--accent)':'rgba(255,255,255,.08)'};background:${pt.color1===t.c1&&pt.color2===t.c2?'rgba(255,249,62,.04)':'rgba(255,255,255,.01)'};transition:all .15s;display:flex;align-items:center;gap:10px;" onmouseover="this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="this.style.borderColor='${pt.color1===t.c1&&pt.color2===t.c2?'var(--accent)':'rgba(255,255,255,.08)'}'" data-theme-c1="${t.c1}" data-theme-c2="${t.c2}">
+              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,${t.c1},${t.c2});flex-shrink:0;border:2px solid rgba(255,255,255,.1);"></div>
+              <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:#fff;">${t.name}</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:1px;">${t.c1} → ${t.c2}</div></div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="settings-section-title">CUSTOM THEME</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:20px;">Or create your own gradient colors</div>
         <!-- Color pickers -->
         <div class="settings-row">
           <div class="settings-row-label"><div class="srl-name">Color 1</div></div>
@@ -24950,8 +24905,12 @@ function renderAtelierTab(tab) {
       {icon:ftzIcon('image','22'),name:'Custom Banner',desc:'Full profile banner',color:'#60a5fa',plus:false},
       {icon:ftzIcon('clip','22'),name:'45MB Uploads',desc:'Bigger attachments',color:'#3ecf6e',plus:false},
       {icon:ftzIcon('gem','22'),name:'Radiance Badge',desc:'Exclusive badge',color:'#a78bfa',plus:false},
+      {icon:'😊',name:'Emoji Access',desc:'Use all emojis daily',color:'#ffb627',plus:false},
+      {icon:'🎞️',name:'Sticker Access',desc:'Use all stickers daily',color:'#ff6b9d',plus:false},
       {icon:ftzIcon('letters','22'),name:'Custom Font',desc:'Change your font',color:'#fb923c',plus:true},
       {icon:ftzIcon('gift','22'),name:'Gift Radiance',desc:'Gift friends',color:'#f472b6',plus:true},
+      {icon:ftzIcon('zap','22'),name:'Profile Themes',desc:'Gradient border colors',color:'#06b6d4',plus:true},
+      {icon:ftzIcon('palette','22'),name:'Enhanced Reactions',desc:'Super reaction toggle',color:'#ec4899',plus:true},
     ];
     const doneQuests = (CU?.completedQuests||[]);
     const allQ = [
@@ -25097,8 +25056,8 @@ function renderAtelierTab(tab) {
 
   // ── RADIANCE DWELLING ─────────────────────────────────────
   else if (tab === 'radiance') {
-    const PLAN_BASIC = ['✨ Profile Glow','🖼️ Custom Banner','📎 45MB Uploads',_radianceImg('14')+' Radiance Badge','🔔 Priority Notifs'];
-    const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance',_boostSvg('14')+' Bastion Boost','🌟 Animated Badge'];
+    const PLAN_BASIC = ['✨ Profile Glow','🖼️ Custom Banner','📎 45MB Uploads',_radianceImg('14')+' Radiance Badge','😊 Daily Emojis','🎞️ Daily Stickers'];
+    const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance','🌈 Profile Themes','⚡ Super Reactions','🌟 Animated Badge'];
     const PRICES = {basic:[{days:7,onyx:200},{days:30,onyx:600},{days:90,onyx:1500}], plus:[{days:30,onyx:1200},{days:90,onyx:3000}]};
 
     el.innerHTML = `<div class="atelier-content-inner" style="max-width:820px;">
@@ -28484,6 +28443,15 @@ async function saveProfileTheme() {
   await saveUser();
   clearSettingsDirty();
   toast('🎨 Profile theme saved!', 'success');
+}
+
+function applyPresetTheme(c1, c2) {
+  const col1 = document.getElementById('pt-color1');
+  const col2 = document.getElementById('pt-color2');
+  if (col1) col1.value = c1;
+  if (col2) col2.value = c2;
+  previewProfileTheme();
+  saveProfileTheme();
 }
 
 

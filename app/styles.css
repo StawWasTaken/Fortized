@@ -584,12 +584,15 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .msg-edited:hover{color:rgba(255,255,255,.4);}
 /* Reactions */
 .msg-reactions{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
-.r-pill{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;padding:3px 10px;font-size:12px;cursor:pointer;transition:all .15s;}
+.r-pill{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;padding:3px 10px;font-size:12px;cursor:pointer;transition:all .15s;position:relative;}
 .r-pill:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.1);}
 .r-pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .r-pill:active{transform:scale(.95);}
 .r-pill.mine{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);}
 .r-pill.super-react{animation:sr-pulse .5s ease;transform-origin:center;}
+.r-super-btn{display:none;width:16px;height:16px;padding:2px;background:rgba(255,215,62,.12);border:1px solid rgba(255,215,62,.24);border-radius:50%;cursor:pointer;transition:all .12s;color:var(--accent);flex-shrink:0;align-items:center;justify-content:center;}
+.r-pill:hover .r-super-btn{display:flex;}
+.r-super-btn:hover{background:rgba(255,215,62,.22);border-color:rgba(255,215,62,.4);transform:scale(1.1);}
 @keyframes sr-pulse{0%{transform:scale(1);}30%{transform:scale(1.3);}60%{transform:scale(0.95);}100%{transform:scale(1);}}
 .sr-particle{position:fixed;font-size:18px;pointer-events:none;z-index:99999;animation-duration:1s;animation-fill-mode:forwards;animation-timing-function:cubic-bezier(.2,.6,.3,1);}
 @keyframes sr-float{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-80px) scale(.6);}}

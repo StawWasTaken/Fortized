@@ -6592,21 +6592,22 @@ function initFortizedUXResilience() {
 // ════════════════════════════════════════════
 (async function appInit(){
   const _sl=document.getElementById('app-loading');
-  const _st=setTimeout(()=>{if(_sl)_sl.style.display='none';},8000);
+  const _st=setTimeout(()=>{if(_sl){_sl.style.opacity='0';setTimeout(()=>{_sl.style.display='none';},300);}},10000);
+  window._loadingSafetyTimer = _st;
   try{
   if (document.readyState==='loading') await new Promise(r=>document.addEventListener('DOMContentLoaded',r));
 
-  // Wait for CDN scripts + FortizedSocial to be available (max 6s)
+  // Wait for CDN scripts + FortizedSocial to be available (max 5s with faster check)
   if (typeof FortizedSocial === 'undefined') {
     await Promise.race([
-      new Promise(r => { const iv = setInterval(() => { if (typeof FortizedSocial !== 'undefined') { clearInterval(iv); r(); } }, 100); }),
-      new Promise(r => setTimeout(r, 6000))
+      new Promise(r => { const iv = setInterval(() => { if (typeof FortizedSocial !== 'undefined') { clearInterval(iv); r(); } }, 50); }),
+      new Promise(r => setTimeout(r, 5000))
     ]);
   }
   if (typeof FortizedSocial === 'undefined') {
     // Scripts never loaded — show offline state from cache if possible
     const lbl = document.querySelector('#app-loading .lbl');
-    if (lbl) lbl.textContent = 'Offline — loading from cache…';
+    if (lbl) lbl.textContent = '⚠️ Network issue — loading cached data…';
   }
 
   // Detect Electron desktop app via preload bridge OR User-Agent string
@@ -6643,17 +6644,28 @@ function initFortizedUXResilience() {
     }
     // First load — must fetch from database
     const lbl=document.querySelector('#app-loading .lbl');
-    if(lbl)lbl.textContent='Signing in…';
+    if(lbl)lbl.textContent='Fetching your profile…';
     try{
       CU=await Promise.race([
         FortizedSocial.getUserByName(username),
-        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000))
+        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),7000))
       ]);
-    }catch{CU=null;}
+    }catch(e){
+      CU=null;
+      if(lbl)lbl.textContent='⚠️ Connection timeout. Retrying…';
+      // Try once more with longer timeout
+      try{
+        await new Promise(r=>setTimeout(r,1500));
+        CU=await Promise.race([
+          FortizedSocial.getUserByName(username),
+          new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))
+        ]);
+      }catch{CU=null;}
+    }
     if (!CU?.username){
       localStorage.removeItem('ftz_current');
       localStorage.removeItem('fortized_current_user');
-      window.location.href='/login';
+      window.location.href='/login?error=auth_failed';
       return;
     }
     localStorage.setItem('ftz_user_'+username,JSON.stringify(CU));

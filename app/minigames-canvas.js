@@ -368,7 +368,20 @@ function startCombatGame(eventId, enemyCount) {
     gameActive = false;
     canvas.remove();
     uiDiv.remove();
-    toast(victory ? '✓ VICTORY!' : '✗ DEFEAT!', victory ? 'success' : 'error');
+
+    if (victory) {
+      // Mark this event as completed
+      if (typeof _chronicleProgress !== 'undefined') {
+        _chronicleProgress[eventId] = true;
+        console.log('Event', eventId, 'marked as complete');
+        if (typeof updateChronicleProgress === 'function') {
+          updateChronicleProgress();
+        }
+      }
+      toast('✓ VICTORY! Event unlocked!', 'success');
+    } else {
+      toast('✗ DEFEAT! Try again.', 'error');
+    }
   }
 
   update();
@@ -510,7 +523,20 @@ function startStealthGame() {
     gameActive = false;
     canvas.remove();
     uiDiv.remove();
-    toast(victory ? `✓ RAID SUCCESSFUL! Gold: ${Math.round(player.gold)}` : '✗ CAUGHT!', victory ? 'success' : 'error');
+
+    if (victory) {
+      // Mark Event 2 as completed
+      if (typeof _chronicleProgress !== 'undefined') {
+        _chronicleProgress[2] = true;
+        console.log('Event 2 marked as complete');
+        if (typeof updateChronicleProgress === 'function') {
+          updateChronicleProgress();
+        }
+      }
+      toast(`✓ RAID SUCCESSFUL! Gold: ${Math.round(player.gold)}. Event unlocked!`, 'success');
+    } else {
+      toast('✗ CAUGHT! Mission failed.', 'error');
+    }
   }
 
   update();

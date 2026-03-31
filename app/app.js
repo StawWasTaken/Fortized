@@ -30882,6 +30882,11 @@ function launchChronicleEvent(id) {
     if (typeof toast === 'function') toast('Minigame system loading...', 'info');
   }
 }
+
+function updateChronicleProgress() {
+  const completed = Object.keys(_chronicleProgress).length;
+  const fill = document.getElementById('chronicle-progress-fill');
+  const text = document.getElementById('chronicle-progress-text');
   if (fill) fill.style.width = ((completed / CHRONICLE_TOTAL) * 100) + '%';
   if (text) text.textContent = completed + ' / ' + CHRONICLE_TOTAL;
 }

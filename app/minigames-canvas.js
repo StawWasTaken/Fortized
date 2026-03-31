@@ -5,25 +5,15 @@
  * Play as a Fortized Knight. Real sword combat, blood, enemy AI, mission objectives.
  */
 
-// Wait for Phaser to load
-function waitForPhaser(callback) {
-  if (typeof Phaser !== 'undefined') {
-    callback();
-  } else {
-    setTimeout(() => waitForPhaser(callback), 100);
-  }
-}
-
 function launchChronicleMinigame(eventId) {
-  waitForPhaser(() => {
-    if (eventId === 1) {
-      createEvent1Game();
-    } else if (eventId === 2) {
-      createEvent2Game();
-    } else {
-      createGenericCombatGame(eventId);
-    }
-  });
+  console.log('Launching event:', eventId);
+  if (eventId === 1) {
+    createEvent1Game();
+  } else if (eventId === 2) {
+    createEvent2Game();
+  } else {
+    createGenericCombatGame(eventId);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -86,12 +76,19 @@ function createEvent1Game() {
     cursor: pointer;
   `;
   btn.textContent = 'BEGIN MISSION';
-  btn.onclick = () => {
-    intro.remove();
-    startCombatGame(container, 15, 'EVENT 1');
-  };
+  btn.id = 'begin-event1';
   intro.appendChild(btn);
   container.appendChild(intro);
+
+  setTimeout(() => {
+    const button = document.getElementById('begin-event1');
+    if (button) {
+      button.addEventListener('click', () => {
+        intro.remove();
+        startCombatGame(container, 15, 'EVENT 1');
+      });
+    }
+  }, 10);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -151,12 +148,19 @@ function createEvent2Game() {
     cursor: pointer;
   `;
   btn.textContent = 'START RAID';
-  btn.onclick = () => {
-    intro.remove();
-    startStealthGame(container);
-  };
+  btn.id = 'begin-event2';
   intro.appendChild(btn);
   container.appendChild(intro);
+
+  setTimeout(() => {
+    const button = document.getElementById('begin-event2');
+    if (button) {
+      button.addEventListener('click', () => {
+        intro.remove();
+        startStealthGame(container);
+      });
+    }
+  }, 10);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -231,12 +235,19 @@ function createGenericCombatGame(eventId) {
     cursor: pointer;
   `;
   btn.textContent = 'ENTER BATTLE';
-  btn.onclick = () => {
-    intro.remove();
-    startCombatGame(container, 20 + eventId * 2, `EVENT ${eventId}`);
-  };
+  btn.id = `begin-event${eventId}`;
   intro.appendChild(btn);
   container.appendChild(intro);
+
+  setTimeout(() => {
+    const button = document.getElementById(`begin-event${eventId}`);
+    if (button) {
+      button.addEventListener('click', () => {
+        intro.remove();
+        startCombatGame(container, 20 + eventId * 2, `EVENT ${eventId}`);
+      });
+    }
+  }, 10);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

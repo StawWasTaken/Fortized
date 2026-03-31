@@ -1443,7 +1443,7 @@ function showView(v, _skipPush) {
   if (rBtn) rBtn.classList.add('active');
 
   // Post-show callbacks
-  if (v === 'atelier') setTimeout(() => { refreshCU().then(()=>{ switchAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }).catch(()=>{ switchAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }); }, 0);
+  if (v === 'atelier') { _atelierTab = 'overview'; renderAtelierTab('overview'); setTimeout(() => { refreshCU().then(()=>{ switchAtelierTab('overview'); refreshDailyBtn(); }).catch(()=>{ switchAtelierTab('overview'); refreshDailyBtn(); }); }, 0); }
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
   if (v === 'dms' && !curDM && !curGC) setTimeout(() => { showDMFriendsHome(); }, 50);
@@ -24974,84 +24974,104 @@ function renderAtelierTab(tab) {
 
     el.innerHTML = `<div class="atelier-content-inner">
 
+      <!-- Welcome Banner -->
+      <div style="margin-bottom:24px;">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:4px;">Welcome back${CU?.displayName ? ', '+CU.displayName : ''}</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.3);line-height:1.5;">Your Onyx balance: <span style="color:var(--accent);font-weight:700;">${bal}</span> · ${doneQ.length}/${allQ.length} quests done</div>
+      </div>
+
       <!-- Quick Actions Row -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px;">
         <!-- Daily Claim -->
-        <div style="background:${dailyDone?'rgba(62,207,110,.04)':'rgba(255,249,62,.04)'};border:1.5px solid ${dailyDone?'rgba(62,207,110,.12)':'rgba(255,249,62,.1)'};border-radius:16px;padding:20px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="claimDailyQuest()" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.2)'" onmouseout="this.style.transform='';this.style.boxShadow='none'">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="width:36px;height:36px;border-radius:12px;background:${dailyDone?'rgba(62,207,110,.08)':'rgba(255,249,62,.08)'};display:flex;align-items:center;justify-content:center;font-size:18px;">🎁</div>
-            <span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:${dailyDone?'rgba(62,207,110,.12)':'rgba(255,249,62,.12)'};color:${dailyDone?'#3ecf6e':'var(--accent)'};">${dailyDone?'CLAIMED':'CLAIM'}</span>
+        <div style="background:${dailyDone?'linear-gradient(135deg,rgba(62,207,110,.05),rgba(62,207,110,.02))':'linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02))'};border:1.5px solid ${dailyDone?'rgba(62,207,110,.12)':'rgba(255,249,62,.1)'};border-radius:18px;padding:22px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="claimDailyQuest()" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='none'">
+          <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,${dailyDone?'rgba(62,207,110,.06)':'rgba(255,249,62,.06)'},transparent 70%);pointer-events:none;"></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:40px;height:40px;border-radius:14px;background:${dailyDone?'rgba(62,207,110,.1)':'rgba(255,249,62,.1)'};display:flex;align-items:center;justify-content:center;font-size:20px;">🎁</div>
+            <span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:${dailyDone?'rgba(62,207,110,.12)':'rgba(255,249,62,.12)'};color:${dailyDone?'#3ecf6e':'var(--accent)'};">${dailyDone?'CLAIMED':'CLAIM'}</span>
           </div>
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">Daily Onyx</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.3);">+50 Onyx every day</div>
+          <div style="font-family:'Syne',sans-serif;font-size:14.5px;font-weight:800;color:#fff;margin-bottom:5px;">Daily Onyx</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);">+50 Onyx every day</div>
         </div>
         <!-- Browse Shop -->
-        <div style="background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.05);border-radius:16px;padding:20px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('shop')" onmouseover="this.style.borderColor='rgba(167,139,250,.2)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="width:36px;height:36px;border-radius:12px;background:rgba(167,139,250,.08);display:flex;align-items:center;justify-content:center;">
+        <div style="background:linear-gradient(135deg,rgba(167,139,250,.04),rgba(167,139,250,.01));border:1.5px solid rgba(167,139,250,.1);border-radius:18px;padding:22px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="switchAtelierTab('shop')" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.25)';this.style.borderColor='rgba(167,139,250,.22)'" onmouseout="this.style.transform='';this.style.boxShadow='none';this.style.borderColor='rgba(167,139,250,.1)'">
+          <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(167,139,250,.06),transparent 70%);pointer-events:none;"></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:40px;height:40px;border-radius:14px;background:rgba(167,139,250,.1);display:flex;align-items:center;justify-content:center;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             </div>
-            <span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:rgba(167,139,250,.12);color:#a78bfa;">SHOP</span>
+            <span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(167,139,250,.12);color:#a78bfa;">SHOP</span>
           </div>
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">Browse Items</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.3);">Themes, decorations & more</div>
+          <div style="font-family:'Syne',sans-serif;font-size:14.5px;font-weight:800;color:#fff;margin-bottom:5px;">Browse Items</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);">Themes, decorations & more</div>
         </div>
         <!-- Radiance -->
-        <div style="background:${hasRad||hasPlus?'rgba(255,160,62,.04)':'rgba(255,255,255,.02)'};border:1.5px solid ${hasRad||hasPlus?'rgba(255,160,62,.12)':'rgba(255,255,255,.05)'};border-radius:16px;padding:20px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('radiance')" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.2)'" onmouseout="this.style.transform='';this.style.boxShadow='none'">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="width:36px;height:36px;border-radius:12px;background:rgba(255,160,62,.08);display:flex;align-items:center;justify-content:center;">
+        <div style="background:${hasRad||hasPlus?'linear-gradient(135deg,rgba(255,160,62,.05),rgba(255,160,62,.02))':'linear-gradient(135deg,rgba(251,146,60,.04),rgba(251,146,60,.01))'};border:1.5px solid ${hasRad||hasPlus?'rgba(255,160,62,.12)':'rgba(251,146,60,.08)'};border-radius:18px;padding:22px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="switchAtelierTab('radiance')" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='none'">
+          <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(255,160,62,.06),transparent 70%);pointer-events:none;"></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:40px;height:40px;border-radius:14px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;">
               ${hasPlus ? _radiancePlusImg('20') : hasRad ? _radianceImg('20') : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'}
             </div>
-            ${hasRad||hasPlus?'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:rgba(62,207,110,.12);color:#3ecf6e;">ACTIVE</span>':'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:rgba(251,146,60,.12);color:#fb923c;">UPGRADE</span>'}
+            ${hasRad||hasPlus?'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(62,207,110,.12);color:#3ecf6e;">ACTIVE</span>':'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(251,146,60,.12);color:#fb923c;">UPGRADE</span>'}
           </div>
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">${hasPlus?'Radiance+':hasRad?'Radiance':'Get Radiance'}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.3);">${hasPlus?daysPlus+' days left':hasRad?daysRad+' days left':'Premium perks & badge'}</div>
+          <div style="font-family:'Syne',sans-serif;font-size:14.5px;font-weight:800;color:#fff;margin-bottom:5px;">${hasPlus?'Radiance+':hasRad?'Radiance':'Get Radiance'}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);">${hasPlus?daysPlus+' days left':hasRad?daysRad+' days left':'Premium perks & badge'}</div>
         </div>
       </div>
 
       <!-- Radiance Perks -->
-      <div style="margin-bottom:28px;">
+      <div style="margin-bottom:32px;">
         <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
           <span>Radiance Perks</span>
-          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('radiance')">See All</span>
+          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('radiance')">See All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
           ${PERKS.map(p => {
             const unlocked = p.plus ? hasPlus : hasRad;
-            return '<div style="background:'+(unlocked?'rgba('+p.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',')+', 0.04)':'rgba(255,255,255,.02)')+';border:1px solid '+(unlocked?p.color+'20':'rgba(255,255,255,.04)')+';border-radius:14px;padding:14px;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);'+(unlocked?'':'opacity:.45')+'"'+(unlocked?' onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'\'"':'')+'>'
-              + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
-              + '<div style="color:'+(unlocked?p.color:'rgba(255,255,255,.3)')+';">'+p.icon+'</div>'
-              + '<div style="font-size:12px;font-weight:700;color:'+(unlocked?'#fff':'rgba(255,255,255,.4)')+';">'+p.name+'</div>'
-              + (p.plus?'<span style="margin-left:auto;font-size:8px;font-weight:800;color:#ffd93e;background:rgba(255,220,62,.1);padding:2px 6px;border-radius:100px;">+</span>':'')
+            const rgb = p.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',');
+            return '<div style="background:'+(unlocked?'linear-gradient(135deg,rgba('+rgb+',.05),rgba('+rgb+',.02))':'rgba(255,255,255,.015)')+';border:1.5px solid '+(unlocked?p.color+'18':'rgba(255,255,255,.04)')+';border-radius:16px;padding:16px;position:relative;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);'+(unlocked?'':'opacity:.4')+'"'+(unlocked?' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.15)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'none\'"':'')+'>'
+              + (unlocked?'<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,'+p.color+'60,'+p.color+'20);"></div>':'')
+              + '<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;">'
+              + '<div style="width:32px;height:32px;border-radius:10px;background:'+(unlocked?p.color+'14':'rgba(255,255,255,.04)')+';display:flex;align-items:center;justify-content:center;color:'+(unlocked?p.color:'rgba(255,255,255,.3)')+';">'+p.icon+'</div>'
+              + '<div style="font-size:12.5px;font-weight:700;color:'+(unlocked?'#fff':'rgba(255,255,255,.4)')+';">'+p.name+'</div>'
+              + (p.plus?'<span style="margin-left:auto;font-size:8px;font-weight:800;color:#ffd93e;background:rgba(255,220,62,.1);padding:2px 7px;border-radius:100px;border:1px solid rgba(255,220,62,.12);">+</span>':'')
               + '</div>'
-              + '<div style="font-size:10.5px;color:rgba(255,255,255,.25);line-height:1.4;">'+p.desc+'</div>'
-              + (unlocked?'<div style="position:absolute;top:0;left:0;right:0;height:1.5px;background:'+p.color+';opacity:.3;"></div>':'')
+              + '<div style="font-size:10.5px;color:rgba(255,255,255,.25);line-height:1.45;">'+p.desc+'</div>'
               + '</div>';
           }).join('')}
         </div>
-        ${!hasRad?'<div style="margin-top:12px;background:rgba(255,249,62,.03);border:1.5px dashed rgba(255,249,62,.1);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;" onclick="switchAtelierTab(\'radiance\')" onmouseover="this.style.background=\'rgba(255,249,62,.06)\'" onmouseout="this.style.background=\'rgba(255,249,62,.03)\'">'
-          + '<div style="color:var(--accent);">'+ftzIcon('star','20')+'</div>'
-          + '<div><div style="font-size:12.5px;font-weight:700;color:var(--accent);">Unlock Radiance</div><div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-top:2px;">Get access to all perks and customization</div></div>'
-          + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="margin-left:auto;opacity:.5;"><path d="m9 18 6-6-6-6"/></svg>'
+        ${!hasRad?'<div style="margin-top:14px;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));border:1.5px dashed rgba(255,249,62,.12);border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab(\'radiance\')" onmouseover="this.style.background=\'linear-gradient(135deg,rgba(255,249,62,.07),rgba(255,249,62,.03))\';this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.background=\'linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01))\';this.style.transform=\'\'">'
+          + '<div style="width:36px;height:36px;border-radius:12px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;color:var(--accent);">'+ftzIcon('star','18')+'</div>'
+          + '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--accent);">Unlock Radiance</div><div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-top:3px;">Get access to all perks and customization</div></div>'
+          + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="opacity:.4;"><path d="m9 18 6-6-6-6"/></svg>'
           + '</div>':''}
       </div>
 
       <!-- Quest Progress -->
-      <div style="margin-bottom:28px;">
+      <div style="margin-bottom:32px;">
         <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
           <span>Quest Progress</span>
-          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('quests')">View All</span>
+          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('quests')">View All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
         </div>
-        ${doneQ.length ? '<div style="display:flex;flex-direction:column;gap:6px;">'
+        <!-- Progress bar -->
+        <div style="margin-bottom:14px;padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.4);">Overall Progress</span>
+            <span style="font-size:11px;font-weight:700;color:var(--accent);">${doneQ.length}/${allQ.length}</span>
+          </div>
+          <div style="height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden;">
+            <div style="height:100%;width:${Math.round(doneQ.length/allQ.length*100)}%;background:linear-gradient(90deg,var(--accent),#ffb93e);border-radius:100px;transition:width .6s cubic-bezier(.22,1,.36,1);"></div>
+          </div>
+        </div>
+        ${doneQ.length ? '<div style="display:flex;flex-direction:column;gap:8px;">'
           + doneQ.slice(0,3).map(q=>
-            '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(62,207,110,.025);border:1px solid rgba(62,207,110,.06);border-radius:12px;transition:all .15s;" onmouseover="this.style.background=\'rgba(62,207,110,.045)\'" onmouseout="this.style.background=\'rgba(62,207,110,.025)\'">'
-            + '<div style="width:30px;height:30px;border-radius:10px;background:rgba(62,207,110,.06);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">'+q.icon+'</div>'
-            + '<div style="flex:1;min-width:0;font-size:12px;font-weight:600;color:rgba(255,255,255,.7);">'+q.title+'</div>'
-            + '<div style="font-size:11px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:3px;">+'+q.reward+' <img src="/Onyx.png" style="width:11px;height:11px;object-fit:contain;"></div>'
-            + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+            '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(62,207,110,.02);border:1.5px solid rgba(62,207,110,.06);border-radius:14px;transition:all .18s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.background=\'rgba(62,207,110,.04)\';this.style.transform=\'translateX(2px)\'" onmouseout="this.style.background=\'rgba(62,207,110,.02)\';this.style.transform=\'\'">'
+            + '<div style="width:34px;height:34px;border-radius:12px;background:rgba(62,207,110,.06);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+q.icon+'</div>'
+            + '<div style="flex:1;min-width:0;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.7);">'+q.title+'</div>'
+            + '<div style="font-size:11px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:4px;">+'+q.reward+' <img src="/Onyx.png" style="width:11px;height:11px;object-fit:contain;"></div>'
+            + '<div style="width:18px;height:18px;border-radius:50%;background:rgba(62,207,110,.12);display:flex;align-items:center;justify-content:center;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>'
             + '</div>').join('')
           + '</div>'
-          : '<div style="font-size:12.5px;color:rgba(255,255,255,.2);text-align:center;padding:18px;background:rgba(255,255,255,.015);border-radius:12px;border:1px solid rgba(255,255,255,.03);">No quests completed yet — <span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="switchAtelierTab(\'quests\')">start one!</span></div>'}
+          : '<div style="text-align:center;padding:24px;background:rgba(255,255,255,.015);border-radius:16px;border:1.5px solid rgba(255,255,255,.04);"><div style="font-size:24px;margin-bottom:8px;">📋</div><div style="font-size:12.5px;color:rgba(255,255,255,.25);">No quests completed yet — <span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="switchAtelierTab(\'quests\')">start one!</span></div></div>'}
       </div>
 
       <!-- Shop Categories -->
@@ -25060,13 +25080,15 @@ function renderAtelierTab(tab) {
           <span>Explore the Shop</span>
           <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('shop')">See All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-          ${[{name:'Appearances',icon:ftzIcon('image','22'),color:'#a78bfa',desc:'Custom themes'},{name:'Decorations',icon:ftzIcon('star','22'),color:'#60a5fa',desc:'Avatar effects'},{name:'Bundles',icon:ftzIcon('gem','22'),color:'#fb923c',desc:'Value packs'}].map(it=>
-            '<div style="background:rgba(255,255,255,.015);border:1.5px solid rgba(255,255,255,.04);border-radius:16px;padding:18px 16px;text-align:center;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab(\'shop\')" onmouseover="this.style.borderColor=\''+it.color+'30\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.04)\';this.style.transform=\'\'">'
-            + '<div style="color:'+it.color+';opacity:.5;margin-bottom:8px;">'+it.icon+'</div>'
-            + '<div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.5);">'+it.name+'</div>'
-            + '<div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:3px;">'+it.desc+'</div>'
-            + '</div>').join('')}
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          ${[{name:'Appearances',icon:ftzIcon('image','22'),color:'#a78bfa',desc:'Custom themes'},{name:'Decorations',icon:ftzIcon('star','22'),color:'#60a5fa',desc:'Avatar effects'},{name:'Bundles',icon:ftzIcon('gem','22'),color:'#fb923c',desc:'Value packs'}].map(it=>{
+            const rgb = it.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',');
+            return '<div style="background:linear-gradient(135deg,rgba('+rgb+',.04),rgba('+rgb+',.01));border:1.5px solid rgba('+rgb+',.08);border-radius:18px;padding:22px 18px;text-align:center;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="switchAtelierTab(\'shop\')" onmouseover="this.style.borderColor=\'rgba('+rgb+',.2)\';this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 10px 28px rgba(0,0,0,.2)\'" onmouseout="this.style.borderColor=\'rgba('+rgb+',.08)\';this.style.transform=\'\';this.style.boxShadow=\'none\'">'
+            + '<div style="position:absolute;top:-15px;right:-15px;width:60px;height:60px;background:radial-gradient(circle,rgba('+rgb+',.06),transparent 70%);pointer-events:none;"></div>'
+            + '<div style="width:44px;height:44px;border-radius:14px;background:rgba('+rgb+',.08);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:'+it.color+';">'+it.icon+'</div>'
+            + '<div style="font-family:\'Syne\',sans-serif;font-size:13px;font-weight:800;color:rgba(255,255,255,.6);">'+it.name+'</div>'
+            + '<div style="font-size:10.5px;color:rgba(255,255,255,.22);margin-top:4px;">'+it.desc+'</div>'
+            + '</div>'}).join('')}
         </div>
       </div>
 
@@ -25079,19 +25101,21 @@ function renderAtelierTab(tab) {
     const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance',_boostSvg('14')+' Bastion Boost','🌟 Animated Badge'];
     const PRICES = {basic:[{days:7,onyx:200},{days:30,onyx:600},{days:90,onyx:1500}], plus:[{days:30,onyx:1200},{days:90,onyx:3000}]};
 
-    el.innerHTML = `<div class="atelier-content-inner" style="max-width:800px;">
+    el.innerHTML = `<div class="atelier-content-inner" style="max-width:820px;">
 
       <!-- Active subscription status -->
-      ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,220,62,.1),rgba(255,249,62,.05));border:1.5px solid rgba(255,220,62,.2);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
-        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.1);display:flex;align-items:center;justify-content:center;">${_radiancePlusImg('32')}</div>
-        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ffd93e;">Radiance+ Active</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:3px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
-        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:12px;color:var(--red);font-size:12px;padding:8px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
-      </div>`:hasRad?`<div style="background:rgba(255,160,62,.07);border:1.5px solid rgba(255,160,62,.18);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
-        <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;">${_radianceImg('32')}</div>
-        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#ff9d3e;">Radiance Active</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:3px;">${daysRad} days remaining · Auto-renews · 600 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
-        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:12px;color:var(--red);font-size:12px;padding:8px 16px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
+      ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,220,62,.08),rgba(255,249,62,.03));border:1.5px solid rgba(255,220,62,.18);border-radius:22px;padding:22px 26px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-30px;right:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,220,62,.06),transparent 70%);pointer-events:none;"></div>
+        <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,220,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_radiancePlusImg('32')}</div>
+        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#ffd93e;letter-spacing:-.01em;">Radiance+ Active</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
+        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:var(--red);font-size:12px;padding:9px 18px;cursor:pointer;transition:all .15s;flex-shrink:0;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
+      </div>`:hasRad?`<div style="background:linear-gradient(135deg,rgba(255,160,62,.06),rgba(255,160,62,.02));border:1.5px solid rgba(255,160,62,.15);border-radius:22px;padding:22px 26px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-30px;right:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,160,62,.06),transparent 70%);pointer-events:none;"></div>
+        <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_radianceImg('32')}</div>
+        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#ff9d3e;letter-spacing:-.01em;">Radiance Active</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">${daysRad} days remaining · Auto-renews · 600 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
+        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:var(--red);font-size:12px;padding:9px 18px;cursor:pointer;transition:all .15s;flex-shrink:0;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
       </div>`:''}
 
       <!-- Plans side by side -->
@@ -25196,60 +25220,68 @@ function renderAtelierTab(tab) {
 
     const questCardHTML = (q) => {
       const catColor = q.daily ? '#60a5fa' : q.category==='Explorer' ? '#fb923c' : '#a78bfa';
-      return `<div style="background:${q.done?'rgba(62,207,110,.025)':'rgba(255,255,255,.02)'};border:1.5px solid ${q.done?'rgba(62,207,110,.1)':'rgba(255,255,255,.05)'};border-radius:16px;padding:16px 18px;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:14px;" ${!q.done?`onmouseover="this.style.borderColor='rgba(255,249,62,.15)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(0,0,0,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'"`:''}>
-        <div style="width:46px;height:46px;border-radius:14px;background:${q.done?'rgba(62,207,110,.08)':'rgba(255,255,255,.03)'};border:1px solid ${q.done?'rgba(62,207,110,.12)':'rgba(255,255,255,.06)'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative;">
+      const catRgb = q.daily ? '96,165,250' : q.category==='Explorer' ? '251,146,60' : '167,139,250';
+      return `<div style="background:${q.done?'linear-gradient(135deg,rgba(62,207,110,.03),rgba(62,207,110,.01))':'linear-gradient(135deg,rgba(255,255,255,.025),rgba(255,255,255,.01))'};border:1.5px solid ${q.done?'rgba(62,207,110,.08)':'rgba(255,255,255,.05)'};border-radius:18px;padding:18px 20px;transition:all .22s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;" ${!q.done?`onmouseover="this.style.borderColor='rgba(${catRgb},.18)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.18)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'"`:''}>
+        ${q.done?'<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);border-radius:0 3px 3px 0;"></div>':''}
+        <div style="width:48px;height:48px;border-radius:16px;background:${q.done?'rgba(62,207,110,.06)':'rgba('+catRgb+',.06)'};border:1.5px solid ${q.done?'rgba(62,207,110,.1)':'rgba('+catRgb+',.1)'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative;">
           ${q.icon}
-          ${q.done?'<div style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;border:2px solid #13161d;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>':''}
+          ${q.done?'<div style="position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;border:2.5px solid #13161d;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>':''}
         </div>
         <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-            <span style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:${q.done?'rgba(255,255,255,.45)':'#fff'};">${q.title}</span>
-            <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;background:${catColor}12;color:${catColor};border:1px solid ${catColor}20;letter-spacing:.03em;">${q.daily?'DAILY':q.category.toUpperCase()}</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:${q.done?'rgba(255,255,255,.4)':'#fff'};letter-spacing:-.01em;">${q.title}</span>
+            <span style="font-size:8.5px;font-weight:800;padding:3px 8px;border-radius:100px;background:${catColor}10;color:${catColor};border:1px solid ${catColor}18;letter-spacing:.05em;">${q.daily?'DAILY':q.category.toUpperCase()}</span>
           </div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.35);line-height:1.4;margin-bottom:8px;">${q.desc}</div>
+          <div style="font-size:11.5px;color:rgba(255,255,255,.3);line-height:1.45;margin-bottom:10px;">${q.desc}</div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;max-width:120px;">
-              <div style="height:100%;border-radius:2px;width:${q.done?100:0}%;background:${q.done?'var(--green)':'var(--accent)'};transition:width .4s cubic-bezier(.22,1,.36,1);"></div>
+            <div style="flex:1;height:4px;background:rgba(255,255,255,.05);border-radius:100px;max-width:140px;">
+              <div style="height:100%;border-radius:100px;width:${q.done?100:0}%;background:${q.done?'linear-gradient(90deg,var(--green),#60d394)':'linear-gradient(90deg,var(--accent),#ffb93e)'};transition:width .5s cubic-bezier(.22,1,.36,1);"></div>
             </div>
-            <span style="font-size:11px;font-weight:700;color:${q.done?'var(--green)':'var(--accent)'};">+${q.reward} <img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;vertical-align:-1px;"></span>
+            <span style="font-size:11.5px;font-weight:700;color:${q.done?'var(--green)':'var(--accent)'};display:flex;align-items:center;gap:4px;">+${q.reward} <img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"></span>
           </div>
         </div>
         ${!q.done
-          ? `<button onclick="${q.action}" style="padding:8px 16px;border-radius:12px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.12);color:var(--accent);font-size:11.5px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;" onmouseover="this.style.background='rgba(255,249,62,.14)'" onmouseout="this.style.background='rgba(255,249,62,.08)'">Go</button>`
-          : `<span style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;">${q.daily?'Resets daily':'Done'}</span>`}
+          ? `<button onclick="${q.action}" style="padding:9px 20px;border-radius:12px;background:linear-gradient(135deg,rgba(${catRgb},.1),rgba(${catRgb},.05));border:1.5px solid rgba(${catRgb},.15);color:${catColor};font-size:11.5px;font-weight:700;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);white-space:nowrap;flex-shrink:0;letter-spacing:.01em;" onmouseover="this.style.background='linear-gradient(135deg,rgba(${catRgb},.18),rgba(${catRgb},.08))';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(${catRgb},.1),rgba(${catRgb},.05))';this.style.transform=''">Go</button>`
+          : `<span style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;font-weight:600;">${q.daily?'Resets daily':'Completed'}</span>`}
       </div>`;
     };
 
     el.innerHTML = `<div class="atelier-content-inner">
 
       <!-- Stats row -->
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:14px;margin-bottom:24px;">
         <!-- Daily progress ring -->
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 14px 8px 8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:14px;">
-          <div style="position:relative;width:40px;height:40px;">
-            <svg width="40" height="40" viewBox="0 0 40 40" style="transform:rotate(-90deg);">
-              <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/>
-              <circle cx="20" cy="20" r="16" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${16*2*Math.PI}" stroke-dashoffset="${16*2*Math.PI*(1-dailyDone/Math.max(dailyTotal,1))}" style="transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);"/>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 18px 14px 14px;background:linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.015));border:1.5px solid rgba(255,255,255,.06);border-radius:16px;">
+          <div style="position:relative;width:48px;height:48px;">
+            <svg width="48" height="48" viewBox="0 0 48 48" style="transform:rotate(-90deg);">
+              <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
+              <circle cx="24" cy="24" r="20" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${20*2*Math.PI}" stroke-dashoffset="${20*2*Math.PI*(1-dailyDone/Math.max(dailyTotal,1))}" style="transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);filter:drop-shadow(0 0 6px rgba(255,249,62,.2));"/>
             </svg>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:#fff;">${dailyDone}/${dailyTotal}</div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#fff;">${dailyDone}/${dailyTotal}</div>
           </div>
           <div>
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;">Daily</div>
-            <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-top:1px;">${dailyDone}/${dailyTotal} done</div>
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;">Daily Quests</div>
+            <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);margin-top:3px;">${dailyDone === dailyTotal ? 'All done!' : (dailyTotal - dailyDone) + ' remaining'}</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.08);border-radius:10px;">
-          <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;">
-          <span style="font-size:11.5px;font-weight:700;color:var(--accent);">${totalOnyx} earned</span>
+        <!-- Stats pills -->
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:7px;padding:10px 16px;background:linear-gradient(135deg,rgba(255,249,62,.05),rgba(255,249,62,.02));border:1.5px solid rgba(255,249,62,.1);border-radius:14px;">
+            <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;">
+            <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--accent);">${totalOnyx}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;">earned</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;padding:10px 16px;background:rgba(62,207,110,.03);border:1.5px solid rgba(62,207,110,.08);border-radius:14px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style="font-size:12px;font-weight:700;color:var(--green);">${doneQ.length}/${QUESTS_DEF.length}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;">done</span>
+          </div>
+          ${streak > 0 ? `<div style="display:flex;align-items:center;gap:7px;padding:10px 16px;background:linear-gradient(135deg,rgba(251,146,60,.05),rgba(251,146,60,.02));border:1.5px solid rgba(251,146,60,.1);border-radius:14px;">
+            <span style="font-size:15px;">🔥</span>
+            <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fb923c;">${streak}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;">day streak</span>
+          </div>` : ''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.08);border-radius:10px;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          <span style="font-size:11.5px;font-weight:700;color:var(--green);">${doneQ.length}/${QUESTS_DEF.length} done</span>
-        </div>
-        ${streak > 0 ? `<div style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(251,146,60,.04);border:1px solid rgba(251,146,60,.08);border-radius:10px;">
-          <span style="font-size:13px;">🔥</span>
-          <span style="font-size:11.5px;font-weight:700;color:#fb923c;">${streak} day streak</span>
-        </div>` : ''}
       </div>
 
       <!-- Tabs -->
@@ -25326,13 +25358,13 @@ function renderAtelierTab(tab) {
     el.innerHTML = `<div class="atelier-content-inner">
 
       <!-- Shop Sub-Tabs -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:22px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
         ${['featured','browse'].map(t=>
           '<button class="quest-tab-chip'+(shopTab===t?' active':'')+'" onclick="setShopTab(\''+t+'\')" id="stab-'+t+'">'+(t==='featured'?'Featured':'Browse All')+'</button>').join('')}
         <div style="flex:1;"></div>
-        <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.08);border-radius:10px;">
-          <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;">
-          <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--accent);">${bal}</span>
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 14px;background:linear-gradient(135deg,rgba(255,249,62,.05),rgba(255,249,62,.02));border:1.5px solid rgba(255,249,62,.1);border-radius:12px;">
+          <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(255,249,62,.2));">
+          <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--accent);text-shadow:0 1px 6px rgba(255,249,62,.1);">${bal}</span>
         </div>
       </div>
 

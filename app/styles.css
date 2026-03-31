@@ -909,21 +909,28 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .ci-preview .ci-room-ref{color:#a78bfa;font-weight:600;}
 /* ── Atelier ─────────────────────────────────────── */
 .atelier-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden;background:transparent;}
-.atelier-banner{position:relative;width:100%;height:200px;overflow:hidden;flex-shrink:0;}
-.atelier-banner-img{width:100%;height:100%;object-fit:cover;display:block;}
-.atelier-banner-fade{position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to top,var(--bg),transparent);pointer-events:none;}
-.atelier-nav{display:none;}
-.atelier-nav-scroll{display:none;}
-.atelier-nav-section{display:none;}
-.atelier-nav-item{display:none;}
-.atelier-nav-icon{display:none;}
-.atelier-nav-sep{display:none;}
 .atelier-scroll{flex:1;overflow-y:auto;padding:0;scroll-behavior:smooth;}
-/* Atelier inline tabs */
-.atelier-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:0 32px;margin-bottom:22px;}
-.atelier-tabs .disc-tab{padding:8px 18px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid transparent;color:rgba(255,255,255,.4);transition:all .18s cubic-bezier(.22,1,.36,1);letter-spacing:.01em;background:transparent;}
-.atelier-tabs .disc-tab:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);}
-.atelier-tabs .disc-tab.active{background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.15);color:var(--accent);font-weight:700;box-shadow:0 2px 10px rgba(255,249,62,.06);}
+/* Atelier sidebar nav (Discord/Guilded-style) */
+.atel-sb-balance{display:flex;align-items:center;gap:10px;padding:12px;margin:8px 8px 0;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.08);border-radius:12px;}
+.atel-sb-coin{width:20px;height:20px;object-fit:contain;}
+.atel-sb-bal-info{display:flex;flex-direction:column;gap:1px;}
+.atel-sb-bal-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--accent);line-height:1;}
+.atel-sb-bal-label{font-size:10px;color:rgba(255,255,255,.25);font-weight:600;}
+.atel-sb-sep{height:1px;background:rgba(255,255,255,.04);margin:10px 16px;}
+.atel-sb-section{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:10px 16px 4px;}
+.atel-sb-item{display:flex;align-items:center;gap:10px;padding:8px 12px;margin:1px 8px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;transition:all .15s cubic-bezier(.22,1,.36,1);user-select:none;}
+.atel-sb-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.8);}
+.atel-sb-item.active{background:rgba(255,249,62,.06);color:var(--accent);font-weight:600;}
+.atel-sb-item.active svg{stroke:var(--accent);}
+.atel-sb-item.active .atel-sb-radiance-icon{filter:brightness(1.2);}
+.atel-sb-badge{margin-left:auto;font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;}
+.atel-sb-badge.atel-active{background:rgba(62,207,110,.1);color:#3ecf6e;border:1px solid rgba(62,207,110,.15);}
+.atel-sb-badge.atel-quest-count{background:rgba(255,249,62,.08);color:var(--accent);border:1px solid rgba(255,249,62,.12);}
+/* Atelier content area */
+.atelier-content-inner{padding:28px 32px 48px;}
+.atel-page-header{margin-bottom:24px;}
+.atel-page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:4px;}
+.atel-page-desc{font-size:12.5px;color:rgba(255,255,255,.3);line-height:1.5;}
 /* Quest tab chips — extends ftz-chip pattern */
 .quest-tab-chip{padding:7px 18px;border-radius:var(--radius-pill);font-size:var(--font-md);font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .2s var(--ease-out);background:var(--surface-1);}
 .quest-tab-chip.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(255,249,62,.25);box-shadow:0 2px 12px rgba(255,249,62,.1);}
@@ -2770,8 +2777,8 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   .disc-hero h2{font-size:22px;}
   .uv-header-content{padding:20px;flex-direction:column;align-items:flex-start;gap:12px;}
   /* ══════ ATELIER ══════ */
-  .atelier-hero{flex-direction:column;gap:16px;padding:20px;}
   .atelier-scroll{padding:0;padding-bottom:72px;}
+  .atelier-content-inner{padding:20px 16px 48px!important;}
   /* ══════ BASTION ══════ */
   .bastion-hub-main{padding:16px;}
   .bastion-banner-hero{height:120px;}
@@ -2799,7 +2806,6 @@ img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.1
   #vc-call-bar{padding:0!important;}
   #vc-call-bar>div:nth-child(2){gap:30px!important;padding:20px!important;}
   .page-banner{height:140px;}
-  .atelier-banner{height:140px;}
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -2988,8 +2994,7 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
   .disc-hero p{font-size:13px;}
   .disc-tabs{gap:4px;}
   .disc-tab{padding:6px 12px;font-size:12px;}
-  .atelier-hero .amt{font-size:26px;}
-  .atelier-tabs{padding:0 16px;}
+  .atel-sb-item{font-size:12px;padding:7px 10px;}
   .msg-code-block{font-size:11.5px;padding:10px 12px;padding-top:26px;}
   .bastion-hub-main{padding:12px;}
   .uv-header{min-height:180px;}

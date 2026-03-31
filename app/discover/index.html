@@ -508,39 +508,8 @@ window._cdnReady.then(function() {
     <!-- ATELIER VIEW -->
     <div class="view" id="view-atelier">
       <div class="atelier-wrap">
-        <div class="atelier-scroll" id="atelier-scroll-outer" style="flex:1;overflow-y:auto;scroll-behavior:smooth;">
-          <!-- Discord-style Banner -->
-          <div class="atelier-banner">
-            <img src="/Onyx banner.png" class="atelier-banner-img" alt="">
-            <div class="atelier-banner-fade"></div>
-          </div>
-          <!-- Header below banner -->
-          <div style="padding:0 28px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-              <div>
-                <h2 style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.02em;">Atelier</h2>
-                <p style="font-size:12.5px;color:rgba(255,255,255,.3);margin:0;">Your store, rewards & subscriptions</p>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px 16px;backdrop-filter:blur(8px);">
-                <img src="/Onyx.png" style="width:18px;height:18px;object-fit:contain;">
-                <div>
-                  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);line-height:1;" id="atelier-balance">0</div>
-                  <div style="font-size:9px;color:rgba(255,255,255,.2);margin-top:1px;">Onyx</div>
-                </div>
-              </div>
-            </div>
-            <!-- Tabs -->
-            <div class="atelier-tabs" style="padding:0;margin-bottom:22px;">
-              <button class="disc-tab active" id="atnav-overview" onclick="switchAtelierTab('overview',this)">Overview</button>
-              <button class="disc-tab" id="atnav-radiance" onclick="switchAtelierTab('radiance',this)">Radiance Dwelling</button>
-              <button class="disc-tab" id="atnav-shop" onclick="switchAtelierTab('shop',this)">Shop</button>
-              <button class="disc-tab" id="atnav-quests" onclick="switchAtelierTab('quests',this)">Quests</button>
-            </div>
-          </div>
-          <!-- Dynamic content -->
-          <div id="atelier-content" style="padding:0 28px 48px;">
-            <!-- Loaded dynamically by switchAtelierTab() -->
-          </div>
+        <div class="atelier-scroll" id="atelier-scroll-outer">
+          <div id="atelier-content"></div>
         </div>
       </div>
     </div>

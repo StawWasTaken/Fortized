@@ -30876,15 +30876,12 @@ function chronicleBack() {
 }
 
 function launchChronicleEvent(id) {
-  if (typeof showToast === 'function') {
-    showToast('Event launching soon \u2014 stay tuned, knight.', 'info');
+  if (typeof launchChronicleMinigame === 'function') {
+    launchChronicleMinigame(id);
+  } else {
+    if (typeof toast === 'function') toast('Minigame system loading...', 'info');
   }
 }
-
-function updateChronicleProgress() {
-  const completed = Object.keys(_chronicleProgress).length;
-  const fill = document.getElementById('chronicle-progress-fill');
-  const text = document.getElementById('chronicle-progress-text');
   if (fill) fill.style.width = ((completed / CHRONICLE_TOTAL) * 100) + '%';
   if (text) text.textContent = completed + ' / ' + CHRONICLE_TOTAL;
 }

@@ -1222,7 +1222,7 @@ function _ftzSoftRefresh() {
   if (_currentView === 'home') { try { renderHomePanel(); } catch {} }
   else if (_currentView === 'dms' || _currentView === 'friends') { try { showDMFriendsHome(); } catch {} }
   else if (_currentView === 'discover') { try { renderDiscoverGrid(); } catch {} }
-  else if (_currentView === 'atelier') { try { refreshCU().then(()=>{ updateAtelierSidebar(); renderAtelierTab(_atelierTab||'overview'); }).catch(()=>{ renderAtelierTab(_atelierTab||'overview'); }); } catch {} }
+  else if (_currentView === 'atelier') { try { refreshCU().then(()=>{ switchAtelierTab(_atelierTab||'overview'); }).catch(()=>{ switchAtelierTab(_atelierTab||'overview'); }); } catch {} }
   else if (_currentView === 'bastion' && curBastion !== null) {
     try { if (curChannel === 'overview') renderOverviewRoom(); else if (curChannel !== null) selectChannel(curChannel); } catch {}
   }
@@ -1443,7 +1443,7 @@ function showView(v, _skipPush) {
   if (rBtn) rBtn.classList.add('active');
 
   // Post-show callbacks
-  if (v === 'atelier') setTimeout(() => { refreshCU().then(()=>{ updateAtelierSidebar(); renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }).catch(()=>{ updateAtelierSidebar(); renderAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }); }, 0);
+  if (v === 'atelier') setTimeout(() => { refreshCU().then(()=>{ switchAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }).catch(()=>{ switchAtelierTab(_atelierTab||'overview'); refreshDailyBtn(); }); }, 0);
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
   if (v === 'dms' && !curDM && !curGC) setTimeout(() => { showDMFriendsHome(); }, 50);
@@ -1551,15 +1551,9 @@ function updateSidebar(v) {
     loadDiscover();
   } else if (v==='atelier') {
     if (hdr) hdr.style.display = '';
-    if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
-    if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="New DM" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">${ftzIcon('pencil','14')}</button>
-      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="Add Friend" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">${ftzIcon('addUser','14')}</button>`;
-    renderDMSidebar(scroll);
-    const ab = document.getElementById('atelier-balance');
-    if (ab) ab.textContent = CU?.onyx||0;
-    const db = document.getElementById('daily-btn');
-    if (db) { const today=new Date().toDateString(); if(CU?.lastDaily===today)db.classList.add('claimed'); else db.classList.remove('claimed'); }
+    if (hdrTitle) hdrTitle.textContent = 'Atelier';
+    if (hdrActs) hdrActs.innerHTML = '';
+    renderAtelierSidebar(scroll);
   } else if (v==='bastion') {
     // Header hidden — bastion sidebar renders its own hero banner
     renderBastionSidebar(scroll);
@@ -1931,6 +1925,62 @@ function updateAtelierSidebar() {
   const balH = document.getElementById('atelier-balance');
   if (balH) balH.textContent = CU.onyx || 0;
   updateOnyxDisplay();
+  // Update sidebar active state
+  const tab = _atelierTab || 'overview';
+  document.querySelectorAll('.atel-sb-item').forEach(function(el) {
+    el.classList.toggle('active', el.getAttribute('data-tab') === tab);
+  });
+}
+
+function renderAtelierSidebar(scroll) {
+  if (!scroll) return;
+  var tab = _atelierTab || 'overview';
+  var bal = CU?.onyx || 0;
+  var hasRad = !!(CU?.radianceUntil && new Date(CU.radianceUntil) > new Date());
+  var hasPlus = !!(CU?.radiancePlus && new Date(CU.radiancePlus) > new Date());
+  var activeQuests = 0;
+  try {
+    var completed = CU?.completedQuests || [];
+    var allQIds = ['daily_claim','send_msg','invite','join_bastion','add_friend','set_pfp','set_bio','five_friends','send_gif','create_bastion'];
+    activeQuests = allQIds.filter(function(id) { return !completed.includes(id); }).length;
+  } catch(e) {}
+  var radianceIcon = hasPlus
+    ? _radiancePlusImg('16')
+    : hasRad
+      ? _radianceImg('16')
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+  scroll.innerHTML = ''
+    + '<div class="atel-sb-balance">'
+    +   '<img src="/Onyx.png" class="atel-sb-coin">'
+    +   '<div class="atel-sb-bal-info">'
+    +     '<span class="atel-sb-bal-val" id="atelier-balance">' + bal + '</span>'
+    +     '<span class="atel-sb-bal-label">Onyx</span>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="atel-sb-sep"></div>'
+    + '<div class="atel-sb-section">Browse</div>'
+    + '<div class="atel-sb-item' + (tab==='overview'?' active':'') + '" data-tab="overview" onclick="switchAtelierTab(\'overview\')">'
+    +   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
+    +   '<span>Overview</span>'
+    + '</div>'
+    + '<div class="atel-sb-item' + (tab==='shop'?' active':'') + '" data-tab="shop" onclick="switchAtelierTab(\'shop\')">'
+    +   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>'
+    +   '<span>Shop</span>'
+    + '</div>'
+    + '<div class="atel-sb-sep"></div>'
+    + '<div class="atel-sb-section">Membership</div>'
+    + '<div class="atel-sb-item' + (tab==='radiance'?' active':'') + '" data-tab="radiance" onclick="switchAtelierTab(\'radiance\')">'
+    +   '<span class="atel-sb-radiance-icon">' + radianceIcon + '</span>'
+    +   '<span>Radiance</span>'
+    +   (hasRad || hasPlus ? '<span class="atel-sb-badge atel-active">' + (hasPlus ? 'Plus' : 'Active') + '</span>' : '')
+    + '</div>'
+    + '<div class="atel-sb-sep"></div>'
+    + '<div class="atel-sb-section">Earn</div>'
+    + '<div class="atel-sb-item' + (tab==='quests'?' active':'') + '" data-tab="quests" onclick="switchAtelierTab(\'quests\')">'
+    +   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
+    +   '<span>Quests</span>'
+    +   (activeQuests > 0 ? '<span class="atel-sb-badge atel-quest-count">' + activeQuests + '</span>' : '')
+    + '</div>';
 }
 function _defaultPfpUrl(name) {
   // Deterministic random based on name — always same for same user
@@ -24824,12 +24874,14 @@ let _atelierTab = 'overview';
 
 function switchAtelierTab(tab, el) {
   _atelierTab = tab;
-  document.querySelectorAll('.atelier-tabs .disc-tab').forEach(i => i.classList.remove('active'));
-  if (el) el.classList.add('active');
-  else {
-    const navEl = document.getElementById('atnav-' + tab);
-    if (navEl) navEl.classList.add('active');
-  }
+  // Update sidebar nav active state
+  document.querySelectorAll('.atel-sb-item').forEach(function(i) {
+    i.classList.toggle('active', i.getAttribute('data-tab') === tab);
+  });
+  // Update topbar title to show current section
+  var names = {overview:'Overview',shop:'Shop',radiance:'Radiance Dwelling',quests:'Quests'};
+  var tt = document.getElementById('topbar-title');
+  if (tt) tt.textContent = names[tab] || 'Atelier';
   updateAtelierSidebar();
   renderAtelierTab(tab);
 }
@@ -24894,21 +24946,21 @@ function renderAtelierTab(tab) {
   // ── OVERVIEW ──────────────────────────────────────────────
   if (tab === 'overview') {
     const PERKS = [
-      {icon:ftzIcon('star','28'),name:'Profile Glow',desc:'Animated glow on avatar',color:'#ffd93e',plus:false},
-      {icon:ftzIcon('image','28'),name:'Custom Banner',desc:'Full profile banner',color:'#60a5fa',plus:false},
-      {icon:ftzIcon('clip','28'),name:'45MB Uploads',desc:'Bigger attachments',color:'#3ecf6e',plus:false},
-      {icon:ftzIcon('gem','28'),name:'Radiance Badge',desc:'Exclusive badge',color:'#a78bfa',plus:false},
-      {icon:ftzIcon('letters','28'),name:'Custom Font',desc:'Change your font',color:'#fb923c',plus:true},
-      {icon:ftzIcon('gift','28'),name:'Gift Radiance',desc:'Gift friends',color:'#f472b6',plus:true},
+      {icon:ftzIcon('star','22'),name:'Profile Glow',desc:'Animated glow on avatar',color:'#ffd93e',plus:false},
+      {icon:ftzIcon('image','22'),name:'Custom Banner',desc:'Full profile banner',color:'#60a5fa',plus:false},
+      {icon:ftzIcon('clip','22'),name:'45MB Uploads',desc:'Bigger attachments',color:'#3ecf6e',plus:false},
+      {icon:ftzIcon('gem','22'),name:'Radiance Badge',desc:'Exclusive badge',color:'#a78bfa',plus:false},
+      {icon:ftzIcon('letters','22'),name:'Custom Font',desc:'Change your font',color:'#fb923c',plus:true},
+      {icon:ftzIcon('gift','22'),name:'Gift Radiance',desc:'Gift friends',color:'#f472b6',plus:true},
     ];
     const doneQuests = (CU?.completedQuests||[]);
     const allQ = [
-      {id:'daily_claim',icon:ftzIcon('gift','18'),title:'Daily Claim',reward:'50 Onyx'},
+      {id:'daily_claim',icon:'🎁',title:'Daily Claim',reward:'50 Onyx'},
       {id:'send_msg',icon:'💬',title:'Send a Message',reward:'10 Onyx'},
-      {id:'invite',icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',title:'Invite a Friend',reward:'+9 Onyx/friend'},
-      {id:'join_bastion',icon:ftzIcon('castle','18'),title:'Join a Bastion',reward:'25 Onyx'},
-      {id:'add_friend',icon:ftzIcon('users','18'),title:'Add First Friend',reward:'15 Onyx'},
-      {id:'set_pfp',icon:ftzIcon('image','18'),title:'Set Avatar',reward:'20 Onyx'},
+      {id:'invite',icon:'🔗',title:'Invite a Friend',reward:'+9 Onyx/friend'},
+      {id:'join_bastion',icon:'🏰',title:'Join a Bastion',reward:'25 Onyx'},
+      {id:'add_friend',icon:'👥',title:'Add First Friend',reward:'15 Onyx'},
+      {id:'set_pfp',icon:'🖼️',title:'Set Avatar',reward:'20 Onyx'},
       {id:'set_bio',icon:'📝',title:'Write Your Bio',reward:'15 Onyx'},
       {id:'five_friends',icon:'🤝',title:'Social Butterfly',reward:'40 Onyx'},
       {id:'send_gif',icon:'🎞️',title:'GIF Master',reward:'10 Onyx'},
@@ -24916,133 +24968,109 @@ function renderAtelierTab(tab) {
     ];
     const doneQ = allQ.filter(q => doneQuests.includes(q.id) || (q.id==='join_bastion'&&(CU?.bastions||[]).length>0) || (q.id==='add_friend'&&(CU?.friends||[]).length>0) || (q.id==='set_pfp'&&CU?.pfp) || (q.id==='daily_claim'&&dailyDone) || (q.id==='send_msg'&&isDailyQuestDone('send_msg')) || (q.id==='set_bio'&&!!CU?.bio) || (q.id==='five_friends'&&(CU?.friends||[]).length>=5));
 
-    // Update the balance in the unified header
+    // Update the balance in the sidebar
     const balHeader = document.getElementById('atelier-balance');
     if (balHeader) balHeader.textContent = bal;
 
-    el.innerHTML = `
-      <!-- Hero Welcome Section -->
-      <div style="position:relative;border-radius:20px;overflow:hidden;margin-bottom:28px;background:linear-gradient(145deg,rgba(255,249,62,.04),rgba(167,139,250,.03),rgba(96,165,250,.02));border:1.5px solid rgba(255,249,62,.08);padding:36px 32px;">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 30%,rgba(255,249,62,.06),transparent 55%),radial-gradient(ellipse at 80% 70%,rgba(167,139,250,.04),transparent 50%);pointer-events:none;"></div>
-        <div style="position:relative;">
-          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:-.02em;text-shadow:0 2px 16px rgba(0,0,0,.3);">WELCOME TO<br>YOUR ATELIER</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:18px;max-width:400px;line-height:1.5;">Your personal hub for customization, rewards, and exclusive items. Claim daily Onyx and unlock premium features.</div>
-          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:var(--accent);color:#0f1119;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-            Browse the Shop
-          </button>
-        </div>
-      </div>
+    el.innerHTML = `<div class="atelier-content-inner">
 
-      <!-- Radiance status pill -->
-      ${hasPlus?`<div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(255,220,62,.06),rgba(255,249,62,.03));border:1.5px solid rgba(255,220,62,.15);border-radius:16px;padding:14px 20px;margin-bottom:24px;">
-        ${_radiancePlusImg('22')}<span style="font-size:13px;font-weight:700;color:#ffd93e;">Radiance+ Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysPlus} days left</span>
-        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:rgba(255,220,62,.08);border:1px solid rgba(255,220,62,.15);border-radius:10px;color:#ffd93e;font-size:11px;font-weight:600;padding:6px 14px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,220,62,.14)'" onmouseout="this.style.background='rgba(255,220,62,.08)'">Manage</button>
-      </div>`:hasRad?`<div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(255,160,62,.06),rgba(255,140,62,.03));border:1.5px solid rgba(255,160,62,.15);border-radius:16px;padding:14px 20px;margin-bottom:24px;">
-        ${_radianceImg('22')}<span style="font-size:13px;font-weight:700;color:#ff9d3e;">Radiance Active</span><span style="font-size:11px;color:rgba(255,255,255,.3);">· ${daysRad} days left</span>
-        <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" style="margin-left:auto;background:rgba(255,160,62,.08);border:1px solid rgba(255,160,62,.15);border-radius:10px;color:#ff9d3e;font-size:11px;font-weight:600;padding:6px 14px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,160,62,.14)'" onmouseout="this.style.background='rgba(255,160,62,.08)'">Manage</button>
-      </div>`:''}
-
-      <!-- Explore What's New Section -->
-      <div style="margin-bottom:28px;">
-        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;">Explore What's New</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.3);margin-bottom:18px;line-height:1.5;">Check back often for the latest offerings exclusive for Atelier members, like yourself.</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-          ${[
-            {tag:dailyDone?'CLAIMED':'NEW',tagColor:dailyDone?'#3ecf6e':'#ffd93e',title:'Daily Onyx Claim',desc:'Claim 50 Onyx every day. Stay consistent!',action:"claimDailyQuest()"},
-            {tag:'PERK',tagColor:'#60a5fa',title:'Your Theme. Your Style.',desc:'Unlock custom appearances and make Fortized uniquely yours.',action:"switchAtelierTab('shop',document.getElementById('atnav-shop'))"},
-            {tag:hasRad?'ACTIVE':'REWARD',tagColor:hasRad?'#3ecf6e':'#fb923c',title:'Radiance Badge',desc:'Unlock the evolving Radiance badge and premium perks.',action:"switchAtelierTab('radiance',document.getElementById('atnav-radiance'))"},
-          ].map(card=>`
-            <div style="background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.05);border-radius:18px;padding:18px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="${card.action}" onmouseover="this.style.borderColor='rgba(255,249,62,.15)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'">
-              <span style="display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:${card.tagColor}18;color:${card.tagColor};border:1px solid ${card.tagColor}25;margin-bottom:10px;">${card.tag}</span>
-              <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:6px;line-height:1.3;">${card.title}</div>
-              <div style="font-size:11.5px;color:rgba(255,255,255,.3);line-height:1.5;">${card.desc}</div>
-            </div>`).join('')}
-        </div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:28px;padding-bottom:60px;">
-        <!-- Radiance Perks — card grid -->
-        <div>
-          <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>Radiance Perks</span>
-            <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))">See All</span>
+      <!-- Quick Actions Row -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
+        <!-- Daily Claim -->
+        <div style="background:${dailyDone?'rgba(62,207,110,.04)':'rgba(255,249,62,.04)'};border:1.5px solid ${dailyDone?'rgba(62,207,110,.12)':'rgba(255,249,62,.1)'};border-radius:16px;padding:20px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="claimDailyQuest()" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.2)'" onmouseout="this.style.transform='';this.style.boxShadow='none'">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="width:36px;height:36px;border-radius:12px;background:${dailyDone?'rgba(62,207,110,.08)':'rgba(255,249,62,.08)'};display:flex;align-items:center;justify-content:center;font-size:18px;">🎁</div>
+            <span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:${dailyDone?'rgba(62,207,110,.12)':'rgba(255,249,62,.12)'};color:${dailyDone?'#3ecf6e':'var(--accent)'};">${dailyDone?'CLAIMED':'CLAIM'}</span>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-            ${PERKS.map(p => {
-              const unlocked = p.plus ? hasPlus : hasRad;
-              return `<div style="background:${unlocked?`rgba(${p.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',')}, 0.04)`:'rgba(255,255,255,.02)'};border:1px solid ${unlocked?p.color+'20':'rgba(255,255,255,.04)'};border-radius:14px;padding:16px;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);${!unlocked?'opacity:.4':''}" ${unlocked?`onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px ${p.color}10'" onmouseout="this.style.transform='';this.style.boxShadow='none'"`:''}>
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-                  <div style="color:${unlocked?p.color:'rgba(255,255,255,.3)'};">${p.icon}</div>
-                  <div style="font-size:12.5px;font-weight:700;color:${unlocked?'#fff':'rgba(255,255,255,.4)'};">${p.name}</div>
-                  ${p.plus?`<span style="margin-left:auto;font-size:8px;font-weight:800;color:#ffd93e;background:rgba(255,220,62,.1);padding:2px 6px;border-radius:100px;">+</span>`:''}
-                </div>
-                <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.4;">${p.desc}</div>
-                ${unlocked?`<div style="position:absolute;top:0;left:0;right:0;height:1.5px;background:${p.color};opacity:.3;"></div>`:''}
-              </div>`;
-            }).join('')}
-          </div>
-          ${!hasRad?`<div style="margin-top:12px;background:rgba(255,249,62,.03);border:1.5px dashed rgba(255,249,62,.1);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;" onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'))" onmouseover="this.style.background='rgba(255,249,62,.06)'" onmouseout="this.style.background='rgba(255,249,62,.03)'">
-            <div style="color:var(--accent);">${ftzIcon('star','22')}</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;color:var(--accent);">Unlock Radiance</div>
-              <div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:2px;">Get access to all perks and customization</div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">Daily Onyx</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.3);">+50 Onyx every day</div>
+        </div>
+        <!-- Browse Shop -->
+        <div style="background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.05);border-radius:16px;padding:20px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('shop')" onmouseover="this.style.borderColor='rgba(167,139,250,.2)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="width:36px;height:36px;border-radius:12px;background:rgba(167,139,250,.08);display:flex;align-items:center;justify-content:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="margin-left:auto;opacity:.5;"><path d="m9 18 6-6-6-6"/></svg>
-          </div>`:''}
+            <span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:rgba(167,139,250,.12);color:#a78bfa;">SHOP</span>
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">Browse Items</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.3);">Themes, decorations & more</div>
         </div>
+        <!-- Radiance -->
+        <div style="background:${hasRad||hasPlus?'rgba(255,160,62,.04)':'rgba(255,255,255,.02)'};border:1.5px solid ${hasRad||hasPlus?'rgba(255,160,62,.12)':'rgba(255,255,255,.05)'};border-radius:16px;padding:20px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('radiance')" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.2)'" onmouseout="this.style.transform='';this.style.boxShadow='none'">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="width:36px;height:36px;border-radius:12px;background:rgba(255,160,62,.08);display:flex;align-items:center;justify-content:center;">
+              ${hasPlus ? _radiancePlusImg('20') : hasRad ? _radianceImg('20') : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'}
+            </div>
+            ${hasRad||hasPlus?'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:rgba(62,207,110,.12);color:#3ecf6e;">ACTIVE</span>':'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:rgba(251,146,60,.12);color:#fb923c;">UPGRADE</span>'}
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">${hasPlus?'Radiance+':hasRad?'Radiance':'Get Radiance'}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.3);">${hasPlus?daysPlus+' days left':hasRad?daysRad+' days left':'Premium perks & badge'}</div>
+        </div>
+      </div>
 
-        <!-- Active Quests -->
-        <div>
-          <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>Quests</span>
-            <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">View All</span>
-          </div>
-          ${doneQ.length ? `
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            ${doneQ.slice(0,3).map(q=>`
-              <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(62,207,110,.025);border:1px solid rgba(62,207,110,.06);border-radius:12px;transition:all .15s;" onmouseover="this.style.background='rgba(62,207,110,.045)'" onmouseout="this.style.background='rgba(62,207,110,.025)'">
-                <div style="width:32px;height:32px;border-radius:10px;background:rgba(62,207,110,.06);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${q.icon}</div>
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);">${q.title}</div>
-                </div>
-                <div style="font-size:11px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:3px;">+${q.reward} <img src="/Onyx.png" style="width:11px;height:11px;object-fit:contain;"></div>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>`).join('')}
-          </div>` : `<div style="font-size:12.5px;color:rgba(255,255,255,.2);text-align:center;padding:20px;background:rgba(255,255,255,.015);border-radius:12px;border:1px solid rgba(255,255,255,.03);">No quests completed yet — <span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="switchAtelierTab('quests',document.getElementById('atnav-quests'))">start one!</span></div>`}
+      <!-- Radiance Perks -->
+      <div style="margin-bottom:28px;">
+        <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Radiance Perks</span>
+          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('radiance')">See All</span>
         </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          ${PERKS.map(p => {
+            const unlocked = p.plus ? hasPlus : hasRad;
+            return '<div style="background:'+(unlocked?'rgba('+p.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',')+', 0.04)':'rgba(255,255,255,.02)')+';border:1px solid '+(unlocked?p.color+'20':'rgba(255,255,255,.04)')+';border-radius:14px;padding:14px;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.22,1,.36,1);'+(unlocked?'':'opacity:.45')+'"'+(unlocked?' onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'\'"':'')+'>'
+              + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+              + '<div style="color:'+(unlocked?p.color:'rgba(255,255,255,.3)')+';">'+p.icon+'</div>'
+              + '<div style="font-size:12px;font-weight:700;color:'+(unlocked?'#fff':'rgba(255,255,255,.4)')+';">'+p.name+'</div>'
+              + (p.plus?'<span style="margin-left:auto;font-size:8px;font-weight:800;color:#ffd93e;background:rgba(255,220,62,.1);padding:2px 6px;border-radius:100px;">+</span>':'')
+              + '</div>'
+              + '<div style="font-size:10.5px;color:rgba(255,255,255,.25);line-height:1.4;">'+p.desc+'</div>'
+              + (unlocked?'<div style="position:absolute;top:0;left:0;right:0;height:1.5px;background:'+p.color+';opacity:.3;"></div>':'')
+              + '</div>';
+          }).join('')}
+        </div>
+        ${!hasRad?'<div style="margin-top:12px;background:rgba(255,249,62,.03);border:1.5px dashed rgba(255,249,62,.1);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;" onclick="switchAtelierTab(\'radiance\')" onmouseover="this.style.background=\'rgba(255,249,62,.06)\'" onmouseout="this.style.background=\'rgba(255,249,62,.03)\'">'
+          + '<div style="color:var(--accent);">'+ftzIcon('star','20')+'</div>'
+          + '<div><div style="font-size:12.5px;font-weight:700;color:var(--accent);">Unlock Radiance</div><div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-top:2px;">Get access to all perks and customization</div></div>'
+          + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="margin-left:auto;opacity:.5;"><path d="m9 18 6-6-6-6"/></svg>'
+          + '</div>':''}
+      </div>
 
-        <!-- Shop Highlights -->
-        <div>
-          <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>Check Out These Favourites</span>
-            <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))">See All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-            ${[{name:'Appearances',icon:ftzIcon('image','22'),color:'#a78bfa',desc:'Custom themes for your app'},{name:'Decorations',icon:ftzIcon('star','22'),color:'#60a5fa',desc:'Avatar frames & effects'},{name:'Bundles',icon:ftzIcon('gem','22'),color:'#fb923c',desc:'Save with item packs'}].map(it=>`
-              <div style="background:rgba(255,255,255,.015);border:1.5px solid rgba(255,255,255,.04);border-radius:16px;padding:20px 16px;text-align:center;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'))" onmouseover="this.style.borderColor='${it.color}30';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.04)';this.style.transform='';this.style.boxShadow='none'">
-                <div style="color:${it.color};opacity:.5;margin-bottom:10px;">${it.icon}</div>
-                <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.5);">${it.name}</div>
-                <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">${it.desc}</div>
-              </div>`).join('')}
-          </div>
+      <!-- Quest Progress -->
+      <div style="margin-bottom:28px;">
+        <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Quest Progress</span>
+          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('quests')">View All</span>
         </div>
-      </div>`;
-    // Init sparkles for atelier banner
-    requestAnimationFrame(() => {
-      const sc = document.getElementById('atelier-sparkles');
-      if (sc && !sc.children.length) {
-        for (let i = 0; i < 14; i++) {
-          const s = document.createElement('div');
-          s.className = 'hero-sparkle';
-          s.style.left = Math.random() * 100 + '%';
-          s.style.top = (20 + Math.random() * 60) + '%';
-          s.style.animationDelay = (Math.random() * 6) + 's';
-          s.style.animationDuration = (4 + Math.random() * 4) + 's';
-          sc.appendChild(s);
-        }
-      }
-    });
+        ${doneQ.length ? '<div style="display:flex;flex-direction:column;gap:6px;">'
+          + doneQ.slice(0,3).map(q=>
+            '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(62,207,110,.025);border:1px solid rgba(62,207,110,.06);border-radius:12px;transition:all .15s;" onmouseover="this.style.background=\'rgba(62,207,110,.045)\'" onmouseout="this.style.background=\'rgba(62,207,110,.025)\'">'
+            + '<div style="width:30px;height:30px;border-radius:10px;background:rgba(62,207,110,.06);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">'+q.icon+'</div>'
+            + '<div style="flex:1;min-width:0;font-size:12px;font-weight:600;color:rgba(255,255,255,.7);">'+q.title+'</div>'
+            + '<div style="font-size:11px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:3px;">+'+q.reward+' <img src="/Onyx.png" style="width:11px;height:11px;object-fit:contain;"></div>'
+            + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+            + '</div>').join('')
+          + '</div>'
+          : '<div style="font-size:12.5px;color:rgba(255,255,255,.2);text-align:center;padding:18px;background:rgba(255,255,255,.015);border-radius:12px;border:1px solid rgba(255,255,255,.03);">No quests completed yet — <span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="switchAtelierTab(\'quests\')">start one!</span></div>'}
+      </div>
+
+      <!-- Shop Categories -->
+      <div>
+        <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Explore the Shop</span>
+          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('shop')">See All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          ${[{name:'Appearances',icon:ftzIcon('image','22'),color:'#a78bfa',desc:'Custom themes'},{name:'Decorations',icon:ftzIcon('star','22'),color:'#60a5fa',desc:'Avatar effects'},{name:'Bundles',icon:ftzIcon('gem','22'),color:'#fb923c',desc:'Value packs'}].map(it=>
+            '<div style="background:rgba(255,255,255,.015);border:1.5px solid rgba(255,255,255,.04);border-radius:16px;padding:18px 16px;text-align:center;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab(\'shop\')" onmouseover="this.style.borderColor=\''+it.color+'30\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.04)\';this.style.transform=\'\'">'
+            + '<div style="color:'+it.color+';opacity:.5;margin-bottom:8px;">'+it.icon+'</div>'
+            + '<div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.5);">'+it.name+'</div>'
+            + '<div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:3px;">'+it.desc+'</div>'
+            + '</div>').join('')}
+        </div>
+      </div>
+
+    </div>`;
   }
 
   // ── RADIANCE DWELLING ─────────────────────────────────────
@@ -25051,23 +25079,7 @@ function renderAtelierTab(tab) {
     const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance',_boostSvg('14')+' Bastion Boost','🌟 Animated Badge'];
     const PRICES = {basic:[{days:7,onyx:200},{days:30,onyx:600},{days:90,onyx:1500}], plus:[{days:30,onyx:1200},{days:90,onyx:3000}]};
 
-    el.style.padding = '0';
-    el.innerHTML = `
-      <!-- Radiance Header (uniform style) -->
-      <div style="position:relative;overflow:hidden;background:linear-gradient(160deg,#0a0810 0%,#100c1c 50%,#0e0818 100%);padding:28px 32px 24px;border-bottom:1px solid rgba(255,255,255,.04);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 30%,rgba(255,160,62,.05),transparent 55%),radial-gradient(ellipse at 85% 65%,rgba(255,220,62,.04),transparent 50%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:center;gap:14px;">
-          <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,180,62,.06);border:1px solid rgba(255,180,62,.12);display:flex;align-items:center;justify-content:center;">
-            ${hasPlus ? _radiancePlusImg('26') : _radianceImg('26')}
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.4);margin-bottom:3px;">ATELIER</div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.01em;">Radiance Dwelling</div>
-          </div>
-        </div>
-      </div>
-
-      <div style="padding:32px;max-width:800px;">
+    el.innerHTML = `<div class="atelier-content-inner" style="max-width:800px;">
 
       <!-- Active subscription status -->
       ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,220,62,.1),rgba(255,249,62,.05));border:1.5px solid rgba(255,220,62,.2);border-radius:20px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);">
@@ -25208,51 +25220,40 @@ function renderAtelierTab(tab) {
       </div>`;
     };
 
-    el.style.padding = '0';
-    el.innerHTML = `
-      <!-- Quest Header -->
-      <div style="position:relative;overflow:hidden;background:linear-gradient(160deg,#080b14 0%,#0c1020 50%,#0e0a1a 100%);padding:28px 32px 24px;border-bottom:1px solid rgba(255,255,255,.04);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 30%,rgba(62,207,110,.04),transparent 55%),radial-gradient(ellipse at 85% 65%,rgba(96,165,250,.03),transparent 50%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;">
-          <div>
-            <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.4);margin-bottom:6px;">ATELIER</div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.01em;">Quests</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.35);line-height:1.5;">Complete quests to earn Onyx currency. Daily quests refresh at midnight.</div>
-          </div>
-          <!-- Daily progress ring -->
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">
-            <div style="position:relative;width:64px;height:64px;">
-              <svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg);">
-                <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="4"/>
-                <circle cx="32" cy="32" r="28" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="${28*2*Math.PI}" stroke-dashoffset="${28*2*Math.PI*(1-dailyDone/Math.max(dailyTotal,1))}" style="transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);"/>
-              </svg>
-              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">${dailyDone}/${dailyTotal}</div>
-            </div>
-            <span style="font-size:9.5px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;">Daily</span>
-          </div>
-        </div>
+    el.innerHTML = `<div class="atelier-content-inner">
 
-        <!-- Stats row -->
-        <div style="position:relative;display:flex;gap:12px;margin-top:18px;">
-          <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);border-radius:10px;">
-            <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;">
-            <span style="font-size:11.5px;font-weight:700;color:var(--accent);">${totalOnyx} earned</span>
+      <!-- Stats row -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+        <!-- Daily progress ring -->
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 14px 8px 8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:14px;">
+          <div style="position:relative;width:40px;height:40px;">
+            <svg width="40" height="40" viewBox="0 0 40 40" style="transform:rotate(-90deg);">
+              <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/>
+              <circle cx="20" cy="20" r="16" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${16*2*Math.PI}" stroke-dashoffset="${16*2*Math.PI*(1-dailyDone/Math.max(dailyTotal,1))}" style="transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:#fff;">${dailyDone}/${dailyTotal}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(62,207,110,.06);border:1px solid rgba(62,207,110,.1);border-radius:10px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            <span style="font-size:11.5px;font-weight:700;color:var(--green);">${doneQ.length}/${QUESTS_DEF.length} done</span>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;">Daily</div>
+            <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-top:1px;">${dailyDone}/${dailyTotal} done</div>
           </div>
-          ${streak > 0 ? `<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.1);border-radius:10px;">
-            <span style="font-size:13px;">🔥</span>
-            <span style="font-size:11.5px;font-weight:700;color:#fb923c;">${streak} day streak</span>
-          </div>` : ''}
         </div>
+        <div style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.08);border-radius:10px;">
+          <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;">
+          <span style="font-size:11.5px;font-weight:700;color:var(--accent);">${totalOnyx} earned</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.08);border-radius:10px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <span style="font-size:11.5px;font-weight:700;color:var(--green);">${doneQ.length}/${QUESTS_DEF.length} done</span>
+        </div>
+        ${streak > 0 ? `<div style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(251,146,60,.04);border:1px solid rgba(251,146,60,.08);border-radius:10px;">
+          <span style="font-size:13px;">🔥</span>
+          <span style="font-size:11.5px;font-weight:700;color:#fb923c;">${streak} day streak</span>
+        </div>` : ''}
       </div>
 
-      <!-- Quest Content -->
-      <div style="padding:22px 28px 60px;">
-        <!-- Tabs -->
-        <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <!-- Tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;">
           <button class="quest-tab-chip ${qTab==='available'?'active':''}" onclick="setQuestTab('available')" id="qtab-available">Available (${activeQ.length})</button>
           <button class="quest-tab-chip ${qTab==='completed'?'active':''}" onclick="setQuestTab('completed')" id="qtab-completed">Completed (${doneQ.length})</button>
         </div>
@@ -25322,43 +25323,24 @@ function renderAtelierTab(tab) {
 
     const onyxTier = CU?.onyxBadge ? _getOnyxTier(CU.onyxBadgeSpent||0) : null;
 
-    el.style.padding = '0';
-    el.innerHTML = `
-      <!-- Shop Header -->
-      <div style="position:relative;overflow:hidden;background:linear-gradient(160deg,#080a16 0%,#0c1020 50%,#0a0818 100%);padding:28px 32px 22px;border-bottom:1px solid rgba(255,255,255,.04);">
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 30%,rgba(255,249,62,.05),transparent 55%),radial-gradient(ellipse at 85% 65%,rgba(167,139,250,.04),transparent 50%);pointer-events:none;"></div>
-        <div style="position:relative;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);display:flex;align-items:center;justify-content:center;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fef83d" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,249,62,.4);margin-bottom:3px;">ATELIER</div>
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.01em;">Shop</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,249,62,.06);border:1.5px solid rgba(255,249,62,.12);border-radius:14px;">
-            <img src="/Onyx.png" style="width:18px;height:18px;object-fit:contain;">
-            <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--accent);">${bal}</span>
-            <span style="font-size:11px;color:rgba(255,255,255,.3);font-weight:500;">Onyx</span>
-          </div>
-        </div>
+    el.innerHTML = `<div class="atelier-content-inner">
 
-        <!-- Shop Tabs -->
-        <div style="position:relative;display:flex;gap:4px;margin-top:18px;">
-          ${['featured','browse'].map(t=>`
-            <button onclick="setShopTab('${t}')" id="stab-${t}" style="padding:9px 20px;border-radius:12px;border:1.5px solid ${shopTab===t?'rgba(255,249,62,.2)':'transparent'};background:${shopTab===t?'rgba(255,249,62,.06)':'transparent'};color:${shopTab===t?'var(--accent)':'rgba(255,255,255,.35)'};font-size:12.5px;font-weight:600;cursor:pointer;transition:all .18s;" onmouseover="if('${t}'!=='${shopTab}')this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.7)'" onmouseout="if('${t}'!=='${shopTab}'){this.style.background='transparent';this.style.color='rgba(255,255,255,.35)'}">${t==='featured'?'Featured':'Browse'}</button>`).join('')}
+      <!-- Shop Sub-Tabs -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:22px;">
+        ${['featured','browse'].map(t=>
+          '<button class="quest-tab-chip'+(shopTab===t?' active':'')+'" onclick="setShopTab(\''+t+'\')" id="stab-'+t+'">'+(t==='featured'?'Featured':'Browse All')+'</button>').join('')}
+        <div style="flex:1;"></div>
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.08);border-radius:10px;">
+          <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;">
+          <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--accent);">${bal}</span>
         </div>
       </div>
 
-      <div style="padding:24px 32px 60px;">
-        ${shopTab==='featured'?`
+      ${shopTab==='featured'?`
 
-          <!-- ═══ COLLECTIONS-BASED SHOP (Discord-style) ═══ -->
-
-          <!-- ── Featured Items Row (horizontal scroll, like Discord shop) ── -->
-          <div style="margin-bottom:36px;">
-            <div class="atel-section-hdr"><span>Featured Items</span></div>
+        <!-- Featured Items -->
+        <div style="margin-bottom:32px;">
+          <div class="atel-section-hdr"><span>Featured Items</span></div>
             <div class="featured-scroll-row">
               ${SHOP_APPEARANCES.map(a => {
                 const owned = ownedAppearances.includes(a.id);

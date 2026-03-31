@@ -374,11 +374,19 @@ function startCombatGame(eventId, enemyCount) {
       if (typeof _chronicleProgress !== 'undefined') {
         _chronicleProgress[eventId] = true;
         console.log('Event', eventId, 'marked as complete');
+
+        // Refresh Chronicle UI to show unlocked next event
+        if (typeof renderChronicleEvents === 'function') {
+          renderChronicleEvents();
+        }
+        if (typeof renderChronicleMapPins === 'function') {
+          renderChronicleMapPins();
+        }
         if (typeof updateChronicleProgress === 'function') {
           updateChronicleProgress();
         }
       }
-      toast('✓ VICTORY! Event unlocked!', 'success');
+      toast('✓ VICTORY! Next event unlocked!', 'success');
     } else {
       toast('✗ DEFEAT! Try again.', 'error');
     }
@@ -529,6 +537,14 @@ function startStealthGame() {
       if (typeof _chronicleProgress !== 'undefined') {
         _chronicleProgress[2] = true;
         console.log('Event 2 marked as complete');
+
+        // Refresh Chronicle UI to show unlocked next event
+        if (typeof renderChronicleEvents === 'function') {
+          renderChronicleEvents();
+        }
+        if (typeof renderChronicleMapPins === 'function') {
+          renderChronicleMapPins();
+        }
         if (typeof updateChronicleProgress === 'function') {
           updateChronicleProgress();
         }

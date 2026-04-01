@@ -10917,22 +10917,49 @@ const EMOJI_PICKER_TABS = [
 ];
 
 let _recentEmojis = JSON.parse(localStorage.getItem('ftz_recent_emojis')||'[]');
+let _favEmojis = JSON.parse(localStorage.getItem('ftz_fav_emojis')||'[]');
 let _emojiPickerTab = 'smileys';
 
 
+function toggleFavEmoji(emoji) {
+  if (_favEmojis.includes(emoji)) {
+    _favEmojis = _favEmojis.filter(e => e !== emoji);
+  } else {
+    _favEmojis = [emoji, ..._favEmojis].slice(0,50);
+  }
+  localStorage.setItem('ftz_fav_emojis', JSON.stringify(_favEmojis));
+  // Refresh picker if currently showing
+  const grid = document.getElementById('epp-grid');
+  if (grid && _emojiPickerTab === 'favorites') {
+    renderEmojiTab('favorites');
+  } else if (grid) {
+    // Just refresh the current view to update star icons
+    const currentTab = _emojiPickerTab;
+    renderEmojiTab(currentTab);
+  }
+}
+
 function buildEmojiSidebar() {
-  // Build sidebar with: Fortized icon, separator, bastion icons, separator, category icons
+  // Build sidebar with: Favorites, Fortized icon, separator, bastion icons, separator, category icons
   const bastions = CU?.bastions || [];
   let html = '';
+  // Favorites
+  html += `<button class="epp-sidebar-btn${_emojiPickerTab==='favorites'?' active':''}" id="etab-favorites" title="Favorites" onclick="setEmojiTab('favorites')"><span style="font-size:16px;">⭐</span></button>`;
   // Fortized global emojis
   html += `<button class="epp-sidebar-btn${_emojiPickerTab==='ftz'?' active':''}" id="etab-ftz" title="Fortized Guide" onclick="setEmojiTab('ftz')"><img src="/Fortized icon.png" width="22" height="22" style="object-fit:contain;" onerror="this.outerHTML='🏰'"></button>`;
   // Frequently used
   html += `<button class="epp-sidebar-btn${_emojiPickerTab==='frequent'?' active':''}" id="etab-frequent" title="Frequently used" onclick="setEmojiTab('frequent')"><span style="font-size:16px;">🔥</span></button>`;
   // Personal emojis
-  html += `<button class="epp-sidebar-btn${_emojiPickerTab==='personal'?' active':''}" id="etab-personal" title="My Emojis" onclick="setEmojiTab('personal')"><span style="font-size:16px;">⭐</span></button>`;
+  html += `<button class="epp-sidebar-btn${_emojiPickerTab==='personal'?' active':''}" id="etab-personal" title="My Emojis" onclick="setEmojiTab('personal')"><span style="font-size:16px;">🎨</span></button>`;
   // Separator before bastions
   if (bastions.length) {
     html += '<div class="epp-sidebar-sep"></div>';
+    const isRadiance = _hasActiveRadiance();
+    if (isRadiance) {
+      // Show unified "All Bastions" button for Radiance users
+      html += `<button class="epp-sidebar-btn${_emojiPickerTab==='bastions'?' active':''}" id="etab-bastions" title="All Bastion Emojis" onclick="setEmojiTab('bastions')"><span style="font-size:14px;">🏰</span></button>`;
+    }
+    // Show individual bastion buttons
     bastions.forEach((b, i) => {
       const active = _emojiPickerTab === 'bastion-' + i;
       const emblem = b.emblem ? `<img src="${escapeHTML(b.emblem)}" alt="${escapeHTML(b.name||'')}">` : `<span style="font-size:12px;font-weight:700;">${escapeHTML((b.name||'B').slice(0,2).toUpperCase())}</span>`;
@@ -11045,6 +11072,17 @@ function renderEmojiTab(tabId) {
   const grid = document.getElementById('epp-grid');
   if (!grid) return;
 
+  if (tabId === 'favorites') {
+    grid.style.gridTemplateColumns = 'repeat(8,1fr)';
+    if (!_favEmojis.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">No favorites yet! Right-click any emoji to favorite it.</div>';
+      return;
+    }
+    grid.innerHTML = _favEmojis.map(e => renderEmojiCell(e)).join('');
+    wireEmojiHover(grid);
+    return;
+  }
+
   if (tabId === 'recent') {
     if (!_recentEmojis.length) {
       grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">No recent emojis yet!</div>';
@@ -11075,6 +11113,41 @@ function renderEmojiTab(tabId) {
     } else {
       html += _recentEmojis.slice(0,24).map(e => renderEmojiCell(e)).join('');
     }
+    grid.innerHTML = html;
+    return;
+  }
+
+  // All bastions for Radiance users
+  if (tabId === 'bastions') {
+    const isRadiance = _hasActiveRadiance();
+    if (!isRadiance) return;
+    grid.style.gridTemplateColumns = 'repeat(6,1fr)';
+    const allBastionEmojis = [];
+    const emojiMap = {}; // Track which bastion owns which emoji
+    const bastions = CU?.bastions || [];
+    bastions.forEach((b, bi) => {
+      const emojis = b.customEmojis || [];
+      emojis.forEach(ce => {
+        if (!emojiMap[ce.name]) {
+          allBastionEmojis.push({...ce, bastion: b.name, bastionIdx: bi});
+          emojiMap[ce.name] = true;
+        }
+      });
+    });
+
+    if (!allBastionEmojis.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">Your bastions have no custom emojis yet.</div>';
+      return;
+    }
+    let html = `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">All Bastion Emojis</div>`;
+    html += allBastionEmojis.map(ce => `
+      <div onclick="insertFortizedEmoji('${escapeHTML(ce.name)}','${escapeHTML(ce.data)}')"
+           onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:  (from ${escapeHTML(ce.bastion)})'"
+           title=":${escapeHTML(ce.name)}: from ${escapeHTML(ce.bastion)}"
+           style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
+           onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+        <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
+      </div>`).join('');
     grid.innerHTML = html;
     return;
   }
@@ -11374,12 +11447,14 @@ function renderEmojiCell(emoji) {
   if (!label) label = emoji;
   const shortcode = Object.entries(EMOJI_SHORTCODES).find(([,em]) => em === emoji)?.[0] || '';
   const displayName = shortcode ? ':' + shortcode + ':' : label;
-  return `<div onclick="insertEmoji('${safe}')" oncontextmenu="event.preventDefault();_showEmojiInfoPopover('${safe}','unicode',event)" data-tip="${escapeHTML(displayName)}"
-    onmouseenter="document.getElementById('epp-hover-label').textContent='${escapeHTML(displayName)}'"
-    style="width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;padding:3px;"
+  const isFav = _favEmojis.includes(emoji);
+  return `<div onclick="insertEmoji('${safe}')" oncontextmenu="event.preventDefault();toggleFavEmoji('${safe}')" data-tip="${escapeHTML(displayName)}${isFav ? ' ★ (Right-click to unfavorite)' : ' (Right-click to favorite)'}"
+    onmouseenter="document.getElementById('epp-hover-label').textContent='${escapeHTML(displayName)}${isFav ? ' ★' : ''}'"
+    style="width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;padding:3px;position:relative;"
     onmouseover="this.style.background='rgba(255,255,255,.07)';this.style.transform='scale(1.15)'"
     onmouseout="this.style.background='transparent';this.style.transform=''">
-    <img src="${url}" style="width:26px;height:26px;object-fit:contain;" loading="lazy" onerror="this.outerHTML='<span style=\'font-size:22px;\'>${emoji}</span>'">
+    <img src="${url}" style="width:26px;height:26px;object-fit:contain;" loading="lazy" onerror="this.outerHTML='<span style=\\'font-size:22px;\\'>${emoji}</span>'">
+    ${isFav ? '<span style="position:absolute;top:2px;right:2px;font-size:12px;color:var(--accent);">★</span>' : ''}
   </div>`;
 }
 

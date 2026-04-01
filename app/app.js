@@ -13085,6 +13085,19 @@ async function doLogout() {
 }
 
 // ════════════════════════════════════════════
+// DEBUG UTILITIES
+// ════════════════════════════════════════════
+window._debugProfileCard = function(username) {
+  console.log('=== Testing Profile Card ===');
+  console.log('Username:', username);
+  console.log('Modal element exists:', !!document.getElementById('modal-user'));
+  console.log('Modal body element exists:', !!document.getElementById('user-modal-body'));
+  console.log('Calling viewUserProfile...');
+  viewUserProfile(username || (CU?.username));
+};
+// Usage: _debugProfileCard('username')
+
+// ════════════════════════════════════════════
 // SEARCH
 // ════════════════════════════════════════════
 

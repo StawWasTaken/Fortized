@@ -20912,43 +20912,54 @@ async function _refreshSpotifyToken() {
   return false;
 }
 
-// Update Spotify widget in profile card if visible
+// Update Spotify widget in profile card if visible (real-time updates)
 function _updateSpotifyWidget() {
-  const spotifyWidget = document.querySelector('[class*="pw-widget"][style*="1DB954"]');
-  if (!spotifyWidget) return;
-
   const spotifyData = CU.spotifyNowPlaying;
-  if (!spotifyData) return;
-
-  // Update the widget content based on current playing status
-  if (spotifyData.isPlaying) {
-    const progressPct = spotifyData.durationMs ? Math.min(100, (spotifyData.progressMs / spotifyData.durationMs) * 100) : 0;
-    const _spotifySvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>';
-
-    spotifyWidget.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div class="pw-widget-title" style="color:#1DB954;margin-bottom:0;">${_spotifySvg} Listening to Spotify</div>
-        <button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" onmouseover="this.style.color='#f87171';this.style.background='rgba(248,113,113,.08)'" onmouseout="this.style.color='rgba(255,255,255,.2)';this.style.background='none'" title="Disconnect Spotify">Disconnect</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        ${spotifyData.albumArt ? `<img src="${escapeHTML(spotifyData.albumArt)}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(29,185,84,.15);">` : `<div style="width:52px;height:52px;border-radius:8px;background:rgba(29,185,84,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(29,185,84,.6)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`}
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(spotifyData.track||'Unknown')}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">by ${escapeHTML(spotifyData.artist||'Unknown artist')}</div>
-          ${spotifyData.album ? `<div style="font-size:10px;color:rgba(255,255,255,.2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">on ${escapeHTML(spotifyData.album)}</div>` : ''}
-        </div>
-      </div>
-      <div style="margin-top:8px;">
-        <div style="width:100%;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;">
-          <div style="width:${progressPct}%;height:100%;background:#1DB954;border-radius:2px;transition:width 1s linear;"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-top:3px;">
-          <span style="font-size:9px;color:rgba(255,255,255,.2);">${escapeHTML(spotifyData.progress||'0:00')}</span>
-          <span style="font-size:9px;color:rgba(255,255,255,.2);">${escapeHTML(spotifyData.duration||'0:00')}</span>
-        </div>
-      </div>
-    `;
+  if (!spotifyData) {
+    console.log('[Spotify Widget] No data to update');
+    return;
   }
+
+  // Find all spotify widgets on the page (in profile cards, modals, etc)
+  const spotifyWidgets = document.querySelectorAll('[style*="1DB954"]');
+  console.log('[Spotify Widget] Found', spotifyWidgets.length, 'potential widgets');
+
+  spotifyWidgets.forEach(widget => {
+    // Check if this is actually a spotify widget (has spotify-related content)
+    if (widget.textContent.includes('Spotify') || widget.textContent.includes('SPOTIFY')) {
+      console.log('[Spotify Widget] Updating widget');
+
+      if (spotifyData.isPlaying) {
+        const progressPct = spotifyData.durationMs ? Math.min(100, (spotifyData.progressMs / spotifyData.durationMs) * 100) : 0;
+        const _spotifySvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>';
+
+        widget.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div class="pw-widget-title" style="color:#1DB954;margin-bottom:0;">${_spotifySvg} Listening to Spotify</div>
+            <button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" onmouseover="this.style.color='#f87171';this.style.background='rgba(248,113,113,.08)'" onmouseout="this.style.color='rgba(255,255,255,.2)';this.style.background='none'" title="Disconnect Spotify">Disconnect</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            ${spotifyData.albumArt ? `<img src="${escapeHTML(spotifyData.albumArt)}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(29,185,84,.15);">` : `<div style="width:52px;height:52px;border-radius:8px;background:rgba(29,185,84,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(29,185,84,.6)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`}
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(spotifyData.track||'Unknown')}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">by ${escapeHTML(spotifyData.artist||'Unknown artist')}</div>
+              ${spotifyData.album ? `<div style="font-size:10px;color:rgba(255,255,255,.2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">on ${escapeHTML(spotifyData.album)}</div>` : ''}
+            </div>
+          </div>
+          <div style="margin-top:8px;">
+            <div style="width:100%;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;">
+              <div style="width:${progressPct}%;height:100%;background:#1DB954;border-radius:2px;transition:width 1s linear;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:3px;">
+              <span style="font-size:9px;color:rgba(255,255,255,.2);">${escapeHTML(spotifyData.progress||'0:00')}</span>
+              <span style="font-size:9px;color:rgba(255,255,255,.2);">${escapeHTML(spotifyData.duration||'0:00')}</span>
+            </div>
+          </div>
+        `;
+        console.log('[Spotify Widget] Updated with playing track:', spotifyData.track);
+      }
+    }
+  });
 }
 
 // Poll Spotify for current playback
@@ -21085,7 +21096,7 @@ async function _disconnectSpotify() {
 }
 
 // Auto-poll Spotify every 60 seconds if connected (reduced from 30s)
-setInterval(() => { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); }, 60000);
+setInterval(() => { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); }, 5000);
 
 async function _removeGameFromCollection(gameName) {
   if (!CU.gameCollection) return;

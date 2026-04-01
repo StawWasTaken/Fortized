@@ -11677,7 +11677,7 @@ function buildProfileView(tab) {
             <!-- Display Name -->
             <div>
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Display Name</div>
-              <input class="settings-input" id="dn-input" value="${escapeHTML(CU.displayName||CU.username)}" maxlength="32" placeholder="Your display name" oninput="markSettingsDirty()">
+              <input class="settings-input" id="dn-input" value="${escapeHTML(CU.displayName||CU.username)}" maxlength="32" placeholder="Your display name" oninput="markSettingsDirty();updateProfilePreview()">
             </div>
             ${sep}
 
@@ -11750,7 +11750,7 @@ function buildProfileView(tab) {
                 <div style="text-align:center;">
                   <label style="cursor:pointer;display:block;">
                     <div style="width:60px;height:60px;border-radius:12px;border:2px solid ${themeC1?themeC1+'55':'rgba(255,255,255,.1)'};overflow:hidden;position:relative;transition:border-color .15s;">
-                      <input type="color" value="${themeC1||'#6366f1'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;this.closest('div[style*=border]').style.borderColor=this.value+'55';if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color1=this.value;_updateProfileThemePreview();markSettingsDirty()">
+                      <input type="color" value="${themeC1||'#6366f1'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;this.closest('div[style*=border]').style.borderColor=this.value+'55';if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color1=this.value;_updateProfileThemePreview();markSettingsDirty();updateProfilePreview()">
                       <div style="width:100%;height:100%;background:${themeC1||'#6366f1'};display:flex;align-items:center;justify-content:center;">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </div>
@@ -11761,7 +11761,7 @@ function buildProfileView(tab) {
                 <div style="text-align:center;">
                   <label style="cursor:pointer;display:block;">
                     <div style="width:60px;height:60px;border-radius:12px;border:2px solid ${(themeC2||themeC1)?((themeC2||themeC1)+'55'):'rgba(255,255,255,.1)'};overflow:hidden;position:relative;transition:border-color .15s;">
-                      <input type="color" value="${themeC2||themeC1||'#8b5cf6'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;this.closest('div[style*=border]').style.borderColor=this.value+'55';if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color2=this.value;_updateProfileThemePreview();markSettingsDirty()">
+                      <input type="color" value="${themeC2||themeC1||'#8b5cf6'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;this.closest('div[style*=border]').style.borderColor=this.value+'55';if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.color2=this.value;_updateProfileThemePreview();markSettingsDirty();updateProfilePreview()">
                       <div style="width:100%;height:100%;background:${themeC2||themeC1||'#8b5cf6'};display:flex;align-items:center;justify-content:center;">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </div>
@@ -11787,7 +11787,7 @@ function buildProfileView(tab) {
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">Bio</div>
               <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px;">You can use markdown and links if you'd like.</div>
               <div style="position:relative;">
-                <textarea class="settings-input" id="bio-input" rows="4" maxlength="300" style="resize:none;padding-bottom:28px;" oninput="markSettingsDirty();document.getElementById('bio-char-count').textContent=(300-this.value.length)">${escapeHTML(CU.bio||'')}</textarea>
+                <textarea class="settings-input" id="bio-input" rows="4" maxlength="300" style="resize:none;padding-bottom:28px;" oninput="markSettingsDirty();updateProfilePreview();document.getElementById('bio-char-count').textContent=(300-this.value.length)">${escapeHTML(CU.bio||'')}</textarea>
                 <span id="bio-char-count" style="position:absolute;bottom:10px;right:12px;font-size:11px;color:rgba(255,255,255,.25);">${300-(CU.bio||'').length}</span>
               </div>
             </div>
@@ -19033,6 +19033,7 @@ async function _dnApplyStyle() {
   await saveUser(true);
   applyRadianceFont();
   updateUserbar();
+  updateProfilePreview();
   // Broadcast style change to other users via Socket.IO
   if (typeof FortizedSocial !== 'undefined' && FortizedSocial._socket) {
     FortizedSocial._socket.emit('profile:update', {
@@ -27686,6 +27687,79 @@ function clearSettingsDirty() {
   _settingsDirty = false;
   document.getElementById('unsaved-bar')?.classList.remove('show');
 }
+
+function updateProfilePreview() {
+  // Update the profile card preview in real-time as user makes changes
+  const previewContainer = document.querySelector('[style*="sticky"]');
+  if (!previewContainer || !previewContainer.querySelector('.up-card')) return;
+
+  // Get current input values
+  const dnInp = document.getElementById('dn-input');
+  const bioInp = document.getElementById('bio-input');
+  const displayName = dnInp ? dnInp.value.trim() || CU.username : (CU.displayName || CU.username);
+  const bio = bioInp ? bioInp.value.trim() : (CU.bio || '');
+
+  // Get theme colors
+  const themeC1 = CU.profileTheme?.color1 || null;
+  const themeC2 = CU.profileTheme?.color2 || themeC1 || null;
+  const profileCardBg = (themeC1 && themeC2) ? _blendColorsForProfileCard(themeC1, themeC2) : null;
+
+  // Get status color
+  const sc = FtzStatus.color(CU.status || 'online');
+  const cs = CU.customStatus;
+  const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
+  const userBanner = (CU.banner && hasRadiance) ? CU.banner : null;
+  const previewBg = themeC1 ? `linear-gradient(135deg,${themeC1}ee,${themeC2||themeC1}bb)` : `linear-gradient(135deg,#141a2e,#1a1035,#0f1828)`;
+
+  // Update the preview card background
+  const cardEl = previewContainer.querySelector('.up-card');
+  if (cardEl) {
+    cardEl.style.background = profileCardBg || '';
+  }
+
+  // Update border styling
+  const cardWrapper = previewContainer.querySelector('[style*="border-radius:16px"]');
+  if (cardWrapper && themeC1) {
+    cardWrapper.style.borderColor = 'transparent';
+    cardWrapper.style.backgroundImage = `linear-gradient(var(--panel),var(--panel)),linear-gradient(135deg,${themeC1},${themeC2||themeC1})`;
+    cardWrapper.style.backgroundOrigin = 'border-box';
+    cardWrapper.style.backgroundClip = 'padding-box,border-box';
+    cardWrapper.style.boxShadow = `0 8px 40px rgba(0,0,0,.35),0 0 28px ${themeC1}15`;
+  }
+
+  // Update banner background
+  const bannerEl = previewContainer.querySelector('[style*="height:100px"]');
+  if (bannerEl) {
+    if (userBanner) {
+      bannerEl.style.backgroundImage = `url('${escapeHTML(userBanner)}')`;
+    } else {
+      bannerEl.style.background = previewBg;
+    }
+  }
+
+  // Update display name
+  const displayNameEl = previewContainer.querySelector('[style*="font-size:17px"]');
+  if (displayNameEl) {
+    displayNameEl.textContent = displayName;
+    displayNameEl.style.fontFamily = _getDisplayFontCSS(CU.displayFont || 'default');
+    const effectCss = _getDisplayEffectCSS(CU.displayEffect || 'solid', CU.displayColor || '#fff');
+    displayNameEl.setAttribute('style', displayNameEl.getAttribute('style') + ';' + effectCss);
+  }
+
+  // Update bio
+  const bioEl = Array.from(previewContainer.querySelectorAll('div')).find(el =>
+    el.textContent && el.textContent.includes('About Me')
+  );
+  if (bioEl && bio) {
+    const bioText = bioEl.parentElement.querySelector('div:last-child');
+    if (bioText) {
+      bioText.textContent = bio.slice(0, 120) + (bio.length > 120 ? '…' : '');
+    }
+  }
+
+  markSettingsDirty();
+}
+
 
 function resetSettingsChanges() {
   // Only revert CU data if we're actually on the profile view with settings inputs visible

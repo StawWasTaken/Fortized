@@ -249,6 +249,37 @@ const FtzStatus = (() => {
       + '</svg>';
   }
 
+  // Helper to blend two colors and ensure readability
+  function _blendColorsForProfileCard(color1, color2) {
+    // Parse hex colors
+    var c1 = parseInt(color1.substring(1), 16);
+    var c2 = parseInt(color2.substring(1), 16);
+
+    // Extract RGB components
+    var r1 = (c1 >> 16) & 255, g1 = (c1 >> 8) & 255, b1 = c1 & 255;
+    var r2 = (c2 >> 16) & 255, g2 = (c2 >> 8) & 255, b2 = c2 & 255;
+
+    // Average the colors (50/50 blend)
+    var r = Math.round((r1 + r2) / 2);
+    var g = Math.round((g1 + g2) / 2);
+    var b = Math.round((b1 + b2) / 2);
+
+    // Desaturate to reduce color intensity (make it more neutral/light)
+    var brightness = (r + g + b) / 3;
+    var desaturate = 0.4;  // 40% saturation
+    r = Math.round(r * desaturate + brightness * (1 - desaturate));
+    g = Math.round(g * desaturate + brightness * (1 - desaturate));
+    b = Math.round(b * desaturate + brightness * (1 - desaturate));
+
+    // Lighten to ensure readability
+    var lighten = 0.25;  // Add 25% lightness
+    r = Math.min(255, Math.round(r + (255 - r) * lighten));
+    g = Math.min(255, Math.round(g + (255 - g) * lighten));
+    b = Math.min(255, Math.round(b + (255 - b) * lighten));
+
+    return '#' + [r, g, b].map(x => ('0' + x.toString(16)).slice(-2)).join('');
+  }
+
   function updateDots(username, st) {
     var s = sanitize(st);
     // Update all status dots with class-based selectors
@@ -11739,15 +11770,12 @@ function buildProfileView(tab) {
                   </label>
                 </div>
                 <div style="text-align:center;">
-                  <label style="cursor:pointer;display:block;">
-                    <div style="width:60px;height:60px;border-radius:12px;border:2px solid ${CU.profileTheme?.cardBgColor?(CU.profileTheme.cardBgColor+'55'):'rgba(255,255,255,.1)'};overflow:hidden;position:relative;transition:border-color .15s;">
-                      <input type="color" value="${CU.profileTheme?.cardBgColor||'#1f232b'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;this.closest('div[style*=border]').style.borderColor=this.value+'55';if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.cardBgColor=this.value;markSettingsDirty()">
-                      <div style="width:100%;height:100%;background:${CU.profileTheme?.cardBgColor||'#1f232b'};display:flex;align-items:center;justify-content:center;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      </div>
+                  <div style="width:60px;height:60px;border-radius:12px;border:2px solid rgba(255,255,255,.1);overflow:hidden;position:relative;">
+                    <div style="width:100%;height:100%;background:${themeC1?'linear-gradient(135deg,'+themeC1+'66,'+( themeC2||themeC1)+'66)':'linear-gradient(135deg,#666,#888)'};display:flex;align-items:center;justify-content:center;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
                     </div>
-                    <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;">Card Bg</div>
-                  </label>
+                  </div>
+                  <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;">Card Bg<br><span style="font-size:8px;color:rgba(255,255,255,.2);">(auto)</span></div>
                 </div>
               </div>
               ${themeC1 ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(248,113,113,.2)\';this.style.color=\'rgba(248,113,113,.6)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.08)\';this.style.color=\'rgba(255,255,255,.4)\'">Reset Theme</button>' : ''}
@@ -12780,6 +12808,10 @@ async function viewUserProfile(username) {
   const ignored = isUserIgnored(username);
   const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
   const profileTheme = hasRadiancePlus ? (u.profileTheme || null) : null;
+  // Auto-generate profile card background from blended theme colors
+  const profileCardBg = profileTheme && profileTheme.color1 && profileTheme.color2
+    ? _blendColorsForProfileCard(profileTheme.color1, profileTheme.color2)
+    : null;
 
   const sc = FtzStatus.color(status);
   const socials = u.socials || {};
@@ -12825,7 +12857,7 @@ async function viewUserProfile(username) {
 
   modalEl.innerHTML = `
     <div style="${themeBorder}">
-    <div class="up-card" style="position:relative;${profileTheme && profileTheme.cardBgColor ? `background:${profileTheme.cardBgColor};` : (profileTheme ? `background:linear-gradient(150deg,${profileTheme.color1}0c,var(--panel) 35%,var(--panel) 65%,${profileTheme.color2}0a);` : '')}">
+    <div class="up-card" style="position:relative;${profileCardBg ? `background:${profileCardBg};` : ''}">
     ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
       <div class="pbo-icon" style="font-size:32px;color:rgba(248,113,113,.5);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
       <div class="pbo-text">You blocked ${escapeHTML(username)}</div>

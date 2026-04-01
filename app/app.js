@@ -3329,12 +3329,12 @@ async function renderActiveNowSidebar(containerId) {
       : u.customStatus
         ? escapeHTML(u.customStatus)
         : FtzStatus.label(u.status);
-    return `<div class="active-now-item" onclick="openDMView('${escapeHTML(u.username)}')">
-      <div class="an-avatar">
+    return `<div class="active-now-item" onclick="viewUserProfile('${escapeHTML(u.username)}')">
+      <div class="an-avatar" style="pointer-events:none;">
         <div class="fa" style="width:36px;height:36px;border-radius:50%;overflow:hidden;font-size:13px;">${buildAvatarHTML(u.pfp, u.displayName, 36)}</div>
         <span class="an-status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="16">${FtzStatus.dotSvg(u.status, 16)}</span>
       </div>
-      <div class="an-info">
+      <div class="an-info" style="pointer-events:none;">
         <div class="an-name">${escapeHTML(u.displayName)}</div>
         <div class="an-activity">${activityText}</div>
       </div>

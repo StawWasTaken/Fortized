@@ -239,16 +239,13 @@ const FtzStatus = (() => {
     var c = color(s);
     var n = parseInt(sz, 10) || 12;
     var half = n / 2;
-    // Online: solid colored circle
-    if (s === 'online') {
-      return '<svg width="'+n+'" height="'+n+'" viewBox="0 0 '+n+' '+n+'" xmlns="http://www.w3.org/2000/svg"><circle cx="'+half+'" cy="'+half+'" r="'+half+'" fill="'+c+'"/></svg>';
-    }
-    // Others: colored circle bg + white icon centered at ~60%
-    var inner = Math.round(n * 0.6);
+    var aroundColor = 'rgba(19,22,29,.6)';
+    // All statuses: dark circle bg + colored icon centered
+    var inner = Math.round(n * 0.65);
     var off = Math.round((n - inner) / 2);
     return '<svg width="'+n+'" height="'+n+'" viewBox="0 0 '+n+' '+n+'" xmlns="http://www.w3.org/2000/svg">'
-      + '<circle cx="'+half+'" cy="'+half+'" r="'+half+'" fill="'+c+'"/>'
-      + '<svg x="'+off+'" y="'+off+'" width="'+inner+'" height="'+inner+'" viewBox="'+i.vb+'" fill="#fff">'+i.path+'</svg>'
+      + '<circle cx="'+half+'" cy="'+half+'" r="'+half+'" fill="'+aroundColor+'"/>'
+      + '<svg x="'+off+'" y="'+off+'" width="'+inner+'" height="'+inner+'" viewBox="'+i.vb+'" fill="'+c+'">'+i.path+'</svg>'
       + '</svg>';
   }
 
@@ -1600,7 +1597,7 @@ function updateUserbar() {
   }
   if (document.getElementById('ua-status-dot')) {
     const uaDotEl = document.getElementById('ua-status-dot');
-    uaDotEl.innerHTML = FtzStatus.dotSvg(st, 20);
+    uaDotEl.innerHTML = FtzStatus.dotSvg(st, 14);
     uaDotEl.style.background = 'none';
   }
   if (uaName) {
@@ -1629,8 +1626,8 @@ function updateUserbar() {
     railUbAvatar.innerHTML = railInner;
     const railDot = document.createElement('span');
     railDot.id = 'rail-ub-status-dot'; railDot.className = 'ua-status-dot';
-    railDot.dataset.dotSize = '20';
-    railDot.innerHTML = FtzStatus.dotSvg(st, 20);
+    railDot.dataset.dotSize = '14';
+    railDot.innerHTML = FtzStatus.dotSvg(st, 14);
     railUbAvatar.appendChild(railDot);
   }
   // Sync rail userbar name & status text
@@ -2558,7 +2555,7 @@ async function _loadRealmFriends(friends, container, countEl) {
     return `<div class="realm-friend" onclick="openDMView('${escapeHTML(r.username)}')" title="${escapeHTML(r.displayName)}">
       <div class="rf-av">
         <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:16px;">${buildAvatarHTML(r.pfp,r.displayName,44)}</div>
-        <span class="rf-status profile-status-dot" data-for="${escapeHTML(r.username)}" data-dot-size="20">${FtzStatus.dotSvg(r.status, 20)}</span>
+        <span class="rf-status profile-status-dot" data-for="${escapeHTML(r.username)}" data-dot-size="16">${FtzStatus.dotSvg(r.status, 16)}</span>
       </div>
       <div class="rf-name">${escapeHTML(r.displayName)}</div>
     </div>`;
@@ -3304,7 +3301,7 @@ async function renderActiveNowSidebar(containerId) {
     return `<div class="active-now-item" onclick="openDMView('${escapeHTML(u.username)}')">
       <div class="an-avatar">
         <div class="fa" style="width:36px;height:36px;border-radius:50%;overflow:hidden;font-size:13px;">${buildAvatarHTML(u.pfp, u.displayName, 36)}</div>
-        <span class="an-status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="22">${FtzStatus.dotSvg(u.status, 22)}</span>
+        <span class="an-status-dot profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="16">${FtzStatus.dotSvg(u.status, 16)}</span>
       </div>
       <div class="an-info">
         <div class="an-name">${escapeHTML(u.displayName)}</div>
@@ -5902,7 +5899,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
             existingImg.onerror = function() { this.src = _defaultPfpUrl(u); };
           } else {
             const currentStatus = _liveStatusCache[u] || entry.dataset.status || status;
-            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="18" data-dot-status="${currentStatus}" style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;">${FtzStatus.dotSvg(currentStatus, 18)}</span>`;
+            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
           }
         }
         const badgesEl = entry.querySelector('.ml-badges');
@@ -5937,7 +5934,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
   return `<div class="ml-entry" data-member="${escapeHTML(u)}" data-status="${status}" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)" style="${dimStyle}">
     <div class="ml-av-wrap profile-decoration-wrap" style="position:relative;display:inline-flex;flex-shrink:0;">
       ${buildAvatarHTML(pfpSrc, displayN, 34)}
-      <span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="18" data-dot-status="${status}" style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;z-index:3;">${FtzStatus.dotSvg(status, 18)}</span>
+      <span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${status}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;z-index:3;">${FtzStatus.dotSvg(status, 14)}</span>
       ${isMe && CU.profileDecoration ? `<img src="${escapeHTML(CU.profileDecoration)}" class="profile-decoration-overlay-ml">` : ''}
     </div>
     <div class="ml-info" style="min-width:0;flex:1;">

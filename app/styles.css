@@ -328,9 +328,9 @@ body.is-desktop-app .topbar{padding-right:0;}
 .ub-user-row{display:flex;align-items:center;padding:4px 4px 4px 8px;gap:4px;flex:1;min-width:0;height:100%;}
 .ua-clickable{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:3px 4px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:background .12s;justify-content:flex-start;}
 .ua-clickable:hover{background:rgba(255,255,255,.05);}
-.ua{width:34px;height:34px;border-radius:50%;background:var(--panel);font-size:12px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.ua{width:34px;height:34px;border-radius:50%;background:var(--panel);font-size:12px;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative;}
 .ua img,.ua>div{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
-.ua-status-dot{position:absolute;bottom:-4px;right:-4px;width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:2.5px solid rgba(255,255,255,.15);border-radius:50%;background:rgba(19,22,29,.4);z-index:2;}
+.ua-status-dot{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.12);border-radius:50%;background:transparent;z-index:2;}
 .ua-status-dot svg,.profile-status-dot svg,.an-status-dot svg,.rf-status svg,.ml-status svg,.sdot svg{transition:all .2s ease;}
 .ua-info{display:block;min-width:0;flex:1;}
 .ua-name{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;font-family:'Syne',sans-serif;line-height:1.2;}
@@ -348,9 +348,9 @@ body.is-desktop-app .topbar{padding-right:0;}
 .rail-ub-user-row{display:flex;align-items:center;padding:4px 4px 4px 8px;gap:4px;flex:1;min-width:0;height:100%;}
 .rail-ub-clickable{display:flex;align-items:center;gap:7px;flex:1;min-width:0;padding:3px 4px;border-radius:8px;background:transparent;border:none;cursor:pointer;transition:background .12s;justify-content:flex-start;}
 .rail-ub-clickable:hover{background:rgba(255,255,255,.05);}
-.rail-ub-avatar{width:34px;height:34px;border-radius:50%;background:var(--panel);cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:visible;position:relative;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.rail-ub-avatar{width:34px;height:34px;border-radius:50%;background:var(--panel);cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:visible;position:relative;flex-shrink:0;}
 .rail-ub-avatar img,.rail-ub-avatar>div{width:100%;height:100%;object-fit:cover;border-radius:50%;}
-.rail-ub-avatar .ua-status-dot{position:absolute;bottom:-4px;right:-4px;width:20px;height:20px;border:2.5px solid rgba(255,255,255,.15);border-radius:50%;background:rgba(19,22,29,.4);z-index:2;}
+.rail-ub-avatar .ua-status-dot{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border:1.5px solid rgba(255,255,255,.12);border-radius:50%;background:transparent;z-index:2;}
 .rail-ub-info{display:block;min-width:0;flex:1;}
 .rail-ub-name{font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;font-family:'Syne',sans-serif;line-height:1.2;}
 .rail-ub-status{font-size:9px;color:rgba(255,255,255,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;line-height:1.2;}
@@ -410,10 +410,9 @@ body.is-desktop-app .topbar{padding-right:0;}
 .active-now-list{flex:1;overflow-y:auto;padding:0 10px 16px;display:flex;flex-direction:column;gap:6px;}
 .active-now-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);backdrop-filter:blur(12px);}
 .active-now-item:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.25),0 0 8px rgba(255,249,62,.03);}
-.active-now-item .an-avatar{position:relative;flex-shrink:0;width:52px;height:40px;display:flex;align-items:flex-end;justify-content:flex-start;}
-.active-now-item .an-avatar::before{content:'';position:absolute;left:0;right:-16px;bottom:0;height:40px;background:rgba(19,22,29,.6);border:2px solid rgba(255,255,255,.12);border-radius:0 8px 8px 0;z-index:-1;}
-.active-now-item .an-avatar .fa{width:36px;height:36px;border-radius:50%;overflow:hidden;font-size:13px;border:2.5px solid rgba(255,255,255,.15);position:relative;z-index:1;}
-.active-now-item .an-status-dot{position:absolute;bottom:2px;right:-6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border:2.5px solid rgba(255,255,255,.15);border-radius:50%;background:rgba(19,22,29,.4);z-index:2;}
+.active-now-item .an-avatar{position:relative;flex-shrink:0;}
+.active-now-item .an-avatar .fa{width:36px;height:36px;border-radius:50%;overflow:hidden;font-size:13px;border:1.5px solid rgba(255,255,255,.1);}
+.active-now-item .an-status-dot{position:absolute;bottom:4px;right:-4px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.1);border-radius:50%;background:transparent;z-index:2;}
 .active-now-item .an-info{flex:1;min-width:0;}
 .active-now-item .an-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'DM Sans',sans-serif;}
 .active-now-item .an-activity{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;margin-top:2px;}
@@ -447,7 +446,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 .realm-friend .rf-av{position:relative;width:46px;height:46px;border-radius:50%;overflow:visible;margin-bottom:4px;}
 .realm-friend .rf-av img,.realm-friend .rf-av .fa{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2.5px solid rgba(255,255,255,.15);transition:border-color .18s;}
 .realm-friend:hover .rf-av img,.realm-friend:hover .rf-av .fa{border-color:rgba(255,249,62,.25);}
-.realm-friend .rf-status{position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;z-index:2;display:flex;align-items:center;justify-content:center;border:2.5px solid rgba(255,255,255,.15);border-radius:50%;background:rgba(19,22,29,.5);}
+.realm-friend .rf-status{position:absolute;bottom:0;right:-2px;width:16px;height:16px;z-index:2;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.1);border-radius:50%;background:transparent;}
 .realm-friend .rf-name{font-size:10.5px;color:rgba(255,255,255,.55);max-width:68px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .18s;}
 .realm-friend:hover .rf-name{color:rgba(255,255,255,.8);}
 /* Scrolled DYK — medieval parchment style */
@@ -821,7 +820,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .ml-entry:active{transform:scale(.98);}
 .ml-av{width:34px;height:34px;border-radius:50%;background:var(--panel);border:2.5px solid rgba(255,255,255,.15);font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:visible;position:relative;}
 .ml-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;background:transparent;}
-.ml-status{position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border:2.5px solid rgba(255,255,255,.15);border-radius:50%;background:rgba(19,22,29,.4);z-index:2;}
+.ml-status{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.1);border-radius:50%;background:transparent;z-index:2;}
 .ml-name{font-size:13px;font-weight:600;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .12s;}
 .ml-entry:hover .ml-name{color:rgba(255,255,255,.9);}
 .ml-badges{display:flex;align-items:center;gap:3px;margin-top:1px;}

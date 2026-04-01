@@ -1,16 +1,22 @@
 // ════════════════════════════════════════════════════
-// FORTIZED — Electron Main Process
+// FORTIZED — Electron Main Process (v3.0.0)
 // ════════════════════════════════════════════════════
-// Desktop app wrapper with game detection, system tray,
-// and native integration features.
+// Desktop app with game detection, system info, audio status,
+// and real-time communication with the web app.
 
 const { app, BrowserWindow, ipcMain, Tray, Menu } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
+const os = require('os');
+const io = require('socket.io-client');
 
 let mainWindow = null;
 let tray = null;
 let gameDetectionInterval = null;
+let activitySyncInterval = null;
+let socket = null;
+const APP_VERSION = '3.0.0';
+const APP_ID = process.env.FORTIZED_APP_ID || 'fortized-desktop-' + Date.now();
 
 // ── Known games database for process matching ──────
 // Maps executable names (lowercase) to display info
@@ -115,6 +121,52 @@ Object.assign(KNOWN_GAMES_UNIX, {
   'celeste.bin.x86_64': { name: 'Celeste', icon: '🏔️' },
   'hades.x86_64':      { name: 'Hades', icon: '⚔️' },
 });
+
+// ── System Info Detection ──────────────────────────
+function getSystemInfo() {
+  return {
+    appVersion: APP_VERSION,
+    appId: APP_ID,
+    platform: process.platform,
+    osVersion: os.release(),
+    arch: process.arch,
+    cpuCount: os.cpus().length,
+    totalMemory: os.totalmem(),
+    freeMemory: os.freemem(),
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  };
+}
+
+// ── Audio Status Detection (Windows) ───────────────
+function detectAudioStatus() {
+  return new Promise((resolve) => {
+    if (process.platform !== 'win32') {
+      resolve({ isPlaying: false, devices: [] });
+      return;
+    }
+    // Simple check: see if any audio-related processes are running
+    const audioProcesses = ['spotify.exe', 'itunes.exe', 'vlc.exe', 'winamp.exe', 'musicbee.exe', 'foobar2000.exe'];
+    exec('tasklist /FO CSV /NH', { maxBuffer: 1024 * 1024 * 5 }, (err, stdout) => {
+      if (err) {
+        resolve({ isPlaying: false, devices: [] });
+        return;
+      }
+      const processes = new Set();
+      stdout.split('\n').forEach(line => {
+        const match = line.match(/^"([^"]+)"/);
+        if (match) processes.add(match[1].toLowerCase());
+      });
+
+      const activeAudioApps = audioProcesses.filter(ap => processes.has(ap));
+      resolve({
+        isPlaying: activeAudioApps.length > 0,
+        devices: activeAudioApps,
+        timestamp: new Date().toISOString(),
+      });
+    });
+  });
+}
 
 // ── Process Detection ──────────────────────────────
 function getRunningProcesses() {
@@ -229,11 +281,93 @@ function createTray() {
   }
 }
 
+// ── Socket.IO Connection & Activity Sync ──────────
+function initializeSocketIO() {
+  const socketUrl = process.env.FORTIZED_SOCKET_URL || (process.env.NODE_ENV === 'development'
+    ? 'http://localhost:3000'
+    : 'https://fortized.com');
+
+  socket = io(socketUrl, {
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: Infinity,
+    transports: ['websocket', 'polling'],
+    extraHeaders: { 'X-Fortized-App': APP_VERSION, 'X-App-ID': APP_ID },
+  });
+
+  socket.on('connect', () => {
+    console.log('[Socket.IO] Connected to server');
+    // Notify the web app that desktop app is connected
+    if (mainWindow) {
+      mainWindow.webContents.send('desktop-app:connected', { appVersion: APP_VERSION });
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('[Socket.IO] Disconnected from server');
+  });
+
+  socket.on('error', (err) => {
+    console.error('[Socket.IO] Error:', err);
+  });
+}
+
+async function startActivitySync() {
+  // Stop any existing interval
+  if (activitySyncInterval) clearInterval(activitySyncInterval);
+
+  // Send activity status to web app every 10 seconds
+  activitySyncInterval = setInterval(async () => {
+    if (!mainWindow) return;
+
+    const games = await detectRunningGames();
+    const audioStatus = await detectAudioStatus();
+    const systemInfo = getSystemInfo();
+
+    const activityData = {
+      appVersion: APP_VERSION,
+      appId: APP_ID,
+      games: games,
+      audio: audioStatus,
+      system: systemInfo,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Send to web app via IPC
+    mainWindow.webContents.send('desktop-app:activity', activityData);
+
+    // Send to server via Socket.IO if connected and user is authenticated
+    if (socket?.connected && mainWindow) {
+      mainWindow.webContents.evaluateJavaScript('CU?.username')
+        .then(username => {
+          if (username) {
+            socket.emit('desktop-app:activity', {
+              username,
+              ...activityData,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, 10000); // Every 10 seconds
+}
+
 // ── IPC Handlers ───────────────────────────────────
 function setupIPC() {
   // Game detection: return currently running games
   ipcMain.handle('detect-games', async () => {
     return await detectRunningGames();
+  });
+
+  // System info
+  ipcMain.handle('get-system-info', async () => {
+    return getSystemInfo();
+  });
+
+  // Audio status
+  ipcMain.handle('get-audio-status', async () => {
+    return await detectAudioStatus();
   });
 
   // Window controls (from window:* events)
@@ -267,9 +401,10 @@ function setupIPC() {
     return await getRunningProcesses();
   });
 
-  // Start periodic game detection
+  // Start periodic game detection and activity sync
   ipcMain.on('game-detection:start', () => {
     if (gameDetectionInterval) clearInterval(gameDetectionInterval);
+    startActivitySync(); // Start the full activity sync
     gameDetectionInterval = setInterval(async () => {
       const games = await detectRunningGames();
       mainWindow?.webContents.send('game-detection:update', games);
@@ -281,12 +416,18 @@ function setupIPC() {
       clearInterval(gameDetectionInterval);
       gameDetectionInterval = null;
     }
+    if (activitySyncInterval) {
+      clearInterval(activitySyncInterval);
+      activitySyncInterval = null;
+    }
   });
 }
 
 // ── App Lifecycle ──────────────────────────────────
 app.whenReady().then(() => {
+  console.log(`[Fortized] Initializing Desktop App v${APP_VERSION}`);
   setupIPC();
+  initializeSocketIO();
   createWindow();
   createTray();
 

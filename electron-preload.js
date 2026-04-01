@@ -7,11 +7,16 @@
 
 const { ipcRenderer } = require('electron');
 
-// ── Desktop bridge API ────────────────────────────────
+// ── Desktop bridge API (v3.0.0) ───────────────────
 const fortizedDesktopAPI = {
-  // Platform info
+  // App Info
   isDesktopApp: true,
+  appVersion: null, // Will be set when connected
   platform: process.platform, // 'win32', 'darwin', 'linux'
+
+  // System Info
+  getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
+  getAudioStatus: () => ipcRenderer.invoke('get-audio-status'),
 
   // Game Detection
   detectGames: () => ipcRenderer.invoke('detect-games'),
@@ -20,6 +25,20 @@ const fortizedDesktopAPI = {
   stopGameDetection: () => ipcRenderer.send('game-detection:stop'),
   onGameDetectionUpdate: (callback) => {
     ipcRenderer.on('game-detection:update', (_event, games) => callback(games));
+  },
+
+  // Activity Updates
+  onActivityUpdate: (callback) => {
+    ipcRenderer.on('desktop-app:activity', (_event, data) => callback(data));
+  },
+  onAppConnected: (callback) => {
+    ipcRenderer.on('desktop-app:connected', (_event, data) => {
+      // Update app version
+      if (data?.appVersion) {
+        fortizedDesktopAPI.appVersion = data.appVersion;
+      }
+      callback(data);
+    });
   },
 
   // Window Controls

@@ -9,6 +9,7 @@ const path = require('path');
 const { exec } = require('child_process');
 const os = require('os');
 const io = require('socket.io-client');
+const fs = require('fs');
 
 let mainWindow = null;
 let tray = null;
@@ -120,6 +121,41 @@ Object.assign(KNOWN_APPS_UNIX, {
   'steamwebhelper': { name: 'Steam', verified: true, category: 'launcher', hidden: true },
 });
 
+// ── Extract icon from app executable ──
+async function getAppIcon(processName) {
+  if (process.platform !== 'win32') return null;
+
+  try {
+    const extractIcon = require('extract-file-icon');
+
+    const possiblePaths = [
+      `C:\\Program Files\\${processName.replace('.exe', '')}\\${processName}`,
+      `C:\\Program Files (x86)\\${processName.replace('.exe', '')}\\${processName}`,
+      `C:\\Program Files\\${processName}`,
+      `C:\\Program Files (x86)\\${processName}`,
+      `C:\\Users\\${process.env.USERNAME}\\AppData\\Local\\Programs\\${processName.replace('.exe', '')}\\${processName}`,
+      `C:\\Users\\${process.env.USERNAME}\\AppData\\Local\\${processName.replace('.exe', '')}\\${processName}`,
+    ];
+
+    for (const fullPath of possiblePaths) {
+      if (fs.existsSync(fullPath)) {
+        try {
+          const icon = await extractIcon(fullPath);
+          if (icon) {
+            return `data:image/png;base64,${icon.toString('base64')}`;
+          }
+        } catch (e) {
+          console.warn(`[Icon] Failed to extract from ${fullPath}:`, e.message);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn(`[Icon] Extract-file-icon error:`, e.message);
+  }
+
+  return null;
+}
+
 // ── System Info Detection ──────────────────────────
 function getSystemInfo() {
   return {
@@ -179,7 +215,11 @@ function getRunningProcesses() {
     }
 
     exec(cmd, { maxBuffer: 1024 * 1024 * 5 }, (err, stdout) => {
-      if (err) { resolve([]); return; }
+      if (err) {
+        console.error('[Process] tasklist error:', err.message);
+        resolve([]);
+        return;
+      }
       const processes = new Set();
       if (platform === 'win32') {
         stdout.split('\n').forEach(line => {
@@ -192,6 +232,7 @@ function getRunningProcesses() {
           if (name) processes.add(name.toLowerCase());
         });
       }
+      console.log(`[Process] Detected ${processes.size} processes`);
       resolve([...processes]);
     });
   });
@@ -199,24 +240,40 @@ function getRunningProcesses() {
 
 // ── Detect ALL running apps (verified + unverified) ──
 async function detectRunningApps() {
+  console.log('[Detection] Starting app detection...');
   const processes = await getRunningProcesses();
   const detected = [];
   const seenNames = new Set();
   const platform = process.platform;
   const knownDB = platform === 'win32' ? KNOWN_APPS : KNOWN_APPS_UNIX;
 
+  console.log(`[Detection] Found ${processes.length} total processes`);
+
   // Step 1: Add verified apps (known to us)
   for (const proc of processes) {
     const match = knownDB[proc];
     if (match && !match.hidden && !seenNames.has(match.name)) {
       seenNames.add(match.name);
-      detected.push({
+
+      const appData = {
         name: match.name,
         processName: proc,
         verified: true,
         category: match.category || 'app',
+        icon: null,
         detectedAt: new Date().toISOString(),
-      });
+      };
+
+      // Try to extract icon
+      try {
+        const icon = await getAppIcon(proc);
+        if (icon) appData.icon = icon;
+      } catch (e) {
+        console.warn(`[Icon] Failed for ${proc}:`, e.message);
+      }
+
+      detected.push(appData);
+      console.log(`[Detection] ✓ Found verified: ${match.name} (${proc})`);
     }
   }
 
@@ -224,13 +281,14 @@ async function detectRunningApps() {
   const ignoredProcesses = new Set([
     'explorer.exe', 'svchost.exe', 'csrss.exe', 'services.exe', 'lsass.exe',
     'dwm.exe', 'userinit.exe', 'spoolsv.exe', 'winlogon.exe', 'smss.exe',
-    'system', 'systemd', 'kernel', 'launchd', 'loginwindow'
+    'system', 'systemd', 'kernel', 'launchd', 'loginwindow', 'wininit.exe',
+    'rundll32.exe', 'conhost.exe', 'dllhost.exe', 'taskhost.exe', 'searchindexer.exe',
+    'nvcontainer.exe', 'nvidia-smi.exe', 'msedgewebview2.exe'
   ]);
 
   for (const proc of processes) {
     const cleanName = proc.replace('.exe', '');
-    if (!KNOWN_APPS[proc] && !ignoredProcesses.has(proc) && !ignoredProcesses.has(cleanName)) {
-      // Format name: remove .exe, capitalize, clean up
+    if (!knownDB[proc] && !ignoredProcesses.has(proc) && !ignoredProcesses.has(cleanName) && !seenNames.has(proc)) {
       const displayName = proc
         .replace('.exe', '')
         .replace(/([a-z])([A-Z])/g, '$1 $2')
@@ -238,19 +296,31 @@ async function detectRunningApps() {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
 
-      if (!seenNames.has(displayName) && detected.length < 100) { // limit to 100 apps
+      if (!seenNames.has(displayName) && detected.length < 100) {
         seenNames.add(displayName);
-        detected.push({
+
+        const appData = {
           name: displayName,
           processName: proc,
           verified: false,
           category: 'unknown',
+          icon: null,
           detectedAt: new Date().toISOString(),
-        });
+        };
+
+        // Try to extract icon
+        try {
+          const icon = await getAppIcon(proc);
+          if (icon) appData.icon = icon;
+        } catch (e) {}
+
+        detected.push(appData);
+        console.log(`[Detection] Found unknown: ${displayName} (${proc})`);
       }
     }
   }
 
+  console.log(`[Detection] Complete - ${detected.length} apps detected`);
   return detected;
 }
 

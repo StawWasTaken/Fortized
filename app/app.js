@@ -27852,6 +27852,37 @@ function clearSettingsDirty() {
   document.getElementById('unsaved-bar')?.classList.remove('show');
 }
 
+
+// Module-level helper to blend two colors for profile card backgrounds
+function _blendColorsForProfileCard(color1, color2) {
+  // Parse hex colors
+  var c1 = parseInt(color1.substring(1), 16);
+  var c2 = parseInt(color2.substring(1), 16);
+
+  // Extract RGB components
+  var r1 = (c1 >> 16) & 255, g1 = (c1 >> 8) & 255, b1 = c1 & 255;
+  var r2 = (c2 >> 16) & 255, g2 = (c2 >> 8) & 255, b2 = c2 & 255;
+
+  // Average the colors (50/50 blend)
+  var r = Math.round((r1 + r2) / 2);
+  var g = Math.round((g1 + g2) / 2);
+  var b = Math.round((b1 + b2) / 2);
+
+  // Desaturate to reduce color intensity (make it more neutral/light)
+  var brightness = (r + g + b) / 3;
+  var desaturate = 0.4;  // 40% saturation
+  r = Math.round(r * desaturate + brightness * (1 - desaturate));
+  g = Math.round(g * desaturate + brightness * (1 - desaturate));
+  b = Math.round(b * desaturate + brightness * (1 - desaturate));
+
+  // Lighten to ensure readability
+  var lighten = 0.25;  // Add 25% lightness
+  r = Math.min(255, Math.round(r + (255 - r) * lighten));
+  g = Math.min(255, Math.round(g + (255 - g) * lighten));
+  b = Math.min(255, Math.round(b + (255 - b) * lighten));
+
+  return '#' + [r, g, b].map(x => ('0' + x.toString(16)).slice(-2)).join('');
+}
 function updateProfilePreview() {
   // Update the profile card preview in real-time as user makes changes
   const previewContainer = document.querySelector('[style*="sticky"]');

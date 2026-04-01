@@ -12841,6 +12841,7 @@ function _clearAllDMBadges(){document.querySelectorAll('.friend-item').forEach(f
 // USER PROFILE POPUP
 // ════════════════════════════════════════════
 async function viewUserProfile(username) {
+  console.log('viewUserProfile called with:', username);
   let u = null;
   try { u = await FortizedSocial.getUserByName(username); } catch {}
   if (!u) u = { username, displayName: username };
@@ -12888,7 +12889,8 @@ async function viewUserProfile(username) {
   const bannerBg = userBanner ? 'transparent' : `linear-gradient(135deg,${profileTheme?profileTheme.color1+'88':'#141a2e'},${profileTheme?profileTheme.color2+'66':'#1a1030'},${profileTheme?profileTheme.color1+'44':'#0f1828'})`;
 
   const modalEl = document.getElementById('user-modal-body');
-  if (!modalEl) { openModal('modal-user'); return; }
+  console.log('Modal element found:', !!modalEl);
+  if (!modalEl) { console.error('Modal body element not found!'); openModal('modal-user'); return; }
 
   const _mutualFriendNames = isOwn ? [] : (CU?.friends||[]).filter(f => f !== CU?.username && f !== u.username && (u.friends||[]).includes(f));
   // Fetch real profile data (pfps) for mutual friends
@@ -12915,7 +12917,9 @@ async function viewUserProfile(username) {
   if (_mutualFriends.length) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${_mutualFriends.slice(0,12).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>12?`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.3);margin-left:-5px;border:2px solid var(--panel);font-weight:700;">+${_mutualFriends.length-12}</div>`:''}</div></div>`);
   if (!_activityContent.length) _activityContent.push(`<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">🎮</div><div style="color:rgba(255,255,255,.15);font-size:12.5px;font-weight:500;">No recent activity</div></div>`);
 
-  modalEl.innerHTML = `
+  try {
+    console.log('Setting innerHTML on modal');
+    modalEl.innerHTML = `
     <div style="${themeBorder}">
     <div class="up-card" style="position:relative;${profileTheme ? `background:linear-gradient(150deg,${profileTheme.color1}0c,var(--panel) 35%,var(--panel) 65%,${profileTheme.color2}0a);` : ''}">
     ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
@@ -13022,11 +13026,25 @@ async function viewUserProfile(username) {
     </div>
     </div>`;
 
-  openModal('modal-user');
-  // Render profile widgets if the user has any enabled
-  const widgetsContainer = document.getElementById('up-widgets-container');
-  if (widgetsContainer) renderProfileWidgetsOnCard(u, widgetsContainer);
-  // Widget manager is the "Add Widgets" button (already in HTML above)
+    console.log('About to open modal and render widgets');
+    openModal('modal-user');
+    console.log('Modal opened');
+    // Render profile widgets if the user has any enabled
+    const widgetsContainer = document.getElementById('up-widgets-container');
+    console.log('Widgets container found:', !!widgetsContainer);
+    if (widgetsContainer) {
+      try {
+        renderProfileWidgetsOnCard(u, widgetsContainer);
+        console.log('Widgets rendered');
+      } catch (e) {
+        console.error('Error rendering widgets:', e);
+      }
+    }
+    // Widget manager is the "Add Widgets" button (already in HTML above)
+  } catch (e) {
+    console.error('Error in viewUserProfile:', e);
+    toast('Error loading profile', 'error');
+  }
 }
 
 function _upSwitchTab(tabEl, panelId) {
@@ -13574,8 +13592,17 @@ function showCustomConfirm(message,callback){
 // MODALS
 // ════════════════════════════════════════════
 function openModal(id){
+  console.log('openModal called with id:', id);
   if (id === 'modal-new-dm') { setTimeout(() => switchNewDMTab('dm'), 10); }
-  const el=document.getElementById(id);if(el){el.classList.add('open');_trapFocusInOverlay(el);}}
+  const el=document.getElementById(id);
+  if(el){
+    console.log('Element found, adding open class');
+    el.classList.add('open');
+    _trapFocusInOverlay(el);
+  } else {
+    console.error('Modal element not found:', id);
+  }
+}
 function closeModal(id){const el=document.getElementById(id);if(el){el.classList.remove('open');_releaseFocusTrap(el);if(id==='modal-settings')clearSettingsDirty();}}
 document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay')){e.target.classList.remove('open');_releaseFocusTrap(e.target);if(e.target.id==='modal-settings')clearSettingsDirty();}});
 document.addEventListener('keydown', e => {

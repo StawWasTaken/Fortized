@@ -19222,6 +19222,29 @@ function initDesktopGameDetection() {
   if (_desktopGameDetectionActive) return;
   _desktopGameDetectionActive = true;
 
+  // Listen for desktop app activity updates (v3.0.0)
+  if (typeof window.fortizedDesktop.onActivityUpdate === 'function') {
+    window.fortizedDesktop.onActivityUpdate((activityData) => {
+      console.log('[Fortized Desktop] Activity update:', activityData);
+      // Send to server if user is authenticated
+      if (CU?.username && FortizedSocial?.getSocket?.()) {
+        try {
+          FortizedSocial.getSocket().emit('desktop-app:activity', {
+            username: CU.username,
+            desktopAppActivity: activityData,
+          });
+        } catch {}
+      }
+    });
+  }
+
+  // Register for desktop app connection events
+  if (typeof window.fortizedDesktop.onAppConnected === 'function') {
+    window.fortizedDesktop.onAppConnected((data) => {
+      console.log('[Fortized Desktop] App connected - Version:', data?.appVersion);
+    });
+  }
+
   const activityEnabled = () => localStorage.getItem('ftz_activity_detection') !== 'false';
 
   async function _pollProcesses() {

@@ -2687,7 +2687,20 @@ const _JOYSTER_DAILY_LIMIT = 5;
 // Joyster AI — uses Gemini API for dynamic personality responses
 const JOYSTER_API_KEY = 'AIzaSyA1mJnFMGbCkaUGyFpcTVrnoWjIY4dIk_0';
 const JOYSTER_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-const JOYSTER_SYSTEM_PROMPT = `You are Joyster, the official mascot jester of the Fortized social platform. You are playful, cheeky, a bit arrogant, and LOVE to laugh. You use "Ahahaha!", "Hehehehe~", and "BAHAHA!" frequently. You make terrible puns and joke about everything. You know about Fortized features: Bastions (community servers), Onyx (currency), Radiance (premium cosmetic), Atelier (shop), Party Rooms, and DMs. Keep responses SHORT (1-2 sentences max), punchy, and in character. Never break character. Never use markdown. Never mention being an AI.`;
+const JOYSTER_SYSTEM_PROMPT = `You are Joyster the Jester, the official mischievous mascot of Fortized - a gaming/social platform. You're a witty jester from King Staw's court who loves chaos, pranks, and laughter. Your personality: playful, arrogant, spontaneous, constantly laughing (BAHAHA! Ahahaha! Hehehehe~), makes terrible puns, teases users lovingly. You know Fortized's features: Bastions (guilds), Onyx (gold currency), Radiance (VIP), Atelier (cosmetics), voice chat, profiles, emojis.
+
+IMPORTANT: Your responses must be:
+- SHORT: 1-2 sentences maximum, punchy and snappy
+- IN-CHARACTER: Full jester energy, mischievous tone
+- VARIED: Don't repeat jokes, be creative and unexpected
+- ENGAGING: Make users want to interact with you
+- NEVER: Break character, mention AI, use markdown formatting
+
+Examples of YOUR style:
+"Ahahaha! Your profile needs SPARKLE, head to the Atelier!"
+"BAHAHA! I dare you to start a Bastion... or are you scared?~"
+"Hehehehe~ You haven't checked your daily Onyx yet? Tisk tisk!"
+"Your status is boring. Make it LEGENDARY! Ahahaha!"`;
 let _joysterAICache = [];
 
 async function _getJoysterAIResponse(context) {
@@ -2711,12 +2724,18 @@ async function _getJoysterAIResponse(context) {
 // Pre-fetch a few AI responses so bubbles feel instant
 async function _prefetchJoysterAI() {
   const contexts = [
-    'Greet a user browsing their homepage. Be cheeky.',
-    'Make a joke about Onyx currency or Bastions.',
-    'Tease the user about their profile or status.',
-    'Say something random and jester-like.',
+    'Make a funny, engaging greeting to a user on the homepage.',
+    'Make a cheeky joke about Onyx or Bastions.',
+    'Tease the user about their profile, status, or online presence.',
+    'Make a silly pun or wordplay about Fortized features.',
+    'Challenge the user to do something (join a Bastion, customize profile, etc).',
+    'Say something unpredictable and chaotic - full jester energy!',
+    'Make fun of the user for being idle or inactive.',
+    'Give a funny "pro tip" about Fortized features.',
   ];
-  for (const ctx of contexts) {
+  // Shuffle and pick random contexts to add variety
+  const shuffled = contexts.sort(() => Math.random() - 0.5);
+  for (const ctx of shuffled.slice(0, Math.min(4, shuffled.length))) {
     const resp = await _getJoysterAIResponse(ctx);
     if (resp && resp.length < 200) _joysterAICache.push(resp);
   }
@@ -2766,7 +2785,18 @@ const JOYSTER_QUIPS = [
   "Go touch grass! ...nah come back I was kidding!",
   "Why did the Bastion cross the road? Because I TOLD it to! Ahahaha! ...okay that was bad.",
   "Knock knock! Who's there? NOT your Onyx balance! HEHEHE!",
+  "BAHAHA! Your notifications are PILING UP!",
+  "Ahahaha! Ever heard of a voice call? Try Party Rooms!",
+  "Hehehehe~ Make your profile LEGENDARY in the Atelier!",
+  "Is your Bastion lonely? It's screaming for members! AHAHAHA!",
+  "BAHAHA! You're too predictable. Change your status!",
+  "Ahahaha! Emojis! We got 'em! Use 'em everywhere!",
+  "I'm judging you. In a loving way. Mostly. Hehehehe~",
+  "PSST! You haven't customized your profile yet?! AHAHAHA!",
+  "Hehehehe~ Voice calls are live! Time to hear my beautiful laugh!",
+  "BAHAHA! Your theme colors are... bold. I like it!",
 ];
+
 function _getJoysterStatusJoke() {
   const status = CU?.status || 'online';
   const statusJokes = {
@@ -20885,10 +20915,18 @@ async function _refreshSpotifyToken() {
 // Poll Spotify for current playback
 async function _pollSpotifyNowPlaying() {
   if (!CU?.spotifyToken) return;
-  // Auto-refresh token if expired
+  // Auto-refresh token if expired (within 60 seconds of expiry)
   if (CU.spotifyTokenExpiry && Date.now() > CU.spotifyTokenExpiry - 60000) {
+    console.log('[Spotify] Token expiring soon, refreshing...');
     const refreshed = await _refreshSpotifyToken();
-    if (!refreshed) { CU.spotifyConnected = false; CU.spotifyToken = null; CU.spotifyNowPlaying = null; return; }
+    if (!refreshed) {
+      console.error('[Spotify] Token refresh failed');
+      CU.spotifyConnected = false;
+      CU.spotifyToken = null;
+      CU.spotifyNowPlaying = null;
+      await saveUser(true);
+      return;
+    }
   }
   try {
     const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
@@ -20950,12 +20988,26 @@ async function _pollSpotifyNowPlaying() {
         try { firebase.database().ref('users/'+CU.username+'/gameActivity').set(null); } catch {}
       }
     } else if (res.status === 401) {
-      // Token expired — try refresh
+      // Token invalid/expired — try refresh
+      console.warn('[Spotify] Token invalid (401), attempting refresh...');
       const refreshed = await _refreshSpotifyToken();
-      if (!refreshed) { CU.spotifyToken = null; CU.spotifyConnected = false; CU.spotifyNowPlaying = null; }
-      else return _pollSpotifyNowPlaying(); // retry with new token
+      if (!refreshed) {
+        console.error('[Spotify] Token refresh failed');
+        CU.spotifyToken = null;
+        CU.spotifyConnected = false;
+        CU.spotifyNowPlaying = null;
+        await saveUser(true);
+      }
+      else {
+        console.log('[Spotify] Token refreshed, retrying poll...');
+        return _pollSpotifyNowPlaying(); // retry with new token
+      }
+    } else {
+      console.warn('[Spotify] API returned status:', res.status);
     }
-  } catch {}
+  } catch (err) {
+    console.error('[Spotify] Polling error:', err);
+  }
   // Re-render widgets on profile
   const wc = document.getElementById('up-widgets-container');
   if (wc) renderProfileWidgetsOnCard(CU, wc);
@@ -23247,8 +23299,28 @@ async function _vcSetup(isCaller) {
     _vc.remoteStream = e.streams[0];
     // Always keep audio routed to the hidden audio element
     let audioEl = document.getElementById('vc-remote-audio');
-    if (!audioEl) { audioEl=document.createElement('audio'); audioEl.id='vc-remote-audio'; audioEl.autoplay=true; document.body.appendChild(audioEl); }
+    if (!audioEl) {
+      audioEl = document.createElement('audio');
+      audioEl.id = 'vc-remote-audio';
+      audioEl.autoplay = true;
+      audioEl.controls = false;
+      audioEl.muted = false;
+      audioEl.volume = 1.0;
+      audioEl.style.display = 'none';
+      audioEl.onerror = (err) => console.error('[Voice] Audio element error:', err);
+      audioEl.onloadedmetadata = () => console.log('[Voice] Remote audio metadata loaded');
+      document.body.appendChild(audioEl);
+    }
     audioEl.srcObject = _vc.remoteStream;
+    // Ensure audio is playing (bypass autoplay restrictions if needed)
+    if (audioEl.play && typeof audioEl.play === 'function') {
+      audioEl.play().catch(err => {
+        console.warn('[Voice] Audio autoplay blocked, requesting user interaction:', err);
+        // Fallback: create a user-initiated playback trigger
+        document.addEventListener('click', () => { audioEl.play().catch(()=>{}); }, {once: true});
+      });
+    }
+    console.log('[Voice] Incoming audio track received, stream:', e.streams[0]?.id);
     // If a screen share video track arrives, show it in the call room
     if (e.track.kind === 'video') {
       _showScreenInRoom(true);

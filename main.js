@@ -18,108 +18,106 @@ let socket = null;
 const APP_VERSION = '3.0.0';
 const APP_ID = process.env.FORTIZED_APP_ID || 'fortized-desktop-' + Date.now();
 
-// ── Known games database for process matching ──────
+// ── Known apps database (games & apps with verification) ─
 // Maps executable names (lowercase) to display info
-const KNOWN_GAMES = {
-  // Popular Games
-  'minecraft.exe': { name: 'Minecraft', icon: '⛏️' },
-  'javaw.exe': { name: 'Minecraft (Java)', icon: '⛏️' },
-  'robloxplayerbeta.exe': { name: 'Roblox', icon: '🎮' },
-  'fortnitelauncherclient.exe': { name: 'Fortnite', icon: '🎯' },
-  'fortniteclient-win64-shipping.exe': { name: 'Fortnite', icon: '🎯' },
-  'valorant.exe': { name: 'Valorant', icon: '🔫' },
-  'valorant-win64-shipping.exe': { name: 'Valorant', icon: '🔫' },
-  'leagueclient.exe': { name: 'League of Legends', icon: '⚔️' },
-  'league of legends.exe': { name: 'League of Legends', icon: '⚔️' },
-  'rocketleague.exe': { name: 'Rocket League', icon: '🚀' },
-  'among us.exe': { name: 'Among Us', icon: '🚀' },
-  'r5apex.exe': { name: 'Apex Legends', icon: '🔫' },
-  'genshinimpact.exe': { name: 'Genshin Impact', icon: '⚡' },
-  'yuanshen.exe': { name: 'Genshin Impact', icon: '⚡' },
-  'overwatch.exe': { name: 'Overwatch 2', icon: '🎯' },
-  'csgo.exe': { name: 'Counter-Strike', icon: '🔫' },
-  'cs2.exe': { name: 'Counter-Strike 2', icon: '🔫' },
-  'dota2.exe': { name: 'Dota 2', icon: '⚔️' },
-  'terraria.exe': { name: 'Terraria', icon: '⛏️' },
-  'starfield.exe': { name: 'Starfield', icon: '🚀' },
-  'baldursgate3.exe': { name: "Baldur's Gate 3", icon: '⚔️' },
-  'bg3.exe': { name: "Baldur's Gate 3", icon: '⚔️' },
-  'eldenring.exe': { name: 'Elden Ring', icon: '⚔️' },
-  'gtav.exe': { name: 'Grand Theft Auto V', icon: '🚗' },
-  'gta5.exe': { name: 'Grand Theft Auto V', icon: '🚗' },
-  'deadbydaylight-win64-shipping.exe': { name: 'Dead by Daylight', icon: '🔪' },
-  'phasmophobia.exe': { name: 'Phasmophobia', icon: '👻' },
-  'lethalcompany.exe': { name: 'Lethal Company', icon: '👻' },
-  'palworld-win64-shipping.exe': { name: 'Palworld', icon: '🎮' },
-  'helldivers2.exe': { name: 'Helldivers 2', icon: '🔫' },
-  'hogwartslegacy.exe': { name: 'Hogwarts Legacy', icon: '🧙' },
-  'destiny2.exe': { name: 'Destiny 2', icon: '🔫' },
-  'warframe.x64.exe': { name: 'Warframe', icon: '⚔️' },
-  'tf2_win64.exe': { name: 'Team Fortress 2', icon: '🔫' },
-  'hl2.exe': { name: 'Half-Life 2', icon: '🔫' },
-  'stardewvalley.exe': { name: 'Stardew Valley', icon: '🌾' },
-  'hollow_knight.exe': { name: 'Hollow Knight', icon: '⚔️' },
-  'celeste.exe': { name: 'Celeste', icon: '🏔️' },
-  'hades.exe': { name: 'Hades', icon: '⚔️' },
-  'subnautica.exe': { name: 'Subnautica', icon: '🌊' },
-  'cyberpunk2077.exe': { name: 'Cyberpunk 2077', icon: '🤖' },
-  'witcher3.exe': { name: 'The Witcher 3', icon: '⚔️' },
-  'skyrim.exe': { name: 'Skyrim', icon: '⚔️' },
-  'skyrimse.exe': { name: 'Skyrim Special Edition', icon: '⚔️' },
-  'fallout4.exe': { name: 'Fallout 4', icon: '☢️' },
-  'sekiro.exe': { name: 'Sekiro', icon: '⚔️' },
-  'persona5r.exe': { name: 'Persona 5 Royal', icon: '🎭' },
-  'nierautomata.exe': { name: 'NieR: Automata', icon: '🤖' },
-  'darksoulsiii.exe': { name: 'Dark Souls III', icon: '⚔️' },
-  // Platforms/Launchers
-  'steam.exe': { name: 'Steam', icon: '🎮', isLauncher: true },
-  'epicgameslauncher.exe': { name: 'Epic Games', icon: '🎮', isLauncher: true },
-  'battle.net.exe': { name: 'Battle.net', icon: '🎮', isLauncher: true },
-  'origin.exe': { name: 'EA App', icon: '🎮', isLauncher: true },
-  // Creative/Productivity
-  'spotify.exe': { name: 'Spotify', icon: '🎵' },
-  'code.exe': { name: 'Visual Studio Code', icon: '💻' },
-  'obs64.exe': { name: 'OBS Studio', icon: '🎥' },
-  'blender.exe': { name: 'Blender', icon: '🎨' },
-  'unity.exe': { name: 'Unity', icon: '🕹️' },
-  'unrealEditor.exe': { name: 'Unreal Engine', icon: '🕹️' },
-  'godot.exe': { name: 'Godot Engine', icon: '🕹️' },
-  'photoshop.exe': { name: 'Photoshop', icon: '🖼️' },
-  'afterfx.exe': { name: 'After Effects', icon: '✨' },
-  'premiere pro.exe': { name: 'Premiere Pro', icon: '🎬' },
-  'figma.exe': { name: 'Figma', icon: '🎨' },
-  'clip studio paint.exe': { name: 'Clip Studio Paint', icon: '🎨' },
+// 'verified' = true means it has an official badge (games/apps we recognize)
+const KNOWN_APPS = {
+  // ── VERIFIED GAMES ──
+  'minecraft.exe': { name: 'Minecraft', verified: true, category: 'game' },
+  'javaw.exe': { name: 'Minecraft (Java)', verified: true, category: 'game' },
+  'robloxplayerbeta.exe': { name: 'Roblox', verified: true, category: 'game' },
+  'robloxplayer.exe': { name: 'Roblox', verified: true, category: 'game' },
+  'roblox.exe': { name: 'Roblox', verified: true, category: 'game' },
+  'fortnitelauncherclient.exe': { name: 'Fortnite', verified: true, category: 'game' },
+  'fortniteclient-win64-shipping.exe': { name: 'Fortnite', verified: true, category: 'game' },
+  'valorant.exe': { name: 'Valorant', verified: true, category: 'game' },
+  'valorant-win64-shipping.exe': { name: 'Valorant', verified: true, category: 'game' },
+  'leagueclient.exe': { name: 'League of Legends', verified: true, category: 'game' },
+  'league of legends.exe': { name: 'League of Legends', verified: true, category: 'game' },
+  'rocketleague.exe': { name: 'Rocket League', verified: true, category: 'game' },
+  'among us.exe': { name: 'Among Us', verified: true, category: 'game' },
+  'r5apex.exe': { name: 'Apex Legends', verified: true, category: 'game' },
+  'genshinimpact.exe': { name: 'Genshin Impact', verified: true, category: 'game' },
+  'yuanshen.exe': { name: 'Genshin Impact', verified: true, category: 'game' },
+  'overwatch.exe': { name: 'Overwatch 2', verified: true, category: 'game' },
+  'csgo.exe': { name: 'Counter-Strike', verified: true, category: 'game' },
+  'cs2.exe': { name: 'Counter-Strike 2', verified: true, category: 'game' },
+  'dota2.exe': { name: 'Dota 2', verified: true, category: 'game' },
+  'terraria.exe': { name: 'Terraria', verified: true, category: 'game' },
+  'starfield.exe': { name: 'Starfield', verified: true, category: 'game' },
+  'baldursgate3.exe': { name: "Baldur's Gate 3", verified: true, category: 'game' },
+  'bg3.exe': { name: "Baldur's Gate 3", verified: true, category: 'game' },
+  'eldenring.exe': { name: 'Elden Ring', verified: true, category: 'game' },
+  'gtav.exe': { name: 'Grand Theft Auto V', verified: true, category: 'game' },
+  'gta5.exe': { name: 'Grand Theft Auto V', verified: true, category: 'game' },
+  'deadbydaylight-win64-shipping.exe': { name: 'Dead by Daylight', verified: true, category: 'game' },
+  'phasmophobia.exe': { name: 'Phasmophobia', verified: true, category: 'game' },
+  'lethalcompany.exe': { name: 'Lethal Company', verified: true, category: 'game' },
+  'palworld-win64-shipping.exe': { name: 'Palworld', verified: true, category: 'game' },
+  'helldivers2.exe': { name: 'Helldivers 2', verified: true, category: 'game' },
+  'hogwartslegacy.exe': { name: 'Hogwarts Legacy', verified: true, category: 'game' },
+  'destiny2.exe': { name: 'Destiny 2', verified: true, category: 'game' },
+  'warframe.x64.exe': { name: 'Warframe', verified: true, category: 'game' },
+  'tf2_win64.exe': { name: 'Team Fortress 2', verified: true, category: 'game' },
+  'hl2.exe': { name: 'Half-Life 2', verified: true, category: 'game' },
+  'stardewvalley.exe': { name: 'Stardew Valley', verified: true, category: 'game' },
+  'hollow_knight.exe': { name: 'Hollow Knight', verified: true, category: 'game' },
+  'celeste.exe': { name: 'Celeste', verified: true, category: 'game' },
+  'hades.exe': { name: 'Hades', verified: true, category: 'game' },
+  'subnautica.exe': { name: 'Subnautica', verified: true, category: 'game' },
+  'cyberpunk2077.exe': { name: 'Cyberpunk 2077', verified: true, category: 'game' },
+  'witcher3.exe': { name: 'The Witcher 3', verified: true, category: 'game' },
+  'skyrim.exe': { name: 'Skyrim', verified: true, category: 'game' },
+  'skyrimse.exe': { name: 'Skyrim Special Edition', verified: true, category: 'game' },
+  'fallout4.exe': { name: 'Fallout 4', verified: true, category: 'game' },
+  'sekiro.exe': { name: 'Sekiro', verified: true, category: 'game' },
+  'persona5r.exe': { name: 'Persona 5 Royal', verified: true, category: 'game' },
+  'nierautomata.exe': { name: 'NieR: Automata', verified: true, category: 'game' },
+  'darksoulsiii.exe': { name: 'Dark Souls III', verified: true, category: 'game' },
+  // ── VERIFIED APPS ──
+  'spotify.exe': { name: 'Spotify', verified: true, category: 'app' },
+  'discord.exe': { name: 'Discord', verified: true, category: 'app' },
+  'code.exe': { name: 'Visual Studio Code', verified: true, category: 'app' },
+  'obs64.exe': { name: 'OBS Studio', verified: true, category: 'app' },
+  'blender.exe': { name: 'Blender', verified: true, category: 'app' },
+  'unity.exe': { name: 'Unity', verified: true, category: 'app' },
+  'unrealEditor.exe': { name: 'Unreal Engine', verified: true, category: 'app' },
+  'godot.exe': { name: 'Godot Engine', verified: true, category: 'app' },
+  'photoshop.exe': { name: 'Photoshop', verified: true, category: 'app' },
+  'afterfx.exe': { name: 'After Effects', verified: true, category: 'app' },
+  'premiere pro.exe': { name: 'Premiere Pro', verified: true, category: 'app' },
+  'figma.exe': { name: 'Figma', verified: true, category: 'app' },
+  'clip studio paint.exe': { name: 'Clip Studio Paint', verified: true, category: 'app' },
+  'chrome.exe': { name: 'Google Chrome', verified: true, category: 'app' },
+  'firefox.exe': { name: 'Firefox', verified: true, category: 'app' },
+  'msedge.exe': { name: 'Microsoft Edge', verified: true, category: 'app' },
+  // ── LAUNCHERS (hidden) ──
+  'steam.exe': { name: 'Steam', verified: true, category: 'launcher', hidden: true },
+  'epicgameslauncher.exe': { name: 'Epic Games', verified: true, category: 'launcher', hidden: true },
+  'battle.net.exe': { name: 'Battle.net', verified: true, category: 'launcher', hidden: true },
+  'origin.exe': { name: 'EA App', verified: true, category: 'launcher', hidden: true },
 };
 
 // macOS / Linux process names
-// Start with .exe-stripped Windows names, then add platform-specific overrides
-const KNOWN_GAMES_UNIX = {};
-Object.entries(KNOWN_GAMES).forEach(([key, val]) => {
-  KNOWN_GAMES_UNIX[key.replace('.exe', '')] = val;
+const KNOWN_APPS_UNIX = {};
+Object.entries(KNOWN_APPS).forEach(([key, val]) => {
+  KNOWN_APPS_UNIX[key.replace('.exe', '')] = val;
 });
-// macOS-specific process names (often different from Windows)
-Object.assign(KNOWN_GAMES_UNIX, {
-  'robloxplayer':       { name: 'Roblox', icon: '🎮' },
-  'java':              { name: 'Minecraft (Java)', icon: '⛏️' },
-  'riot client':       { name: 'Valorant', icon: '🔫' },
-  'leagueoflegends':   { name: 'League of Legends', icon: '⚔️' },
-  'genshinimpact':     { name: 'Genshin Impact', icon: '⚡' },
-  'spotify':           { name: 'Spotify', icon: '🎵' },
-  'electron':          { name: 'Electron App', icon: '💻', isLauncher: true },
-  'code helper':       { name: 'Visual Studio Code', icon: '💻' },
-  'code helper (renderer)': { name: 'Visual Studio Code', icon: '💻' },
-  'obs':               { name: 'OBS Studio', icon: '🎥' },
-  'figma':             { name: 'Figma', icon: '🎨' },
-  'blender':           { name: 'Blender', icon: '🎨' },
-  'godot':             { name: 'Godot Engine', icon: '🕹️' },
-  'steam_osx':         { name: 'Steam', icon: '🎮', isLauncher: true },
-  'steamwebhelper':    { name: 'Steam', icon: '🎮', isLauncher: true },
-  'subnautica.x86_64': { name: 'Subnautica', icon: '🌊' },
-  'terraria.bin.x86_64': { name: 'Terraria', icon: '⛏️' },
-  'stardewvalley.bin.x86_64': { name: 'Stardew Valley', icon: '🌾' },
-  'hollowknight.x86_64': { name: 'Hollow Knight', icon: '⚔️' },
-  'celeste.bin.x86_64': { name: 'Celeste', icon: '🏔️' },
-  'hades.x86_64':      { name: 'Hades', icon: '⚔️' },
+Object.assign(KNOWN_APPS_UNIX, {
+  'robloxplayer': { name: 'Roblox', verified: true, category: 'game' },
+  'java': { name: 'Minecraft (Java)', verified: true, category: 'game' },
+  'riot client': { name: 'Valorant', verified: true, category: 'game' },
+  'leagueoflegends': { name: 'League of Legends', verified: true, category: 'game' },
+  'genshinimpact': { name: 'Genshin Impact', verified: true, category: 'game' },
+  'spotify': { name: 'Spotify', verified: true, category: 'app' },
+  'discord': { name: 'Discord', verified: true, category: 'app' },
+  'code helper': { name: 'Visual Studio Code', verified: true, category: 'app' },
+  'obs': { name: 'OBS Studio', verified: true, category: 'app' },
+  'figma': { name: 'Figma', verified: true, category: 'app' },
+  'blender': { name: 'Blender', verified: true, category: 'app' },
+  'godot': { name: 'Godot Engine', verified: true, category: 'app' },
+  'steam_osx': { name: 'Steam', verified: true, category: 'launcher', hidden: true },
+  'steamwebhelper': { name: 'Steam', verified: true, category: 'launcher', hidden: true },
 });
 
 // ── System Info Detection ──────────────────────────
@@ -145,7 +143,6 @@ function detectAudioStatus() {
       resolve({ isPlaying: false, devices: [] });
       return;
     }
-    // Simple check: see if any audio-related processes are running
     const audioProcesses = ['spotify.exe', 'itunes.exe', 'vlc.exe', 'winamp.exe', 'musicbee.exe', 'foobar2000.exe'];
     exec('tasklist /FO CSV /NH', { maxBuffer: 1024 * 1024 * 5 }, (err, stdout) => {
       if (err) {
@@ -200,25 +197,60 @@ function getRunningProcesses() {
   });
 }
 
-async function detectRunningGames() {
+// ── Detect ALL running apps (verified + unverified) ──
+async function detectRunningApps() {
   const processes = await getRunningProcesses();
   const detected = [];
   const seenNames = new Set();
   const platform = process.platform;
-  const knownDB = platform === 'win32' ? KNOWN_GAMES : KNOWN_GAMES_UNIX;
+  const knownDB = platform === 'win32' ? KNOWN_APPS : KNOWN_APPS_UNIX;
 
+  // Step 1: Add verified apps (known to us)
   for (const proc of processes) {
     const match = knownDB[proc];
-    if (match && !match.isLauncher && !seenNames.has(match.name)) {
+    if (match && !match.hidden && !seenNames.has(match.name)) {
       seenNames.add(match.name);
       detected.push({
         name: match.name,
-        icon: match.icon,
         processName: proc,
+        verified: true,
+        category: match.category || 'app',
         detectedAt: new Date().toISOString(),
       });
     }
   }
+
+  // Step 2: Add unknown apps (everything else, with limit)
+  const ignoredProcesses = new Set([
+    'explorer.exe', 'svchost.exe', 'csrss.exe', 'services.exe', 'lsass.exe',
+    'dwm.exe', 'userinit.exe', 'spoolsv.exe', 'winlogon.exe', 'smss.exe',
+    'system', 'systemd', 'kernel', 'launchd', 'loginwindow'
+  ]);
+
+  for (const proc of processes) {
+    const cleanName = proc.replace('.exe', '');
+    if (!KNOWN_APPS[proc] && !ignoredProcesses.has(proc) && !ignoredProcesses.has(cleanName)) {
+      // Format name: remove .exe, capitalize, clean up
+      const displayName = proc
+        .replace('.exe', '')
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .split(/[\s-_]+/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+
+      if (!seenNames.has(displayName) && detected.length < 100) { // limit to 100 apps
+        seenNames.add(displayName);
+        detected.push({
+          name: displayName,
+          processName: proc,
+          verified: false,
+          category: 'unknown',
+          detectedAt: new Date().toISOString(),
+        });
+      }
+    }
+  }
+
   return detected;
 }
 
@@ -234,21 +266,17 @@ function createWindow() {
     frame: false,
     backgroundColor: '#0c0f16',
     webPreferences: {
-      preload: path.join(__dirname, 'electron-preload.js'),
+      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: false,
       nodeIntegration: false,
       sandbox: false,
     },
   });
 
-  // Append "FortizedApp" to the User-Agent so the web app can detect the desktop client.
-  // We spoof a mainstream browser UA to avoid site compatibility issues, but KEEP
-  // "FortizedApp" and "Electron" markers so the web app can identify the desktop wrapper.
   const defaultUA = mainWindow.webContents.getUserAgent();
   const fortizedUA = defaultUA + ' FortizedApp';
   mainWindow.webContents.setUserAgent(fortizedUA);
 
-  // Load the web app — use production URL, or localhost in dev
   const appUrl = process.env.FORTIZED_URL || (process.env.NODE_ENV === 'development'
     ? `http://localhost:${process.env.PORT || 3000}/app`
     : 'https://fortized.com/app');
@@ -256,7 +284,6 @@ function createWindow() {
 
   mainWindow.on('closed', () => { mainWindow = null; });
   mainWindow.on('close', (e) => {
-    // Minimize to tray instead of closing
     if (tray) {
       e.preventDefault();
       mainWindow.hide();
@@ -298,7 +325,6 @@ function initializeSocketIO() {
 
   socket.on('connect', () => {
     console.log('[Socket.IO] Connected to server');
-    // Notify the web app that desktop app is connected
     if (mainWindow) {
       mainWindow.webContents.send('desktop-app:connected', { appVersion: APP_VERSION });
     }
@@ -314,30 +340,26 @@ function initializeSocketIO() {
 }
 
 async function startActivitySync() {
-  // Stop any existing interval
   if (activitySyncInterval) clearInterval(activitySyncInterval);
 
-  // Send activity status to web app every 10 seconds
   activitySyncInterval = setInterval(async () => {
     if (!mainWindow) return;
 
-    const games = await detectRunningGames();
+    const apps = await detectRunningApps();
     const audioStatus = await detectAudioStatus();
     const systemInfo = getSystemInfo();
 
     const activityData = {
       appVersion: APP_VERSION,
       appId: APP_ID,
-      games: games,
+      apps: apps,
       audio: audioStatus,
       system: systemInfo,
       timestamp: new Date().toISOString(),
     };
 
-    // Send to web app via IPC
     mainWindow.webContents.send('desktop-app:activity', activityData);
 
-    // Send to server via Socket.IO if connected and user is authenticated
     if (socket?.connected && mainWindow) {
       mainWindow.webContents.evaluateJavaScript('CU?.username')
         .then(username => {
@@ -350,27 +372,23 @@ async function startActivitySync() {
         })
         .catch(() => {});
     }
-  }, 10000); // Every 10 seconds
+  }, 10000);
 }
 
 // ── IPC Handlers ───────────────────────────────────
 function setupIPC() {
-  // Game detection: return currently running games
   ipcMain.handle('detect-games', async () => {
-    return await detectRunningGames();
+    return await detectRunningApps();
   });
 
-  // System info
   ipcMain.handle('get-system-info', async () => {
     return getSystemInfo();
   });
 
-  // Audio status
   ipcMain.handle('get-audio-status', async () => {
     return await detectAudioStatus();
   });
 
-  // Window controls (from window:* events)
   ipcMain.on('window:minimize', () => mainWindow?.minimize());
   ipcMain.on('window:maximize', () => {
     if (mainWindow?.isMaximized()) mainWindow.unmaximize();
@@ -378,7 +396,6 @@ function setupIPC() {
   });
   ipcMain.on('window:close', () => mainWindow?.close());
 
-  // Window controls from titlebar buttons (fortized-window events)
   ipcMain.on('fortized-window', (event, action) => {
     if (!mainWindow) return;
     switch (action) {
@@ -391,24 +408,21 @@ function setupIPC() {
     }
   });
 
-  // Notification badge from preload
   ipcMain.on('fortized-notification', () => {
-    // Could implement badge/tray notification count here
+    // Badge/tray notification count here
   });
 
-  // Get raw process list (for renderer-side matching)
   ipcMain.handle('get-processes', async () => {
     return await getRunningProcesses();
   });
 
-  // Start periodic game detection and activity sync
   ipcMain.on('game-detection:start', () => {
     if (gameDetectionInterval) clearInterval(gameDetectionInterval);
-    startActivitySync(); // Start the full activity sync
+    startActivitySync();
     gameDetectionInterval = setInterval(async () => {
-      const games = await detectRunningGames();
-      mainWindow?.webContents.send('game-detection:update', games);
-    }, 15000); // Check every 15 seconds
+      const apps = await detectRunningApps();
+      mainWindow?.webContents.send('game-detection:update', apps);
+    }, 15000);
   });
 
   ipcMain.on('game-detection:stop', () => {

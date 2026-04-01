@@ -11,6 +11,28 @@ const os = require('os');
 const io = require('socket.io-client');
 const fs = require('fs');
 
+// ── Icon URLs for verified apps (from CDNs) ──
+const APP_ICONS = {
+  'minecraft.exe': 'https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/main/icons/minecraft.svg',
+  'robloxplayerbeta.exe': 'https://www.roblox.com/favicon.ico',
+  'robloxplayer.exe': 'https://www.roblox.com/favicon.ico',
+  'roblox.exe': 'https://www.roblox.com/favicon.ico',
+  'fortnitelauncherclient.exe': 'https://cdn2.unrealengine.com/en-US-Fortnite-Site-5CF9C7C71D2C4D70B8F7A09A0A0A0A0A.ico',
+  'fortniteclient-win64-shipping.exe': 'https://cdn2.unrealengine.com/en-US-Fortnite-Site-5CF9C7C71D2C4D70B8F7A09A0A0A0A0A.ico',
+  'valorant.exe': 'https://valorant.com/favicon.ico',
+  'valorant-win64-shipping.exe': 'https://valorant.com/favicon.ico',
+  'leagueclient.exe': 'https://raw.githubusercontent.com/leagueoflegends/lol-wiki-static/main/img/favicon.ico',
+  'league of legends.exe': 'https://raw.githubusercontent.com/leagueoflegends/lol-wiki-static/main/img/favicon.ico',
+  'discord.exe': 'https://discord.com/favicon.ico',
+  'spotify.exe': 'https://www.spotify.com/favicon.ico',
+  'code.exe': 'https://code.visualstudio.com/favicon.ico',
+  'obs64.exe': 'https://obsproject.com/favicon.ico',
+  'blender.exe': 'https://www.blender.org/favicon.ico',
+  'chrome.exe': 'https://www.google.com/favicon.ico',
+  'firefox.exe': 'https://www.mozilla.org/favicon.ico',
+  'msedge.exe': 'https://www.microsoft.com/favicon.ico',
+};
+
 let mainWindow = null;
 let tray = null;
 let gameDetectionInterval = null;
@@ -121,39 +143,9 @@ Object.assign(KNOWN_APPS_UNIX, {
   'steamwebhelper': { name: 'Steam', verified: true, category: 'launcher', hidden: true },
 });
 
-// ── Extract icon from app executable ──
-async function getAppIcon(processName) {
-  if (process.platform !== 'win32') return null;
-
-  try {
-    const extractIcon = require('extract-file-icon');
-
-    const possiblePaths = [
-      `C:\\Program Files\\${processName.replace('.exe', '')}\\${processName}`,
-      `C:\\Program Files (x86)\\${processName.replace('.exe', '')}\\${processName}`,
-      `C:\\Program Files\\${processName}`,
-      `C:\\Program Files (x86)\\${processName}`,
-      `C:\\Users\\${process.env.USERNAME}\\AppData\\Local\\Programs\\${processName.replace('.exe', '')}\\${processName}`,
-      `C:\\Users\\${process.env.USERNAME}\\AppData\\Local\\${processName.replace('.exe', '')}\\${processName}`,
-    ];
-
-    for (const fullPath of possiblePaths) {
-      if (fs.existsSync(fullPath)) {
-        try {
-          const icon = await extractIcon(fullPath);
-          if (icon) {
-            return `data:image/png;base64,${icon.toString('base64')}`;
-          }
-        } catch (e) {
-          console.warn(`[Icon] Failed to extract from ${fullPath}:`, e.message);
-        }
-      }
-    }
-  } catch (e) {
-    console.warn(`[Icon] Extract-file-icon error:`, e.message);
-  }
-
-  return null;
+// ── Get icon URL for verified apps ──
+function getAppIconUrl(processName) {
+  return APP_ICONS[processName] || null;
 }
 
 // ── System Info Detection ──────────────────────────
@@ -260,17 +252,9 @@ async function detectRunningApps() {
         processName: proc,
         verified: true,
         category: match.category || 'app',
-        icon: null,
+        icon: getAppIconUrl(proc),
         detectedAt: new Date().toISOString(),
       };
-
-      // Try to extract icon
-      try {
-        const icon = await getAppIcon(proc);
-        if (icon) appData.icon = icon;
-      } catch (e) {
-        console.warn(`[Icon] Failed for ${proc}:`, e.message);
-      }
 
       detected.push(appData);
       console.log(`[Detection] ✓ Found verified: ${match.name} (${proc})`);
@@ -304,15 +288,9 @@ async function detectRunningApps() {
           processName: proc,
           verified: false,
           category: 'unknown',
-          icon: null,
+          icon: getAppIconUrl(proc),
           detectedAt: new Date().toISOString(),
         };
-
-        // Try to extract icon
-        try {
-          const icon = await getAppIcon(proc);
-          if (icon) appData.icon = icon;
-        } catch (e) {}
 
         detected.push(appData);
         console.log(`[Detection] Found unknown: ${displayName} (${proc})`);

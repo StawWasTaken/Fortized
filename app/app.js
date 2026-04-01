@@ -2304,7 +2304,7 @@ document.addEventListener('mouseover', function(e) {
     tip.style.left = left + 'px';
     tip.style.top = top + 'px';
     requestAnimationFrame(() => tip.classList.add('visible'));
-  }, 300);
+  }, 1500);
 });
 document.addEventListener('mouseout', function(e) {
   const pill = e.target.closest?.('.r-pill[data-r-emoji]');
@@ -5081,6 +5081,22 @@ function appendMessage(container, msg, context, prevAuthor) {
     }
   }
   container.appendChild(row);
+  // Initialize super reaction hover replays for all reactions in this message
+  if (_hasActiveRadiance()) {
+    const reactionPills = row.querySelectorAll('.r-pill[data-r-emoji]:not(.r-add-btn)');
+    reactionPills.forEach((pill, idx) => {
+      const emoji = pill.dataset.rEmoji;
+      if (!emoji) return;
+      // Auto-play super reaction animation when message is rendered
+      setTimeout(() => {
+        triggerSuperReaction(pill, emoji);
+      }, 100 + (idx * 150));
+      // Add mouseover to replay super reaction animation
+      pill.addEventListener('mouseover', function() {
+        triggerSuperReaction(pill, emoji);
+      });
+    });
+  }
   // Blur messages from blocked or ignored users
   if (_msgBlocked || _msgIgnored) {
     row.classList.add('msg-blurred');
@@ -11761,6 +11777,7 @@ function buildProfileView(tab) {
               <div style="position:relative;">
                 <textarea class="settings-input" id="bio-input" rows="4" maxlength="300" style="resize:none;padding-bottom:28px;" oninput="markSettingsDirty();document.getElementById('bio-char-count').textContent=(300-this.value.length)">${escapeHTML(CU.bio||'')}</textarea>
                 <span id="bio-char-count" style="position:absolute;bottom:10px;right:12px;font-size:11px;color:rgba(255,255,255,.25);">${300-(CU.bio||'').length}</span>
+                <button onclick="toggleEmojiPicker('bio-input')" style="position:absolute;bottom:8px;right:50px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:rgba(255,249,62,.7);border-radius:6px;width:24px;height:24px;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .12s;" onmouseover="this.style.background='rgba(255,249,62,.15)';this.style.borderColor='rgba(255,249,62,.3)';this.style.color='rgba(255,249,62,.9)'" onmouseout="this.style.background='rgba(255,249,62,.1)';this.style.borderColor='rgba(255,249,62,.2)';this.style.color='rgba(255,249,62,.7)'" data-tip="Add emoji">😀</button>
               </div>
             </div>
             ${sep}
@@ -18386,7 +18403,7 @@ function parseMD(s) {
     try {
       const url = emojiToTwemojiUrl(emoji);
       const safeEmoji = emoji.replace(/'/g, "\\'").replace(/\\/g, '\\\\');
-      return `<img src="${url}" alt="${emoji}" class="msg-emoji" data-emoji="${emoji}" style="width:1.25em;height:1.25em;object-fit:contain;vertical-align:-0.25em;display:inline-block;" loading="lazy" onerror="this.outerHTML='<span class=\\'msg-emoji-native\\' data-emoji=\\'${safeEmoji}\\' style=\\'cursor:pointer;font-size:1.25em;\\'>${emoji}</span>'">`;
+      return `<img src="${url}" alt="${emoji}" class="msg-emoji" data-emoji="${emoji}" style="width:1.25em;height:1.25em;object-fit:contain;vertical-align:-0.25em;display:inline-block;" onerror="this.style.display='none'">`;
     } catch { return emoji; }
   });
   // ═══════════════════════════════════════════════════════

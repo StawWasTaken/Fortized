@@ -239,7 +239,7 @@ const FtzStatus = (() => {
     var c = color(s);
     var n = parseInt(sz, 10) || 12;
     var half = n / 2;
-    var aroundColor = 'rgba(19,22,29,.6)';
+    var aroundColor = '#1f232b';  // Solid dark color (not transparent)
     // All statuses: dark circle bg + colored icon centered
     var inner = Math.round(n * 0.65);
     var off = Math.round((n - inner) / 2);
@@ -11738,13 +11738,16 @@ function buildProfileView(tab) {
                     <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;">Accent</div>
                   </label>
                 </div>
-                <div style="flex:1;min-width:0;">
-                  <div id="profile-theme-mini-preview" style="height:60px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);">
-                    <div style="height:100%;background:${themeC1?'linear-gradient(135deg,'+themeC1+'ee,'+(themeC2||themeC1)+'bb)':'linear-gradient(135deg,#6366f1ee,#8b5cf6bb)'};display:flex;align-items:center;justify-content:center;">
-                      <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7);">Profile Border Preview</span>
+                <div style="text-align:center;">
+                  <label style="cursor:pointer;display:block;">
+                    <div style="width:60px;height:60px;border-radius:12px;border:2px solid ${CU.profileTheme?.cardBgColor?(CU.profileTheme.cardBgColor+'55'):'rgba(255,255,255,.1)'};overflow:hidden;position:relative;transition:border-color .15s;">
+                      <input type="color" value="${CU.profileTheme?.cardBgColor||'#1f232b'}" style="position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);cursor:pointer;opacity:0;" oninput="this.parentElement.querySelector('div').style.background=this.value;this.closest('div[style*=border]').style.borderColor=this.value+'55';if(!CU.profileTheme)CU.profileTheme={};CU.profileTheme.cardBgColor=this.value;markSettingsDirty()">
+                      <div style="width:100%;height:100%;background:${CU.profileTheme?.cardBgColor||'#1f232b'};display:flex;align-items:center;justify-content:center;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </div>
                     </div>
-                  </div>
-                  <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;text-align:center;">Preview</div>
+                    <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;">Card Bg</div>
+                  </label>
                 </div>
               </div>
               ${themeC1 ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(248,113,113,.2)\';this.style.color=\'rgba(248,113,113,.6)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.08)\';this.style.color=\'rgba(255,255,255,.4)\'">Reset Theme</button>' : ''}
@@ -12822,7 +12825,7 @@ async function viewUserProfile(username) {
 
   modalEl.innerHTML = `
     <div style="${themeBorder}">
-    <div class="up-card" style="position:relative;${profileTheme ? `background:linear-gradient(150deg,${profileTheme.color1}0c,var(--panel) 35%,var(--panel) 65%,${profileTheme.color2}0a);` : ''}">
+    <div class="up-card" style="position:relative;${profileTheme && profileTheme.cardBgColor ? `background:${profileTheme.cardBgColor};` : (profileTheme ? `background:linear-gradient(150deg,${profileTheme.color1}0c,var(--panel) 35%,var(--panel) 65%,${profileTheme.color2}0a);` : '')}">
     ${isBlocked ? `<div class="profile-blocked-overlay" id="profile-blocked-overlay">
       <div class="pbo-icon" style="font-size:32px;color:rgba(248,113,113,.5);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
       <div class="pbo-text">You blocked ${escapeHTML(username)}</div>

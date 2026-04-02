@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bastion Invite - Fortized</title>
+  <link rel="icon" type="image/png" href="/Fortized icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    ::selection { background: rgba(255, 249, 62, 0.2); }
+    :root {
+      --accent: #fff93e;
+      --accent-dim: rgba(255, 249, 62, 0.08);
+      --accent-glow: rgba(255, 249, 62, 0.35);
+      --bg: #080a0f;
+      --bg2: #0c0f18;
+      --panel: rgba(10, 13, 20, 0.82);
+      --border: #151b2a;
+      --muted: #3a4a5e;
+      --muted-light: #8eb5cc;
+      --green: #3ecf6e;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      font-family: var(--font-body);
+      color: white;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Background with animated gradient */
+    .invite-bg {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(255, 249, 62, 0.05) 0%, rgba(8, 10, 15, 0.9) 100%);
+      z-index: 0;
+    }
+
+    /* Animated orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: rgba(255, 249, 62, 0.03);
+      top: -50px;
+      left: -100px;
+      animation: float1 20s ease-in-out infinite;
+    }
+
+    .orb-2 {
+      width: 350px;
+      height: 350px;
+      background: rgba(62, 207, 110, 0.02);
+      bottom: -50px;
+      right: -100px;
+      animation: float2 25s ease-in-out infinite;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(50px, 30px); }
+    }
+
+    @keyframes float2 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-40px, -50px); }
+    }
+
+    /* Container */
+    .invite-container {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      max-width: 500px;
+      width: 100%;
+    }
+
+    /* Logo */
+    .invite-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
+      animation: slideDown 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .invite-logo img {
+      height: 40px;
+      width: 40px;
+      filter: drop-shadow(0 0 20px rgba(255, 249, 62, 0.15));
+    }
+
+    .invite-logo span {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    /* Card */
+    .invite-card {
+      background: var(--panel);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(40px) saturate(1.3);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+      overflow: hidden;
+      animation: revealUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .invite-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 5%, rgba(255, 249, 62, 0.15) 50%, transparent 95%);
+    }
+
+    /* Icon */
+    .invite-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--accent), #ffb700);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 32px;
+      box-shadow: 0 10px 30px rgba(255, 249, 62, 0.2);
+    }
+
+    /* Content */
+    .invite-content h1 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .invite-content p {
+      font-size: 14px;
+      color: var(--muted-light);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    /* Bastion info */
+    .bastion-info {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin: 24px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+
+    .bastion-info .info-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted-light);
+    }
+
+    .bastion-info .info-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px rgba(62, 207, 110, 0.5);
+    }
+
+    .bastion-info strong {
+      color: #dde3ed;
+      font-weight: 600;
+    }
+
+    /* Buttons */
+    .invite-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      margin: 24px 0;
+    }
+
+    .btn {
+      padding: 14px 20px;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: all 0.25s;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #080a0f;
+      width: 100%;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 0 40px var(--accent-glow), 0 4px 20px rgba(255, 249, 62, 0.15);
+      filter: brightness(1.05);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted-light);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 100%;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: rgba(255, 249, 62, 0.2);
+      color: #fff;
+    }
+
+    /* Status message */
+    .status-message {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 16px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent);
+    }
+
+    /* Animations */
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes revealUp {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Loading state */
+    .invite-card.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 540px) {
+      .invite-card {
+        padding: 28px 20px;
+      }
+
+      .invite-logo {
+        margin-bottom: 30px;
+      }
+
+      .bastion-info {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="invite-bg"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="invite-container">
+  <!-- Logo -->
+  <div class="invite-logo">
+    <img src="/Fortized icon.png" alt="Fortized">
+    <span>Fortized</span>
+  </div>
+
+  <!-- Card -->
+  <div class="invite-card" id="inviteCard">
+    <!-- Icon -->
+    <div class="invite-icon">🏰</div>
+
+    <!-- Content -->
+    <div class="invite-content">
+      <h1 id="bastionName">Loading...</h1>
+      <p id="inviteText">Vous avez été invité(e) à rejoindre</p>
+    </div>
+
+    <!-- Bastion Info -->
+    <div class="bastion-info" id="bastionInfo">
+      <div class="info-item">
+        <span class="info-dot"></span>
+        <span><strong id="memberCount">0</strong> members</span>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="invite-buttons">
+      <button class="btn btn-primary" id="openAppBtn" onclick="openInApp()">
+        <span>🚀</span>
+        <span id="appBtnText">Open in Fortized</span>
+      </button>
+      <button class="btn btn-secondary" id="continueBrowserBtn" onclick="continueInBrowser()">
+        Continue in Browser
+      </button>
+    </div>
+
+    <!-- Status message -->
+    <div class="status-message" id="statusMsg" style="display: none;"></div>
+  </div>
+</div>
+
+<script>
+  // Get invite code from URL
+  const params = new URLSearchParams(window.location.search);
+  const inviteCode = params.get('code') || window.location.pathname.split('/').pop();
+
+  // Check if desktop app is detected
+  function isDesktopAppDetected() {
+    return !!window.fortizedDesktop && window.fortizedDesktop.isDesktopApp;
+  }
+
+  // Fetch bastion invite info
+  async function loadBastionInfo() {
+    try {
+      const response = await fetch(`/api/bastion/invite/${inviteCode}`);
+      const data = await response.json();
+
+      if (data.success) {
+        document.getElementById('bastionName').textContent = data.bastion.name;
+        document.getElementById('memberCount').textContent = data.bastion.memberCount;
+        document.getElementById('inviteText').textContent = `You've been invited to join`;
+
+        // Hide app button if desktop app not detected
+        if (!isDesktopAppDetected()) {
+          document.getElementById('openAppBtn').style.display = 'none';
+          document.getElementById('continueBrowserBtn').style.width = '100%';
+        }
+      } else {
+        document.getElementById('bastionName').textContent = 'Invalid invite';
+        document.getElementById('inviteText').textContent = 'This invite may have expired or been revoked.';
+        document.getElementById('openAppBtn').style.display = 'none';
+        document.getElementById('continueBrowserBtn').textContent = 'Go back';
+        document.getElementById('continueBrowserBtn').onclick = () => window.location.href = '/app';
+      }
+    } catch (err) {
+      console.error('Failed to load bastion info:', err);
+      document.getElementById('bastionName').textContent = 'Connection error';
+      document.getElementById('inviteText').textContent = 'Failed to load bastion information.';
+    }
+  }
+
+  // Open in Fortized Desktop App
+  function openInApp() {
+    const btn = document.getElementById('openAppBtn');
+    const card = document.getElementById('inviteCard');
+
+    if (isDesktopAppDetected()) {
+      btn.innerHTML = '<div class="spinner"></div><span>Opening...</span>';
+      card.classList.add('loading');
+
+      // Send invite to desktop app via IPC
+      window.fortizedDesktop.openBastionInvite?.(inviteCode);
+
+      // Also redirect after a delay
+      setTimeout(() => {
+        window.location.href = `/app/bastion/invite/${inviteCode}`;
+      }, 500);
+    }
+  }
+
+  // Continue in browser
+  function continueInBrowser() {
+    const btn = document.getElementById('continueBrowserBtn');
+    btn.innerHTML = '<div class="spinner"></div><span>Loading...</span>';
+
+    // Check if user is authenticated
+    fetch('/api/user/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.username) {
+          // User is authenticated, go to bastion
+          window.location.href = `/app/bastion/invite/${inviteCode}`;
+        } else {
+          // User needs to sign in first
+          window.location.href = `/login?redirect=/app/bastion/invite/${inviteCode}`;
+        }
+      })
+      .catch(err => {
+        console.error('Auth check failed:', err);
+        window.location.href = `/login?redirect=/app/bastion/invite/${inviteCode}`;
+      });
+  }
+
+  // Load bastion info on page load
+  document.addEventListener('DOMContentLoaded', loadBastionInfo);
+</script>
+
+</body>
+</html>

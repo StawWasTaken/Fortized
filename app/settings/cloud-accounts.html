@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloud Accounts - Fortized Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-glow:rgba(255,249,62,.4);--bg:#060810;--panel:rgba(10,13,20,.82);--border:#151b2a;--border-hover:#1e2840;--muted:#4a5568;--muted-light:#7d8a9e;--green:#3ecf6e;--red:#f87171;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:var(--font-body);color:white;padding:20px;}
+
+.settings-container{max-width:800px;margin:0 auto;}
+.settings-header{margin-bottom:32px;}
+.settings-header h1{font-family:var(--font-display);font-size:28px;font-weight:800;margin-bottom:8px;}
+.settings-header p{color:var(--muted-light);font-size:14px;}
+
+.settings-section{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px;}
+.section-title{font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+
+.account-card{background:rgba(255,249,62,.03);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.account-info{flex:1;}
+.account-username{font-weight:600;font-size:15px;margin-bottom:4px;}
+.account-meta{font-size:13px;color:var(--muted);margin:2px 0;}
+.account-status{display:inline-block;font-size:11px;padding:4px 8px;background:rgba(62,207,110,.1);color:#3ecf6e;border-radius:6px;margin-top:8px;}
+
+.account-actions{display:flex;gap:8px;}
+.btn-small{padding:8px 12px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all .25s;}
+.btn-small:hover{background:rgba(255,249,62,.1);}
+.btn-danger{color:#f87171;border-color:#f87171;}
+.btn-danger:hover{background:rgba(248,113,113,.05);}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-state svg{width:48px;height:48px;margin-bottom:12px;opacity:.5;}
+
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:6px;color:#4a5870;letter-spacing:.1em;}
+.form-input{width:100%;padding:10px;background:rgba(6,8,14,.7);border:1px solid var(--border);border-radius:8px;color:white;font-family:var(--font-body);}
+.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
+
+.button-group{display:flex;gap:12px;}
+.btn-primary{flex:1;padding:12px;background:var(--accent);color:#080a0f;border:none;border-radius:8px;font-weight:700;cursor:pointer;transition:all .25s;}
+.btn-primary:hover{box-shadow:0 0 40px var(--accent-glow);}
+.btn-secondary{flex:1;padding:12px;background:transparent;color:var(--accent);border:1.5px solid var(--accent);border-radius:8px;font-weight:700;cursor:pointer;transition:all .25s;}
+.btn-secondary:hover{background:rgba(255,249,62,.08);}
+
+.status-message{padding:12px;border-radius:8px;margin-bottom:16px;font-size:14px;}
+.status-success{background:rgba(62,207,110,.1);color:#3ecf6e;border:1px solid rgba(62,207,110,.2);}
+.status-error{background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.2);}
+
+@media(max-width:600px){
+  .account-card{flex-direction:column;align-items:flex-start;}
+  .account-actions{width:100%;margin-top:12px;}
+  .btn-small{flex:1;}
+}
+</style>
+</head>
+<body>
+
+<div class="settings-container">
+  <div class="settings-header">
+    <h1>Cloud Accounts</h1>
+    <p>Manage your Fortized subaccounts linked to Swiftaw Cloud.</p>
+  </div>
+
+  <!-- Status Messages -->
+  <div id="statusMessage"></div>
+
+  <!-- Linked Accounts Section -->
+  <div class="settings-section">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      Your Fortized Accounts
+    </div>
+
+    <div id="accountsList"></div>
+
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8"/>
+        <path d="M12 8v4m0 4v.01"/>
+      </svg>
+      <p>No Fortized accounts linked to your Cloud account.</p>
+      <button class="btn-secondary" style="margin-top:16px;max-width:200px;" onclick="showCreateForm()">Create One</button>
+    </div>
+  </div>
+
+  <!-- Create Account Section -->
+  <div class="settings-section" id="createSection" style="display:none;">
+    <div class="section-title">Create New Account</div>
+    <div class="form-group">
+      <label class="form-label" for="newUsername">Fortized Username</label>
+      <input type="text" id="newUsername" class="form-input" placeholder="e.g., gaming_pro" maxlength="30">
+      <small style="color:var(--muted);margin-top:4px;display:block;">3-30 characters, alphanumeric and underscores only</small>
+    </div>
+    <div class="button-group">
+      <button class="btn-primary" onclick="createNewAccount()">Create Account</button>
+      <button class="btn-secondary" onclick="hideCreateForm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════
+// FORTIZED CLOUD ACCOUNT MANAGEMENT
+// ════════════════════════════════════════════════════════════════════════
+
+const API_URL = 'https://fortized.com/api';
+const CURRENT_USER = localStorage.getItem('fortized_username');
+const CLOUD_USER_ID = localStorage.getItem('cloud_user_id');
+const FORTIZED_TOKEN = localStorage.getItem('fortized_token');
+
+class CloudAccountManager {
+  constructor() {
+    this.accounts = [];
+  }
+
+  async init() {
+    if (!FORTIZED_TOKEN || !CLOUD_USER_ID) {
+      this.showMessage('Not authenticated', 'error');
+      return;
+    }
+
+    await this.loadAccounts();
+  }
+
+  async loadAccounts() {
+    try {
+      const response = await fetch(`${API_URL}/accounts/${CLOUD_USER_ID}`, {
+        headers: { 'Authorization': `Bearer ${FORTIZED_TOKEN}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to load accounts');
+
+      const data = await response.json();
+      this.accounts = data.accounts || [];
+      this.renderAccounts();
+    } catch (error) {
+      this.showMessage(error.message, 'error');
+    }
+  }
+
+  renderAccounts() {
+    const list = document.getElementById('accountsList');
+    const empty = document.getElementById('emptyState');
+
+    if (this.accounts.length === 0) {
+      list.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+    list.innerHTML = this.accounts.map(acc => `
+      <div class="account-card">
+        <div class="account-info">
+          <div class="account-username">@${acc.username}</div>
+          <div class="account-meta">Created: ${new Date(acc.created_at).toLocaleDateString()}</div>
+          <div class="account-meta">Last login: ${acc.last_login ? new Date(acc.last_login).toLocaleDateString() : 'Never'}</div>
+          <div class="account-status">${acc.username === CURRENT_USER ? '✓ Active' : 'Linked'}</div>
+        </div>
+        <div class="account-actions">
+          ${acc.username !== CURRENT_USER ? `
+            <button class="btn-small" onclick="manager.switchAccount('${acc.subaccount_id}')">Switch</button>
+          ` : ''}
+          <button class="btn-small btn-danger" onclick="manager.disconnectAccount('${acc.subaccount_id}', '@${acc.username}')">Disconnect</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async switchAccount(subaccountId) {
+    try {
+      const response = await fetch(`${API_URL}/auth/switch-subaccount`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${FORTIZED_TOKEN}`
+        },
+        body: JSON.stringify({
+          cloud_user_id: CLOUD_USER_ID,
+          subaccount_id: subaccountId
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to switch account');
+
+      const data = await response.json();
+      localStorage.setItem('fortized_token', data.fortized_token);
+      localStorage.setItem('fortized_subaccount_id', data.subaccount_id);
+      localStorage.setItem('fortized_username', data.username);
+
+      this.showMessage(`Switched to @${data.username}`, 'success');
+      setTimeout(() => window.location.href = '/app', 1000);
+    } catch (error) {
+      this.showMessage(error.message, 'error');
+    }
+  }
+
+  async disconnectAccount(subaccountId, username) {
+    if (!confirm(`Are you sure you want to disconnect ${username}? You can always link it again later.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/accounts/${CLOUD_USER_ID}/${subaccountId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${FORTIZED_TOKEN}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to disconnect account');
+
+      this.showMessage(`Disconnected ${username}`, 'success');
+      await this.loadAccounts();
+    } catch (error) {
+      this.showMessage(error.message, 'error');
+    }
+  }
+
+  showMessage(text, type) {
+    const el = document.getElementById('statusMessage');
+    el.innerHTML = `<div class="status-message status-${type}">${text}</div>`;
+    if (type === 'success') {
+      setTimeout(() => el.innerHTML = '', 3000);
+    }
+  }
+}
+
+// Helper functions
+function showCreateForm() {
+  document.getElementById('createSection').style.display = 'block';
+  document.getElementById('newUsername').focus();
+}
+
+function hideCreateForm() {
+  document.getElementById('createSection').style.display = 'none';
+  document.getElementById('newUsername').value = '';
+}
+
+async function createNewAccount() {
+  const username = document.getElementById('newUsername').value.trim();
+
+  if (!username) {
+    manager.showMessage('Please enter a username', 'error');
+    return;
+  }
+
+  if (username.length < 3) {
+    manager.showMessage('Username must be at least 3 characters', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/accounts/link-to-cloud`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${FORTIZED_TOKEN}`
+      },
+      body: JSON.stringify({
+        cloud_user_id: CLOUD_USER_ID,
+        username: username,
+        action: 'create'
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      if (data.error === 'username_exists') {
+        manager.showMessage(`"${username}" is already taken. Try "${data.suggestion}"`, 'error');
+      } else {
+        manager.showMessage(data.message || 'Failed to create account', 'error');
+      }
+      return;
+    }
+
+    manager.showMessage(`Created new account @${username}`, 'success');
+    hideCreateForm();
+    await manager.loadAccounts();
+  } catch (error) {
+    manager.showMessage(error.message, 'error');
+  }
+}
+
+// Initialize
+const manager = new CloudAccountManager();
+manager.init();
+</script>
+
+</body>
+</html>

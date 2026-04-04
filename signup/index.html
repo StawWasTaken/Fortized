@@ -10,19 +10,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 ::selection{background:rgba(255,249,62,.2);}
-:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.2);--accent-glow:rgba(255,249,62,.4);--bg:#060810;--panel:rgba(10,13,20,.82);--border:#151b2a;--border-hover:#1e2840;--input-bg:rgba(6,8,14,.7);--radius:14px;--muted:#4a5568;--muted-light:#7d8a9e;--green:#3ecf6e;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
-*{margin:0;padding:0;box-sizing:border-box;}img{-webkit-user-drag:none;user-select:none;}
+:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--bg:#060810;--panel:rgba(10,13,20,.82);--border:#151b2a;--input-bg:rgba(6,8,14,.7);--radius:14px;--muted:#4a5568;--muted-light:#7d8a9e;--green:#3ecf6e;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
 html{height:100%;}
 body{min-height:100%;background:var(--bg);font-family:var(--font-body);color:white;overflow-x:hidden;display:flex;align-items:center;justify-content:center;padding:40px 0;}
 
-/* ── Background ── */
-.bg-layer{position:fixed;inset:0;z-index:0;overflow:hidden;}
+.bg-layer{position:fixed;inset:0;z-index:0;}
 .bg-layer::before{content:"";position:absolute;inset:0;background:url("/Fortized banner.png") center/cover no-repeat;opacity:.06;filter:blur(2px) saturate(0.5);}
 .bg-layer::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(255,249,62,.04),transparent 70%),linear-gradient(180deg,rgba(6,8,16,0) 0%,rgba(6,8,16,.5) 60%,var(--bg) 100%);}
 
-.bg-grid{position:fixed;inset:0;z-index:1;background-image:linear-gradient(rgba(255,249,62,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.012) 1px,transparent 1px);background-size:64px 64px;pointer-events:none;mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,black 0%,transparent 100%);}
+.bg-grid{position:fixed;inset:0;z-index:1;background-image:linear-gradient(rgba(255,249,62,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.012) 1px,transparent 1px);background-size:64px 64px;pointer-events:none;}
 
-/* ── Main layout ── */
 .auth-container{position:relative;z-index:10;width:100%;max-width:500px;padding:24px;display:flex;flex-direction:column;align-items:center;}
 
 .auth-brand{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:32px;}
@@ -41,62 +39,39 @@ body{min-height:100%;background:var(--bg);font-family:var(--font-body);color:whi
 .auth-header h1 em{font-style:normal;color:var(--accent);}
 .auth-header p{font-size:13.5px;color:var(--muted-light);line-height:1.6;}
 
-/* Steps indicator */
-.steps-indicator{display:flex;justify-content:space-between;margin-bottom:32px;position:relative;}
-.steps-indicator::before{content:"";position:absolute;top:20px;left:0;right:0;height:2px;background:var(--border);z-index:0;}
-.steps-indicator .step{flex:1;text-align:center;position:relative;z-index:1;}
-.steps-indicator .step-num{width:40px;height:40px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-weight:700;font-size:14px;color:var(--muted);}
-.steps-indicator .step.active .step-num{background:var(--accent);color:#080a0f;}
-.steps-indicator .step.completed .step-num{background:var(--green);color:white;}
-.steps-indicator .step-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;}
-
-/* Welcome bonus */
 .welcome-bonus{display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(62,207,110,.03));border:1px solid rgba(255,249,62,.1);border-radius:12px;margin-bottom:24px;}
-.bonus-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
-.bonus-text{font-size:12.5px;color:var(--muted-light);line-height:1.5;}
+.bonus-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.bonus-text{font-size:12.5px;color:var(--muted-light);}
 .bonus-text strong{color:#fff;}
 .bonus-text .accent{color:var(--accent);font-weight:700;}
 
-/* Form sections */
-.form-section{margin-bottom:24px;}
-.section-title{font-size:12px;font-weight:700;text-transform:uppercase;color:#4a5870;margin-bottom:12px;letter-spacing:.1em;}
+/* Connection Status */
+.connection-status{padding:14px;background:rgba(255,249,62,.04);border:1.5px dashed var(--border);border-radius:var(--radius);margin-bottom:24px;text-align:center;}
+.connection-status.connected{background:rgba(62,207,110,.04);border-color:rgba(62,207,110,.3);}
+.connection-status .status-label{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.connection-status.connected .status-label{color:#3ecf6e;font-weight:600;}
+.connection-status .status-info{font-size:11px;color:var(--muted-light);}
+
+.btn-primary{width:100%;padding:13px;background:var(--accent);color:#080a0f;border:none;border-radius:var(--radius);font-family:var(--font-display);font-weight:700;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-primary:hover{box-shadow:0 0 40px rgba(255,249,62,.4);}
+
+.cloud-logo{filter:drop-shadow(0 0 0 1.5px #ffa43b);}
 
 .field{margin-bottom:16px;}
 .field-label{font-size:11px;font-weight:700;text-transform:uppercase;color:#4a5870;margin-bottom:6px;letter-spacing:.1em;display:block;}
-.field-input{width:100%;padding:11px 13px;background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius);color:white;font-family:var(--font-body);font-size:14px;transition:border-color .18s,box-shadow .18s;outline:none;}
-.field-input:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px var(--accent-dim),0 0 20px rgba(255,249,62,.04);background:rgba(8,10,16,.9);}
-.field-input::placeholder{color:#1e2538;}
+.field-input{width:100%;padding:11px 13px;background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius);color:white;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .18s;}
+.field-input:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.1);}
 .field-hint{font-size:12px;color:var(--muted);margin-top:4px;}
 
-/* Cloud connection */
-.cloud-connect{padding:14px;background:rgba(255,249,62,.04);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:24px;text-align:center;}
-.cloud-connect.connected{background:rgba(62,207,110,.04);border-color:rgba(62,207,110,.2);}
-.cloud-connect-status{font-size:12px;color:var(--muted-light);margin-bottom:8px;}
-.cloud-connect.connected .cloud-connect-status{color:#3ecf6e;}
-.cloud-connect .btn-primary{margin:0;}
+.form-section{margin-bottom:24px;display:none;}
+.form-section.show{display:block;}
 
-/* Profile picture upload */
-.upload-area{position:relative;border:2px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:12px;}
-.upload-area:hover{border-color:var(--accent);background:rgba(255,249,62,.02);}
-.upload-area input[type="file"]{display:none;}
-.upload-icon{width:40px;height:40px;margin:0 auto 12px;opacity:.5;}
-.upload-text{font-size:13px;font-weight:500;margin-bottom:4px;}
-.upload-sub{font-size:11px;color:var(--muted);}
-.upload-preview{display:none;text-align:center;}
-.upload-preview.show{display:block;}
-.preview-img{max-width:100%;max-height:100px;border-radius:8px;margin-bottom:8px;}
+.auth-divider{display:flex;align-items:center;gap:14px;margin:24px 0;color:#1e2538;font-size:11.5px;font-weight:500;text-transform:uppercase;}
+.auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);}
 
-/* Buttons */
-.btn-primary{width:100%;padding:13px;background:var(--accent);color:#080a0f;border:none;border-radius:var(--radius);font-family:var(--font-display);font-weight:700;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;}
-.btn-primary:hover:not(:disabled){box-shadow:0 0 40px var(--accent-glow);}
-.btn-primary:disabled{opacity:.55;cursor:not-allowed;}
-
-/* Footer */
-.auth-footer{text-align:center;font-size:13px;color:var(--muted);margin-top:24px;}
+.auth-footer{text-align:center;font-size:13px;color:var(--muted);margin-top:20px;}
 .auth-footer a{color:var(--accent);text-decoration:none;font-weight:600;}
-.auth-footer a:hover{text-decoration:underline;}
 
-/* Perks */
 .auth-perks{display:flex;align-items:center;justify-content:center;gap:20px;margin-top:24px;flex-wrap:wrap;}
 .perk-chip{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);font-weight:500;}
 .perk-chip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.6;}
@@ -104,7 +79,6 @@ body{min-height:100%;background:var(--bg);font-family:var(--font-body);color:whi
 @media(max-width:540px){
   body{padding:24px 0;}
   .auth-card-body{padding:28px 24px 32px;}
-  .steps-indicator{margin-bottom:24px;}
 }
 </style>
 </head>
@@ -136,72 +110,47 @@ body{min-height:100%;background:var(--bg);font-family:var(--font-body);color:whi
         <div class="bonus-text"><strong>Welcome bonus:</strong> Get <span class="accent">25 Onyx</span> free when you sign up.</div>
       </div>
 
-      <div class="steps-indicator">
-        <div class="step completed">
-          <div class="step-num">✓</div>
-          <div class="step-label">Cloud Account</div>
+      <!-- Step 1: Cloud Connection -->
+      <div class="form-section show" id="step1">
+        <div class="connection-status" id="connectionStatus">
+          <div class="status-label">Step 1: Connect Your Swiftaw Cloud Account</div>
+          <div class="status-info">Click button below to create or connect your Cloud account</div>
         </div>
-        <div class="step active">
-          <div class="step-num">2</div>
-          <div class="step-label">Profile</div>
+
+        <button class="btn-primary" id="connectCloudBtn">
+          <img src="https://swiftaw.com/Cloud%20logo.png" alt="Swiftaw Cloud" class="cloud-logo" style="height:16px;width:auto;">
+          Connect Swiftaw Cloud Account
+        </button>
+      </div>
+
+      <!-- Step 2: Profile Details -->
+      <div class="form-section" id="step2">
+        <div class="field">
+          <label class="field-label">Display Name</label>
+          <input type="text" id="displayName" class="field-input" placeholder="How others will see you">
+          <div class="field-hint">Auto-filled with your Cloud username, but you can change it.</div>
         </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-label">Create</div>
+
+        <div class="field">
+          <label class="field-label">Date of Birth</label>
+          <input type="date" id="dateOfBirth" class="field-input">
+          <div class="field-hint">Required to comply with age restrictions</div>
         </div>
-      </div>
 
-      <!-- Cloud Connection Status -->
-      <div class="cloud-connect connected" id="cloudStatus">
-        <div class="cloud-connect-status">✓ Connected to Swiftaw Cloud</div>
-        <div style="font-size:12px;color:var(--muted-light);">Email: <span id="cloudEmail"></span></div>
-        <div style="font-size:12px;color:var(--muted-light);margin-top:4px;">Username: <span id="cloudUsername" style="color:var(--accent);font-weight:600;"></span></div>
-      </div>
-
-      <!-- Display Name -->
-      <div class="form-section">
-        <label class="field-label">Display Name</label>
-        <input type="text" id="displayName" class="field-input" placeholder="How others will see you" autocomplete="off">
-        <div class="field-hint">This is auto-filled with your Swiftaw username, but you can change it.</div>
-      </div>
-
-      <!-- Date of Birth -->
-      <div class="form-section">
-        <label class="field-label">Date of Birth</label>
-        <input type="date" id="dateOfBirth" class="field-input">
-        <div class="field-hint">Required to comply with age restrictions</div>
-      </div>
-
-      <!-- About Me -->
-      <div class="form-section">
-        <label class="field-label">About Me</label>
-        <textarea id="aboutMe" class="field-input" style="min-height:80px;resize:vertical;font-family:var(--font-body);" placeholder="Tell us about yourself..."></textarea>
-        <div class="field-hint">Share what makes you unique (optional)</div>
-      </div>
-
-      <!-- Profile Picture -->
-      <div class="form-section">
-        <label class="field-label">Profile Picture</label>
-        <div class="upload-area" id="uploadArea" onclick="document.getElementById('pfpInput').click()">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          <div class="upload-text">Click to upload or drag & drop</div>
-          <div class="upload-sub">PNG, JPG, GIF up to 5 MB</div>
-          <input type="file" id="pfpInput" accept="image/*" onchange="handleFileSelect(event)">
+        <div class="field">
+          <label class="field-label">About Me</label>
+          <textarea id="aboutMe" class="field-input" style="min-height:70px;resize:vertical;font-family:var(--font-body);" placeholder="Tell us about yourself..."></textarea>
+          <div class="field-hint">Share what makes you unique (optional)</div>
         </div>
-        <div class="upload-preview" id="uploadPreview">
-          <img id="previewImg" class="preview-img" src="" alt="Preview">
-          <button type="button" onclick="clearImage()" style="font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline;">Remove</button>
-        </div>
+
+        <button class="btn-primary" id="createBtn" onclick="createAccount()">
+          <span>Create Fortized Account</span>
+        </button>
       </div>
 
-      <!-- Create Account Button -->
-      <button class="btn-primary" id="createBtn" onclick="createAccount()">
-        <span>Create Fortized Account</span>
-      </button>
+      <div class="auth-divider" id="divider" style="display:none;">or</div>
 
-      <div class="auth-footer" style="margin-top:16px;">
+      <div class="auth-footer">
         Already have an account? <a href="/login">Sign in here</a>
       </div>
 
@@ -218,76 +167,87 @@ body{min-height:100%;background:var(--bg);font-family:var(--font-body);color:whi
 
 <script>
 // ════════════════════════════════════════════════════════════════════════
-// FORTIZED × SWIFTAW CLOUD SIGNUP FLOW
+// FORTIZED SIGNUP × SWIFTAW CLOUD
+// Step 1: Connect Cloud (in new tab)
+// Step 2: Fill Fortized profile (auto-filled from Cloud)
+// Step 3: Create account
 // ════════════════════════════════════════════════════════════════════════
 
-const CLOUD_AUTH_URL = 'https://swiftaw.com/cloud/auth/link?product=fortized&redirect_uri=https%3A%2F%2Ffortized.com%2Fauth%2Fcloud-callback&state=';
+const CLOUD_AUTH_URL = 'https://swiftaw.com/cloud/auth/link?product=fortized&redirect_uri=https://fortized.com/auth/cloud-callback&state=';
 
-let cloudUserData = null;
-let selectedFile = null;
+let cloudData = null;
 
-// Check if user already signed up with Cloud
-function init() {
+// Check if already logged in
+const fortizedToken = localStorage.getItem('fortized_token');
+if (fortizedToken) {
+  window.location.href = '/app';
+}
+
+// Check if coming back from Cloud (URL params)
+function checkCloudParams() {
   const params = new URLSearchParams(window.location.search);
-  const cloudEmail = params.get('cloud_email');
   const cloudUsername = params.get('cloud_username');
+  const cloudEmail = params.get('cloud_email');
 
-  if (cloudEmail && cloudUsername) {
-    // User came from Cloud signup
-    cloudUserData = { email: cloudEmail, username: cloudUsername };
-    document.getElementById('cloudEmail').textContent = cloudEmail;
-    document.getElementById('cloudUsername').textContent = cloudUsername;
-    document.getElementById('displayName').value = cloudUsername;
-    document.getElementById('aboutMe').value = `Hi! I am ${cloudUsername}, welcome to my profile!`;
-  } else {
-    // No Cloud account yet, redirect
-    redirectToCloud();
+  if (cloudUsername && cloudEmail) {
+    // User returned from Cloud signup
+    cloudData = { username: cloudUsername, email: cloudEmail };
+    showStep2();
   }
 }
 
-function redirectToCloud() {
-  const state = Math.random().toString(36).substring(7) + Date.now().toString(36);
-  localStorage.setItem('cloud_auth_state', state);
-  window.location.href = CLOUD_AUTH_URL + state;
+// Generate random state for CSRF protection
+function generateState() {
+  return Math.random().toString(36).substring(2, 15) +
+         Math.random().toString(36).substring(2, 15);
 }
 
-function handleFileSelect(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+// Connect Cloud Account button
+document.getElementById('connectCloudBtn').addEventListener('click', () => {
+  const state = generateState();
+  sessionStorage.setItem('cloud_auth_state', state);
+  sessionStorage.setItem('signup_referrer', 'signup');
 
-  if (file.size > 5 * 1024 * 1024) {
-    alert('File too large - max 5 MB');
-    return;
-  }
+  // Open Cloud auth in NEW TAB
+  // If already logged into Cloud, it auto-closes and redirects back
+  window.open(
+    CLOUD_AUTH_URL + state,
+    'fortized_cloud_signup',
+    'width=600,height=700'
+  );
+});
 
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    selectedFile = file;
-    document.getElementById('previewImg').src = e.target.result;
-    document.getElementById('uploadPreview').classList.add('show');
-    document.getElementById('uploadArea').style.display = 'none';
-  };
-  reader.readAsDataURL(file);
+// Show Step 2 (profile details)
+function showStep2() {
+  document.getElementById('step1').classList.remove('show');
+  document.getElementById('step2').classList.add('show');
+  document.getElementById('divider').style.display = 'none';
+
+  // Update connection status
+  const status = document.getElementById('connectionStatus');
+  status.classList.add('connected');
+  status.innerHTML = `
+    <div class="status-label">✓ Cloud Account Connected</div>
+    <div class="status-info">Email: ${cloudData.email} | Username: ${cloudData.username}</div>
+  `;
+
+  // Auto-fill display name
+  document.getElementById('displayName').value = cloudData.username;
+  document.getElementById('aboutMe').value = `Hi! I am ${cloudData.username}, welcome to my profile!`;
 }
 
-function clearImage() {
-  selectedFile = null;
-  document.getElementById('pfpInput').value = '';
-  document.getElementById('uploadPreview').classList.remove('show');
-  document.getElementById('uploadArea').style.display = 'block';
-}
-
+// Create account
 async function createAccount() {
-  if (!cloudUserData) {
-    alert('Not connected to Cloud. Redirecting...');
-    redirectToCloud();
+  if (!cloudData) {
+    alert('Please connect a Cloud account first');
     return;
   }
 
   const displayName = document.getElementById('displayName').value.trim();
-  const aboutMe = document.getElementById('aboutMe').value.trim();
   const dateOfBirth = document.getElementById('dateOfBirth').value;
+  const aboutMe = document.getElementById('aboutMe').value.trim();
 
+  // Validation
   if (!displayName) {
     alert('Display name is required');
     return;
@@ -298,23 +258,16 @@ async function createAccount() {
     return;
   }
 
-  // Validate date of birth
+  // Age validation
   const dob = new Date(dateOfBirth);
   const today = new Date();
-  const age = today.getFullYear() - dob.getFullYear();
-  const monthDiff = today.getMonth() - dob.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+  let age = today.getFullYear() - dob.getFullYear();
+  if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
     age--;
   }
 
-  // Check if age is reasonable (between 13 and 150)
-  if (age < 13) {
-    alert('You must be at least 13 years old to create an account');
-    return;
-  }
-
-  if (age > 150 || dob.getFullYear() < 1870) {
-    alert('Please enter a valid date of birth');
+  if (age < 13 || age > 150 || dob.getFullYear() < 1870) {
+    alert('Please enter a valid date of birth (13+ years old)');
     return;
   }
 
@@ -323,20 +276,17 @@ async function createAccount() {
     btn.disabled = true;
     btn.textContent = 'Creating account...';
 
-    // Call Fortized API to create account
-    const formData = new FormData();
-    formData.append('displayName', displayName);
-    formData.append('aboutMe', aboutMe);
-    formData.append('dateOfBirth', dateOfBirth);
-    formData.append('cloudUsername', cloudUserData.username);
-    formData.append('cloudEmail', cloudUserData.email);
-    if (selectedFile) {
-      formData.append('profilePicture', selectedFile);
-    }
-
+    // Call backend to create account
     const response = await fetch('/api/auth/create-fortized-account', {
       method: 'POST',
-      body: formData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cloudUsername: cloudData.username,
+        cloudEmail: cloudData.email,
+        displayName: displayName,
+        dateOfBirth: dateOfBirth,
+        aboutMe: aboutMe
+      })
     });
 
     if (!response.ok) {
@@ -348,8 +298,7 @@ async function createAccount() {
 
     // Save session
     localStorage.setItem('fortized_token', data.token);
-    localStorage.setItem('fortized_subaccount_id', data.subaccountId);
-    localStorage.setItem('fortized_username', data.username);
+    localStorage.setItem('fortized_user_id', data.userId);
 
     // Redirect to app
     window.location.href = '/app';
@@ -361,8 +310,22 @@ async function createAccount() {
   }
 }
 
-// Initialize on page load
-window.addEventListener('load', init);
+// Listen for Cloud window close (user connected)
+window.addEventListener('message', (event) => {
+  if (event.origin !== window.location.origin) return;
+
+  if (event.data.type === 'cloud_auth_complete') {
+    // Cloud auth completed, received user data
+    cloudData = {
+      username: event.data.cloudUsername,
+      email: event.data.cloudEmail
+    };
+    showStep2();
+  }
+});
+
+// Check URL params on load
+window.addEventListener('load', checkCloudParams);
 </script>
 
 </body>

@@ -3,312 +3,140 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Connecting to Swiftaw Cloud - Fortized</title>
-<meta name="description" content="Connecting your Fortized account to Swiftaw Cloud...">
-<meta name="theme-color" content="#fff93e">
-<link rel="icon" type="image/png" href="/Fortized icon.png">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<title>Cloud Auth Callback - Fortized</title>
 <style>
-::selection{background:rgba(255,249,62,.2);}
-:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.2);--accent-glow:rgba(255,249,62,.4);--bg:#060810;--panel:rgba(10,13,20,.82);--border:#151b2a;--border-hover:#1e2840;--input-bg:rgba(6,8,14,.7);--radius:14px;--muted:#4a5568;--muted-light:#7d8a9e;--green:#3ecf6e;--red:#f87171;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
-*{margin:0;padding:0;box-sizing:border-box;}
-html,body{height:100%;background:var(--bg);font-family:var(--font-body);color:white;}
-body{display:flex;align-items:center;justify-content:center;}
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #060810;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: white;
+  margin: 0;
+}
 
-.callback-container{position:relative;z-index:10;width:100%;max-width:500px;padding:24px;text-align:center;}
+.container {
+  text-align: center;
+}
 
-.loading-spinner{width:50px;height:50px;border:3px solid rgba(255,249,62,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 24px;}
-@keyframes spin{to{transform:rotate(360deg);}}
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 249, 62, 0.2);
+  border-top-color: #fff93e;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
 
-.status-text{font-size:16px;color:var(--muted-light);margin-bottom:40px;font-weight:500;}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
-/* Account Picker */
-.account-picker{display:none;}
-.account-picker.show{display:block;}
-.account-picker-header{margin-bottom:32px;}
-.account-picker-header h1{font-family:var(--font-display);font-size:24px;font-weight:800;margin-bottom:8px;}
-.account-picker-header p{font-size:14px;color:var(--muted-light);}
+.status {
+  font-size: 14px;
+  color: #7d8a9e;
+}
 
-.account-list{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}
-.account-item{padding:16px;background:rgba(255,249,62,.05);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .25s;text-align:left;}
-.account-item:hover{background:rgba(255,249,62,.1);border-color:var(--accent);}
-.account-item-name{font-weight:600;font-size:15px;margin-bottom:4px;}
-.account-item-meta{font-size:12px;color:var(--muted);margin:4px 0;}
-
-.account-form{background:rgba(255,249,62,.05);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:24px;display:none;}
-.account-form.show{display:block;}
-.form-group{margin-bottom:20px;text-align:left;}
-.form-label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;color:#4a5870;margin-bottom:8px;letter-spacing:.1em;}
-.form-input{width:100%;padding:12px;background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius);color:white;font-family:var(--font-body);font-size:14px;}
-.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
-
-.button-group{display:flex;gap:12px;}
-.btn-primary,.btn-secondary{flex:1;padding:12px;border:none;border-radius:var(--radius);font-family:var(--font-display);font-weight:700;cursor:pointer;transition:all .25s;}
-.btn-primary{background:var(--accent);color:#080a0f;}
-.btn-primary:hover{box-shadow:0 0 40px var(--accent-glow);}
-.btn-secondary{background:transparent;color:var(--accent);border:1.5px solid var(--accent);}
-.btn-secondary:hover{background:rgba(255,249,62,.08);}
-
-.error-message{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;padding:16px;border-radius:var(--radius);margin-bottom:24px;display:none;font-size:14px;text-align:left;}
-.error-message.show{display:block;}
-
-@media(max-width:540px){
-  .callback-container{max-width:90vw;}
-  .button-group{flex-direction:column;}
+.error {
+  color: #f87171;
+  padding: 16px;
+  background: rgba(248, 113, 113, 0.1);
+  border-radius: 8px;
+  margin-top: 20px;
 }
 </style>
 </head>
 <body>
 
-<div class="callback-container">
-  <div class="loading-state" id="loadingState">
-    <div class="loading-spinner"></div>
-    <div class="status-text">Connecting to Swiftaw Cloud...</div>
-  </div>
-
-  <div class="account-picker" id="accountPicker">
-    <div class="account-picker-header">
-      <h1>Select Your Fortress</h1>
-      <p>Choose which Fortized account to use, or create a new one.</p>
-    </div>
-
-    <div class="error-message" id="errorMessage"></div>
-
-    <!-- Existing Accounts -->
-    <div id="existingAccountsList"></div>
-
-    <!-- Create New Account Form Option -->
-    <div style="text-align:center;padding:16px 0;color:var(--muted);">
-      <p style="font-size:12px;margin-bottom:12px;">No Fortized accounts linked yet?</p>
-      <button class="btn-secondary" id="createNewBtn" style="width:100%;margin-bottom:24px;">
-        Create New Fortized Account
-      </button>
-    </div>
-
-    <!-- Create New Account Form -->
-    <div class="account-form" id="createForm">
-      <div class="form-group">
-        <label class="form-label" for="username">Fortized Username</label>
-        <input type="text" id="username" class="form-input" placeholder="e.g., gaming_pro" maxlength="30">
-      </div>
-      <div class="button-group">
-        <button class="btn-primary" id="createSubmitBtn">Create Account</button>
-        <button class="btn-secondary" id="createCancelBtn">Cancel</button>
-      </div>
-    </div>
-  </div>
+<div class="container">
+  <div class="spinner"></div>
+  <div class="status" id="status">Connecting to Swiftaw Cloud...</div>
+  <div class="error" id="error" style="display:none;"></div>
 </div>
 
 <script>
 // ════════════════════════════════════════════════════════════════════════
-// FORTIZED × SWIFTAW CLOUD CALLBACK HANDLER
+// FORTIZED CLOUD CALLBACK HANDLER
+// Receives authorization code from Cloud and exchanges it for session token
 // ════════════════════════════════════════════════════════════════════════
 
 const API_URL = 'https://fortized.com/api';
-const CLOUD_AUTH_STATE_KEY = 'cloud_auth_state';
 
-class CloudCallbackHandler {
-  constructor() {
-    this.cloudToken = null;
-    this.cloudUserId = null;
-    this.accounts = [];
-    this.state = 'loading';
-  }
+async function handleCallback() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
 
-  async init() {
-    try {
-      // Get token from URL query params
-      const params = new URLSearchParams(window.location.search);
-      this.cloudToken = params.get('cloud_token');
-      this.cloudUserId = params.get('cloud_user_id');
-      const state = params.get('state');
-
-      // Verify CSRF state
-      const savedState = localStorage.getItem(CLOUD_AUTH_STATE_KEY);
-      if (!state || !savedState || state !== savedState) {
-        this.showError('Security validation failed. Please try again.');
-        return;
-      }
-      localStorage.removeItem(CLOUD_AUTH_STATE_KEY);
-
-      if (!this.cloudToken) {
-        this.showError('No authentication token received. Please try again.');
-        return;
-      }
-
-      // Call Cloud callback endpoint
-      const response = await fetch(`${API_URL}/auth/cloud-callback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cloud_token: this.cloudToken,
-          cloud_user_id: this.cloudUserId
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Authentication failed');
-      }
-
-      const data = await response.json();
-
-      if (data.action === 'login') {
-        // Single account - log in directly
-        this.loginUser(data);
-      } else if (data.action === 'select_account' && data.accounts) {
-        // Multiple accounts - show picker
-        this.showAccountPicker(data);
-      } else if (data.action === 'create_or_link') {
-        // No accounts - show create/link form
-        this.showCreateForm();
-      }
-    } catch (error) {
-      console.error('Callback error:', error);
-      this.showError(error.message || 'Connection failed. Please try again.');
+    // Verify state (CSRF protection)
+    const savedState = sessionStorage.getItem('cloud_auth_state');
+    if (!state || state !== savedState) {
+      throw new Error('Security validation failed. Please try again.');
     }
-  }
+    sessionStorage.removeItem('cloud_auth_state');
 
-  showAccountPicker(data) {
-    this.accounts = data.accounts || [];
-    document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('accountPicker').classList.add('show');
-
-    // Populate existing accounts
-    const list = document.getElementById('existingAccountsList');
-    list.innerHTML = this.accounts.map((acc, idx) => `
-      <button class="account-item" onclick="handler.selectAccount(${idx})">
-        <div class="account-item-name">@${acc.username}</div>
-        <div class="account-item-meta">Created: ${new Date(acc.created_at).toLocaleDateString()}</div>
-      </button>
-    `).join('');
-  }
-
-  showCreateForm() {
-    document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('accountPicker').classList.add('show');
-    document.getElementById('existingAccountsList').innerHTML = '';
-  }
-
-  selectAccount(index) {
-    const account = this.accounts[index];
-    if (!account) return;
-
-    // Switch to this account
-    this.switchSubaccount(account.subaccount_id);
-  }
-
-  async switchSubaccount(subaccountId) {
-    try {
-      this.showLoading('Activating account...');
-
-      const response = await fetch(`${API_URL}/auth/switch-subaccount`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cloud_user_id: this.cloudUserId,
-          subaccount_id: subaccountId
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to switch account');
-
-      const data = await response.json();
-      this.loginUser(data);
-    } catch (error) {
-      this.showError(error.message);
-    }
-  }
-
-  async createAccount() {
-    const username = document.getElementById('username').value.trim();
-
-    if (!username) {
-      this.showError('Please enter a username');
-      return;
+    if (!code) {
+      throw new Error('No authorization code received. Please try again.');
     }
 
-    if (username.length < 3) {
-      this.showError('Username must be at least 3 characters');
-      return;
+    document.getElementById('status').textContent = 'Authenticating...';
+
+    // Exchange code for Fortized session
+    const response = await fetch(`${API_URL}/auth/cloud-callback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, state })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Authentication failed');
     }
 
-    try {
-      this.showLoading('Creating account...');
+    const data = await response.json();
 
-      const response = await fetch(`${API_URL}/accounts/link-to-cloud`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cloud_user_id: this.cloudUserId,
-          username: username,
-          action: 'create'
-        })
-      });
+    document.getElementById('status').textContent = 'Redirecting...';
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.error === 'username_exists') {
-          this.showError(`"${username}" is already taken. Try "${data.suggestion}"`);
-        } else {
-          this.showError(data.message || 'Failed to create account');
-        }
-        return;
-      }
-
-      // Account created - login
-      this.loginUser(data);
-    } catch (error) {
-      this.showError(error.message);
-    }
-  }
-
-  loginUser(userData) {
     // Save session
-    localStorage.setItem('fortized_token', userData.fortized_token);
-    localStorage.setItem('fortized_subaccount_id', userData.subaccount_id);
-    localStorage.setItem('fortized_username', userData.username);
+    localStorage.setItem('fortized_token', data.session_token);
+    localStorage.setItem('fortized_user_id', data.user.id);
+    localStorage.setItem('fortized_username', data.user.username);
 
-    // Redirect to app
-    window.location.href = '/app';
-  }
+    // Determine where to redirect
+    const referrer = sessionStorage.getItem('signup_referrer');
+    if (referrer === 'signup') {
+      // Came from signup - send back user data to signup page
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({
+          type: 'cloud_auth_complete',
+          cloudUsername: data.user.username,
+          cloudEmail: data.user.email
+        }, window.location.origin);
+      }
+      window.close();
+    } else {
+      // Came from login - redirect to app
+      window.location.href = '/app';
+    }
 
-  showLoading(text = 'Connecting to Swiftaw Cloud...') {
-    document.getElementById('accountPicker').classList.remove('show');
-    document.getElementById('loadingState').style.display = 'block';
-    document.querySelector('.status-text').textContent = text;
-    document.getElementById('errorMessage').classList.remove('show');
-  }
+  } catch (error) {
+    console.error('Callback error:', error);
+    document.getElementById('status').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('error').textContent = 'Error: ' + error.message;
 
-  showError(message) {
-    const errorEl = document.getElementById('errorMessage');
-    errorEl.textContent = message;
-    errorEl.classList.add('show');
+    // Offer retry
+    setTimeout(() => {
+      document.getElementById('error').innerHTML +=
+        '<br><br><a href="/login" style="color: #fff93e; text-decoration: none;">Back to Login</a>';
+    }, 2000);
   }
 }
 
-// Initialize
-const handler = new CloudCallbackHandler();
-handler.init();
-
-// Event listeners
-document.getElementById('createNewBtn').addEventListener('click', () => {
-  document.getElementById('createForm').classList.add('show');
-  document.getElementById('existingAccountsList').style.display = 'none';
-  document.getElementById('createNewBtn').style.display = 'none';
-});
-
-document.getElementById('createCancelBtn').addEventListener('click', () => {
-  document.getElementById('createForm').classList.remove('show');
-  document.getElementById('existingAccountsList').style.display = 'block';
-  document.getElementById('createNewBtn').style.display = 'block';
-});
-
-document.getElementById('createSubmitBtn').addEventListener('click', () => handler.createAccount());
-document.getElementById('username').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') handler.createAccount();
-});
+// Run on page load
+window.addEventListener('load', handleCallback);
 </script>
 
 </body>

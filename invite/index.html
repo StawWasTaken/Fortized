@@ -387,9 +387,33 @@
 </div>
 
 <script>
-  // Get invite code from URL
-  const params = new URLSearchParams(window.location.search);
-  const inviteCode = params.get('code') || window.location.pathname.split('/').pop();
+  // Get invite code from multiple possible URL formats
+  function getInviteCode() {
+    // Try query parameter first: ?code=ABC123
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('code')) {
+      return params.get('code');
+    }
+
+    // Try path parameter: /invite/ABC123
+    const pathSegments = window.location.pathname.split('/').filter(s => s);
+    if (pathSegments.length > 0) {
+      const lastSegment = pathSegments[pathSegments.length - 1];
+      // Check if it looks like an invite code (not a common word like 'invite')
+      if (lastSegment && lastSegment !== 'invite' && lastSegment !== 'app') {
+        return lastSegment;
+      }
+    }
+
+    // Try from hash: #ABC123
+    if (window.location.hash) {
+      return window.location.hash.substring(1);
+    }
+
+    return null;
+  }
+
+  const inviteCode = getInviteCode();
 
   // Check if desktop app is detected
   function isDesktopAppDetected() {
@@ -468,8 +492,22 @@
       });
   }
 
+  // Validate invite code exists
+  if (!inviteCode) {
+    document.getElementById('bastionName').textContent = 'Invalid invite link';
+    document.getElementById('inviteText').textContent = 'Unable to find invite code in URL.';
+    document.getElementById('openAppBtn').style.display = 'none';
+    document.getElementById('bastionInfo').style.display = 'none';
+    document.getElementById('continueBrowserBtn').textContent = 'Go back';
+    document.getElementById('continueBrowserBtn').onclick = () => window.location.href = '/app';
+  }
+
   // Load bastion info on page load
-  document.addEventListener('DOMContentLoaded', loadBastionInfo);
+  document.addEventListener('DOMContentLoaded', () => {
+    if (inviteCode) {
+      loadBastionInfo();
+    }
+  });
 </script>
 
 </body>

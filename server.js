@@ -573,8 +573,70 @@ io.on('connection', (socket) => {
   });
 });
 
+// ════════════════════════════════════════════════════
+// SWIFTAW CLOUD INTEGRATION — API ENDPOINTS
+// ════════════════════════════════════════════════════
+
+const {
+  validateCloudToken,
+  generateFortizedToken,
+  rateLimitMiddleware,
+} = require('./cloud-auth');
+
+const {
+  handleCloudCallback,
+  handleLinkToCloud,
+  handleGetAccounts,
+  handleSwitchSubaccount,
+  handleDisconnectAccount,
+  handleVerifyCloudToken,
+  handleGetPublicKey,
+} = require('./cloud-endpoints');
+
+// ── Cloud Auth Middleware ──
+app.use('/api/auth', rateLimitMiddleware);
+app.use('/api/accounts', rateLimitMiddleware);
+
+// ── Cloud Callback (OAuth Return) ──
+app.post('/api/auth/cloud-callback', (req, res) => {
+  handleCloudCallback(req, res, sb)(req, res);
+});
+
+// ── Link to Cloud (Create New Account) ──
+app.post('/api/accounts/link-to-cloud', (req, res) => {
+  handleLinkToCloud(req, res, sb)(req, res);
+});
+
+// ── Get Cloud User's Accounts ──
+app.get('/api/accounts/:cloud_user_id', (req, res) => {
+  handleGetAccounts(req, res, sb)(req, res);
+});
+
+// ── Switch Subaccount ──
+app.post('/api/auth/switch-subaccount', (req, res) => {
+  handleSwitchSubaccount(req, res, sb)(req, res);
+});
+
+// ── Disconnect Account ──
+app.delete('/api/accounts/:cloud_user_id/:subaccount_id', (req, res) => {
+  handleDisconnectAccount(req, res, sb)(req, res);
+});
+
+// ── Verify Cloud Token (Utility) ──
+app.get('/api/auth/verify-cloud-token', (req, res) => {
+  handleVerifyCloudToken(req, res)(req, res);
+});
+
+// ── Get Public Key (Utility) ──
+app.get('/api/auth/public-key', (req, res) => {
+  handleGetPublicKey(req, res)(req, res);
+});
+
+console.log('[Cloud Auth] Cloud integration endpoints registered');
+
 // ── Start ──────────────────────────────────────────
 server.listen(PORT, () => {
   console.log(`[Fortized] Server running on port ${PORT}`);
   console.log(`[Fortized] Socket.io real-time layer active`);
+  console.log(`[Cloud Auth] Ready for Swiftaw Cloud integration`);
 });

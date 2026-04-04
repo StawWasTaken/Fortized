@@ -114,6 +114,9 @@ body{background:var(--bg);font-family:var(--font-body);color:white;overflow-x:hi
 .status-dot.yellow{background:var(--accent);box-shadow:0 0 8px rgba(255,249,62,.4);}
 .status-sep{width:1px;height:12px;background:#1a2030;}
 
+/* Cloud logo stroke */
+.cloud-logo{filter:drop-shadow(0 0 0 1.5px #ffa43b);}
+
 /* ── Responsive ── */
 @media(max-width:540px){
   .auth-card-body{padding:28px 24px 32px;}
@@ -159,7 +162,7 @@ body{background:var(--bg);font-family:var(--font-body);color:white;overflow-x:hi
       <!-- Cloud Login Section -->
       <div class="cloud-section">
         <button class="btn-primary" id="cloudLoginBtn">
-          <img src="https://swiftaw.com/Cloud%20logo.png" alt="Swiftaw Cloud" style="height:18px;width:auto;opacity:.9;">
+          <img src="https://swiftaw.com/Cloud%20logo.png" alt="Swiftaw Cloud" class="cloud-logo" style="height:18px;width:auto;opacity:.9;">
           Sign in with Swiftaw Cloud
         </button>
       </div>
@@ -188,9 +191,7 @@ body{background:var(--bg);font-family:var(--font-body);color:white;overflow-x:hi
 // FORTIZED × SWIFTAW CLOUD LOGIN
 // ════════════════════════════════════════════════════════════════════════
 
-const CLOUD_AUTH_URL = 'https://swiftaw.com/cloud/auth/link';
-const FORTIZED_URL = 'https://fortized.com';
-const REDIRECT_URI = `${FORTIZED_URL}/auth/cloud-callback`;
+const CLOUD_AUTH_URL = 'https://swiftaw.com/cloud/auth/link?product=fortized&redirect_uri=https%3A%2F%2Ffortized.com%2Fauth%2Fcloud-callback&state=';
 
 // Already logged in → go straight to app
 const fortizedToken = localStorage.getItem('fortized_token');
@@ -205,13 +206,8 @@ document.getElementById('cloudLoginBtn').addEventListener('click', () => {
   const state = Math.random().toString(36).substring(7) + Date.now().toString(36);
   localStorage.setItem('cloud_auth_state', state);
 
-  // Redirect to Cloud login with proper URL encoding
-  const cloudUrl = new URL(CLOUD_AUTH_URL);
-  cloudUrl.searchParams.set('product', 'fortized');
-  cloudUrl.searchParams.set('redirect_uri', REDIRECT_URI);
-  cloudUrl.searchParams.set('state', state);
-
-  window.location.href = cloudUrl.toString();
+  // Redirect to Cloud login
+  window.location.href = CLOUD_AUTH_URL + state;
 });
 </script>
 

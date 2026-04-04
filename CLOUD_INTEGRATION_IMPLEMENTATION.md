@@ -10,27 +10,51 @@
 
 This document tracks the implementation of Swiftaw Cloud authentication integration into Fortized. Users will authenticate through Cloud (email + password), then select or create Fortized subaccounts.
 
+### Data Architecture
+- **Cloud Database:** Stores `email` + `password` for authentication
+- **Fortized Database:** Stores `username` as the linking identifier
+- **Link Table:** `cloud_account_links` matches Cloud users to Fortized subaccounts
+
+**Example:**
+```
+Cloud DB: alice@example.com (password in Cloud)
+          ↓
+          cloud_user_id: 550e8400-...
+          ↓
+Fortized: username: alice_pro (in users table)
+          cloud_user_id: 550e8400-... (links to Cloud)
+          ↓
+System identifies it's the same person via cloud_user_id
+```
+
 ---
 
 ## ✅ COMPLETED: Week 1 Backend Setup
 
 ### Database Schema
 - ✅ Created migration file: `migrations/001_cloud_integration_schema.sql`
-- ✅ Adds 3 columns to `users` table:
-  - `cloud_user_id` (UUID, unique)
-  - `is_linked_to_cloud` (boolean)
-  - `last_login` (timestamp)
 - ✅ Creates 2 new tables:
   - `cloud_account_links` - Tracks Fortized accounts linked to Cloud users
   - `cloud_linking_tokens` - One-time tokens for account linking
+- ✅ Adds 3 columns to `users` table:
+  - `cloud_user_id` (UUID, unique) - Links to Cloud user
+  - `is_linked_to_cloud` (boolean) - Linking status
+  - `last_login` (timestamp) - Last login time
 - ✅ Creates indexes for optimal query performance
+
+- ✅ Created migration file: `migrations/002_remove_auth_columns.sql`
+- ✅ Removes columns from `users` table (moved to Cloud):
+  - `password` - ❌ REMOVED (now in Cloud database)
+  - `email` - ❌ REMOVED (now in Cloud database)
+- ✅ Keeps `username` - ✅ KEPT (linking identifier)
 
 **How to apply:**
 ```bash
 # Using Supabase CLI
 supabase db push
 
-# Or manually copy the SQL and run in Supabase dashboard
+# Or manually copy each SQL file and run in Supabase dashboard
+# Apply in order: 001_cloud_integration_schema.sql → 002_remove_auth_columns.sql
 ```
 
 ### Cloud Authentication Module

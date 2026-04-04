@@ -6,89 +6,190 @@
 <title>Sign Up - Fortized</title>
 <meta name="description" content="Create your Fortized account and start building your fortress. Get 25 free Onyx when you sign up.">
 <meta name="theme-color" content="#fff93e">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Fortized">
+<meta property="og:title" content="Sign Up – Fortized">
+<meta property="og:description" content="Create your Fortized account and start building your fortress. Get 25 free Onyx when you sign up.">
+<meta property="og:image" content="https://fortized.com/Fortized banner.png">
+<meta property="og:url" content="https://fortized.com/signup">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sign Up – Fortized">
+<meta name="twitter:description" content="Create your Fortized account and start building your fortress. Get 25 free Onyx when you sign up.">
+<meta name="twitter:image" content="https://fortized.com/Fortized banner.png">
 <link rel="icon" type="image/png" href="/Fortized icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 ::selection{background:rgba(255,249,62,.2);}
-:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--bg:#060810;--panel:rgba(10,13,20,.82);--border:#151b2a;--input-bg:rgba(6,8,14,.7);--radius:14px;--muted:#4a5568;--muted-light:#7d8a9e;--green:#3ecf6e;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
-*{margin:0;padding:0;box-sizing:border-box;}
+:root{--accent:#fff93e;--accent-dim:rgba(255,249,62,.1);--accent-mid:rgba(255,249,62,.2);--accent-glow:rgba(255,249,62,.4);--bg:#060810;--panel:rgba(10,13,20,.82);--border:#151b2a;--border-hover:#1e2840;--input-bg:rgba(6,8,14,.7);--radius:14px;--muted:#4a5568;--muted-light:#7d8a9e;--green:#3ecf6e;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}img{-webkit-user-drag:none;user-select:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;}
 html{height:100%;}
 body{min-height:100%;background:var(--bg);font-family:var(--font-body);color:white;overflow-x:hidden;display:flex;align-items:center;justify-content:center;padding:40px 0;}
 
-.bg-layer{position:fixed;inset:0;z-index:0;}
+/* ── Immersive background ── */
+.bg-layer{position:fixed;inset:0;z-index:0;overflow:hidden;}
 .bg-layer::before{content:"";position:absolute;inset:0;background:url("/Fortized banner.png") center/cover no-repeat;opacity:.06;filter:blur(2px) saturate(0.5);}
-.bg-layer::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(255,249,62,.04),transparent 70%),linear-gradient(180deg,rgba(6,8,16,0) 0%,rgba(6,8,16,.5) 60%,var(--bg) 100%);}
+.bg-layer::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(255,249,62,.04),transparent 70%),radial-gradient(ellipse 60% 50% at 20% 70%,rgba(62,207,110,.02),transparent 60%),linear-gradient(180deg,rgba(6,8,16,0) 0%,rgba(6,8,16,.5) 60%,var(--bg) 100%);}
 
-.bg-grid{position:fixed;inset:0;z-index:1;background-image:linear-gradient(rgba(255,249,62,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.012) 1px,transparent 1px);background-size:64px 64px;pointer-events:none;}
+/* Grid overlay */
+.bg-grid{position:fixed;inset:0;z-index:1;background-image:linear-gradient(rgba(255,249,62,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,249,62,.012) 1px,transparent 1px);background-size:64px 64px;pointer-events:none;mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,black 0%,transparent 100%);}
 
+/* Floating particles */
+.particles{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+.particle{position:absolute;border-radius:50%;opacity:0;animation:particleFloat linear infinite;}
+.particle:nth-child(1){width:3px;height:3px;background:var(--accent);left:12%;top:80%;animation-duration:12s;animation-delay:0s;}
+.particle:nth-child(2){width:2px;height:2px;background:rgba(255,249,62,.6);left:30%;top:90%;animation-duration:15s;animation-delay:2s;}
+.particle:nth-child(3){width:4px;height:4px;background:rgba(255,249,62,.3);left:60%;top:85%;animation-duration:18s;animation-delay:4s;}
+.particle:nth-child(4){width:2px;height:2px;background:rgba(96,165,250,.5);left:78%;top:95%;animation-duration:14s;animation-delay:1s;}
+.particle:nth-child(5){width:3px;height:3px;background:rgba(255,249,62,.4);left:45%;top:88%;animation-duration:16s;animation-delay:3s;}
+.particle:nth-child(6){width:2px;height:2px;background:rgba(62,207,110,.4);left:88%;top:82%;animation-duration:20s;animation-delay:5s;}
+@keyframes particleFloat{0%{transform:translateY(0) translateX(0);opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{transform:translateY(-100vh) translateX(20px);opacity:0;}}
+
+/* Ambient glow orbs */
+.glow-orb{position:fixed;border-radius:50%;pointer-events:none;filter:blur(80px);z-index:0;}
+.glow-orb-1{width:400px;height:400px;background:rgba(255,249,62,.025);top:-10%;right:-5%;animation:orbFloat1 20s ease-in-out infinite;}
+.glow-orb-2{width:350px;height:350px;background:rgba(96,165,250,.02);bottom:-10%;left:-5%;animation:orbFloat2 25s ease-in-out infinite;}
+@keyframes orbFloat1{0%,100%{transform:translate(0,0);}50%{transform:translate(-60px,40px);}}
+@keyframes orbFloat2{0%,100%{transform:translate(0,0);}50%{transform:translate(50px,-30px);}}
+
+/* ── Main layout ── */
 .auth-container{position:relative;z-index:10;width:100%;max-width:500px;padding:24px;display:flex;flex-direction:column;align-items:center;}
 
-.auth-brand{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:32px;}
+/* Branding */
+.auth-brand{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:32px;animation:fadeDown .6s cubic-bezier(.22,1,.36,1) both;}
 .auth-brand-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
 .auth-brand-logo img{height:40px;width:40px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(255,249,62,.2));}
-.auth-brand-logo span{font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;}
-.auth-tagline{font-size:13px;color:var(--muted-light);}
+.auth-brand-logo span{font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px;}
+.auth-tagline{font-size:13px;color:var(--muted-light);letter-spacing:.03em;}
 
-.auth-card{width:100%;background:var(--panel);border-radius:20px;border:1px solid var(--border);backdrop-filter:blur(40px);box-shadow:0 30px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.03) inset;overflow:hidden;position:relative;}
+/* Card */
+.auth-card{width:100%;background:var(--panel);border-radius:20px;border:1px solid var(--border);backdrop-filter:blur(40px) saturate(1.3);box-shadow:0 30px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.03) inset,0 1px 0 rgba(255,255,255,.04) inset;overflow:hidden;animation:revealUp .5s cubic-bezier(.22,1,.36,1) .1s both;position:relative;}
 .auth-card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(255,249,62,.3) 50%,transparent 95%);}
+@keyframes revealUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
+.shake{animation:shake .35s ease both;}
 
 .auth-card-body{padding:36px 40px 40px;}
 
+/* Header */
 .auth-header{margin-bottom:28px;text-align:center;}
-.auth-header h1{font-family:var(--font-display);font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;}
+.auth-header h1{font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-.5px;color:#fff;margin-bottom:6px;}
 .auth-header h1 em{font-style:normal;color:var(--accent);}
 .auth-header p{font-size:13.5px;color:var(--muted-light);line-height:1.6;}
 
-.welcome-bonus{display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(62,207,110,.03));border:1px solid rgba(255,249,62,.1);border-radius:12px;margin-bottom:24px;}
-.bonus-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:18px;}
-.bonus-text{font-size:12.5px;color:var(--muted-light);}
-.bonus-text strong{color:#fff;}
+/* Welcome bonus banner */
+.welcome-bonus{display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(62,207,110,.03));border:1px solid rgba(255,249,62,.1);border-radius:12px;margin-bottom:24px;animation:revealUp .5s cubic-bezier(.22,1,.36,1) .2s both;}
+.bonus-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.bonus-text{font-size:12.5px;color:var(--muted-light);line-height:1.5;}
+.bonus-text strong{color:#fff;font-weight:600;}
 .bonus-text .accent{color:var(--accent);font-weight:700;}
 
-/* Connection Status */
-.connection-status{padding:14px;background:rgba(255,249,62,.04);border:1.5px dashed var(--border);border-radius:var(--radius);margin-bottom:24px;text-align:center;}
-.connection-status.connected{background:rgba(62,207,110,.04);border-color:rgba(62,207,110,.3);}
-.connection-status .status-label{font-size:12px;color:var(--muted);margin-bottom:8px;}
-.connection-status.connected .status-label{color:#3ecf6e;font-weight:600;}
-.connection-status .status-info{font-size:11px;color:var(--muted-light);}
+/* Input fields */
+.field{margin-bottom:18px;}
+.field-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.field-label label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4a5870;}
+.field-label .optional{font-size:10.5px;font-weight:500;letter-spacing:0;text-transform:none;color:#252c3d;}
+.input-wrap{position:relative;display:flex;align-items:center;}
+.input-wrap .input-icon{position:absolute;left:14px;width:16px;height:16px;color:#2a3348;pointer-events:none;transition:color .18s;z-index:1;}
+.input-wrap input:focus ~ .input-icon,.input-wrap input:not(:placeholder-shown) ~ .input-icon{color:var(--muted);}
+.input-wrap input{width:100%;padding:13px 15px 13px 42px;border-radius:var(--radius);border:1px solid var(--border);background:var(--input-bg);color:white;font-family:var(--font-body);font-size:14.5px;transition:border-color .18s,box-shadow .18s,background .18s;outline:none;}
+.input-wrap input:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px var(--accent-dim),0 0 20px rgba(255,249,62,.04);background:rgba(8,10,16,.9);}
+.input-wrap input::placeholder{color:#1e2538;}
+.input-wrap .toggle-pw{position:absolute;right:12px;background:none;border:none;cursor:pointer;color:#2a3348;padding:4px;transition:color .15s;display:flex;align-items:center;z-index:1;}
+.input-wrap .toggle-pw:hover{color:var(--muted-light);}
+.input-wrap .toggle-pw svg{width:16px;height:16px;}
+.field-hint{font-size:11px;color:var(--muted);margin-top:6px;padding-left:2px;}
+.field-error{font-size:12px;color:#f87171;margin-top:5px;min-height:0;padding-left:2px;transition:all .15s;}
 
-.btn-primary{width:100%;padding:13px;background:var(--accent);color:#080a0f;border:none;border-radius:var(--radius);font-family:var(--font-display);font-weight:700;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;}
-.btn-primary:hover{box-shadow:0 0 40px rgba(255,249,62,.4);}
+/* Profile picture upload */
+.upload-area{position:relative;border:1.5px dashed var(--border);border-radius:var(--radius);padding:22px;text-align:center;cursor:pointer;transition:border-color .25s,background .25s;background:var(--input-bg);overflow:hidden;}
+.upload-area:hover{border-color:var(--border-hover);background:rgba(10,13,20,.8);}
+.upload-area.dragover{border-color:rgba(255,249,62,.3);background:rgba(255,249,62,.02);}
+.upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-preview{display:none;align-items:center;gap:14px;text-align:left;}
+.upload-preview.active{display:flex;}
+.upload-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.upload-preview.active + .upload-placeholder{display:none;}
+.preview-img{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;}
+.preview-info{flex:1;min-width:0;}
+.preview-name{font-size:13px;color:#fff;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.preview-size{font-size:11px;color:var(--muted);margin-top:2px;}
+.preview-remove{background:none;border:none;color:#f87171;cursor:pointer;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;transition:background .15s;}
+.preview-remove:hover{background:rgba(248,113,113,.08);}
+.upload-icon-svg{width:28px;height:28px;color:#252e42;margin-bottom:2px;}
+.upload-text{font-size:13px;color:#3a4358;}
+.upload-text strong{color:var(--muted-light);font-weight:600;}
+.upload-sub{font-size:11.5px;color:#252c3d;margin-top:2px;}
 
-.cloud-logo{filter:drop-shadow(0 0 0 1.5px #ffa43b);}
+/* Divider */
+.form-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:22px 0;}
 
-.field{margin-bottom:16px;}
-.field-label{font-size:11px;font-weight:700;text-transform:uppercase;color:#4a5870;margin-bottom:6px;letter-spacing:.1em;display:block;}
-.field-input{width:100%;padding:11px 13px;background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius);color:white;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .18s;}
-.field-input:focus{border-color:rgba(255,249,62,.35);box-shadow:0 0 0 3px rgba(255,249,62,.1);}
-.field-hint{font-size:12px;color:var(--muted);margin-top:4px;}
+/* Terms agreement */
+.agree-block{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:rgba(255,249,62,.02);border:1px solid rgba(255,249,62,.08);border-radius:var(--radius);margin-bottom:18px;cursor:pointer;user-select:none;transition:border-color .18s,background .18s;}
+.agree-block:hover{border-color:rgba(255,249,62,.15);background:rgba(255,249,62,.03);}
+.agree-block input[type=checkbox]{display:none;}
+.checkbox-custom{width:20px;height:20px;min-width:20px;border-radius:6px;border:1.5px solid #252e42;background:var(--input-bg);display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0;margin-top:1px;}
+.agree-block input:checked + .checkbox-custom{background:var(--accent);border-color:var(--accent);box-shadow:0 0 12px rgba(255,249,62,.2);}
+.checkbox-check{display:none;width:11px;height:11px;}
+.agree-block input:checked + .checkbox-custom .checkbox-check{display:block;}
+.agree-text{font-size:12.5px;color:var(--muted-light);line-height:1.6;}
+.agree-text a{color:var(--accent);text-decoration:none;font-weight:600;}
+.agree-text a:hover{text-decoration:underline;}
 
-.form-section{margin-bottom:24px;display:none;}
-.form-section.show{display:block;}
+/* Error */
+.error-msg{font-size:12.5px;color:#f87171;margin-bottom:14px;min-height:0;display:flex;align-items:center;gap:7px;transition:all .2s;}
+.error-msg:not(:empty){min-height:18px;padding:8px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:10px;}
+.error-msg:not(:empty)::before{content:"";width:14px;height:14px;flex-shrink:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23f87171'%3E%3Cpath fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z' clip-rule='evenodd'/%3E%3C/svg%3E");background-size:contain;}
 
-.auth-divider{display:flex;align-items:center;gap:14px;margin:24px 0;color:#1e2538;font-size:11.5px;font-weight:500;text-transform:uppercase;}
-.auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);}
+/* Primary button */
+.btn-primary{width:100%;padding:14px;background:var(--accent);color:#080a0f;border:none;border-radius:var(--radius);font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:.02em;cursor:pointer;transition:box-shadow .25s,transform .1s,filter .15s;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden;}
+.btn-primary::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent 50%);opacity:0;transition:opacity .25s;}
+.btn-primary:hover:not(:disabled)::before{opacity:1;}
+.btn-primary:hover:not(:disabled){box-shadow:0 0 40px var(--accent-glow),0 4px 20px rgba(255,249,62,.15);filter:brightness(1.05);}
+.btn-primary:active:not(:disabled){transform:scale(.98);}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner{width:16px;height:16px;border:2.5px solid rgba(8,10,15,.2);border-top-color:#080a0f;border-radius:50%;animation:spin .6s linear infinite;display:none;flex-shrink:0;}
+.loading .spinner{display:block;}
+.loading .btn-label{display:none;}
 
+/* Footer */
 .auth-footer{text-align:center;font-size:13px;color:var(--muted);margin-top:20px;}
 .auth-footer a{color:var(--accent);text-decoration:none;font-weight:600;}
+.auth-footer a:hover{text-decoration:underline;}
 
-.auth-perks{display:flex;align-items:center;justify-content:center;gap:20px;margin-top:24px;flex-wrap:wrap;}
+/* Perks row below card */
+.auth-perks{display:flex;align-items:center;justify-content:center;gap:20px;margin-top:24px;flex-wrap:wrap;animation:fadeDown .6s cubic-bezier(.22,1,.36,1) .3s both;}
 .perk-chip{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);font-weight:500;}
-.perk-chip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.6;}
+.perk-chip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.6;flex-shrink:0;}
 
+/* ── Responsive ── */
 @media(max-width:540px){
   body{padding:24px 0;}
   .auth-card-body{padding:28px 24px 32px;}
+  .auth-brand{margin-bottom:24px;}
+  .auth-perks{flex-direction:column;gap:8px;}
+  .welcome-bonus{flex-direction:column;text-align:center;gap:8px;}
 }
+img.emoji { height: 1.15em; width: 1.15em; margin: 0 .05em; vertical-align: -0.15em; }
 </style>
+<script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
+<!-- Background layers -->
 <div class="bg-layer"></div>
 <div class="bg-grid"></div>
+<div class="particles">
+  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+</div>
+<div class="glow-orb glow-orb-1"></div>
+<div class="glow-orb glow-orb-2"></div>
 
 <div class="auth-container">
 
+  <!-- Brand -->
   <div class="auth-brand">
     <a href="/" class="auth-brand-logo">
       <img src="/Fortized icon.png" alt="Fortized" onerror="this.style.display='none'">
@@ -97,66 +198,109 @@ body{min-height:100%;background:var(--bg);font-family:var(--font-body);color:whi
     <div class="auth-tagline">Build your fortress. Start your legacy.</div>
   </div>
 
-  <div class="auth-card">
+  <!-- Card -->
+  <div class="auth-card" id="authCard">
     <div class="auth-card-body">
-
       <div class="auth-header">
         <h1>Create your <em>account</em></h1>
         <p>Join the fortress and start building your community.</p>
       </div>
 
+      <!-- Welcome bonus -->
       <div class="welcome-bonus">
         <div class="bonus-icon">💎</div>
-        <div class="bonus-text"><strong>Welcome bonus:</strong> Get <span class="accent">25 Onyx</span> free when you sign up.</div>
+        <div class="bonus-text"><strong>Welcome bonus:</strong> Get <span class="accent">25 Onyx</span> free when you sign up — spend them in the Atelier.</div>
       </div>
 
-      <!-- Step 1: Cloud Connection -->
-      <div class="form-section show" id="step1">
-        <div class="connection-status" id="connectionStatus">
-          <div class="status-label">Step 1: Connect Your Swiftaw Cloud Account</div>
-          <div class="status-info">Click button below to create or connect your Cloud account</div>
+      <div class="field">
+        <div class="field-label"><label for="email">Email address</label></div>
+        <div class="input-wrap">
+          <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+          <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3.5" width="12" height="9" rx="2"/><path d="M2 5.5l6 4 6-4"/>
+          </svg>
         </div>
-
-        <button class="btn-primary" id="connectCloudBtn">
-          <img src="https://swiftaw.com/Cloud%20logo.png" alt="Swiftaw Cloud" class="cloud-logo" style="height:16px;width:auto;">
-          Connect Swiftaw Cloud Account
-        </button>
       </div>
 
-      <!-- Step 2: Profile Details -->
-      <div class="form-section" id="step2">
-        <div class="field">
-          <label class="field-label">Display Name</label>
-          <input type="text" id="displayName" class="field-input" placeholder="How others will see you">
-          <div class="field-hint">Auto-filled with your Cloud username, but you can change it.</div>
+      <div class="field">
+        <div class="field-label"><label for="username">Username</label></div>
+        <div class="input-wrap">
+          <input type="text" id="username" placeholder="Choose a unique handle" autocomplete="username">
+          <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="8" cy="5" r="3.25"/><path d="M2.5 14.5c0-3 2.5-4.5 5.5-4.5s5.5 1.5 5.5 4.5"/>
+          </svg>
         </div>
-
-        <div class="field">
-          <label class="field-label">Date of Birth</label>
-          <input type="date" id="dateOfBirth" class="field-input">
-          <div class="field-hint">Required to comply with age restrictions</div>
-        </div>
-
-        <div class="field">
-          <label class="field-label">About Me</label>
-          <textarea id="aboutMe" class="field-input" style="min-height:70px;resize:vertical;font-family:var(--font-body);" placeholder="Tell us about yourself..."></textarea>
-          <div class="field-hint">Share what makes you unique (optional)</div>
-        </div>
-
-        <button class="btn-primary" id="createBtn" onclick="createAccount()">
-          <span>Create Fortized Account</span>
-        </button>
+        <div id="userError" class="field-error"></div>
       </div>
 
-      <div class="auth-divider" id="divider" style="display:none;">or</div>
-
-      <div class="auth-footer">
-        Already have an account? <a href="/login">Sign in here</a>
+      <div class="field">
+        <div class="field-label"><label for="password">Password</label></div>
+        <div class="input-wrap">
+          <input type="password" id="password" placeholder="At least 6 characters" autocomplete="new-password">
+          <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5 7V5a3 3 0 016 0v2"/>
+          </svg>
+          <button type="button" class="toggle-pw" id="togglePw" tabindex="-1" aria-label="Toggle password visibility">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8s-2.5 4.5-6.5 4.5S1.5 8 1.5 8z"/>
+              <circle cx="8" cy="8" r="2"/>
+            </svg>
+          </button>
+        </div>
+        <div class="field-hint">Must be at least 6 characters long.</div>
       </div>
 
+      <div class="field">
+        <div class="field-label">
+          <label for="pfp">Profile picture</label>
+          <span class="optional">Optional</span>
+        </div>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="pfp" accept="image/*">
+          <div class="upload-preview" id="uploadPreview">
+            <img class="preview-img" id="previewImg" src="" alt="">
+            <div class="preview-info">
+              <div class="preview-name" id="previewName"></div>
+              <div class="preview-size" id="previewSize"></div>
+            </div>
+            <button type="button" class="preview-remove" id="previewRemove">Remove</button>
+          </div>
+          <div class="upload-placeholder">
+            <svg class="upload-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <div class="upload-text"><strong>Click to upload</strong> or drag & drop</div>
+            <div class="upload-sub">PNG, JPG, GIF up to 5 MB</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-divider"></div>
+
+      <label class="agree-block">
+        <input type="checkbox" id="terms">
+        <div class="checkbox-custom">
+          <svg class="checkbox-check" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6l3 3 5-5" stroke="#080a0f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="agree-text">
+          By creating an account you agree to our <a href="/terms" target="_blank" onclick="event.stopPropagation()">Terms of Service</a> and <a href="/privacy" target="_blank" onclick="event.stopPropagation()">Privacy Policy</a>.
+        </div>
+      </label>
+
+      <div id="error" class="error-msg"></div>
+
+      <button class="btn-primary" id="signupBtn">
+        <div class="spinner"></div>
+        <span class="btn-label">Create Account</span>
+      </button>
+
+      <div class="auth-footer">Already have an account? <a href="/login">Sign in</a></div>
     </div>
   </div>
 
+  <!-- Trust chips -->
   <div class="auth-perks">
     <div class="perk-chip">Free forever</div>
     <div class="perk-chip">No credit card needed</div>
@@ -165,168 +309,192 @@ body{min-height:100%;background:var(--bg);font-family:var(--font-body);color:whi
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/FortizedSocial-supabase.js"></script>
+<script src="/firebase-compat-shim.js"></script>
 <script>
-// ════════════════════════════════════════════════════════════════════════
-// FORTIZED SIGNUP × SWIFTAW CLOUD
-// Step 1: Connect Cloud (in new tab)
-// Step 2: Fill Fortized profile (auto-filled from Cloud)
-// Step 3: Create account
-// ════════════════════════════════════════════════════════════════════════
+const signupBtn     = document.getElementById('signupBtn');
+const emailInput    = document.getElementById('email');
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const termsCheckbox = document.getElementById('terms');
+const pfpInput      = document.getElementById('pfp');
+const errorDiv      = document.getElementById('error');
+const userErrorDiv  = document.getElementById('userError');
+const uploadArea    = document.getElementById('uploadArea');
+const uploadPreview = document.getElementById('uploadPreview');
+const previewImg    = document.getElementById('previewImg');
+const previewName   = document.getElementById('previewName');
+const previewSize   = document.getElementById('previewSize');
+const previewRemove = document.getElementById('previewRemove');
+const authCard      = document.getElementById('authCard');
 
-const CLOUD_AUTH_URL = 'https://swiftaw.com/cloud/auth/link?product=fortized&redirect_uri=https://fortized.com/auth/cloud-callback&state=';
-
-let cloudData = null;
-
-// Check if already logged in
-const fortizedToken = localStorage.getItem('fortized_token');
-if (fortizedToken) {
-  window.location.href = '/app';
-}
-
-// Check if coming back from Cloud (URL params)
-function checkCloudParams() {
-  const params = new URLSearchParams(window.location.search);
-  const cloudUsername = params.get('cloud_username');
-  const cloudEmail = params.get('cloud_email');
-
-  if (cloudUsername && cloudEmail) {
-    // User returned from Cloud signup
-    cloudData = { username: cloudUsername, email: cloudEmail };
-    showStep2();
+// File upload handling with preview
+function handleFile(file) {
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    errorDiv.textContent = 'File too large — max 5 MB allowed.';
+    pfpInput.value = '';
+    return;
   }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    previewImg.src = e.target.result;
+    previewName.textContent = file.name;
+    previewSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+    uploadPreview.classList.add('active');
+  };
+  reader.readAsDataURL(file);
 }
 
-// Generate random state for CSRF protection
-function generateState() {
-  return Math.random().toString(36).substring(2, 15) +
-         Math.random().toString(36).substring(2, 15);
-}
+pfpInput.addEventListener('change', () => handleFile(pfpInput.files[0]));
 
-// Connect Cloud Account button
-document.getElementById('connectCloudBtn').addEventListener('click', () => {
-  const state = generateState();
-  sessionStorage.setItem('cloud_auth_state', state);
-  sessionStorage.setItem('signup_referrer', 'signup');
-
-  // Open Cloud auth in NEW TAB
-  // If already logged into Cloud, it auto-closes and redirects back
-  window.open(
-    CLOUD_AUTH_URL + state,
-    'fortized_cloud_signup',
-    'width=600,height=700'
-  );
+// Drag & drop
+uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    pfpInput.files = dt.files;
+    handleFile(file);
+  }
 });
 
-// Show Step 2 (profile details)
-function showStep2() {
-  document.getElementById('step1').classList.remove('show');
-  document.getElementById('step2').classList.add('show');
-  document.getElementById('divider').style.display = 'none';
+previewRemove.addEventListener('click', (e) => {
+  e.stopPropagation();
+  pfpInput.value = '';
+  uploadPreview.classList.remove('active');
+  previewImg.src = '';
+});
 
-  // Update connection status
-  const status = document.getElementById('connectionStatus');
-  status.classList.add('connected');
-  status.innerHTML = `
-    <div class="status-label">✓ Cloud Account Connected</div>
-    <div class="status-info">Email: ${cloudData.email} | Username: ${cloudData.username}</div>
-  `;
+// Password visibility toggle
+const togglePw = document.getElementById('togglePw');
+togglePw.addEventListener('click', () => {
+  const isPassword = passwordInput.type === 'password';
+  passwordInput.type = isPassword ? 'text' : 'password';
+  togglePw.innerHTML = isPassword
+    ? '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8s-2.5 4.5-6.5 4.5S1.5 8 1.5 8z"/><line x1="2" y1="14" x2="14" y2="2"/></svg>'
+    : '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8s-2.5 4.5-6.5 4.5S1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>';
+});
 
-  // Auto-fill display name
-  document.getElementById('displayName').value = cloudData.username;
-  document.getElementById('aboutMe').value = `Hi! I am ${cloudData.username}, welcome to my profile!`;
+// Client-side protected username check
+const PROTECTED_BASES = ['staw'];
+function isProtectedUsername(name) {
+  const clean = name.toLowerCase().replace(/[^a-z]/g, '');
+  for (const base of PROTECTED_BASES) {
+    if (clean === base) return true;
+    if (clean.length > base.length && clean.startsWith(base)) return true;
+  }
+  return false;
 }
 
-// Create account
-async function createAccount() {
-  if (!cloudData) {
-    alert('Please connect a Cloud account first');
+usernameInput.addEventListener('input', () => {
+  const val = usernameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (val && isProtectedUsername(val)) {
+    userErrorDiv.textContent = 'This username is not available.';
+  } else {
+    userErrorDiv.textContent = '';
+  }
+});
+
+// Enter key submission
+signupBtn.addEventListener('click', doSignup);
+[emailInput, usernameInput, passwordInput].forEach(el =>
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') doSignup(); })
+);
+
+async function doSignup() {
+  const email    = emailInput.value.trim();
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
+  const terms    = termsCheckbox.checked;
+
+  errorDiv.textContent = '';
+  userErrorDiv.textContent = '';
+
+  if (!email || !username || !password) { errorDiv.textContent = 'All fields are required.'; return; }
+  if (!terms) { errorDiv.textContent = 'You must agree to the Terms to continue.'; return; }
+
+  // Check if registrations are disabled globally
+  try {
+    const gsSnap = await firebase.database().ref('admin/global_settings/disableRegistration').get();
+    if (gsSnap.exists() && gsSnap.val() === true) {
+      errorDiv.textContent = 'New registrations are currently disabled. Please try again later.';
+      return;
+    }
+  } catch(e) { /* continue if check fails — don't block on network error */ }
+
+  // Client-side block before hitting the server
+  if (isProtectedUsername(username.toLowerCase().replace(/[^a-z0-9_]/g, ''))) {
+    userErrorDiv.textContent = 'This username is not available.';
     return;
   }
 
-  const displayName = document.getElementById('displayName').value.trim();
-  const dateOfBirth = document.getElementById('dateOfBirth').value;
-  const aboutMe = document.getElementById('aboutMe').value.trim();
-
-  // Validation
-  if (!displayName) {
-    alert('Display name is required');
-    return;
-  }
-
-  if (!dateOfBirth) {
-    alert('Date of birth is required');
-    return;
-  }
-
-  // Age validation
-  const dob = new Date(dateOfBirth);
-  const today = new Date();
-  let age = today.getFullYear() - dob.getFullYear();
-  if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
-    age--;
-  }
-
-  if (age < 13 || age > 150 || dob.getFullYear() < 1870) {
-    alert('Please enter a valid date of birth (13+ years old)');
-    return;
-  }
+  setLoading(true);
 
   try {
-    const btn = document.getElementById('createBtn');
-    btn.disabled = true;
-    btn.textContent = 'Creating account...';
-
-    // Call backend to create account
-    const response = await fetch('/api/auth/create-fortized-account', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        cloudUsername: cloudData.username,
-        cloudEmail: cloudData.email,
-        displayName: displayName,
-        dateOfBirth: dateOfBirth,
-        aboutMe: aboutMe
-      })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create account');
+    const result = await FortizedSocial.register(username, password, email);
+    if (!result.ok) {
+      userErrorDiv.textContent = result.msg;
+      setLoading(false);
+      authCard.classList.remove('shake');
+      void authCard.offsetWidth;
+      authCard.classList.add('shake');
+      return;
     }
 
-    const data = await response.json();
+    function cacheAndRedirect(userObj) {
+      const u = userObj || result.user;
+      localStorage.setItem('ftz_current', u.username);
+      localStorage.setItem('fortized_current_user', u.username);
+      localStorage.setItem('ftz_user_' + u.username, JSON.stringify(u));
+      window.location.href = '/app';
+    }
 
-    // Save session
-    localStorage.setItem('fortized_token', data.token);
-    localStorage.setItem('fortized_user_id', data.userId);
+    const file = pfpInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const updatedUser = { ...result.user, pfp: e.target.result };
+          await FortizedSocial.saveUserObject(updatedUser);
+          cacheAndRedirect(updatedUser);
+        } catch (err) {
+          console.error('PFP save error:', err);
+          cacheAndRedirect(result.user);
+        }
+      };
+      reader.onerror = () => cacheAndRedirect(result.user);
+      reader.readAsDataURL(file);
+    } else {
+      // Assign a deterministic default profile picture
+      const _hash = (result.user.username||'').split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+      const defaultPfpUrl = _hash % 2 === 0 ? '/default%20pfp.png' : '/default%20pfp2.png';
+      try {
+        const updatedUser = { ...result.user, pfp: defaultPfpUrl };
+        await FortizedSocial.saveUserObject(updatedUser);
+        cacheAndRedirect(updatedUser);
+      } catch {
+        cacheAndRedirect(result.user);
+      }
+    }
 
-    // Redirect to app
-    window.location.href = '/app';
-
-  } catch (error) {
-    alert('Error: ' + error.message);
-    btn.disabled = false;
-    btn.textContent = 'Create Fortized Account';
+  } catch (err) {
+    console.error('Signup error:', err);
+    errorDiv.textContent = 'Connection error. Check your internet and try again.';
+    setLoading(false);
   }
 }
 
-// Listen for Cloud window close (user connected)
-window.addEventListener('message', (event) => {
-  if (event.origin !== window.location.origin) return;
-
-  if (event.data.type === 'cloud_auth_complete') {
-    // Cloud auth completed, received user data
-    cloudData = {
-      username: event.data.cloudUsername,
-      email: event.data.cloudEmail
-    };
-    showStep2();
-  }
-});
-
-// Check URL params on load
-window.addEventListener('load', checkCloudParams);
+function setLoading(on) {
+  signupBtn.disabled = on;
+  signupBtn.classList.toggle('loading', on);
+}
 </script>
-
+<script>if (typeof twemoji !== 'undefined') { twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); }</script>
 </body>
 </html>

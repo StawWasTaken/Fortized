@@ -31044,6 +31044,11 @@ function openChronicle() {
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
 
+  // Reset game menu for event launches
+  if (typeof window._gameMenuShown !== 'undefined') {
+    window._gameMenuShown = false;
+  }
+
   // Show intro if not yet played
   const intro = document.getElementById('chronicle-intro');
   const body = document.getElementById('chronicle-body');

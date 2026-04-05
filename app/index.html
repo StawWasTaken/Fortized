@@ -987,39 +987,6 @@ window._cdnReady.then(function() {
             </div>
             <div class="chronicle-progress-label"><span id="chronicle-progress-text">0 / 14</span> Events Complete</div>
 
-            <!-- Stats Section: Joy & Onyx -->
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #000;">
-              <!-- Joy System -->
-              <div style="margin-bottom: 16px;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                  <span style="font-size: 12px; color: #000; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">🎭 Joy</span>
-                  <span id="chronicle-joy-percent" style="font-size: 14px; font-weight: 700; color: #000;">85</span>%
-                </div>
-                <div style="height: 16px; background: white; border: 2px solid #000; border-radius: 0; overflow: hidden; cursor: pointer;" title="Click to increase Joy">
-                  <div id="chronicle-joy-bar" style="height: 100%; background: #000; width: 85%; transition: width 0.3s;"></div>
-                </div>
-              </div>
-
-              <!-- Onyx Counter -->
-              <div style="margin-bottom: 16px;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                  <span style="font-size: 12px; color: #000; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">💎 Onyx</span>
-                  <span id="player-onyx-count" style="font-size: 14px; font-weight: 700; color: #000;">0</span>
-                </div>
-                <div style="height: 16px; background: white; border: 2px solid #000; border-radius: 0; overflow: hidden;">
-                  <div style="height: 100%; background: linear-gradient(90deg, #333, #000); width: 50%;"></div>
-                </div>
-              </div>
-
-              <!-- FortCoins Counter -->
-              <div style="margin-bottom: 8px;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                  <span style="font-size: 12px; color: #000; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">🪙 FortCoins</span>
-                  <span id="player-fortcoin-count" style="font-size: 14px; font-weight: 700; color: #000;">0</span>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
 
@@ -1038,6 +1005,39 @@ window._cdnReady.then(function() {
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- Bottom-Left Stats Panel -->
+    <div style="position: fixed; bottom: 20px; left: 20px; z-index: 100; background: white; border: 3px solid #000; padding: 16px; border-radius: 0; box-shadow: 4px 4px 0px rgba(0,0,0,0.2);">
+      <!-- Joy Bar -->
+      <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+        <img src="/app/Chronicle/chapter1/assets/IconJesterHat.png" style="height: 20px; width: auto; image-rendering: crisp-edges;">
+        <div style="flex: 1;">
+          <div style="font-size: 11px; font-weight: 700; color: #000; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Joy</div>
+          <div style="height: 12px; background: white; border: 1px solid #000; border-radius: 0; overflow: hidden; width: 120px;">
+            <div id="chronicle-joy-bar" style="height: 100%; background: #000; width: 85%; transition: width 0.3s;"></div>
+          </div>
+          <div style="font-size: 10px; color: #000; margin-top: 2px;"><span id="chronicle-joy-percent">85</span>%</div>
+        </div>
+      </div>
+
+      <!-- Onyx Counter -->
+      <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+        <img src="/app/Chronicle/chapter1/assets/IconHammer.png" style="height: 20px; width: auto; image-rendering: crisp-edges;">
+        <div style="flex: 1;">
+          <div style="font-size: 11px; font-weight: 700; color: #000; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Onyx</div>
+          <div style="font-size: 16px; font-weight: 700; color: #000;" id="player-onyx-count">0</div>
+        </div>
+      </div>
+
+      <!-- Coins Counter -->
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="/app/Chronicle/chapter1/assets/IconCoin.png" style="height: 20px; width: auto; image-rendering: crisp-edges;">
+        <div style="flex: 1;">
+          <div style="font-size: 11px; font-weight: 700; color: #000; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">FortCoins</div>
+          <div style="font-size: 16px; font-weight: 700; color: #000;" id="player-fortcoin-count">0</div>
+        </div>
       </div>
     </div>
 

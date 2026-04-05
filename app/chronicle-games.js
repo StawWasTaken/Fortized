@@ -345,10 +345,15 @@ async function showChronicleMenu(eventId) {
     await showIntroVideo();
     playBackgroundMusic();
 
-    // Open the Chronicle view
+    // Return to Chronicle view (NOT launch a game!)
     _sessionStarted = true;
     if (typeof openChronicle === 'function') {
-      openChronicle();
+      // Directly open chronicle, don't show menu again
+      const overlay = document.getElementById('chronicle-overlay');
+      if (overlay) {
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
     }
   };
   content.appendChild(continueBtn);

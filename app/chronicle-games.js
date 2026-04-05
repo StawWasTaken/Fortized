@@ -255,55 +255,36 @@ function resetChronicleSession() {
 // ════════════════════════════════════════════════════════════════════════════
 
 async function showChronicleMenu(eventId) {
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `
+  const menu = document.createElement('div');
+  menu.style.cssText = `
     position: fixed;
     inset: 0;
     background: white;
     z-index: 10000;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    padding: 60px;
     font-family: ${FONT};
     overflow: hidden;
   `;
 
   // Load all assets in parallel
-  const [title, caravan, joyLogo, uiBox] = await Promise.all([
+  const [title, caravan, joyLogo] = await Promise.all([
     preloadImage('Chap1Title.png'),
     preloadImage('Caravan.png'),
-    preloadImage('Grand Joy Games.png'),
-    preloadImage('UIBox.png')
+    preloadImage('Grand Joy Games.png')
   ]);
 
-  // Background caravan (decorative)
-  if (caravan) {
-    const bgImg = document.createElement('img');
-    bgImg.src = `${ASSET_PATH}Caravan.png`;
-    bgImg.style.cssText = `
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      height: 75%;
-      width: auto;
-      object-fit: contain;
-      opacity: 0.85;
-      z-index: 1;
-    `;
-    overlay.appendChild(bgImg);
-  }
-
-  // Content wrapper
+  // LEFT SIDE: Content
   const content = document.createElement('div');
   content.style.cssText = `
-    position: relative;
-    z-index: 10;
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: 30px;
     align-items: flex-start;
-    max-width: 45%;
+    max-width: 50%;
+    z-index: 10;
   `;
 
   // Logo
@@ -311,7 +292,7 @@ async function showChronicleMenu(eventId) {
     const logo = document.createElement('img');
     logo.src = `${ASSET_PATH}Grand Joy Games.png`;
     logo.style.cssText = `
-      height: 70px;
+      height: 60px;
       width: auto;
       filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
     `;
@@ -323,7 +304,7 @@ async function showChronicleMenu(eventId) {
     const titleImg = document.createElement('img');
     titleImg.src = `${ASSET_PATH}Chap1Title.png`;
     titleImg.style.cssText = `
-      height: 140px;
+      height: 120px;
       width: auto;
       max-width: 100%;
       filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
@@ -331,15 +312,15 @@ async function showChronicleMenu(eventId) {
     content.appendChild(titleImg);
   }
 
-  // Start button
-  const startBtn = document.createElement('button');
-  startBtn.style.cssText = `
+  // Continue button
+  const continueBtn = document.createElement('button');
+  continueBtn.style.cssText = `
     background: #000;
     color: white;
     border: 3px solid #000;
-    padding: 20px 50px;
+    padding: 18px 45px;
     font-family: ${FONT};
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     cursor: pointer;
     text-transform: uppercase;
@@ -348,25 +329,41 @@ async function showChronicleMenu(eventId) {
     transition: all 0.15s;
     box-shadow: 4px 4px 0px rgba(0,0,0,0.3);
   `;
-  startBtn.textContent = 'Begin Your Journey';
-  startBtn.onmouseover = () => {
-    startBtn.style.transform = 'translate(-2px, -2px)';
-    startBtn.style.boxShadow = '6px 6px 0px rgba(0,0,0,0.3)';
+  continueBtn.textContent = 'Continue Game';
+  continueBtn.onmouseover = () => {
+    continueBtn.style.transform = 'translate(-2px, -2px)';
+    continueBtn.style.boxShadow = '6px 6px 0px rgba(0,0,0,0.3)';
   };
-  startBtn.onmouseout = () => {
-    startBtn.style.transform = 'translate(0, 0)';
-    startBtn.style.boxShadow = '4px 4px 0px rgba(0,0,0,0.3)';
+  continueBtn.onmouseout = () => {
+    continueBtn.style.transform = 'translate(0, 0)';
+    continueBtn.style.boxShadow = '4px 4px 0px rgba(0,0,0,0.3)';
   };
-  startBtn.onclick = async () => {
+  continueBtn.onclick = async () => {
     playSound('SoundUiSelect.mp3');
-    overlay.remove();
+    menu.remove();
+    stopBackgroundMusic();
     await showIntroVideo();
-    await launchChronicleGame(eventId);
+    playBackgroundMusic();
+    // Return to chronicle view (close menu, stay in game)
   };
-  content.appendChild(startBtn);
+  content.appendChild(continueBtn);
 
-  overlay.appendChild(content);
-  document.body.appendChild(overlay);
+  menu.appendChild(content);
+
+  // RIGHT SIDE: Caravan image
+  if (caravan) {
+    const bgImg = document.createElement('img');
+    bgImg.src = `${ASSET_PATH}Caravan.png`;
+    bgImg.style.cssText = `
+      height: 80%;
+      width: auto;
+      object-fit: contain;
+      opacity: 0.9;
+    `;
+    menu.appendChild(bgImg);
+  }
+
+  document.body.appendChild(menu);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -430,7 +427,7 @@ async function showIntroVideo() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// GAME SCREEN - BASE STRUCTURE (Discord Last Meadow Style)
+// GAME SCREEN - SIMPLE (No persistent UI)
 // ════════════════════════════════════════════════════════════════════════════
 
 function createGameScreen() {
@@ -444,253 +441,7 @@ function createGameScreen() {
     display: flex;
     flex-direction: column;
   `;
-
-  // Game content area (fills center)
-  const gameContent = document.createElement('div');
-  gameContent.setAttribute('data-game-content', 'true');
-  gameContent.style.cssText = `
-    flex: 1;
-    overflow: auto;
-    position: relative;
-  `;
-  screen.appendChild(gameContent);
-
-  // Footer with player stats (bottom-left, fixed)
-  const footer = createStatBarsFooter();
-  screen.appendChild(footer);
-
-  // Add global stats boxes (top-right, fixed)
-  const globalStats = createGlobalStatsOverlay();
-  screen.appendChild(globalStats);
-
   return screen;
-}
-
-function createStatBarsFooter() {
-  const footer = document.createElement('div');
-  footer.style.cssText = `
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: auto;
-    max-width: 350px;
-    background: #f5f5f5;
-    border: 3px solid #000;
-    border-radius: 0 8px 0 0;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 10001;
-    box-shadow: 0 -4px 0 rgba(0,0,0,0.2);
-  `;
-
-  // Joy Bar
-  const joyContainer = document.createElement('div');
-  joyContainer.style.cssText = `
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  `;
-  const joyLabel = document.createElement('div');
-  joyLabel.style.cssText = `
-    font-weight: 700;
-    font-size: 11px;
-    color: #000;
-    min-width: 50px;
-    text-transform: uppercase;
-  `;
-  joyLabel.textContent = 'JOY';
-  const joyBar = document.createElement('div');
-  joyBar.style.cssText = `
-    flex: 1;
-    height: 16px;
-    background: white;
-    border: 2px solid #000;
-    border-radius: 2px;
-    overflow: hidden;
-    min-width: 150px;
-  `;
-  const joyFill = document.createElement('div');
-  joyFill.style.cssText = `
-    height: 100%;
-    background: linear-gradient(90deg, #FFD700, #FFA500);
-    width: ${(typeof _playerJoy !== 'undefined' ? _playerJoy : 85)}%;
-    transition: width 0.3s ease;
-  `;
-  joyBar.appendChild(joyFill);
-  joyContainer.appendChild(joyLabel);
-  joyContainer.appendChild(joyBar);
-  footer.appendChild(joyContainer);
-
-  // Coins Bar
-  const coinsContainer = document.createElement('div');
-  coinsContainer.style.cssText = `
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  `;
-  const coinsLabel = document.createElement('div');
-  coinsLabel.style.cssText = `
-    font-weight: 700;
-    font-size: 11px;
-    color: #000;
-    min-width: 50px;
-    text-transform: uppercase;
-  `;
-  coinsLabel.textContent = 'COINS';
-  const coinsBar = document.createElement('div');
-  coinsBar.style.cssText = `
-    flex: 1;
-    height: 16px;
-    background: white;
-    border: 2px solid #000;
-    border-radius: 2px;
-    overflow: hidden;
-    min-width: 150px;
-  `;
-  const coinsFill = document.createElement('div');
-  coinsFill.style.cssText = `
-    height: 100%;
-    background: #FFD700;
-    width: ${typeof _playerOnyx !== 'undefined' ? Math.min((_playerOnyx / 100) * 100, 100) : 0}%;
-    transition: width 0.3s ease;
-  `;
-  coinsBar.appendChild(coinsFill);
-  coinsContainer.appendChild(coinsLabel);
-  coinsContainer.appendChild(coinsBar);
-  footer.appendChild(coinsContainer);
-
-  // Armor Bar
-  const armorContainer = document.createElement('div');
-  armorContainer.style.cssText = `
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  `;
-  const armorLabel = document.createElement('div');
-  armorLabel.style.cssText = `
-    font-weight: 700;
-    font-size: 11px;
-    color: #000;
-    min-width: 50px;
-    text-transform: uppercase;
-  `;
-  armorLabel.textContent = 'ARMOR';
-  const armorBar = document.createElement('div');
-  armorBar.style.cssText = `
-    flex: 1;
-    height: 16px;
-    background: white;
-    border: 2px solid #000;
-    border-radius: 2px;
-    overflow: hidden;
-    min-width: 150px;
-  `;
-  const armorFill = document.createElement('div');
-  armorFill.style.cssText = `
-    height: 100%;
-    background: #8B4513;
-    width: 0%;
-    transition: width 0.3s ease;
-  `;
-  armorBar.appendChild(armorFill);
-  armorContainer.appendChild(armorLabel);
-  armorContainer.appendChild(armorBar);
-  footer.appendChild(armorContainer);
-
-  return footer;
-}
-
-function createGlobalStatsOverlay() {
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    z-index: 10001;
-  `;
-
-  // Players Box
-  const playersBox = document.createElement('div');
-  playersBox.style.cssText = `
-    background: white;
-    border: 3px solid #000;
-    border-radius: 4px;
-    padding: 12px;
-    text-align: center;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
-    min-width: 80px;
-    min-height: 50px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 6px;
-  `;
-
-  const playersIcon = document.createElement('img');
-  playersIcon.src = `${ASSET_PATH}IconKnight.png`;
-  playersIcon.style.cssText = `
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-  `;
-  playersBox.appendChild(playersIcon);
-
-  const playersCount = document.createElement('div');
-  playersCount.style.cssText = `
-    font-weight: 700;
-    font-size: 13px;
-    color: #000;
-  `;
-  playersCount.textContent = '1,248';
-  playersBox.appendChild(playersCount);
-
-  overlay.appendChild(playersBox);
-
-  // Wins Box
-  const winsBox = document.createElement('div');
-  winsBox.style.cssText = `
-    background: white;
-    border: 3px solid #000;
-    border-radius: 4px;
-    padding: 12px;
-    text-align: center;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
-    min-width: 80px;
-    min-height: 50px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 6px;
-  `;
-
-  const winsIcon = document.createElement('img');
-  winsIcon.src = `${ASSET_PATH}IconSword.png`;
-  winsIcon.style.cssText = `
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-  `;
-  winsBox.appendChild(winsIcon);
-
-  const winsCount = document.createElement('div');
-  winsCount.style.cssText = `
-    font-weight: 700;
-    font-size: 13px;
-    color: #000;
-  `;
-  winsCount.textContent = '3,847';
-  winsBox.appendChild(winsCount);
-
-  overlay.appendChild(winsBox);
-
-  return overlay;
 }
 
 
@@ -701,8 +452,6 @@ function createGlobalStatsOverlay() {
 async function game_breakingTreaty(eventId) {
   const screen = createGameScreen();
   document.body.appendChild(screen);
-
-  const gameContent = screen.querySelector('[data-game-content]');
 
   const [bgImg, npcImg] = await Promise.all([
     preloadImage('CouncilChamber.png'),
@@ -730,8 +479,8 @@ async function game_breakingTreaty(eventId) {
   let dialogueIndex = 0;
 
   function render() {
-    // Clear content area
-    gameContent.innerHTML = '';
+    // Clear screen
+    screen.innerHTML = '';
 
     if (dialogueIndex >= dialogues.length) {
       endGame();
@@ -902,13 +651,12 @@ async function game_breakingTreaty(eventId) {
     };
     contentArea.appendChild(continueBtn);
 
-    gameContent.appendChild(contentArea);
+    screen.appendChild(contentArea);
   }
 
   function endGame() {
     playSound('SoundWin.mp3');
     screen.remove();
-    stopBackgroundMusic();
     markEventComplete(eventId, 30);
     toast('✓ Treaty negotiations complete!', 'success');
   }
@@ -924,13 +672,12 @@ async function game_raidSilverStream(eventId) {
   const screen = createGameScreen();
   document.body.appendChild(screen);
 
-  const gameContent = screen.querySelector('[data-game-content]');
   const bgImg = await preloadImage('SilverStream.png');
 
   const canvas = document.createElement('canvas');
-  canvas.width = gameContent.clientWidth || window.innerWidth;
-  canvas.height = gameContent.clientHeight || window.innerHeight - 150;
-  gameContent.appendChild(canvas);
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  screen.appendChild(canvas);
 
   const ctx = canvas.getContext('2d');
   const w = canvas.width;
@@ -1128,8 +875,6 @@ async function createClickerGame(eventId, name, requiredClicks, bgImage) {
   const screen = createGameScreen();
   document.body.appendChild(screen);
 
-  const gameContent = screen.querySelector('[data-game-content]');
-
   const bgImg = bgImage ? await preloadImage(bgImage) : null;
 
   if (bgImg) {
@@ -1144,7 +889,7 @@ async function createClickerGame(eventId, name, requiredClicks, bgImage) {
       opacity: 0.35;
       z-index: 1;
     `;
-    gameContent.appendChild(bg);
+    screen.appendChild(bg);
   }
 
   const game = {
@@ -1163,7 +908,7 @@ async function createClickerGame(eventId, name, requiredClicks, bgImage) {
     justify-content: center;
     z-index: 10;
   `;
-  gameContent.appendChild(cardWrapper);
+  screen.appendChild(cardWrapper);
 
   function render() {
     // Remove old content

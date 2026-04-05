@@ -6,6 +6,14 @@
 function launchChronicleMinigame(eventId) {
   console.log('🎮 Game launch:', eventId);
 
+  // Check Joy before allowing game to start
+  if (typeof canPlayGame === 'function') {
+    if (!canPlayGame()) {
+      console.log('Joy too low - cannot play');
+      return;
+    }
+  }
+
   if (eventId === 1) {
     showEvent1Intro();
   } else if (eventId === 2) {
@@ -370,6 +378,11 @@ function startCombatGame(eventId, enemyCount) {
     uiDiv.remove();
 
     if (victory) {
+      // Decrease Joy after game
+      if (typeof decayAfterGame === 'function') {
+        decayAfterGame();
+      }
+
       // Mark this event as completed
       if (typeof _chronicleProgress !== 'undefined') {
         _chronicleProgress[eventId] = true;
@@ -388,6 +401,11 @@ function startCombatGame(eventId, enemyCount) {
       }
       toast('✓ VICTORY! Next event unlocked!', 'success');
     } else {
+      // Less Joy loss on defeat
+      if (typeof decayAfterGame === 'function') {
+        _playerJoy = Math.max(0, _playerJoy - 5); // Only -5% on loss
+        updateJoyBar();
+      }
       toast('✗ DEFEAT! Try again.', 'error');
     }
   }
@@ -533,6 +551,11 @@ function startStealthGame() {
     uiDiv.remove();
 
     if (victory) {
+      // Decrease Joy after game
+      if (typeof decayAfterGame === 'function') {
+        decayAfterGame();
+      }
+
       // Mark Event 2 as completed
       if (typeof _chronicleProgress !== 'undefined') {
         _chronicleProgress[2] = true;
@@ -551,6 +574,11 @@ function startStealthGame() {
       }
       toast(`✓ RAID SUCCESSFUL! Gold: ${Math.round(player.gold)}. Event unlocked!`, 'success');
     } else {
+      // Less Joy loss on defeat
+      if (typeof decayAfterGame === 'function') {
+        _playerJoy = Math.max(0, _playerJoy - 5);
+        updateJoyBar();
+      }
       toast('✗ CAUGHT! Mission failed.', 'error');
     }
   }

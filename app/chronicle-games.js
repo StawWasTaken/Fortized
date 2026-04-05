@@ -451,35 +451,43 @@ function createGameHeader() {
   const header = document.createElement('div');
   header.style.cssText = `
     display: grid;
-    grid-template-columns: 2fr 1fr 2fr 1fr 2fr;
-    gap: 15px;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
     padding: 20px;
     background: #f5f5f5;
     border-bottom: 3px solid #000;
-    align-items: center;
+    min-height: 150px;
   `;
 
-  // ===== PLAYER STATS (Left Side) =====
+  // ===== LEFT SIDE: PLAYER STATS (3 bars) =====
+  const playerStatsContainer = document.createElement('div');
+  playerStatsContainer.style.cssText = `
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: flex-start;
+  `;
 
   // Joy Bar
   const joyContainer = document.createElement('div');
   joyContainer.style.cssText = `
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   `;
   const joyLabel = document.createElement('div');
   joyLabel.style.cssText = `
     font-weight: 700;
     font-size: 11px;
     color: #000;
-    min-width: 35px;
+    min-width: 45px;
+    text-transform: uppercase;
   `;
   joyLabel.textContent = 'JOY';
   const joyBar = document.createElement('div');
   joyBar.style.cssText = `
     flex: 1;
-    height: 14px;
+    height: 16px;
     background: white;
     border: 2px solid #000;
     border-radius: 2px;
@@ -490,165 +498,171 @@ function createGameHeader() {
     height: 100%;
     background: linear-gradient(90deg, #FFD700, #FFA500);
     width: ${(typeof _playerJoy !== 'undefined' ? _playerJoy : 85)}%;
+    transition: width 0.3s ease;
   `;
   joyBar.appendChild(joyFill);
   joyContainer.appendChild(joyLabel);
   joyContainer.appendChild(joyBar);
-  header.appendChild(joyContainer);
+  playerStatsContainer.appendChild(joyContainer);
 
-  // Divider
-  const div1 = document.createElement('div');
-  div1.style.cssText = `
-    height: 40px;
-    border-left: 2px solid #ccc;
-  `;
-  header.appendChild(div1);
-
-  // FortCoins & Hammer
-  const playerStatsContainer = document.createElement('div');
-  playerStatsContainer.style.cssText = `
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    justify-content: center;
-  `;
-
+  // FortCoins Bar
   const coinsContainer = document.createElement('div');
   coinsContainer.style.cssText = `
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
   `;
-  const coinsIcon = document.createElement('img');
-  coinsIcon.src = `${ASSET_PATH}IconCoin.png`;
-  coinsIcon.style.cssText = `
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-  `;
-  const coinsText = document.createElement('div');
-  coinsText.style.cssText = `
+  const coinsLabel = document.createElement('div');
+  coinsLabel.style.cssText = `
     font-weight: 700;
-    font-size: 13px;
+    font-size: 11px;
     color: #000;
-    min-width: 30px;
+    min-width: 45px;
+    text-transform: uppercase;
   `;
-  coinsText.textContent = typeof _playerOnyx !== 'undefined' ? _playerOnyx : '0';
-  coinsContainer.appendChild(coinsIcon);
-  coinsContainer.appendChild(coinsText);
+  coinsLabel.textContent = 'COINS';
+  const coinsBar = document.createElement('div');
+  coinsBar.style.cssText = `
+    flex: 1;
+    height: 16px;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 2px;
+    overflow: hidden;
+  `;
+  const coinsFill = document.createElement('div');
+  coinsFill.style.cssText = `
+    height: 100%;
+    background: #FFD700;
+    width: ${typeof _playerOnyx !== 'undefined' ? Math.min((_playerOnyx / 100) * 100, 100) : 0}%;
+    transition: width 0.3s ease;
+  `;
+  coinsBar.appendChild(coinsFill);
+  coinsContainer.appendChild(coinsLabel);
+  coinsContainer.appendChild(coinsBar);
   playerStatsContainer.appendChild(coinsContainer);
 
-  const hammerContainer = document.createElement('div');
-  hammerContainer.style.cssText = `
+  // Armor Bar
+  const armorContainer = document.createElement('div');
+  armorContainer.style.cssText = `
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
   `;
-  const hammerIcon = document.createElement('img');
-  hammerIcon.src = `${ASSET_PATH}IconHammer.png`;
-  hammerIcon.style.cssText = `
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-  `;
-  const hammerText = document.createElement('div');
-  hammerText.style.cssText = `
+  const armorLabel = document.createElement('div');
+  armorLabel.style.cssText = `
     font-weight: 700;
-    font-size: 13px;
+    font-size: 11px;
     color: #000;
-    min-width: 30px;
+    min-width: 45px;
+    text-transform: uppercase;
   `;
-  hammerText.textContent = '0';
-  hammerContainer.appendChild(hammerIcon);
-  hammerContainer.appendChild(hammerText);
-  playerStatsContainer.appendChild(hammerContainer);
+  armorLabel.textContent = 'ARMOR';
+  const armorBar = document.createElement('div');
+  armorBar.style.cssText = `
+    flex: 1;
+    height: 16px;
+    background: white;
+    border: 2px solid #000;
+    border-radius: 2px;
+    overflow: hidden;
+  `;
+  const armorFill = document.createElement('div');
+  armorFill.style.cssText = `
+    height: 100%;
+    background: #8B4513;
+    width: 0%;
+    transition: width 0.3s ease;
+  `;
+  armorBar.appendChild(armorFill);
+  armorContainer.appendChild(armorLabel);
+  armorContainer.appendChild(armorBar);
+  playerStatsContainer.appendChild(armorContainer);
 
   header.appendChild(playerStatsContainer);
 
-  // Divider
-  const div2 = document.createElement('div');
-  div2.style.cssText = `
-    height: 40px;
-    border-left: 2px solid #ccc;
-  `;
-  header.appendChild(div2);
-
-  // ===== GLOBAL STATS (Right Side) =====
+  // ===== RIGHT SIDE: GLOBAL STATS (2 stacked boxes) =====
   const globalStatsContainer = document.createElement('div');
   globalStatsContainer.style.cssText = `
     display: flex;
-    gap: 15px;
-    align-items: center;
-    justify-content: flex-end;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: flex-start;
   `;
 
-  const knightContainer = document.createElement('div');
-  knightContainer.style.cssText = `
+  // Players Box
+  const playersBox = document.createElement('div');
+  playersBox.style.cssText = `
+    background: white;
+    border: 3px solid #000;
+    border-radius: 4px;
+    padding: 12px;
+    text-align: center;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+    min-height: 50px;
     display: flex;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
     gap: 6px;
-    flex-direction: column;
   `;
-  const knightIcon = document.createElement('img');
-  knightIcon.src = `${ASSET_PATH}IconKnight.png`;
-  knightIcon.style.cssText = `
+
+  const playersIcon = document.createElement('img');
+  playersIcon.src = `${ASSET_PATH}IconKnight.png`;
+  playersIcon.style.cssText = `
     width: 20px;
     height: 20px;
     object-fit: contain;
   `;
-  const knightLabel = document.createElement('div');
-  knightLabel.style.cssText = `
+  playersBox.appendChild(playersIcon);
+
+  const playersCount = document.createElement('div');
+  playersCount.style.cssText = `
     font-weight: 700;
-    font-size: 10px;
-    color: #666;
-    text-align: center;
-  `;
-  knightLabel.textContent = 'Players';
-  const knightCount = document.createElement('div');
-  knightCount.style.cssText = `
-    font-weight: 700;
-    font-size: 12px;
+    font-size: 14px;
     color: #000;
   `;
-  knightCount.textContent = '1,248';
-  knightContainer.appendChild(knightIcon);
-  knightContainer.appendChild(knightLabel);
-  knightContainer.appendChild(knightCount);
-  globalStatsContainer.appendChild(knightContainer);
+  playersCount.textContent = '1,248';
+  playersBox.appendChild(playersCount);
 
-  const swordContainer = document.createElement('div');
-  swordContainer.style.cssText = `
+  globalStatsContainer.appendChild(playersBox);
+
+  // Wins Box
+  const winsBox = document.createElement('div');
+  winsBox.style.cssText = `
+    background: white;
+    border: 3px solid #000;
+    border-radius: 4px;
+    padding: 12px;
+    text-align: center;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+    min-height: 50px;
     display: flex;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
     gap: 6px;
-    flex-direction: column;
   `;
-  const swordIcon = document.createElement('img');
-  swordIcon.src = `${ASSET_PATH}IconSword.png`;
-  swordIcon.style.cssText = `
+
+  const winsIcon = document.createElement('img');
+  winsIcon.src = `${ASSET_PATH}IconSword.png`;
+  winsIcon.style.cssText = `
     width: 20px;
     height: 20px;
     object-fit: contain;
   `;
-  const swordLabel = document.createElement('div');
-  swordLabel.style.cssText = `
+  winsBox.appendChild(winsIcon);
+
+  const winsCount = document.createElement('div');
+  winsCount.style.cssText = `
     font-weight: 700;
-    font-size: 10px;
-    color: #666;
-    text-align: center;
-  `;
-  swordLabel.textContent = 'Won';
-  const swordCount = document.createElement('div');
-  swordCount.style.cssText = `
-    font-weight: 700;
-    font-size: 12px;
+    font-size: 14px;
     color: #000;
   `;
-  swordCount.textContent = '3,847';
-  swordContainer.appendChild(swordIcon);
-  swordContainer.appendChild(swordLabel);
-  swordContainer.appendChild(swordCount);
-  globalStatsContainer.appendChild(swordContainer);
+  winsCount.textContent = '3,847';
+  winsBox.appendChild(winsCount);
+
+  globalStatsContainer.appendChild(winsBox);
 
   header.appendChild(globalStatsContainer);
 

@@ -6,6 +6,9 @@
 
 const ASSET_PATH = '/app/Chronicle/chapter1/assets/';
 
+// FortCoin System
+let _fortCoinsEarned = 0;
+
 // Audio system
 const audioCache = {};
 function playSound(filename) {
@@ -178,7 +181,8 @@ async function game_breakingTreaty() {
   function endGame() {
     playSound('SoundWin.mp3');
     screen.remove();
-    markEventComplete(1);
+    const fortCoins = 30; // Fixed reward for dialogue completion
+    markEventComplete(1, fortCoins);
     toast('✓ Treaty dialogue complete!', 'success');
   }
 
@@ -301,9 +305,9 @@ async function game_raidSilverStream() {
   function endGame() {
     game.active = false;
     screen.remove();
-    if (game.collected >= 100) {
+    if (game.player.collected >= 100) {
       playSound('SoundWin.mp3');
-      markEventComplete(2);
+      markEventComplete(2, game.player.collected);
       toast('✓ Raid successful!', 'success');
     } else {
       playSound('SoundLose.mp3');
@@ -406,7 +410,8 @@ async function game_burningElowen() {
   function endGame() {
     playSound('SoundWin.mp3');
     screen.remove();
-    markEventComplete(3);
+    const fortCoins = game.clicks * 2; // 2 coins per click
+    markEventComplete(3, fortCoins);
     toast('✓ Elowen burns!', 'success');
   }
 
@@ -530,7 +535,8 @@ async function game_timberRoads() {
     screen.remove();
     if (success) {
       playSound('SoundWin.mp3');
-      markEventComplete(4);
+      const fortCoins = 50; // Fixed reward for completing all rounds
+      markEventComplete(4, fortCoins);
       toast('✓ You navigated safely!', 'success');
     } else {
       playSound('SoundLose.mp3');
@@ -661,7 +667,8 @@ async function game_combatBattle() {
     screen.remove();
     if (victory) {
       playSound('SoundWin.mp3');
-      markEventComplete(5);
+      const fortCoins = Math.max(30, game.player.hp); // Bonus based on remaining HP
+      markEventComplete(5, fortCoins);
       toast('✓ Enemy defeated!', 'success');
     } else {
       playSound('SoundLose.mp3');
@@ -733,7 +740,8 @@ function createClickerGame(eventId, name, goalClicks, bgImage) {
         if (game.clicks >= goalClicks) {
           screen.remove();
           playSound('SoundWin.mp3');
-          markEventComplete(eventId);
+          const fortCoins = Math.floor(goalClicks * 1.5); // Reward proportional to difficulty
+          markEventComplete(eventId, fortCoins);
           toast(`✓ ${name} complete!`, 'success');
         } else {
           render();
@@ -792,15 +800,40 @@ async function game_generic(eventId) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// EVENT COMPLETION
+// EVENT COMPLETION & COIN CONVERSION
 // ════════════════════════════════════════════════════════════════════════════
 
-function markEventComplete(eventId) {
+function markEventComplete(eventId, fortCoins = 0) {
   if (typeof decayAfterGame === 'function') {
     decayAfterGame();
   }
 
+  // Track if this is a first-time completion
+  const isFirstCompletion = !_chronicleProgress[eventId];
+
   _chronicleProgress[eventId] = true;
+
+  // Convert FortCoins to Onyx on first completion only
+  if (isFirstCompletion && fortCoins > 0) {
+    const onyxGain = Math.floor(fortCoins / 2); // 1 FortCoin = 0.5 Onyx, but only full Onyx
+
+    if (onyxGain > 0) {
+      // Add Onyx to player's inventory
+      if (typeof _playerOnyx === 'undefined') {
+        window._playerOnyx = 0;
+      }
+      _playerOnyx += onyxGain;
+
+      console.log(`💎 Earned ${onyxGain} Onyx from ${fortCoins} FortCoins!`);
+      toast(`💎 +${onyxGain} Onyx!`, 'success');
+
+      // Update Onyx display if it exists
+      const onyxDisplay = document.getElementById('player-onyx-count');
+      if (onyxDisplay) {
+        onyxDisplay.textContent = _playerOnyx;
+      }
+    }
+  }
 
   if (typeof renderChronicleEvents === 'function') renderChronicleEvents();
   if (typeof renderChronicleMapPins === 'function') renderChronicleMapPins();

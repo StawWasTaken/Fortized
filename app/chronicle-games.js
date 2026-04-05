@@ -430,7 +430,7 @@ async function showIntroVideo() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// GAME SCREEN - BASE STRUCTURE
+// GAME SCREEN - BASE STRUCTURE (Discord Last Meadow Style)
 // ════════════════════════════════════════════════════════════════════════════
 
 function createGameScreen() {
@@ -444,28 +444,45 @@ function createGameScreen() {
     display: flex;
     flex-direction: column;
   `;
+
+  // Game content area (fills center)
+  const gameContent = document.createElement('div');
+  gameContent.setAttribute('data-game-content', 'true');
+  gameContent.style.cssText = `
+    flex: 1;
+    overflow: auto;
+    position: relative;
+  `;
+  screen.appendChild(gameContent);
+
+  // Footer with player stats (bottom-left, fixed)
+  const footer = createStatBarsFooter();
+  screen.appendChild(footer);
+
+  // Add global stats boxes (top-right, fixed)
+  const globalStats = createGlobalStatsOverlay();
+  screen.appendChild(globalStats);
+
   return screen;
 }
 
-function createGameHeader() {
-  const header = document.createElement('div');
-  header.style.cssText = `
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-    padding: 20px;
+function createStatBarsFooter() {
+  const footer = document.createElement('div');
+  footer.style.cssText = `
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-width: 350px;
     background: #f5f5f5;
-    border-bottom: 3px solid #000;
-    min-height: 150px;
-  `;
-
-  // ===== LEFT SIDE: PLAYER STATS (3 bars) =====
-  const playerStatsContainer = document.createElement('div');
-  playerStatsContainer.style.cssText = `
+    border: 3px solid #000;
+    border-radius: 0 8px 0 0;
+    padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    justify-content: flex-start;
+    gap: 10px;
+    z-index: 10001;
+    box-shadow: 0 -4px 0 rgba(0,0,0,0.2);
   `;
 
   // Joy Bar
@@ -480,7 +497,7 @@ function createGameHeader() {
     font-weight: 700;
     font-size: 11px;
     color: #000;
-    min-width: 45px;
+    min-width: 50px;
     text-transform: uppercase;
   `;
   joyLabel.textContent = 'JOY';
@@ -492,6 +509,7 @@ function createGameHeader() {
     border: 2px solid #000;
     border-radius: 2px;
     overflow: hidden;
+    min-width: 150px;
   `;
   const joyFill = document.createElement('div');
   joyFill.style.cssText = `
@@ -503,9 +521,9 @@ function createGameHeader() {
   joyBar.appendChild(joyFill);
   joyContainer.appendChild(joyLabel);
   joyContainer.appendChild(joyBar);
-  playerStatsContainer.appendChild(joyContainer);
+  footer.appendChild(joyContainer);
 
-  // FortCoins Bar
+  // Coins Bar
   const coinsContainer = document.createElement('div');
   coinsContainer.style.cssText = `
     display: flex;
@@ -517,7 +535,7 @@ function createGameHeader() {
     font-weight: 700;
     font-size: 11px;
     color: #000;
-    min-width: 45px;
+    min-width: 50px;
     text-transform: uppercase;
   `;
   coinsLabel.textContent = 'COINS';
@@ -529,6 +547,7 @@ function createGameHeader() {
     border: 2px solid #000;
     border-radius: 2px;
     overflow: hidden;
+    min-width: 150px;
   `;
   const coinsFill = document.createElement('div');
   coinsFill.style.cssText = `
@@ -540,7 +559,7 @@ function createGameHeader() {
   coinsBar.appendChild(coinsFill);
   coinsContainer.appendChild(coinsLabel);
   coinsContainer.appendChild(coinsBar);
-  playerStatsContainer.appendChild(coinsContainer);
+  footer.appendChild(coinsContainer);
 
   // Armor Bar
   const armorContainer = document.createElement('div');
@@ -554,7 +573,7 @@ function createGameHeader() {
     font-weight: 700;
     font-size: 11px;
     color: #000;
-    min-width: 45px;
+    min-width: 50px;
     text-transform: uppercase;
   `;
   armorLabel.textContent = 'ARMOR';
@@ -566,6 +585,7 @@ function createGameHeader() {
     border: 2px solid #000;
     border-radius: 2px;
     overflow: hidden;
+    min-width: 150px;
   `;
   const armorFill = document.createElement('div');
   armorFill.style.cssText = `
@@ -577,17 +597,21 @@ function createGameHeader() {
   armorBar.appendChild(armorFill);
   armorContainer.appendChild(armorLabel);
   armorContainer.appendChild(armorBar);
-  playerStatsContainer.appendChild(armorContainer);
+  footer.appendChild(armorContainer);
 
-  header.appendChild(playerStatsContainer);
+  return footer;
+}
 
-  // ===== RIGHT SIDE: GLOBAL STATS (2 stacked boxes) =====
-  const globalStatsContainer = document.createElement('div');
-  globalStatsContainer.style.cssText = `
+function createGlobalStatsOverlay() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    justify-content: flex-start;
+    z-index: 10001;
   `;
 
   // Players Box
@@ -598,7 +622,8 @@ function createGameHeader() {
     border-radius: 4px;
     padding: 12px;
     text-align: center;
-    box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+    min-width: 80px;
     min-height: 50px;
     display: flex;
     flex-direction: column;
@@ -610,8 +635,8 @@ function createGameHeader() {
   const playersIcon = document.createElement('img');
   playersIcon.src = `${ASSET_PATH}IconKnight.png`;
   playersIcon.style.cssText = `
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     object-fit: contain;
   `;
   playersBox.appendChild(playersIcon);
@@ -619,13 +644,13 @@ function createGameHeader() {
   const playersCount = document.createElement('div');
   playersCount.style.cssText = `
     font-weight: 700;
-    font-size: 14px;
+    font-size: 13px;
     color: #000;
   `;
   playersCount.textContent = '1,248';
   playersBox.appendChild(playersCount);
 
-  globalStatsContainer.appendChild(playersBox);
+  overlay.appendChild(playersBox);
 
   // Wins Box
   const winsBox = document.createElement('div');
@@ -635,7 +660,8 @@ function createGameHeader() {
     border-radius: 4px;
     padding: 12px;
     text-align: center;
-    box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+    min-width: 80px;
     min-height: 50px;
     display: flex;
     flex-direction: column;
@@ -647,8 +673,8 @@ function createGameHeader() {
   const winsIcon = document.createElement('img');
   winsIcon.src = `${ASSET_PATH}IconSword.png`;
   winsIcon.style.cssText = `
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     object-fit: contain;
   `;
   winsBox.appendChild(winsIcon);
@@ -656,18 +682,17 @@ function createGameHeader() {
   const winsCount = document.createElement('div');
   winsCount.style.cssText = `
     font-weight: 700;
-    font-size: 14px;
+    font-size: 13px;
     color: #000;
   `;
   winsCount.textContent = '3,847';
   winsBox.appendChild(winsCount);
 
-  globalStatsContainer.appendChild(winsBox);
+  overlay.appendChild(winsBox);
 
-  header.appendChild(globalStatsContainer);
-
-  return header;
+  return overlay;
 }
+
 
 // ════════════════════════════════════════════════════════════════════════════
 // EVENT 1: BREAKING TREATY - DIALOGUE RPG STYLE
@@ -677,8 +702,7 @@ async function game_breakingTreaty(eventId) {
   const screen = createGameScreen();
   document.body.appendChild(screen);
 
-  const header = createGameHeader();
-  screen.appendChild(header);
+  const gameContent = screen.querySelector('[data-game-content]');
 
   const [bgImg, npcImg] = await Promise.all([
     preloadImage('CouncilChamber.png'),
@@ -706,9 +730,8 @@ async function game_breakingTreaty(eventId) {
   let dialogueIndex = 0;
 
   function render() {
-    // Clear content area (keep header)
-    const content = screen.querySelector('[data-content]');
-    if (content) content.remove();
+    // Clear content area
+    gameContent.innerHTML = '';
 
     if (dialogueIndex >= dialogues.length) {
       endGame();
@@ -716,10 +739,9 @@ async function game_breakingTreaty(eventId) {
     }
 
     const contentArea = document.createElement('div');
-    contentArea.setAttribute('data-content', 'true');
     contentArea.style.cssText = `
-      flex: 1;
-      position: relative;
+      position: absolute;
+      inset: 0;
       overflow: hidden;
     `;
 
@@ -880,7 +902,7 @@ async function game_breakingTreaty(eventId) {
     };
     contentArea.appendChild(continueBtn);
 
-    screen.appendChild(contentArea);
+    gameContent.appendChild(contentArea);
   }
 
   function endGame() {
@@ -902,22 +924,13 @@ async function game_raidSilverStream(eventId) {
   const screen = createGameScreen();
   document.body.appendChild(screen);
 
-  const header = createGameHeader();
-  screen.appendChild(header);
-
+  const gameContent = screen.querySelector('[data-game-content]');
   const bgImg = await preloadImage('SilverStream.png');
 
-  const gameArea = document.createElement('div');
-  gameArea.style.cssText = `
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-  `;
-
   const canvas = document.createElement('canvas');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight - 100;
-  gameArea.appendChild(canvas);
+  canvas.width = gameContent.clientWidth || window.innerWidth;
+  canvas.height = gameContent.clientHeight || window.innerHeight - 150;
+  gameContent.appendChild(canvas);
 
   const ctx = canvas.getContext('2d');
   const w = canvas.width;
@@ -1096,8 +1109,6 @@ async function game_raidSilverStream(eventId) {
     }
   }
 
-  screen.appendChild(gameArea);
-
   // Cleanup on game end
   const endGameOriginal = endGame;
   endGame = () => {
@@ -1117,18 +1128,7 @@ async function createClickerGame(eventId, name, requiredClicks, bgImage) {
   const screen = createGameScreen();
   document.body.appendChild(screen);
 
-  const header = createGameHeader();
-  screen.appendChild(header);
-
-  const contentArea = document.createElement('div');
-  contentArea.style.cssText = `
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 40px;
-  `;
+  const gameContent = screen.querySelector('[data-game-content]');
 
   const bgImg = bgImage ? await preloadImage(bgImage) : null;
 
@@ -1142,8 +1142,9 @@ async function createClickerGame(eventId, name, requiredClicks, bgImage) {
       height: 100%;
       object-fit: cover;
       opacity: 0.35;
+      z-index: 1;
     `;
-    contentArea.appendChild(bg);
+    gameContent.appendChild(bg);
   }
 
   const game = {
@@ -1152,16 +1153,26 @@ async function createClickerGame(eventId, name, requiredClicks, bgImage) {
     cooldown: 0
   };
 
+  // Create wrapper for card
+  const cardWrapper = document.createElement('div');
+  cardWrapper.style.cssText = `
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  `;
+  gameContent.appendChild(cardWrapper);
+
   function render() {
     // Remove old content
-    const oldCard = contentArea.querySelector('[data-card]');
+    const oldCard = cardWrapper.querySelector('[data-card]');
     if (oldCard) oldCard.remove();
 
     const card = document.createElement('div');
     card.setAttribute('data-card', 'true');
     card.style.cssText = `
-      position: relative;
-      z-index: 10;
       background: white;
       border: 4px solid #000;
       border-radius: 8px;
@@ -1277,7 +1288,7 @@ async function createClickerGame(eventId, name, requiredClicks, bgImage) {
     };
 
     card.appendChild(clickBtn);
-    contentArea.appendChild(card);
+    cardWrapper.appendChild(card);
 
     // Update cooldown
     if (game.cooldown > 0) {
@@ -1286,7 +1297,6 @@ async function createClickerGame(eventId, name, requiredClicks, bgImage) {
     }
   }
 
-  screen.appendChild(contentArea);
   render();
 }
 

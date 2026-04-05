@@ -389,8 +389,13 @@
 <script>
   // Get invite code from multiple possible URL formats
   function getInviteCode() {
-    // Try query parameter first: ?code=ABC123
+    // Try query parameter: ?invite=ABC123 (Fortized format)
     const params = new URLSearchParams(window.location.search);
+    if (params.has('invite')) {
+      return params.get('invite');
+    }
+
+    // Try legacy format: ?code=ABC123
     if (params.has('code')) {
       return params.get('code');
     }

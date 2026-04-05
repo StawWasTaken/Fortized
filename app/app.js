@@ -19318,10 +19318,135 @@ async function _enrichDetectedGameIGDB(game) {
 
 // _setGameActivity and _clearGameActivity removed — use setGameActivity() instead
 
+// Handle bastion invites from URL parameters
+function handleBastionInvite() {
+  const params = new URLSearchParams(window.location.search);
+  const inviteCode = params.get('invite');
+
+  if (!inviteCode) return;
+
+  // Fetch bastion invite info
+  fetch(`/api/bastion/invite/${inviteCode}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showBastionInviteModal(data.bastion, inviteCode);
+      } else {
+        showNotification('Invalid or expired invite', 'error');
+      }
+    })
+    .catch(err => {
+      console.error('Failed to load bastion invite:', err);
+      showNotification('Failed to load invite', 'error');
+    });
+}
+
+function showBastionInviteModal(bastion, inviteCode) {
+  // Create modal HTML
+  const modal = document.createElement('div');
+  modal.id = 'bastionInviteModal';
+  modal.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      backdrop-filter: blur(40px);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+    ">
+      <div style="font-size: 48px; margin-bottom: 20px;">🏰</div>
+      <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 8px; color: #fff;">
+        ${bastion.name || 'Bastion Invite'}
+      </h2>
+      <p style="color: var(--muted-light); margin-bottom: 20px;">
+        You've been invited to join this bastion
+      </p>
+
+      <div style="
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 24px;
+        font-size: 13px;
+        color: var(--muted-light);
+      ">
+        <span style="color: #dde3ed; font-weight: 600;">${bastion.memberCount || 0}</span> members
+      </div>
+
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <button onclick="acceptBastionInvite('${inviteCode}')" style="
+          background: var(--accent);
+          color: #080a0f;
+          border: none;
+          padding: 12px 20px;
+          border-radius: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.25s;
+        " onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter='brightness(1)'">
+          Accept Invite
+        </button>
+        <button onclick="document.getElementById('bastionInviteModal').remove()" style="
+          background: transparent;
+          color: var(--muted-light);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 12px 20px;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.25s;
+        " onmouseover="this.style.borderColor='rgba(255, 249, 62, 0.2)'; this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'; this.style.color='var(--muted-light)'">
+          Decline
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+function acceptBastionInvite(inviteCode) {
+  const modal = document.getElementById('bastionInviteModal');
+  if (modal) modal.remove();
+
+  // Send accept request
+  fetch(`/api/bastion/invite/${inviteCode}/accept`, { method: 'POST' })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showNotification('Joined bastion!', 'success');
+        // Navigate to bastion
+        window.location.href = `/app/bastion/${data.bastionId}`;
+      } else {
+        showNotification(data.error || 'Failed to join bastion', 'error');
+      }
+    })
+    .catch(err => {
+      console.error('Failed to accept invite:', err);
+      showNotification('Failed to join bastion', 'error');
+    });
+}
+
 // Initialize game detection when app loads (if desktop)
 if (typeof window !== 'undefined') {
   window.addEventListener('load', () => {
     setTimeout(initDesktopGameDetection, 3000);
+    setTimeout(handleBastionInvite, 1000); // Handle invites after app loads
   });
 }
 

@@ -31163,6 +31163,12 @@ let _chronicleProgress = {}; // {eventId: true} for completed events
 let _playerOnyx = 0; // Player's Onyx currency
 
 function openChronicle() {
+  // Show the Grand Chronicle Menu first if it's the first time
+  if (typeof showChronicleMenu === 'function' && typeof _sessionStarted !== 'undefined' && !_sessionStarted) {
+    showChronicleMenu(0);
+    return;
+  }
+
   const overlay = document.getElementById('chronicle-overlay');
   if (!overlay) return;
   _chronicleOpen = true;

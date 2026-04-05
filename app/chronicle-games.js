@@ -344,7 +344,12 @@ async function showChronicleMenu(eventId) {
     stopBackgroundMusic();
     await showIntroVideo();
     playBackgroundMusic();
-    // Return to chronicle view (close menu, stay in game)
+
+    // Open the Chronicle view
+    _sessionStarted = true;
+    if (typeof openChronicle === 'function') {
+      openChronicle();
+    }
   };
   content.appendChild(continueBtn);
 

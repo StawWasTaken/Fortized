@@ -2,12 +2,14 @@
  * ═══════════════════════════════════════════════════════════════════════════════
  * FORTIZED GRAND CHRONICLE - COMPLETE GAME SYSTEM v3
  * ═══════════════════════════════════════════════════════════════════════════════
- * Proper asset loading, menu system, audio, and dialogues
+ * Proper asset loading, menu system, audio, and dialogues with UIBox buttons
  */
 
 const ASSET_PATH = '/app/Chronicle/chapter1/assets/';
+const FONT_FAMILY = "'MedievalSharp', cursive";
 let _backgroundMusic = null;
 let _gameMenuShown = false;
+let _uiBoxImages = {};
 
 // ════════════════════════════════════════════════════════════════════════════
 // BACKGROUND MUSIC SYSTEM
@@ -72,6 +74,48 @@ function loadImage(filename) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// UIBOX BUTTON CREATOR
+// ════════════════════════════════════════════════════════════════════════════
+
+async function createUIBoxButton(text, onClick, useUIBox2 = false) {
+  const btn = document.createElement('button');
+  const boxType = useUIBox2 ? 'UIBox2.png' : 'UIBox.png';
+  const bgImg = await loadImage(boxType);
+
+  btn.style.cssText = `
+    background: white;
+    border: none;
+    padding: 12px 24px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: ${FONT_FAMILY};
+    border-radius: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #000;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+    min-width: 120px;
+  `;
+
+  if (bgImg) {
+    btn.style.backgroundImage = `url('${bgImg.src}')`;
+    btn.style.backgroundSize = 'stretch';
+    btn.style.backgroundRepeat = 'no-repeat';
+    btn.style.backgroundPosition = 'center';
+  }
+
+  btn.textContent = text;
+  btn.onmouseover = () => btn.style.opacity = '0.85';
+  btn.onmouseout = () => btn.style.opacity = '1';
+  btn.onclick = onClick;
+
+  return btn;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // MAIN GAME LAUNCHER
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -115,7 +159,7 @@ async function showGameMenu(nextEventId) {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: white; z-index: 10000; display: flex;
     flex-direction: column; align-items: center; justify-content: center;
-    font-family: 'Comic Sans MS', sans-serif; overflow: hidden;
+    font-family: ${FONT_FAMILY}; overflow: hidden;
     border: 4px solid #000;
   `;
 
@@ -169,18 +213,7 @@ async function showGameMenu(nextEventId) {
   }
 
   // Continue button
-  const btn = document.createElement('button');
-  btn.style.cssText = `
-    background: #000; color: white; border: 3px solid #000;
-    padding: 16px 48px; font-size: 18px; font-weight: 700;
-    cursor: pointer; font-family: 'Comic Sans MS', sans-serif;
-    border-radius: 0; text-transform: uppercase; letter-spacing: 1px;
-    transition: all 0.2s;
-  `;
-  btn.textContent = 'Continue Game';
-  btn.onmouseover = () => btn.style.background = '#333';
-  btn.onmouseout = () => btn.style.background = '#000';
-  btn.onclick = async () => {
+  const btn = await createUIBoxButton('Continue Game', async () => {
     playSound('SoundUiSelect.mp3');
     menu.remove();
     _gameMenuShown = true;
@@ -190,7 +223,9 @@ async function showGameMenu(nextEventId) {
 
     // Launch the actual game
     launchChronicleMinigame(nextEventId);
-  };
+  });
+  btn.style.padding = '16px 48px';
+  btn.style.fontSize = '18px';
   content.appendChild(btn);
 
   menu.appendChild(content);
@@ -221,13 +256,15 @@ async function showIntroVideo() {
       resolve();
     };
 
+    screen.appendChild(video);
+
     // Skip button
     const skipBtn = document.createElement('button');
     skipBtn.style.cssText = `
       position: absolute; top: 20px; right: 20px;
-      background: white; color: #000; border: 2px solid white;
+      background: white; color: #000; border: 2px solid #000;
       padding: 10px 20px; font-weight: 700; cursor: pointer;
-      font-family: 'Comic Sans MS', sans-serif; z-index: 10001;
+      font-family: ${FONT_FAMILY}; z-index: 10001;
       border-radius: 0;
     `;
     skipBtn.textContent = 'SKIP';
@@ -236,9 +273,8 @@ async function showIntroVideo() {
       screen.remove();
       resolve();
     };
-
-    screen.appendChild(video);
     screen.appendChild(skipBtn);
+
     document.body.appendChild(screen);
   });
 }
@@ -251,7 +287,7 @@ function createGameScreen() {
   const screen = document.createElement('div');
   screen.style.cssText = `
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: white; z-index: 9999; font-family: 'Comic Sans MS', sans-serif;
+    background: white; z-index: 9999; font-family: ${FONT_FAMILY};
     overflow: hidden; border: 4px solid #000;
   `;
   return screen;
@@ -345,12 +381,16 @@ async function game_breakingTreaty() {
     const continueBtn = document.createElement('button');
     continueBtn.style.cssText = `
       position: absolute; bottom: 20px; right: 20px;
-      background: white; color: #000; border: 2px solid white;
+      background: white; color: #000; border: 2px solid #000;
       padding: 12px 24px; font-weight: 700; cursor: pointer;
-      font-family: 'Comic Sans MS', sans-serif; z-index: 10;
-      font-size: 13px;
+      font-family: ${FONT_FAMILY}; z-index: 10;
+      font-size: 13px; border-radius: 0;
+      text-transform: uppercase; letter-spacing: 1px;
+      transition: all 0.15s;
     `;
     continueBtn.textContent = '→ CONTINUE';
+    continueBtn.onmouseover = () => continueBtn.style.opacity = '0.85';
+    continueBtn.onmouseout = () => continueBtn.style.opacity = '1';
     continueBtn.onclick = () => {
       playSound('SoundUiSelect.mp3');
       dialogueIndex++;
@@ -549,9 +589,13 @@ function createClickerGame(eventId, name, clicks, bgImage) {
       btn.style.cssText = `
         width: 100%; padding: 30px; background: white; border: 3px solid #000;
         font-size: 18px; font-weight: 700; cursor: pointer; border-radius: 0;
-        font-family: 'Comic Sans MS', sans-serif; color: #000;
+        font-family: ${FONT_FAMILY}; color: #000;
+        text-transform: uppercase; letter-spacing: 1px;
+        transition: all 0.15s;
       `;
       btn.textContent = 'CLICK!';
+      btn.onmouseover = () => btn.style.opacity = '0.85';
+      btn.onmouseout = () => btn.style.opacity = '1';
       btn.onclick = () => {
         game.clicks++;
         playSound('SoundCoin.mp3');
@@ -609,11 +653,15 @@ async function game_generic(eventId) {
 
   const btn = document.createElement('button');
   btn.style.cssText = `
-    background: #000; color: white; border: 2px solid #000;
+    background: white; color: #000; border: 2px solid #000;
     padding: 12px 24px; cursor: pointer; font-weight: 700;
-    font-family: 'Comic Sans MS', sans-serif;
+    font-family: ${FONT_FAMILY}; border-radius: 0;
+    text-transform: uppercase; letter-spacing: 1px;
+    transition: all 0.15s;
   `;
   btn.textContent = 'CONTINUE';
+  btn.onmouseover = () => btn.style.opacity = '0.85';
+  btn.onmouseout = () => btn.style.opacity = '1';
   btn.onclick = () => {
     playSound('SoundUiSelect.mp3');
     screen.remove();

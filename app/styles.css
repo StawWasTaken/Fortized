@@ -3080,7 +3080,7 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 
 .chronicle-chapter-label, .chronicle-chapter-title, .chronicle-chapter-desc {
   color: #000;
-  font-family: 'Comic Sans MS', sans-serif;
+  font-family: 'MedievalSharp', cursive;
   font-weight: 700;
 }
 
@@ -3121,7 +3121,7 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
   background: white;
   color: #000;
   border-bottom: 2px solid #000;
-  font-family: 'Comic Sans MS', sans-serif;
+  font-family: 'MedievalSharp', cursive;
   font-weight: 700;
 }
 
@@ -3158,7 +3158,7 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 
 .chron-event-title {
   color: #000;
-  font-family: 'Comic Sans MS', sans-serif;
+  font-family: 'MedievalSharp', cursive;
   font-weight: 700;
 }
 
@@ -3190,7 +3190,7 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
   border: 3px solid #000;
   color: #000;
   font-weight: 700;
-  font-family: 'Comic Sans MS', sans-serif;
+  font-family: 'MedievalSharp', cursive;
 }
 
 .chron-play-btn {
@@ -3199,7 +3199,7 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
   border: 3px solid #000;
   border-radius: 0;
   font-weight: 700;
-  font-family: 'Comic Sans MS', sans-serif;
+  font-family: 'MedievalSharp', cursive;
 }
 
 .chron-play-btn:hover {
@@ -3209,7 +3209,7 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 
 .chron-detail-title {
   color: #000;
-  font-family: 'Comic Sans MS', sans-serif;
+  font-family: 'MedievalSharp', cursive;
 }
 
 .chron-detail-inner {

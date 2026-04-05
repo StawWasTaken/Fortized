@@ -440,31 +440,35 @@ function createGameHeader() {
   const header = document.createElement('div');
   header.style.cssText = `
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 2fr 1fr 2fr;
     gap: 15px;
     padding: 20px;
     background: #f5f5f5;
     border-bottom: 3px solid #000;
+    align-items: center;
   `;
+
+  // ===== PLAYER STATS (Left Side) =====
 
   // Joy Bar
   const joyContainer = document.createElement('div');
   joyContainer.style.cssText = `
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   `;
   const joyLabel = document.createElement('div');
   joyLabel.style.cssText = `
     font-weight: 700;
-    font-size: 12px;
+    font-size: 11px;
     color: #000;
+    min-width: 35px;
   `;
   joyLabel.textContent = 'JOY';
   const joyBar = document.createElement('div');
   joyBar.style.cssText = `
     flex: 1;
-    height: 16px;
+    height: 14px;
     background: white;
     border: 2px solid #000;
     border-radius: 2px;
@@ -473,65 +477,169 @@ function createGameHeader() {
   const joyFill = document.createElement('div');
   joyFill.style.cssText = `
     height: 100%;
-    background: #FFD700;
-    width: 85%;
+    background: linear-gradient(90deg, #FFD700, #FFA500);
+    width: ${(typeof _playerJoy !== 'undefined' ? _playerJoy : 85)}%;
   `;
   joyBar.appendChild(joyFill);
   joyContainer.appendChild(joyLabel);
   joyContainer.appendChild(joyBar);
   header.appendChild(joyContainer);
 
-  // FortCoins
+  // Divider
+  const div1 = document.createElement('div');
+  div1.style.cssText = `
+    height: 40px;
+    border-left: 2px solid #ccc;
+  `;
+  header.appendChild(div1);
+
+  // FortCoins & Hammer
+  const playerStatsContainer = document.createElement('div');
+  playerStatsContainer.style.cssText = `
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+  `;
+
   const coinsContainer = document.createElement('div');
   coinsContainer.style.cssText = `
     display: flex;
     align-items: center;
-    gap: 10px;
-    justify-content: center;
+    gap: 6px;
   `;
   const coinsIcon = document.createElement('img');
   coinsIcon.src = `${ASSET_PATH}IconCoin.png`;
   coinsIcon.style.cssText = `
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     object-fit: contain;
   `;
   const coinsText = document.createElement('div');
   coinsText.style.cssText = `
     font-weight: 700;
-    font-size: 14px;
+    font-size: 13px;
     color: #000;
+    min-width: 30px;
   `;
-  coinsText.textContent = '0';
+  coinsText.textContent = typeof _playerOnyx !== 'undefined' ? _playerOnyx : '0';
   coinsContainer.appendChild(coinsIcon);
   coinsContainer.appendChild(coinsText);
-  header.appendChild(coinsContainer);
+  playerStatsContainer.appendChild(coinsContainer);
 
-  // Hammer (Health/Armor)
   const hammerContainer = document.createElement('div');
   hammerContainer.style.cssText = `
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
+  `;
+  const hammerIcon = document.createElement('img');
+  hammerIcon.src = `${ASSET_PATH}IconHammer.png`;
+  hammerIcon.style.cssText = `
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+  `;
+  const hammerText = document.createElement('div');
+  hammerText.style.cssText = `
+    font-weight: 700;
+    font-size: 13px;
+    color: #000;
+    min-width: 30px;
+  `;
+  hammerText.textContent = '0';
+  hammerContainer.appendChild(hammerIcon);
+  hammerContainer.appendChild(hammerText);
+  playerStatsContainer.appendChild(hammerContainer);
+
+  header.appendChild(playerStatsContainer);
+
+  // Divider
+  const div2 = document.createElement('div');
+  div2.style.cssText = `
+    height: 40px;
+    border-left: 2px solid #ccc;
+  `;
+  header.appendChild(div2);
+
+  // ===== GLOBAL STATS (Right Side) =====
+  const globalStatsContainer = document.createElement('div');
+  globalStatsContainer.style.cssText = `
+    display: flex;
+    gap: 15px;
+    align-items: center;
     justify-content: flex-end;
   `;
-  const hammerLabel = document.createElement('div');
-  hammerLabel.style.cssText = `
+
+  const knightContainer = document.createElement('div');
+  knightContainer.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-direction: column;
+  `;
+  const knightIcon = document.createElement('img');
+  knightIcon.src = `${ASSET_PATH}IconKnight.png`;
+  knightIcon.style.cssText = `
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+  `;
+  const knightLabel = document.createElement('div');
+  knightLabel.style.cssText = `
+    font-weight: 700;
+    font-size: 10px;
+    color: #666;
+    text-align: center;
+  `;
+  knightLabel.textContent = 'Players';
+  const knightCount = document.createElement('div');
+  knightCount.style.cssText = `
     font-weight: 700;
     font-size: 12px;
     color: #000;
   `;
-  hammerLabel.textContent = 'ARMOR';
-  const hammerIcon = document.createElement('img');
-  hammerIcon.src = `${ASSET_PATH}IconHammer.png`;
-  hammerIcon.style.cssText = `
-    width: 24px;
-    height: 24px;
+  knightCount.textContent = '1,248';
+  knightContainer.appendChild(knightIcon);
+  knightContainer.appendChild(knightLabel);
+  knightContainer.appendChild(knightCount);
+  globalStatsContainer.appendChild(knightContainer);
+
+  const swordContainer = document.createElement('div');
+  swordContainer.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-direction: column;
+  `;
+  const swordIcon = document.createElement('img');
+  swordIcon.src = `${ASSET_PATH}IconSword.png`;
+  swordIcon.style.cssText = `
+    width: 20px;
+    height: 20px;
     object-fit: contain;
   `;
-  hammerContainer.appendChild(hammerLabel);
-  hammerContainer.appendChild(hammerIcon);
-  header.appendChild(hammerContainer);
+  const swordLabel = document.createElement('div');
+  swordLabel.style.cssText = `
+    font-weight: 700;
+    font-size: 10px;
+    color: #666;
+    text-align: center;
+  `;
+  swordLabel.textContent = 'Won';
+  const swordCount = document.createElement('div');
+  swordCount.style.cssText = `
+    font-weight: 700;
+    font-size: 12px;
+    color: #000;
+  `;
+  swordCount.textContent = '3,847';
+  swordContainer.appendChild(swordIcon);
+  swordContainer.appendChild(swordLabel);
+  swordContainer.appendChild(swordCount);
+  globalStatsContainer.appendChild(swordContainer);
+
+  header.appendChild(globalStatsContainer);
 
   return header;
 }
@@ -622,14 +730,32 @@ async function game_breakingTreaty(eventId) {
       left: 0;
       right: 0;
       background: #000;
-      border-top: 4px solid #000;
+      border-top: 4px solid #fff;
       padding: 30px;
       display: flex;
       gap: 20px;
       z-index: 10;
+      animation: slideUp 0.3s ease-out;
     `;
 
-    // Character portrait
+    // Add animation
+    const style = document.createElement('style');
+    if (!document.getElementById('dialogue-animation')) {
+      style.id = 'dialogue-animation';
+      style.textContent = `
+        @keyframes slideUp {
+          from { transform: translateY(50px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Character portrait with animation
     if (bgImg) {
       const portrait = document.createElement('img');
       portrait.src = `${ASSET_PATH}${dialogues[dialogueIndex].image}`;
@@ -640,6 +766,7 @@ async function game_breakingTreaty(eventId) {
         border: 3px solid white;
         border-radius: 4px;
         flex-shrink: 0;
+        animation: bounce 0.8s ease-in-out infinite;
       `;
       dialogueBox.appendChild(portrait);
     }
@@ -671,10 +798,24 @@ async function game_breakingTreaty(eventId) {
       font-size: 16px;
       line-height: 1.8;
       color: white;
+      animation: fadeIn 0.5s ease-in;
     `;
     dialogueText.textContent = dialogues[dialogueIndex].text;
-    textBox.appendChild(dialogueText);
 
+    // Add style for text fade-in
+    if (!document.getElementById('text-animation')) {
+      const textStyle = document.createElement('style');
+      textStyle.id = 'text-animation';
+      textStyle.textContent = `
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `;
+      document.head.appendChild(textStyle);
+    }
+
+    textBox.appendChild(dialogueText);
     dialogueBox.appendChild(textBox);
     contentArea.appendChild(dialogueBox);
 
@@ -797,17 +938,29 @@ async function game_raidSilverStream(eventId) {
       ctx.fillRect(0, 0, w, h);
     }
 
+    // Semi-transparent overlay
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.fillRect(0, 0, w, h);
+
     // Player movement
     const speed = 8;
     if (keys['arrowleft'] || keys['a']) game.player.x = Math.max(0, game.player.x - speed);
     if (keys['arrowright'] || keys['d']) game.player.x = Math.min(w - game.player.w, game.player.x + speed);
 
-    // Draw player bucket
+    // Draw player bucket with shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+
     ctx.fillStyle = '#8B4513';
     ctx.fillRect(game.player.x, game.player.y, game.player.w, game.player.h);
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 3;
     ctx.strokeRect(game.player.x, game.player.y, game.player.w, game.player.h);
+
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
 
     // Update items
     game.items = game.items.filter(item => {
@@ -840,24 +993,60 @@ async function game_raidSilverStream(eventId) {
       });
     }
 
-    // Draw items
+    // Draw items with better visuals
     game.items.forEach(item => {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+
       if (item.type === 'gold') {
+        // Draw gold coin
         ctx.fillStyle = '#FFD700';
-        ctx.drawImage(assetCache.images['GoldBag.png'] || null, item.x, item.y, item.w, item.h);
-        ctx.fillStyle = '#FFD700';
-        ctx.fillRect(item.x, item.y, item.w, item.h);
+        ctx.beginPath();
+        ctx.arc(item.x + item.w/2, item.y + item.h/2, item.w/2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#DAA520';
+        ctx.lineWidth = 2;
+        ctx.stroke();
       } else {
+        // Draw danger item
         ctx.fillStyle = '#FF6B6B';
         ctx.fillRect(item.x, item.y, item.w, item.h);
+        ctx.strokeStyle = '#CC0000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(item.x, item.y, item.w, item.h);
       }
+
+      ctx.shadowColor = 'transparent';
     });
 
-    // UI Text
+    // Draw UI Panel
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fillRect(0, 0, w, 60);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, w, 60);
+
+    // UI Text with better styling
     ctx.fillStyle = '#000';
-    ctx.font = `bold 20px ${FONT}`;
-    ctx.fillText(`Gold: ${game.gold}`, 30, 40);
-    ctx.fillText(`Time: ${Math.ceil(game.time)}s`, w - 200, 40);
+    ctx.font = `bold 24px ${FONT}`;
+    ctx.fillText(`Gold Collected: ${game.gold}`, 30, 40);
+
+    ctx.fillStyle = game.time <= 10 ? '#FF6B6B' : '#000';
+    ctx.font = `bold 24px ${FONT}`;
+    ctx.fillText(`Time: ${Math.ceil(game.time)}s`, w - 250, 40);
+
+    // Progress indicator
+    const progressWidth = (w - 60) * 0.5;
+    const progressX = w / 2 - progressWidth / 2;
+    ctx.fillStyle = '#f0f0f0';
+    ctx.fillRect(progressX, 8, progressWidth, 20);
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(progressX, 8, (game.gold / 150) * progressWidth, 20);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(progressX, 8, progressWidth, 20);
 
     game.time -= 1 / 60;
     if (game.time <= 0) endGame();
@@ -1034,6 +1223,12 @@ async function createClickerGame(eventId, name, requiredClicks, bgImage) {
         game.cooldown = 0.3; // 300ms cooldown
         playSound('SoundCoin.mp3', 0.5);
 
+        // Visual feedback - button press effect
+        clickBtn.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          clickBtn.style.transform = 'scale(1)';
+        }, 100);
+
         if (game.clicks >= game.needed) {
           screen.remove();
           stopBackgroundMusic();
@@ -1095,8 +1290,26 @@ function markEventComplete(eventId, fortCoins = 0) {
     }
   }
 
+  // Reset game state
+  _gameState.isPlaying = false;
+  _gameState.currentEvent = null;
+
   // Re-render chronicle UI
   if (typeof renderChronicleEvents === 'function') renderChronicleEvents();
   if (typeof renderChronicleMapPins === 'function') renderChronicleMapPins();
   if (typeof updateChronicleProgress === 'function') updateChronicleProgress();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// CLEANUP & UTILITIES
+// ════════════════════════════════════════════════════════════════════════════
+
+function cleanupGame() {
+  stopBackgroundMusic();
+  _gameState.isPlaying = false;
+  _gameState.currentEvent = null;
+
+  // Clean up event listeners
+  document.removeEventListener('keydown', null);
+  document.removeEventListener('keyup', null);
 }

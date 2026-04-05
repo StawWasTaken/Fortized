@@ -930,13 +930,16 @@ async function game_raidSilverStream(eventId) {
 
   // Keyboard controls
   const keys = {};
-  document.addEventListener('keydown', (e) => {
+  const handleKeyDown = (e) => {
     keys[e.key.toLowerCase()] = true;
     if (['arrowleft', 'arrowright'].includes(e.key.toLowerCase())) e.preventDefault();
-  });
-  document.addEventListener('keyup', (e) => {
+  };
+  const handleKeyUp = (e) => {
     keys[e.key.toLowerCase()] = false;
-  });
+  };
+
+  document.addEventListener('keydown', handleKeyDown);
+  document.addEventListener('keyup', handleKeyUp);
 
   function update() {
     if (!game.active) return;
@@ -1080,8 +1083,15 @@ async function game_raidSilverStream(eventId) {
   }
 
   screen.appendChild(gameArea);
-  document.removeEventListener('keydown', null);
-  document.removeEventListener('keyup', null);
+
+  // Cleanup on game end
+  const endGameOriginal = endGame;
+  endGame = () => {
+    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('keyup', handleKeyUp);
+    endGameOriginal();
+  };
+
   update();
 }
 

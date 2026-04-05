@@ -31207,6 +31207,10 @@ function closeChronicle() {
   if (video) video.pause();
   const detail = document.getElementById('chronicle-detail');
   if (detail) detail.classList.remove('open');
+  // Reset chronicle game session when closing
+  if (typeof resetChronicleSession === 'function') {
+    resetChronicleSession();
+  }
 }
 
 function skipChronicleIntro() {

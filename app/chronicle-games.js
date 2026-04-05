@@ -199,14 +199,15 @@ function createStatBar(label, current, max, icon = null) {
 // ════════════════════════════════════════════════════════════════════════════
 
 let _menuShown = false;
+let _sessionStarted = false;
 
 async function launchChronicleMinigame(eventId) {
   console.log('🎮 Launching Chronicle Event:', eventId);
 
-  // Show menu if first time
-  if (!_menuShown) {
+  // Show menu only on first event of the session
+  if (!_sessionStarted) {
     await showChronicleMenu(eventId);
-    _menuShown = true;
+    _sessionStarted = true;
     return;
   }
 
@@ -214,6 +215,11 @@ async function launchChronicleMinigame(eventId) {
     return;
   }
 
+  // Start the actual game
+  await launchChronicleGame(eventId);
+}
+
+async function launchChronicleGame(eventId) {
   playSound('SoundPlay.mp3');
   playBackgroundMusic();
 
@@ -237,6 +243,11 @@ async function launchChronicleMinigame(eventId) {
   }
 
   _gameState.isPlaying = false;
+}
+
+// Reset session when Chronicle view closes
+function resetChronicleSession() {
+  _sessionStarted = false;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -350,7 +361,7 @@ async function showChronicleMenu(eventId) {
     playSound('SoundUiSelect.mp3');
     overlay.remove();
     await showIntroVideo();
-    launchChronicleMinigame(eventId);
+    await launchChronicleGame(eventId);
   };
   content.appendChild(startBtn);
 

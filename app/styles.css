@@ -3024,4 +3024,232 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
   .uv-header-content{min-height:180px;}
   .mobile-settings-drawer{width:100%;max-width:100vw;}
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CHRONICLE WHITE/BLACK AESTHETIC OVERRIDES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.chronicle-topbar{
+  background: white;
+  border-bottom: 3px solid #000;
+  padding: 12px 16px;
+}
+
+.chronicle-topbar-left, .chronicle-topbar-title, .chronicle-topbar-chapter,
+.chronicle-timer, .chronicle-topbar-right {
+  color: #000;
+}
+
+.chronicle-topbar-chapter {
+  background: transparent;
+  border: 2px solid #000;
+  color: #000;
+}
+
+.chronicle-desk {
+  background: white;
+  border: none;
+}
+
+.chronicle-desk::before, .chronicle-desk::after {
+  display: none;
+}
+
+.chronicle-desk-map {
+  background: white;
+  padding: 20px;
+}
+
+.chronicle-map-wrap {
+  border: 4px solid #000;
+  box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+  border-radius: 0;
+}
+
+.chronicle-map-img {
+  filter: contrast(1.1) brightness(1);
+}
+
+.chronicle-chapter-parchment {
+  background: white;
+  border: 4px solid #000;
+  border-radius: 0;
+  padding: 20px;
+  box-shadow: 4px 4px 0px rgba(0,0,0,0.15);
+}
+
+.chronicle-chapter-label, .chronicle-chapter-title, .chronicle-chapter-desc {
+  color: #000;
+  font-family: 'Comic Sans MS', sans-serif;
+  font-weight: 700;
+}
+
+.chronicle-chapter-title {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.chronicle-chapter-desc {
+  color: #333;
+}
+
+.chronicle-progress-bar {
+  background: #ddd;
+  border: 2px solid #000;
+  height: 20px;
+  border-radius: 0;
+  margin: 12px 0;
+}
+
+.chronicle-progress-fill {
+  background: #000;
+  border-radius: 0;
+}
+
+.chronicle-progress-label {
+  color: #000;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.chronicle-scroll-panel {
+  background: white;
+  border-left: 3px solid #000;
+}
+
+.chronicle-scroll-header {
+  background: white;
+  color: #000;
+  border-bottom: 2px solid #000;
+  font-family: 'Comic Sans MS', sans-serif;
+  font-weight: 700;
+}
+
+.chronicle-scroll-list {
+  background: white;
+  padding: 12px;
+}
+
+.chron-event {
+  background: white;
+  border: 2px solid #000;
+  border-radius: 0;
+  padding: 12px;
+  margin-bottom: 6px;
+}
+
+.chron-event:hover {
+  background: #f5f5f5;
+  border-color: #000;
+}
+
+.chron-event-num {
+  background: white;
+  color: #000;
+  border: 2px solid #000;
+  font-weight: 700;
+}
+
+.chron-event.completed .chron-event-num {
+  background: #000;
+  color: white;
+  border: 2px solid #000;
+}
+
+.chron-event-title {
+  color: #000;
+  font-family: 'Comic Sans MS', sans-serif;
+  font-weight: 700;
+}
+
+.chron-event-loc {
+  color: #666;
+  font-size: 12px;
+}
+
+.chron-event.locked {
+  opacity: 0.5;
+}
+
+.chronicle-shop-banner {
+  background: white;
+  border: 2px solid #000;
+  border-radius: 0;
+}
+
+.chronicle-shop-banner svg {
+  color: #000;
+}
+
+.chronicle-shop-banner-text {
+  color: #000;
+}
+
+.chronicle-skip-btn {
+  background: white;
+  border: 3px solid #000;
+  color: #000;
+  font-weight: 700;
+  font-family: 'Comic Sans MS', sans-serif;
+}
+
+.chron-play-btn {
+  background: #000;
+  color: white;
+  border: 3px solid #000;
+  border-radius: 0;
+  font-weight: 700;
+  font-family: 'Comic Sans MS', sans-serif;
+}
+
+.chron-play-btn:hover {
+  background: #333;
+  border-color: #000;
+}
+
+.chron-detail-title {
+  color: #000;
+  font-family: 'Comic Sans MS', sans-serif;
+}
+
+.chron-detail-inner {
+  background: white;
+  color: #000;
+}
+
+.chron-detail-phase {
+  background: white;
+  border: 2px solid #000;
+  border-radius: 0;
+}
+
+.chron-detail-phase h4 {
+  color: #000;
+}
+
+.chron-detail-phase p {
+  color: #333;
+}
+
+.chronicle-intro {
+  background: white;
+}
+
+/* Joy Bar Styling */
+#chronicle-joy-bar {
+  background: #000 !important;
+  border: 2px solid #000 !important;
+  border-radius: 0 !important;
+}
+
+/* Progress text */
+#chronicle-progress-text {
+  color: #000 !important;
+}
+
+/* Joy percent display */
+#chronicle-joy-percent {
+  color: #000 !important;
+}
+
 </style>

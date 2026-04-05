@@ -31035,6 +31035,7 @@ const TAG_CLASS_MAP = {stealth:'tag-stealth',siege:'tag-siege',naval:'tag-naval'
 let _chronicleOpen = false;
 let _chronicleIntroPlayed = false;
 let _chronicleProgress = {}; // {eventId: true} for completed events
+let _playerOnyx = 0; // Player's Onyx currency
 
 function openChronicle() {
   const overlay = document.getElementById('chronicle-overlay');

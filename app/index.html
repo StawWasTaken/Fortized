@@ -987,18 +987,37 @@ window._cdnReady.then(function() {
             </div>
             <div class="chronicle-progress-label"><span id="chronicle-progress-text">0 / 14</span> Events Complete</div>
 
-            <!-- Joy System Bar -->
-            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,249,62,.2);">
-              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                <span style="font-size: 12px; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: 1px;">🎭 Joy</span>
-                <span id="chronicle-joy-percent" style="font-size: 14px; font-weight: 600; color: #fff93e;">85</span>%
+            <!-- Stats Section: Joy & Onyx -->
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #000;">
+              <!-- Joy System -->
+              <div style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                  <span style="font-size: 12px; color: #000; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">🎭 Joy</span>
+                  <span id="chronicle-joy-percent" style="font-size: 14px; font-weight: 700; color: #000;">85</span>%
+                </div>
+                <div style="height: 16px; background: white; border: 2px solid #000; border-radius: 0; overflow: hidden; cursor: pointer;" title="Click to increase Joy">
+                  <div id="chronicle-joy-bar" style="height: 100%; background: #000; width: 85%; transition: width 0.3s;"></div>
+                </div>
               </div>
-              <div style="height: 12px; background: rgba(255,255,255,.1); border-radius: 6px; overflow: hidden; cursor: pointer;" title="Click to increase Joy">
-                <div id="chronicle-joy-bar" style="height: 100%; background: linear-gradient(90deg, #4ade80, #22c55e); width: 85%; transition: width 0.3s;"></div>
+
+              <!-- Onyx Counter -->
+              <div style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                  <span style="font-size: 12px; color: #000; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">💎 Onyx</span>
+                  <span id="player-onyx-count" style="font-size: 14px; font-weight: 700; color: #000;">0</span>
+                </div>
+                <div style="height: 16px; background: white; border: 2px solid #000; border-radius: 0; overflow: hidden;">
+                  <div style="height: 100%; background: linear-gradient(90deg, #333, #000); width: 50%;"></div>
+                </div>
               </div>
-              <p style="margin: 8px 0 0 0; font-size: 11px; color: rgba(255,255,255,.5);">
-                Click bar to boost Joy • Depletes during battles • Recovers over time
-              </p>
+
+              <!-- FortCoins Counter -->
+              <div style="margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                  <span style="font-size: 12px; color: #000; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">🪙 FortCoins</span>
+                  <span id="player-fortcoin-count" style="font-size: 14px; font-weight: 700; color: #000;">0</span>
+                </div>
+              </div>
             </div>
 
           </div>

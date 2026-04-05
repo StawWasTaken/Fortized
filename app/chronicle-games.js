@@ -1,14 +1,44 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
- * FORTIZED GRAND CHRONICLE - GAMES (Hand-drawn White/Black Style)
+ * FORTIZED GRAND CHRONICLE - GAMES v2 (White/Black Aesthetic + Image Assets)
  * ═══════════════════════════════════════════════════════════════════════════════
- * Discord-style narrative games with sketch aesthetic
  */
 
 const ASSET_PATH = '/app/Chronicle/chapter1/assets/';
 
+// Audio system
+const audioCache = {};
+function playSound(filename) {
+  if (!audioCache[filename]) {
+    const audio = new Audio(`${ASSET_PATH}${filename}`);
+    audio.volume = 0.3;
+    audioCache[filename] = audio;
+  }
+  audioCache[filename].currentTime = 0;
+  audioCache[filename].play().catch(() => {});
+}
+
+// Image preloader
+const imageCache = {};
+function loadImage(filename) {
+  return new Promise((resolve) => {
+    if (imageCache[filename]) {
+      resolve(imageCache[filename]);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      imageCache[filename] = img;
+      resolve(img);
+    };
+    img.onerror = () => resolve(null);
+    img.src = `${ASSET_PATH}${filename}`;
+  });
+}
+
 function launchChronicleMinigame(eventId) {
   console.log('🎮 Game launch:', eventId);
+  playSound('SoundPlay.mp3');
 
   if (typeof canPlayGame === 'function' && !canPlayGame()) {
     return;
@@ -19,7 +49,7 @@ function launchChronicleMinigame(eventId) {
     case 2: return game_raidSilverStream();
     case 3: return game_burningElowen();
     case 4: return game_timberRoads();
-    case 5: return game_defenseVastilly();
+    case 5: return game_combatBattle();
     case 6: return game_fenwckCanal();
     case 7: return game_ironstall();
     case 8: return game_glassportBlockade();
@@ -28,329 +58,236 @@ function launchChronicleMinigame(eventId) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// SHARED UI UTILITIES
+// SHARED UI & STYLING
 // ════════════════════════════════════════════════════════════════════════════
 
-function createGameContainer() {
+function createGameScreen() {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: white; z-index: 9999; font-family: 'Comic Sans MS', sans-serif;
+    overflow: hidden; border: 4px solid #000;
+  `;
+  return screen;
+}
+
+function createNPCDialogue(npcImage, npcName, text) {
   const container = document.createElement('div');
   container.style.cssText = `
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(135deg, #f5f5f0 0%, #fafaf8 100%);
-    z-index: 9999; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    font-family: 'Comic Sans MS', 'Trebuchet MS', sans-serif;
-    overflow: hidden;
-  `;
-  return container;
-}
-
-function createGameBox(title, content) {
-  const box = document.createElement('div');
-  box.style.cssText = `
-    background: white;
-    border: 4px solid #000;
-    border-radius: 8px;
-    padding: 30px;
-    max-width: 600px;
-    width: 90%;
-    box-shadow: 6px 6px 0px rgba(0,0,0,0.15);
-    position: relative;
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #000; color: white; padding: 20px; border-top: 3px solid #000;
+    min-height: 120px; display: flex; gap: 20px;
   `;
 
-  if (title) {
-    const titleEl = document.createElement('h2');
-    titleEl.style.cssText = `
-      margin: -40px 0 20px 0;
-      font-size: 28px;
-      font-weight: 900;
-      text-align: center;
-      color: #000;
-      font-style: italic;
-      text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
-      letter-spacing: 2px;
+  if (npcImage) {
+    const imgEl = document.createElement('img');
+    imgEl.src = `${ASSET_PATH}${npcImage}`;
+    imgEl.style.cssText = `
+      height: 120px; width: auto; image-rendering: crisp-edges;
+      border: 2px solid white;
     `;
-    titleEl.textContent = title;
-    box.appendChild(titleEl);
+    container.appendChild(imgEl);
   }
 
-  if (content) {
-    box.appendChild(content);
-  }
-
-  return box;
-}
-
-function createButton(text, onClick) {
-  const btn = document.createElement('button');
-  btn.style.cssText = `
-    background: #000;
-    color: white;
-    border: 3px solid #000;
-    padding: 12px 24px;
-    margin: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 700;
-    border-radius: 4px;
-    transition: all 0.1s;
-    transform: skewX(-10deg);
-    font-family: 'Comic Sans MS', sans-serif;
-  `;
-  btn.textContent = text;
-  btn.onmouseover = () => {
-    btn.style.background = '#333';
-    btn.style.transform = 'skewX(-10deg) scale(1.05)';
-  };
-  btn.onmouseout = () => {
-    btn.style.background = '#000';
-    btn.style.transform = 'skewX(-10deg)';
-  };
-  btn.onclick = onClick;
-  return btn;
-}
-
-function createDialogueBox(npcName, text) {
-  const box = document.createElement('div');
-  box.style.cssText = `
-    background: white;
-    border: 3px solid #000;
-    border-radius: 6px;
-    padding: 16px;
-    margin: 12px 0;
-    position: relative;
-  `;
+  const textBox = document.createElement('div');
+  textBox.style.cssText = `flex: 1;`;
 
   if (npcName) {
     const name = document.createElement('div');
     name.style.cssText = `
-      font-weight: 700;
-      color: #000;
-      font-size: 14px;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      font-weight: 700; font-size: 14px; margin-bottom: 8px; text-transform: uppercase;
     `;
     name.textContent = npcName;
-    box.appendChild(name);
+    textBox.appendChild(name);
   }
 
-  const textEl = document.createElement('div');
-  textEl.style.cssText = `
-    color: #333;
-    font-size: 14px;
-    line-height: 1.5;
-    font-family: 'Comic Sans MS', sans-serif;
+  const dialogue = document.createElement('div');
+  dialogue.style.cssText = `
+    font-size: 13px; line-height: 1.5; color: #fff;
   `;
-  textEl.textContent = text;
-  box.appendChild(textEl);
+  dialogue.textContent = text;
+  textBox.appendChild(dialogue);
 
-  return box;
+  container.appendChild(textBox);
+  return container;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// EVENT 1: BREAKING OF THE TREATY - Dialogue/Choice Game
+// EVENT 1: BREAKING OF THE TREATY - RPG Dialogue
 // ════════════════════════════════════════════════════════════════════════════
-function game_breakingTreaty() {
-  const container = createGameContainer();
-  document.body.appendChild(container);
+async function game_breakingTreaty() {
+  const screen = createGameScreen();
+  document.body.appendChild(screen);
 
-  const game = {
-    persuasion: 50,
-    round: 0,
-    maxRounds: 3,
-    dialogues: [
-      { npc: 'Cardinal Wealthplace', text: 'The Treaty of Silver Stream is broken! What counsel do you offer, Knight?' },
-      { npc: 'Lady Vesper', text: 'Oakhaven tests our resolve. Do we show strength or restraint?' },
-      { npc: 'Magistrate Kolin', text: 'The people await our decision. What is your word?' }
-    ],
-    choices: [
-      { text: 'Demand reparations', impact: 10 },
-      { text: 'New trade deals', impact: 5 },
-      { text: 'Prepare for war', impact: 20 },
-      { text: 'Seek peace', impact: 3 }
-    ]
-  };
+  const bgImg = await loadImage('CouncilChamber.png');
+  const dialogues = [
+    { npc: 'Wealthplace.png', name: 'Cardinal Wealthplace', text: 'The treaty is broken. We must act decisively.' },
+    { npc: 'Wealthplace.png', name: 'Cardinal Wealthplace', text: 'Your honor as a knight will determine our fate.' }
+  ];
 
-  function updateDialogue() {
-    container.innerHTML = '';
+  let dialogueIndex = 0;
 
-    if (game.round >= game.maxRounds) {
+  function showDialogue() {
+    screen.innerHTML = '';
+
+    // Background
+    if (bgImg) {
+      const bg = document.createElement('img');
+      bg.src = bgImg.src;
+      bg.style.cssText = `
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        object-fit: cover; opacity: 0.7;
+      `;
+      screen.appendChild(bg);
+    }
+
+    // Dark overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+    `;
+    screen.appendChild(overlay);
+
+    if (dialogueIndex >= dialogues.length) {
       endGame();
       return;
     }
 
-    const curr = game.dialogues[game.round];
-    const content = document.createElement('div');
+    const curr = dialogues[dialogueIndex];
+    const dialogue = createNPCDialogue(curr.npc, curr.name, curr.text);
+    screen.appendChild(dialogue);
 
-    // Dialogue
-    content.appendChild(createDialogueBox(curr.npc, curr.text));
-
-    // Persuasion meter
-    const meterBox = document.createElement('div');
-    meterBox.style.cssText = `
-      background: #f0f0f0;
-      border: 2px solid #000;
-      padding: 12px;
-      margin: 16px 0;
-      border-radius: 4px;
+    // Continue button
+    const continueBtn = document.createElement('button');
+    continueBtn.style.cssText = `
+      position: absolute; bottom: 150px; right: 20px;
+      background: #000; color: white; border: 2px solid white;
+      padding: 10px 20px; cursor: pointer; font-weight: 700;
+      font-family: 'Comic Sans MS', sans-serif; font-size: 12px;
     `;
-
-    const meterLabel = document.createElement('div');
-    meterLabel.style.cssText = 'font-size: 12px; font-weight: 700; margin-bottom: 6px;';
-    meterLabel.textContent = `PERSUASION: ${Math.round(game.persuasion)}%`;
-    meterBox.appendChild(meterLabel);
-
-    const meterBar = document.createElement('div');
-    meterBar.style.cssText = `
-      height: 12px;
-      background: #ddd;
-      border: 1px solid #000;
-      border-radius: 2px;
-      overflow: hidden;
-    `;
-    const fill = document.createElement('div');
-    fill.style.cssText = `
-      height: 100%;
-      background: #000;
-      width: ${Math.min(100, game.persuasion)}%;
-      transition: width 0.3s;
-    `;
-    meterBar.appendChild(fill);
-    meterBox.appendChild(meterBar);
-    content.appendChild(meterBox);
-
-    // Choices
-    const choicesBox = document.createElement('div');
-    choicesBox.style.cssText = 'margin-top: 12px;';
-    game.choices.forEach(choice => {
-      const btn = document.createElement('button');
-      btn.style.cssText = `
-        display: block;
-        width: 100%;
-        background: white;
-        border: 2px solid #000;
-        padding: 12px;
-        margin: 6px 0;
-        cursor: pointer;
-        text-align: left;
-        font-size: 13px;
-        border-radius: 4px;
-        transition: all 0.1s;
-        font-family: 'Comic Sans MS', sans-serif;
-      `;
-      btn.textContent = choice.text;
-      btn.onmouseover = () => btn.style.background = '#f0f0f0';
-      btn.onmouseout = () => btn.style.background = 'white';
-      btn.onclick = () => makeChoice(choice.impact);
-      choicesBox.appendChild(btn);
-    });
-    content.appendChild(choicesBox);
-
-    const gameBox = createGameBox('COUNCIL CHAMBER', content);
-    container.appendChild(gameBox);
-  }
-
-  function makeChoice(impact) {
-    game.persuasion += impact + (Math.random() * 20 - 10);
-    game.persuasion = Math.max(0, Math.min(100, game.persuasion));
-    game.round++;
-    updateDialogue();
+    continueBtn.textContent = '→ CONTINUE';
+    continueBtn.onclick = () => {
+      playSound('SoundUiSelect.mp3');
+      dialogueIndex++;
+      showDialogue();
+    };
+    screen.appendChild(continueBtn);
   }
 
   function endGame() {
-    const success = game.persuasion > 60;
-    container.remove();
-    if (success) {
-      markEventComplete(1);
-      toast('✓ The council declares war!', 'success');
-    } else {
-      toast('✗ The council remains divided.', 'error');
-    }
+    playSound('SoundWin.mp3');
+    screen.remove();
+    markEventComplete(1);
+    toast('✓ Treaty dialogue complete!', 'success');
   }
 
-  updateDialogue();
+  showDialogue();
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// EVENT 2: RAID ON SILVER STREAM - Catch Falling Objects
+// EVENT 2: RAID ON SILVER STREAM - Catch/Dodge Falling Objects
 // ════════════════════════════════════════════════════════════════════════════
-function game_raidSilverStream() {
-  const container = createGameContainer();
-  document.body.appendChild(container);
+async function game_raidSilverStream() {
+  const screen = createGameScreen();
+  document.body.appendChild(screen);
 
+  const bgImg = await loadImage('SilverStream.png');
   const canvas = document.createElement('canvas');
-  canvas.width = 600;
-  canvas.height = 400;
-  canvas.style.cssText = `
-    border: 4px solid #000;
-    background: white;
-    display: block;
-    max-width: 90vw;
-    image-rendering: crisp-edges;
-  `;
-  container.appendChild(canvas);
+  canvas.width = screen.clientWidth;
+  canvas.height = screen.clientHeight;
+  canvas.style.cssText = `position: absolute; top: 0; left: 0;`;
+  screen.appendChild(canvas);
 
   const ctx = canvas.getContext('2d');
   const w = canvas.width;
   const h = canvas.height;
 
+  // Draw background
+  if (bgImg) {
+    ctx.drawImage(bgImg, 0, 0, w, h);
+  }
+
   const game = {
-    player: { x: w / 2, y: h - 50, w: 40, h: 40, collected: 0 },
-    items: [],
+    player: { x: w / 2, y: h - 60, w: 40, h: 50, collected: 0 },
+    objects: [],
     time: 30,
-    gameActive: true
+    active: true
   };
 
-  // Spawn initial items
   for (let i = 0; i < 3; i++) {
-    game.items.push({
+    game.objects.push({
       x: Math.random() * w,
-      y: Math.random() * (h * 0.5),
-      w: 20,
-      h: 20,
-      vy: 1.5 + Math.random(),
-      type: Math.random() > 0.3 ? 'gold' : 'danger'
+      y: -30,
+      w: 25,
+      h: 25,
+      vy: 2 + Math.random(),
+      type: Math.random() > 0.3 ? 'catch' : 'dodge'
     });
   }
 
   document.addEventListener('mousemove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    game.player.x = e.clientX - rect.left - game.player.w / 2;
+    game.player.x = e.clientX - game.player.w / 2;
     game.player.x = Math.max(0, Math.min(w - game.player.w, game.player.x));
   });
 
   function update() {
-    if (!game.gameActive) return;
+    if (!game.active) return;
 
-    // Update items
-    game.items = game.items.filter(item => {
-      item.y += item.vy;
+    // Clear and redraw background
+    if (bgImg) {
+      ctx.drawImage(bgImg, 0, 0, w, h);
+    } else {
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(0, 0, w, h);
+    }
 
-      // Check collision
-      if (item.y + item.h > game.player.y &&
-          item.y < game.player.y + game.player.h &&
-          item.x + item.w > game.player.x &&
-          item.x < game.player.x + game.player.w) {
-        if (item.type === 'gold') {
-          game.player.collected += 10;
+    // Update objects
+    game.objects = game.objects.filter(obj => {
+      obj.y += obj.vy;
+
+      // Collision
+      if (obj.y + obj.h > game.player.y &&
+          obj.y < game.player.y + game.player.h &&
+          obj.x + obj.w > game.player.x &&
+          obj.x < game.player.x + game.player.w) {
+        if (obj.type === 'catch') {
+          game.collected += 10;
+          playSound('SoundCoin.mp3');
         }
         return false;
       }
 
-      return item.y < h;
+      return obj.y < h;
     });
 
-    // Spawn new items
-    if (Math.random() < 0.02) {
-      game.items.push({
+    // Spawn new
+    if (Math.random() < 0.03) {
+      game.objects.push({
         x: Math.random() * w,
-        y: -20,
-        w: 20,
-        h: 20,
-        vy: 1.5 + Math.random(),
-        type: Math.random() > 0.3 ? 'gold' : 'danger'
+        y: -30,
+        w: 25,
+        h: 25,
+        vy: 2 + Math.random(),
+        type: Math.random() > 0.3 ? 'catch' : 'dodge'
       });
     }
+
+    // Draw player
+    ctx.fillStyle = '#000';
+    ctx.fillRect(game.player.x, game.player.y, game.player.w, game.player.h);
+
+    // Draw objects
+    game.objects.forEach(obj => {
+      ctx.fillStyle = obj.type === 'catch' ? '#FFD700' : '#FF4444';
+      ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
+    });
+
+    // UI
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 16px Comic Sans MS';
+    ctx.fillText(`Gold: ${game.collected}`, 20, 30);
+    ctx.fillText(`Time: ${Math.ceil(game.time)}s`, w - 150, 30);
 
     game.time -= 1 / 60;
     if (game.time <= 0) {
@@ -358,520 +295,504 @@ function game_raidSilverStream() {
       return;
     }
 
-    draw();
     requestAnimationFrame(update);
   }
 
-  function draw() {
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, w, h);
-
-    // Player
-    ctx.fillStyle = '#000';
-    ctx.fillRect(game.player.x, game.player.y, game.player.w, game.player.h);
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(game.player.x, game.player.y, game.player.w, game.player.h);
-
-    // Items
-    game.items.forEach(item => {
-      ctx.fillStyle = item.type === 'gold' ? '#FFD700' : '#FF6B6B';
-      ctx.fillRect(item.x, item.y, item.w, item.h);
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(item.x, item.y, item.w, item.h);
-    });
-
-    // UI
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 14px Comic Sans MS';
-    ctx.fillText(`Gold: ${game.player.collected}`, 10, 20);
-    ctx.fillText(`Time: ${Math.ceil(game.time)}s`, w - 100, 20);
-  }
-
   function endGame() {
-    game.gameActive = false;
-    container.remove();
-    if (game.player.collected >= 150) {
+    game.active = false;
+    screen.remove();
+    if (game.collected >= 100) {
+      playSound('SoundWin.mp3');
       markEventComplete(2);
-      toast('✓ Raid successful! Gold secured!', 'success');
+      toast('✓ Raid successful!', 'success');
     } else {
-      toast('✗ Raid failed. Not enough gold collected.', 'error');
+      playSound('SoundLose.mp3');
+      toast('✗ Not enough gold.', 'error');
     }
   }
 
-  draw();
-  requestAnimationFrame(update);
+  update();
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// EVENT 3: BURNING ELOWEN - Clicker Game
+// EVENT 3: BURNING ELOWEN - Clicker with Cooldown
 // ════════════════════════════════════════════════════════════════════════════
-function game_burningElowen() {
-  const container = createGameContainer();
-  document.body.appendChild(container);
+async function game_burningElowen() {
+  const screen = createGameScreen();
+  document.body.appendChild(screen);
+
+  const bgImg = await loadImage('Battlefield.png');
+  if (bgImg) {
+    const bg = document.createElement('img');
+    bg.src = bgImg.src;
+    bg.style.cssText = `
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: cover; opacity: 0.6;
+    `;
+    screen.appendChild(bg);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+  `;
+  screen.appendChild(overlay);
 
   const game = {
-    depots: [
-      { name: 'North Depot', clicked: 0, needed: 3 },
-      { name: 'East Depot', clicked: 0, needed: 3 },
-      { name: 'South Depot', clicked: 0, needed: 3 },
-      { name: 'West Depot', clicked: 0, needed: 3 },
-      { name: 'Center Depot', clicked: 0, needed: 3 }
-    ],
-    completed: 0
+    clicks: 0,
+    needed: 20,
+    cooldown: 0,
+    maxCooldown: 30
   };
 
-  function renderGame() {
-    container.innerHTML = '';
-
+  function render() {
     const content = document.createElement('div');
-
-    const progressBox = document.createElement('div');
-    progressBox.style.cssText = `
-      background: #f0f0f0;
-      border: 2px solid #000;
-      padding: 12px;
-      margin-bottom: 16px;
-      text-align: center;
-      border-radius: 4px;
+    content.style.cssText = `
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: white; border: 4px solid #000; padding: 40px;
+      text-align: center; max-width: 400px; z-index: 10;
     `;
-    progressBox.innerHTML = `
-      <div style="font-weight: 700; margin-bottom: 6px;">DEPOTS DESTROYED: ${game.completed}/5</div>
+
+    const title = document.createElement('h2');
+    title.style.cssText = 'margin: 0 0 20px 0; font-size: 24px;';
+    title.textContent = 'BURN THE DEPOT';
+    content.appendChild(title);
+
+    const progress = document.createElement('div');
+    progress.style.cssText = `
+      background: #f0f0f0; border: 2px solid #000; padding: 15px;
+      margin-bottom: 20px; border-radius: 4px;
+    `;
+    progress.innerHTML = `
+      <div style="font-weight: 700; margin-bottom: 8px;">${game.clicks}/${game.needed}</div>
       <div style="height: 16px; background: white; border: 1px solid #000; border-radius: 2px; overflow: hidden;">
-        <div style="height: 100%; background: #000; width: ${(game.completed / 5) * 100}%;"></div>
+        <div style="height: 100%; background: #000; width: ${(game.clicks / game.needed) * 100}%;"></div>
       </div>
     `;
-    content.appendChild(progressBox);
+    content.appendChild(progress);
 
-    game.depots.forEach((depot, idx) => {
-      const depotBtn = document.createElement('button');
-      depotBtn.style.cssText = `
-        display: block;
-        width: 100%;
-        background: white;
-        border: 2px solid #000;
-        padding: 12px;
-        margin: 6px 0;
-        cursor: pointer;
-        text-align: left;
-        font-size: 13px;
-        border-radius: 4px;
-        transition: all 0.1s;
-        font-weight: 700;
-        font-family: 'Comic Sans MS', sans-serif;
-      `;
-      depotBtn.textContent = `${depot.name}: ${depot.clicked}/${depot.needed}`;
-
-      if (depot.clicked >= depot.needed) {
-        depotBtn.style.background = '#000';
-        depotBtn.style.color = 'white';
-        depotBtn.disabled = true;
+    const clickBtn = document.createElement('button');
+    clickBtn.style.cssText = `
+      width: 100%; padding: 30px; background: white; border: 3px solid #000;
+      font-size: 18px; font-weight: 700; cursor: pointer; border-radius: 4px;
+      font-family: 'Comic Sans MS', sans-serif;
+      ${game.cooldown > 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''}
+    `;
+    clickBtn.textContent = game.cooldown > 0 ? `WAIT ${Math.ceil(game.cooldown / 10)}...` : 'CLICK!';
+    clickBtn.disabled = game.cooldown > 0;
+    clickBtn.onclick = () => {
+      if (game.cooldown <= 0) {
+        game.clicks++;
+        game.cooldown = game.maxCooldown;
+        playSound('SoundCoin.mp3');
+        if (game.clicks >= game.needed) {
+          endGame();
+          return;
+        }
+        render();
       }
+    };
+    content.appendChild(clickBtn);
 
-      depotBtn.onmouseover = () => {
-        if (depot.clicked < depot.needed) {
-          depotBtn.style.background = '#f0f0f0';
-        }
-      };
-      depotBtn.onmouseout = () => {
-        if (depot.clicked < depot.needed) {
-          depotBtn.style.background = 'white';
-        }
-      };
+    screen.appendChild(content);
 
-      depotBtn.onclick = () => {
-        if (depot.clicked < depot.needed) {
-          depot.clicked++;
-          if (depot.clicked >= depot.needed) {
-            game.completed++;
-            if (game.completed >= 5) {
-              endGame();
-              return;
-            }
-          }
-          renderGame();
-        }
-      };
-
-      content.appendChild(depotBtn);
-    });
-
-    const gameBox = createGameBox('BURNING ELOWEN', content);
-    container.appendChild(gameBox);
+    if (game.cooldown > 0) {
+      game.cooldown--;
+      setTimeout(render, 50);
+    }
   }
 
   function endGame() {
-    container.remove();
+    playSound('SoundWin.mp3');
+    screen.remove();
     markEventComplete(3);
-    toast('✓ Elowen is burning! Mission complete!', 'success');
+    toast('✓ Elowen burns!', 'success');
   }
 
-  renderGame();
+  render();
 }
 
 // ════════════════════════════════════════════════════════════════════════════
 // EVENT 4: TIMBER ROADS - Arrow Sequence
 // ════════════════════════════════════════════════════════════════════════════
-function game_timberRoads() {
-  const container = createGameContainer();
-  document.body.appendChild(container);
+async function game_timberRoads() {
+  const screen = createGameScreen();
+  document.body.appendChild(screen);
+
+  const bgImg = await loadImage('TheCanals.png');
+  if (bgImg) {
+    const bg = document.createElement('img');
+    bg.src = bgImg.src;
+    bg.style.cssText = `
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: cover; opacity: 0.5;
+    `;
+    screen.appendChild(bg);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.3);
+  `;
+  screen.appendChild(overlay);
 
   const game = {
     sequence: [],
-    playerSequence: [],
+    playerInput: [],
     round: 0,
-    maxRounds: 4
+    maxRounds: 5
   };
 
-  const arrows = ['↑', '→', '↓', '←'];
+  const arrows = [
+    { key: 'ArrowUp', symbol: '↑', code: 38 },
+    { key: 'ArrowRight', symbol: '→', code: 39 },
+    { key: 'ArrowDown', symbol: '↓', code: 40 },
+    { key: 'ArrowLeft', symbol: '←', code: 37 }
+  ];
 
   function generateSequence() {
     game.sequence.push(arrows[Math.floor(Math.random() * 4)]);
   }
 
-  function renderGame() {
-    container.innerHTML = '';
+  function render() {
+    screen.innerHTML = '';
+    if (bgImg) {
+      const bg = document.createElement('img');
+      bg.src = bgImg.src;
+      bg.style.cssText = `
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        object-fit: cover; opacity: 0.5;
+      `;
+      screen.appendChild(bg);
+    }
+    screen.appendChild(overlay.cloneNode());
 
     const content = document.createElement('div');
-
-    // Instructions
-    const instructions = document.createElement('div');
-    instructions.style.cssText = `
-      background: #f0f0f0;
-      border: 2px solid #000;
-      padding: 12px;
-      margin-bottom: 16px;
-      text-align: center;
-      border-radius: 4px;
-      font-size: 12px;
+    content.style.cssText = `
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: white; border: 4px solid #000; padding: 40px;
+      text-align: center; max-width: 500px; z-index: 10;
     `;
-    instructions.innerHTML = `Remember the arrow sequence!<br>Round ${game.round + 1} of ${game.maxRounds}`;
-    content.appendChild(instructions);
 
-    // Sequence display
+    const title = document.createElement('h2');
+    title.textContent = `TIMBER ROADS - Round ${game.round + 1}/${game.maxRounds}`;
+    title.style.cssText = 'margin: 0 0 20px 0;';
+    content.appendChild(title);
+
     const seqDisplay = document.createElement('div');
     seqDisplay.style.cssText = `
-      background: white;
-      border: 2px solid #000;
-      padding: 16px;
-      text-align: center;
-      font-size: 32px;
-      font-weight: 700;
-      margin-bottom: 16px;
-      border-radius: 4px;
-      letter-spacing: 8px;
-      min-height: 50px;
+      background: #000; color: white; padding: 20px; border: 2px solid #000;
+      font-size: 28px; font-weight: 700; letter-spacing: 10px; margin-bottom: 20px;
+      border-radius: 4px; min-height: 60px;
     `;
-    seqDisplay.textContent = game.sequence.join(' ');
+    seqDisplay.textContent = game.sequence.map(a => a.symbol).join(' ') || '...';
     content.appendChild(seqDisplay);
 
-    // Arrow buttons
-    const buttonBox = document.createElement('div');
-    buttonBox.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;';
+    const hint = document.createElement('p');
+    hint.textContent = 'Press arrow keys in order!';
+    hint.style.cssText = 'margin: 0 0 20px 0; font-weight: 700;';
+    content.appendChild(hint);
 
-    arrows.forEach((arrow, idx) => {
-      const btn = createButton(arrow, () => playerInput(arrow));
-      btn.style.cssText = `
-        background: white;
-        color: #000;
-        border: 2px solid #000;
-        padding: 20px;
-        font-size: 24px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.1s;
-        font-family: 'Comic Sans MS', sans-serif;
-      `;
-      btn.onmouseover = () => btn.style.background = '#f0f0f0';
-      btn.onmouseout = () => btn.style.background = 'white';
-      buttonBox.appendChild(btn);
-    });
-    content.appendChild(buttonBox);
-
-    const gameBox = createGameBox('TIMBER ROADS', content);
-    container.appendChild(gameBox);
+    screen.appendChild(content);
   }
 
-  function playerInput(arrow) {
-    game.playerSequence.push(arrow);
+  function handleKeypress(e) {
+    const arrow = arrows.find(a => a.key === e.key);
+    if (!arrow) return;
 
-    if (arrow !== game.sequence[game.playerSequence.length - 1]) {
+    e.preventDefault();
+    const expected = game.sequence[game.playerInput.length];
+
+    if (arrow.key !== expected.key) {
       endGame(false);
       return;
     }
 
-    if (game.playerSequence.length === game.sequence.length) {
+    playSound('SoundUiSelect.mp3');
+    game.playerInput.push(arrow);
+
+    if (game.playerInput.length === game.sequence.length) {
       game.round++;
       if (game.round >= game.maxRounds) {
         endGame(true);
         return;
       }
-
       generateSequence();
-      game.playerSequence = [];
-      setTimeout(renderGame, 500);
+      game.playerInput = [];
+      setTimeout(render, 500);
     }
   }
 
   function endGame(success) {
-    container.remove();
+    document.removeEventListener('keydown', handleKeypress);
+    screen.remove();
     if (success) {
+      playSound('SoundWin.mp3');
       markEventComplete(4);
-      toast('✓ You navigated the Timber Roads!', 'success');
+      toast('✓ You navigated safely!', 'success');
     } else {
-      toast('✗ You lost the path. Try again.', 'error');
+      playSound('SoundLose.mp3');
+      toast('✗ Lost the path!', 'error');
     }
   }
 
+  document.addEventListener('keydown', handleKeypress);
   generateSequence();
-  renderGame();
+  render();
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// EVENT 5: DEFENSE OF VASTILLY - Shield Movement
+// EVENT 5: COMBAT - Click to attack, Arrows to dodge
 // ════════════════════════════════════════════════════════════════════════════
-function game_defenseVastilly() {
-  const container = createGameContainer();
-  document.body.appendChild(container);
+async function game_combatBattle() {
+  const screen = createGameScreen();
+  document.body.appendChild(screen);
+
+  const bgImg = await loadImage('Battlefield.png');
+  if (bgImg) {
+    const bg = document.createElement('img');
+    bg.src = bgImg.src;
+    bg.style.cssText = `
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: cover; opacity: 0.6;
+    `;
+    screen.appendChild(bg);
+  }
 
   const canvas = document.createElement('canvas');
-  canvas.width = 600;
-  canvas.height = 400;
-  canvas.style.cssText = `
-    border: 4px solid #000;
-    background: white;
-    display: block;
-    max-width: 90vw;
-    image-rendering: crisp-edges;
-  `;
-  container.appendChild(canvas);
+  canvas.width = screen.clientWidth;
+  canvas.height = screen.clientHeight;
+  canvas.style.cssText = `position: absolute; top: 0; left: 0;`;
+  screen.appendChild(canvas);
 
   const ctx = canvas.getContext('2d');
   const w = canvas.width;
   const h = canvas.height;
 
   const game = {
-    shield: { x: w / 2 - 20, y: h - 50, w: 40, h: 40, blocked: 0 },
-    projectiles: [],
-    time: 45,
-    gameActive: true
+    player: { x: w / 2, y: h - 80, hp: 100, maxHp: 100 },
+    enemy: { x: w / 2, y: 100, hp: 100, maxHp: 100 },
+    attacks: [],
+    dodging: false,
+    dodgeDir: null,
+    time: 60
   };
 
-  document.addEventListener('mousemove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    game.shield.x = e.clientX - rect.left - game.shield.w / 2;
-    game.shield.x = Math.max(0, Math.min(w - game.shield.w, game.shield.x));
+  document.addEventListener('click', () => {
+    playSound('SoundCoin.mp3');
+    game.enemy.hp -= 10;
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      game.dodging = true;
+      game.dodgeDir = e.key === 'ArrowLeft' ? -1 : 1;
+    }
+  });
+
+  document.addEventListener('keyup', () => {
+    game.dodging = false;
   });
 
   function update() {
-    if (!game.gameActive) return;
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillRect(0, 0, w, h);
 
-    // Spawn projectiles
-    if (Math.random() < 0.03) {
-      game.projectiles.push({
-        x: Math.random() * w,
-        y: -20,
-        w: 15,
-        h: 15,
-        vy: 2 + Math.random()
+    // Enemy attacks
+    if (Math.random() < 0.02) {
+      game.attacks.push({
+        x: game.enemy.x,
+        y: game.enemy.y + 50,
+        vy: 3
       });
     }
 
-    // Update projectiles
-    game.projectiles = game.projectiles.filter(proj => {
-      proj.y += proj.vy;
+    // Update attacks
+    game.attacks = game.attacks.filter(atk => {
+      atk.y += atk.vy;
+      ctx.fillStyle = '#FF0000';
+      ctx.fillRect(atk.x - 10, atk.y, 20, 20);
 
-      // Check collision with shield
-      if (proj.y + proj.h > game.shield.y &&
-          proj.y < game.shield.y + game.shield.h &&
-          proj.x + proj.w > game.shield.x &&
-          proj.x < game.shield.x + game.shield.w) {
-        game.shield.blocked++;
+      // Hit detection
+      if (atk.y > game.player.y - 40 && atk.y < game.player.y + 40) {
+        if (!game.dodging || (game.dodging && Math.random() > 0.5)) {
+          game.player.hp -= 5;
+          playSound('SoundLose.mp3');
+        }
         return false;
       }
 
-      return proj.y < h;
+      return atk.y < h;
     });
 
+    // Draw player
+    ctx.fillStyle = '#000';
+    ctx.fillRect(game.player.x - 20, game.player.y, 40, 50);
+    if (game.dodging) {
+      game.player.x += 5 * game.dodgeDir;
+    }
+
+    // Draw enemy
+    ctx.fillStyle = '#333';
+    ctx.fillRect(game.enemy.x - 20, game.enemy.y, 40, 50);
+
+    // HP bars
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 14px Comic Sans MS';
+    ctx.fillText(`Your HP: ${game.player.hp}/${game.player.maxHp}`, 20, 30);
+    ctx.fillText(`Enemy HP: ${game.enemy.hp}/${game.enemy.maxHp}`, 20, 50);
+    ctx.fillText('Click to attack | Arrows to dodge', 20, 70);
+    ctx.fillText(`Time: ${Math.ceil(game.time)}s`, w - 150, 30);
+
     game.time -= 1 / 60;
-    if (game.time <= 0 || game.shield.blocked >= 10) {
+
+    if (game.player.hp <= 0 || game.enemy.hp <= 0 || game.time <= 0) {
       endGame();
       return;
     }
 
-    draw();
     requestAnimationFrame(update);
   }
 
-  function draw() {
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, w, h);
-
-    // Shield
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.moveTo(game.shield.x + game.shield.w / 2, game.shield.y);
-    ctx.lineTo(game.shield.x + game.shield.w, game.shield.y + game.shield.h);
-    ctx.lineTo(game.shield.x, game.shield.y + game.shield.h);
-    ctx.closePath();
-    ctx.fill();
-
-    // Projectiles
-    game.projectiles.forEach(proj => {
-      ctx.fillStyle = '#000';
-      ctx.fillRect(proj.x, proj.y, proj.w, proj.h);
-    });
-
-    // UI
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 14px Comic Sans MS';
-    ctx.fillText(`Blocked: ${game.shield.blocked}/10`, 10, 20);
-    ctx.fillText(`Time: ${Math.ceil(game.time)}s`, w - 100, 20);
-  }
-
   function endGame() {
-    game.gameActive = false;
-    container.remove();
-    if (game.shield.blocked >= 10) {
+    const victory = game.enemy.hp <= 0;
+    screen.remove();
+    if (victory) {
+      playSound('SoundWin.mp3');
       markEventComplete(5);
-      toast('✓ Vastilly is defended!', 'success');
+      toast('✓ Enemy defeated!', 'success');
     } else {
-      toast('✗ Defense failed. The city falls.', 'error');
+      playSound('SoundLose.mp3');
+      toast('✗ You were defeated.', 'error');
     }
   }
 
-  draw();
-  requestAnimationFrame(update);
+  update();
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// SIMPLE CLICKER TEMPLATE (Events 6-8)
+// CLICKER GAMES (Events 6-8)
 // ════════════════════════════════════════════════════════════════════════════
 
-function createSimpleClicker(eventId, eventName, clicksNeeded) {
-  const container = createGameContainer();
-  document.body.appendChild(container);
+function createClickerGame(eventId, name, goalClicks, bgImage) {
+  return async () => {
+    const screen = createGameScreen();
+    document.body.appendChild(screen);
 
-  const game = { clicks: 0, needed: clicksNeeded };
+    const bgImg = bgImage ? await loadImage(bgImage) : null;
+    if (bgImg) {
+      const bg = document.createElement('img');
+      bg.src = bgImg.src;
+      bg.style.cssText = `
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        object-fit: cover; opacity: 0.6;
+      `;
+      screen.appendChild(bg);
+    }
 
-  function renderGame() {
-    container.innerHTML = '';
+    const game = { clicks: 0 };
 
-    const content = document.createElement('div');
+    function render() {
+      const content = document.createElement('div');
+      content.style.cssText = `
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: white; border: 4px solid #000; padding: 40px;
+        text-align: center; max-width: 400px; z-index: 10;
+      `;
 
-    const progressBox = document.createElement('div');
-    progressBox.style.cssText = `
-      background: #f0f0f0;
-      border: 2px solid #000;
-      padding: 16px;
-      margin-bottom: 20px;
-      text-align: center;
-      border-radius: 4px;
-    `;
-    progressBox.innerHTML = `
-      <div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">${game.clicks}/${game.needed}</div>
-      <div style="height: 20px; background: white; border: 2px solid #000; border-radius: 2px; overflow: hidden;">
-        <div style="height: 100%; background: #000; width: ${(game.clicks / game.needed) * 100}%;"></div>
-      </div>
-    `;
-    content.appendChild(progressBox);
+      const title = document.createElement('h2');
+      title.textContent = name;
+      title.style.cssText = 'margin: 0 0 20px 0;';
+      content.appendChild(title);
 
-    const clickBtn = document.createElement('button');
-    clickBtn.style.cssText = `
-      width: 100%;
-      background: white;
-      border: 3px solid #000;
-      padding: 40px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: all 0.1s;
-      font-family: 'Comic Sans MS', sans-serif;
-    `;
-    clickBtn.textContent = 'CLICK!';
-    clickBtn.onmouseover = () => clickBtn.style.background = '#f0f0f0';
-    clickBtn.onmouseout = () => clickBtn.style.background = 'white';
-    clickBtn.onmousedown = () => clickBtn.style.transform = 'scale(0.95)';
-    clickBtn.onmouseup = () => clickBtn.style.transform = 'scale(1)';
-    clickBtn.onclick = () => {
-      game.clicks++;
-      if (game.clicks >= game.needed) {
-        endGame();
-        return;
-      }
-      renderGame();
-    };
-    content.appendChild(clickBtn);
+      const progress = document.createElement('div');
+      progress.style.cssText = `
+        background: #f0f0f0; border: 2px solid #000; padding: 15px;
+        margin-bottom: 20px; border-radius: 4px;
+      `;
+      progress.innerHTML = `
+        <div style="font-weight: 700; margin-bottom: 8px;">${game.clicks}/${goalClicks}</div>
+        <div style="height: 16px; background: white; border: 1px solid #000; border-radius: 2px; overflow: hidden;">
+          <div style="height: 100%; background: #000; width: ${(game.clicks / goalClicks) * 100}%;"></div>
+        </div>
+      `;
+      content.appendChild(progress);
 
-    const gameBox = createGameBox(eventName, content);
-    container.appendChild(gameBox);
-  }
+      const btn = document.createElement('button');
+      btn.style.cssText = `
+        width: 100%; padding: 30px; background: white; border: 3px solid #000;
+        font-size: 18px; font-weight: 700; cursor: pointer; border-radius: 4px;
+        font-family: 'Comic Sans MS', sans-serif;
+      `;
+      btn.textContent = 'CLICK!';
+      btn.onclick = () => {
+        game.clicks++;
+        playSound('SoundCoin.mp3');
+        if (game.clicks >= goalClicks) {
+          screen.remove();
+          playSound('SoundWin.mp3');
+          markEventComplete(eventId);
+          toast(`✓ ${name} complete!`, 'success');
+        } else {
+          render();
+        }
+      };
+      content.appendChild(btn);
 
-  function endGame() {
-    container.remove();
-    markEventComplete(eventId);
-    toast(`✓ ${eventName} complete!`, 'success');
-  }
+      screen.appendChild(content);
+    }
 
-  renderGame();
-}
-
-function game_fenwckCanal() {
-  createSimpleClicker(6, 'FENWCK CANAL', 75);
-}
-
-function game_ironstall() {
-  createSimpleClicker(7, 'IRONSTALL', 50);
-}
-
-function game_glassportBlockade() {
-  createSimpleClicker(8, 'GLASSPORT BLOCKADE', 60);
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// GENERIC GAME FOR EVENTS 9-14
-// ════════════════════════════════════════════════════════════════════════════
-
-function game_generic(eventId) {
-  const container = createGameContainer();
-  document.body.appendChild(container);
-
-  const eventNames = {
-    9: 'EVENT 9',
-    10: 'EVENT 10',
-    11: 'EVENT 11',
-    12: 'EVENT 12',
-    13: 'EVENT 13',
-    14: 'EVENT 14'
+    render();
   };
+}
+
+const game_fenwckCanal = createClickerGame(6, 'FENWCK CANAL', 75, 'TheCanals.png');
+const game_ironstall = createClickerGame(7, 'IRONSTALL', 50, 'GlassportHarbour.png');
+const game_glassportBlockade = createClickerGame(8, 'GLASSPORT BLOCKADE', 60, 'GlassportHarbour.png');
+
+// ════════════════════════════════════════════════════════════════════════════
+// GENERIC PLACEHOLDER
+// ════════════════════════════════════════════════════════════════════════════
+
+async function game_generic(eventId) {
+  const screen = createGameScreen();
+  document.body.appendChild(screen);
 
   const content = document.createElement('div');
-  content.style.cssText = 'text-align: center;';
-
-  const message = document.createElement('p');
-  message.style.cssText = `
-    color: #000;
-    font-size: 14px;
-    line-height: 1.6;
-    margin: 16px 0;
+  content.style.cssText = `
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: white; border: 4px solid #000; padding: 40px;
+    text-align: center; max-width: 400px; z-index: 10;
   `;
-  message.textContent = 'This event is coming soon...';
-  content.appendChild(message);
 
-  const skipBtn = createButton('Continue', () => {
-    container.remove();
-    toast('Event passed', 'info');
-  });
-  content.appendChild(skipBtn);
+  const title = document.createElement('h2');
+  title.textContent = `EVENT ${eventId}`;
+  content.appendChild(title);
 
-  const gameBox = createGameBox(eventNames[eventId] || `EVENT ${eventId}`, content);
-  container.appendChild(gameBox);
+  const msg = document.createElement('p');
+  msg.textContent = 'Coming soon...';
+  content.appendChild(msg);
+
+  const btn = document.createElement('button');
+  btn.style.cssText = `
+    background: #000; color: white; border: 2px solid #000;
+    padding: 10px 20px; cursor: pointer; font-weight: 700;
+    font-family: 'Comic Sans MS', sans-serif;
+  `;
+  btn.textContent = 'CONTINUE';
+  btn.onclick = () => {
+    playSound('SoundUiSelect.mp3');
+    screen.remove();
+  };
+  content.appendChild(btn);
+
+  screen.appendChild(content);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// EVENT COMPLETION HANDLER
+// EVENT COMPLETION
 // ════════════════════════════════════════════════════════════════════════════
 
 function markEventComplete(eventId) {

@@ -383,7 +383,11 @@ window._cdnReady.then(function() {
               <div class="hero-greeting">Welcome back, <span id="hero-username" style="color:var(--accent);font-weight:700;margin:0 4px;"></span> <span class="wave-emoji" style="font-size:18px;">👋</span></div>
               <h1>Your <em>Fortress</em><br>Awaits</h1>
               <div class="home-hero-actions">
-<button class="hero-btn hero-btn-primary" onclick="showView('discover')" onmouseenter="_joysterReact('wink')" onmouseleave="_joysterReact('idle')">
+                <button class="hero-btn hero-btn-chronicle" onclick="openGrandChronicle()" onmouseenter="_joysterReact('excited')" onmouseleave="_joysterReact('idle')">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M8 7h8M8 11h5"/></svg>
+                  The Grand Chronicle
+                </button>
+                <button class="hero-btn hero-btn-primary" onclick="showView('discover')" onmouseenter="_joysterReact('wink')" onmouseleave="_joysterReact('idle')">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/></svg>
                   Explore
                 </button>
@@ -917,6 +921,7 @@ window._cdnReady.then(function() {
 
 <script src="/app/app.js"></script>
 <script src="/app/joy-system.js"></script>
+<script src="/app/chronicle-games.js"></script>
 <script>
 // Initialize Joy System when page loads
 document.addEventListener('DOMContentLoaded', () => {

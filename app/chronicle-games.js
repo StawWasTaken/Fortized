@@ -59,12 +59,12 @@ async function launchChronicleMinigame(eventId) {
       'Our fate awaits your decision.'
     ], 30),
     2: () => gameCatch(eventId),
-    3: () => gameClicker(eventId, 'BURNING ELOWEN', 20),
-    4: () => gameClicker(eventId, 'TIMBER ROADS', 25),
-    5: () => gameClicker(eventId, 'COMBAT', 30),
-    6: () => gameClicker(eventId, 'FENWCK CANAL', 75),
-    7: () => gameClicker(eventId, 'IRONSTALL', 50),
-    8: () => gameClicker(eventId, 'GLASSPORT', 60),
+    3: () => gameInferno(eventId),
+    4: () => gameLumber(eventId),
+    5: () => gameDuel(eventId),
+    6: () => gameBoat(eventId),
+    7: () => gameTrade(eventId),
+    8: () => gameSiege(eventId),
   };
 
   const game = games[eventId] || (() => gamePlaceholder(eventId));
@@ -377,18 +377,602 @@ async function gameCatch(eventId) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// CLICKER GAME
+// EVENT 3: BURNING ELOWEN - DODGE & COLLECT
 // ════════════════════════════════════════════════════════════════════════════
 
-async function gameClicker(eventId, name, clicks) {
+async function gameInferno(eventId) {
   const screen = document.createElement('div');
   screen.style.cssText = `
-    position: fixed; inset: 0; background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+    position: fixed; inset: 0; background: #1a1a1a;
+    z-index: 9999; display: flex; flex-direction: column;
+  `;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  screen.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const game = {
+    knight: { x: w / 2, y: h - 60, w: 40, h: 50, lives: 3 },
+    enemies: [],
+    time: 40,
+    score: 0,
+    active: true
+  };
+
+  for (let i = 0; i < 2; i++) {
+    game.enemies.push({
+      x: Math.random() * w,
+      y: Math.random() * (h * 0.4),
+      w: 30,
+      h: 30,
+      vy: 2 + Math.random(),
+      type: 'fire'
+    });
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    game.knight.x = Math.max(0, Math.min(w - game.knight.w, e.clientX - game.knight.w / 2));
+  });
+
+  function update() {
+    if (!game.active) return;
+
+    // Background
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Fire gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, 'rgba(255, 100, 0, 0.1)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Update enemies
+    game.enemies = game.enemies.filter(enemy => {
+      enemy.y += enemy.vy;
+
+      if (enemy.y + enemy.h > game.knight.y &&
+          enemy.y < game.knight.y + game.knight.h &&
+          enemy.x + enemy.w > game.knight.x &&
+          enemy.x < game.knight.x + game.knight.w) {
+        game.knight.lives--;
+        sound('SoundLose.mp3');
+        if (game.knight.lives <= 0) {
+          endGame();
+          return false;
+        }
+        return false;
+      }
+      return enemy.y < h;
+    });
+
+    if (Math.random() < 0.04) {
+      game.enemies.push({
+        x: Math.random() * w,
+        y: -30,
+        w: 30,
+        h: 30,
+        vy: 3 + Math.random() * 2,
+        type: 'fire'
+      });
+    }
+
+    // Draw knight
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(game.knight.x, game.knight.y, game.knight.w, game.knight.h);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(game.knight.x, game.knight.y, game.knight.w, game.knight.h);
+
+    // Draw enemies (fire)
+    game.enemies.forEach(enemy => {
+      ctx.fillStyle = '#FF6347';
+      ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(enemy.x + 5, enemy.y + 5, enemy.w - 10, enemy.h - 10);
+    });
+
+    // UI
+    ctx.fillStyle = '#FFF';
+    ctx.font = `bold 18px ${FONT}`;
+    ctx.fillText(`LIVES: ${game.knight.lives}`, 20, 30);
+    ctx.fillText(`TIME: ${Math.ceil(game.time)}s`, w - 150, 30);
+
+    game.time -= 1 / 60;
+    if (game.time <= 0) endGame();
+    else requestAnimationFrame(update);
+  }
+
+  function endGame() {
+    game.active = false;
+    screen.remove();
+    bgMusicStop();
+    if (game.knight.lives > 0) {
+      sound('SoundWin.mp3');
+      markEventComplete(eventId, 40);
+      toast('✓ Escaped the inferno!', 'success');
+    } else {
+      sound('SoundLose.mp3');
+      toast('✗ Consumed by flames.', 'error');
+    }
+  }
+
+  update();
+  document.body.appendChild(screen);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// EVENT 4: TIMBER ROADS - COLLECT & NAVIGATE
+// ════════════════════════════════════════════════════════════════════════════
+
+async function gameLumber(eventId) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: #8B7355;
+    z-index: 9999; display: flex; flex-direction: column;
+  `;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  screen.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const game = {
+    cart: { x: w / 2, y: h - 60, w: 50, h: 40, wood: 0 },
+    trees: [],
+    obstacles: [],
+    time: 35,
+    active: true
+  };
+
+  for (let i = 0; i < 5; i++) {
+    game.trees.push({
+      x: Math.random() * w,
+      y: Math.random() * (h * 0.6),
+      w: 30,
+      h: 40,
+      collected: false
+    });
+  }
+
+  for (let i = 0; i < 3; i++) {
+    game.obstacles.push({
+      x: Math.random() * w,
+      y: Math.random() * (h * 0.5),
+      w: 40,
+      h: 20,
+      vy: 1 + Math.random()
+    });
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    game.cart.x = Math.max(0, Math.min(w - game.cart.w, e.clientX - game.cart.w / 2));
+  });
+
+  function update() {
+    if (!game.active) return;
+
+    // Background
+    ctx.fillStyle = '#D2B48C';
+    ctx.fillRect(0, 0, w, h);
+
+    // Grass
+    ctx.fillStyle = '#228B22';
+    ctx.fillRect(0, h - 80, w, 80);
+
+    // Collect trees
+    game.trees = game.trees.filter(tree => {
+      if (!tree.collected &&
+          tree.x + tree.w > game.cart.x &&
+          tree.x < game.cart.x + game.cart.w &&
+          tree.y + tree.h > game.cart.y) {
+        game.cart.wood += 15;
+        sound('SoundCoin.mp3');
+        return false;
+      }
+      return true;
+    });
+
+    // Move obstacles
+    game.obstacles.forEach(obs => {
+      obs.y += obs.vy;
+      if (obs.y + obs.h > game.cart.y &&
+          obs.y < game.cart.y + game.cart.h &&
+          obs.x + obs.w > game.cart.x &&
+          obs.x < game.cart.x + game.cart.w) {
+        game.cart.wood -= 10;
+        if (game.cart.wood < 0) game.cart.wood = 0;
+        sound('SoundLose.mp3');
+      }
+    });
+
+    game.obstacles = game.obstacles.filter(obs => obs.y < h);
+
+    if (Math.random() < 0.03) {
+      game.obstacles.push({
+        x: Math.random() * w,
+        y: -20,
+        w: 40,
+        h: 20,
+        vy: 2 + Math.random()
+      });
+    }
+
+    // Draw cart
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(game.cart.x, game.cart.y, game.cart.w, game.cart.h);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(game.cart.x, game.cart.y, game.cart.w, game.cart.h);
+
+    // Draw trees
+    game.trees.forEach(tree => {
+      ctx.fillStyle = '#228B22';
+      ctx.fillRect(tree.x, tree.y, tree.w, tree.h);
+      ctx.fillStyle = '#32CD32';
+      ctx.fillRect(tree.x + 5, tree.y + 5, tree.w - 10, tree.h - 10);
+    });
+
+    // Draw obstacles (rocks)
+    game.obstacles.forEach(obs => {
+      ctx.fillStyle = '#696969';
+      ctx.beginPath();
+      ctx.arc(obs.x + obs.w / 2, obs.y + obs.h / 2, obs.w / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+
+    // UI
+    ctx.fillStyle = '#000';
+    ctx.font = `bold 18px ${FONT}`;
+    ctx.fillText(`WOOD: ${game.cart.wood}`, 20, 30);
+    ctx.fillText(`TIME: ${Math.ceil(game.time)}s`, w - 150, 30);
+
+    game.time -= 1 / 60;
+    if (game.time <= 0) endGame();
+    else requestAnimationFrame(update);
+  }
+
+  function endGame() {
+    game.active = false;
+    screen.remove();
+    bgMusicStop();
+    if (game.cart.wood >= 50) {
+      sound('SoundWin.mp3');
+      markEventComplete(eventId, Math.floor(game.cart.wood * 0.8));
+      toast('✓ Lumber collected!', 'success');
+    } else {
+      sound('SoundLose.mp3');
+      toast('✗ Not enough timber.', 'error');
+    }
+  }
+
+  update();
+  document.body.appendChild(screen);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// EVENT 5: COMBAT - SWORD DUEL
+// ════════════════════════════════════════════════════════════════════════════
+
+async function gameDuel(eventId) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: #2C2C2C;
+    z-index: 9999; display: flex; flex-direction: column;
+  `;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  screen.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const game = {
+    knight: { x: w / 3, y: h / 2, hp: 5, attacking: false, combo: 0 },
+    enemy: { x: (w * 2) / 3, y: h / 2, hp: 5, attacking: false },
+    time: 45,
+    active: true
+  };
+
+  document.addEventListener('click', () => {
+    if (game.active && !game.knight.attacking) {
+      game.knight.attacking = true;
+      game.knight.combo++;
+      if (Math.random() > 0.4) {
+        game.enemy.hp -= game.knight.combo;
+        sound('SoundCoin.mp3');
+      }
+      setTimeout(() => { game.knight.attacking = false; }, 300);
+    }
+  });
+
+  function update() {
+    if (!game.active) return;
+
+    // Background
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Enemy AI
+    if (Math.random() < 0.02 && !game.enemy.attacking) {
+      game.enemy.attacking = true;
+      if (Math.random() > 0.5) {
+        game.knight.hp--;
+        sound('SoundLose.mp3');
+      }
+      setTimeout(() => { game.enemy.attacking = false; }, 400);
+    }
+
+    if (game.enemy.hp <= 0 || game.knight.hp <= 0) {
+      endGame();
+      return;
+    }
+
+    // Draw knight
+    ctx.fillStyle = game.knight.attacking ? '#FFD700' : '#FFB6C1';
+    ctx.fillRect(game.knight.x - 20, game.knight.y - 30, 40, 60);
+    ctx.fillStyle = '#000';
+    ctx.font = `bold 16px ${FONT}`;
+    ctx.fillText('YOU', game.knight.x - 15, game.knight.y + 50);
+
+    // Draw enemy
+    ctx.fillStyle = game.enemy.attacking ? '#FF6B6B' : '#DC143C';
+    ctx.fillRect(game.enemy.x - 20, game.enemy.y - 30, 40, 60);
+    ctx.fillStyle = '#000';
+    ctx.fillText('FOE', game.enemy.x - 15, game.enemy.y + 50);
+
+    // Health bars
+    ctx.fillStyle = '#00AA00';
+    ctx.fillRect(20, 20, 150, 20);
+    ctx.fillStyle = '#FF0000';
+    ctx.fillRect(20, 20, (game.knight.hp / 5) * 150, 20);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(20, 20, 150, 20);
+    ctx.fillStyle = '#000';
+    ctx.fillText(`HP: ${game.knight.hp}`, 25, 37);
+
+    ctx.fillStyle = '#00AA00';
+    ctx.fillRect(w - 170, 20, 150, 20);
+    ctx.fillStyle = '#FF0000';
+    ctx.fillRect(w - 170, 20, (game.enemy.hp / 5) * 150, 20);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(w - 170, 20, 150, 20);
+    ctx.fillStyle = '#000';
+    ctx.fillText(`ENEMY: ${game.enemy.hp}`, w - 165, 37);
+
+    // Combo display
+    if (game.knight.combo > 0) {
+      ctx.fillStyle = '#FFD700';
+      ctx.font = `bold 32px ${FONT}`;
+      ctx.fillText(`COMBO x${game.knight.combo}`, w / 2 - 80, 60);
+    }
+
+    game.time -= 1 / 60;
+    if (game.time <= 0) {
+      if (game.enemy.hp > 0) game.knight.hp = 0;
+      endGame();
+    }
+    else requestAnimationFrame(update);
+  }
+
+  function endGame() {
+    game.active = false;
+    screen.remove();
+    bgMusicStop();
+    if (game.knight.hp > 0) {
+      sound('SoundWin.mp3');
+      markEventComplete(eventId, 50 + game.knight.combo * 5);
+      toast(`✓ Victory! Combo x${game.knight.combo}`, 'success');
+    } else {
+      sound('SoundLose.mp3');
+      toast('✗ Defeated in combat.', 'error');
+    }
+  }
+
+  update();
+  document.body.appendChild(screen);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// EVENT 6: FENWCK CANAL - BOAT NAVIGATION
+// ════════════════════════════════════════════════════════════════════════════
+
+async function gameBoat(eventId) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: #1a3a52;
+    z-index: 9999; display: flex; flex-direction: column;
+  `;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  screen.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const game = {
+    boat: { x: w / 2, y: h - 80, w: 60, h: 40, health: 3 },
+    rocks: [],
+    gems: [],
+    time: 50,
+    score: 0,
+    active: true
+  };
+
+  for (let i = 0; i < 3; i++) {
+    game.gems.push({
+      x: Math.random() * w,
+      y: Math.random() * (h * 0.5),
+      w: 20,
+      h: 20,
+      vy: 1 + Math.random() * 0.5
+    });
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    game.boat.x = Math.max(0, Math.min(w - game.boat.w, e.clientX - game.boat.w / 2));
+  });
+
+  function update() {
+    if (!game.active) return;
+
+    // Water background
+    ctx.fillStyle = '#0d1e2d';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#1a3a52';
+    for (let i = 0; i < h; i += 30) {
+      ctx.fillRect(0, i, w, 15);
+    }
+
+    // Collect gems
+    game.gems = game.gems.filter(gem => {
+      gem.y += gem.vy;
+      if (gem.y + gem.h > game.boat.y &&
+          gem.y < game.boat.y + game.boat.h &&
+          gem.x + gem.w > game.boat.x &&
+          gem.x < game.boat.x + game.boat.w) {
+        game.score += 20;
+        sound('SoundCoin.mp3');
+        return false;
+      }
+      return gem.y < h;
+    });
+
+    // Rock obstacles
+    game.rocks.forEach(rock => {
+      rock.y += rock.vy;
+      if (rock.y + rock.h > game.boat.y &&
+          rock.y < game.boat.y + game.boat.h &&
+          rock.x + rock.w > game.boat.x &&
+          rock.x < game.boat.x + game.boat.w) {
+        game.boat.health--;
+        sound('SoundLose.mp3');
+        if (game.boat.health <= 0) {
+          endGame();
+          return;
+        }
+      }
+    });
+
+    game.rocks = game.rocks.filter(rock => rock.y < h);
+
+    if (Math.random() < 0.05) {
+      game.gems.push({
+        x: Math.random() * w,
+        y: -20,
+        w: 20,
+        h: 20,
+        vy: 2 + Math.random()
+      });
+    }
+
+    if (Math.random() < 0.03) {
+      game.rocks.push({
+        x: Math.random() * w,
+        y: -30,
+        w: 50,
+        h: 30,
+        vy: 3 + Math.random() * 2
+      });
+    }
+
+    // Draw boat
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(game.boat.x, game.boat.y, game.boat.w, game.boat.h);
+    ctx.fillStyle = '#D2B48C';
+    ctx.fillRect(game.boat.x + 10, game.boat.y + 5, game.boat.w - 20, 15);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(game.boat.x, game.boat.y, game.boat.w, game.boat.h);
+
+    // Draw gems
+    game.gems.forEach(gem => {
+      ctx.fillStyle = '#00FF00';
+      ctx.fillRect(gem.x, gem.y, gem.w, gem.h);
+      ctx.fillStyle = '#00AA00';
+      ctx.fillRect(gem.x + 3, gem.y + 3, gem.w - 6, gem.h - 6);
+    });
+
+    // Draw rocks
+    game.rocks.forEach(rock => {
+      ctx.fillStyle = '#696969';
+      ctx.beginPath();
+      ctx.arc(rock.x + rock.w / 2, rock.y + rock.h / 2, rock.w / 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // UI
+    ctx.fillStyle = '#FFF';
+    ctx.font = `bold 18px ${FONT}`;
+    ctx.fillText(`HEALTH: ${game.boat.health}`, 20, 30);
+    ctx.fillText(`GEMS: ${game.score}`, w / 2 - 50, 30);
+    ctx.fillText(`TIME: ${Math.ceil(game.time)}s`, w - 150, 30);
+
+    game.time -= 1 / 60;
+    if (game.time <= 0) endGame();
+    else requestAnimationFrame(update);
+  }
+
+  function endGame() {
+    game.active = false;
+    screen.remove();
+    bgMusicStop();
+    if (game.boat.health > 0) {
+      sound('SoundWin.mp3');
+      markEventComplete(eventId, game.score);
+      toast('✓ Sailed through safely!', 'success');
+    } else {
+      sound('SoundLose.mp3');
+      toast('✗ Ship wrecked.', 'error');
+    }
+  }
+
+  update();
+  document.body.appendChild(screen);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// EVENT 7: IRONSTALL - MERCHANT TRADING
+// ════════════════════════════════════════════════════════════════════════════
+
+async function gameTrade(eventId) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: #f5f5f5;
     z-index: 9999; display: flex; align-items: center; justify-content: center;
     font-family: ${FONT}; padding: 20px;
   `;
 
-  const game = { clicks: 0, needed: clicks };
+  const game = {
+    gold: 100,
+    items: [
+      { name: 'Iron Ore', cost: 20, value: 35, qty: 0 },
+      { name: 'Steel Bar', cost: 40, value: 65, qty: 0 },
+      { name: 'War Axe', cost: 80, value: 150, qty: 0 }
+    ],
+    time: 30
+  };
 
   function render() {
     screen.innerHTML = '';
@@ -396,65 +980,95 @@ async function gameClicker(eventId, name, clicks) {
     const card = document.createElement('div');
     card.style.cssText = `
       background: white; border: 2px solid #000;
-      border-radius: 12px; padding: 40px; max-width: 500px;
+      border-radius: 12px; padding: 30px; max-width: 600px;
       width: 100%; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-      text-align: center;
     `;
 
     const title = document.createElement('h2');
-    title.style.cssText = `
-      margin: 0 0 20px 0; font-size: 28px; color: #000;
-      text-transform: uppercase; letter-spacing: 2px;
-    `;
-    title.textContent = name;
+    title.style.cssText = `margin: 0 0 20px 0; font-size: 24px; color: #000;`;
+    title.textContent = 'MERCHANT\'S STALL';
     card.appendChild(title);
 
-    const progress = document.createElement('div');
-    progress.style.cssText = `
-      margin: 0 0 20px 0; font-size: 20px; color: #000;
+    const gold = document.createElement('p');
+    gold.style.cssText = `
+      margin: 0 0 20px 0; font-size: 18px; color: #FFD700;
       font-weight: 700;
     `;
-    progress.textContent = `${game.clicks} / ${game.needed}`;
-    card.appendChild(progress);
+    gold.textContent = `Gold: ${game.gold}`;
+    card.appendChild(gold);
 
-    const bar = document.createElement('div');
-    bar.style.cssText = `
-      height: 16px; background: #e8e8e8; border: 2px solid #000;
-      border-radius: 8px; overflow: hidden; margin-bottom: 30px;
-    `;
-    const fill = document.createElement('div');
-    fill.style.cssText = `
-      height: 100%; background: #000;
-      width: ${(game.clicks / game.needed) * 100}%;
-    `;
-    bar.appendChild(fill);
-    card.appendChild(bar);
+    const itemsDiv = document.createElement('div');
+    itemsDiv.style.cssText = `margin-bottom: 20px;`;
 
-    const btn = document.createElement('button');
-    btn.style.cssText = `
+    game.items.forEach((item, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = `
+        display: flex; gap: 10px; margin-bottom: 10px;
+        align-items: center; padding: 10px; border: 1px solid #ddd;
+        border-radius: 6px;
+      `;
+
+      const label = document.createElement('span');
+      label.style.cssText = `flex: 1; font-weight: 700;`;
+      label.textContent = `${item.name} (Buy: ${item.cost}g / Sell: ${item.value}g) x${item.qty}`;
+      row.appendChild(label);
+
+      const buyBtn = document.createElement('button');
+      buyBtn.style.cssText = `
+        background: #000; color: white; border: none;
+        padding: 6px 12px; border-radius: 4px; font-family: ${FONT};
+        font-weight: 700; cursor: pointer; font-size: 12px;
+      `;
+      buyBtn.textContent = 'BUY';
+      buyBtn.onclick = () => {
+        if (game.gold >= item.cost) {
+          game.gold -= item.cost;
+          item.qty++;
+          sound('SoundCoin.mp3');
+          render();
+        }
+      };
+      row.appendChild(buyBtn);
+
+      const sellBtn = document.createElement('button');
+      sellBtn.style.cssText = `
+        background: #666; color: white; border: none;
+        padding: 6px 12px; border-radius: 4px; font-family: ${FONT};
+        font-weight: 700; cursor: pointer; font-size: 12px;
+      `;
+      sellBtn.textContent = 'SELL';
+      sellBtn.onclick = () => {
+        if (item.qty > 0) {
+          game.gold += item.value;
+          item.qty--;
+          sound('SoundCoin.mp3');
+          render();
+        }
+      };
+      row.appendChild(sellBtn);
+
+      itemsDiv.appendChild(row);
+    });
+
+    card.appendChild(itemsDiv);
+
+    const done = document.createElement('button');
+    done.style.cssText = `
       background: #000; color: white; border: none;
-      padding: 16px 48px; border-radius: 6px; font-family: ${FONT};
-      font-size: 18px; font-weight: 700; cursor: pointer;
-      text-transform: uppercase; letter-spacing: 1px;
-      transition: all 0.2s; width: 100%;
+      padding: 12px 24px; border-radius: 6px; font-family: ${FONT};
+      font-weight: 700; cursor: pointer; width: 100%;
+      text-transform: uppercase; font-size: 14px;
     `;
-    btn.textContent = 'CLICK!';
-    btn.onmouseover = () => btn.style.opacity = '0.9';
-    btn.onmouseout = () => btn.style.opacity = '1';
-    btn.onclick = () => {
-      game.clicks++;
-      sound('SoundCoin.mp3');
-      if (game.clicks >= game.needed) {
-        screen.remove();
-        bgMusicStop();
-        sound('SoundWin.mp3');
-        markEventComplete(eventId, Math.floor(clicks * 1.5));
-        toast(`✓ ${name} complete!`, 'success');
-      } else {
-        render();
-      }
+    done.textContent = 'DONE TRADING';
+    done.onclick = () => {
+      screen.remove();
+      bgMusicStop();
+      sound('SoundWin.mp3');
+      const profit = Math.max(0, game.gold - 100);
+      markEventComplete(eventId, 30 + profit);
+      toast(`✓ Profit: ${profit}g!`, 'success');
     };
-    card.appendChild(btn);
+    card.appendChild(done);
 
     screen.appendChild(card);
   }
@@ -464,53 +1078,162 @@ async function gameClicker(eventId, name, clicks) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// PLACEHOLDER
+// EVENT 8: GLASSPORT - SIEGE DEFENSE
 // ════════════════════════════════════════════════════════════════════════════
 
-async function gamePlaceholder(eventId) {
+async function gameSiege(eventId) {
   const screen = document.createElement('div');
   screen.style.cssText = `
-    position: fixed; inset: 0; background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
-    z-index: 9999; display: flex; align-items: center; justify-content: center;
-    font-family: ${FONT}; padding: 20px;
+    position: fixed; inset: 0; background: #4a4a4a;
+    z-index: 9999; display: flex; flex-direction: column;
   `;
 
-  const card = document.createElement('div');
-  card.style.cssText = `
-    background: white; border: 2px solid #000;
-    border-radius: 12px; padding: 40px; max-width: 400px;
-    width: 100%; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    text-align: center;
-  `;
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  screen.appendChild(canvas);
 
-  const title = document.createElement('h2');
-  title.style.cssText = `margin: 0 0 20px 0; font-size: 24px; color: #000;`;
-  title.textContent = `Event ${eventId}`;
-  card.appendChild(title);
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
 
-  const msg = document.createElement('p');
-  msg.style.cssText = `margin: 0 0 20px 0; color: #666; font-size: 14px;`;
-  msg.textContent = 'Coming soon...';
-  card.appendChild(msg);
+  const game = {
+    castle: { x: w / 2 - 40, y: 100, w: 80, h: 60, health: 5 },
+    enemies: [],
+    arrows: [],
+    time: 60,
+    kills: 0,
+    active: true
+  };
 
-  const btn = document.createElement('button');
-  btn.style.cssText = `
-    background: #000; color: white; border: none;
-    padding: 12px 24px; border-radius: 6px; font-family: ${FONT};
-    font-weight: 700; cursor: pointer; text-transform: uppercase;
-    font-size: 12px;
-  `;
-  btn.textContent = 'OK';
-  btn.onclick = () => {
-    sound('SoundUiSelect.mp3');
+  document.addEventListener('click', (e) => {
+    if (game.active) {
+      game.arrows.push({
+        x: game.castle.x + 40,
+        y: game.castle.y,
+        vx: (e.clientX - (game.castle.x + 40)) / 10,
+        vy: (e.clientY - game.castle.y) / 10,
+        traveled: 0
+      });
+      sound('SoundPlay.mp3');
+    }
+  });
+
+  function update() {
+    if (!game.active) return;
+
+    // Background (sky & ground)
+    ctx.fillStyle = '#87CEEB';
+    ctx.fillRect(0, 0, w, h / 2);
+    ctx.fillStyle = '#8B7355';
+    ctx.fillRect(0, h / 2, w, h / 2);
+
+    // Draw castle
+    ctx.fillStyle = '#696969';
+    ctx.fillRect(game.castle.x, game.castle.y, game.castle.w, game.castle.h);
+    ctx.fillStyle = game.castle.health > 0 ? '#FFD700' : '#FF6B6B';
+    for (let i = 0; i < game.castle.health; i++) {
+      ctx.fillRect(game.castle.x + i * 15, game.castle.y - 15, 12, 12);
+    }
+
+    // Spawn enemies
+    if (Math.random() < 0.03 && game.enemies.length < 5) {
+      game.enemies.push({
+        x: Math.random() * w,
+        y: 50,
+        w: 25,
+        h: 30,
+        vx: (game.castle.x + 40 - (Math.random() * w)) / 100,
+        vy: 2 + Math.random(),
+        health: 1
+      });
+    }
+
+    // Move arrows
+    game.arrows = game.arrows.filter(arrow => {
+      arrow.x += arrow.vx;
+      arrow.y += arrow.vy;
+      arrow.traveled++;
+
+      let hit = false;
+      game.enemies.forEach(enemy => {
+        if (arrow.x > enemy.x && arrow.x < enemy.x + enemy.w &&
+            arrow.y > enemy.y && arrow.y < enemy.y + enemy.h) {
+          enemy.health--;
+          hit = true;
+          sound('SoundCoin.mp3');
+          if (enemy.health <= 0) game.kills++;
+        }
+      });
+
+      return !hit && arrow.traveled < 200;
+    });
+
+    // Move enemies
+    game.enemies = game.enemies.filter(enemy => {
+      enemy.y += enemy.vy;
+      enemy.x += enemy.vx;
+
+      if (enemy.y > game.castle.y && enemy.x > game.castle.x - 50 && enemy.x < game.castle.x + game.castle.w + 50) {
+        game.castle.health--;
+        sound('SoundLose.mp3');
+        if (game.castle.health <= 0) {
+          endGame();
+          return false;
+        }
+        return false;
+      }
+      return enemy.y < h;
+    });
+
+    // Draw enemies
+    game.enemies.forEach(enemy => {
+      ctx.fillStyle = '#FF6B6B';
+      ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(enemy.x + 5, enemy.y + 5, enemy.w - 10, 10);
+    });
+
+    // Draw arrows
+    game.arrows.forEach(arrow => {
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(arrow.x - arrow.vx, arrow.y - arrow.vy);
+      ctx.lineTo(arrow.x, arrow.y);
+      ctx.stroke();
+    });
+
+    // UI
+    ctx.fillStyle = '#000';
+    ctx.font = `bold 18px ${FONT}`;
+    ctx.fillText(`WALLS: ${game.castle.health}`, 20, 30);
+    ctx.fillText(`KILLS: ${game.kills}`, w / 2 - 50, 30);
+    ctx.fillText(`TIME: ${Math.ceil(game.time)}s`, w - 150, 30);
+
+    game.time -= 1 / 60;
+    if (game.time <= 0) endGame();
+    else requestAnimationFrame(update);
+  }
+
+  function endGame() {
+    game.active = false;
     screen.remove();
     bgMusicStop();
-  };
-  card.appendChild(btn);
+    if (game.castle.health > 0) {
+      sound('SoundWin.mp3');
+      markEventComplete(eventId, 60 + game.kills * 10);
+      toast(`✓ Castle defended! ${game.kills} enemies slain`, 'success');
+    } else {
+      sound('SoundLose.mp3');
+      toast('✗ Castle fell.', 'error');
+    }
+  }
 
-  screen.appendChild(card);
+  update();
   document.body.appendChild(screen);
 }
+
 
 // ════════════════════════════════════════════════════════════════════════════
 // COMPLETION

@@ -3251,50 +3251,82 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
    ACTIVITY SYSTEM v2 — Multi-Activity UI
    ════════════════════════════════════════════════════════════════ */
 
-/* Activity Card Component */
+/* Activity Card Component - Discord-like polished design */
 .activity-card {
-  background: linear-gradient(135deg, rgba(62,207,110,.08), transparent);
+  background: linear-gradient(135deg, rgba(62,207,110,.06), rgba(62,207,110,.02));
   border-left: 3px solid #3ecf6e;
   border-radius: 12px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   animation: slideIn 0.3s cubic-bezier(.22,1,.36,1);
-  transition: transform 0.2s, background 0.2s;
-  margin-bottom: 10px;
+  transition: all 0.2s cubic-bezier(.22,1,.36,1);
+  margin-bottom: 9px;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.activity-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top right, rgba(62,207,110,.08), transparent 70%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 .activity-card:hover {
-  transform: translateX(4px);
-  background: linear-gradient(135deg, rgba(62,207,110,.12), rgba(62,207,110,.04));
+  transform: translateX(3px);
+  background: linear-gradient(135deg, rgba(62,207,110,.1), rgba(62,207,110,.03));
+  border-color: rgba(62,207,110,.2);
+  box-shadow: 0 4px 12px rgba(62,207,110,.1);
+}
+
+.activity-card:hover::before {
+  opacity: 1;
 }
 
 .activity-card.spotify {
-  background: linear-gradient(135deg, rgba(29,185,84,.08), transparent);
+  background: linear-gradient(135deg, rgba(29,185,84,.06), rgba(29,185,84,.02));
   border-left-color: #1DB954;
 }
 
 .activity-card.spotify:hover {
-  background: linear-gradient(135deg, rgba(29,185,84,.12), rgba(29,185,84,.04));
+  background: linear-gradient(135deg, rgba(29,185,84,.1), rgba(29,185,84,.03));
+  border-color: rgba(29,185,84,.2);
+  box-shadow: 0 4px 12px rgba(29,185,84,.1);
 }
 
 .ac-icon {
-  font-size: 20px;
+  font-size: 18px;
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.06);
+  background: linear-gradient(135deg, rgba(62,207,110,.12), rgba(62,207,110,.04));
+  border: 1.5px solid rgba(62,207,110,.2);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.05);
+}
+
+.activity-card.spotify .ac-icon {
+  background: linear-gradient(135deg, rgba(29,185,84,.12), rgba(29,185,84,.04));
+  border-color: rgba(29,185,84,.2);
 }
 
 .ac-content {
   flex: 1;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .ac-title {
@@ -3304,11 +3336,12 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.4;
 }
 
 .ac-detail {
   font-size: 11px;
-  color: rgba(255,255,255,.4);
+  color: rgba(255,255,255,.45);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -3317,17 +3350,21 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 
 .ac-state {
   font-size: 10px;
-  color: rgba(255,255,255,.25);
+  color: rgba(255,255,255,.3);
   margin-top: 1px;
 }
 
 .ac-elapsed {
   font-size: 9px;
-  color: rgba(62,207,110,.6);
+  color: rgba(62,207,110,.65);
   margin-top: 3px;
   display: flex;
   align-items: center;
   gap: 3px;
+}
+
+.activity-card.spotify .ac-elapsed {
+  color: rgba(29,185,84,.65);
 }
 
 /* Activity items for friend lists */

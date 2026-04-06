@@ -61,6 +61,11 @@ function openGrandChronicle() {
   }
 }
 
+// Alias for compatibility with button onclick handler
+function openChronicle() {
+  openGrandChronicle();
+}
+
 function showChronicleMenu() {
   const menu = document.createElement('div');
   menu.style.cssText = `position: fixed; inset: 0; background: linear-gradient(135deg, #f5f1e8 0%, #e8e4db 100%); z-index: 10000; display: flex; align-items: center; justify-content: space-between; padding: 80px 100px; font-family: ${CHRONICLE.FONT}; overflow: hidden;`;

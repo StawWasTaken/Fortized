@@ -532,26 +532,33 @@ io.on('connection', (socket) => {
 
   // ── Friend Request Events ──
   socket.on('friend:request', (data) => {
-    if (!username || !data?.to) return;
+    if (!username || !data?.to || typeof data.to !== 'string') return;
     if (!rateLimit(socket.id, 'friend:request', 2000)) return;
-    io.to(`user:${data.to}`).emit('friend:request:new', { from: username });
+    const to = sanitizeString(data.to, 32);
+    if (!to) return;
+    io.to(`user:${to}`).emit('friend:request:new', { from: username });
   });
   socket.on('friend:accept', (data) => {
-    if (!username || !data?.to) return;
+    if (!username || !data?.to || typeof data.to !== 'string') return;
     if (!rateLimit(socket.id, 'friend:accept', 1000)) return;
-    io.to(`user:${data.to}`).emit('friend:accepted', { from: username });
+    const to = sanitizeString(data.to, 32);
+    if (!to) return;
+    io.to(`user:${to}`).emit('friend:accepted', { from: username });
   });
 
   // ── Poll Events (real-time broadcast) ──
   socket.on('poll:update', (data) => {
     if (!username || !data?.bastionId) return;
     if (!rateLimit(socket.id, 'poll:update', 500)) return;
+    // Validate action against allowed values
+    const validActions = ['create', 'vote', 'unvote', 'delete'];
+    if (data.action && !validActions.includes(data.action)) return;
     // Broadcast to all connected clients so sidebar badges + poll channels update
     io.emit('poll:updated', {
-      bastionId: data.bastionId,
-      channelName: data.channelName,
-      action: data.action, // 'create', 'vote', 'unvote', 'delete'
-      pollKey: data.pollKey,
+      bastionId: sanitizeString(data.bastionId, 100),
+      channelName: sanitizeString(data.channelName || '', 100),
+      action: data.action || 'update',
+      pollKey: sanitizeString(data.pollKey || '', 100),
       username,
     });
   });
@@ -588,13 +595,16 @@ io.on('connection', (socket) => {
     if (!username) return;
     if (!rateLimit(socket.id, 'profile:update', 1000)) return;
     if (!data || typeof data !== 'object') return;
+    // Validate field against allowed values
+    const validFields = ['pfp', 'displayName', 'displayFont', 'displayEffect', 'displayColor'];
+    if (data.field && !validFields.includes(data.field)) return;
     io.emit('profile:updated', {
       username,
-      pfp: data.pfp || null,
+      pfp: typeof data.pfp === 'string' ? sanitizeString(data.pfp, 500) : null,
       displayName: data.displayName ? sanitizeString(data.displayName, 50) : null,
-      displayFont: data.displayFont || null,
-      displayEffect: data.displayEffect || null,
-      displayColor: data.displayColor || null,
+      displayFont: typeof data.displayFont === 'string' ? sanitizeString(data.displayFont, 50) : null,
+      displayEffect: typeof data.displayEffect === 'string' ? sanitizeString(data.displayEffect, 50) : null,
+      displayColor: typeof data.displayColor === 'string' ? sanitizeString(data.displayColor, 20) : null,
       field: data.field || 'pfp',
     });
   });

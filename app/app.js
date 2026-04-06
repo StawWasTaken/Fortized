@@ -22900,7 +22900,7 @@ function openStatusPicker() {
         <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Presence</div>
         <div class="sp-mode-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;">
           ${STATUS_MODES.map(m=>`
-            <div class="sp-mode-opt ${status===m.id?'sel':''}" onclick="pickStatusMode('${m.id}',this)" data-mode="${m.id}" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid ${status===m.id?'rgba(254,248,61,.2)':'rgba(255,255,255,.06)'};border-radius:12px;cursor:pointer;transition:all .15s;background:${status===m.id?'rgba(254,248,61,.04)':'transparent'};" onmouseover="this.style.borderColor='rgba(254,248,61,.15)';this.style.background='rgba(254,248,61,.03)'" onmouseout="if(!this.classList.contains('sel')){this.style.borderColor='rgba(255,255,255,.06)';this.style.background='transparent'}">
+            <div class="sp-mode-opt ${status===m.id?'sel':''}" onclick="pickStatusMode('${m.id}',this)" data-mode="${m.id}" style="border:1.5px solid ${status===m.id?'rgba(254,248,61,.2)':'rgba(255,255,255,.06)'};">
               <div style="width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">${FtzStatus.dotSvg(m.id, 14)}</div>
               <span style="font-size:12.5px;font-weight:600;color:${status===m.id?'#fff':'rgba(255,255,255,.55)'};">${m.label}</span>
             </div>`).join('')}
@@ -22909,7 +22909,7 @@ function openStatusPicker() {
         <!-- Custom Status Input -->
         <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Custom Status</div>
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">
-          <button onclick="pickStatusEmoji()" id="status-emoji-btn" data-emoji="${escapeHTML(curEmoji)}" style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;" onmouseover="this.style.borderColor='rgba(254,248,61,.2)';this.style.background='rgba(254,248,61,.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.04)'">
+          <button onclick="pickStatusEmoji()" id="status-emoji-btn" data-emoji="${escapeHTML(curEmoji)}" class="sp-emoji-btn">
             <img src="${twemojiUrl}" style="width:24px;height:24px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;\\'>${curEmoji}</span>'">
           </button>
           <input id="status-text-input" class="field-input" placeholder="What's happening?" value="${escapeHTML(cur.text||'')}" style="flex:1;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:14px;padding:11px 16px;color:#fff;font-family:var(--font-ui);font-size:13.5px;outline:none;transition:border-color .2s;" maxlength="100" oninput="_updateStatusPreview()">
@@ -23415,7 +23415,7 @@ function _renderPollCard(poll, chIdx) {
     <div class="poll-card-body">${optionsHTML}</div>
     <div class="poll-card-footer">
       <span class="pcf-responses">${totalVotes} vote${totalVotes !== 1 ? 's' : ''}</span>
-      ${hasVoted && !isEnded ? `<button onclick="_unvotePoll('${escapeHTML(poll._key)}',${chIdx})" style="background:none;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:4px 12px;color:var(--muted);font-size:11px;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">Change vote</button>` : ''}
+      ${hasVoted && !isEnded ? `<button onclick="_unvotePoll('${escapeHTML(poll._key)}',${chIdx})" class="poll-unvote-btn">Change vote</button>` : ''}
       <span class="pcf-time">${createdAgo}${endLabel ? ' · ' + endLabel : ''}</span>
     </div>
   </div>`;
@@ -23474,7 +23474,7 @@ function openCreatePollModal(chIdx) {
       <input class="field-input poll-opt-input" placeholder="Option 1" maxlength="100" style="margin-bottom:6px;">
       <input class="field-input poll-opt-input" placeholder="Option 2" maxlength="100" style="margin-bottom:6px;">
     </div>
-    <button onclick="_addPollOption()" style="background:none;border:1px dashed rgba(255,255,255,.1);border-radius:10px;padding:8px;width:100%;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;margin-bottom:16px;" onmouseover="this.style.borderColor='var(--accent-mid)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='var(--muted)'">+ Add option</button>
+    <button onclick="_addPollOption()" class="poll-add-opt-btn">+ Add option</button>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
       <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:rgba(255,255,255,.6);cursor:pointer;">
         <input type="checkbox" id="poll-multi" style="accent-color:var(--accent);"> Allow multiple answers

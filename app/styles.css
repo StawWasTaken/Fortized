@@ -5269,6 +5269,67 @@ button[style*="background: var(--accent)"]:active {
 }
 .pw-widget-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.25) !important; }
 
+/* ── Poll change vote button ── */
+.poll-unvote-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  padding: 4px 12px;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.poll-unvote-btn:hover { border-color: rgba(255,255,255,.15); }
+
+/* ── Add poll option button ── */
+.poll-add-opt-btn {
+  background: none;
+  border: 1px dashed rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: 8px;
+  width: 100%;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .15s;
+  margin-bottom: 16px;
+}
+.poll-add-opt-btn:hover { border-color: var(--accent-mid); color: var(--accent); }
+
+/* ── Shop item card hover ── */
+.shop-item-card { transition: all .2s cubic-bezier(.22,1,.36,1); }
+.shop-item-card:hover { transform: translateY(-2px); filter: brightness(1.05); }
+
+/* ── Status mode option ── */
+.sp-mode-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.sp-mode-opt:not(.sel):hover { border-color: rgba(254,248,61,.15) !important; background: rgba(254,248,61,.03) !important; }
+.sp-mode-opt.sel { border-color: rgba(254,248,61,.2); background: rgba(254,248,61,.04); }
+
+/* ── Status emoji button ── */
+.sp-emoji-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.04);
+  border: 1.5px solid rgba(255,255,255,.06);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.sp-emoji-btn:hover { border-color: rgba(254,248,61,.2); background: rgba(254,248,61,.04); }
+
 /* ── Tooltip for data-tip attributes ── */
 [data-tip] { position: relative; }
 [data-tip]:hover::after {

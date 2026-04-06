@@ -10004,8 +10004,12 @@ async function removeKeyword(i) {
 }
 async function saveAutoMod() {
   const ml = parseInt(document.getElementById('mention-limit')?.value)||10;
+  const btn=document.querySelector('[onclick*="saveAutoMod"]');
+  if(btn){btn.classList.add('btn-loading');btn.disabled=true;}
   CU.bastions[curBastion].automod.mentionLimit = ml;
-  await saveUser(); _syncBastionToGlobal(curBastion); toast('AutoMod saved!', 'success');
+  await saveUser(); _syncBastionToGlobal(curBastion);
+  if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}
+  toast('AutoMod saved!', 'success');
 }
 async function generateInvite() {
   const b = CU.bastions[curBastion];
@@ -10028,7 +10032,7 @@ async function generateInvite() {
     await firebase.database().ref('globalBastions/'+bid+'/invites').set(b.invites);
     // Also save to dedicated invites collection for faster lookup
     await FortizedSocial.saveInvite(code, {code, bastionId: bid, bastionName: b.name, createdBy: CU.username, created: invite.created, expires: invite.expires||null, maxUses: invite.maxUses||0, uses:0});
-  } catch {}
+  } catch(e) { console.warn('[Invite] Sync failed:', e?.message); }
   // Sync full bastion data to global
   _syncBastionToGlobal(curBastion);
   renderBSettingsMain('invites');
@@ -12812,8 +12816,8 @@ function buildProfileView(tab) {
     main.innerHTML = `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('construction','48')}</div><h3>Coming Soon</h3><p>These settings are on the way!</p></div>`;
   }
 }
-async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}CU.displayName=dn;await saveUser();document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');try{const s=FortizedSocial.getSocket();if(s)s.emit('profile:update',{displayName:dn,field:'displayName'});}catch(e){}toast('Display name updated!','success');showFeedbackToast('editing your profile','profile_edit');}
-async function saveEmail(){const e=document.getElementById('email-input')?.value?.trim();CU.email=e;await saveUser();toast('Email updated!','success');}
+async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}const btn=document.querySelector('[onclick*="saveDisplayName"]');if(btn){btn.classList.add('btn-loading');btn.disabled=true;}CU.displayName=dn;await saveUser();if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');try{const s=FortizedSocial.getSocket();if(s)s.emit('profile:update',{displayName:dn,field:'displayName'});}catch(e){}toast('Display name updated!','success');showFeedbackToast('editing your profile','profile_edit');}
+async function saveEmail(){const e=document.getElementById('email-input')?.value?.trim();const btn=document.querySelector('[onclick*="saveEmail"]');if(btn){btn.classList.add('btn-loading');btn.disabled=true;}CU.email=e;await saveUser();if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}toast('Email updated!','success');}
 async function changePassword(){const old=document.getElementById('pw-old')?.value,nw=document.getElementById('pw-new')?.value,msg=document.getElementById('pw-msg');if(!old||!nw){if(msg){msg.style.color='var(--red)';msg.textContent='Fill both fields.';}return;}if(old!==CU.password){if(msg){msg.style.color='var(--red)';msg.textContent='Current password incorrect.';}return;}if(nw.length<6){if(msg){msg.style.color='var(--red)';msg.textContent='Too short.';}return;}CU.password=nw;await saveUser();if(msg){msg.style.color='var(--green)';msg.textContent='Password updated!';}document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';}
 async function updatePfp(e) {
   const file = e.target.files[0];
@@ -12865,7 +12869,7 @@ async function setMyStatus(s) {
   if (own) { toggleOwnProfilePanel(); toggleOwnProfilePanel(); }
 }
 function toggleNotifSetting(key,el){notifSettings[key]=!notifSettings[key];el.classList.toggle('on',notifSettings[key]);}
-async function saveNotifSettings(){CU.notifSettings=notifSettings;await saveUser();toast('Notification settings saved!','success');}
+async function saveNotifSettings(){const btn=document.querySelector('[onclick*="saveNotifSettings"]');if(btn){btn.classList.add('btn-loading');btn.disabled=true;}CU.notifSettings=notifSettings;await saveUser();if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}toast('Notification settings saved!','success');}
 
 // ════════════════════════════════════════════
 // ATELIER

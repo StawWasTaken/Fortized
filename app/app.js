@@ -450,7 +450,7 @@ const FtzStatus = (() => {
     if (CU?.username) {
       try {
         firebase.database().ref('statuses/' + CU.username).onDisconnect().set('offline');
-      } catch {}
+      } catch(e) { console.warn('[Status] onDisconnect setup failed:', e?.message); }
     }
     window.addEventListener('beforeunload', () => {
       if (!CU?.username) return;
@@ -477,7 +477,7 @@ const FtzStatus = (() => {
     try {
       const uname = (CU.username || '').toLowerCase();
       if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(null);
-    } catch {}
+    } catch(e) { console.warn('[Status] Custom status clear failed:', e?.message); }
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     refreshCustomStatusBubble();
     toast('Custom status cleared', 'info');
@@ -497,7 +497,7 @@ const FtzStatus = (() => {
     try {
       const uname = (CU.username || '').toLowerCase();
       if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(cs);
-    } catch {}
+    } catch(e) { console.warn('[Status] Custom status write failed:', e?.message); }
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     refreshCustomStatusBubble();
   }
@@ -509,7 +509,7 @@ const FtzStatus = (() => {
     try {
       const uname = (CU.username || '').toLowerCase();
       if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(null);
-    } catch {}
+    } catch(e) { console.warn('[Status] Custom status clear failed:', e?.message); }
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     refreshCustomStatusBubble();
   }
@@ -1522,7 +1522,7 @@ function updateTopbar(v) {
   }
   // On mobile, add member list toggle for bastion views
   if (_isMobile() && v === 'bastion' && acts) {
-    acts.innerHTML += '<button class="tb-act-btn" title="Members" onclick="toggleMobileMemberPanel()" style="position:relative;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></button>';
+    acts.insertAdjacentHTML('beforeend', '<button class="tb-act-btn" title="Members" onclick="toggleMobileMemberPanel()" style="position:relative;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></button>');
   }
   updateOnyxDisplay();
 }
@@ -1693,7 +1693,7 @@ function updateUserbar() {
   }
   _syncRailUserbarActivity();
   // Update mobile tab bar avatar and badges
-  try { _updateMobileTabAvatar(); _updateMobileNotifBadge(); } catch {}
+  try { _updateMobileTabAvatar(); _updateMobileNotifBadge(); } catch(e) { console.debug('[Mobile] Tab update:', e?.message); }
 }
 function _isMobile() { return window.innerWidth <= 768; }
 function _isTablet() { return window.innerWidth <= 1024 && window.innerWidth > 768; }
@@ -3198,7 +3198,7 @@ async function renderDMSidebar(scroll) {
       }
       const row = document.getElementById('dm-fi-'+f);
       if (row) row.dataset.lastTime = lastTime;
-    } catch {}
+    } catch(e) { console.debug('[DM] Friend row update:', e?.message); }
   });
 
   const gcPromises = visibleGCs.map(async gc => {
@@ -3213,7 +3213,7 @@ async function renderDMSidebar(scroll) {
           el.textContent = (last.from===CU.username?'You: ':last.from+': ') + (last.text||'').slice(0,35);
         }
       }
-    } catch {}
+    } catch(e) { console.debug('[GC] Preview update:', e?.message); }
     const row = document.getElementById('gc-fi-'+gc.id);
     if (row) row.dataset.lastTime = lastTime;
   });
@@ -3602,7 +3602,7 @@ async function ensureDMExists(partnerUsername) {
 async function loadDMMessages(username) {
   const msgsEl = document.getElementById('dm-msgs');
   if (!msgsEl) return;
-  if (_dmListener) { try{_dmListener();}catch{} _dmListener=null; }
+  if (_dmListener) { try{_dmListener();}catch(e){console.debug('[DM] Listener cleanup:',e?.message);} _dmListener=null; }
   try {
     const msgs = await FortizedSocial.getDMMessages(CU.username, username);
     renderMessages(msgsEl, msgs||[], 'dm');
@@ -3984,7 +3984,7 @@ function _filterGCMembers(query) {
 async function loadGCMessages(gcId) {
   const msgsEl = document.getElementById('gc-msgs');
   if (!msgsEl || !gcId) return;
-  if (_gcListener) { try{_gcListener();}catch{} _gcListener=null; }
+  if (_gcListener) { try{_gcListener();}catch(e){console.debug('[GC] Listener cleanup:',e?.message);} _gcListener=null; }
   // Join Socket.io room for GC real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('gc', gcId);
   try {
@@ -4017,8 +4017,8 @@ let _gcEditListenerPath = null;
 function _attachGCLiveEdits(gcId) {
   const path = 'groupChats/'+gcId+'/messages';
   if (_gcEditListenerPath) {
-    try { firebase.database().ref(_gcEditListenerPath).off('child_changed'); } catch{}
-    try { firebase.database().ref(_gcEditListenerPath).off('child_removed'); } catch{}
+    try { firebase.database().ref(_gcEditListenerPath).off('child_changed'); } catch(e){console.debug('[GC] Edit listener off:',e?.message);}
+    try { firebase.database().ref(_gcEditListenerPath).off('child_removed'); } catch(e){console.debug('[GC] Delete listener off:',e?.message);}
     _gcEditListenerPath = null;
   }
   _gcEditListenerPath = path;
@@ -4090,7 +4090,7 @@ function _stopGCTypingBroadcast() {
 }
 
 function listenGCTyping(gcId, members) {
-  if (_gcTypingListenerOff) { try{_gcTypingListenerOff();}catch{} _gcTypingListenerOff=null; }
+  if (_gcTypingListenerOff) { try{_gcTypingListenerOff();}catch(e){console.debug('[GC] Typing listener off:',e?.message);} _gcTypingListenerOff=null; }
   const ref = firebase.database().ref(_gcTypingPath(gcId));
   const handler = ref.on('value', snap => {
     const data = snap.val()||{};
@@ -4739,7 +4739,7 @@ async function loadChannelMessages(idx) {
   const ch=b?.channels?.[idx];
   const msgsEl=document.getElementById('ch-msgs-'+idx);
   if (!ch||!msgsEl) return;
-  if (_chListener){try{_chListener();}catch{}_chListener=null;}
+  if (_chListener){try{_chListener();}catch(e){console.debug('[CH] Listener cleanup:',e?.message);}_chListener=null;}
   // Join Socket.io room for bastion channel real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('bastion', b.globalId||b.name, ch.name);
   try {
@@ -4812,7 +4812,7 @@ async function _loadAnnouncementRoom(wrap, b, ch, idx) {
   } catch(e) { console.warn('Ann load', e); }
 
   // Live listener
-  if (_annListener) { try { _annListener(); } catch {} _annListener = null; }
+  if (_annListener) { try { _annListener(); } catch(e) { console.debug('[Ann] Listener cleanup:', e?.message); } _annListener = null; }
   _annListener = FortizedSocial.listenBastionChannel(b.globalId||b.name, ch.name, msg => {
     if (curChannel !== idx) return;
     // Handle edit/delete events
@@ -6794,7 +6794,7 @@ function initFortizedUXResilience() {
   let username=localStorage.getItem('ftz_current')||localStorage.getItem('fortized_current_user');
   if (!username){window.location.href='/login';return;}
   // Handle old format that stored full JSON object
-  if (username.startsWith('{')){try{username=JSON.parse(username).username;}catch{}}
+  if (username.startsWith('{')){try{username=JSON.parse(username).username;}catch(e){console.warn('[Init] Username parse failed:', e?.message);}}
   username=username.replace(/^["']|["']$/g,'').trim();
   if (!username){window.location.href='/login';return;}
 
@@ -6913,7 +6913,7 @@ function initFortizedUXResilience() {
           // Only update if not a self-triggered change (avoid loops)
           if (CU.status !== data.status && data.status !== 'offline') {
             CU.status = data.status;
-            try { updateUserbar(); } catch {}
+            try { updateUserbar(); } catch(e) { console.debug('[Userbar] Update failed:', e?.message); }
           }
         }
 
@@ -7199,7 +7199,7 @@ function initFortizedUXResilience() {
         if (data.username === CU.username) {
           if (data.pfp) CU.pfp = data.pfp;
           if (data.displayName) CU.displayName = data.displayName;
-          try { updateUserbar(); } catch {}
+          try { updateUserbar(); } catch(e) { console.debug('[Userbar] Update failed:', e?.message); }
         }
 
         // ── UPDATE PFP EVERYWHERE ──
@@ -7350,10 +7350,10 @@ function initFortizedUXResilience() {
   else if(!CU.dateOfBirth)setTimeout(showDOBSetup,600);
 
   // Check invite link
-  try{checkInviteLink();}catch{}
-  try{checkTrialLink();}catch{}
-  try{checkPersonalInviteLink();}catch{}
-  try{checkGiftLinks();}catch{}
+  try{checkInviteLink();}catch(e){console.warn('[Init] Invite link check:',e?.message);}
+  try{checkTrialLink();}catch(e){console.warn('[Init] Trial link check:',e?.message);}
+  try{checkPersonalInviteLink();}catch(e){console.warn('[Init] Personal invite check:',e?.message);}
+  try{checkGiftLinks();}catch(e){console.warn('[Init] Gift links check:',e?.message);}
   // Show personal invite link if already generated
   try { applyRadianceFont(); } catch(e) { console.warn('[init] applyRadianceFont:', e); }
   try { trackRadianceTime(); } catch(e) { console.warn('[init] trackRadianceTime:', e); }
@@ -8595,7 +8595,7 @@ function renderOverviewRoom() {
     + '</div>';
 
   // Load events async into the row
-  setTimeout(function(){ _loadOverviewEvents(bastionId); }, 50);
+  setTimeout(() => _loadOverviewEvents(bastionId), 50);
 
   // ── Latest Announcements ──
   if (showAnnouncements && annChs.length > 0) {

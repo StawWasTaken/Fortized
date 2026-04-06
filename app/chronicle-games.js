@@ -167,7 +167,7 @@ function showChronicleDashboard() {
     // UIBox2 as background image
     const uiboxImg = document.createElement('img');
     uiboxImg.src = `${CHRONICLE.ASSET_PATH}UIBox2.png`;
-    uiboxImg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none; opacity: 0.8;`;
+    uiboxImg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
     btnWrapper.appendChild(uiboxImg);
 
     // Button on top
@@ -194,7 +194,7 @@ function showChronicleDashboard() {
 
   const mapImg = document.createElement('img');
   mapImg.src = `${CHRONICLE.ASSET_PATH}IRL Human World Map 1452.png`;
-  mapImg.style.cssText = `width: 100%; height: 100%; object-fit: cover; opacity: 0.35;`;
+  mapImg.style.cssText = `width: 100%; height: 100%; object-fit: cover; opacity: 0.12;`;
   centerPanel.appendChild(mapImg);
 
   main.appendChild(centerPanel);
@@ -214,7 +214,7 @@ function showChronicleDashboard() {
     wrapper.appendChild(uiboxImg);
 
     const box = document.createElement('div');
-    box.style.cssText = `position: absolute; inset: 0; border: 3px solid #000; padding: 12px; border-radius: 3px; background: rgba(255,255,255,0.9);`;
+    box.style.cssText = `position: absolute; inset: 0; border: 3px solid #000; padding: 12px; border-radius: 3px; background: rgba(255,255,255,0.75);`;
 
     const titleEl = document.createElement('div');
     titleEl.style.cssText = `font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #000;`;
@@ -259,7 +259,7 @@ function showChronicleDashboard() {
   battleWrapper.appendChild(battleUibox);
 
   const battleBox = document.createElement('div');
-  battleBox.style.cssText = `position: absolute; inset: 0; border: 3px solid #000; padding: 12px; text-align: center; border-radius: 3px; background: rgba(255,255,255,0.9);`;
+  battleBox.style.cssText = `position: absolute; inset: 0; border: 3px solid #000; padding: 12px; text-align: center; border-radius: 3px; background: rgba(255,255,255,0.75);`;
 
   const battleLabel = document.createElement('div');
   battleLabel.style.cssText = `font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;`;

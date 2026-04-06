@@ -3247,6 +3247,170 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
   color: #000 !important;
 }
 
+/* ════════════════════════════════════════════════════════════════
+   ACTIVITY SYSTEM v2 — Multi-Activity UI
+   ════════════════════════════════════════════════════════════════ */
+
+/* Activity Card Component */
+.activity-card {
+  background: linear-gradient(135deg, rgba(62,207,110,.08), transparent);
+  border-left: 3px solid #3ecf6e;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideIn 0.3s cubic-bezier(.22,1,.36,1);
+  transition: transform 0.2s, background 0.2s;
+  margin-bottom: 10px;
+}
+
+.activity-card:hover {
+  transform: translateX(4px);
+  background: linear-gradient(135deg, rgba(62,207,110,.12), rgba(62,207,110,.04));
+}
+
+.activity-card.spotify {
+  background: linear-gradient(135deg, rgba(29,185,84,.08), transparent);
+  border-left-color: #1DB954;
+}
+
+.activity-card.spotify:hover {
+  background: linear-gradient(135deg, rgba(29,185,84,.12), rgba(29,185,84,.04));
+}
+
+.ac-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+.ac-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ac-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ac-detail {
+  font-size: 11px;
+  color: rgba(255,255,255,.4);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ac-state {
+  font-size: 10px;
+  color: rgba(255,255,255,.25);
+  margin-top: 1px;
+}
+
+.ac-elapsed {
+  font-size: 9px;
+  color: rgba(62,207,110,.6);
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Activity items for friend lists */
+.activity-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: rgba(255,255,255,.5);
+}
+
+.activity-item.secondary {
+  font-size: 10px;
+  color: rgba(255,255,255,.35);
+  margin-top: 2px;
+}
+
+/* Activity display sections */
+.activities-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activities-header {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.35);
+}
+
+.activities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Mini profile activities */
+.mpp-activities {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mpp-activity-primary {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mpp-activity-secondary {
+  font-size: 10px;
+  color: rgba(255,255,255,.35);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Joy percent display */
 #chronicle-joy-percent {
   color: #000 !important;

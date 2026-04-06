@@ -1692,14 +1692,17 @@ function _updateUserbarActivity() {
   if (!row || !nameEl) return;
   const actionBtn = document.getElementById('ub-activity-action');
   const activityEnabled = localStorage.getItem('ftz_activity_detection') !== 'false';
-  if (_gameActivity && activityEnabled) {
+  const primary = activityState.primary;
+
+  if (primary && activityEnabled) {
     row.classList.add('active');
     row.style.display = '';
-    const isSpotify = !!_gameActivity._spotify;
-    // Update label text
+
+    const isSpotify = primary.type === 'listening';
     const labelEl = row.querySelector('.ub-activity-label');
     if (labelEl) labelEl.textContent = isSpotify ? 'Listening to Spotify' : 'Playing';
-    // Update activity row colors for Spotify
+
+    // Color for Spotify
     if (isSpotify) {
       row.style.background = 'rgba(29,185,84,.04)';
       row.style.borderColor = 'rgba(29,185,84,.08)';
@@ -1707,30 +1710,39 @@ function _updateUserbarActivity() {
       row.style.background = '';
       row.style.borderColor = '';
     }
-    nameEl.textContent = isSpotify ? (_gameActivity.spotifyTrack + ' — ' + _gameActivity.spotifyArtist) : _gameActivity.name;
+
+    // Activity display text
+    const displayText = formatActivityDisplay(primary);
+    nameEl.textContent = displayText;
+
+    // Icon/Cover
     if (iconEl) {
-      if (isSpotify && _gameActivity.spotifyAlbumArt) {
-        iconEl.innerHTML = '<img src="'+escapeHTML(_gameActivity.spotifyAlbumArt)+'" style="width:26px;height:26px;border-radius:4px;object-fit:cover;">';
+      if (isSpotify && primary.metadata?.spotifyAlbumArt) {
+        iconEl.innerHTML = '<img src="'+escapeHTML(primary.metadata.spotifyAlbumArt)+'" style="width:26px;height:26px;border-radius:4px;object-fit:cover;">';
         iconEl.style.background = 'rgba(29,185,84,.1)';
         iconEl.style.borderColor = 'rgba(29,185,84,.18)';
-      } else if (_gameActivity.coverThumb) {
-        iconEl.innerHTML = '<img src="'+escapeHTML(_gameActivity.coverThumb)+'" style="width:24px;height:32px;border-radius:4px;object-fit:cover;" onerror="this.outerHTML=\'<span style=font-size:15px>'+(_gameActivity.icon||'🎮')+'</span>\'">';
+      } else if (primary.metadata?.coverThumb) {
+        iconEl.innerHTML = '<img src="'+escapeHTML(primary.metadata.coverThumb)+'" style="width:24px;height:32px;border-radius:4px;object-fit:cover;" onerror="this.outerHTML=\'<span style=font-size:15px>'+primary.icon+'</span>\'">';
         iconEl.style.background = '';
         iconEl.style.borderColor = '';
       } else {
-        iconEl.innerHTML = '<span style="font-size:15px;">' + (_gameActivity.icon || ftzIcon('gamepad','15')) + '</span>';
+        iconEl.innerHTML = '<span style="font-size:15px;">' + primary.icon + '</span>';
         iconEl.style.background = '';
         iconEl.style.borderColor = '';
       }
     }
+
     if (actionBtn) {
       actionBtn.title = 'Stop Activity';
       actionBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     }
-    // Show elapsed time
+
+    // Elapsed time
     const timeEl = row.querySelector('.ub-activity-time');
-    if (_gameActivity.since) {
-      const elapsed = isSpotify && _gameActivity.spotifyDuration ? _gameActivity.spotifyDuration : _formatActivityElapsed(_gameActivity.since);
+    if (primary.since) {
+      const elapsed = isSpotify && primary.metadata?.spotifyDuration
+        ? primary.metadata.spotifyDuration
+        : _formatActivityElapsed(primary.since);
       if (timeEl) {
         timeEl.textContent = elapsed;
       } else {
@@ -1743,18 +1755,13 @@ function _updateUserbarActivity() {
         }
       }
     }
-    // Broadcast activity via Socket.io
-    FortizedSocial.socketEmit('activity:set', { activity: _gameActivity });
   } else {
-    // No app detected or activity detection disabled — hide the row entirely
     row.classList.remove('active');
     row.style.display = 'none';
     nameEl.textContent = '—';
     if (iconEl) iconEl.innerHTML = '';
     const timeEl = row.querySelector('.ub-activity-time');
     if (timeEl) timeEl.remove();
-    // Clear activity on server
-    FortizedSocial.socketEmit('activity:set', { activity: null });
   }
 }
 
@@ -1764,11 +1771,15 @@ function _syncRailUserbarActivity() {
   const iconEl = document.getElementById('rail-ub-activity-icon');
   if (!row || !nameEl) return;
   const activityEnabled = localStorage.getItem('ftz_activity_detection') !== 'false';
-  if (_gameActivity && activityEnabled) {
-    const isSpotify = !!_gameActivity._spotify;
+  const primary = activityState.primary;
+
+  if (primary && activityEnabled) {
+    const isSpotify = primary.type === 'listening';
     row.classList.add('active');
     row.style.display = '';
-    nameEl.textContent = isSpotify ? (_gameActivity.spotifyTrack || _gameActivity.name) : _gameActivity.name;
+    const displayText = formatActivityDisplay(primary);
+    nameEl.textContent = displayText;
+
     if (iconEl) {
       if (isSpotify) {
         iconEl.innerHTML = '<span style="font-size:11px;">🎵</span>';
@@ -1776,7 +1787,7 @@ function _syncRailUserbarActivity() {
         iconEl.style.borderColor = 'rgba(29,185,84,.18)';
         iconEl.style.color = '#1DB954';
       } else {
-        iconEl.innerHTML = '<span style="font-size:11px;">' + (_gameActivity.icon || ftzIcon('gamepad','11')) + '</span>';
+        iconEl.innerHTML = '<span style="font-size:11px;">' + primary.icon + '</span>';
         iconEl.style.background = '';
         iconEl.style.borderColor = '';
         iconEl.style.color = '';
@@ -1799,7 +1810,7 @@ function _formatActivityElapsed(since) {
   return Math.floor(hrs / 24) + 'd ' + (hrs % 24) + 'h elapsed';
 }
 // Tick elapsed time every 30s while an activity is active
-setInterval(() => { if (_gameActivity) _updateUserbarActivity(); }, 30000);
+setInterval(() => { if (activityState.primary) _updateUserbarActivity(); }, 30000);
 
 /* ── Mobile sidebar toggle (Discord-style drawer: rail + ctx together) ──── */
 function toggleMobileSidebar() {
@@ -21180,18 +21191,25 @@ async function _pollSpotifyNowPlaying() {
           progress: progressStr,
           durationMs, progressMs
         };
-        // Set Spotify as activity status (like Discord's "Listening to Spotify")
-        _gameActivity = {
-          name: data.item.name,
+        // Set Spotify activity using new v2 system
+        addActivity({
+          id: 'spotify',
+          type: 'listening',
+          name: 'Spotify',
+          details: data.item.name,
+          state: CU.spotifyNowPlaying.artist,
           icon: '🎵',
           since: new Date(Date.now() - progressMs).toISOString(),
-          _spotify: true,
-          spotifyTrack: data.item.name,
-          spotifyArtist: CU.spotifyNowPlaying.artist,
-          spotifyAlbumArt: CU.spotifyNowPlaying.albumArt,
-          spotifyDuration: durationStr
-        };
-        CU.gameActivity = _gameActivity;
+          priority: 3,
+          metadata: {
+            spotifyTrack: data.item.name,
+            spotifyArtist: CU.spotifyNowPlaying.artist,
+            spotifyAlbumArt: CU.spotifyNowPlaying.albumArt,
+            spotifyDuration: durationStr,
+            durationMs, progressMs
+          }
+        });
+        CU.gameActivity = activityState.primary;  // Keep backward compat
         _updateUserbarActivity();
         _syncRailUserbarActivity();
         FortizedSocial.socketEmit('activity:set', { activity: _gameActivity });
@@ -21202,31 +21220,16 @@ async function _pollSpotifyNowPlaying() {
         _updateSpotifyWidget();
       } else {
         CU.spotifyNowPlaying = { isPlaying: false };
-        // Save the not-playing state
         try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch {}
         _updateSpotifyWidget();
         // Clear Spotify activity if it was set
-        if (_gameActivity && _gameActivity._spotify) {
-          _gameActivity = null;
-          CU.gameActivity = null;
-          _updateUserbarActivity();
-          _syncRailUserbarActivity();
-          FortizedSocial.socketEmit('activity:set', { activity: null });
-          try { firebase.database().ref('users/'+CU.username+'/gameActivity').set(null); } catch {}
-        }
+        removeActivity('spotify');
       }
     } else if (res.status === 204) {
       CU.spotifyNowPlaying = { isPlaying: false };
       try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch {}
       _updateSpotifyWidget();
-      if (_gameActivity && _gameActivity._spotify) {
-        _gameActivity = null;
-        CU.gameActivity = null;
-        _updateUserbarActivity();
-        _syncRailUserbarActivity();
-        FortizedSocial.socketEmit('activity:set', { activity: null });
-        try { firebase.database().ref('users/'+CU.username+'/gameActivity').set(null); } catch {}
-      }
+      removeActivity('spotify');
     } else if (res.status === 401) {
       // Token invalid/expired — try refresh
       console.warn('[Spotify] Token invalid (401), attempting refresh...');
@@ -21261,15 +21264,7 @@ async function _disconnectSpotify() {
   CU.spotifyRefreshToken = null;
   CU.spotifyTokenExpiry = null;
   CU.spotifyNowPlaying = null;
-  // Clear Spotify activity if it was showing
-  if (_gameActivity && _gameActivity._spotify) {
-    _gameActivity = null;
-    CU.gameActivity = null;
-    _updateUserbarActivity();
-    _syncRailUserbarActivity();
-    FortizedSocial.socketEmit('activity:set', { activity: null });
-    try { firebase.database().ref('users/'+CU.username+'/gameActivity').set(null); } catch {}
-  }
+  removeActivity('spotify');
   await saveUser(true);
   const wc = document.getElementById('up-widgets-container');
   if (wc) renderProfileWidgetsOnCard(CU, wc);
@@ -24496,6 +24491,112 @@ function ftzVideoKey(id, e) {
 }
 
 // ════════════════════════════════════════════
+// ACTIVITY SYSTEM v2 — Multi-Activity with Priorities
+// ════════════════════════════════════════════
+let activityState = {
+  activities: [],
+  primary: null,
+  lastUpdated: null,
+  lastBroadcastHash: null
+};
+
+function addActivity(activity) {
+  if (!activity || !activity.id) return;
+  activityState.activities = activityState.activities.filter(a => a.id !== activity.id);
+  activityState.activities.push(activity);
+  activityState.lastUpdated = Date.now();
+  updatePrimaryActivity();
+  broadcastIfChanged();
+}
+
+function removeActivity(id) {
+  activityState.activities = activityState.activities.filter(a => a.id !== id);
+  activityState.lastUpdated = Date.now();
+  updatePrimaryActivity();
+  broadcastIfChanged();
+}
+
+function clearAllActivities() {
+  activityState.activities = [];
+  activityState.primary = null;
+  activityState.lastUpdated = Date.now();
+  broadcastIfChanged();
+}
+
+function updatePrimaryActivity() {
+  const sorted = [...activityState.activities].sort((a, b) => {
+    const aPri = a.priority || 2;
+    const bPri = b.priority || 2;
+    return bPri - aPri;
+  });
+  activityState.primary = sorted[0] || null;
+}
+
+function broadcastIfChanged() {
+  const currentHash = JSON.stringify(activityState);
+  if (currentHash !== activityState.lastBroadcastHash) {
+    activityState.lastBroadcastHash = currentHash;
+    if (CU?.username) {
+      FortizedSocial.socketEmit('activity:update', { username: CU.username, activityState });
+    }
+    try {
+      if (CU?.username) {
+        firebase.database().ref('users/' + CU.username + '/activityState').set(activityState);
+      }
+    } catch {}
+    _updateUserbarActivity();
+    _syncRailUserbarActivity();
+  }
+}
+
+function getFormattedActivities() {
+  return activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2))
+    .map(activity => ({
+      ...activity,
+      displayText: formatActivityDisplay(activity),
+      displayIcon: activity.icon || '🎮'
+    }));
+}
+
+function formatActivityDisplay(activity) {
+  if (activity.type === 'listening' && activity.metadata?.spotifyTrack) {
+    return `${activity.metadata.spotifyTrack} — ${activity.metadata.spotifyArtist || 'Unknown'}`;
+  }
+  return activity.details || activity.name;
+}
+
+function renderActivityCard(activity) {
+  if (!activity) return '';
+
+  const statusColor = activity.id === 'spotify' ? '#1DB954' : '#3ecf6e';
+  const bgColor = activity.id === 'spotify' ? 'rgba(29,185,84,.08)' : 'rgba(62,207,110,.08)';
+  const borderColor = activity.id === 'spotify' ? '#1DB954' : '#3ecf6e';
+
+  const displayText = formatActivityDisplay(activity);
+  const elapsedHtml = activity.since
+    ? `<div class="ac-elapsed"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${_formatActivityElapsed(activity.since)}</div>`
+    : '';
+
+  return `<div class="activity-card ${activity.id === 'spotify' ? 'spotify' : ''}" style="background:linear-gradient(135deg,${bgColor},transparent);border-left-color:${borderColor};">
+    <div class="ac-icon" style="background:${borderColor}15;border-color:${borderColor}22;color:${borderColor};">${activity.icon}</div>
+    <div class="ac-content">
+      <div class="ac-title">${escapeHTML(displayText)}</div>
+      ${activity.state ? `<div class="ac-detail">${escapeHTML(activity.state)}</div>` : ''}
+      ${elapsedHtml}
+    </div>
+  </div>`;
+}
+
+function renderAllActivitiesInProfile(activities) {
+  if (!activities || activities.length === 0) {
+    return '<div style="text-align:center;padding:30px 20px;color:rgba(255,255,255,.15);"><div style="font-size:24px;margin-bottom:8px;">🎮</div><div style="font-size:12px;">No active activities</div></div>';
+  }
+
+  const sorted = activities.sort((a, b) => (b.priority || 2) - (a.priority || 2));
+  return sorted.map(a => renderActivityCard(a)).join('');
+}
+
+// ════════════════════════════════════════════
 // GAME ACTIVITY / STATUS (Discord-style)
 // ════════════════════════════════════════════
 const KNOWN_GAMES = [
@@ -24541,7 +24642,6 @@ const KNOWN_GAMES = [
   {name:'Discord', icon:'💬', keywords:['discord']},
 ];
 
-let _gameActivity = null;
 let _gameActivityInterval = null;
 let _autoActivityPoller = null;
 let _userCustomApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
@@ -24621,11 +24721,15 @@ function _startAutoActivityDetection() {
       if (!procs) return;
       const detected = _matchRunningApp(procs);
       if (detected) {
-        if (!_gameActivity || _gameActivity.name !== detected.name) {
+        const gameActivity = activityState.activities.find(a => a.id === 'game');
+        if (!gameActivity || gameActivity.name !== detected.name) {
           setGameActivity(detected.name, detected.icon);
         }
-      } else if (_gameActivity && !_gameActivity._manual) {
-        setGameActivity(null);
+      } else {
+        const gameActivity = activityState.activities.find(a => a.id === 'game');
+        if (gameActivity && !gameActivity._manual) {
+          setGameActivity(null);
+        }
       }
     } catch {}
   }, AUTO_ACTIVITY_POLL_MS);
@@ -24660,16 +24764,14 @@ async function detectGameActivity() {
 
 async function openActivityDetector() {
   // If already playing, offer to stop
-  if (_gameActivity) {
+  const gameActivity = activityState.activities.find(a => a.id === 'game');
+  if (gameActivity) {
     setGameActivity(null);
-    _updateUserbarActivity();
     return;
   }
-  // Use the Screen Capture label hack
   const detected = await detectGameActivity();
   if (detected) {
     setGameActivity(detected.name, detected.icon);
-    _updateUserbarActivity();
   }
 }
 
@@ -24706,75 +24808,79 @@ function _getManualCover(name) {
 }
 
 function setGameActivity(name, icon) {
-  // Don't override Spotify activity with game detection — Spotify takes priority
-  if (_gameActivity?._spotify && name) return;
-  const prevGame = _gameActivity?.name;
-  _gameActivity = name ? {name, icon: icon||'🎮', since: new Date().toISOString()} : null;
-  // Apply manual cover art immediately if available
-  if (_gameActivity) {
+  // Don't override Spotify activity with game detection
+  const hasSpotify = activityState.activities.some(a => a.id === 'spotify');
+  if (hasSpotify && name) return;
+
+  const prevGame = activityState.primary?.name;
+
+  if (name) {
     const manualCover = _getManualCover(name);
-    if (manualCover) {
-      _gameActivity.coverUrl = manualCover;
-      _gameActivity.coverThumb = manualCover;
-    }
+    addActivity({
+      id: 'game',
+      type: 'playing',
+      name: name,
+      icon: icon || '🎮',
+      since: new Date().toISOString(),
+      priority: 2,
+      metadata: {
+        coverUrl: manualCover,
+        coverThumb: manualCover
+      }
+    });
+  } else {
+    removeActivity('game');
   }
-  refreshGameActivityBar();
-  _updateUserbarActivity();
-  // Track lastPlayed on the game collection entry
+
+  // Track lastPlayed
   if (prevGame && prevGame !== name && CU?.gameCollection) {
     const entry = CU.gameCollection.find(g => g.name === prevGame);
     if (entry) { entry.lastPlayed = new Date().toISOString(); }
   }
-  // Save to user profile
+
+  // Update CU and save
   if (CU) {
-    CU.gameActivity = _gameActivity;
+    CU.gameActivity = activityState.primary;
     saveUser().catch(()=>{});
-    firebase.database().ref('users/'+CU.username+'/gameActivity').set(_gameActivity).catch(()=>{});
-    // Broadcast activity change via Socket.io for instant updates
-    FortizedSocial.socketEmit('activity:set', { activity: _gameActivity });
-    if (_gameActivity && !_gameActivity._igdbEnriched) {
-      _enrichActivityWithIGDB(_gameActivity).catch(()=>{});
+    if (activityState.primary) {
+      firebase.database().ref('users/'+CU.username+'/gameActivity').set(activityState.primary).catch(()=>{});
+      if (!activityState.primary._igdbEnriched) {
+        _enrichActivityWithIGDB(activityState.primary).catch(()=>{});
+      }
     }
   }
+  refreshGameActivityBar();
 }
+
 async function _enrichActivityWithIGDB(activity) {
   try {
     const igdbOk = await _checkIGDB();
     if (!igdbOk) {
-      // Fall back to manual covers if IGDB is down
       const manualCover = _getManualCover(activity.name);
-      if (manualCover && !activity.coverUrl) {
-        activity.coverUrl = manualCover;
-        activity.coverThumb = manualCover;
+      if (manualCover && !activity.metadata?.coverUrl) {
+        if (!activity.metadata) activity.metadata = {};
+        activity.metadata.coverUrl = manualCover;
+        activity.metadata.coverThumb = manualCover;
+        activity._igdbEnriched = true;
+        addActivity(activity);
         refreshGameActivityBar();
         _updateUserbarActivity();
-        if (CU) {
-          CU.gameActivity = activity;
-          firebase.database().ref('users/'+CU.username+'/gameActivity').set(activity).catch(()=>{});
-          FortizedSocial.socketEmit('activity:set', { activity });
-        }
       }
       return;
     }
     const results = await _searchIGDB(activity.name);
     if (results.length > 0) {
       const match = results[0];
-      activity.genre = match.genre || activity.genre || null;
-      activity.coverUrl = match.coverUrl || activity.coverUrl || null;
-      activity.coverThumb = match.coverThumb || activity.coverThumb || null;
-      activity.summary = match.summary || activity.summary || null;
-      activity.year = match.year || activity.year || null;
+      if (!activity.metadata) activity.metadata = {};
+      activity.metadata.genre = match.genre || null;
+      activity.metadata.coverUrl = match.coverUrl || activity.metadata.coverUrl || null;
+      activity.metadata.coverThumb = match.coverThumb || activity.metadata.coverThumb || null;
+      activity.metadata.summary = match.summary || null;
+      activity.metadata.year = match.year || null;
       activity._igdbEnriched = true;
-      // Update the UI with enriched data
+      addActivity(activity);
       refreshGameActivityBar();
       _updateUserbarActivity();
-      // Persist enriched data
-      if (CU) {
-        CU.gameActivity = activity;
-        firebase.database().ref('users/'+CU.username+'/gameActivity').set(activity).catch(()=>{});
-        // Broadcast enriched activity via Socket.io
-        FortizedSocial.socketEmit('activity:set', { activity });
-      }
     }
   } catch(e) { console.warn('[IGDB] Activity enrichment failed:', e); }
 }
@@ -24782,15 +24888,16 @@ async function _enrichActivityWithIGDB(activity) {
 function refreshGameActivityBar() {
   const bar = document.getElementById('game-activity-bar');
   if (!bar) return;
-  if (_gameActivity) {
+  const gameActivity = activityState.activities.find(a => a.id === 'game');
+  if (gameActivity) {
     bar.style.display = 'flex';
-    const coverSrc = _gameActivity.coverThumb || _gameActivity.coverUrl || _getManualCover(_gameActivity.name);
+    const coverSrc = gameActivity.metadata?.coverThumb || gameActivity.metadata?.coverUrl || _getManualCover(gameActivity.name);
     const coverHtml = coverSrc
-      ? '<img src="'+escapeHTML(coverSrc)+'" style="width:24px;height:32px;border-radius:4px;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML=\'<span style=font-size:13px>'+(_gameActivity.icon||'🎮')+'</span>\'">'
-      : '<span style="font-size:13px;">' + (_gameActivity.icon||'🎮') + '</span>';
-    const genreHtml = _gameActivity.genre ? '<span style="font-size:9px;color:rgba(255,255,255,.25);margin-left:4px;">'+escapeHTML(_gameActivity.genre)+'</span>' : '';
+      ? '<img src="'+escapeHTML(coverSrc)+'" style="width:24px;height:32px;border-radius:4px;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML=\'<span style=font-size:13px>'+gameActivity.icon+'</span>\'">'
+      : '<span style="font-size:13px;">' + gameActivity.icon + '</span>';
+    const genreHtml = gameActivity.metadata?.genre ? '<span style="font-size:9px;color:rgba(255,255,255,.25);margin-left:4px;">'+escapeHTML(gameActivity.metadata.genre)+'</span>' : '';
     bar.innerHTML = coverHtml
-      +'<span style="font-size:11px;font-weight:700;color:var(--text);">'+escapeHTML(_gameActivity.name)+genreHtml+'</span>'
+      +'<span style="font-size:11px;font-weight:700;color:var(--text);">'+escapeHTML(gameActivity.name)+genreHtml+'</span>'
       +'<span style="font-size:10px;color:var(--muted);">Playing</span>'
       +'<button onclick="setGameActivity(null)" title="Stop" style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;">✕</button>';
   } else {
@@ -24810,7 +24917,7 @@ async function openGameActivityPicker() {
     +'<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;">🎮 Game Activity</div>'
     +'<button id="ga-close" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;">✕</button>'
     +'</div>'
-    +((_gameActivity) ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:12px;margin-bottom:14px;flex-shrink:0;"><span>'+(_gameActivity.icon||'🎮')+'</span><span style="font-size:13px;font-weight:700;">'+escapeHTML(_gameActivity.name)+'</span><button id="ga-stop-btn" style="margin-left:auto;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:var(--red);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;">Stop</button></div>' : '')
+    +((activityState.primary?.type === 'playing') ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:12px;margin-bottom:14px;flex-shrink:0;"><span>'+activityState.primary.icon+'</span><span style="font-size:13px;font-weight:700;">'+escapeHTML(activityState.primary.name)+'</span><button id="ga-stop-btn" style="margin-left:auto;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:var(--red);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;">Stop</button></div>' : '')
     +'<div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;flex-shrink:0;">Running on your PC</div>'
     +'<input id="ga-search" class="field-input" placeholder="Search…" style="font-size:12.5px;margin-bottom:10px;flex-shrink:0;">'
     +'<div id="ga-proc-list" style="flex:1;overflow-y:auto;min-height:100px;">'

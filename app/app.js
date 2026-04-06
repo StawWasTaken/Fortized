@@ -12033,7 +12033,7 @@ function buildProfileView(tab) {
             <div>
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:12px;">Avatar</div>
               <div style="display:flex;gap:8px;">
-                <label style="cursor:pointer;"><div class="settings-save-btn">Change Avatar</div><input type="file" accept="image/*" style="display:none;" onchange="updatePfp(event);markSettingsDirty()"></label>
+                <label style="cursor:pointer;"><div class="settings-save-btn">Change Avatar</div><input id="pfp-file-inp" type="file" accept="image/*" style="display:none;" onchange="updatePfp(event);markSettingsDirty()"></label>
                 ${CU.pfp ? '<button onclick="CU.pfp=&#39;&#39;;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Remove Avatar</button>' : ''}
               </div>
             </div>
@@ -12134,14 +12134,14 @@ function buildProfileView(tab) {
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-bottom:10px;">Preview</div>
             <div style="border-radius:16px;overflow:hidden;border:1.5px solid ${themeC1?'transparent':'rgba(255,255,255,.08)'};${themeC1?'background-image:linear-gradient(var(--panel),var(--panel)),linear-gradient(135deg,'+themeC1+','+( themeC2||themeC1)+');background-origin:border-box;background-clip:padding-box,border-box':''};box-shadow:0 8px 40px rgba(0,0,0,.35)${themeC1?',0 0 28px '+themeC1+'15':''};margin-bottom:18px;">
               <!-- Banner -->
-              <div style="height:100px;position:relative;overflow:hidden;${CU.banner?'':'background:'+previewBg};">
+              <div style="height:100px;position:relative;overflow:hidden;${CU.banner?'':'background:'+previewBg};cursor:pointer;transition:opacity .2s;" onclick="document.getElementById('banner-file-inp')?.click();" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
                 ${CU.banner ? '<img src="'+escapeHTML(CU.banner)+'" style="width:100%;height:100%;object-fit:cover;">' : ''}
                 <div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 0%,transparent 60%);"></div>
                 ${themeC1 ? '<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,'+themeC1+','+(themeC2||themeC1)+');opacity:.8;"></div>' : ''}
               </div>
               <div style="padding:0 16px 16px;">
                 <div style="display:flex;align-items:flex-end;gap:8px;margin-top:-38px;margin-bottom:12px;position:relative;z-index:2;">
-                  <div style="width:76px;height:76px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(0,0,0,.6);flex-shrink:0;position:relative;">
+                  <div style="width:76px;height:76px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(0,0,0,.6);flex-shrink:0;position:relative;cursor:pointer;transition:opacity .2s;" onclick="document.getElementById('pfp-file-inp')?.click();" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                     ${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-family:var(--font-display);font-weight:800;font-size:22px;color:'+(themeC1||'var(--accent)')+';">'+(CU.displayName||CU.username)[0].toUpperCase()+'</span>'}
                     ${CU.activeDecoration ? (()=>{const d=PROFILE_DECORATIONS.find(dec=>dec.id===CU.activeDecoration);return d?'<img src="'+escapeHTML(d.src)+'" style="position:absolute;inset:-9px;width:calc(100%+18px);height:calc(100%+18px);object-fit:contain;pointer-events:none;z-index:2;" onerror="this.style.display=\'none\'">':'';})() : ''}
                   </div>

@@ -334,7 +334,7 @@ const FtzStatus = (() => {
     _autoAway = false;
     CU.status = status;
     // Save manual status to localStorage for persistence across reloads
-    try { localStorage.setItem('ftz_manual_status_' + CU.username, status); } catch {}
+    try { localStorage.setItem('ftz_manual_status_' + CU.username, status); } catch (e) { console.debug('[Status] localStorage write failed', e); }
     _broadcast(status);
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     updateUserbar();
@@ -353,7 +353,7 @@ const FtzStatus = (() => {
         updateUserbar();
         return;
       }
-    } catch {}
+    } catch (e) { console.debug('[Status] localStorage read failed', e); }
     // Default to online
     _manualStatus = CU.status || 'online';
     CU.status = _manualStatus;
@@ -413,7 +413,7 @@ const FtzStatus = (() => {
           _broadcast(CU.status);
           updateUserbar();
         }
-      } catch {} finally { _companionIdlePollRunning = false; }
+      } catch (e) { console.debug('[Status] idle poll failed', e); } finally { _companionIdlePollRunning = false; }
     }, COMPANION_IDLE_POLL_MS);
   }
 
@@ -939,13 +939,13 @@ function escapeHTML(s) {
 
 function _getTrustedDomains() {
   const builtIn = ['youtube.com','youtu.be','spotify.com','github.com','twitter.com','x.com','twitch.tv','reddit.com','itch.io','roblox.com','steam','fortized.com','giphy.com','klipy.com','tenor.com'];
-  try { const user = JSON.parse(localStorage.getItem('ftz_trusted_domains')||'[]'); return [...builtIn, ...user]; } catch { return builtIn; }
+  try { const user = JSON.parse(localStorage.getItem('ftz_trusted_domains')||'[]'); return [...builtIn, ...user]; } catch (e) { console.debug('[URL] trusted domains parse failed', e); return builtIn; }
 }
 function _trustDomain(domain) {
   try {
     const user = JSON.parse(localStorage.getItem('ftz_trusted_domains')||'[]');
     if (!user.includes(domain)) { user.push(domain); localStorage.setItem('ftz_trusted_domains', JSON.stringify(user)); }
-  } catch {}
+  } catch (e) { console.debug('[URL] trust domain save failed', e); }
 }
 function openExternalLink(e, url) {
   if (e) e.preventDefault();
@@ -953,7 +953,7 @@ function openExternalLink(e, url) {
   const trustedDomains = _getTrustedDomains();
   let isTrusted = false;
   let urlDomain = '';
-  try { urlDomain = new URL(url).hostname; isTrusted = trustedDomains.some(d => urlDomain.includes(d)); } catch {}
+  try { urlDomain = new URL(url).hostname; isTrusted = trustedDomains.some(d => urlDomain.includes(d)); } catch (e) { console.debug('[URL] parse failed', e); }
   if (isTrusted) {
     window.open(url, '_blank', 'noopener,noreferrer');
   } else {
@@ -1446,7 +1446,7 @@ function showView(v, _skipPush) {
   // Close mobile sidebars on navigation
   if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
   // Sync mobile tab bar
-  setTimeout(() => { try { _syncMobileTabBar(); } catch {} }, 50);
+  setTimeout(() => { try { _syncMobileTabBar(); } catch (e) { console.debug('[Mobile] tab bar sync failed', e); } }, 50);
   const _mtb = document.getElementById('mobile-tab-bar');
   if (_mtb) _mtb.style.display = '';
   // Stop admin polling when leaving admin view
@@ -2065,8 +2065,8 @@ function renderRailBastions() {
   const groupKey = 'ftz_bastion_groups';
   let order = [];
   let groups = {};
-  try { order = JSON.parse(localStorage.getItem(orderKey)||'[]'); } catch {}
-  try { groups = JSON.parse(localStorage.getItem(groupKey)||'{}'); } catch {}
+  try { order = JSON.parse(localStorage.getItem(orderKey)||'[]'); } catch (e) { console.debug('[Sidebar] order parse failed', e); }
+  try { groups = JSON.parse(localStorage.getItem(groupKey)||'{}'); } catch (e) { console.debug('[Sidebar] groups parse failed', e); }
 
   const bastions = CU?.bastions||[];
   // Build ordered list: user order first, then any new bastions
@@ -2449,7 +2449,7 @@ function _groupBastions(name) {
   // Group selected bastions together (called from context menu)
   const groupKey = 'ftz_bastion_groups';
   let groups = {};
-  try { groups = JSON.parse(localStorage.getItem(groupKey)||'{}'); } catch {}
+  try { groups = JSON.parse(localStorage.getItem(groupKey)||'{}'); } catch (e) { console.debug('[Sidebar] groups parse failed', e); }
   if (!groups[name]) groups[name] = [];
   // For now, add current bastion to group
   const bastions = CU?.bastions||[];
@@ -3375,7 +3375,7 @@ async function renderDMFriendsHome() {
         const row = document.querySelector(`.dm-friend-row[data-user="${CSS.escape(f)}"]`);
         if (row) row.style.display = 'none';
       }
-    } catch {}
+    } catch (e) { console.debug('[DM] friend status update failed', e); }
   });
 }
 
@@ -6998,7 +6998,7 @@ function initFortizedUXResilience() {
               allRows.forEach(r => { if (r.style.display !== 'none') onCount++; });
               sob.textContent = _dmFriendsFilter === 'online' ? onCount : sob.textContent;
             }
-          } catch {}
+          } catch (e) { console.debug('[DM] online count update failed', e); }
           // Refresh Active Now sidebar when a friend's status changes
           _debouncedActiveNowRefresh();
         }
@@ -7388,7 +7388,7 @@ function initFortizedUXResilience() {
         }
         // Force logout check
         _checkForceLogout(u);
-      } catch {}
+      } catch (e) { console.debug('[Init] enforcement poll failed', e); }
     }, 120000); // Reduced to 2min (was 15s) — egress emergency
   } catch(e) { console.warn('[init] enforcement poller:', e); }
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
@@ -7494,7 +7494,7 @@ function initFortizedUXResilience() {
     clearTimeout(_st);
     if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
     // Fallback: ensure home view is visible even if init partially failed
-    try { showView('home'); } catch {}
+    try { showView('home'); } catch (e) { console.debug('[Nav] showView failed', e); }
   }
 })();
 
@@ -8188,7 +8188,7 @@ async function createBastion() {
     CU.bastions[CU.bastions.length-1].globalId = globalId;
     await FortizedSocial.addBastionMember(globalId, CU.username);
     await saveUser();
-  } catch {}
+  } catch (e) { console.warn('[Bastion] global save failed', e); }
 
   if (createBtn) { createBtn.classList.remove('btn-loading'); createBtn.disabled = false; }
   closeModal('modal-create-bastion');
@@ -8381,7 +8381,7 @@ async function joinBastionByCode() {
       closeModal('modal-join-bastion');
       return;
     }
-  } catch {}
+  } catch (e) { console.debug('[Bastion] invite lookup failed', e); }
 
   // Strategy 2: Search global bastions for invite code
   const allBastions = await FortizedSocial.getGlobalBastions().catch(()=>({})) || {};
@@ -11811,7 +11811,7 @@ function _trackEmojiFrequency(emoji) {
     // Keep only top 100 entries
     const sorted = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,100);
     localStorage.setItem('ftz_emoji_freq', JSON.stringify(Object.fromEntries(sorted)));
-  } catch {}
+  } catch (e) { console.debug('[Emoji] frequency save failed', e); }
 }
 
 // Emoji info popover — right-click an emoji to see details
@@ -12920,7 +12920,7 @@ async function updateNotifBadge() {
   const badge=document.getElementById('notif-badge');
   const tbBadge=document.getElementById('tb-notif-badge');
   let unread = 0;
-  try { unread = await FortizedSocial.getUnreadCount(CU.username) || 0; } catch {}
+  try { unread = await FortizedSocial.getUnreadCount(CU.username) || 0; } catch (e) { console.debug('[Notif] unread count failed', e); }
   if(badge){badge.textContent=unread;badge.style.display=unread>0?'flex':'none';}
   if(tbBadge){tbBadge.textContent=unread;tbBadge.style.display=unread>0?'block':'none';}
   setFaviconNotif(unread>0);
@@ -13032,7 +13032,7 @@ async function buildNotifList() {
   const _notifUsers = {};
   const _notifUsernames = [...new Set(notifs.slice(0,25).filter(n=>n.from && n.type!=='support_ticket').map(n=>n.from))];
   await Promise.allSettled(_notifUsernames.map(async uname => {
-    try { const u = await FortizedSocial.getUserByName(uname); if (u) _notifUsers[uname] = u; } catch {}
+    try { const u = await FortizedSocial.getUserByName(uname); if (u) _notifUsers[uname] = u; } catch (e) { console.debug('[Notif] user lookup failed', e); }
   }));
 
   list.innerHTML = notifs.slice(0,25).map(n => {
@@ -13105,7 +13105,7 @@ function _clearAllDMBadges(){document.querySelectorAll('.friend-item').forEach(f
 // ════════════════════════════════════════════
 async function viewUserProfile(username) {
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch {}
+  try { u = await FortizedSocial.getUserByName(username); } catch (e) { console.debug('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
   if (username === CU.username) u = { ...u, ...CU };
 
@@ -13120,10 +13120,10 @@ async function viewUserProfile(username) {
         status = presenceResult[username].status || 'offline';
       } else {
         // Socket.IO unavailable, fall back to DB
-        try { status = await FortizedSocial.getStatus(username); } catch {}
+        try { status = await FortizedSocial.getStatus(username); } catch (e) { console.debug('[Profile] status fallback failed', e); }
       }
-    } catch {
-      try { status = await FortizedSocial.getStatus(username); } catch {}
+    } catch (e) {
+      try { status = await FortizedSocial.getStatus(username); } catch (e) { console.debug('[Profile] status fallback failed', e); }
     }
   }
   subscribeProfileStatus(username);
@@ -13162,7 +13162,7 @@ async function viewUserProfile(username) {
   const _mutualFriendsData = {};
   if (_mutualFriendNames.length) {
     await Promise.all(_mutualFriendNames.slice(0, 20).map(async f => {
-      try { const ud = await FortizedSocial.getUserByName(f); if (ud) _mutualFriendsData[f] = ud; } catch {}
+      try { const ud = await FortizedSocial.getUserByName(f); if (ud) _mutualFriendsData[f] = ud; } catch (e) { console.debug('[Profile] mutual friend lookup failed', e); }
     }));
   }
   const _mutualFriends = _mutualFriendNames;
@@ -14285,7 +14285,7 @@ function _setupAdminLiveSync() {
         _renderAdminNav(adminTab);
         _loadAdminPage(adminTab, true);
       }
-    } catch {}
+    } catch (e) { console.debug('[Admin] live sync failed', e); }
   }, 60000);
 }
 function _teardownAdminLiveSync() {
@@ -14400,7 +14400,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       onlineCount = usersList.filter(u => u.status === 'online').length;
       awayCount = usersList.filter(u => u.status === 'away' || u.status === 'idle').length;
       dndCount = usersList.filter(u => u.status === 'dnd').length;
-    } catch {}
+    } catch (e) { console.warn('[Admin] stats fetch failed', e); }
     const pending = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
     const nsfwQueue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
     const auditLog = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
@@ -14972,7 +14972,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         localStorage.setItem('ftz_global_settings', JSON.stringify(gs2));
         _globalSettings = gs2;
       }
-    } catch {}
+    } catch (e) { console.debug('[Admin] settings fetch failed', e); }
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
     main.innerHTML = `<div style="padding:20px 24px;height:100%;overflow:auto;">
       <div style="font-family:var(--font-display);font-size:19px;font-weight:800;margin-bottom:14px;">Configuration</div>
@@ -15106,7 +15106,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     try {
       const fbSnap = await firebase.database().ref('feedback').limitToLast(50).get();
       if (fbSnap.exists()) { fbSnap.forEach(c => { const v = c.val(); v._key = c.key; feedbackData.push(v); }); feedbackData.reverse(); }
-    } catch {}
+    } catch (e) { console.debug('[Admin] feedback fetch failed', e); }
     const posCount = feedbackData.filter(f=>f.rating==='positive').length;
     const neuCount = feedbackData.filter(f=>f.rating==='neutral').length;
     const negCount = feedbackData.filter(f=>f.rating==='negative').length;
@@ -15281,7 +15281,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       if (statSnap.exists()) onlineNow=Object.values(statSnap.val()).filter(s=>s==='online'||s==='away'||s==='dnd').length;
       const bastSnap = await firebase.database().ref('bastions').get();
       if (bastSnap.exists()) { const bv=Object.values(bastSnap.val()); totalBastions=bv.length; topBastions=bv.sort((a,b)=>(b.members||[]).length-(a.members||[]).length).slice(0,5); }
-    } catch {}
+    } catch (e) { console.warn('[Admin] analytics fetch failed', e); }
     const convRate = totalUsers > 0 ? ((radianceCount/totalUsers)*100).toFixed(1) : '0';
     main.innerHTML = `<div style="padding:var(--space-xl);">
       <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Platform Analytics</div>
@@ -15351,7 +15351,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   else if (tab === 'scheduled_actions') {
     if (!isAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
     let scheduledItems = [];
-    try { const acts = await FortizedSocial.adminGetScheduledActions(); scheduledItems = acts.map((v,i)=>({...v,_key:i})); } catch {}
+    try { const acts = await FortizedSocial.adminGetScheduledActions(); scheduledItems = acts.map((v,i)=>({...v,_key:i})); } catch (e) { console.debug('[Admin] scheduled actions fetch failed', e); }
     main.innerHTML = `<div style="padding:var(--space-xl);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-xl);">
         <div>
@@ -15382,7 +15382,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     try {
       const statSnap = await firebase.database().ref('statuses').get();
       if (statSnap.exists()) activeConnections = Object.values(statSnap.val()).filter(s=>s!=='offline').length;
-    } catch {}
+    } catch (e) { console.debug('[Admin] network stats fetch failed', e); }
     main.innerHTML = `<div style="padding:var(--space-xl);">
       <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Network Monitor</div>
       <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:var(--space-xl);">Monitor active connections, database health, and service status.</div>
@@ -15615,7 +15615,7 @@ async function _closeTicket(id) {
     const tickets = await FortizedSocial.adminGetSupportTickets();
     if (tickets[id]) { tickets[id].status = 'closed'; tickets[id].closedBy = CU.username; tickets[id].closedAt = new Date().toISOString(); }
     await FortizedSocial.adminSaveSupportTickets(tickets);
-  } catch {}
+  } catch (e) { console.warn('[Admin] ticket close failed', e); }
   toast('Ticket closed','success');
   _loadAdminSupportTickets();
 }
@@ -15625,7 +15625,7 @@ async function _reopenTicket(id) {
     const tickets = await FortizedSocial.adminGetSupportTickets();
     if (tickets[id]) { tickets[id].status = 'open'; delete tickets[id].closedBy; delete tickets[id].closedAt; }
     await FortizedSocial.adminSaveSupportTickets(tickets);
-  } catch {}
+  } catch (e) { console.warn('[Admin] ticket reopen failed', e); }
   toast('Ticket reopened','success');
   _loadAdminSupportTickets();
 }
@@ -15636,7 +15636,7 @@ async function _deleteTicket(id) {
     const tickets = await FortizedSocial.adminGetSupportTickets();
     delete tickets[id];
     await FortizedSocial.adminSaveSupportTickets(tickets);
-  } catch {}
+  } catch (e) { console.warn('[Admin] ticket delete failed', e); }
   toast('Ticket deleted','success');
   _loadAdminSupportTickets();
 }
@@ -15958,7 +15958,7 @@ function _listenGlobalSettingsConsolidated() {
           document.body.appendChild(bar);
         }
       }
-    } catch {}
+    } catch (e) { console.debug('[Settings] global settings poll failed', e); }
   }, 60000);
 }
 // Keep old function names as no-ops since init code calls them separately
@@ -16072,7 +16072,7 @@ function _listenStaffChanges() {
         }
         adminAuthed = false;
       }
-    } catch {}
+    } catch (e) { console.debug('[Admin] staff access poll failed', e); }
   }, 60000);
 }
 
@@ -16090,7 +16090,7 @@ function _listenForceRefresh() {
           setTimeout(() => location.reload(), 2000);
         }
       }
-    } catch {}
+    } catch (e) { console.debug('[Admin] force refresh poll failed', e); }
   }, 30000);
 }
 
@@ -16110,7 +16110,7 @@ function _listenClearSessions() {
           setTimeout(() => { window.location.href = '/login'; }, 2000);
         }
       }
-    } catch {}
+    } catch (e) { console.debug('[Admin] clear sessions poll failed', e); }
   }, 30000);
 }
 
@@ -16231,8 +16231,8 @@ async function adminSearchUser() {
   try {
     const pr = await FortizedSocial.queryPresence([username]);
     if (pr && pr[username]) { userStatus = pr[username].status || 'offline'; }
-    else { try { userStatus = await FortizedSocial.getStatus(username); } catch {} }
-  } catch { try { userStatus = await FortizedSocial.getStatus(username); } catch {} }
+    else { try { userStatus = await FortizedSocial.getStatus(username); } catch (e) { console.debug('[Profile] status fallback failed', e); } }
+  } catch (e) { try { userStatus = await FortizedSocial.getStatus(username); } catch (e) { console.debug('[Profile] status fallback failed', e); } }
   const statusColors = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
 
   // Risk analysis
@@ -16945,7 +16945,7 @@ async function _loadNSFWModel() {
         if (typeof nsfwjs === 'undefined') { throw new Error('nsfwjs library not available'); }
       }
       if (typeof tf !== 'undefined') {
-        try { await tf.ready(); } catch {}
+        try { await tf.ready(); } catch (e) { console.debug('[TF] ready failed', e); }
       }
       _nsfwModel = await nsfwjs.load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/model/', { size: 299 });
       if (_nsfwModel) { console.debug('[NSFW] Model loaded (attempt ' + (attempt+1) + ')'); break; }
@@ -17634,7 +17634,7 @@ async function showBastionInviteDialog(bastion, inviterName, inviteCode) {
   try {
     const inviterUser = await FortizedSocial.getUserByName(inviterName);
     if (inviterUser?.pfp) inviterPfp = inviterUser.pfp;
-  } catch {}
+  } catch (e) { console.debug('[Invite] inviter avatar fetch failed', e); }
   const inviterAvatarHTML = inviterPfp
     ? `<img src="${inviterPfp}" onerror="this.src='${_defaultPfpUrl(inviterName)}'">`
     : `<img src="${_defaultPfpUrl(inviterName)}">`;
@@ -18787,7 +18787,7 @@ function parseMD(s) {
   s = s.replace(/(?<![='"(])(https?:\/\/[^\s<>"'()]+)/gi, url => {
     const safe = escapeHTML(url);
     let domain = '', siteName = '', embedColor = 'rgba(255,255,255,.2)';
-    try { const u = new URL(url); domain = u.hostname.replace('www.',''); siteName = domain.split('.')[0]; siteName = siteName.charAt(0).toUpperCase() + siteName.slice(1); } catch {}
+    try { const u = new URL(url); domain = u.hostname.replace('www.',''); siteName = domain.split('.')[0]; siteName = siteName.charAt(0).toUpperCase() + siteName.slice(1); } catch (e) { console.debug('[Embed] URL parse failed', e); }
     if (domain.includes('github.com')) { siteName = 'GitHub'; embedColor = '#f0f6fc'; }
     else if (domain.includes('twitch.tv')) { siteName = 'Twitch'; embedColor = '#9146ff'; }
     else if (domain.includes('reddit.com')) { siteName = 'Reddit'; embedColor = '#ff4500'; }
@@ -19520,7 +19520,7 @@ function initDesktopGameDetection() {
             username: CU.username,
             desktopAppActivity: activityData,
           });
-        } catch {}
+        } catch (e) { console.debug('[Desktop] activity emit failed', e); }
       }
     });
   }
@@ -19551,7 +19551,7 @@ function initDesktopGameDetection() {
           setGameActivity(null);
         }
       }
-    } catch {}
+    } catch (e) { console.debug('[Desktop] process poll failed', e); }
   }
 
   // Poll every 15s using renderer-side matching
@@ -19577,7 +19577,7 @@ async function _enrichDetectedGameIGDB(game) {
         _igdbEnriched: true,
       };
     }
-  } catch {}
+  } catch (e) { console.debug('[IGDB] enrichment failed', e); }
   return game;
 }
 
@@ -19721,11 +19721,11 @@ async function detectRunningApps() {
   try {
     const procs = await window.fortizedDesktop.getProcesses();
     if (procs) return _matchAllRunningApps(procs);
-  } catch {}
+  } catch (e) { console.debug('[Desktop] getProcesses failed', e); }
   try {
     const games = await window.fortizedDesktop.detectGames();
     if (games.length) return games;
-  } catch {}
+  } catch (e) { console.debug('[Desktop] detectGames failed', e); }
   return [];
 }
 
@@ -19839,7 +19839,7 @@ function _blockUserConfirm(username) {
         try {
           await FortizedSocial.declineFriendRequest(CU.username, username);
           await refreshCU();
-        } catch {}
+        } catch (e) { console.debug('[Block] cancel friend request failed', e); }
       }
       // Persist to Firebase
       try { await firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked); } catch(e) { console.warn('[Block] Save failed:', e?.message); }
@@ -19926,7 +19926,7 @@ async function _syncIgnoreListFromFirebase() {
       }
       if (merged) _saveIgnoreList(localList);
     }
-  } catch {}
+  } catch (e) { console.debug('[Ignore] sync from Firebase failed', e); }
 }
 
 function isUserIgnored(username) {
@@ -19946,12 +19946,12 @@ function unignoreUser(username) {
   // Sync to Firebase
   try { firebase.database().ref('users/' + CU.username + '/ignoredUsers/' + username).remove(); } catch(e) { console.warn('[Ignore] Remove sync:', e?.message); }
   toast(`Unignored ${username}`, 'success');
-  try { closeModal('modal-user'); } catch {}
+  try { closeModal('modal-user'); } catch (e) { console.debug('[Modal] close failed', e); }
   _applyIgnoreBlurToExistingMessages(username, false);
 }
 
 function showIgnorePicker(username) {
-  try { closeModal('modal-user'); } catch {}
+  try { closeModal('modal-user'); } catch (e) { console.debug('[Modal] close failed', e); }
   document.getElementById('modal-ignore-picker')?.remove();
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -20090,8 +20090,8 @@ function _playNotifFallback(type) {
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.3);
     }
-    setTimeout(() => { try { ctx.close(); } catch {} }, 1000);
-  } catch {}
+    setTimeout(() => { try { ctx.close(); } catch (e) { console.debug('[Audio] ctx close failed', e); } }, 1000);
+  } catch (e) { console.debug('[Audio] sound play failed', e); }
 }
 
 
@@ -20349,7 +20349,7 @@ async function _refreshInlineDetectedApps() {
     try {
       const procs = await window.fortizedDesktop.getProcesses();
       if (procs) detectedApps = _matchAllRunningApps(procs).filter(a => !owned.has(a.name.toLowerCase()));
-    } catch {}
+    } catch (e) { console.debug('[Desktop] detect apps failed', e); }
   }
 
   // Enrich detected apps with IGDB cover art
@@ -20366,7 +20366,7 @@ async function _refreshInlineDetectedApps() {
           enriched.coverThumb = results[0].coverThumb || null;
           enriched.genre = results[0].genre || 'App';
         }
-      } catch {}
+      } catch (e) { console.debug('[IGDB] cover search failed', e); }
     }
     enrichedApps.push(enriched);
   }
@@ -20408,7 +20408,7 @@ async function _addDetectedGame(name) {
         coverThumb = results[0].coverThumb || null;
         genre = results[0].genre || genre;
       }
-    } catch {}
+    } catch (e) { console.debug('[IGDB] search failed', e); }
   }
   addGameToCollection(name, catalogEntry?.icon || '🎮', genre, cover, coverThumb);
   // Refresh the picker to remove the added game
@@ -20523,7 +20523,7 @@ async function _enrichGamesFromIGDB(games) {
           }
         });
       }
-    } catch {}
+    } catch (e) { console.debug('[IGDB] batch lookup failed', e); }
   }
   if (changed) { CU.gameCollection = games; await saveUser(); }
 }
@@ -20631,7 +20631,7 @@ async function addGameToCollection(name, icon, genre, coverUrl, coverThumb) {
   if (coverThumb) entry.coverThumb = coverThumb;
   CU.gameCollection.push(entry);
   await saveUser();
-  try { renderGCGrid(GAME_CATALOG); } catch {}
+  try { renderGCGrid(GAME_CATALOG); } catch (e) { console.debug('[GameCatalog] render failed', e); }
   buildProfileView('game_collection');
   toast(name + ' added!', 'success');
 }
@@ -21275,7 +21275,7 @@ async function _connectSpotify() {
           _onSpotifyTokens(d.tokens);
         }
       }
-    } catch {}
+    } catch (e) { console.debug('[Spotify] auth poll failed', e); }
   }, 2000);
 
   // Safety: stop polling after 5 minutes
@@ -21298,7 +21298,7 @@ async function _onSpotifyTokens(tokens) {
   _pollSpotifyNowPlaying();
   const wc = document.getElementById('up-widgets-container');
   if (wc) renderProfileWidgetsOnCard(CU, wc);
-  try { buildProfileView('myprofile'); } catch {}
+  try { buildProfileView('myprofile'); } catch (e) { console.debug('[Spotify] profile refresh failed', e); }
 }
 
 // Refresh Spotify token using refresh_token
@@ -21322,7 +21322,7 @@ async function _refreshSpotifyToken() {
       saveUser();
       return true;
     }
-  } catch {}
+  } catch (e) { console.debug('[Spotify] token refresh failed', e); }
   return false;
 }
 
@@ -21722,7 +21722,7 @@ async function renderActivityDetectionTab(main) {
     try {
       const procs = await window.fortizedDesktop.getProcesses();
       if (procs) detectedApps = _matchAllRunningApps(procs);
-    } catch {}
+    } catch (e) { console.debug('[Desktop] process detection failed', e); }
   }
 
   // ── Current activity ──
@@ -22319,7 +22319,7 @@ async function _loadCollectionPreviews() {
     // Assign first gif to trending, then distribute to categories
     const trendCard = document.querySelector('[data-cat-preview="trending"]');
     if (trendCard && items[0]) trendCard.src = _klipyGifUrl(items[0], 'sm') || _klipyGifUrl(items[0], 'xs');
-  } catch {}
+  } catch (e) { console.debug('[Klipy] trending fetch failed', e); }
   // Load a preview for each category (batch a few at a time)
   const cats = [...previewCards].filter(c => c.dataset.catPreview !== 'trending');
   for (let i = 0; i < cats.length; i += 4) {
@@ -22332,7 +22332,7 @@ async function _loadCollectionPreviews() {
         const data = await res.json();
         const items = data.data?.data || data.data || [];
         if (items[0]) card.src = _klipyGifUrl(items[0], 'sm') || _klipyGifUrl(items[0], 'xs');
-      } catch {}
+      } catch (e) { console.debug('[Klipy] category preview failed', e); }
     }));
   }
 }
@@ -23316,7 +23316,7 @@ async function openPollChannel(chIdx) {
     const snap = await firebase.database().ref(_getPollDbPath(bastionId, ch.name)).orderByChild('createdAt').get();
     if (snap.exists()) polls = Object.entries(snap.val()).map(([k, v]) => ({ ...v, _key: k }));
     polls.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  } catch {}
+  } catch (e) { console.debug('[Polls] load failed', e); }
 
   const totalResponses = polls.reduce((s, p) => s + Object.keys(p.voters || {}).length, 0);
 
@@ -24131,7 +24131,7 @@ async function renderVoiceCallUI(partner, isCaller) {
         if(ring) ring.style.borderColor = vol>12?'#3ecf6e':'rgba(255,255,255,.08)';
       },100);
       _vc._speakChecker = checkSpeak;
-    } catch {}
+    } catch (e) { console.debug('[VC] local speak detect failed', e); }
   }
   // Speaking indicator for partner (remote stream)
   if (_vc.remoteStream) {
@@ -24148,7 +24148,7 @@ async function renderVoiceCallUI(partner, isCaller) {
         const pRing = document.getElementById('vc-partner-ring');
         if(pRing) pRing.style.borderColor = vol2>12?'#3ecf6e':'rgba(255,255,255,.08)';
       },100);
-    } catch {}
+    } catch (e) { console.debug('[VC] remote speak detect failed', e); }
   } else {
     // Remote stream may not be ready yet — attach when it arrives
     const _waitRemote = setInterval(()=>{
@@ -24168,7 +24168,7 @@ async function renderVoiceCallUI(partner, isCaller) {
             const pr = document.getElementById('vc-partner-ring');
             if(pr) pr.style.borderColor = v>12?'#3ecf6e':'rgba(255,255,255,.08)';
           },100);
-        } catch {}
+        } catch (e) { console.debug('[VC] deferred speak detect failed', e); }
       }
     }, 500);
   }
@@ -24211,7 +24211,7 @@ function _startVCQualityMonitor() {
       bars.forEach((bar, i) => {
         bar.style.background = i < level ? (colors[level]||'#3ecf6e') : 'rgba(255,255,255,.12)';
       });
-    } catch {}
+    } catch (e) { console.debug('[VC] quality indicator failed', e); }
   }, 3000);
 }
 
@@ -29093,7 +29093,7 @@ async function _mppToggleRole(username, roleId, el) {
     _syncBastionToGlobal(curBastion);
   } catch(e) { console.warn('Role save failed:', e); }
   // Refresh member list
-  try { renderMemberList(); } catch {}
+  try { renderMemberList(); } catch (e) { console.debug('[Members] render failed', e); }
 }
 
 

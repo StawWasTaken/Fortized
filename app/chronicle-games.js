@@ -1,615 +1,1403 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
- * FORTIZED GRAND CHRONICLE - PROPER IMPLEMENTATION
- * UIBox images used correctly + Games play in-dashboard
+ * FORTIZED GRAND CHRONICLE - DISCORD-STYLE NARRATIVE GAMES
  * ═══════════════════════════════════════════════════════════════════════════════
+ * Clean card-based UI with sketch artwork and proper character integration
  */
 
-const CHRONICLE = {
-  ASSET_PATH: '/app/Chronicle/chapter1/assets/',
-  FONT: "'MedievalSharp', cursive",
-  bgMusic: null,
-  sessionStarted: false,
-  introPlayed: false,
-  playerStats: {
-    joy: 100,
-    fortCoins: 0,
-    level: 1,
-    xp: 0,
-    upgrades: 0,
-    isResting: false,
-    restEndTime: null
-  },
-  globalStats: { totalPlayers: 1247, victories: 3458 },
-  currentGame: null,
-  events: [
-    { id: 1, title: 'Breaking Treaty', unlocked: true, completed: false, location: 'Council Chamber' },
-    { id: 2, title: 'Raid Silver Stream', unlocked: false, completed: false, location: 'Silver Stream' },
-    { id: 3, title: 'Burning Elowen', unlocked: false, completed: false, location: 'Elowen' },
-    { id: 4, title: 'Timber Roads', unlocked: false, completed: false, location: 'Timber Roads' },
-    { id: 5, title: 'Defense Vastilly', unlocked: false, completed: false, location: 'Vastilly' },
-    { id: 6, title: 'Fenwick Canal', unlocked: false, completed: false, location: 'Fenwick' },
-    { id: 7, title: 'Ironstall', unlocked: false, completed: false, location: 'Ironstall' },
-    { id: 8, title: 'Glassport Blockade', unlocked: false, completed: false, location: 'Glassport' },
-    { id: 9, title: 'Port-Crest Siege', unlocked: false, completed: false, location: 'Port-Crest' },
-    { id: 10, title: '14-Day Bombardment', unlocked: false, completed: false, location: 'Mainland' },
-    { id: 11, title: 'Harbour Wrecks', unlocked: false, completed: false, location: 'Harbour' },
-    { id: 12, title: 'Push Oakhaven', unlocked: false, completed: false, location: 'Oakhaven' },
-    { id: 13, title: 'Fall of Elowen', unlocked: false, completed: false, location: 'Elowen' }
-  ]
-};
+const ASSET = '/app/Chronicle/chapter1/assets/';
+const FONT = "'MedievalSharp', cursive";
 
-function playBgMusic() {
-  if (!CHRONICLE.bgMusic) {
-    CHRONICLE.bgMusic = new Audio(`${CHRONICLE.ASSET_PATH}Chapter 1 Theme Song.mp3`);
-    CHRONICLE.bgMusic.loop = true;
-    CHRONICLE.bgMusic.volume = 0.3;
-  }
-  CHRONICLE.bgMusic.play().catch(() => {});
-}
+let bgMusic = null;
+let menuShown = false;
 
-function pauseBgMusic() {
-  if (CHRONICLE.bgMusic) CHRONICLE.bgMusic.pause();
-}
+// ════════════════════════════════════════════════════════════════════════════
+// AUDIO SYSTEM
+// ════════════════════════════════════════════════════════════════════════════
 
-function resumeBgMusic() {
-  if (CHRONICLE.bgMusic) CHRONICLE.bgMusic.play().catch(() => {});
-}
-
-function playSound(filename, volume = 0.5) {
-  const audio = new Audio(`${CHRONICLE.ASSET_PATH}${filename}`);
-  audio.volume = volume;
+function sound(file) {
+  const audio = new Audio(ASSET + file);
+  audio.volume = 0.4;
   audio.play().catch(() => {});
 }
 
-function openGrandChronicle() {
-  if (!CHRONICLE.sessionStarted) {
-    showChronicleMenu();
-    playBgMusic();
+function bgMusicStart() {
+  if (!bgMusic) {
+    bgMusic = new Audio(ASSET + 'Chapter 1 Theme Song.mp3');
+    bgMusic.loop = true;
+    bgMusic.volume = 0.2;
+  }
+  bgMusic.play().catch(() => {});
+}
+
+function bgMusicStop() {
+  if (bgMusic) {
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
   }
 }
 
-// Alias for compatibility with button onclick handler
-function openChronicle() {
-  openGrandChronicle();
+// ════════════════════════════════════════════════════════════════════════════
+// GAME LAUNCHER
+// ════════════════════════════════════════════════════════════════════════════
+
+async function launchChronicleMinigame(eventId) {
+  if (!menuShown) {
+    await showGameMenu(eventId);
+    return;
+  }
+
+  if (typeof canPlayGame === 'function' && !canPlayGame()) return;
+
+  sound('SoundPlay.mp3');
+  bgMusicStart();
+
+  const games = {
+    1: () => gameDialogue(eventId, 'BREAKING TREATY', 'Wealthplace.png', [
+      'The treaty is shattered...',
+      'What is your counsel, knight?',
+      'Our fate awaits your decision.'
+    ], 30),
+    2: () => gameCatch(eventId),
+    3: () => gameInferno(eventId),
+    4: () => gameLumber(eventId),
+    5: () => gameDuel(eventId),
+    6: () => gameBoat(eventId),
+    7: () => gameTrade(eventId),
+    8: () => gameSiege(eventId),
+  };
+
+  const game = games[eventId] || (() => gamePlaceholder(eventId));
+  await game();
 }
 
-function showChronicleMenu() {
+// ════════════════════════════════════════════════════════════════════════════
+// GAME MENU - DISCORD CARD STYLE
+// ════════════════════════════════════════════════════════════════════════════
+
+async function showGameMenu(eventId) {
   const menu = document.createElement('div');
-  menu.style.cssText = `position: fixed; inset: 0; background: linear-gradient(135deg, #f5f1e8 0%, #e8e4db 100%); z-index: 10000; display: flex; align-items: center; justify-content: space-between; padding: 80px 100px; font-family: ${CHRONICLE.FONT}; overflow: hidden;`;
+  menu.style.cssText = `
+    position: fixed; inset: 0; background: #f5f5f5;
+    z-index: 10000; display: flex; align-items: center;
+    justify-content: center; font-family: ${FONT};
+  `;
 
-  const content = document.createElement('div');
-  content.style.cssText = `display: flex; flex-direction: column; gap: 40px; max-width: 50%; z-index: 10;`;
+  const card = document.createElement('div');
+  card.style.cssText = `
+    background: white; border: 2px solid #000;
+    border-radius: 12px; padding: 40px; max-width: 600px;
+    width: 90%; box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    display: flex; flex-direction: column; gap: 20px;
+  `;
 
+  // Logo
   const logo = document.createElement('img');
-  logo.src = `${CHRONICLE.ASSET_PATH}Grand Joy Games.png`;
-  logo.style.cssText = `height: 80px; width: auto; filter: drop-shadow(3px 3px 8px rgba(0,0,0,0.2));`;
-  content.appendChild(logo);
+  logo.src = ASSET + 'Grand Joy Games.png';
+  logo.style.cssText = `height: 60px; width: auto; align-self: center;`;
+  card.appendChild(logo);
 
-  const titleImg = document.createElement('img');
-  titleImg.src = `${CHRONICLE.ASSET_PATH}Chap1Title.png`;
-  titleImg.style.cssText = `height: 140px; width: auto; filter: drop-shadow(4px 4px 10px rgba(0,0,0,0.3));`;
-  content.appendChild(titleImg);
+  // Title
+  const title = document.createElement('img');
+  title.src = ASSET + 'Chap1Title.png';
+  title.style.cssText = `height: 100px; width: auto; align-self: center;`;
+  card.appendChild(title);
 
-  const playBtn = document.createElement('button');
-  playBtn.style.cssText = `background: #000; color: #fff; border: 4px solid #000; padding: 20px 50px; font-family: ${CHRONICLE.FONT}; font-size: 18px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 3px; border-radius: 4px; box-shadow: 6px 6px 0 rgba(0,0,0,0.4); transition: all 0.2s; width: fit-content;`;
-  playBtn.textContent = 'Begin Game';
-  playBtn.onmouseover = () => { playBtn.style.transform = 'translate(-3px, -3px)'; playBtn.style.boxShadow = '9px 9px 0 rgba(0,0,0,0.4)'; };
-  playBtn.onmouseout = () => { playBtn.style.transform = 'none'; playBtn.style.boxShadow = '6px 6px 0 rgba(0,0,0,0.4)'; };
-  playBtn.onclick = async () => {
-    playSound('SoundUiSelect.mp3', 0.6);
+  // Description
+  const desc = document.createElement('p');
+  desc.style.cssText = `
+    margin: 0; color: #333; text-align: center;
+    font-size: 14px; line-height: 1.6;
+  `;
+  desc.textContent = 'The kingdom awaits your courage. Begin your journey through dangerous lands.';
+  card.appendChild(desc);
+
+  // Button
+  const btn = document.createElement('button');
+  btn.style.cssText = `
+    background: #000; color: white; border: none;
+    padding: 14px 32px; border-radius: 6px; font-family: ${FONT};
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 1px;
+    transition: all 0.2s; align-self: center;
+  `;
+  btn.textContent = 'Begin Game';
+  btn.onmouseover = () => btn.style.opacity = '0.9';
+  btn.onmouseout = () => btn.style.opacity = '1';
+  btn.onclick = async () => {
+    sound('SoundUiSelect.mp3');
     menu.remove();
-    pauseBgMusic();
-    await showChronicleIntro();
-    resumeBgMusic();
-    CHRONICLE.sessionStarted = true;
-    showChronicleDashboard();
+    menuShown = true;
+    await showIntro();
+    launchChronicleMinigame(eventId);
   };
-  content.appendChild(playBtn);
+  card.appendChild(btn);
 
-  menu.appendChild(content);
-
-  const caravan = document.createElement('img');
-  caravan.src = `${CHRONICLE.ASSET_PATH}Caravan.png`;
-  caravan.style.cssText = `height: 85%; width: auto; object-fit: contain; filter: drop-shadow(5px 5px 15px rgba(0,0,0,0.2));`;
-  menu.appendChild(caravan);
-
+  menu.appendChild(card);
   document.body.appendChild(menu);
 }
 
-async function showChronicleIntro() {
+// ════════════════════════════════════════════════════════════════════════════
+// INTRO VIDEO
+// ════════════════════════════════════════════════════════════════════════════
+
+async function showIntro() {
   return new Promise((resolve) => {
     const screen = document.createElement('div');
-    screen.style.cssText = `position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center;`;
+    screen.style.cssText = `
+      position: fixed; inset: 0; background: #000;
+      z-index: 10000; display: flex; align-items: center;
+      justify-content: center;
+    `;
 
     const video = document.createElement('video');
-    video.src = `${CHRONICLE.ASSET_PATH}FTZchap1-Intro.mp4`;
+    video.src = ASSET + 'FTZchap1-Intro.mp4';
     video.style.cssText = `width: 100%; height: 100%; object-fit: cover;`;
     video.autoplay = true;
-    video.onended = () => { screen.remove(); CHRONICLE.introPlayed = true; resolve(); };
+    video.onended = () => {
+      screen.remove();
+      resolve();
+    };
 
-    const skipBtn = document.createElement('button');
-    skipBtn.style.cssText = `position: absolute; top: 30px; right: 30px; background: #fff; color: #000; border: 3px solid #fff; padding: 12px 25px; font-family: ${CHRONICLE.FONT}; font-weight: 700; font-size: 13px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; border-radius: 3px; box-shadow: 3px 3px 8px rgba(0,0,0,0.4); z-index: 10;`;
-    skipBtn.textContent = 'SKIP';
-    skipBtn.onclick = () => { video.pause(); screen.remove(); CHRONICLE.introPlayed = true; resolve(); };
+    const skip = document.createElement('button');
+    skip.style.cssText = `
+      position: absolute; top: 20px; right: 20px;
+      background: white; color: #000; border: none;
+      padding: 8px 16px; border-radius: 6px; font-family: ${FONT};
+      font-weight: 700; cursor: pointer; z-index: 10;
+      font-size: 12px; text-transform: uppercase;
+    `;
+    skip.textContent = 'SKIP';
+    skip.onclick = () => {
+      video.pause();
+      screen.remove();
+      resolve();
+    };
 
     screen.appendChild(video);
-    screen.appendChild(skipBtn);
+    screen.appendChild(skip);
     document.body.appendChild(screen);
   });
 }
 
-function showChronicleDashboard() {
-  const dashboard = document.createElement('div');
-  dashboard.id = 'chronicle-dashboard';
-  dashboard.style.cssText = `position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; font-family: ${CHRONICLE.FONT}; overflow: hidden;`;
+// ════════════════════════════════════════════════════════════════════════════
+// DIALOGUE GAME - ENHANCED WITH ANIMATIONS & CHARACTER PERSONALITY
+// ════════════════════════════════════════════════════════════════════════════
 
-  // TOP BAR with Chap1Title image
-  const topbar = document.createElement('div');
-  topbar.style.cssText = `display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #000; border-bottom: 3px solid #000;`;
+async function gameDialogue(eventId, title, npcImage, dialogues, reward) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4);
+    z-index: 9999; display: flex; align-items: center; justify-content: center;
+    font-family: ${FONT}; padding: 20px; backdrop-filter: blur(3px);
+  `;
 
-  const titleImg = document.createElement('img');
-  titleImg.src = `${CHRONICLE.ASSET_PATH}Chap1Title.png`;
-  titleImg.style.cssText = `height: 50px; width: auto;`;
-  topbar.appendChild(titleImg);
-
-  const closeBtn = document.createElement('button');
-  closeBtn.style.cssText = `width: 36px; height: 36px; background: #fff; color: #000; border: 2px solid #000; border-radius: 2px; font-size: 20px; cursor: pointer; font-weight: 700;`;
-  closeBtn.textContent = '✕';
-  closeBtn.onclick = () => { pauseBgMusic(); dashboard.remove(); CHRONICLE.sessionStarted = false; };
-  topbar.appendChild(closeBtn);
-  dashboard.appendChild(topbar);
-
-  const main = document.createElement('div');
-  main.style.cssText = `display: flex; flex: 1; overflow: hidden;`;
-
-  // LEFT PANEL - Player Stats with UIBox
-  const leftPanel = document.createElement('div');
-  leftPanel.style.cssText = `width: 220px; background: #f5f5f5; border-right: 3px solid #000; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;`;
-
-  // Level circle
-  const levelCircle = document.createElement('div');
-  levelCircle.style.cssText = `width: 70px; height: 70px; border-radius: 50%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 900; margin: 0 auto; border: 3px solid #fff;`;
-  levelCircle.id = 'level-display';
-  levelCircle.textContent = `${CHRONICLE.playerStats.level}`;
-  leftPanel.appendChild(levelCircle);
-
-  // XP Bar
-  const xpContainer = document.createElement('div');
-  const xpLabel = document.createElement('div');
-  xpLabel.style.cssText = `font-size: 10px; font-weight: 700; color: #000; margin-bottom: 4px;`;
-  xpLabel.id = 'xp-label';
-  xpLabel.textContent = `XP: ${CHRONICLE.playerStats.xp}/100`;
-  xpContainer.appendChild(xpLabel);
-
-  const xpBar = document.createElement('div');
-  xpBar.style.cssText = `width: 100%; height: 12px; background: #ddd; border: 2px solid #000; border-radius: 2px; overflow: hidden;`;
-  const xpFill = document.createElement('div');
-  xpFill.id = 'xp-fill';
-  xpFill.style.cssText = `height: 100%; background: #000; width: ${CHRONICLE.playerStats.xp}%;`;
-  xpBar.appendChild(xpFill);
-  xpContainer.appendChild(xpBar);
-  leftPanel.appendChild(xpContainer);
-
-  // UIBox wrapper for stat boxes
-  [
-    { icon: 'IconJesterHat.png', label: 'Joy', id: 'joy-stat', value: `${CHRONICLE.playerStats.joy}%`, key: 'joy' },
-    { icon: 'IconCoin.png', label: 'FortCoins', id: 'coins-stat', value: CHRONICLE.playerStats.fortCoins, key: 'fortCoins' },
-    { icon: 'IconHammer.png', label: 'Upgrades', id: 'upgrades-stat', value: CHRONICLE.playerStats.upgrades, key: 'upgrades' }
-  ].forEach(stat => {
-    const statBox = document.createElement('div');
-    statBox.style.cssText = `position: relative; height: 70px;`;
-
-    const uiboxImg = document.createElement('img');
-    uiboxImg.src = `${CHRONICLE.ASSET_PATH}UIBox.png`;
-    uiboxImg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
-    statBox.appendChild(uiboxImg);
-
-    const content = document.createElement('div');
-    content.style.cssText = `position: absolute; inset: 0; padding: 8px; display: flex; align-items: center; gap: 8px;`;
-
-    const icon = document.createElement('img');
-    icon.src = `${CHRONICLE.ASSET_PATH}${stat.icon}`;
-    icon.style.cssText = `width: 28px; height: 28px; object-fit: contain;`;
-    content.appendChild(icon);
-
-    const info = document.createElement('div');
-    info.style.cssText = `flex: 1;`;
-    const label = document.createElement('div');
-    label.style.cssText = `font-size: 9px; font-weight: 700; color: #666;`;
-    label.textContent = stat.label;
-    info.appendChild(label);
-    const value = document.createElement('div');
-    value.style.cssText = `font-size: 13px; font-weight: 900; color: #000;`;
-    value.id = stat.id;
-    value.textContent = stat.value;
-    info.appendChild(value);
-    content.appendChild(info);
-
-    statBox.appendChild(content);
-    leftPanel.appendChild(statBox);
-  });
-
-  main.appendChild(leftPanel);
-
-  // CENTER PANEL - Map
-  const centerPanel = document.createElement('div');
-  centerPanel.style.cssText = `flex: 1; background: #fff; border-right: 3px solid #000; display: flex; flex-direction: column; overflow: hidden; position: relative;`;
-
-  // Map background
-  const mapContainer = document.createElement('div');
-  mapContainer.style.cssText = `flex: 1; position: relative; overflow: hidden;`;
-  const mapImg = document.createElement('img');
-  mapImg.src = `${CHRONICLE.ASSET_PATH}IRL Human World Map 1452.png`;
-  mapImg.style.cssText = `width: 100%; height: 100%; object-fit: cover;`;
-  mapContainer.appendChild(mapImg);
-  centerPanel.appendChild(mapContainer);
-
-  // Event Details Box
-  const detailsBox = document.createElement('div');
-  detailsBox.style.cssText = `padding: 16px; background: #f5f5f5; border-top: 3px solid #000; min-height: 120px;`;
-
-  const selectedEvent = CHRONICLE.events.find(e => e.unlocked && !e.completed) || CHRONICLE.events[0];
-
-  const eventName = document.createElement('div');
-  eventName.style.cssText = `font-size: 14px; font-weight: 900; color: #000; margin-bottom: 4px;`;
-  eventName.textContent = selectedEvent.title;
-  detailsBox.appendChild(eventName);
-
-  const eventLocation = document.createElement('div');
-  eventLocation.style.cssText = `font-size: 11px; font-weight: 700; color: #666; margin-bottom: 8px;`;
-  eventLocation.textContent = `📍 ${selectedEvent.location}`;
-  detailsBox.appendChild(eventLocation);
-
-  const playBtn = document.createElement('button');
-  playBtn.style.cssText = `padding: 10px 25px; background: #000; color: #fff; border: 2px solid #000; border-radius: 3px; font-family: ${CHRONICLE.FONT}; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase;`;
-  playBtn.textContent = '▶ Play';
-  playBtn.disabled = !selectedEvent.unlocked || CHRONICLE.playerStats.joy < 20;
-  playBtn.style.opacity = playBtn.disabled ? '0.5' : '1';
-  playBtn.style.cursor = playBtn.disabled ? 'not-allowed' : 'pointer';
-  playBtn.onclick = () => launchEvent(selectedEvent.id);
-  detailsBox.appendChild(playBtn);
-
-  centerPanel.appendChild(detailsBox);
-  main.appendChild(centerPanel);
-
-  // RIGHT PANEL - War Orders with UIBox2
-  const rightPanel = document.createElement('div');
-  rightPanel.style.cssText = `width: 160px; background: #f5f5f5; border-left: 3px solid #000; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;`;
-
-  const ordersTitle = document.createElement('div');
-  ordersTitle.style.cssText = `font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #000; border-bottom: 2px solid #000; padding-bottom: 6px;`;
-  ordersTitle.textContent = 'War Orders';
-  rightPanel.appendChild(ordersTitle);
-
-  // Global stats
-  const globalBox = document.createElement('div');
-  globalBox.style.cssText = `position: relative; height: 50px; margin-bottom: 4px;`;
-
-  const globalUibox = document.createElement('img');
-  globalUibox.src = `${CHRONICLE.ASSET_PATH}UIBox2.png`;
-  globalUibox.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
-  globalBox.appendChild(globalUibox);
-
-  const globalContent = document.createElement('div');
-  globalContent.style.cssText = `position: absolute; inset: 0; padding: 4px; font-size: 9px; font-weight: 700; display: flex; flex-direction: column; justify-content: center;`;
-  globalContent.textContent = `${CHRONICLE.globalStats.totalPlayers} 👥 | ${CHRONICLE.globalStats.victories} ⚔`;
-  globalBox.appendChild(globalContent);
-  rightPanel.appendChild(globalBox);
-
-  // Event buttons with UIBox2
-  CHRONICLE.events.forEach((evt) => {
-    const btnWrapper = document.createElement('div');
-    btnWrapper.style.cssText = `position: relative; height: 45px;`;
-
-    const uiboxImg = document.createElement('img');
-    uiboxImg.src = `${CHRONICLE.ASSET_PATH}UIBox2.png`;
-    uiboxImg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
-    btnWrapper.appendChild(uiboxImg);
-
-    const btn = document.createElement('button');
-    btn.style.cssText = `position: absolute; inset: 0; background: transparent; border: none; cursor: ${evt.unlocked ? 'pointer' : 'default'}; font-family: ${CHRONICLE.FONT}; font-size: 10px; font-weight: 700; text-align: center; transition: all 0.2s; color: #000;`;
-
-    if (evt.completed) {
-      btn.textContent = `✓ E${evt.id}`;
-    } else if (evt.unlocked) {
-      btn.textContent = `E${evt.id}`;
-      btn.onmouseover = () => { btn.style.transform = 'scale(1.08)'; };
-      btn.onmouseout = () => { btn.style.transform = 'scale(1)'; };
-      btn.onclick = () => launchEvent(evt.id);
-    } else {
-      btn.textContent = `🔒`;
-      btn.style.opacity = '0.4';
-    }
-
-    btnWrapper.appendChild(btn);
-    rightPanel.appendChild(btnWrapper);
-  });
-
-  main.appendChild(rightPanel);
-  dashboard.appendChild(main);
-
-  document.body.appendChild(dashboard);
-}
-
-function launchEvent(eventId) {
-  // Check if joy is too low
-  if (CHRONICLE.playerStats.joy < 20) {
-    alert('Joy too low! Rest to recover.');
-    return;
-  }
-
-  playSound('SoundPlay.mp3', 0.6);
-  pauseBgMusic();
-
-  // Create fullscreen game overlay
-  const gameOverlay = document.createElement('div');
-  gameOverlay.id = 'game-overlay';
-  gameOverlay.style.cssText = `position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: ${CHRONICLE.FONT};`;
-
-  const title = document.createElement('div');
-  title.style.cssText = `font-size: 28px; font-weight: 900; color: #fff; margin-bottom: 30px; text-transform: uppercase; text-align: center;`;
-  title.textContent = `${CHRONICLE.events[eventId - 1].title}`;
-  gameOverlay.appendChild(title);
-
-  const content = document.createElement('div');
-  content.id = `game-content-${eventId}`;
-  content.style.cssText = `flex: 1; display: flex; align-items: center; justify-content: center; width: 100%;`;
-  gameOverlay.appendChild(content);
-
-  const returnBtn = document.createElement('button');
-  returnBtn.style.cssText = `padding: 14px 35px; background: #fff; color: #000; border: 3px solid #fff; font-family: ${CHRONICLE.FONT}; font-weight: 900; font-size: 14px; cursor: pointer; border-radius: 4px; margin-bottom: 30px; text-transform: uppercase; transition: all 0.2s;`;
-  returnBtn.textContent = '← Return to Dashboard';
-  returnBtn.onmouseover = () => { returnBtn.style.background = '#f0f0f0'; };
-  returnBtn.onmouseout = () => { returnBtn.style.background = '#fff'; };
-  returnBtn.onclick = () => {
-    gameOverlay.remove();
-    resumeBgMusic();
-    CHRONICLE.currentGame = null;
-  };
-  gameOverlay.appendChild(returnBtn);
-
-  document.body.appendChild(gameOverlay);
-  CHRONICLE.currentGame = eventId;
-
-  // Deduct joy when starting game
-  CHRONICLE.playerStats.joy = Math.max(0, CHRONICLE.playerStats.joy - 15);
-  const joyEl = document.getElementById('stat-joy');
-  if (joyEl) joyEl.textContent = `${CHRONICLE.playerStats.joy}%`;
-
-  // Load game
-  loadGame(eventId, content);
-}
-
-function loadGame(eventId, container) {
-  const games = {
-    1: gameEvent1,
-    2: gameEvent2,
-    3: () => simpleGame(container, eventId, 'Burning Elowen', 10),
-    4: () => simpleGame(container, eventId, 'Timber Roads', 15),
-    5: () => simpleGame(container, eventId, 'Defense Vastilly', 20),
-    6: () => simpleGame(container, eventId, 'Fenwick Canal', 12),
-    7: () => simpleGame(container, eventId, 'Ironstall', 8),
-    8: () => simpleGame(container, eventId, 'Glassport Blockade', 18),
-    9: () => simpleGame(container, eventId, 'Port-Crest Siege', 25),
-    10: () => simpleGame(container, eventId, '14-Day Bombardment', 30),
-    11: () => simpleGame(container, eventId, 'Harbour Wrecks', 16),
-    12: () => simpleGame(container, eventId, 'Push Oakhaven', 22),
-    13: () => simpleGame(container, eventId, 'Fall of Elowen', 35)
-  };
-
-  if (games[eventId]) {
-    games[eventId](container);
-  }
-}
-
-function gameEvent1(container) {
-  // Dialogue game with CouncilChamber background
-  container.innerHTML = '';
-  container.style.cssText = `position: relative; width: 100%; height: 100%; background: #000;`;
-
-  const bg = document.createElement('img');
-  bg.src = `${CHRONICLE.ASSET_PATH}CouncilChamber.png`;
-  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;`;
-  container.appendChild(bg);
-
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.2); z-index: 1;`;
-  container.appendChild(overlay);
-
-  let dialogueIndex = 0;
-  const dialogues = [
-    { text: 'The Treaty of the Silver Stream is shattered...', img: 'Wealthplace.png' },
-    { text: 'What counsel do you offer, noble knight?', img: 'Wealthplace.png' },
-    { text: 'Our fate rests in your hands.', img: 'Wealthplace.png' }
-  ];
-
-  const dialogueContainer = document.createElement('div');
-  dialogueContainer.style.cssText = `position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2;`;
-  container.appendChild(dialogueContainer);
+  let idx = 0;
 
   function render() {
-    dialogueContainer.innerHTML = '';
+    screen.innerHTML = '';
 
-    if (dialogueIndex >= dialogues.length) {
-      completeEvent(1, 50, 25);
+    if (idx >= dialogues.length) {
+      const endScreen = document.createElement('div');
+      endScreen.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
+        z-index: 10001; display: flex; align-items: center; justify-content: center;
+        animation: fadeIn 0.5s ease-out;
+      `;
+
+      const endCard = document.createElement('div');
+      endCard.style.cssText = `
+        background: white; border: 3px solid #FFD700;
+        border-radius: 16px; padding: 50px; max-width: 500px;
+        width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        text-align: center; animation: slideUp 0.6s ease-out;
+      `;
+
+      const endTitle = document.createElement('h2');
+      endTitle.style.cssText = `
+        margin: 0 0 20px 0; font-size: 32px; color: #000;
+        text-transform: uppercase; letter-spacing: 2px;
+      `;
+      endTitle.textContent = 'COUNSEL ACCEPTED';
+      endCard.appendChild(endTitle);
+
+      const endMsg = document.createElement('p');
+      endMsg.style.cssText = `
+        margin: 0 0 30px 0; color: #333; font-size: 16px;
+        line-height: 1.8;
+      `;
+      endMsg.textContent = 'Your wisdom guides the realm forward.';
+      endCard.appendChild(endMsg);
+
+      const rewardDisplay = document.createElement('div');
+      rewardDisplay.style.cssText = `
+        background: #FFF8DC; border: 2px solid #FFD700;
+        border-radius: 8px; padding: 15px; margin-bottom: 20px;
+        font-size: 18px; font-weight: 700; color: #FFD700;
+      `;
+      rewardDisplay.textContent = `+${reward} FortCoins`;
+      endCard.appendChild(rewardDisplay);
+
+      endScreen.appendChild(endCard);
+      document.body.appendChild(endScreen);
+
+      setTimeout(() => {
+        screen.remove();
+        endScreen.remove();
+        bgMusicStop();
+        sound('SoundWin.mp3');
+        markEventComplete(eventId, reward);
+        toast('✓ Dialogue complete!', 'success');
+      }, 2000);
       return;
     }
 
-    const d = dialogues[dialogueIndex];
-    const box = document.createElement('div');
-    box.style.cssText = `display: flex; gap: 20px; align-items: flex-start; background: rgba(0,0,0,0.95); padding: 25px; border-radius: 8px; border: 4px solid #FFD700; max-width: 600px; width: 85%; box-shadow: 0 8px 32px rgba(0,0,0,0.8);`;
+    const card = document.createElement('div');
+    card.style.cssText = `
+      background: white; border: 3px solid #FFD700;
+      border-radius: 16px; padding: 30px; max-width: 800px;
+      width: 95%; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex; gap: 25px; animation: slideUp 0.5s ease-out;
+    `;
 
-    const portrait = document.createElement('img');
-    portrait.src = `${CHRONICLE.ASSET_PATH}${d.img}`;
-    portrait.style.cssText = `height: 140px; width: auto; border: 3px solid #FFD700; border-radius: 4px; flex-shrink: 0;`;
-    box.appendChild(portrait);
+    // Character container
+    const charContainer = document.createElement('div');
+    charContainer.style.cssText = `
+      flex-shrink: 0; position: relative; width: 220px;
+    `;
 
-    const textBox = document.createElement('div');
-    textBox.style.cssText = `color: #fff; flex: 1;`;
+    // Character portrait background
+    const portraitBg = document.createElement('div');
+    portraitBg.style.cssText = `
+      width: 220px; height: 220px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      border-radius: 12px; padding: 3px; box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+    `;
 
-    const charName = document.createElement('div');
-    charName.style.cssText = `font-weight: 900; color: #FFD700; margin-bottom: 12px; font-family: ${CHRONICLE.FONT}; text-transform: uppercase; font-size: 13px;`;
-    charName.textContent = 'Cardinal Wealthplace';
-    textBox.appendChild(charName);
+    const npc = document.createElement('img');
+    npc.src = ASSET + npcImage;
+    npc.style.cssText = `
+      height: 100%; width: 100%; object-fit: cover; border-radius: 10px;
+      display: block; background: #f5f5f5;
+    `;
+    portraitBg.appendChild(npc);
+    charContainer.appendChild(portraitBg);
 
-    const text = document.createElement('div');
-    text.style.cssText = `font-size: 15px; line-height: 1.7; font-family: ${CHRONICLE.FONT}; margin-bottom: 15px;`;
-    text.textContent = d.text;
-    textBox.appendChild(text);
+    // Character name badge
+    const nameBadge = document.createElement('div');
+    nameBadge.style.cssText = `
+      background: #000; color: #FFD700; padding: 8px 12px;
+      border-radius: 6px; text-align: center; margin-top: 12px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px;
+    `;
+    nameBadge.textContent = 'Cardinal Wealthplace';
+    charContainer.appendChild(nameBadge);
 
-    const continueBtn = document.createElement('button');
-    continueBtn.style.cssText = `padding: 10px 20px; background: #FFD700; color: #000; border: 2px solid #FFD700; border-radius: 4px; font-family: ${CHRONICLE.FONT}; font-weight: 900; cursor: pointer; font-size: 12px; text-transform: uppercase; transition: all 0.2s;`;
-    continueBtn.textContent = dialogueIndex === dialogues.length - 1 ? 'Complete Event' : 'Continue →';
-    continueBtn.onmouseover = () => continueBtn.style.background = '#FFC700';
-    continueBtn.onmouseout = () => continueBtn.style.background = '#FFD700';
-    continueBtn.onclick = (e) => { e.preventDefault(); dialogueIndex++; render(); };
-    textBox.appendChild(continueBtn);
+    card.appendChild(charContainer);
 
-    box.appendChild(textBox);
-    dialogueContainer.appendChild(box);
+    // Text content
+    const content = document.createElement('div');
+    content.style.cssText = `
+      flex: 1; display: flex; flex-direction: column; justify-content: space-between;
+    `;
+
+    // Progress indicator
+    const progress = document.createElement('div');
+    progress.style.cssText = `
+      display: flex; gap: 6px; margin-bottom: 15px;
+    `;
+    for (let i = 0; i < dialogues.length; i++) {
+      const dot = document.createElement('div');
+      dot.style.cssText = `
+        width: 8px; height: 8px; border-radius: 50%;
+        background: ${i <= idx ? '#000' : '#ddd'};
+        transition: all 0.3s;
+      `;
+      progress.appendChild(dot);
+    }
+    content.appendChild(progress);
+
+    // Dialogue text with animation
+    const text = document.createElement('p');
+    text.style.cssText = `
+      margin: 0 0 25px 0; color: #333; font-size: 16px;
+      line-height: 1.8; min-height: 60px; animation: fadeIn 0.6s ease-out;
+    `;
+    text.textContent = dialogues[idx];
+    content.appendChild(text);
+
+    // Button container
+    const btnContainer = document.createElement('div');
+    btnContainer.style.cssText = `
+      display: flex; gap: 10px;
+    `;
+
+    const btn = document.createElement('button');
+    btn.style.cssText = `
+      background: #000; color: #FFD700; border: 2px solid #FFD700;
+      padding: 12px 28px; border-radius: 8px; font-family: ${FONT};
+      font-weight: 700; cursor: pointer; text-transform: uppercase;
+      font-size: 12px; letter-spacing: 1px; transition: all 0.3s;
+      flex: 1;
+    `;
+    btn.textContent = idx === dialogues.length - 1 ? '✓ FINISH' : '→ CONTINUE';
+    btn.onmouseover = () => {
+      btn.style.background = '#FFD700';
+      btn.style.color = '#000';
+      btn.style.transform = 'scale(1.05)';
+    };
+    btn.onmouseout = () => {
+      btn.style.background = '#000';
+      btn.style.color = '#FFD700';
+      btn.style.transform = 'scale(1)';
+    };
+    btn.onclick = () => {
+      sound('SoundUiSelect.mp3');
+      idx++;
+      render();
+    };
+    btnContainer.appendChild(btn);
+
+    // Skip button
+    if (idx < dialogues.length - 1) {
+      const skipBtn = document.createElement('button');
+      skipBtn.style.cssText = `
+        background: transparent; color: #666; border: 2px solid #ddd;
+        padding: 12px 20px; border-radius: 8px; font-family: ${FONT};
+        font-weight: 700; cursor: pointer; text-transform: uppercase;
+        font-size: 11px; transition: all 0.3s;
+      `;
+      skipBtn.textContent = 'SKIP';
+      skipBtn.onmouseover = () => {
+        skipBtn.style.borderColor = '#000';
+        skipBtn.style.color = '#000';
+      };
+      skipBtn.onmouseout = () => {
+        skipBtn.style.borderColor = '#ddd';
+        skipBtn.style.color = '#666';
+      };
+      skipBtn.onclick = () => {
+        sound('SoundUiSelect.mp3');
+        idx = dialogues.length;
+        render();
+      };
+      btnContainer.appendChild(skipBtn);
+    }
+
+    content.appendChild(btnContainer);
+
+    // Add style animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    card.appendChild(content);
+    screen.appendChild(card);
   }
 
   render();
+  document.body.appendChild(screen);
 }
 
-function gameEvent2(container) {
-  // Catching game with SilverStream background
-  container.innerHTML = '';
-  container.style.cssText = `position: relative; width: 100%; height: 100%; background: #000;`;
+// ════════════════════════════════════════════════════════════════════════════
+// CATCH GAME
+// ════════════════════════════════════════════════════════════════════════════
 
-  const bg = document.createElement('img');
-  bg.src = `${CHRONICLE.ASSET_PATH}SilverStream.png`;
-  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;`;
-  container.appendChild(bg);
+async function gameCatch(eventId) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: white;
+    z-index: 9999; display: flex; flex-direction: column;
+  `;
 
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.15); z-index: 1;`;
-  container.appendChild(overlay);
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  screen.appendChild(canvas);
 
-  let caught = 0;
-  const needed = 5;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
 
-  const gameUI = document.createElement('div');
-  gameUI.style.cssText = `position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; z-index: 2;`;
-  container.appendChild(gameUI);
-
-  const label = document.createElement('div');
-  label.style.cssText = `color: #fff; font-size: 18px; font-family: ${CHRONICLE.FONT}; background: rgba(0,0,0,0.8); padding: 15px 30px; border-radius: 8px; border: 3px solid #FFD700; font-weight: 900;`;
-  label.textContent = `Caught: ${caught}/${needed}`;
-  gameUI.appendChild(label);
-
-  const btn = document.createElement('button');
-  btn.style.cssText = `width: 120px; height: 120px; background: #FFD700; border: 4px solid #000; border-radius: 50%; font-size: 48px; cursor: pointer; transition: all 0.1s; box-shadow: 0 0 30px rgba(255, 215, 0, 0.9);`;
-  btn.textContent = '💰';
-
-  btn.onclick = () => {
-    caught++;
-    btn.style.transform = 'scale(0.85)';
-    playSound('SoundCoin.mp3', 0.4);
-    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 100);
-
-    label.textContent = `Caught: ${caught}/${needed}`;
-
-    if (caught >= needed) {
-      btn.disabled = true;
-      completeEvent(2, 75, 30);
-    }
+  const game = {
+    player: { x: w / 2, y: h - 60, w: 40, h: 40, gold: 0 },
+    items: [],
+    time: 30,
+    active: true
   };
 
-  gameUI.appendChild(btn);
+  for (let i = 0; i < 3; i++) {
+    game.items.push({
+      x: Math.random() * w,
+      y: Math.random() * (h * 0.4),
+      w: 25,
+      h: 25,
+      vy: 2 + Math.random(),
+      type: Math.random() > 0.3 ? 'gold' : 'danger'
+    });
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    game.player.x = Math.max(0, Math.min(w - game.player.w, e.clientX - game.player.w / 2));
+  });
+
+  function update() {
+    if (!game.active) return;
+
+    ctx.fillStyle = '#f5f5f5';
+    ctx.fillRect(0, 0, w, h);
+
+    game.items = game.items.filter(item => {
+      item.y += item.vy;
+      if (item.y + item.h > game.player.y &&
+          item.y < game.player.y + game.player.h &&
+          item.x + item.w > game.player.x &&
+          item.x < game.player.x + game.player.w) {
+        if (item.type === 'gold') {
+          game.gold += 10;
+          sound('SoundCoin.mp3');
+        }
+        return false;
+      }
+      return item.y < h;
+    });
+
+    if (Math.random() < 0.02) {
+      game.items.push({
+        x: Math.random() * w,
+        y: -25,
+        w: 25,
+        h: 25,
+        vy: 2 + Math.random(),
+        type: Math.random() > 0.3 ? 'gold' : 'danger'
+      });
+    }
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(game.player.x, game.player.y, game.player.w, game.player.h);
+
+    game.items.forEach(item => {
+      ctx.fillStyle = item.type === 'gold' ? '#FFD700' : '#FF6B6B';
+      ctx.fillRect(item.x, item.y, item.w, item.h);
+    });
+
+    ctx.fillStyle = '#000';
+    ctx.font = `bold 16px ${FONT}`;
+    ctx.fillText(`GOLD: ${game.gold}`, 20, 30);
+    ctx.fillText(`TIME: ${Math.ceil(game.time)}s`, w - 150, 30);
+
+    game.time -= 1 / 60;
+    if (game.time <= 0) endGame();
+    else requestAnimationFrame(update);
+  }
+
+  function endGame() {
+    game.active = false;
+    screen.remove();
+    bgMusicStop();
+    if (game.gold >= 100) {
+      sound('SoundWin.mp3');
+      markEventComplete(eventId, game.gold);
+      toast('✓ Raid successful!', 'success');
+    } else {
+      sound('SoundLose.mp3');
+      toast('✗ Not enough gold.', 'error');
+    }
+  }
+
+  update();
+  document.body.appendChild(screen);
 }
 
-function simpleGame(container, eventId, title, clicks) {
-  // Simple clicking game using location images
-  container.innerHTML = '';
-  container.style.cssText = `position: relative; width: 100%; height: 100%; background: #000;`;
+// ════════════════════════════════════════════════════════════════════════════
+// EVENT 3: BURNING ELOWEN - DODGE & COLLECT
+// ════════════════════════════════════════════════════════════════════════════
 
-  const locations = ['Battlefield', 'SupplyBox', 'TheCanals'];
-  const bgImage = locations[(eventId - 3) % locations.length];
+async function gameInferno(eventId) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: #1a1a1a;
+    z-index: 9999; display: flex; flex-direction: column;
+  `;
 
-  const bg = document.createElement('img');
-  bg.src = `${CHRONICLE.ASSET_PATH}${bgImage}.png`;
-  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;`;
-  container.appendChild(bg);
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  screen.appendChild(canvas);
 
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.15); z-index: 1;`;
-  container.appendChild(overlay);
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
 
-  let clicked = 0;
-
-  const gameUI = document.createElement('div');
-  gameUI.style.cssText = `position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; z-index: 2;`;
-  container.appendChild(gameUI);
-
-  const progress = document.createElement('div');
-  progress.style.cssText = `color: #fff; font-family: ${CHRONICLE.FONT}; font-size: 18px; background: rgba(0,0,0,0.8); padding: 15px 30px; border-radius: 8px; border: 3px solid #FFD700; font-weight: 900;`;
-  progress.textContent = `${clicked}/${clicks}`;
-  gameUI.appendChild(progress);
-
-  const btn = document.createElement('button');
-  btn.style.cssText = `width: 130px; height: 130px; background: #FFD700; border: 4px solid #000; border-radius: 50%; font-size: 48px; cursor: pointer; transition: all 0.1s; box-shadow: 0 0 30px rgba(255, 215, 0, 0.9);`;
-  btn.textContent = '⚔';
-
-  btn.onclick = () => {
-    clicked++;
-    btn.style.transform = 'scale(0.85)';
-    playSound('SoundCoin.mp3', 0.4);
-    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 100);
-
-    progress.textContent = `${clicked}/${clicks}`;
-
-    if (clicked >= clicks) {
-      btn.disabled = true;
-      const coins = Math.floor(50 + (clicks * 5));
-      const xp = Math.floor(20 + clicks);
-      completeEvent(eventId, coins, xp);
-    }
+  const game = {
+    knight: { x: w / 2, y: h - 60, w: 40, h: 50, lives: 3 },
+    enemies: [],
+    time: 40,
+    score: 0,
+    active: true
   };
 
-  gameUI.appendChild(btn);
-}
-
-function completeEvent(eventId, coins, xp) {
-  // Award coins and XP
-  CHRONICLE.playerStats.fortCoins += coins;
-  CHRONICLE.playerStats.xp += xp;
-
-  if (CHRONICLE.playerStats.xp >= 100) {
-    CHRONICLE.playerStats.level++;
-    CHRONICLE.playerStats.xp -= 100;
+  for (let i = 0; i < 2; i++) {
+    game.enemies.push({
+      x: Math.random() * w,
+      y: Math.random() * (h * 0.4),
+      w: 30,
+      h: 30,
+      vy: 2 + Math.random(),
+      type: 'fire'
+    });
   }
 
-  CHRONICLE.events[eventId - 1].completed = true;
-  if (eventId < 13) {
-    CHRONICLE.events[eventId].unlocked = true;
+  document.addEventListener('mousemove', (e) => {
+    game.knight.x = Math.max(0, Math.min(w - game.knight.w, e.clientX - game.knight.w / 2));
+  });
+
+  function update() {
+    if (!game.active) return;
+
+    // Background
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Fire gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, 'rgba(255, 100, 0, 0.1)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Update enemies
+    game.enemies = game.enemies.filter(enemy => {
+      enemy.y += enemy.vy;
+
+      if (enemy.y + enemy.h > game.knight.y &&
+          enemy.y < game.knight.y + game.knight.h &&
+          enemy.x + enemy.w > game.knight.x &&
+          enemy.x < game.knight.x + game.knight.w) {
+        game.knight.lives--;
+        sound('SoundLose.mp3');
+        if (game.knight.lives <= 0) {
+          endGame();
+          return false;
+        }
+        return false;
+      }
+      return enemy.y < h;
+    });
+
+    if (Math.random() < 0.04) {
+      game.enemies.push({
+        x: Math.random() * w,
+        y: -30,
+        w: 30,
+        h: 30,
+        vy: 3 + Math.random() * 2,
+        type: 'fire'
+      });
+    }
+
+    // Draw knight
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(game.knight.x, game.knight.y, game.knight.w, game.knight.h);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(game.knight.x, game.knight.y, game.knight.w, game.knight.h);
+
+    // Draw enemies (fire)
+    game.enemies.forEach(enemy => {
+      ctx.fillStyle = '#FF6347';
+      ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(enemy.x + 5, enemy.y + 5, enemy.w - 10, enemy.h - 10);
+    });
+
+    // UI
+    ctx.fillStyle = '#FFF';
+    ctx.font = `bold 18px ${FONT}`;
+    ctx.fillText(`LIVES: ${game.knight.lives}`, 20, 30);
+    ctx.fillText(`TIME: ${Math.ceil(game.time)}s`, w - 150, 30);
+
+    game.time -= 1 / 60;
+    if (game.time <= 0) endGame();
+    else requestAnimationFrame(update);
   }
 
-  // Show completion screen
-  const overlay = document.getElementById('game-overlay');
-  if (overlay) {
-    const content = overlay.querySelector(`[id="game-content-${eventId}"]`);
-    if (content) {
-      content.innerHTML = `<div style="color: #fff; font-family: ${CHRONICLE.FONT}; text-align: center; background: rgba(0,0,0,0.8); padding: 40px; border-radius: 8px;">
-        <div style="font-size: 48px; font-weight: 900; margin-bottom: 20px;">✓</div>
-        <div style="font-size: 28px; font-weight: 900; margin-bottom: 20px;">Event Complete!</div>
-        <div style="font-size: 18px; margin: 10px 0;">+${coins} FortCoins</div>
-        <div style="font-size: 18px;">+${xp} XP</div>
-      </div>`;
+  function endGame() {
+    game.active = false;
+    screen.remove();
+    bgMusicStop();
+    if (game.knight.lives > 0) {
+      sound('SoundWin.mp3');
+      markEventComplete(eventId, 40);
+      toast('✓ Escaped the inferno!', 'success');
+    } else {
+      sound('SoundLose.mp3');
+      toast('✗ Consumed by flames.', 'error');
     }
   }
 
-  playSound('SoundWin.mp3', 0.6);
+  update();
+  document.body.appendChild(screen);
+}
 
-  setTimeout(() => {
-    const overlay = document.getElementById('game-overlay');
-    if (overlay) overlay.remove();
-    resumeBgMusic();
-    CHRONICLE.currentGame = null;
-    // Refresh dashboard
-    const dashboard = document.getElementById('chronicle-dashboard');
-    if (dashboard) dashboard.remove();
-    showChronicleDashboard();
-  }, 2000);
+// ════════════════════════════════════════════════════════════════════════════
+// EVENT 4: TIMBER ROADS - COLLECT & NAVIGATE
+// ════════════════════════════════════════════════════════════════════════════
+
+async function gameLumber(eventId) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: #8B7355;
+    z-index: 9999; display: flex; flex-direction: column;
+  `;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  screen.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const game = {
+    cart: { x: w / 2, y: h - 60, w: 50, h: 40, wood: 0 },
+    trees: [],
+    obstacles: [],
+    time: 35,
+    active: true
+  };
+
+  for (let i = 0; i < 5; i++) {
+    game.trees.push({
+      x: Math.random() * w,
+      y: Math.random() * (h * 0.6),
+      w: 30,
+      h: 40,
+      collected: false
+    });
+  }
+
+  for (let i = 0; i < 3; i++) {
+    game.obstacles.push({
+      x: Math.random() * w,
+      y: Math.random() * (h * 0.5),
+      w: 40,
+      h: 20,
+      vy: 1 + Math.random()
+    });
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    game.cart.x = Math.max(0, Math.min(w - game.cart.w, e.clientX - game.cart.w / 2));
+  });
+
+  function update() {
+    if (!game.active) return;
+
+    // Background
+    ctx.fillStyle = '#D2B48C';
+    ctx.fillRect(0, 0, w, h);
+
+    // Grass
+    ctx.fillStyle = '#228B22';
+    ctx.fillRect(0, h - 80, w, 80);
+
+    // Collect trees
+    game.trees = game.trees.filter(tree => {
+      if (!tree.collected &&
+          tree.x + tree.w > game.cart.x &&
+          tree.x < game.cart.x + game.cart.w &&
+          tree.y + tree.h > game.cart.y) {
+        game.cart.wood += 15;
+        sound('SoundCoin.mp3');
+        return false;
+      }
+      return true;
+    });
+
+    // Move obstacles
+    game.obstacles.forEach(obs => {
+      obs.y += obs.vy;
+      if (obs.y + obs.h > game.cart.y &&
+          obs.y < game.cart.y + game.cart.h &&
+          obs.x + obs.w > game.cart.x &&
+          obs.x < game.cart.x + game.cart.w) {
+        game.cart.wood -= 10;
+        if (game.cart.wood < 0) game.cart.wood = 0;
+        sound('SoundLose.mp3');
+      }
+    });
+
+    game.obstacles = game.obstacles.filter(obs => obs.y < h);
+
+    if (Math.random() < 0.03) {
+      game.obstacles.push({
+        x: Math.random() * w,
+        y: -20,
+        w: 40,
+        h: 20,
+        vy: 2 + Math.random()
+      });
+    }
+
+    // Draw cart
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(game.cart.x, game.cart.y, game.cart.w, game.cart.h);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(game.cart.x, game.cart.y, game.cart.w, game.cart.h);
+
+    // Draw trees
+    game.trees.forEach(tree => {
+      ctx.fillStyle = '#228B22';
+      ctx.fillRect(tree.x, tree.y, tree.w, tree.h);
+      ctx.fillStyle = '#32CD32';
+      ctx.fillRect(tree.x + 5, tree.y + 5, tree.w - 10, tree.h - 10);
+    });
+
+    // Draw obstacles (rocks)
+    game.obstacles.forEach(obs => {
+      ctx.fillStyle = '#696969';
+      ctx.beginPath();
+      ctx.arc(obs.x + obs.w / 2, obs.y + obs.h / 2, obs.w / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+
+    // UI
+    ctx.fillStyle = '#000';
+    ctx.font = `bold 18px ${FONT}`;
+    ctx.fillText(`WOOD: ${game.cart.wood}`, 20, 30);
+    ctx.fillText(`TIME: ${Math.ceil(game.time)}s`, w - 150, 30);
+
+    game.time -= 1 / 60;
+    if (game.time <= 0) endGame();
+    else requestAnimationFrame(update);
+  }
+
+  function endGame() {
+    game.active = false;
+    screen.remove();
+    bgMusicStop();
+    if (game.cart.wood >= 50) {
+      sound('SoundWin.mp3');
+      markEventComplete(eventId, Math.floor(game.cart.wood * 0.8));
+      toast('✓ Lumber collected!', 'success');
+    } else {
+      sound('SoundLose.mp3');
+      toast('✗ Not enough timber.', 'error');
+    }
+  }
+
+  update();
+  document.body.appendChild(screen);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// EVENT 5: COMBAT - SWORD DUEL
+// ════════════════════════════════════════════════════════════════════════════
+
+async function gameDuel(eventId) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: #2C2C2C;
+    z-index: 9999; display: flex; flex-direction: column;
+  `;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  screen.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const game = {
+    knight: { x: w / 3, y: h / 2, hp: 5, attacking: false, combo: 0 },
+    enemy: { x: (w * 2) / 3, y: h / 2, hp: 5, attacking: false },
+    time: 45,
+    active: true
+  };
+
+  document.addEventListener('click', () => {
+    if (game.active && !game.knight.attacking) {
+      game.knight.attacking = true;
+      game.knight.combo++;
+      if (Math.random() > 0.4) {
+        game.enemy.hp -= game.knight.combo;
+        sound('SoundCoin.mp3');
+      }
+      setTimeout(() => { game.knight.attacking = false; }, 300);
+    }
+  });
+
+  function update() {
+    if (!game.active) return;
+
+    // Background
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Enemy AI
+    if (Math.random() < 0.02 && !game.enemy.attacking) {
+      game.enemy.attacking = true;
+      if (Math.random() > 0.5) {
+        game.knight.hp--;
+        sound('SoundLose.mp3');
+      }
+      setTimeout(() => { game.enemy.attacking = false; }, 400);
+    }
+
+    if (game.enemy.hp <= 0 || game.knight.hp <= 0) {
+      endGame();
+      return;
+    }
+
+    // Draw knight
+    ctx.fillStyle = game.knight.attacking ? '#FFD700' : '#FFB6C1';
+    ctx.fillRect(game.knight.x - 20, game.knight.y - 30, 40, 60);
+    ctx.fillStyle = '#000';
+    ctx.font = `bold 16px ${FONT}`;
+    ctx.fillText('YOU', game.knight.x - 15, game.knight.y + 50);
+
+    // Draw enemy
+    ctx.fillStyle = game.enemy.attacking ? '#FF6B6B' : '#DC143C';
+    ctx.fillRect(game.enemy.x - 20, game.enemy.y - 30, 40, 60);
+    ctx.fillStyle = '#000';
+    ctx.fillText('FOE', game.enemy.x - 15, game.enemy.y + 50);
+
+    // Health bars
+    ctx.fillStyle = '#00AA00';
+    ctx.fillRect(20, 20, 150, 20);
+    ctx.fillStyle = '#FF0000';
+    ctx.fillRect(20, 20, (game.knight.hp / 5) * 150, 20);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(20, 20, 150, 20);
+    ctx.fillStyle = '#000';
+    ctx.fillText(`HP: ${game.knight.hp}`, 25, 37);
+
+    ctx.fillStyle = '#00AA00';
+    ctx.fillRect(w - 170, 20, 150, 20);
+    ctx.fillStyle = '#FF0000';
+    ctx.fillRect(w - 170, 20, (game.enemy.hp / 5) * 150, 20);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(w - 170, 20, 150, 20);
+    ctx.fillStyle = '#000';
+    ctx.fillText(`ENEMY: ${game.enemy.hp}`, w - 165, 37);
+
+    // Combo display
+    if (game.knight.combo > 0) {
+      ctx.fillStyle = '#FFD700';
+      ctx.font = `bold 32px ${FONT}`;
+      ctx.fillText(`COMBO x${game.knight.combo}`, w / 2 - 80, 60);
+    }
+
+    game.time -= 1 / 60;
+    if (game.time <= 0) {
+      if (game.enemy.hp > 0) game.knight.hp = 0;
+      endGame();
+    }
+    else requestAnimationFrame(update);
+  }
+
+  function endGame() {
+    game.active = false;
+    screen.remove();
+    bgMusicStop();
+    if (game.knight.hp > 0) {
+      sound('SoundWin.mp3');
+      markEventComplete(eventId, 50 + game.knight.combo * 5);
+      toast(`✓ Victory! Combo x${game.knight.combo}`, 'success');
+    } else {
+      sound('SoundLose.mp3');
+      toast('✗ Defeated in combat.', 'error');
+    }
+  }
+
+  update();
+  document.body.appendChild(screen);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// EVENT 6: FENWCK CANAL - BOAT NAVIGATION
+// ════════════════════════════════════════════════════════════════════════════
+
+async function gameBoat(eventId) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: #1a3a52;
+    z-index: 9999; display: flex; flex-direction: column;
+  `;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  screen.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const game = {
+    boat: { x: w / 2, y: h - 80, w: 60, h: 40, health: 3 },
+    rocks: [],
+    gems: [],
+    time: 50,
+    score: 0,
+    active: true
+  };
+
+  for (let i = 0; i < 3; i++) {
+    game.gems.push({
+      x: Math.random() * w,
+      y: Math.random() * (h * 0.5),
+      w: 20,
+      h: 20,
+      vy: 1 + Math.random() * 0.5
+    });
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    game.boat.x = Math.max(0, Math.min(w - game.boat.w, e.clientX - game.boat.w / 2));
+  });
+
+  function update() {
+    if (!game.active) return;
+
+    // Water background
+    ctx.fillStyle = '#0d1e2d';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#1a3a52';
+    for (let i = 0; i < h; i += 30) {
+      ctx.fillRect(0, i, w, 15);
+    }
+
+    // Collect gems
+    game.gems = game.gems.filter(gem => {
+      gem.y += gem.vy;
+      if (gem.y + gem.h > game.boat.y &&
+          gem.y < game.boat.y + game.boat.h &&
+          gem.x + gem.w > game.boat.x &&
+          gem.x < game.boat.x + game.boat.w) {
+        game.score += 20;
+        sound('SoundCoin.mp3');
+        return false;
+      }
+      return gem.y < h;
+    });
+
+    // Rock obstacles
+    game.rocks.forEach(rock => {
+      rock.y += rock.vy;
+      if (rock.y + rock.h > game.boat.y &&
+          rock.y < game.boat.y + game.boat.h &&
+          rock.x + rock.w > game.boat.x &&
+          rock.x < game.boat.x + game.boat.w) {
+        game.boat.health--;
+        sound('SoundLose.mp3');
+        if (game.boat.health <= 0) {
+          endGame();
+          return;
+        }
+      }
+    });
+
+    game.rocks = game.rocks.filter(rock => rock.y < h);
+
+    if (Math.random() < 0.05) {
+      game.gems.push({
+        x: Math.random() * w,
+        y: -20,
+        w: 20,
+        h: 20,
+        vy: 2 + Math.random()
+      });
+    }
+
+    if (Math.random() < 0.03) {
+      game.rocks.push({
+        x: Math.random() * w,
+        y: -30,
+        w: 50,
+        h: 30,
+        vy: 3 + Math.random() * 2
+      });
+    }
+
+    // Draw boat
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(game.boat.x, game.boat.y, game.boat.w, game.boat.h);
+    ctx.fillStyle = '#D2B48C';
+    ctx.fillRect(game.boat.x + 10, game.boat.y + 5, game.boat.w - 20, 15);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(game.boat.x, game.boat.y, game.boat.w, game.boat.h);
+
+    // Draw gems
+    game.gems.forEach(gem => {
+      ctx.fillStyle = '#00FF00';
+      ctx.fillRect(gem.x, gem.y, gem.w, gem.h);
+      ctx.fillStyle = '#00AA00';
+      ctx.fillRect(gem.x + 3, gem.y + 3, gem.w - 6, gem.h - 6);
+    });
+
+    // Draw rocks
+    game.rocks.forEach(rock => {
+      ctx.fillStyle = '#696969';
+      ctx.beginPath();
+      ctx.arc(rock.x + rock.w / 2, rock.y + rock.h / 2, rock.w / 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // UI
+    ctx.fillStyle = '#FFF';
+    ctx.font = `bold 18px ${FONT}`;
+    ctx.fillText(`HEALTH: ${game.boat.health}`, 20, 30);
+    ctx.fillText(`GEMS: ${game.score}`, w / 2 - 50, 30);
+    ctx.fillText(`TIME: ${Math.ceil(game.time)}s`, w - 150, 30);
+
+    game.time -= 1 / 60;
+    if (game.time <= 0) endGame();
+    else requestAnimationFrame(update);
+  }
+
+  function endGame() {
+    game.active = false;
+    screen.remove();
+    bgMusicStop();
+    if (game.boat.health > 0) {
+      sound('SoundWin.mp3');
+      markEventComplete(eventId, game.score);
+      toast('✓ Sailed through safely!', 'success');
+    } else {
+      sound('SoundLose.mp3');
+      toast('✗ Ship wrecked.', 'error');
+    }
+  }
+
+  update();
+  document.body.appendChild(screen);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// EVENT 7: IRONSTALL - MERCHANT TRADING
+// ════════════════════════════════════════════════════════════════════════════
+
+async function gameTrade(eventId) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: #f5f5f5;
+    z-index: 9999; display: flex; align-items: center; justify-content: center;
+    font-family: ${FONT}; padding: 20px;
+  `;
+
+  const game = {
+    gold: 100,
+    items: [
+      { name: 'Iron Ore', cost: 20, value: 35, qty: 0 },
+      { name: 'Steel Bar', cost: 40, value: 65, qty: 0 },
+      { name: 'War Axe', cost: 80, value: 150, qty: 0 }
+    ],
+    time: 30
+  };
+
+  function render() {
+    screen.innerHTML = '';
+
+    const card = document.createElement('div');
+    card.style.cssText = `
+      background: white; border: 2px solid #000;
+      border-radius: 12px; padding: 30px; max-width: 600px;
+      width: 100%; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    `;
+
+    const title = document.createElement('h2');
+    title.style.cssText = `margin: 0 0 20px 0; font-size: 24px; color: #000;`;
+    title.textContent = 'MERCHANT\'S STALL';
+    card.appendChild(title);
+
+    const gold = document.createElement('p');
+    gold.style.cssText = `
+      margin: 0 0 20px 0; font-size: 18px; color: #FFD700;
+      font-weight: 700;
+    `;
+    gold.textContent = `Gold: ${game.gold}`;
+    card.appendChild(gold);
+
+    const itemsDiv = document.createElement('div');
+    itemsDiv.style.cssText = `margin-bottom: 20px;`;
+
+    game.items.forEach((item, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = `
+        display: flex; gap: 10px; margin-bottom: 10px;
+        align-items: center; padding: 10px; border: 1px solid #ddd;
+        border-radius: 6px;
+      `;
+
+      const label = document.createElement('span');
+      label.style.cssText = `flex: 1; font-weight: 700;`;
+      label.textContent = `${item.name} (Buy: ${item.cost}g / Sell: ${item.value}g) x${item.qty}`;
+      row.appendChild(label);
+
+      const buyBtn = document.createElement('button');
+      buyBtn.style.cssText = `
+        background: #000; color: white; border: none;
+        padding: 6px 12px; border-radius: 4px; font-family: ${FONT};
+        font-weight: 700; cursor: pointer; font-size: 12px;
+      `;
+      buyBtn.textContent = 'BUY';
+      buyBtn.onclick = () => {
+        if (game.gold >= item.cost) {
+          game.gold -= item.cost;
+          item.qty++;
+          sound('SoundCoin.mp3');
+          render();
+        }
+      };
+      row.appendChild(buyBtn);
+
+      const sellBtn = document.createElement('button');
+      sellBtn.style.cssText = `
+        background: #666; color: white; border: none;
+        padding: 6px 12px; border-radius: 4px; font-family: ${FONT};
+        font-weight: 700; cursor: pointer; font-size: 12px;
+      `;
+      sellBtn.textContent = 'SELL';
+      sellBtn.onclick = () => {
+        if (item.qty > 0) {
+          game.gold += item.value;
+          item.qty--;
+          sound('SoundCoin.mp3');
+          render();
+        }
+      };
+      row.appendChild(sellBtn);
+
+      itemsDiv.appendChild(row);
+    });
+
+    card.appendChild(itemsDiv);
+
+    const done = document.createElement('button');
+    done.style.cssText = `
+      background: #000; color: white; border: none;
+      padding: 12px 24px; border-radius: 6px; font-family: ${FONT};
+      font-weight: 700; cursor: pointer; width: 100%;
+      text-transform: uppercase; font-size: 14px;
+    `;
+    done.textContent = 'DONE TRADING';
+    done.onclick = () => {
+      screen.remove();
+      bgMusicStop();
+      sound('SoundWin.mp3');
+      const profit = Math.max(0, game.gold - 100);
+      markEventComplete(eventId, 30 + profit);
+      toast(`✓ Profit: ${profit}g!`, 'success');
+    };
+    card.appendChild(done);
+
+    screen.appendChild(card);
+  }
+
+  render();
+  document.body.appendChild(screen);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// EVENT 8: GLASSPORT - SIEGE DEFENSE
+// ════════════════════════════════════════════════════════════════════════════
+
+async function gameSiege(eventId) {
+  const screen = document.createElement('div');
+  screen.style.cssText = `
+    position: fixed; inset: 0; background: #4a4a4a;
+    z-index: 9999; display: flex; flex-direction: column;
+  `;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 60;
+  screen.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const game = {
+    castle: { x: w / 2 - 40, y: 100, w: 80, h: 60, health: 5 },
+    enemies: [],
+    arrows: [],
+    time: 60,
+    kills: 0,
+    active: true
+  };
+
+  document.addEventListener('click', (e) => {
+    if (game.active) {
+      game.arrows.push({
+        x: game.castle.x + 40,
+        y: game.castle.y,
+        vx: (e.clientX - (game.castle.x + 40)) / 10,
+        vy: (e.clientY - game.castle.y) / 10,
+        traveled: 0
+      });
+      sound('SoundPlay.mp3');
+    }
+  });
+
+  function update() {
+    if (!game.active) return;
+
+    // Background (sky & ground)
+    ctx.fillStyle = '#87CEEB';
+    ctx.fillRect(0, 0, w, h / 2);
+    ctx.fillStyle = '#8B7355';
+    ctx.fillRect(0, h / 2, w, h / 2);
+
+    // Draw castle
+    ctx.fillStyle = '#696969';
+    ctx.fillRect(game.castle.x, game.castle.y, game.castle.w, game.castle.h);
+    ctx.fillStyle = game.castle.health > 0 ? '#FFD700' : '#FF6B6B';
+    for (let i = 0; i < game.castle.health; i++) {
+      ctx.fillRect(game.castle.x + i * 15, game.castle.y - 15, 12, 12);
+    }
+
+    // Spawn enemies
+    if (Math.random() < 0.03 && game.enemies.length < 5) {
+      game.enemies.push({
+        x: Math.random() * w,
+        y: 50,
+        w: 25,
+        h: 30,
+        vx: (game.castle.x + 40 - (Math.random() * w)) / 100,
+        vy: 2 + Math.random(),
+        health: 1
+      });
+    }
+
+    // Move arrows
+    game.arrows = game.arrows.filter(arrow => {
+      arrow.x += arrow.vx;
+      arrow.y += arrow.vy;
+      arrow.traveled++;
+
+      let hit = false;
+      game.enemies.forEach(enemy => {
+        if (arrow.x > enemy.x && arrow.x < enemy.x + enemy.w &&
+            arrow.y > enemy.y && arrow.y < enemy.y + enemy.h) {
+          enemy.health--;
+          hit = true;
+          sound('SoundCoin.mp3');
+          if (enemy.health <= 0) game.kills++;
+        }
+      });
+
+      return !hit && arrow.traveled < 200;
+    });
+
+    // Move enemies
+    game.enemies = game.enemies.filter(enemy => {
+      enemy.y += enemy.vy;
+      enemy.x += enemy.vx;
+
+      if (enemy.y > game.castle.y && enemy.x > game.castle.x - 50 && enemy.x < game.castle.x + game.castle.w + 50) {
+        game.castle.health--;
+        sound('SoundLose.mp3');
+        if (game.castle.health <= 0) {
+          endGame();
+          return false;
+        }
+        return false;
+      }
+      return enemy.y < h;
+    });
+
+    // Draw enemies
+    game.enemies.forEach(enemy => {
+      ctx.fillStyle = '#FF6B6B';
+      ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(enemy.x + 5, enemy.y + 5, enemy.w - 10, 10);
+    });
+
+    // Draw arrows
+    game.arrows.forEach(arrow => {
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(arrow.x - arrow.vx, arrow.y - arrow.vy);
+      ctx.lineTo(arrow.x, arrow.y);
+      ctx.stroke();
+    });
+
+    // UI
+    ctx.fillStyle = '#000';
+    ctx.font = `bold 18px ${FONT}`;
+    ctx.fillText(`WALLS: ${game.castle.health}`, 20, 30);
+    ctx.fillText(`KILLS: ${game.kills}`, w / 2 - 50, 30);
+    ctx.fillText(`TIME: ${Math.ceil(game.time)}s`, w - 150, 30);
+
+    game.time -= 1 / 60;
+    if (game.time <= 0) endGame();
+    else requestAnimationFrame(update);
+  }
+
+  function endGame() {
+    game.active = false;
+    screen.remove();
+    bgMusicStop();
+    if (game.castle.health > 0) {
+      sound('SoundWin.mp3');
+      markEventComplete(eventId, 60 + game.kills * 10);
+      toast(`✓ Castle defended! ${game.kills} enemies slain`, 'success');
+    } else {
+      sound('SoundLose.mp3');
+      toast('✗ Castle fell.', 'error');
+    }
+  }
+
+  update();
+  document.body.appendChild(screen);
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// COMPLETION
+// ════════════════════════════════════════════════════════════════════════════
+
+function markEventComplete(eventId, fortCoins = 0) {
+  if (typeof decayAfterGame === 'function') decayAfterGame();
+
+  const isFirst = !_chronicleProgress[eventId];
+  _chronicleProgress[eventId] = true;
+
+  if (isFirst && fortCoins > 0) {
+    const onyx = Math.floor(fortCoins / 2);
+    if (onyx > 0) {
+      if (typeof _playerOnyx === 'undefined') window._playerOnyx = 0;
+      _playerOnyx += onyx;
+      const display = document.getElementById('player-onyx-count');
+      if (display) display.textContent = _playerOnyx;
+    }
+  }
+
+  if (typeof renderChronicleEvents === 'function') renderChronicleEvents();
+  if (typeof renderChronicleMapPins === 'function') renderChronicleMapPins();
+  if (typeof updateChronicleProgress === 'function') updateChronicleProgress();
 }

@@ -3713,7 +3713,7 @@ function updateGCSelectedPreview() {
   if (!preview) return;
   if (!selected.length) { preview.innerHTML=''; return; }
   preview.innerHTML = selected.map(u=>`
-    <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:100px;padding:3px 8px;font-size:12px;">
+    <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:var(--radius-pill);padding:3px 8px;font-size:12px;">
       ${escapeHTML(u)}
       <button onclick="uncheckGCMember('${escapeHTML(u)}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;line-height:1;padding:0 0 0 2px;">✕</button>
     </span>`).join('');
@@ -4442,7 +4442,7 @@ function renderBastionSidebar(scroll) {
     if (ch.type==='voice'||ch.type==='forum'||ch.type==='announcement'||ch.type==='poll') return;
     const tier=getAgeTier(CU?.dateOfBirth);
     const blocked=ch.nsfw&&tier==='child';
-    const nsfwTag=ch.nsfw?`<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:rgba(248,113,113,.6);flex-shrink:0;">18+</span>`:'';
+    const nsfwTag=ch.nsfw?`<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:rgba(248,113,113,.6);flex-shrink:0;">18+</span>`:'';
     const focusBadge=ch.focusMode?'<span class="focus-mode-badge">FOCUS</span>':'';
     const unread = getChannelUnread(curBastion, i);
     const isUnread = unread.count > 0 && curChannel !== i;
@@ -4687,7 +4687,7 @@ function loadChatChannel(idx) {
     _loadAnnouncementRoom(wrap, b, ch, idx);
     return;
   }
-  const nsfwBadge=ch.nsfw?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(248,113,113,.15);color:var(--red);margin-left:6px;">NSFW</span>`:'';
+  const nsfwBadge=ch.nsfw?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);background:rgba(248,113,113,.15);color:var(--red);margin-left:6px;">NSFW</span>`:'';
   // Room name is displayed in the room-topbar above the chat, not in the main Fortized topbar
   const sep=document.getElementById('tb-sep');
   const desc=document.getElementById('tb-desc');
@@ -7532,7 +7532,7 @@ function renderBastionTemplateGrid() {
   grid.innerHTML = templates.map(t => {
     const tmpl=BASTION_TEMPLATES[t.id];
     const previewChs=(tmpl?.channels||[]).slice(0,5).map(c=>`<div style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--muted-light);padding:2px 0;"><span style="font-size:10px;opacity:.7;">${chIcon[c.type]||'#'}</span>${c.name}</div>`).join('');
-    const previewRoles=(tmpl?.roles||[]).slice(0,3).map(r=>`<span style="font-size:9px;padding:1px 6px;border-radius:100px;border:1px solid ${r.color}44;color:${r.color};background:${r.color}11;">${r.name}</span>`).join(' ');
+    const previewRoles=(tmpl?.roles||[]).slice(0,3).map(r=>`<span style="font-size:9px;padding:1px 6px;border-radius:var(--radius-pill);border:1px solid ${r.color}44;color:${r.color};background:${r.color}11;">${r.name}</span>`).join(' ');
     return `<div class="tmpl-card" id="tmpl-${t.id}" onclick="selectBastionTemplate('${t.id}','${t.emoji}','${t.name}')" style="position:relative;">
       <div class="tmpl-emoji">${t.emoji}</div>
       <div class="tmpl-name">${t.name}</div>
@@ -8244,7 +8244,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
           <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.02);">
             <span id="crm-pv-icon" style="color:rgba(255,255,255,.35);display:flex;align-items:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
             <span id="crm-pv-name" style="font-size:14px;font-weight:700;color:#fff;">new-room</span>
-            <span id="crm-pv-type" style="font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(255,249,62,.08);color:rgba(255,249,62,.7);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Text</span>
+            <span id="crm-pv-type" style="font-size:10px;padding:2px 8px;border-radius:var(--radius-pill);background:rgba(255,249,62,.08);color:rgba(255,249,62,.7);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Text</span>
           </div>
           <div style="padding:16px 14px;">
             <div style="display:flex;flex-direction:column;gap:8px;">
@@ -8857,7 +8857,7 @@ function openBoostModal() {
     const isNext=level===lv-1;
     const monthlyCost=boostCost*lv;
     return `<div style="padding:16px;border-radius:14px;border:1.5px solid ${isActive?t.color+'55':'var(--border)'};background:${isActive?t.color+'10':'var(--panel)'};position:relative;${isNext?'box-shadow:0 0 20px '+t.color+'20;':''}">
-      ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
+      ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:var(--radius-pill);background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         ${_boostSvg('20')}
         <div><div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
@@ -9115,7 +9115,7 @@ function renderBSettingsMain(tab) {
       <div class="role-item" onclick="editRole(${r._idx})" style="position:relative;">
         <div class="role-dot" style="background:${r.color};"></div>
         <div class="role-name">${escapeHTML(r.name)}</div>
-        ${r.displayAsTag?'<span style="font-size:9px;padding:2px 6px;border-radius:100px;border:1px solid '+r.color+'33;color:'+r.color+';background:'+r.color+'15;">Tag</span>':''}
+        ${r.displayAsTag?'<span style="font-size:9px;padding:2px 6px;border-radius:var(--radius-pill);border:1px solid '+r.color+'33;color:'+r.color+';background:'+r.color+'15;">Tag</span>':''}
         <div style="font-size:11px;color:var(--muted);margin-left:auto;display:flex;align-items:center;gap:6px;">
           <span title="Priority">#${r.priority||0}</span>
           <span>${(r.permissions||[]).length} perms</span>
@@ -9333,7 +9333,7 @@ function renderBSettingsMain(tab) {
       const isNext=level===lv-1;
       const monthlyCost=boostCost*lv;
       return `<div style="padding:16px;border-radius:14px;border:1.5px solid ${isActive?t.color+'55':'var(--border)'};background:${isActive?t.color+'10':'var(--panel)'};position:relative;${isNext?'box-shadow:0 0 20px '+t.color+'20;':''}">
-        ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
+        ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:var(--radius-pill);background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           ${_boostSvg('20')}
           <div><div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
@@ -9748,7 +9748,7 @@ function renderBSettingsMain(tab) {
     const hasLink = !!b.templateLink;
     const chIcon = {text:'#',voice:ftzIcon('mic','12'),forum:ftzIcon('chat','12'),announcement:ftzIcon('megaphone','12'),poll:ftzIcon('ballot','12')};
     const previewChs = (b.channels||[]).slice(0,6).map(c=>`<div style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,.5);padding:2px 0;"><span style="font-size:11px;opacity:.6;">${chIcon[c.type]||'#'}</span>${escapeHTML(c.name)}</div>`).join('');
-    const previewRoles = (b.roles||[]).slice(0,5).map(r=>`<span style="font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:100px;color:${r.color};background:${r.color}15;border:1px solid ${r.color}33;">${escapeHTML(r.name)}</span>`).join(' ');
+    const previewRoles = (b.roles||[]).slice(0,5).map(r=>`<span style="font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:var(--radius-pill);color:${r.color};background:${r.color}15;border:1px solid ${r.color}33;">${escapeHTML(r.name)}</span>`).join(' ');
     main.innerHTML = `
       <div class="bs-section-title">Templates</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:20px;">Save your bastion as a template that others can use to create bastions with the same layout, channels, roles, and design.</div>
@@ -10045,7 +10045,7 @@ async function loadBastionMembersList() {
   el.innerHTML = members.map(u=>{
     const uRoleIds = memberRoles[u]||[];
     const uRoles = roles.filter(r=>uRoleIds.includes(r.id));
-    const roleTags = uRoles.map(r=>`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;border:1px solid ${r.color}33;color:${r.color};background:${r.color}15;">${escapeHTML(r.name)}</span>`).join(' ');
+    const roleTags = uRoles.map(r=>`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);border:1px solid ${r.color}33;color:${r.color};background:${r.color}15;">${escapeHTML(r.name)}</span>`).join(' ');
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:7px;">
       <div style="flex-shrink:0;">${buildAvatarHTML(null,u,36)}</div>
       <div style="flex:1;min-width:0;">
@@ -12939,7 +12939,7 @@ async function toggleNotifPanel() {
       <button class="npv-tab" onclick="_setNotifTab('mentions',this)">Mentions</button>
       <button class="npv-tab" onclick="_setNotifTab('friends',this)">Friends</button>
     </div>
-    <div class="npv-list" id="np-list-v2"><div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">Loading...</div></div>`;
+    <div class="npv-list" id="np-list-v2"><div style="text-align:center;padding:30px;display:flex;flex-direction:column;align-items:center;gap:8px;"><div class="skeleton skeleton-text" style="width:80%;height:14px;"></div><div class="skeleton skeleton-text" style="width:60%;height:14px;"></div><div class="skeleton skeleton-text" style="width:40%;height:14px;"></div></div></div>`;
   document.body.appendChild(panel);
   await buildNotifList();
 }
@@ -13242,11 +13242,11 @@ async function viewUserProfile(username) {
       </div>
       <!-- Status -->
       <div class="up-left-status">
-        <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;">
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);">
           <span class="profile-status-dot" data-for="${escapeHTML(u.username)}" data-dot-size="10" style="width:10px;height:10px;display:inline-flex;">${FtzStatus.dotSvg(u.status||'offline', 10)}</span>
           <span class="profile-status-label" data-for="${escapeHTML(u.username)}" style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:600;">${FtzStatus.publicLabel(status)}</span>
         </div>
-        ${customStatus?.text ? `<div style="font-size:10.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;color:rgba(255,255,255,.4);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text)}</div>` : `<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></div>`}
+        ${customStatus?.text ? `<div style="font-size:10.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);color:rgba(255,255,255,.4);">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''} ${escapeHTML(customStatus.text)}</div>` : `<div class="profile-custom-status" data-for="${escapeHTML(u.username)}" style="display:none;"></div>`}
       </div>
       <!-- Badges -->
       <div class="up-left-badges">${renderBadgesHTML(u)}</div>
@@ -14221,7 +14221,7 @@ async function _openAdminUI() {
       <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
         <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--green);font-weight:700;"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(62,207,110,.5);animation:adm-badge-pulse 2s infinite;"></div>LIVE</div>
         <div style="width:1px;height:16px;background:rgba(255,255,255,.06);"></div>
-        <div style="display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;background:${roleColor}0d;border:1px solid ${roleColor}25;">
+        <div style="display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:var(--radius-pill);background:${roleColor}0d;border:1px solid ${roleColor}25;">
           <span style="color:${roleColor};display:flex;">${roleSvg}</span>
           <span style="font-size:10px;font-weight:800;color:${roleColor};letter-spacing:.04em;">${roleLabel.toUpperCase()}</span>
         </div>
@@ -14565,8 +14565,8 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       return `<div style="background:var(--panel,#1b1e25);border:1px solid ${isPend?'rgba(248,113,113,.15)':'rgba(255,255,255,.06)'};border-radius:14px;overflow:hidden;${isPend?'box-shadow:0 0 0 1px rgba(248,113,113,.06),0 2px 12px rgba(248,113,113,.04);':''}">
         <!-- Report header bar -->
         <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;background:${isPend?'rgba(248,113,113,.04)':'rgba(255,255,255,.02)'};border-bottom:1px solid rgba(255,255,255,.04);">
-          <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${_statusBg(r)};color:${_statusColor(r)};text-transform:uppercase;letter-spacing:.5px;">${r.status||'pending'}</span>
-          <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;background:${r.type==='message'?'rgba(96,165,250,.1)':'rgba(168,85,247,.1)'};color:${r.type==='message'?'#60a5fa':'#a855f7'};">${r.type==='message'?ftzIcon('chat','10')+' Message':ftzIcon('users','10')+' User'}</span>
+          <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:var(--radius-pill);background:${_statusBg(r)};color:${_statusColor(r)};text-transform:uppercase;letter-spacing:.5px;">${r.status||'pending'}</span>
+          <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:var(--radius-pill);background:${r.type==='message'?'rgba(96,165,250,.1)':'rgba(168,85,247,.1)'};color:${r.type==='message'?'#60a5fa':'#a855f7'};">${r.type==='message'?ftzIcon('chat','10')+' Message':ftzIcon('users','10')+' User'}</span>
           <div style="flex:1;"></div>
           <span style="font-size:10.5px;color:rgba(255,255,255,.25);font-family:monospace;" title="${escapeHTML(timeFull)}">${escapeHTML(timeAgo)}</span>
           <span style="font-size:10px;color:rgba(255,255,255,.15);font-family:monospace;">${escapeHTML(r.id||'')}</span>
@@ -14673,9 +14673,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div>
           <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Reports</div>
           <div style="display:flex;gap:12px;margin-top:6px;">
-            <span style="font-size:12px;padding:3px 10px;border-radius:100px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);">${reps.length} total</span>
-            <span style="font-size:12px;padding:3px 10px;border-radius:100px;background:${pendingReps.length>0?'rgba(248,113,113,.1)':'rgba(62,207,110,.1)'};color:${pendingReps.length>0?'#f87171':'#3ecf6e'};font-weight:600;">${pendingReps.length} pending</span>
-            <span style="font-size:12px;padding:3px 10px;border-radius:100px;background:rgba(62,207,110,.06);color:rgba(62,207,110,.6);">${resolvedReps.length} resolved</span>
+            <span style="font-size:12px;padding:3px 10px;border-radius:var(--radius-pill);background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);">${reps.length} total</span>
+            <span style="font-size:12px;padding:3px 10px;border-radius:var(--radius-pill);background:${pendingReps.length>0?'rgba(248,113,113,.1)':'rgba(62,207,110,.1)'};color:${pendingReps.length>0?'#f87171':'#3ecf6e'};font-weight:600;">${pendingReps.length} pending</span>
+            <span style="font-size:12px;padding:3px 10px;border-radius:var(--radius-pill);background:rgba(62,207,110,.06);color:rgba(62,207,110,.6);">${resolvedReps.length} resolved</span>
           </div>
         </div>
         <div style="display:flex;gap:8px;">
@@ -14877,8 +14877,8 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           return `<div style="background:var(--panel,#1b1e25);border:1px solid rgba(245,158,11,.15);border-radius:14px;overflow:hidden;">
           <!-- Header bar -->
           <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;background:rgba(245,158,11,.04);border-bottom:1px solid rgba(255,255,255,.04);">
-            <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;background:${labelColor}18;color:${labelColor};text-transform:uppercase;letter-spacing:.5px;">${escapeHTML(item.aiLabel||'FLAGGED')}</span>
-            <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;background:rgba(245,158,11,.1);color:#f59e0b;">${typeIcon} ${escapeHTML(item.type||'image').toUpperCase()}</span>
+            <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:var(--radius-pill);background:${labelColor}18;color:${labelColor};text-transform:uppercase;letter-spacing:.5px;">${escapeHTML(item.aiLabel||'FLAGGED')}</span>
+            <span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:var(--radius-pill);background:rgba(245,158,11,.1);color:#f59e0b;">${typeIcon} ${escapeHTML(item.type||'image').toUpperCase()}</span>
             <div style="flex:1;"></div>
             <span style="font-size:10.5px;color:rgba(255,255,255,.25);font-family:monospace;">${item.flaggedAt?new Date(item.flaggedAt).toLocaleString():(item.createdAt?new Date(item.createdAt).toLocaleString():'')}</span>
           </div>
@@ -15508,7 +15508,7 @@ async function _loadAdminSuspensions() {
       <div style="background:var(--panel,#1b1e25);border:1px solid ${s.active?'rgba(168,85,247,.15)':'rgba(255,255,255,.06)'};border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:6px;">
         <div style="width:8px;height:8px;border-radius:50%;background:${s.active?'#a855f7':'rgba(255,255,255,.15)'};${s.active?'box-shadow:0 0 6px rgba(168,85,247,.5);':''}flex-shrink:0;"></div>
         <div style="flex:1;">
-          <div style="font-weight:600;font-size:13.5px;">${escapeHTML(s.username)} <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:100px;${s.active?'background:rgba(168,85,247,.1);color:#a855f7;':'background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);'}">${s.active?'ACTIVE':'EXPIRED'}</span></div>
+          <div style="font-weight:600;font-size:13.5px;">${escapeHTML(s.username)} <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:var(--radius-pill);${s.active?'background:rgba(168,85,247,.1);color:#a855f7;':'background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);'}">${s.active?'ACTIVE':'EXPIRED'}</span></div>
           <div style="font-size:11.5px;color:rgba(255,255,255,.4);">Reason: ${escapeHTML(s.reason||'–')} · Duration: ${escapeHTML(s.duration||'–')}</div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.25);">By ${escapeHTML(s.suspendedBy||'admin')} · Until ${_fmtDateEU(s.until)}</div>
         </div>
@@ -15561,8 +15561,8 @@ function _renderTickets() {
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <div style="width:8px;height:8px;border-radius:50%;background:${isClosed?'rgba(255,255,255,.15)':'#3ecf6e'};${isClosed?'':'box-shadow:0 0 6px rgba(62,207,110,.5);'}flex-shrink:0;"></div>
         <div style="flex:1;font-weight:700;font-size:14px;">${escapeHTML(t.subject||'No Subject')}</div>
-        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:${catCol}15;color:${catCol};border:1px solid ${catCol}25;">${escapeHTML((t.category||'general').replace(/-/g,' ').toUpperCase())}</span>
-        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;${isClosed?'background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);':'background:rgba(62,207,110,.1);color:#3ecf6e;'}">${isClosed?'CLOSED':'OPEN'}</span>
+        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--radius-pill);background:${catCol}15;color:${catCol};border:1px solid ${catCol}25;">${escapeHTML((t.category||'general').replace(/-/g,' ').toUpperCase())}</span>
+        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--radius-pill);${isClosed?'background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);':'background:rgba(62,207,110,.1);color:#3ecf6e;'}">${isClosed?'CLOSED':'OPEN'}</span>
       </div>
       <div style="font-size:12.5px;color:rgba(255,255,255,.55);margin-bottom:6px;line-height:1.5;white-space:pre-wrap;max-height:120px;overflow-y:auto;">${escapeHTML((t.message||'').slice(0,500))}</div>
       <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:rgba(255,255,255,.3);">
@@ -16214,9 +16214,9 @@ async function adminSearchUser() {
 
   const myRole = getStaffRole(CU.username);
   const targetStaffRole = getStaffRole(username);
-  const targetStaffBadge = targetStaffRole === 'superadmin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(255,215,62,.15),rgba(255,215,62,.08));color:#ffd93e;padding:3px 10px;border-radius:100px;border:1px solid rgba(255,215,62,.2);">SUPER ADMIN</span>'
-    : targetStaffRole === 'admin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(248,113,113,.15),rgba(248,113,113,.08));color:#f87171;padding:3px 10px;border-radius:100px;border:1px solid rgba(248,113,113,.2);">ADMIN</span>'
-    : targetStaffRole === 'moderator' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(96,165,250,.08));color:#60a5fa;padding:3px 10px;border-radius:100px;border:1px solid rgba(96,165,250,.2);">MODERATOR</span>' : '';
+  const targetStaffBadge = targetStaffRole === 'superadmin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(255,215,62,.15),rgba(255,215,62,.08));color:#ffd93e;padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(255,215,62,.2);">SUPER ADMIN</span>'
+    : targetStaffRole === 'admin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(248,113,113,.15),rgba(248,113,113,.08));color:#f87171;padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(248,113,113,.2);">ADMIN</span>'
+    : targetStaffRole === 'moderator' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(96,165,250,.08));color:#60a5fa;padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(96,165,250,.2);">MODERATOR</span>' : '';
   const canSeeEmail = isSuperAdmin() || isAdmin();
   const canSeePreciseAge = isSuperAdmin();
   const canSeeFullData = isAdmin();
@@ -16235,7 +16235,7 @@ async function adminSearchUser() {
           <div style="flex:1;">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
               <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;">${escapeHTML(u.displayName||u.username)}</div>
-              ${isBanned?'<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;padding:3px 10px;border-radius:100px;animation:adm-badge-pulse 2s infinite;">BANNED</span>':''}
+              ${isBanned?'<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;padding:3px 10px;border-radius:var(--radius-pill);animation:adm-badge-pulse 2s infinite;">BANNED</span>':''}
               ${targetStaffBadge}
             </div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:6px;">@${escapeHTML(username)} · <span style="color:${statusColors[userStatus]||'#6b7280'};font-weight:600;">${userStatus.toUpperCase()}</span>${accountAge!==null?' · Account age: '+accountAge+'d':''}</div>
@@ -18031,9 +18031,9 @@ function renderAllUsersList(users) {
     const riskColor = risk >= 50 ? '#f87171' : risk >= 20 ? '#f59e0b' : risk >= 5 ? '#60a5fa' : '#3ecf6e';
     const statusVal = _hqUserStatuses[u.username] || 'offline';
     const statusColor = statusVal === 'online' ? '#3ecf6e' : statusVal === 'away' ? '#f59e0b' : statusVal === 'dnd' ? '#f87171' : '#4a4a5a';
-    const roleBadge = staffRole === 'superadmin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(255,215,62,.1);color:#ffd93e;">SA</span>'
-      : staffRole === 'admin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:#f87171;">ADM</span>'
-      : staffRole === 'moderator' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;">MOD</span>' : '<span style="font-size:8px;color:rgba(255,255,255,.15);">—</span>';
+    const roleBadge = staffRole === 'superadmin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,215,62,.1);color:#ffd93e;">SA</span>'
+      : staffRole === 'admin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:#f87171;">ADM</span>'
+      : staffRole === 'moderator' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(96,165,250,.1);color:#60a5fa;">MOD</span>' : '<span style="font-size:8px;color:rgba(255,255,255,.15);">—</span>';
     const ageDays = u.dateOfBirth ? Math.floor((Date.now() - new Date(u.dateOfBirth)) / 86400000 / 365.25) : null;
     const joinDate = u.createdAt || u.joinedAt;
 
@@ -18056,7 +18056,7 @@ function renderAllUsersList(users) {
       <div style="width:50px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);">${ageDays !== null ? ageDays : '—'}</div>
       <div style="width:75px;text-align:center;font-size:10px;color:rgba(255,255,255,.3);">${joinDate?new Date(joinDate).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'—'}</div>
       <div style="width:75px;text-align:center;font-size:10px;color:${statusVal==='online'?'#3ecf6e':'rgba(255,255,255,.3)'};">${statusVal==='online'?'Now':u.lastSeen?formatTimeAgo(u.lastSeen):'—'}</div>
-      <div style="width:65px;text-align:center;">${hasRadPlus?'<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(168,85,247,.12);color:#a855f7;">R+</span>':hasRad?'<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:100px;background:rgba(255,249,62,.1);color:#ffd93e;">R</span>':'<span style="font-size:8px;color:rgba(255,255,255,.12);">—</span>'}</div>
+      <div style="width:65px;text-align:center;">${hasRadPlus?'<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(168,85,247,.12);color:#a855f7;">R+</span>':hasRad?'<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,249,62,.1);color:#ffd93e;">R</span>':'<span style="font-size:8px;color:rgba(255,255,255,.12);">—</span>'}</div>
       <div style="width:50px;text-align:center;">${roleBadge}</div>
       <div style="width:55px;text-align:center;"><div style="display:inline-block;width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,.06);overflow:hidden;"><div style="height:100%;width:${risk}%;background:${riskColor};border-radius:2px;"></div></div><div style="font-size:8px;color:${riskColor};margin-top:1px;">${risk}</div></div>
     </div>`}).join('');
@@ -18234,9 +18234,9 @@ function renderAdminBastionsList(bastions) {
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-weight:700;font-size:13.5px;">${escapeHTML(b.name||'Unnamed')}</span>
-          ${b.public===false?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);">PRIVATE</span>':''}
-          ${nsfwChannels?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(248,113,113,.1);color:#f87171;">${nsfwChannels} NSFW</span>`:''}
-          ${boostLv?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;background:rgba(255,249,62,.08);color:#ffd93e;display:inline-flex;align-items:center;gap:2px;">${_boostSvg('9')} Lv${boostLv}</span>`:''}
+          ${b.public===false?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);">PRIVATE</span>':''}
+          ${nsfwChannels?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:#f87171;">${nsfwChannels} NSFW</span>`:''}
+          ${boostLv?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,249,62,.08);color:#ffd93e;display:inline-flex;align-items:center;gap:2px;">${_boostSvg('9')} Lv${boostLv}</span>`:''}
         </div>
         <div style="font-size:11px;color:var(--muted);">Owner: <strong>${escapeHTML(b.owner||'?')}</strong> · ${memberCount} members · ${channelCount} channels</div>
       </div>
@@ -19256,7 +19256,7 @@ function _openDisplayNameStyleModal() {
               <div style="font-size:9.5px;color:rgba(255,255,255,.25);">@${escapeHTML(CU.username)}${CU.pronouns ? ' &middot; '+escapeHTML(CU.pronouns) : ''}</div>
             </div>
           </div>
-          <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:100px;">
+          <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:var(--radius-pill);">
             <span style="width:7px;height:7px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px rgba(62,207,110,.4);"></span>
             <span style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600;">Online</span>
           </div>
@@ -20091,7 +20091,7 @@ function radianceBadgeHTML(user) {
   const badgeColor = isPlus ? '#ffd93e' : '#ff9d3e';
   const badgeBg = isPlus ? 'rgba(255,220,62,.15),rgba(255,249,62,.1)' : 'rgba(255,160,62,.15),rgba(255,180,62,.1)';
   const badgeBorder = isPlus ? 'rgba(255,220,62,.3)' : 'rgba(255,160,62,.3)';
-  return '<span style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,'+badgeBg+');border:1px solid '+badgeBorder+';border-radius:100px;padding:2px 9px;font-size:10px;font-weight:700;color:'+badgeColor+';">' + icon + label + '</span>';
+  return '<span style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,'+badgeBg+');border:1px solid '+badgeBorder+';border-radius:var(--radius-pill);padding:2px 9px;font-size:10px;font-weight:700;color:'+badgeColor+';">' + icon + label + '</span>';
 }
 
 // ════════════════════════════════════════════
@@ -22047,7 +22047,7 @@ async function showDMUserPanel(username) {
     + '</div>'
     // Status
     + '<div style="padding:6px 16px 0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
-    + '<div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,255,255,.03);border-radius:100px;">'
+    + '<div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,255,255,.03);border-radius:var(--radius-pill);">'
     + '<span class="profile-status-dot" data-for="'+escapeHTML(u.username)+'" data-dot-size="10" style="width:10px;height:10px;display:inline-flex;">'+FtzStatus.dotSvg(u.status||'offline', 10)+'</span>'
     + '<span class="profile-status-label" data-for="'+escapeHTML(u.username)+'" style="font-size:11px;color:rgba(255,255,255,.45);font-weight:600;">' + FtzStatus.publicLabel(status) + '</span>'
     + '</div>'
@@ -22637,7 +22637,7 @@ function openBotCommandPanel(inputId, context) {
     <div class="bcp-header">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
       Bot Commands
-      <span style="font-size:8.5px;color:rgba(96,165,250,.45);letter-spacing:.08em;font-weight:700;text-transform:uppercase;margin-left:auto;background:rgba(96,165,250,.06);padding:3px 9px;border-radius:100px;border:1px solid rgba(96,165,250,.1);">${commands.length} cmd${commands.length!==1?'s':''}</span>
+      <span style="font-size:8.5px;color:rgba(96,165,250,.45);letter-spacing:.08em;font-weight:700;text-transform:uppercase;margin-left:auto;background:rgba(96,165,250,.06);padding:3px 9px;border-radius:var(--radius-pill);border:1px solid rgba(96,165,250,.1);">${commands.length} cmd${commands.length!==1?'s':''}</span>
     </div>
     <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
@@ -23385,7 +23385,7 @@ function _renderPollCard(poll, chIdx) {
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);opacity:.6;">${isMulti ? 'Form' : 'Poll'}</span>
-          ${isEnded ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(255,255,255,.06);color:var(--muted);">ENDED</span>' : ''}
+          ${isEnded ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--radius-pill);background:rgba(255,255,255,.06);color:var(--muted);">ENDED</span>' : ''}
         </div>
         <div class="poll-card-title">${escapeHTML(poll.question || 'Untitled Poll')}</div>
         <div class="poll-card-meta">
@@ -24407,7 +24407,7 @@ function showPinnedMessages() {
     <div style="padding:20px 22px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg>
       <div style="font-family:var(--font-display);font-size:17px;font-weight:800;flex:1;color:#fff;">Pinned Messages</div>
-      <span style="font-size:10px;color:rgba(255,255,255,.25);background:rgba(255,255,255,.04);padding:2px 10px;border-radius:100px;font-weight:600;">${pins.length}</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.25);background:rgba(255,255,255,.04);padding:2px 10px;border-radius:var(--radius-pill);font-weight:600;">${pins.length}</span>
       <button onclick="_closeEl('pins-panel');_closeEl('pins-panel-overlay')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
     </div>
     <div id="pins-list-content" style="flex:1;overflow-y:auto;padding:10px 14px;">${pins.length
@@ -25596,7 +25596,7 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
     return '<div class="shop-item-card" style="background:'+item.gradient+';border-color:'+item.borderColor+';" onmouseover="this.style.borderColor=\''+item.hoverBorder+'\'" onmouseout="this.style.borderColor=\''+item.borderColor+'\'">'
       + '<div class="sic-preview" style="background:'+item.previewBg+';">'
       + '<div class="sic-sidebar" style="background:'+item.sidebarBg+';"></div>'
-      + '<div class="sic-content"><div style="height:4px;background:#fff93e;border-radius:100px;width:40%;margin-bottom:5px;"></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:100px;width:60%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.03);border-radius:100px;width:45%;"></div></div>'
+      + '<div class="sic-content"><div style="height:4px;background:#fff93e;border-radius:var(--radius-pill);width:40%;margin-bottom:5px;"></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:var(--radius-pill);width:60%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.03);border-radius:var(--radius-pill);width:45%;"></div></div>'
       + '</div>'
       + '<div class="sic-body">'
       + '<div class="sic-name">'+item.name+'</div>'
@@ -25741,7 +25741,7 @@ function renderAtelierTab(tab) {
               + '<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;">'
               + '<div style="width:32px;height:32px;border-radius:10px;background:'+(unlocked?p.color+'14':'rgba(255,255,255,.04)')+';display:flex;align-items:center;justify-content:center;color:'+(unlocked?p.color:'rgba(255,255,255,.3)')+';">'+p.icon+'</div>'
               + '<div style="font-size:12.5px;font-weight:700;color:'+(unlocked?'#fff':'rgba(255,255,255,.4)')+';">'+p.name+'</div>'
-              + (p.plus?'<span style="margin-left:auto;font-size:8px;font-weight:800;color:#ffd93e;background:rgba(255,220,62,.1);padding:2px 7px;border-radius:100px;border:1px solid rgba(255,220,62,.12);">+</span>':'')
+              + (p.plus?'<span style="margin-left:auto;font-size:8px;font-weight:800;color:#ffd93e;background:rgba(255,220,62,.1);padding:2px 7px;border-radius:var(--radius-pill);border:1px solid rgba(255,220,62,.12);">+</span>':'')
               + '</div>'
               + '<div style="font-size:10.5px;color:rgba(255,255,255,.25);line-height:1.45;">'+p.desc+'</div>'
               + '</div>';
@@ -25766,8 +25766,8 @@ function renderAtelierTab(tab) {
             <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.4);">Overall Progress</span>
             <span style="font-size:11px;font-weight:700;color:var(--accent);">${doneQ.length}/${allQ.length}</span>
           </div>
-          <div style="height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden;">
-            <div style="height:100%;width:${Math.round(doneQ.length/allQ.length*100)}%;background:linear-gradient(90deg,var(--accent),#ffb93e);border-radius:100px;transition:width .6s cubic-bezier(.22,1,.36,1);"></div>
+          <div style="height:4px;background:rgba(255,255,255,.06);border-radius:var(--radius-pill);overflow:hidden;">
+            <div style="height:100%;width:${Math.round(doneQ.length/allQ.length*100)}%;background:linear-gradient(90deg,var(--accent),#ffb93e);border-radius:var(--radius-pill);transition:width .6s cubic-bezier(.22,1,.36,1);"></div>
           </div>
         </div>
         ${doneQ.length ? '<div style="display:flex;flex-direction:column;gap:8px;">'
@@ -25938,12 +25938,12 @@ function renderAtelierTab(tab) {
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <span style="font-family:var(--font-display);font-size:13.5px;font-weight:800;color:${q.done?'rgba(255,255,255,.4)':'#fff'};letter-spacing:-.01em;">${q.title}</span>
-            <span style="font-size:8.5px;font-weight:800;padding:3px 8px;border-radius:100px;background:${catColor}10;color:${catColor};border:1px solid ${catColor}18;letter-spacing:.05em;">${q.daily?'DAILY':q.category.toUpperCase()}</span>
+            <span style="font-size:8.5px;font-weight:800;padding:3px 8px;border-radius:var(--radius-pill);background:${catColor}10;color:${catColor};border:1px solid ${catColor}18;letter-spacing:.05em;">${q.daily?'DAILY':q.category.toUpperCase()}</span>
           </div>
           <div style="font-size:11.5px;color:rgba(255,255,255,.3);line-height:1.45;margin-bottom:10px;">${q.desc}</div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="flex:1;height:4px;background:rgba(255,255,255,.05);border-radius:100px;max-width:140px;">
-              <div style="height:100%;border-radius:100px;width:${q.done?100:0}%;background:${q.done?'linear-gradient(90deg,var(--green),#60d394)':'linear-gradient(90deg,var(--accent),#ffb93e)'};transition:width .5s cubic-bezier(.22,1,.36,1);"></div>
+            <div style="flex:1;height:4px;background:rgba(255,255,255,.05);border-radius:var(--radius-pill);max-width:140px;">
+              <div style="height:100%;border-radius:var(--radius-pill);width:${q.done?100:0}%;background:${q.done?'linear-gradient(90deg,var(--green),#60d394)':'linear-gradient(90deg,var(--accent),#ffb93e)'};transition:width .5s cubic-bezier(.22,1,.36,1);"></div>
             </div>
             <span style="font-size:11.5px;font-weight:700;color:${q.done?'var(--green)':'var(--accent)'};display:flex;align-items:center;gap:4px;">+${q.reward} <img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"></span>
           </div>
@@ -26087,7 +26087,7 @@ function renderAtelierTab(tab) {
                 return '<div class="shop-item-card" style="background:'+a.gradient+';border-color:'+a.borderColor+';" onmouseover="this.style.borderColor=\''+a.hoverBorder+'\'" onmouseout="this.style.borderColor=\''+a.borderColor+'\'">'
                   + '<div class="sic-preview" style="background:'+a.previewBg+';">'
                   + '<div class="sic-sidebar" style="background:'+a.sidebarBg+';"></div>'
-                  + '<div class="sic-content"><div style="height:4px;background:#fff93e;border-radius:100px;width:40%;margin-bottom:5px;"></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:100px;width:60%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.03);border-radius:100px;width:45%;"></div></div>'
+                  + '<div class="sic-content"><div style="height:4px;background:#fff93e;border-radius:var(--radius-pill);width:40%;margin-bottom:5px;"></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:var(--radius-pill);width:60%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.03);border-radius:var(--radius-pill);width:45%;"></div></div>'
                   + '</div>'
                   + '<div class="sic-body">'
                   + '<div class="sic-name">'+a.name+'</div>'
@@ -26196,7 +26196,7 @@ function renderAtelierTab(tab) {
                 return `<div style="background:${a.gradient};border:1.5px solid ${a.borderColor};border-radius:20px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='${a.hoverBorder}';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='${a.borderColor}';this.style.transform=''">
                   <div style="height:80px;background:${a.previewBg};display:flex;gap:3px;padding:10px;position:relative;">
                     <div style="width:16px;background:${a.sidebarBg};border-radius:4px;"></div>
-                    <div style="flex:1;background:rgba(255,255,255,.02);border-radius:4px;padding:8px;"><div style="height:4px;background:#fff93e;border-radius:100px;width:35%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.05);border-radius:100px;width:55%;"></div></div>
+                    <div style="flex:1;background:rgba(255,255,255,.02);border-radius:4px;padding:8px;"><div style="height:4px;background:#fff93e;border-radius:var(--radius-pill);width:35%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.05);border-radius:var(--radius-pill);width:55%;"></div></div>
                     <span style="position:absolute;bottom:6px;right:10px;font-size:8px;color:${a.labelColor};font-weight:700;letter-spacing:.04em;">${a.name.toUpperCase()}</span>
                   </div>
                   <div style="padding:14px 16px;">
@@ -26494,7 +26494,7 @@ function renderAccountSwitcher() {
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(a.displayName||a.username)}</div>
         <div style="font-size:10.5px;color:var(--muted);">@${escapeHTML(a.username)}</div>
       </div>
-      ${a.username===CU?.username?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:2px 6px;border-radius:100px;">ACTIVE</span>':''}
+      ${a.username===CU?.username?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:2px 6px;border-radius:var(--radius-pill);">ACTIVE</span>':''}
     </div>`).join('');
 }
 function getSavedAccounts() {
@@ -27670,7 +27670,7 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
         <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:2px;">Edit Image</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <div style="font-size:12px;color:rgba(255,255,255,.4);">Scroll or drag slider to zoom</div>
-          <div style="margin-left:auto;font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);color:rgba(255,249,62,.6);font-weight:600;">${shapeLabel}</div>
+          <div style="margin-left:auto;font-size:10px;padding:2px 8px;border-radius:var(--radius-pill);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);color:rgba(255,249,62,.6);font-weight:600;">${shapeLabel}</div>
         </div>
       </div>
       <!-- Canvas area with checkered bg for transparency -->
@@ -28761,7 +28761,7 @@ function toggleOwnProfilePanel() {
     <div style="padding:10px 18px 0;">
       <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;cursor:pointer;line-height:1.2;transition:color .12s;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='#fff'">${escapeHTML(CU?.displayName||CU?.username||'')}</div>
       <div style="font-size:12px;color:rgba(255,255,255,.28);margin-top:3px;">@${escapeHTML(CU?.username||'')}</div>
-      ${cs?.text?`<div style="display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:5px 13px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:12px;color:rgba(255,255,255,.5);">${cs.emoji||''} ${escapeHTML(cs.text)}</div>`:''}
+      ${cs?.text?`<div style="display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:5px 13px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-pill);font-size:12px;color:rgba(255,255,255,.5);">${cs.emoji||''} ${escapeHTML(cs.text)}</div>`:''}
     </div>
     <!-- Divider -->
     <div style="height:1px;background:rgba(255,255,255,.06);margin:13px 18px 7px;"></div>
@@ -28905,7 +28905,7 @@ async function showMiniProfilePreview(username, anchorEl) {
         <span class="sdot profile-status-dot" data-for="${escapeHTML(username)}" data-dot-size="10" style="display:inline-flex;">${FtzStatus.dotSvg(u.status||'offline', 10)}</span>
         <span class="profile-status-label" data-for="${escapeHTML(username)}">${FtzStatus.publicLabel(status)}</span>
       </div>
-      <div class="profile-custom-status cloud-status-bubble" data-for="${escapeHTML(username)}" style="${customStatus?.text ? 'display:inline-flex;' : 'display:none;'}font-size:10.5px;padding:4px 10px;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;color:rgba(255,255,255,.45);">${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,30)}</span>` : ''}</div>
+      <div class="profile-custom-status cloud-status-bubble" data-for="${escapeHTML(username)}" style="${customStatus?.text ? 'display:inline-flex;' : 'display:none;'}font-size:10.5px;padding:4px 10px;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius-pill);color:rgba(255,255,255,.45);">${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,30)}</span>` : ''}</div>
     </div>
     <!-- Activity Status - Multi-activity support -->
     ${(() => {

@@ -1952,7 +1952,7 @@ function _openMobileSettings() {
   if (usernameEl) usernameEl.textContent = '@' + (CU?.username || 'user');
   if (avatarEl) {
     if (CU?.pfp) avatarEl.innerHTML = '<img src="' + escapeHTML(CU.pfp) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-    else { const init = (CU?.displayName || CU?.username || '?')[0].toUpperCase(); avatarEl.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:rgba(255,249,62,.1);display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:var(--accent);">' + init + '</div>'; }
+    else { const init = (CU?.displayName || CU?.username || '?')[0].toUpperCase(); avatarEl.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:rgba(255,249,62,.1);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent);">' + init + '</div>'; }
   }
   if (statusEl) {
     const st = FtzStatus?.current?.() || 'online';
@@ -2055,7 +2055,7 @@ function buildAvatarHTML(pfp, name, size) {
   const initial = (name||'?')[0].toUpperCase();
   const fs = Math.floor(size/2.2);
   if (pfp) return '<img src="'+pfp+'" style="'+s+'" onerror="this.src=\''+defaultUrl+'\'">';
-  return '<img src="'+defaultUrl+'" style="'+s+'" onerror="this.outerHTML=\'<span style=\\\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:Syne,sans-serif;font-weight:800;flex-shrink:0;\\\'>'+initial+'</span>\'">';
+  return '<img src="'+defaultUrl+'" style="'+s+'" onerror="this.outerHTML=\'<span style=\\\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\\\'>'+initial+'</span>\'">';
 }
 function renderRailBastions() {
   const cont = document.getElementById('rail-bastions');
@@ -2122,7 +2122,7 @@ function _renderRailBastion(b, i) {
     style="margin-bottom:4px;">
     <div class="bastion-icon">${b.icon
       ? (b.icon.toLowerCase().endsWith('.gif') ? `<img src="${b.icon}" class="gif-emblem" onload="_freezeGifEmblem(this)">` : `<img src="${b.icon}">`)
-      : `<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}</div>
+      : `<span style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}</div>
   </div>`;
 }
 
@@ -2212,7 +2212,7 @@ function _showRailTip(e) {
   tip.className = 'rail-tooltip';
   const iconHtml = icon
     ? `<div class="rail-tooltip-icon"><img src="${icon}"></div>`
-    : `<div class="rail-tooltip-icon"><span style="font-family:'Syne',sans-serif;font-weight:800;color:var(--accent);">${name ? name[0].toUpperCase() : 'B'}</span></div>`;
+    : `<div class="rail-tooltip-icon"><span style="font-family:var(--font-display);font-weight:800;color:var(--accent);">${name ? name[0].toUpperCase() : 'B'}</span></div>`;
   tip.innerHTML = iconHtml + `<span>${escapeHTML(name)}</span>`;
   document.body.appendChild(tip);
   _railTipEl = tip;
@@ -3239,7 +3239,7 @@ async function renderDMFriendsHome() {
   if (!friends.length) {
     list.innerHTML = `<div style="text-align:center;padding:48px 20px;">
       <div style="margin-bottom:14px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
-      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;color:rgba(255,255,255,.7);">No Friends Yet</div>
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:800;margin-bottom:8px;color:rgba(255,255,255,.7);">No Friends Yet</div>
       <div style="font-size:12.5px;color:rgba(255,255,255,.3);margin-bottom:18px;line-height:1.5;">Add friends by their username to start chatting</div>
       <button class="btn-a" onclick="openModal('modal-add-friend')" style="padding:9px 20px;border-radius:12px;font-size:12px;display:inline-flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Friend</button>
     </div>`;
@@ -3278,7 +3278,7 @@ async function renderDMFriendsHome() {
         <span class="dm-home-status" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;background:#6b7280;border:2.5px solid var(--bg);"></span>
       </div>
       <div style="flex:1;min-width:0;">
-        <div id="dm-home-dn-${escapeHTML(f)}" style="font-weight:700;font-size:13.5px;font-family:'Syne',sans-serif;">${escapeHTML(f)}</div>
+        <div id="dm-home-dn-${escapeHTML(f)}" style="font-weight:700;font-size:13.5px;font-family:var(--font-display);">${escapeHTML(f)}</div>
         <div style="display:flex;flex-direction:column;gap:1px;margin-top:2px;">
           <div class="dm-home-status-text" data-for="${escapeHTML(f)}" style="font-size:11px;color:rgba(255,255,255,.25);">Offline</div>
           <div id="dm-home-activity-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.2);"></div>
@@ -3492,7 +3492,7 @@ function showDMFriendsHome() {
       <div style="padding:0 28px 28px;max-width:900px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
           <div>
-            <h2 style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.02em;">Friends</h2>
+            <h2 style="font-family:var(--font-display);font-size:24px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.02em;">Friends</h2>
             <p style="font-size:12.5px;color:rgba(255,255,255,.3);margin:0;">Your conversations & friends</p>
           </div>
           <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
@@ -3901,7 +3901,7 @@ async function showGCMemberPanel(meta) {
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${meta.emoji||'👥'}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(meta.name)}</div>
+          <div style="font-family:var(--font-display);font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(meta.name)}</div>
           <div style="font-size:10.5px;color:var(--muted);">${onlineCount} online · ${memberCount} member${memberCount!==1?'s':''}</div>
         </div>
       </div>
@@ -4150,7 +4150,7 @@ async function addMembersToGC(gcId) {
   ov.style.cssText='position:fixed;inset:0;background:rgba(12,14,20,.85);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
   ov.innerHTML=`
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:26px;max-width:380px;width:100%;">
-      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:14px;">Add Members</div>
+      <div style="font-family:var(--font-display);font-size:17px;font-weight:800;margin-bottom:14px;">Add Members</div>
       <div style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:14px;">
         ${eligible.map(f=>`
           <label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;cursor:pointer;">
@@ -4370,7 +4370,7 @@ function renderBastionSidebar(scroll) {
 
   // ── Banner Hero with centered icon ──
   let html='';
-  const emblemHTML=b.icon?`<img src="${escapeHTML(b.icon)}" onerror="this.outerHTML='<span style=\\'font-family:Syne,sans-serif;font-weight:800;font-size:32px;color:var(--accent)\\'>${(b.name||'B')[0].toUpperCase()}</span>'">`:`<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:32px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`;
+  const emblemHTML=b.icon?`<img src="${escapeHTML(b.icon)}" onerror="this.outerHTML='<span style=\\'font-family:var(--font-display);font-weight:800;font-size:32px;color:var(--accent)\\'>${(b.name||'B')[0].toUpperCase()}</span>'">`:`<span style="font-family:var(--font-display);font-weight:800;font-size:32px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`;
   const memberCount=Object.keys(b.memberRoles||{}).length||(b.members||[]).length||1;
   if (bannerSrc) {
     html+=`<div class="bastion-banner-hero">
@@ -4652,7 +4652,7 @@ function selectChannel(idx) {
   if (access===null) {
     wrap.innerHTML=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;">
       <div style="font-size:56px;margin-bottom:18px;filter:blur(3px);">🔞</div>
-      <h3 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:10px;">Sensitive Content</h3>
+      <h3 style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:10px;">Sensitive Content</h3>
       <p style="font-size:13.5px;color:var(--muted-light);max-width:340px;line-height:1.65;margin-bottom:20px;">
         <strong>#${escapeHTML(ch.name)}</strong> is marked as containing sensitive content. By proceeding, you confirm you understand this.
       </p>
@@ -4707,7 +4707,7 @@ function loadChatChannel(idx) {
       </div>
       <div class="chat-msgs" id="ch-msgs-${idx}">
         <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Return to Present</button></div>
-        ${bannerSafe ? `<div style="width:100%;height:120px;position:relative;flex-shrink:0;overflow:hidden;border-bottom:1.5px solid var(--border);"><img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.88);" onerror="this.parentElement.style.display='none'"><div style="position:absolute;bottom:12px;left:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);">${escapeHTML(b.name||'')}</div></div>` : ''}
+        ${bannerSafe ? `<div style="width:100%;height:120px;position:relative;flex-shrink:0;overflow:hidden;border-bottom:1.5px solid var(--border);"><img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.88);" onerror="this.parentElement.style.display='none'"><div style="position:absolute;bottom:12px;left:16px;font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);">${escapeHTML(b.name||'')}</div></div>` : ''}
         <div class="chat-welcome">
           <div class="w-av" style="font-size:26px;background:var(--panel2);">${chTypeIcon}</div>
           <h3>${escapeHTML(ch.name)}${nsfwBadge}</h3>
@@ -4834,7 +4834,7 @@ function _renderAnnouncementFeed(feed, msgs, idx, canPost) {
   if (!msgs.length) {
     feed.innerHTML = `<div class="ann-empty">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;margin-bottom:4px;">No announcements yet</div>
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:4px;">No announcements yet</div>
       <div style="font-size:12.5px;color:var(--muted);">${canPost ? 'Be the first to post an announcement.' : 'Announcements from admins will appear here.'}</div>
     </div>`;
     return;
@@ -5415,7 +5415,7 @@ function editMsg(msgId) {
   const original=row.dataset.text||'';
   const textEl=row.querySelector('.msg-text');
   if (!textEl) return;
-  textEl.innerHTML=`<textarea style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--accent-mid);border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13.5px;padding:6px 10px;resize:none;outline:none;box-sizing:border-box;" rows="2" id="edit-ta">${escapeHTML(original)}</textarea>
+  textEl.innerHTML=`<textarea style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--accent-mid);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:6px 10px;resize:none;outline:none;box-sizing:border-box;" rows="2" id="edit-ta">${escapeHTML(original)}</textarea>
     <div style="display:flex;gap:6px;margin-top:4px;font-size:12px;">
       <button class="btn-a" style="padding:4px 12px;font-size:12px;" onclick="saveEdit('${escapeHTML(msgId)}')">Save</button>
       <button class="btn-g" style="padding:4px 12px;font-size:12px;" onclick="cancelEdit('${escapeHTML(msgId)}','${escapeHTML(original)}')">Cancel</button>
@@ -6150,7 +6150,7 @@ function showBotProfilePreview(botId, el) {
     <div style="background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(96,165,250,.05));padding:20px;text-align:center;">
       <div style="width:56px;height:56px;border-radius:50%;background:rgba(96,165,250,.12);border:2px solid rgba(96,165,250,.25);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 8px;overflow:hidden;">${bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
       <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
-        <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">${escapeHTML(bot.name)}</span>
+        <span style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;">${escapeHTML(bot.name)}</span>
         <span class="bot-badge">BOT</span>
       </div>
       <div style="font-size:11px;color:var(--muted-light);margin-top:4px;">by ${escapeHTML(bot.owner||'Unknown')}</div>
@@ -6194,7 +6194,7 @@ function _renderVoicePanel(ch, idx) {
       <!-- Header -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
         <div style="width:10px;height:10px;border-radius:50%;background:#3ecf6e;animation:vcPulse 1.5s infinite;"></div>
-        <div class="voice-panel-title" style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;">🎉 ${escapeHTML(ch.name)}</div>
+        <div class="voice-panel-title" style="font-family:var(--font-display);font-size:24px;font-weight:800;">🎉 ${escapeHTML(ch.name)}</div>
       </div>
       <div class="voice-panel-sub" style="font-size:13.5px;color:var(--muted);margin-bottom:32px;display:flex;align-items:center;gap:8px;">
         <span style="font-weight:600;">Party Room</span>
@@ -6411,14 +6411,14 @@ function _renderDiscoverFeatured(bastions){
   if(!el)return;
   const featured=bastions.filter(b=>b.public!==false).sort((a,b)=>(b.memberCount||0)-(a.memberCount||0)).slice(0,3);
   if(!featured.length){el.innerHTML='';return;}
-  el.innerHTML=`<div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:.04em;text-transform:uppercase;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Featured Bastions</div>
+  el.innerHTML=`<div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:.04em;text-transform:uppercase;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Featured Bastions</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
   ${featured.map(b=>{
     const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
     const mc = b.memberCount||1;
     return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid rgba(255,249,62,.12);border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(12px);" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 36px rgba(255,249,62,.06)';this.style.borderColor='rgba(255,249,62,.25)'" onmouseleave="this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,249,62,.12)'">
       <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,249,62,.1);overflow:hidden;">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}</div>
-      <div style="flex:1;min-width:0;"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'DM Sans',sans-serif;">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.6);display:flex;align-items:center;gap:2px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg> Active</span>`:''}</div></div>
+      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.6);display:flex;align-items:center;gap:2px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg> Active</span>`:''}</div></div>
       ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.12);padding:5px 12px;border-radius:10px;">Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);padding:5px 12px;border-radius:10px;">Join</span>`}
     </div>`;
   }).join('')}</div>`;
@@ -6560,7 +6560,7 @@ function _showBanScreen(ban) {
   const reason = ban.reason || ban.note || '';
   const category = ban.category || 'Account behavior';
   const bannedBy = ban.bannedBy || ban.by || 'Fortized Moderation';
-  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
+  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);">
     <div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
       <div style="width:68px;height:68px;border-radius:18px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
@@ -6610,7 +6610,7 @@ function _showSuspendScreen(data) {
       setTimeout(() => { location.reload(); }, msLeft + 1000);
     }
   }
-  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
+  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);">
     <div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
       <div style="width:68px;height:68px;border-radius:18px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
@@ -7784,7 +7784,7 @@ function showImportTemplateStep(type) {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>
         </div>
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;">Import Discord Server Template</div>
+          <div style="font-family:var(--font-display);font-size:15px;font-weight:800;">Import Discord Server Template</div>
           <div style="font-size:11.5px;color:var(--muted-light);">Paste a discord.new template link to import channels, categories, and roles</div>
         </div>
       </div>
@@ -7802,7 +7802,7 @@ function showImportTemplateStep(type) {
           <img src="/Fortized icon.png" style="width:22px;height:22px;border-radius:5px;">
         </div>
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;">Import Fortized Bastion Template</div>
+          <div style="font-family:var(--font-display);font-size:15px;font-weight:800;">Import Fortized Bastion Template</div>
           <div style="font-size:11.5px;color:var(--muted-light);">Paste a Fortized bastion template link to clone a bastion layout</div>
         </div>
       </div>
@@ -8213,7 +8213,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
   overlay.innerHTML = `<div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.08);border-radius:20px;max-width:460px;width:92%;box-shadow:0 24px 80px rgba(0,0,0,.7);animation:embedIn .18s cubic-bezier(.22,1,.36,1) both;">
     <div style="padding:26px 28px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-        <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;">Create Room</div>
+        <div style="font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;">Create Room</div>
         <button id="crm-close" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:20px;padding:4px;line-height:1;transition:color .15s;" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.3)'">&times;</button>
       </div>
       <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:20px;">in ${escapeHTML(b.name)}</div>
@@ -8235,7 +8235,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
       <div style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:8px;">Room Name</div>
       <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;padding:0 14px;transition:border-color .15s;" id="crm-input-wrap">
         <span id="crm-prefix" style="color:rgba(255,255,255,.2);font-size:15px;font-weight:600;">#</span>
-        <input id="crm-name" type="text" placeholder="new-room" maxlength="50" style="flex:1;background:transparent;border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;padding:12px 0;outline:none;" autocomplete="off" spellcheck="false">
+        <input id="crm-name" type="text" placeholder="new-room" maxlength="50" style="flex:1;background:transparent;border:none;color:#fff;font-family:var(--font-ui);font-size:14px;padding:12px 0;outline:none;" autocomplete="off" spellcheck="false">
       </div>
       <!-- Room Preview -->
       <div style="margin-top:18px;">
@@ -8260,8 +8260,8 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;">
-        <button id="crm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;">Cancel</button>
-        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:#0f1119;font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Create Room</button>
+        <button id="crm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-family:var(--font-ui);font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;">Cancel</button>
+        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:#0f1119;font-family:var(--font-display);font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Create Room</button>
       </div>
     </div>
   </div>`;
@@ -8426,7 +8426,7 @@ function renderBastionHub() {
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;${bannerSafe?'margin-top:-40px;position:relative;z-index:2;padding:0 8px;':''}">
       <div style="width:56px;height:56px;border-radius:16px;background:var(--panel2);border:3px solid var(--channel);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,.4);">${emblemHTML}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;word-break:break-word;">${escapeHTML(b.name)}</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;word-break:break-word;">${escapeHTML(b.name)}</div>
         ${b.tagline ? `<div style="font-size:12px;color:var(--muted-light);margin-top:2px;">${escapeHTML(b.tagline)}</div>` : ''}
       </div>
     </div>
@@ -8481,7 +8481,7 @@ function renderBastionHub() {
 
     ${isOwner || hasAdmin ? `
     <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--muted);margin-bottom:12px;">Administration</div>
+      <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--muted);margin-bottom:12px;">Administration</div>
       <button class="btn-g" style="font-size:13px;padding:10px 18px;display:flex;align-items:center;gap:8px;" onclick="openBastionSettings()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         Bastion Settings
@@ -8723,7 +8723,7 @@ function openOverviewEditor() {
   modal.innerHTML = `<div class="modal" style="max-width:560px;">
     <div class="modal-bar"></div>
     <div class="modal-body" style="padding:24px;max-height:80vh;overflow-y:auto;">
-      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:18px;display:flex;align-items:center;gap:8px;">
+      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:18px;display:flex;align-items:center;gap:8px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
         Customize Overview
       </div>
@@ -8860,7 +8860,7 @@ function openBoostModal() {
       ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         ${_boostSvg('20')}
-        <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
+        <div><div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
           <div style="font-size:11px;color:var(--muted);">${monthlyCost} ${_onyxImg('13')}/month</div></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
@@ -8876,12 +8876,12 @@ function openBoostModal() {
     <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;">
       ${_onyxImg('22')}
       <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Your Onyx Balance</div><div style="font-size:11px;color:var(--muted);">Available to spend</div></div>
-      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">${CU.onyx||0}</div>
+      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent);">${CU.onyx||0}</div>
     </div>
     <div style="display:grid;gap:12px;">${tierCards}</div>
     ${level>=3?`<div style="text-align:center;margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:14px;">
       <span style="font-size:22px;">👑</span>
-      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fbbf24;margin-top:6px;">Sovereign Level — Maximum Boost!</div>
+      <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:#fbbf24;margin-top:6px;">Sovereign Level — Maximum Boost!</div>
     </div>`:''}
     <div class="modal-actions" style="margin-top:18px;">
       <button class="btn-g" onclick="closeModal('modal-boost')">Close</button>
@@ -8991,7 +8991,7 @@ function _updateBSettingsPreview() {
     <div class="bs-preview-card">
       <div class="bs-preview-banner">${b.banner?`<img src="${escapeHTML(b.banner)}">`:'<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a0f30,#0f1830);"></div>'}</div>
       <div class="bs-preview-body">
-        <div class="bs-preview-icon">${b.icon?`<img src="${escapeHTML(b.icon)}">`:`<span style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}</div>
+        <div class="bs-preview-icon">${b.icon?`<img src="${escapeHTML(b.icon)}">`:`<span style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}</div>
         <div class="bs-preview-name">${escapeHTML(b.name)}</div>
         <div class="bs-preview-stats">
           <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;"></span> ${onlineGuess} Online</span>
@@ -9023,7 +9023,7 @@ function renderBSettingsMain(tab) {
       </div>
       <div style="display:flex;gap:14px;margin-bottom:20px;">
         <div style="width:80px;height:80px;border-radius:18px;background:var(--panel2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;overflow:hidden;" onclick="document.getElementById('bs-icon-upload').click()" id="bs-icon-prev">
-          ${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`:`<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}
+          ${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`:`<span style="font-family:var(--font-display);font-weight:800;font-size:28px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}
         </div>
         <input id="bs-icon-upload" type="file" accept="image/*" style="display:none;" onchange="updateBastionIcon(event)">
         <div style="flex:1;">
@@ -9139,7 +9139,7 @@ function renderBSettingsMain(tab) {
       </div>
       ${rolesHTML||'<div style="color:var(--muted);font-size:13.5px;margin-bottom:20px;">No roles created yet.</div>'}
       <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
-        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;">Role Templates</div>
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;">Role Templates</div>
         <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Apply a preset role structure. This will replace all existing roles.</div>
         <div class="role-tmpl-grid">${tmplCards}</div>
       </div>`;
@@ -9336,7 +9336,7 @@ function renderBSettingsMain(tab) {
         ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           ${_boostSvg('20')}
-          <div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
+          <div><div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
             <div style="font-size:11px;color:var(--muted);">${monthlyCost} ${_onyxImg('13')}/month</div></div>
         </div>
         <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
@@ -9352,12 +9352,12 @@ function renderBSettingsMain(tab) {
       <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;">
         ${_onyxImg('22')}
         <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Your Onyx Balance</div><div style="font-size:11px;color:var(--muted);">Available to spend</div></div>
-        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">${CU.onyx||0}</div>
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent);">${CU.onyx||0}</div>
       </div>
       <div style="display:grid;gap:12px;">${tierCards}</div>
       ${level>=3?`<div style="text-align:center;margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:14px;">
         <span style="font-size:22px;">👑</span>
-        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fbbf24;margin-top:6px;">Sovereign Level — Maximum Boost!</div>
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:#fbbf24;margin-top:6px;">Sovereign Level — Maximum Boost!</div>
         <div style="margin-top:12px;">
           <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:rgba(255,255,255,.6);">Upload Limit</div>
           <div style="font-size:13px;color:#fbbf24;font-weight:700;">50 MB per file (up from 8 MB)</div>
@@ -9380,7 +9380,7 @@ function renderBSettingsMain(tab) {
       <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Your Bastion has a live Mood State based on activity, time, and engagement. It changes the sidebar atmosphere.</div>
       <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
         <div style="font-weight:700;margin-bottom:8px;">Current Mood</div>
-        ${curMood ? `<div style="display:flex;align-items:center;gap:10px;font-size:18px;"><span>${moodInfo.emoji}</span><span style="font-family:'Syne',sans-serif;font-weight:800;">${moodInfo.label}</span></div>` : '<div style="color:var(--muted);">Mood is disabled</div>'}
+        ${curMood ? `<div style="display:flex;align-items:center;gap:10px;font-size:18px;"><span>${moodInfo.emoji}</span><span style="font-family:var(--font-display);font-weight:800;">${moodInfo.label}</span></div>` : '<div style="color:var(--muted);">Mood is disabled</div>'}
       </div>
       <div style="padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;">
         <div style="font-weight:700;margin-bottom:12px;">Settings</div>
@@ -9483,7 +9483,7 @@ function renderBSettingsMain(tab) {
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:24px;">Define rules for your bastion. These will be shown to new members when they join.</div>
       <div id="rules-list">
         ${rules.map((r,i) => `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
-          <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:var(--accent);flex-shrink:0;">${i+1}</div>
+          <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:11px;font-weight:800;color:var(--accent);flex-shrink:0;">${i+1}</div>
           <input class="field-input bastion-rule-input" value="${escapeHTML(r)}" style="flex:1;">
           <button onclick="removeBastionRule(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:17px;padding:6px;">×</button>
         </div>`).join('')}
@@ -9495,9 +9495,9 @@ function renderBSettingsMain(tab) {
       ${rules.length ? `<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);">
         <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Preview</div>
         <div style="background:rgba(255,255,255,.015);border:1.5px solid rgba(255,255,255,.05);border-radius:14px;padding:18px;">
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;">📜 ${escapeHTML(b.name)} Rules</div>
+          <div style="font-family:var(--font-display);font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;">📜 ${escapeHTML(b.name)} Rules</div>
           ${rules.map((r,i) => `<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
-            <span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:var(--accent);min-width:20px;">${i+1}.</span>
+            <span style="font-family:var(--font-display);font-size:11px;font-weight:800;color:var(--accent);min-width:20px;">${i+1}.</span>
             <span style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5;">${escapeHTML(r)}</span>
           </div>`).join('')}
         </div>
@@ -9549,12 +9549,12 @@ function renderBSettingsMain(tab) {
         ].map(s=>`<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:18px;text-align:center;position:relative;overflow:hidden;">
           <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${s.color};opacity:.3;"></div>
           <div style="font-size:24px;margin-bottom:8px;">${s.icon}</div>
-          <div style="font-family:'Syne',sans-serif;font-size:${typeof s.val==='number'?'22':'12'}px;font-weight:800;color:#fff;margin-bottom:4px;">${s.val}</div>
+          <div style="font-family:var(--font-display);font-size:${typeof s.val==='number'?'22':'12'}px;font-weight:800;color:#fff;margin-bottom:4px;">${s.val}</div>
           <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">${s.label}</div>
         </div>`).join('')}
       </div>
       <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:20px;">
-        <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;">🏥 Health Check</div>
+        <div style="font-family:var(--font-display);font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;">🏥 Health Check</div>
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${[
             {ok:channelCount>0,text:'Has at least one channel',fix:'Add a channel in Rooms Management'},
@@ -9711,7 +9711,7 @@ function renderBSettingsMain(tab) {
         `).join('') : `
           <div style="text-align:center;padding:40px 20px;">
             <div style="font-size:36px;margin-bottom:12px;"><img src="/Fortized Bot.png" style="width:36px;height:36px;"></div>
-            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;">No Bots Yet</div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;margin-bottom:8px;">No Bots Yet</div>
             <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:16px;">Create your first bot to start automating your Bastions.</div>
             <button class="btn-a" onclick="openCreateBotModal()">Create Bot</button>
           </div>
@@ -10567,7 +10567,7 @@ function renderMyBotsView(main) {
         `).join('') : `
           <div style="text-align:center;padding:40px 20px;">
             <div style="font-size:36px;margin-bottom:12px;"><img src="/Fortized Bot.png" style="width:36px;height:36px;"></div>
-            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;">No Bots Yet</div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;margin-bottom:8px;">No Bots Yet</div>
             <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:16px;">Create your first bot to start automating your Bastions.</div>
             <button class="btn-a" onclick="openCreateBotModal()">Create Bot</button>
           </div>
@@ -10721,7 +10721,7 @@ function openBotEditor(idx) {
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
         <div class="bot-av" style="width:56px;height:56px;font-size:26px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
           <div style="font-size:12px;color:var(--muted);">Owner: @${escapeHTML(bot.owner)} · Created ${new Date(bot.createdAt).toLocaleDateString()} · v${bot.version}</div>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px;">
@@ -10920,12 +10920,12 @@ function renderArsenalView(main) {
   main.innerHTML = `
     <div style="max-width:780px;">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
-        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;">🏪 The Arsenal</div>
+        <div style="font-family:var(--font-display);font-size:22px;font-weight:800;">🏪 The Arsenal</div>
       </div>
       <div style="font-size:13px;color:var(--muted-light);margin-bottom:20px;">Browse bots created by the community. Deploy them to your Bastions with one click.</div>
       <div style="display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;" id="arsenal-chips">
-        <button class="gif-chip active" onclick="_arsenalFilter(this,'all')" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(167,139,250,.15);background:rgba(167,139,250,.07);color:#a78bfa;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:'DM Sans',sans-serif;">All</button>
-        ${categories.map(c => `<button class="gif-chip" onclick="_arsenalFilter(this,'${escapeHTML(c)}')" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.03);color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:'DM Sans',sans-serif;">${escapeHTML(c)}</button>`).join('')}
+        <button class="gif-chip active" onclick="_arsenalFilter(this,'all')" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(167,139,250,.15);background:rgba(167,139,250,.07);color:#a78bfa;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:var(--font-ui);">All</button>
+        ${categories.map(c => `<button class="gif-chip" onclick="_arsenalFilter(this,'${escapeHTML(c)}')" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.03);color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:var(--font-ui);">${escapeHTML(c)}</button>`).join('')}
       </div>
       <div class="arsenal-grid" id="arsenal-grid">
         ${ARSENAL_BOTS.map(bot => renderArsenalCard(bot)).join('')}
@@ -11280,7 +11280,7 @@ function buildEmojiPicker() {
       <div style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0;">
         <div style="position:relative;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="epp-search-inp" placeholder="Search" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;padding:8px 12px 8px 32px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.boxShadow='none'" oninput="searchEmojis(this.value)">
+          <input class="epp-search-inp" placeholder="Search" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12px;padding:8px 12px 8px 32px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.boxShadow='none'" oninput="searchEmojis(this.value)">
         </div>
       </div>
       <div id="epp-grid" style="flex:1;overflow-y:auto;padding:6px 8px;display:grid;grid-template-columns:repeat(8,1fr);gap:1px;max-height:340px;"></div>
@@ -11878,12 +11878,12 @@ function buildProfileNav(scroll) {
     {type:'sep'},
   ];
   // User card at top (Discord-style)
-  const _navPfp = CU?.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--accent);">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</span>`;
+  const _navPfp = CU?.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<span style="font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--accent);">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</span>`;
   scroll.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:0 4px 4px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);">
       <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_navPfp}</div>
       <div style="min-width:0;flex:1;">
-        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(CU?.displayName||CU?.username||'User')}</div>
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(CU?.displayName||CU?.username||'User')}</div>
         <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:500;">Edit Profiles</div>
       </div>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -11954,7 +11954,7 @@ function buildProfileView(tab) {
             <!-- Text -->
             <div style="flex:1;min-width:0;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-                <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em;">The Atelier</div>
+                <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em;">The Atelier</div>
                 <span style="font-size:8.5px;font-weight:700;color:var(--accent);background:rgba(254,248,61,.1);border:1px solid rgba(254,248,61,.15);border-radius:5px;padding:2px 7px;text-transform:uppercase;letter-spacing:.04em;">New</span>
               </div>
               <div style="font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.5;">Discover avatar decorations, profile themes, appearance styles, and Radiance effects to make your profile truly yours.</div>
@@ -11965,7 +11965,7 @@ function buildProfileView(tab) {
               </div>
             </div>
             <!-- CTA -->
-            <button style="flex-shrink:0;padding:11px 24px;background:linear-gradient(135deg,var(--accent),#ffe566);color:#0f1119;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 4px 20px rgba(254,248,61,.2);">
+            <button style="flex-shrink:0;padding:11px 24px;background:linear-gradient(135deg,var(--accent),#ffe566);color:#0f1119;border:none;border-radius:11px;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 4px 20px rgba(254,248,61,.2);">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
               Explore
             </button>
@@ -12122,7 +12122,7 @@ function buildProfileView(tab) {
               <div style="padding:0 16px 16px;">
                 <div style="display:flex;align-items:flex-end;gap:8px;margin-top:-38px;margin-bottom:12px;position:relative;z-index:2;">
                   <div style="width:76px;height:76px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(0,0,0,.6);flex-shrink:0;position:relative;">
-                    ${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:22px;color:'+(themeC1||'var(--accent)')+';">'+(CU.displayName||CU.username)[0].toUpperCase()+'</span>'}
+                    ${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-family:var(--font-display);font-weight:800;font-size:22px;color:'+(themeC1||'var(--accent)')+';">'+(CU.displayName||CU.username)[0].toUpperCase()+'</span>'}
                     ${CU.activeDecoration ? (function(){var d=PROFILE_DECORATIONS.find(function(d){return d.id===CU.activeDecoration});return d?'<img src="'+escapeHTML(d.src)+'" style="position:absolute;inset:-9px;width:calc(100%+18px);height:calc(100%+18px);object-fit:contain;pointer-events:none;z-index:2;" onerror="this.style.display=\'none\'">':'';})() : ''}
                   </div>
                   <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;">${renderBadgesHTML(CU)}</div>
@@ -12155,7 +12155,7 @@ function buildProfileView(tab) {
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-bottom:10px;">Nameplate</div>
             <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
               <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--panel2);flex-shrink:0;">
-                ${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<div style="width:100%;height:100%;background:'+(themeC1||'rgba(255,255,255,.06)')+';display:flex;align-items:center;justify-content:center;font-size:12px;font-family:Syne,sans-serif;font-weight:800;color:'+(themeC1?'#fff':'var(--accent)')+';">'+(CU.displayName||CU.username)[0].toUpperCase()+'</div>'}
+                ${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<div style="width:100%;height:100%;background:'+(themeC1||'rgba(255,255,255,.06)')+';display:flex;align-items:center;justify-content:center;font-size:12px;font-family:var(--font-display);font-weight:800;color:'+(themeC1?'#fff':'var(--accent)')+';">'+(CU.displayName||CU.username)[0].toUpperCase()+'</div>'}
               </div>
               <div style="flex:1;min-width:0;">
                 <div style="font-family:${_getDisplayFontCSS(CU.displayFont||'default')};font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${_getDisplayEffectCSS(CU.displayEffect||'solid',CU.displayColor||'#fff')}">${escapeHTML(CU.displayName||CU.username)}</div>
@@ -12179,7 +12179,7 @@ function buildProfileView(tab) {
     main.innerHTML = `
       <div class="settings-panel">
         <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">My Account</div>
+          <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">My Account</div>
           <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Manage your account details and security</div>
         </div>
 
@@ -12222,7 +12222,7 @@ function buildProfileView(tab) {
     main.innerHTML = `
       <div class="settings-panel">
         <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Notifications</div>
+          <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Notifications</div>
           <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Control how and when you receive notifications</div>
         </div>
 
@@ -12293,7 +12293,7 @@ function buildProfileView(tab) {
     main.innerHTML = `<div class="settings-panel">
       <!-- Page Hero -->
       <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Quick Support</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Quick Support</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Get help and find answers fast</div>
       </div>
 
@@ -12327,7 +12327,7 @@ function buildProfileView(tab) {
   else if (tab === 'policies') {
     main.innerHTML = `<div class="settings-panel">
       <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Policies</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Policies</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Legal documents and guidelines</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;">
@@ -12350,7 +12350,7 @@ function buildProfileView(tab) {
   else if (tab === 'safety') {
     main.innerHTML = `<div class="settings-panel">
       <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Safety</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Safety</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Manage blocked and ignored users</div>
       </div>
       <div class="settings-section-title">BLOCKED USERS</div>
@@ -12375,7 +12375,7 @@ function buildProfileView(tab) {
   else if (tab === 'my_data') {
     main.innerHTML = `<div class="settings-panel">
       <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">My Data</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">My Data</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Download or manage your personal data</div>
       </div>
       <div class="settings-section-title">YOUR DATA</div>
@@ -12421,7 +12421,7 @@ function buildProfileView(tab) {
       const textMuted = isLight ? 'rgba(0,0,0,.35)' : 'rgba(255,255,255,.3)';
       const pfpHtml = CU?.pfp
         ? '<img src="'+CU.pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
-        : '<div style="width:100%;height:100%;border-radius:50%;background:'+t.panel+';display:flex;align-items:center;justify-content:center;font-size:10px;font-family:Syne,sans-serif;font-weight:800;color:'+t.accent+';">'+uInitial+'</div>';
+        : '<div style="width:100%;height:100%;border-radius:50%;background:'+t.panel+';display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--font-display);font-weight:800;color:'+t.accent+';">'+uInitial+'</div>';
       return `
       <div style="flex:1;min-width:0;">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:10px;">${label}</div>
@@ -12430,7 +12430,7 @@ function buildProfileView(tab) {
           <div style="height:28px;background:${t.sidebar};display:flex;align-items:center;padding:0 10px;gap:6px;border-bottom:1px solid ${t.border};">
             <div style="display:flex;gap:4px;align-items:center;">
               <div style="width:8px;height:8px;border-radius:50%;background:${t.accent};opacity:.5;"></div>
-              <span style="font-size:9px;font-weight:800;color:${textMuted};font-family:Syne,sans-serif;letter-spacing:-.02em;">Fortized</span>
+              <span style="font-size:9px;font-weight:800;color:${textMuted};font-family:var(--font-display);letter-spacing:-.02em;">Fortized</span>
             </div>
             <div style="flex:1;"></div>
             <div style="display:flex;gap:5px;">
@@ -12611,7 +12611,7 @@ function buildProfileView(tab) {
     main.innerHTML = `<div class="settings-panel">
       <!-- Page Hero -->
       <div style="margin-bottom:28px;margin-top:28px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;">Appearance</div>
+        <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;">Appearance</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:5px;">Your client, your look — choose how Fortized feels</div>
       </div>
 
@@ -12648,9 +12648,9 @@ function buildProfileView(tab) {
       ` : `
         <div style="background:rgba(255,255,255,.015);border:1.5px dashed rgba(254,248,61,.1);border-radius:18px;padding:36px 24px;text-align:center;margin-bottom:32px;">
           <div style="font-size:32px;margin-bottom:12px;opacity:.4;">🎨</div>
-          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:rgba(255,255,255,.6);margin-bottom:6px;">No owned appearances yet</div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:rgba(255,255,255,.6);margin-bottom:6px;">No owned appearances yet</div>
           <div style="font-size:12.5px;color:rgba(255,255,255,.3);max-width:300px;margin:0 auto 18px;line-height:1.55;">Visit the Atelier Shop to browse and purchase exclusive appearances with Onyx.</div>
-          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="background:#fef83d;color:#0f1119;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;padding:10px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 12px rgba(254,248,61,.15);">Browse the Atelier Shop</button>
+          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="background:#fef83d;color:#0f1119;border:none;border-radius:14px;font-family:var(--font-display);font-size:12.5px;font-weight:800;padding:10px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 12px rgba(254,248,61,.15);">Browse the Atelier Shop</button>
         </div>
       `}
 
@@ -12715,7 +12715,7 @@ function buildProfileView(tab) {
     const pt = CU?.profileTheme || { color1: '#a855f7', color2: '#3b82f6' };
     const ptHero = `
       <div style="margin-bottom:28px;margin-top:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Profile Theme</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Profile Theme</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize your profile card gradient</div>
       </div>`;
     if (!hasPlus) {
@@ -12723,9 +12723,9 @@ function buildProfileView(tab) {
         ${ptHero}
         <div style="background:rgba(255,255,255,.02);border:1.5px dashed rgba(254,248,61,.08);border-radius:18px;padding:40px;text-align:center;">
           <div style="font-size:44px;margin-bottom:14px;">🔒</div>
-          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Radiance+ Required</div>
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Radiance+ Required</div>
           <div style="font-size:13.5px;color:rgba(255,255,255,.4);max-width:320px;margin:0 auto 22px;line-height:1.6;">Profile themes let you add a gradient stroke and custom colors around your profile card and avatar.</div>
-          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" style="background:#fef83d;color:#0f1119;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:11px 24px;cursor:pointer;">Get Radiance+</button>
+          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" style="background:#fef83d;color:#0f1119;border:none;border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:11px 24px;cursor:pointer;">Get Radiance+</button>
         </div>
       </div>`;
     } else {
@@ -12770,7 +12770,7 @@ function buildProfileView(tab) {
           <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:10px;">Preview</div>
           <div id="pt-preview" style="display:inline-block;padding:3px;border-radius:50%;background:linear-gradient(135deg,${pt.color1},${pt.color2});">
             <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:3px solid #18191c;">
-              ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;font-family:'Syne',sans-serif;font-weight:800;">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
+              ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;">`:`<div style="width:100%;height:100%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;font-family:var(--font-display);font-weight:800;">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
             </div>
           </div>
           <div style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.35);">The profile card will have a gradient border using your chosen colors.</div>
@@ -13966,7 +13966,7 @@ function renderNSFWGate(contentEl, channelName) {
     contentEl.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px;text-align:center;">
         <div style="font-size:48px;margin-bottom:16px;filter:blur(2px);">🔞</div>
-        <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Sensitive Content</h3>
+        <h3 style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Sensitive Content</h3>
         <p style="font-size:13.5px;color:var(--muted-light);max-width:320px;line-height:1.6;margin-bottom:20px;">
           This channel has been marked as containing sensitive content. By proceeding, you confirm that you understand the nature of this content.
         </p>
@@ -14034,7 +14034,7 @@ function showReportModal() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
           </div>
           <div style="flex:1;">
-            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">Report ${targetLabel}</div>
+            <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Report ${targetLabel}</div>
             <div style="font-size:11px;color:rgba(255,255,255,.35);">Help us keep Fortized safe</div>
           </div>
           <button onclick="this.closest('.modal-overlay').remove()" style="width:32px;height:32px;border-radius:10px;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -14054,11 +14054,11 @@ function showReportModal() {
         </div>
 
         <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:8px;">Additional Context <span style="font-weight:500;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.15);">(optional)</span></div>
-        <textarea class="field-input" id="report-context" placeholder="Describe what happened in more detail…" rows="3" style="resize:none;margin-bottom:14px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:12px;padding:11px 14px;width:100%;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(248,113,113,.2)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'"></textarea>
+        <textarea class="field-input" id="report-context" placeholder="Describe what happened in more detail…" rows="3" style="resize:none;margin-bottom:14px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:12px;padding:11px 14px;width:100%;color:#fff;font-family:var(--font-ui);font-size:13px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(248,113,113,.2)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'"></textarea>
         <div id="report-error" style="font-size:12px;color:var(--red);margin-bottom:8px;min-height:16px;"></div>
 
         <div style="display:flex;gap:8px;">
-          <button onclick="submitReport()" style="flex:1;background:rgba(248,113,113,.12);color:var(--red);border:1.5px solid rgba(248,113,113,.2);border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.2)'" onmouseout="this.style.background='rgba(248,113,113,.12)'">Submit Report</button>
+          <button onclick="submitReport()" style="flex:1;background:rgba(248,113,113,.12);color:var(--red);border:1.5px solid rgba(248,113,113,.2);border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.2)'" onmouseout="this.style.background='rgba(248,113,113,.12)'">Submit Report</button>
           <button onclick="this.closest('.modal-overlay').remove()" style="padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;">Cancel</button>
         </div>
 
@@ -14214,7 +14214,7 @@ async function _openAdminUI() {
           <img src="/FortizedSecurity logo.png" style="width:20px;height:20px;object-fit:contain;" onerror="this.outerHTML='<svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'var(--accent)\\' stroke-width=\\'2\\'><path d=\\'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\\'/></svg>'">
         </div>
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacing:.04em;line-height:1;">ADMIN CONTROL CENTER</div>
+          <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;letter-spacing:.04em;line-height:1;">ADMIN CONTROL CENTER</div>
           <div style="font-size:9px;color:var(--accent-mid);font-weight:600;letter-spacing:.1em;margin-top:2px;">FORTIZED ADMINISTRATION</div>
         </div>
       </div>
@@ -14386,7 +14386,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg);">
         <div>
           <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-xs);">
-            <div style="font-family:'Syne',sans-serif;font-size:var(--font-xl);font-weight:800;color:#fff;">Admin Control Center</div>
+            <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;">Admin Control Center</div>
             <div class="hq-threat ${threat.cls}">${threat.icon} THREAT: ${threat.level}</div>
           </div>
           <div style="font-size:11.5px;color:rgba(255,255,255,.3);">Operator: <span style="color:var(--accent);">${escapeHTML(CU.displayName||CU.username)}</span> · ${new Date().toLocaleString()} · Session Active</div>
@@ -14489,7 +14489,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             ${topOnyx.map((u,i)=>`<div class="hq-user-row" onclick="adminInspectUser('${escapeHTML(u.username)}')">
               <div style="font-size:10px;font-weight:800;color:${i===0?'#ffd93e':i===1?'#c0c0c0':i===2?'#cd7f32':'rgba(255,255,255,.3)'};width:16px;text-align:center;">#${i+1}</div>
               <div style="flex:1;min-width:0;font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);">@${escapeHTML(u.username)}</div>
-              <div style="font-size:12px;font-weight:800;color:#ffd93e;font-family:'Syne',sans-serif;">${(u.onyx||0).toLocaleString()}</div>
+              <div style="font-size:12px;font-weight:800;color:#ffd93e;font-family:var(--font-display);">${(u.onyx||0).toLocaleString()}</div>
             </div>`).join('')||'<div style="padding:14px;text-align:center;color:rgba(255,255,255,.2);font-size:11px;">No data</div>'}
           </div>
         </div>
@@ -14576,7 +14576,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
             <div>
-              <div style="font-size:15px;font-weight:800;font-family:'Syne',sans-serif;">${escapeHTML(r.reason||'No reason')}</div>
+              <div style="font-size:15px;font-weight:800;font-family:var(--font-display);">${escapeHTML(r.reason||'No reason')}</div>
             </div>
           </div>
           <!-- People involved -->
@@ -14671,7 +14671,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Reports</div>
+          <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Reports</div>
           <div style="display:flex;gap:12px;margin-top:6px;">
             <span style="font-size:12px;padding:3px 10px;border-radius:100px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);">${reps.length} total</span>
             <span style="font-size:12px;padding:3px 10px;border-radius:100px;background:${pendingReps.length>0?'rgba(248,113,113,.1)':'rgba(62,207,110,.1)'};color:${pendingReps.length>0?'#f87171':'#3ecf6e'};font-weight:600;">${pendingReps.length} pending</span>
@@ -14685,7 +14685,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       ${reps.length===0?'<div style="text-align:center;padding:80px 20px;color:rgba(255,255,255,.3);"><div style="margin-bottom:12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(62,207,110,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-size:14px;">No reports — all clear!</div></div>':
       `${pendingReps.length>0?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 16px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.08);border-radius:10px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#f87171;">${pendingReps.length} report${pendingReps.length>1?'s':''} pending review</span>
+        <span style="font-family:var(--font-display);font-size:13px;font-weight:700;color:#f87171;">${pendingReps.length} report${pendingReps.length>1?'s':''} pending review</span>
       </div>`:''}
       <div style="display:flex;flex-direction:column;gap:14px;">
         ${sortedReps.map((r)=>{
@@ -14699,7 +14699,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-        <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Bans (${bans.length})</div>
+        <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Bans (${bans.length})</div>
         <button onclick="showCustomInput('Ban User','Enter username to ban:',(name)=>{if(!name)return;showCustomInput('Ban Reason','Enter reason:',(reason)=>{if(!reason)return;const b=JSON.parse(localStorage.getItem('ftz_bans')||'[]');const obj={username:name.trim(),reason,bannedBy:CU.username,bannedAt:new Date().toISOString()};b.push(obj);localStorage.setItem('ftz_bans',JSON.stringify(b));_saveBanToFirebase(obj);logAudit('ban',name.trim(),reason);toast(name.trim()+' banned','success');_loadAdminPage('bans');})})" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;">+ Ban User</button>
       </div>
       ${bans.length?`<div style="display:flex;flex-direction:column;gap:8px;">${bans.map((b,i)=>`<div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
@@ -14716,7 +14716,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   else if (tab === 'suspensions') {
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-        <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Suspensions</div>
+        <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Suspensions</div>
         <button onclick="adminActionUser(prompt('Username to suspend:'),'suspend')" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#a855f7;font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;">+ Suspend User</button>
       </div>
       <div id="admin-suspensions-list" style="color:rgba(255,255,255,.3);text-align:center;padding:20px;">Loading suspensions...</div>
@@ -14727,7 +14727,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div style="padding:24px 28px;">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">Subject Lookup</div>
+          <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;">Subject Lookup</div>
           <div style="font-size:11px;color:rgba(248,113,113,.35);font-weight:600;">Search and inspect any user in the database</div>
         </div>
       </div>
@@ -14745,7 +14745,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div style="padding:24px 28px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">User Database</div>
+          <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;">User Database</div>
           <div id="admin-users-count" style="font-size:11px;color:rgba(248,113,113,.4);margin-top:2px;font-weight:600;"></div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
@@ -14787,7 +14787,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   else if (tab === 'economy') {
     const trialLinks = JSON.parse(localStorage.getItem('ftz_trial_links')||'[]');
     main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:20px;">Economy</div>
+      <div style="font-family:var(--font-display);font-size:21px;font-weight:800;margin-bottom:20px;">Economy</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;max-width:800px;margin-bottom:20px;">
         <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
           <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> Give Onyx</div>
@@ -14810,7 +14810,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         </div>
       </div>
       ${trialLinks.length?`
-      <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:10px;">Recent Trial Links</div>
+      <div style="font-family:var(--font-display);font-size:13.5px;font-weight:700;margin-bottom:10px;">Recent Trial Links</div>
       <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;max-width:800px;">
         ${trialLinks.slice(-5).reverse().map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
           <div style="flex:1;min-width:0;font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(t.code||t.link||'–')}</div>
@@ -14823,7 +14823,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   else if (tab === 'bastions') {
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Bastions</div>
+        <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Bastions</div>
         <div id="admin-bastion-count" style="font-size:12px;color:rgba(255,255,255,.35);"></div>
       </div>
       <input class="settings-input" placeholder="Filter by name…" style="max-width:280px;margin-bottom:14px;" oninput="filterAdminBastions(this.value)">
@@ -14838,7 +14838,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Activity Log</div>
+          <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Activity Log</div>
           <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">${allLog.length} events total</div>
         </div>
         <div style="display:flex;gap:8px;">
@@ -14863,7 +14863,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;">Content Review</div>
+          <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Content Review</div>
           <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">${queue.length} items awaiting review</div>
         </div>
       </div>
@@ -14943,7 +14943,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     } catch {}
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
     main.innerHTML = `<div style="padding:20px 24px;height:100%;overflow:auto;">
-      <div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;margin-bottom:14px;">Configuration</div>
+      <div style="font-family:var(--font-display);font-size:19px;font-weight:800;margin-bottom:14px;">Configuration</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
         <!-- Column 1: Controls & Moderation -->
         <div style="display:flex;flex-direction:column;gap:10px;">
@@ -15009,7 +15009,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     const admins = staff.admins || [];
     const moderators = staff.moderators || [];
     main.innerHTML = `<div style="padding:28px 32px;">
-      <div style="font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:6px;">Staff</div>
+      <div style="font-family:var(--font-display);font-size:21px;font-weight:800;margin-bottom:6px;">Staff</div>
       <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:18px;">Only super admins can manage staff roles.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:900px;">
         <!-- Super Admins -->
@@ -15885,12 +15885,12 @@ function _showMaintenanceScreen() {
   const gs = _globalSettings || {};
   overlay.innerHTML = `
     <div style="width:80px;height:80px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;">🔧</div>
-    <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;text-align:center;">Under Maintenance</div>
+    <div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:#fff;text-align:center;">Under Maintenance</div>
     <div style="font-size:14px;color:rgba(255,255,255,.5);text-align:center;max-width:400px;line-height:1.7;">
       Fortized is currently undergoing maintenance. We'll be back shortly!
       ${gs.announcement?`<br><br><strong style="color:var(--accent);">${escapeHTML(gs.announcement)}</strong>`:''}
     </div>
-    <button onclick="location.reload()" style="padding:10px 24px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:10px;color:var(--accent);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;">Retry</button>
+    <button onclick="location.reload()" style="padding:10px 24px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:10px;color:var(--accent);cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:14px;">Retry</button>
   `;
   document.body.appendChild(overlay);
 }
@@ -16234,7 +16234,7 @@ async function adminSearchUser() {
           </div>
           <div style="flex:1;">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">${escapeHTML(u.displayName||u.username)}</div>
+              <div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff;">${escapeHTML(u.displayName||u.username)}</div>
               ${isBanned?'<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;padding:3px 10px;border-radius:100px;animation:adm-badge-pulse 2s infinite;">BANNED</span>':''}
               ${targetStaffBadge}
             </div>
@@ -16244,7 +16244,7 @@ async function adminSearchUser() {
           <!-- Risk Gauge -->
           <div style="flex-shrink:0;text-align:center;padding:12px 18px;background:${riskColor}08;border:1px solid ${riskColor}20;border-radius:14px;">
             <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:${riskColor};margin-bottom:4px;">Risk Score</div>
-            <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:${riskColor};line-height:1;">${risk}</div>
+            <div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:${riskColor};line-height:1;">${risk}</div>
             <div style="font-size:9px;font-weight:700;color:${riskColor};opacity:.6;">${riskLabel}</div>
             <div style="width:60px;height:4px;border-radius:2px;background:rgba(255,255,255,.06);margin:6px auto 0;overflow:hidden;"><div style="height:100%;width:${risk}%;background:${riskColor};border-radius:2px;transition:width .3s;"></div></div>
           </div>
@@ -16669,8 +16669,8 @@ function showVerifyQuiz() {
         <div style="height:4px;background:linear-gradient(90deg,#f87171,var(--accent),#3ecf6e);"></div>
         <div style="padding:44px 40px 40px;text-align:center;">
           <img src="/FortizedSecurity logo.png" alt="Fortized Security" style="width:72px;height:72px;object-fit:contain;border-radius:18px;margin:0 auto 20px;display:block;" onerror="this.style.display='none'">
-          <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#f87171;margin-bottom:10px;">Fortized Security Department</div>
-          <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:8px;">Identity Verification</div>
+          <div style="font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#f87171;margin-bottom:10px;">Fortized Security Department</div>
+          <div style="font-family:var(--font-display);font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:8px;">Identity Verification</div>
           <div style="font-size:14px;color:var(--muted-light);line-height:1.7;margin-bottom:28px;max-width:400px;margin-left:auto;margin-right:auto;">To protect our community, all users must verify their identity by completing a short safety knowledge check.</div>
           <div style="display:flex;gap:10px;justify-content:center;margin-bottom:28px;flex-wrap:wrap;">
             <div style="background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.12);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted-light);display:flex;align-items:center;gap:8px;"><span style="color:var(--accent);font-weight:700;">5</span>Questions</div>
@@ -16680,7 +16680,7 @@ function showVerifyQuiz() {
           <div style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.12);border-left:3px solid #f87171;border-radius:10px;padding:12px 16px;text-align:left;font-size:12.5px;color:var(--muted-light);line-height:1.6;margin-bottom:28px;">
             <strong style="color:#f87171;">Required:</strong> This verification is mandatory. You cannot access Fortized until you pass the safety check. Questions are randomised from a pool.
           </div>
-          <button onclick="document.getElementById('verify-intro').style.display='none';document.getElementById('verify-quiz').style.display='';" style="padding:14px 36px;background:var(--accent);border:none;border-radius:12px;color:#0f1119;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .18s;box-shadow:0 0 24px rgba(255,249,62,.2);" onmouseover="this.style.boxShadow='0 0 36px rgba(255,249,62,.35)';this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 0 24px rgba(255,249,62,.2)';this.style.transform='translateY(0)'">Begin Verification</button>
+          <button onclick="document.getElementById('verify-intro').style.display='none';document.getElementById('verify-quiz').style.display='';" style="padding:14px 36px;background:var(--accent);border:none;border-radius:12px;color:#0f1119;font-family:var(--font-display);font-size:15px;font-weight:700;cursor:pointer;transition:all .18s;box-shadow:0 0 24px rgba(255,249,62,.2);" onmouseover="this.style.boxShadow='0 0 36px rgba(255,249,62,.35)';this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 0 24px rgba(255,249,62,.2)';this.style.transform='translateY(0)'">Begin Verification</button>
         </div>
       </div>
       <div id="verify-quiz" style="display:none;background:rgba(19,22,29,.96);border:1px solid #252b3a;border-radius:24px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.8);">
@@ -16689,7 +16689,7 @@ function showVerifyQuiz() {
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
             <img src="/FortizedSecurity logo.png" alt="" style="width:36px;height:36px;object-fit:contain;border-radius:10px;" onerror="this.style.display='none'">
             <div>
-              <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;">Safety Knowledge Check</div>
+              <div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:#fff;">Safety Knowledge Check</div>
               <div style="font-size:11px;color:var(--muted);">Powered by Fortized Security</div>
             </div>
             <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:6px;padding:4px 10px;" id="quiz-score-live">0/5</div>
@@ -16728,11 +16728,11 @@ function renderQuizQuestion() {
       <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Question ${quizIdx+1} of ${QUIZ_QUESTIONS.length}</div>
       <div style="font-size:11px;font-weight:700;color:${quizCorrect >= 4 ? '#3ecf6e' : quizCorrect >= 2 ? 'var(--accent)' : 'var(--muted)'};">${quizCorrect} correct</div>
     </div>
-    <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#fff;line-height:1.5;margin-bottom:20px;padding:16px 18px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;">${escapeHTML(q.q)}</div>
+    <div style="font-family:var(--font-display);font-size:17px;font-weight:700;color:#fff;line-height:1.5;margin-bottom:20px;padding:16px 18px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;">${escapeHTML(q.q)}</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       ${shuffledOpts.map((opt,i)=>`
-        <button id="qopt-${i}" data-correct="${opt===q.a}" onclick="answerQuiz(${i})" style="width:100%;padding:14px 18px;border-radius:12px;border:1.5px solid var(--border);background:rgba(255,255,255,.015);color:var(--muted-light);font-family:'DM Sans',sans-serif;font-size:14px;text-align:left;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:12px;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.background='rgba(255,249,62,.03)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='rgba(255,255,255,.015)'">
-          <span style="width:28px;height:28px;min-width:28px;border-radius:8px;border:1.5px solid var(--border);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--muted-light);transition:all .18s;">${['A','B','C','D'][i]}</span>
+        <button id="qopt-${i}" data-correct="${opt===q.a}" onclick="answerQuiz(${i})" style="width:100%;padding:14px 18px;border-radius:12px;border:1.5px solid var(--border);background:rgba(255,255,255,.015);color:var(--muted-light);font-family:var(--font-ui);font-size:14px;text-align:left;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:12px;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.background='rgba(255,249,62,.03)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='rgba(255,255,255,.015)'">
+          <span style="width:28px;height:28px;min-width:28px;border-radius:8px;border:1.5px solid var(--border);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-display);color:var(--muted-light);transition:all .18s;">${['A','B','C','D'][i]}</span>
           <span>${escapeHTML(opt)}</span>
         </button>`).join('')}
     </div>`;
@@ -16774,7 +16774,7 @@ async function showQuizResult() {
       <div style="width:72px;height:72px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#3ecf6e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#3ecf6e;margin-bottom:8px;letter-spacing:-.3px;">Verification Passed</div>
+      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:#3ecf6e;margin-bottom:8px;letter-spacing:-.3px;">Verification Passed</div>
       <div style="font-size:13.5px;color:var(--muted-light);margin-bottom:6px;">You scored <strong style="color:#fff;">${quizCorrect} of ${QUIZ_QUESTIONS.length}</strong> correct.</div>
       <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">Your account has been verified by Fortized Security.</div>
       <div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.14);border-radius:8px;padding:6px 12px;margin-bottom:28px;">+25 Onyx Awarded</div>
@@ -16786,7 +16786,7 @@ async function showQuizResult() {
       <div style="width:72px;height:72px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M8 8l8 8M16 8l-8 8" stroke="#f87171" stroke-width="2.5" stroke-linecap="round"/></svg>
       </div>
-      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#f87171;margin-bottom:8px;letter-spacing:-.3px;">Verification Failed</div>
+      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:#f87171;margin-bottom:8px;letter-spacing:-.3px;">Verification Failed</div>
       <div style="font-size:13.5px;color:var(--muted-light);margin-bottom:6px;">You scored <strong style="color:#fff;">${quizCorrect} of ${QUIZ_QUESTIONS.length}</strong> correct. You need at least <strong style="color:#fff;">4</strong> to pass.</div>
       <div style="font-size:12.5px;color:var(--muted);margin-bottom:28px;">Review the community guidelines and try again. Questions are randomised.</div>
       <button class="btn-a" onclick="QUIZ_QUESTIONS=_pickQuizQuestions();quizIdx=0;quizCorrect=0;quizAnswers=[];document.getElementById('quiz-result').style.display='none';document.getElementById('quiz-question-area').style.display='';document.getElementById('quiz-progress-bar').innerHTML=QUIZ_QUESTIONS.map((_,i)=>'<div id=qpb-'+i+' style=flex:1;height:5px;border-radius:99px;background:var(--border);transition:background\\x20.3s,box-shadow\\x20.3s></div>').join('');renderQuizQuestion();" style="padding:14px 36px;font-size:15px;">Try Again</button>`;
@@ -16824,7 +16824,7 @@ function showDOBSetup() {
   overlay.innerHTML = `
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:40px;max-width:440px;width:90%;text-align:center;">
       <div style="width:70px;height:70px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 20px;">🛡️</div>
-      <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:10px;">Age Verification</h2>
+      <h2 style="font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:10px;">Age Verification</h2>
       <p style="font-size:13.5px;color:var(--muted-light);line-height:1.65;margin-bottom:28px;">
         Fortized uses your date of birth to protect you and ensure you only access age-appropriate content.<br><br>
         <strong style="color:var(--accent);">Your date of birth cannot be changed without identity verification.</strong>
@@ -17132,14 +17132,14 @@ async function _showInviteFriendsPanel() {
     <!-- Header -->
     <div style="padding:20px 20px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <h3 style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite friends to Fortized</h3>
+        <h3 style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite friends to Fortized</h3>
         <button onclick="this.closest('.input-dialog-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:4px 8px;border-radius:8px;transition:all .15s;">&times;</button>
       </div>
       <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px;">You earn <strong style="color:var(--accent);">9 Onyx</strong> for each friend who joins!</div>
       <!-- Search -->
       <div style="position:relative;margin-bottom:14px;">
         <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="invite-friends-search" placeholder="Search friends..." autocomplete="off" style="width:100%;padding:9px 14px 9px 34px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;" oninput="_filterInviteFriends(this.value)">
+        <input type="text" id="invite-friends-search" placeholder="Search friends..." autocomplete="off" style="width:100%;padding:9px 14px 9px 34px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#fff;font-family:var(--font-ui);font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;" oninput="_filterInviteFriends(this.value)">
       </div>
     </div>
     <!-- Friends list -->
@@ -17201,7 +17201,7 @@ function _renderInviteFriendsList(list) {
         <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(r.displayName)}</div>
         <div style="font-size:11px;color:rgba(255,255,255,.3);">${isOnline ? FtzStatus.publicLabel(r.status) : 'Offline'}</div>
       </div>
-      <button onclick="_sendInviteDM(this,'${escapeHTML(r.username)}')" style="padding:6px 14px;border-radius:8px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'DM Sans',sans-serif;">Invite</button>
+      <button onclick="_sendInviteDM(this,'${escapeHTML(r.username)}')" style="padding:6px 14px;border-radius:8px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--font-ui);">Invite</button>
     </div>`;
   }).join('');
 }
@@ -17283,13 +17283,13 @@ async function showBastionInviteUI(bastionIdx) {
   ov.innerHTML = `<div style="background:var(--panel,#13161d);border:1.5px solid rgba(255,249,62,.1);border-radius:18px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 80px rgba(255,249,62,.03);animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;overflow:hidden;">
     <div style="padding:20px 20px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <h3 style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite friends to ${escapeHTML(b.name)}</h3>
+        <h3 style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite friends to ${escapeHTML(b.name)}</h3>
         <button onclick="this.closest('.input-dialog-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:4px 8px;border-radius:8px;transition:all .15s;">&times;</button>
       </div>
-      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;display:flex;align-items:center;gap:8px;">${b.icon?`<img src="${escapeHTML(b.icon)}" style="width:18px;height:18px;border-radius:6px;object-fit:cover;">`:`<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`} <span style="font-weight:600;color:rgba(255,255,255,.6);">${escapeHTML(b.name)}</span></div>
+      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;display:flex;align-items:center;gap:8px;">${b.icon?`<img src="${escapeHTML(b.icon)}" style="width:18px;height:18px;border-radius:6px;object-fit:cover;">`:`<span style="font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`} <span style="font-weight:600;color:rgba(255,255,255,.6);">${escapeHTML(b.name)}</span></div>
       <div style="position:relative;margin-bottom:14px;">
         <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="bastion-invite-search" placeholder="Search friends..." autocomplete="off" style="width:100%;padding:9px 14px 9px 34px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;" oninput="_filterBastionInviteFriends(this.value)">
+        <input type="text" id="bastion-invite-search" placeholder="Search friends..." autocomplete="off" style="width:100%;padding:9px 14px 9px 34px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#fff;font-family:var(--font-ui);font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;" oninput="_filterBastionInviteFriends(this.value)">
       </div>
     </div>
     <div id="bastion-invite-friends-list" style="flex:1;overflow-y:auto;padding:0 10px 10px;min-height:120px;max-height:340px;">
@@ -17342,7 +17342,7 @@ function _renderBastionInviteFriendsList(list) {
     const isOnline = FtzStatus.isPresent(r.status);
     const btnHTML = r.isMember
       ? `<span style="padding:6px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.25);">Joined</span>`
-      : `<button onclick="_sendBastionInviteDM(this,'${escapeHTML(r.username)}')" style="padding:6px 14px;border-radius:8px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'DM Sans',sans-serif;">Invite</button>`;
+      : `<button onclick="_sendBastionInviteDM(this,'${escapeHTML(r.username)}')" style="padding:6px 14px;border-radius:8px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--font-ui);">Invite</button>`;
     return `<div class="bastion-invite-friend-row" data-username="${escapeHTML(r.username)}" data-displayname="${escapeHTML(r.displayName.toLowerCase())}" style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;transition:background .12s;cursor:default;">
       <div style="position:relative;flex-shrink:0;">
         <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.04);">${buildAvatarHTML(r.pfp,r.displayName,32)}</div>
@@ -17448,7 +17448,7 @@ function animateOnyxGain(amount) {
   // Create floating +N animation
   const el = document.createElement('div');
   el.textContent = '+' + amount + ' Onyx';
-  el.style.cssText = `position:fixed;font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--accent);pointer-events:none;z-index:9999;text-shadow:0 0 20px rgba(255,249,62,.6);transition:all 1.2s cubic-bezier(.22,1,.36,1);`;
+  el.style.cssText = `position:fixed;font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent);pointer-events:none;z-index:9999;text-shadow:0 0 20px rgba(255,249,62,.6);transition:all 1.2s cubic-bezier(.22,1,.36,1);`;
   const rect = balEl.getBoundingClientRect();
   el.style.left = rect.left + 'px';
   el.style.top = rect.top + 'px';
@@ -17615,7 +17615,7 @@ async function showBastionInviteDialog(bastion, inviterName, inviteCode) {
   // Right panel: bastion logo (image only, no emoji fallback)
   const bastionLogoInner = bastion.icon
     ? `<img src="${escapeHTML(bastion.icon)}">`
-    : `<div class="invite-emblem" style="font-family:'Syne',sans-serif;font-weight:800;font-size:48px;color:var(--accent);">${(bastion.name||'B')[0].toUpperCase()}</div>`;
+    : `<div class="invite-emblem" style="font-family:var(--font-display);font-weight:800;font-size:48px;color:var(--accent);">${(bastion.name||'B')[0].toUpperCase()}</div>`;
 
   // Gaming icon pattern SVGs for right panel
   const iconsSVG = [
@@ -17875,7 +17875,7 @@ function openAssignRoleUI(username) {
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:8000;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:28px;max-width:400px;width:100%;">
-      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;">Assign Roles</div>
+      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:6px;">Assign Roles</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:18px;">to @${escapeHTML(username)}</div>
       <div id="role-assign-list">${html}</div>
       <div style="display:flex;gap:8px;margin-top:18px;">
@@ -18050,7 +18050,7 @@ function renderAllUsersList(users) {
         <div style="font-size:9.5px;color:rgba(255,255,255,.2);">@${escapeHTML(u.username)}</div>
       </div>
       <div style="width:70px;text-align:center;"><div style="width:8px;height:8px;border-radius:50%;background:${statusColor};margin:0 auto;box-shadow:0 0 4px ${statusColor}55;"></div></div>
-      <div style="width:65px;text-align:right;font-size:11px;font-weight:700;color:#ffd93e;font-family:'Syne',sans-serif;">${(u.onyx||0).toLocaleString()}</div>
+      <div style="width:65px;text-align:right;font-size:11px;font-weight:700;color:#ffd93e;font-family:var(--font-display);">${(u.onyx||0).toLocaleString()}</div>
       <div style="width:55px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);">${(u.friends||[]).length}</div>
       <div style="width:60px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);">${(u.bastions||[]).length}</div>
       <div style="width:50px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);">${ageDays !== null ? ageDays : '—'}</div>
@@ -18089,7 +18089,7 @@ async function checkTrialLink() {
       <div style="height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);"></div>
       <div style="padding:40px 36px;">
         <div style="font-size:48px;margin-bottom:16px;">✨</div>
-        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:10px;">Special Offer from Staw</div>
+        <div style="font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:10px;">Special Offer from Staw</div>
         <div style="font-size:14px;color:var(--muted-light);line-height:1.65;margin-bottom:24px;">
           <strong>staw</strong> is offering you a <strong style="color:var(--accent);">${days}-day free trial of Radiance</strong>!<br>
           Get a profile glow, custom banner, and more — completely free.
@@ -18725,13 +18725,13 @@ function parseMD(s) {
   // 5b. X / Twitter post links — unique tweet card (unified embed)
   s = s.replace(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/([\w]+)\/status\/([\d]+)[^\s]*/gi, (url, user, id) => {
     const safe = escapeHTML(url);
-    return `<div class="ftz-embed" style="--embed-color:#1d9bf0;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><span style="font-family:'Syne',sans-serif;font-weight:900;font-size:14px;">&#120143;</span> Post</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="background:linear-gradient(135deg,#1d9bf0,#0a6bbf);">${user[0].toUpperCase()}</div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">@${escapeHTML(user)}</div><div class="ftz-embed-desc">View post on &#120143;</div></div></div><div class="ftz-embed-foot"><span style="display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Likes</span><span style="display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Reposts</span><span style="display:flex;align-items:center;gap:4px;">${ftzIcon('chat','11')}Replies</span></div></div></div></div>`;
+    return `<div class="ftz-embed" style="--embed-color:#1d9bf0;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><span style="font-family:var(--font-display);font-weight:900;font-size:14px;">&#120143;</span> Post</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="background:linear-gradient(135deg,#1d9bf0,#0a6bbf);">${user[0].toUpperCase()}</div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">@${escapeHTML(user)}</div><div class="ftz-embed-desc">View post on &#120143;</div></div></div><div class="ftz-embed-foot"><span style="display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Likes</span><span style="display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Reposts</span><span style="display:flex;align-items:center;gap:4px;">${ftzIcon('chat','11')}Replies</span></div></div></div></div>`;
   });
 
   // 5c. X / Twitter profile links — unified channel/profile card
   s = s.replace(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/([\w]+)(?:\s|$)/gi, (url, user) => {
     const safe = escapeHTML(url.trim());
-    return `<div class="ftz-embed" style="--embed-color:#1d9bf0;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><span style="font-family:'Syne',sans-serif;font-weight:900;font-size:14px;">&#120143;</span> Profile</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="background:linear-gradient(135deg,#1d9bf0,#0a6bbf);">${user[0].toUpperCase()}</div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">@${escapeHTML(user)}</div><div class="ftz-embed-desc">&#120143; Profile</div></div><div class="ftz-embed-btn" style="flex-shrink:0;margin:0;padding:6px 14px;font-size:11px;">Follow</div></div></div></div></div> `;
+    return `<div class="ftz-embed" style="--embed-color:#1d9bf0;" onclick="openExternalLink(event,'${safe}')"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head"><span style="font-family:var(--font-display);font-weight:900;font-size:14px;">&#120143;</span> Profile</div><div class="ftz-embed-profile"><div class="ftz-embed-avatar" style="background:linear-gradient(135deg,#1d9bf0,#0a6bbf);">${user[0].toUpperCase()}</div><div style="flex:1;min-width:0;"><div class="ftz-embed-title">@${escapeHTML(user)}</div><div class="ftz-embed-desc">&#120143; Profile</div></div><div class="ftz-embed-btn" style="flex-shrink:0;margin:0;padding:6px 14px;font-size:11px;">Follow</div></div></div></div></div> `;
   });
   // 5d. Instagram channel links
   s = s.replace(/https?:\/\/(?:www\.)?instagram\.com\/([\w.]+)(?:\s|$)/gi, (url, user) => {
@@ -19188,7 +19188,7 @@ function _openDisplayNameStyleModal() {
   const dn = CU.displayName || CU.username;
   const avHtml = CU.pfp
     ? `<img src="${escapeHTML(CU.pfp)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-    : `<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-weight:800;color:#0f1119;border-radius:50%;">${dn[0].toUpperCase()}</div>`;
+    : `<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;color:#0f1119;border-radius:50%;">${dn[0].toUpperCase()}</div>`;
   const profileTheme = (CU.radiancePlus && new Date(CU.radiancePlus) > new Date()) ? CU.profileTheme : null;
 
   document.querySelector('.dns-modal-overlay')?.remove();
@@ -19201,7 +19201,7 @@ function _openDisplayNameStyleModal() {
     <!-- Left: Controls -->
     <div style="flex:1;padding:28px 24px;overflow-y:auto;min-width:0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-        <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:#fff;">Display Name Style</div>
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Display Name Style</div>
         <button onclick="this.closest('.dns-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.4);cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
       </div>
 
@@ -19303,8 +19303,8 @@ function _openDisplayNameStyleModal() {
       <div style="flex:1;"></div>
       <!-- Actions -->
       <div style="display:flex;gap:8px;margin-top:4px;">
-        <button onclick="_dnSurpriseMe()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-family:Syne,sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg> Randomise</button>
-        <button onclick="_dnApplyStyle()" style="flex:1;padding:10px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:Syne,sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .12s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">Apply Style</button>
+        <button onclick="_dnSurpriseMe()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-family:var(--font-display);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg> Randomise</button>
+        <button onclick="_dnApplyStyle()" style="flex:1;padding:10px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;transition:all .12s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">Apply Style</button>
       </div>
     </div>
   </div>`;
@@ -19368,7 +19368,7 @@ function _dnUpdatePreview() {
   const plateEl = document.getElementById('dns-preview-nameplate');
   if (nameEl) { nameEl.style.cssText = 'font-size:14px;font-weight:700;font-family:'+fontCSS+';'+effectCSS; }
   if (chatEl) { chatEl.style.cssText = 'font-size:12px;font-weight:700;font-family:'+fontCSS+';'+effectCSS; }
-  if (plateEl) { plateEl.style.cssText = 'font-family:Syne,sans-serif;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'+fontCSS+';'+effectCSS; }
+  if (plateEl) { plateEl.style.cssText = 'font-family:var(--font-display);font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'+fontCSS+';'+effectCSS; }
 }
 
 function _dnSurpriseMe() {
@@ -19703,7 +19703,7 @@ function addRegisteredGame() {
   overlay.innerHTML = `
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:480px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;">
       <div style="padding:20px 22px 14px;border-bottom:1px solid var(--border);">
-        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;">Add Game</div>
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:6px;">Add Game</div>
         <input class="field-input" id="game-search-inp" placeholder="Search or type a name…" style="width:100%;" oninput="filterGamePicker(this.value)">
       </div>
       <div id="game-picker-list" style="overflow-y:auto;flex:1;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -19933,7 +19933,7 @@ function showIgnorePicker(username) {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
           <div style="width:36px;height:36px;border-radius:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;font-size:18px;">🔇</div>
           <div>
-            <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;">Ignore ${escapeHTML(username)}</div>
+            <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;">Ignore ${escapeHTML(username)}</div>
             <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">Messages will be blurred. They stay on your friends list.</div>
           </div>
         </div>
@@ -20111,7 +20111,7 @@ function showBastionApplicationForm(b) {
   });
   overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;">'
     + '<div style="padding:24px 26px;">'
-    + '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:4px;">Apply to Join</div>'
+    + '<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:4px;">Apply to Join</div>'
     + '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">' + escapeHTML(b.name) + '</div>'
     + qHtml
     + '<div style="display:flex;gap:8px;margin-top:4px;">'
@@ -20186,7 +20186,7 @@ function renderGameCollectionTab(main) {
   let currentGameHtml = '';
   if (currentGame) {
     const cover = currentGame.coverUrl || currentGame.coverThumb || _getManualCover(currentGame.name);
-    currentGameHtml = '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:12px;">Current Game</div>'
+    currentGameHtml = '<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:12px;">Current Game</div>'
       + '<div style="padding:16px 20px;background:linear-gradient(135deg,rgba(30,100,50,.35),rgba(20,80,40,.25));border:1.5px solid rgba(62,207,110,.3);border-radius:14px;margin-bottom:24px;display:flex;align-items:center;gap:14px;">'
       + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:48px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '<div style="width:48px;height:64px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">' + (currentGame.icon||'🎮') + '</div>')
       + '<div style="flex:1;min-width:0;">'
@@ -20229,7 +20229,7 @@ function renderGameCollectionTab(main) {
   // ── Added Games section (list with cover art left, name/description right) ──
   let gamesListHtml = '';
   if (games.length) {
-    gamesListHtml = '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Your Games</div>'
+    gamesListHtml = '<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Your Games</div>'
       + '<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Cover art provided by <a href="https://www.igdb.com" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;font-weight:600;">IGDB</a>.</div>'
       + '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">';
     games.forEach((g, i) => {
@@ -20255,10 +20255,10 @@ function renderGameCollectionTab(main) {
     });
     gamesListHtml += '</div>';
   } else {
-    gamesListHtml = '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Your Games</div>'
+    gamesListHtml = '<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Your Games</div>'
       + '<div style="text-align:center;padding:40px;">'
       + '<div style="font-size:48px;margin-bottom:14px;">\uD83C\uDFAE</div>'
-      + '<div style="font-family:Syne,sans-serif;font-weight:800;font-size:16px;margin-bottom:8px;">No games yet</div>'
+      + '<div style="font-family:var(--font-display);font-weight:800;font-size:16px;margin-bottom:8px;">No games yet</div>'
       + '<div style="font-size:13px;color:var(--muted);">Add games you love to show them on your public profile.</div>'
       + '</div>';
   }
@@ -20505,7 +20505,7 @@ function openGameCollectionPicker() {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:620px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);">'
     + '<div style="padding:20px 24px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">'
-    + '<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:4px;color:#fff;">Add to Your Collection</div>'
+    + '<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:4px;color:#fff;">Add to Your Collection</div>'
     + '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;" id="gc-igdb-badge">Searching local catalog...</div>'
     + '<input class="field-input" id="gc-search" placeholder="Search games or type a name\u2026" style="width:100%;padding:10px 14px;font-size:13px;" oninput="filterGCPicker(this.value)">'
     + '</div>'
@@ -20690,7 +20690,7 @@ function renderProfileWidgetsTab(main) {
     }
     if (def.id === 'want_to_play') {
       configHtml = `<div style="margin-top:8px;">
-        <button onclick="_openWidgetGameSearch(event,'want_to_play')" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <button onclick="_openWidgetGameSearch(event,'want_to_play')" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add game
         </button>
@@ -20725,9 +20725,9 @@ function renderProfileWidgetsTab(main) {
   main.innerHTML = `<div style="padding:24px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
       <div>
-        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:rgba(255,255,255,.5);">Your Widgets</div>
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:rgba(255,255,255,.5);">Your Widgets</div>
       </div>
-      <button onclick="_openAddWidgetPanel()" style="padding:8px 18px;border-radius:10px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.7);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.color='var(--accent)';this.style.background='rgba(255,249,62,.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)';this.style.background='rgba(255,255,255,.03)'">
+      <button onclick="_openAddWidgetPanel()" style="padding:8px 18px;border-radius:10px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.7);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.color='var(--accent)';this.style.background='rgba(255,249,62,.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)';this.style.background='rgba(255,255,255,.03)'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add Widget
       </button>
@@ -20781,7 +20781,7 @@ function _openAddWidgetPanel() {
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:36px;height:36px;border-radius:10px;background:${def.color}15;display:flex;align-items:center;justify-content:center;color:${def.color};border:1px solid ${def.color}20;">${def.icon}</div>
           <div>
-            <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:#fff;">${def.label}</div>
+            <div style="font-family:var(--font-display);font-size:13.5px;font-weight:800;color:#fff;">${def.label}</div>
             <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:1px;">${def.desc}</div>
           </div>
         </div>
@@ -20801,7 +20801,7 @@ function _openAddWidgetPanel() {
     <div class="pwm-header" style="position:sticky;top:0;z-index:2;background:var(--panel,rgba(16,18,28,.98));backdrop-filter:blur(20px);padding:20px 24px 16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div>
-          <h3 style="margin:0;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">Add Widgets</h3>
+          <h3 style="margin:0;font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Add Widgets</h3>
           <p style="margin:4px 0 0;font-size:11.5px;color:rgba(255,255,255,.3);">Choose widgets to display on your profile</p>
         </div>
         <button onclick="this.closest('.pw-add-widget-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.4);cursor:pointer;width:34px;height:34px;display:flex;align-items:center;justify-content:center;transition:all .12s;font-size:16px;">✕</button>
@@ -20986,7 +20986,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
       <div style="display:flex;align-items:center;gap:12px;">
         ${cover ? `<img src="${escapeHTML(cover)}" style="width:56px;height:74px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1.5px solid ${statusColor}33;box-shadow:0 4px 12px rgba(0,0,0,.3);" onerror="this.style.display='none'">` : `<div style="width:56px;height:74px;border-radius:10px;background:linear-gradient(135deg,${statusColor}15,${statusColor}08);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;border:1.5px dashed ${statusColor}22;">${ga.icon||'🎮'}</div>`}
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;">${escapeHTML(ga.name)}</div>
+          <div style="font-family:var(--font-display);font-size:13.5px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;">${escapeHTML(ga.name)}</div>
           ${ga.genre ? `<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;line-height:1.2;">${escapeHTML(ga.genre)}</div>` : ''}
           ${elapsed ? `<div style="font-size:9.5px;color:${statusColor}66;margin-top:4px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${elapsed}</div>` : ''}
         </div>
@@ -21004,10 +21004,10 @@ function renderProfileWidgetsOnCard(u, containerEl) {
       html += `<div class="pw-widget" style="padding:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div>
-            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">Games I like</div>
+            <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;">Games I like</div>
             <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">Add up to 20 games</div>
           </div>
-          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event)" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:5px;">
+          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event)" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:5px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add game
           </button>` : ''}
@@ -21109,7 +21109,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
           </div>
           ${isConnected
             ? '<div style="font-size:11.5px;color:rgba(255,255,255,.3);margin-top:6px;">Not currently playing anything.</div>'
-            : '<button onclick="_connectSpotify()" style="margin-top:8px;padding:8px 16px;background:#1DB954;color:#fff;border:none;border-radius:8px;font-family:Syne,sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Connect Spotify</button>'}
+            : '<button onclick="_connectSpotify()" style="margin-top:8px;padding:8px 16px;background:#1DB954;color:#fff;border:none;border-radius:8px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Connect Spotify</button>'}
         </div>`;
       }
     }
@@ -21122,11 +21122,11 @@ function renderProfileWidgetsOnCard(u, containerEl) {
           <div>
             <div style="display:flex;align-items:center;gap:6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-              <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">Want to Play</div>
+              <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;">Want to Play</div>
             </div>
             <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">Games on my wishlist</div>
           </div>
-          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event,'want_to_play')" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
+          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event,'want_to_play')" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add
           </button>` : ''}
@@ -21151,7 +21151,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
       html += `<div class="pw-widget" style="border-left:3px solid #fbbf24;padding:16px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">Player Archetype</div>
+          <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;">Player Archetype</div>
         </div>
         ${traits.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;">${traits.map(t => `<span style="padding:6px 14px;background:rgba(251,191,36,.08);border:1.5px solid rgba(251,191,36,.15);border-radius:20px;font-size:12px;font-weight:700;color:#fbbf24;display:flex;align-items:center;gap:5px;">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -21490,7 +21490,7 @@ function _openWidgetGameSearch(e, target) {
   if (rect.left + 280 > window.innerWidth) drop.style.left = (window.innerWidth - 288) + 'px';
   const owned = new Set((CU.gameCollection||[]).map(g => g.name.toLowerCase()));
   drop.innerHTML = `<div style="padding:10px 12px 8px;flex-shrink:0;">
-    <input id="pw-gs-input" placeholder="Search" style="width:100%;padding:8px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .15s;" oninput="_filterWidgetGameSearch(this.value)">
+    <input id="pw-gs-input" placeholder="Search" style="width:100%;padding:8px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:13px;outline:none;box-sizing:border-box;transition:border-color .15s;" oninput="_filterWidgetGameSearch(this.value)">
   </div>
   <div id="pw-gs-results" style="flex:1;overflow-y:auto;padding:4px 8px 10px;scrollbar-width:thin;"></div>`;
   document.body.appendChild(drop);
@@ -21579,7 +21579,7 @@ function _renderProfileWidgetManager(mgr) {
   html += '</div>';
 
   if (!hasAnyEnabled) {
-    html += '<div style="text-align:center;padding:20px 10px;"><div style="font-size:22px;opacity:.15;margin-bottom:6px;">🧩</div><div style="color:rgba(255,255,255,.2);font-size:11.5px;font-weight:500;margin-bottom:10px;">No widgets on your board</div><button onclick="_openAddWidgetPanel()" style="padding:8px 18px;background:var(--accent);color:#0f1119;border:none;border-radius:8px;font-family:Syne,sans-serif;font-size:11px;font-weight:800;cursor:pointer;">Add Widgets</button></div></div>';
+    html += '<div style="text-align:center;padding:20px 10px;"><div style="font-size:22px;opacity:.15;margin-bottom:6px;">🧩</div><div style="color:rgba(255,255,255,.2);font-size:11.5px;font-weight:500;margin-bottom:10px;">No widgets on your board</div><button onclick="_openAddWidgetPanel()" style="padding:8px 18px;background:var(--accent);color:#0f1119;border:none;border-radius:8px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;">Add Widgets</button></div></div>';
     mgr.innerHTML = html;
     return;
   }
@@ -21888,7 +21888,7 @@ async function openAddGameModal() {
   const box = document.createElement('div');
   box.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;width:420px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7);';
   box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0;">'
-    +'<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;color:#fff;">Add Game</div>'
+    +'<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;">Add Game</div>'
     +'<button id="agm-close" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50;">✕</button>'
     +'</div>'
     +'<div style="font-size:12px;color:var(--muted);margin-bottom:14px;flex-shrink:0;">Select a running program to add for activity detection.</div>'
@@ -22041,7 +22041,7 @@ async function showDMUserPanel(username) {
     + '</div>'
     // Display Name
     + '<div style="padding:0 16px 4px;">'
-    + '<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;color:#fff;line-height:1.15;'+(u.displayFont&&u.displayFont!=='default'?'font-family:'+getDisplayFont(u)+';':'')+'">' + escapeHTML(u.displayName||u.username) + '</div>'
+    + '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;line-height:1.15;'+(u.displayFont&&u.displayFont!=='default'?'font-family:'+getDisplayFont(u)+';':'')+'">' + escapeHTML(u.displayName||u.username) + '</div>'
     // Username
     + '<div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:2px;">@' + escapeHTML(u.username) + '</div>'
     + '</div>'
@@ -22195,7 +22195,7 @@ function openGiphyPicker(inputId) {
     <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="giphy-search-input" placeholder="Search Klipy" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
+        <input id="giphy-search-input" placeholder="Search Klipy" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
       </div>
     </div>
     <div id="gif-collection-view" class="gif-collection-grid">
@@ -22214,7 +22214,7 @@ function openGiphyPicker(inputId) {
     </div>
     <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;display:none;"></div>
     <div id="gif-back-bar" style="display:none;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;">
-      <button onclick="_gifBackToCollections('${esc}')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:4px 6px;border-radius:8px;transition:all .15s;" onmouseover="this.style.color='#fff';this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.color='rgba(255,255,255,.5)';this.style.background='none'">
+      <button onclick="_gifBackToCollections('${esc}')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:rgba(255,255,255,.5);font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;padding:4px 6px;border-radius:8px;transition:all .15s;" onmouseover="this.style.color='#fff';this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.color='rgba(255,255,255,.5)';this.style.background='none'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
         <span id="gif-back-label">Back to Collections</span>
       </button>
@@ -22514,7 +22514,7 @@ function openStickerPicker(inputId) {
     <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="sticker-search-input" placeholder="Search stickers…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="_searchStickers(this.value)">
+        <input id="sticker-search-input" placeholder="Search stickers…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="_searchStickers(this.value)">
       </div>
     </div>
     ${bastionTabsHTML ? `<div class="spp-tabs"><button class="spp-tab active" onclick="_filterStickerBastion('all', event)">All</button>${bastionTabsHTML}</div>` : ''}
@@ -22642,7 +22642,7 @@ function openBotCommandPanel(inputId, context) {
     <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input placeholder="Search commands…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="_filterBotCmds(this.value,'${escapeHTML(inputId)}')">
+        <input placeholder="Search commands…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="_filterBotCmds(this.value,'${escapeHTML(inputId)}')">
       </div>
     </div>
     <div class="botcmd-list" id="botcmd-list"></div>
@@ -22857,7 +22857,7 @@ function openStatusPicker() {
       <div style="padding:18px 22px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
           <div>
-            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">Set a custom status</div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;">Set a custom status</div>
           </div>
           <button onclick="_closeStatusPicker()" style="margin-left:auto;width:32px;height:32px;border-radius:10px;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.4)'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
@@ -22868,11 +22868,11 @@ function openStatusPicker() {
         <div style="font-size:9.5px;font-weight:700;color:rgba(254,248,61,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Preview</div>
         <div id="status-preview-card" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;margin-bottom:18px;">
           <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--panel2);position:relative;">
-            ${CU?.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<div style="width:100%;height:100%;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--accent);">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
+            ${CU?.pfp ? `<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<div style="width:100%;height:100%;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--accent);">${(CU?.displayName||CU?.username||'?')[0].toUpperCase()}</div>`}
             <span style="position:absolute;bottom:0;right:0;width:14px;height:14px;">${FtzStatus.dotSvg(status, 14)}</span>
           </div>
           <div style="min-width:0;flex:1;">
-            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">${escapeHTML(CU?.displayName||CU?.username||'User')}</div>
+            <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">${escapeHTML(CU?.displayName||CU?.username||'User')}</div>
             <div id="status-preview-bubble" style="display:${cur.text?'inline-flex':'none'};" class="cloud-status-bubble" >
               <span class="csb-emoji" id="status-preview-emoji">${cur.emoji ? `<img src="${emojiToTwemojiUrl(cur.emoji)}" style="width:14px;height:14px;object-fit:contain;">` : ''}</span>
               <span class="csb-text" id="status-preview-text" style="font-size:11px;">${escapeHTML(cur.text||'')}</span>
@@ -22896,7 +22896,7 @@ function openStatusPicker() {
           <button onclick="pickStatusEmoji()" id="status-emoji-btn" data-emoji="${escapeHTML(curEmoji)}" style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;" onmouseover="this.style.borderColor='rgba(254,248,61,.2)';this.style.background='rgba(254,248,61,.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.04)'">
             <img src="${twemojiUrl}" style="width:24px;height:24px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;\\'>${curEmoji}</span>'">
           </button>
-          <input id="status-text-input" class="field-input" placeholder="What's happening?" value="${escapeHTML(cur.text||'')}" style="flex:1;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:14px;padding:11px 16px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(254,248,61,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'" maxlength="100" oninput="_updateStatusPreview()">
+          <input id="status-text-input" class="field-input" placeholder="What's happening?" value="${escapeHTML(cur.text||'')}" style="flex:1;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:14px;padding:11px 16px;color:#fff;font-family:var(--font-ui);font-size:13.5px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(254,248,61,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'" maxlength="100" oninput="_updateStatusPreview()">
         </div>
 
         <!-- Quick Presets -->
@@ -22915,7 +22915,7 @@ function openStatusPicker() {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px;">
-          <button onclick="saveCustomStatus()" style="flex:1;background:var(--accent);color:#0f1119;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Save Custom Status</button>
+          <button onclick="saveCustomStatus()" style="flex:1;background:var(--accent);color:#0f1119;border:none;border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Save Custom Status</button>
           <button onclick="clearCustomStatus()" style="width:44px;height:44px;border-radius:14px;background:rgba(248,113,113,.06);border:1.5px solid rgba(248,113,113,.12);color:rgba(248,113,113,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;" onmouseover="this.style.borderColor='rgba(248,113,113,.25)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='rgba(248,113,113,.12)';this.style.color='rgba(248,113,113,.6)'" title="Clear status"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
         </div>
       </div>
@@ -23039,7 +23039,7 @@ function openForumChannel(chIdx) {
   }).join('') : '<div style="text-align:center;padding:60px 20px;color:var(--muted);"><div style="font-size:32px;margin-bottom:12px;opacity:.5;">'+ftzIcon('chat','32')+'</div><div style="font-size:14px;font-weight:600;margin-bottom:4px;">No posts yet</div><div style="font-size:12.5px;">Be the first to start a conversation!</div></div>';
   wrap.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">'
     +'<div style="padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--panel);">'
-    +'<div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:16px;">💬</div><div><div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;">'+escapeHTML(ch.name)+'</div><div style="font-size:11.5px;color:var(--muted);">'+posts.length+' post'+(posts.length!==1?'s':'')+(ch.description?' · '+escapeHTML(ch.description):'')+'</div></div></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:16px;">💬</div><div><div style="font-family:var(--font-display);font-size:15px;font-weight:800;">'+escapeHTML(ch.name)+'</div><div style="font-size:11.5px;color:var(--muted);">'+posts.length+' post'+(posts.length!==1?'s':'')+(ch.description?' · '+escapeHTML(ch.description):'')+'</div></div></div>'
     +'<button class="btn-a" onclick="openNewForumPost('+chIdx+')" style="font-size:12.5px;padding:8px 18px;display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Post</button>'
     +'</div>'
     +'<div style="flex:1;overflow-y:auto;padding:14px 16px;" id="forum-posts-list">'+postsHTML+'</div>'
@@ -23123,7 +23123,7 @@ function editForumPost(chIdx, postIdx) {
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.className = 'ftz-edit-post-overlay';
   overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:560px;width:100%;padding:26px;max-height:90vh;overflow-y:auto;">'
-    +'<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:18px;">✏ Edit Post</div>'
+    +'<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:18px;">✏ Edit Post</div>'
     +'<input id="ep-title" class="field-input" value="'+escapeHTML(p.title||'')+'" maxlength="120" style="margin-bottom:10px;font-size:14px;font-weight:600;">'
     +'<input id="ep-tags" class="field-input" value="'+escapeHTML((p.tags||[]).join(', '))+'" placeholder="Tags (comma-separated)" style="margin-bottom:10px;font-size:12.5px;">'
     +'<textarea id="ep-body" class="field-input" rows="6" style="resize:vertical;margin-bottom:14px;">'+escapeHTML(p.body||'')+'</textarea>'
@@ -23177,7 +23177,7 @@ function openNewForumPost(chIdx) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;'; overlay.className='ftz-new-post-overlay';
   overlay.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:560px;width:100%;padding:26px;max-height:90vh;overflow-y:auto;">'
-    +'<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;margin-bottom:18px;">📝 New Post</div>'
+    +'<div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:18px;">📝 New Post</div>'
     +'<input id="fp-title" class="field-input" placeholder="Post title…" maxlength="120" style="margin-bottom:10px;font-size:14px;font-weight:600;">'
     +'<input id="fp-tags" class="field-input" placeholder="Tags (comma-separated, e.g. help, news)" style="margin-bottom:10px;font-size:12.5px;">'
     +'<textarea id="fp-body" class="field-input" placeholder="Write your post…" rows="4" style="resize:vertical;margin-bottom:10px;"></textarea>'
@@ -23294,7 +23294,7 @@ async function openPollChannel(chIdx) {
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="poll-card-icon">🗳</div>
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;">${escapeHTML(ch.name)}</div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;">${escapeHTML(ch.name)}</div>
           <div style="font-size:11.5px;color:var(--muted);">${polls.length} poll${polls.length !== 1 ? 's' : ''} · ${totalResponses} total responses</div>
         </div>
       </div>
@@ -23449,7 +23449,7 @@ function openCreatePollModal(chIdx) {
   overlay.className = 'ftz-poll-create-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(14px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
   overlay.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:520px;width:100%;padding:28px;max-height:90vh;overflow-y:auto;">
-    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;">🗳 Create Poll</div>
+    <div style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:6px;">🗳 Create Poll</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Ask a question and let your community vote.</div>
     <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);opacity:.5;margin-bottom:6px;">Question</div>
     <input id="poll-q" class="field-input" placeholder="What are we all playing for game night?" maxlength="200" style="margin-bottom:14px;font-size:14px;font-weight:600;">
@@ -23632,7 +23632,7 @@ async function showCallingScreen(partner) {
   ring3.style.cssText = 'position:absolute;width:160px;height:160px;border-radius:50%;border:2px solid rgba(255,249,62,.08);animation:callingPulse2 2s ease-out 1s infinite;';
   
   const avCircle = document.createElement('div');
-  avCircle.style.cssText = 'width:120px;height:120px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,249,62,.4);background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:46px;font-family:Syne,sans-serif;font-weight:800;animation:callingRing 1.5s ease-in-out infinite;z-index:1;';
+  avCircle.style.cssText = 'width:120px;height:120px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,249,62,.4);background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:46px;font-family:var(--font-display);font-weight:800;animation:callingRing 1.5s ease-in-out infinite;z-index:1;';
   if (partnerPfp) {
     const img = document.createElement('img');
     img.src = partnerPfp; img.style.cssText='width:100%;height:100%;object-fit:cover;';
@@ -23654,7 +23654,7 @@ async function showCallingScreen(partner) {
   callingText.style.cssText = 'font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:12px;';
   callingText.textContent = 'Calling';
   const nameDiv = document.createElement('div');
-  nameDiv.style.cssText = 'font-family:Syne,sans-serif;font-size:30px;font-weight:800;color:#fff;margin-bottom:4px;';
+  nameDiv.style.cssText = 'font-family:var(--font-display);font-size:30px;font-weight:800;color:#fff;margin-bottom:4px;';
   nameDiv.textContent = partner;
   const subDiv = document.createElement('div');
   subDiv.style.cssText = 'font-size:13.5px;color:rgba(255,255,255,.4);';
@@ -23859,7 +23859,7 @@ function renderScreenShareView(isRemote) {
   ov.id = 'vc-screen-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:#000;z-index:6000;display:flex;flex-direction:column;';
   ov.innerHTML = '<div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.05);flex-shrink:0;">'
-    +'<div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;">🖥 '+(isRemote?escapeHTML(_vc.partner)+' is sharing their screen':'You are sharing your screen')+'</div>'
+    +'<div style="font-family:var(--font-display);font-size:14px;font-weight:800;">🖥 '+(isRemote?escapeHTML(_vc.partner)+' is sharing their screen':'You are sharing your screen')+'</div>'
     +'<button id="vc-screen-close-btn" style="background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;">✕</button>'
     +'</div>'
     +'<div style="flex:1;display:flex;align-items:center;justify-content:center;">'
@@ -23886,7 +23886,7 @@ function startWatchTogether() {
   ov.id = 'vc-watch-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.96);z-index:7500;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;';
   ov.innerHTML = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:24px;max-width:440px;width:100%;">'
-    +'<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;margin-bottom:4px;">▶ Watch Together</div>'
+    +'<div style="font-family:var(--font-display);font-size:16px;font-weight:800;margin-bottom:4px;">▶ Watch Together</div>'
     +'<div style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Paste a YouTube link to watch in sync</div>'
     +'<input id="wt-url-inp" class="field-input" placeholder="https://youtube.com/watch?v=..." style="margin-bottom:10px;">'
     +'<div style="display:flex;gap:8px;">'
@@ -23914,7 +23914,7 @@ function renderWatchTogetherPlayer(vid, isHost) {
   ov.id = 'wt-player-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:#000;z-index:7000;display:flex;flex-direction:column;';
   ov.innerHTML = '<div style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.06);flex-shrink:0;">'
-    +'<div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;">▶ Watching together with '+escapeHTML(_vc.partner||'')+'</div>'
+    +'<div style="font-family:var(--font-display);font-size:14px;font-weight:800;">▶ Watching together with '+escapeHTML(_vc.partner||'')+'</div>'
     +'<div style="display:flex;gap:8px;">'
     +(isHost?'<button onclick="syncYTAction(\"pause\")" class="btn-g" style="padding:5px 12px;font-size:12px;">⏸ Pause</button>':'')
     +(isHost?'<button onclick="syncYTAction(\"play\")" class="btn-a" style="padding:5px 12px;font-size:12px;">▶ Play</button>':'')
@@ -23969,7 +23969,7 @@ async function renderVoiceCallUI(partner, isCaller) {
   topBar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:18px 28px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.06);';
   topBar.innerHTML = '<div style="display:flex;align-items:center;gap:8px;">'
     +'<div style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;animation:vcPulse 1.5s infinite;"></div>'
-    +'<span style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:#fff;">Voice Call</span>'
+    +'<span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;">Voice Call</span>'
     +'<span style="font-size:12px;color:rgba(255,255,255,.4);">with '+escapeHTML(partner)+'</span>'
     +'</div>'
     +'<div style="display:flex;align-items:center;gap:12px;">'
@@ -24000,10 +24000,10 @@ async function renderVoiceCallUI(partner, isCaller) {
     if (pfp) {
       const img = document.createElement('img');
       img.src = pfp; img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%;';
-      img.onerror = ()=>{ img.remove(); ring.innerHTML='<span style="font-size:52px;font-family:Syne,sans-serif;font-weight:800;">'+name[0].toUpperCase()+'</span>'; };
+      img.onerror = ()=>{ img.remove(); ring.innerHTML='<span style="font-size:52px;font-family:var(--font-display);font-weight:800;">'+name[0].toUpperCase()+'</span>'; };
       ring.appendChild(img);
     } else {
-      ring.innerHTML='<span style="font-size:52px;font-family:Syne,sans-serif;font-weight:800;">'+escapeHTML(name[0].toUpperCase())+'</span>';
+      ring.innerHTML='<span style="font-size:52px;font-family:var(--font-display);font-weight:800;">'+escapeHTML(name[0].toUpperCase())+'</span>';
     }
     // Muted indicator
     const mutedDot = document.createElement('div');
@@ -24013,7 +24013,7 @@ async function renderVoiceCallUI(partner, isCaller) {
     avOuter.appendChild(ring); avOuter.appendChild(mutedDot);
     // Label
     const label = document.createElement('div');
-    label.style.cssText = 'font-family:Syne,sans-serif;font-size:15px;font-weight:800;color:#fff;';
+    label.style.cssText = 'font-family:var(--font-display);font-size:15px;font-weight:800;color:#fff;';
     label.textContent = name;
     const subLabel = document.createElement('div');
     subLabel.style.cssText = 'font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;';
@@ -24244,7 +24244,7 @@ async function showIncomingCall(caller, offerSdp) {
   const pulse2 = document.createElement('div');
   pulse2.style.cssText = 'position:absolute;inset:-30px;border-radius:50%;border:2px solid rgba(62,207,110,.15);animation:callPulse 1.8s ease-out .6s infinite;';
   const avCircle = document.createElement('div');
-  avCircle.style.cssText = 'width:110px;height:110px;border-radius:50%;overflow:hidden;border:3px solid #3ecf6e;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:42px;font-family:Syne,sans-serif;font-weight:800;';
+  avCircle.style.cssText = 'width:110px;height:110px;border-radius:50%;overflow:hidden;border:3px solid #3ecf6e;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:42px;font-family:var(--font-display);font-weight:800;';
   if (callerPfp) {
     const img = document.createElement('img');
     img.src = callerPfp; img.style.cssText='width:100%;height:100%;object-fit:cover;';
@@ -24257,7 +24257,7 @@ async function showIncomingCall(caller, offerSdp) {
   const textDiv = document.createElement('div');
   textDiv.style.cssText = 'text-align:center;';
   textDiv.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,.5);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Incoming Call</div>'
-    +'<div style="font-family:Syne,sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:4px;">'+escapeHTML(caller)+'</div>'
+    +'<div style="font-family:var(--font-display);font-size:26px;font-weight:800;color:#fff;margin-bottom:4px;">'+escapeHTML(caller)+'</div>'
     +'<div style="font-size:13px;color:rgba(255,255,255,.4);">wants to start a voice call</div>';
 
   // Buttons
@@ -24406,7 +24406,7 @@ function showPinnedMessages() {
   panel.innerHTML = `
     <div style="padding:20px 22px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg>
-      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex:1;color:#fff;">Pinned Messages</div>
+      <div style="font-family:var(--font-display);font-size:17px;font-weight:800;flex:1;color:#fff;">Pinned Messages</div>
       <span style="font-size:10px;color:rgba(255,255,255,.25);background:rgba(255,255,255,.04);padding:2px 10px;border-radius:100px;font-weight:600;">${pins.length}</span>
       <button onclick="_closeEl('pins-panel');_closeEl('pins-panel-overlay')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
     </div>
@@ -24422,7 +24422,7 @@ function showPinnedMessages() {
           </div>
           <button data-unpin-idx="${i}" data-unpin-id="${CSS.escape(p.id)}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:rgba(255,255,255,.3);cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;" title="Unpin" onmouseover="this.style.color='var(--red)';this.style.background='rgba(248,113,113,.1)'" onmouseout="this.style.color='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.04)'">✕</button>
         </div>`).join('')
-      : '<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,.2);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:12px;"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;margin-bottom:4px;">No pinned messages</div><div style="font-size:12px;opacity:.6;">Right-click a message to pin it.</div></div>'
+      : '<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,.2);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:12px;"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg><div style="font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:4px;">No pinned messages</div><div style="font-size:12px;opacity:.6;">Right-click a message to pin it.</div></div>'
     }</div>`;
   document.body.appendChild(panel);
   // Wire unpin buttons via delegation
@@ -25107,7 +25107,7 @@ async function openGameActivityPicker() {
   const box = document.createElement('div');
   box.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;width:400px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7);';
   box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0;">'
-    +'<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;">🎮 Game Activity</div>'
+    +'<div style="font-family:var(--font-display);font-size:16px;font-weight:800;">🎮 Game Activity</div>'
     +'<button id="ga-close" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;">✕</button>'
     +'</div>'
     +((activityState.primary?.type === 'playing') ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:12px;margin-bottom:14px;flex-shrink:0;"><span>'+activityState.primary.icon+'</span><span style="font-size:13px;font-weight:700;">'+escapeHTML(activityState.primary.name)+'</span><button id="ga-stop-btn" style="margin-left:auto;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:var(--red);font-size:11px;padding:3px 8px;border-radius:7px;cursor:pointer;">Stop</button></div>' : '')
@@ -25287,7 +25287,7 @@ function _showWatchInRoom(vid) {
     +'<div style="width:8px;height:8px;border-radius:50%;background:#f87171;"></div>'
     +'<div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;"></div>'
     +'<div style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div>'
-    +'<span style="font-family:Syne,sans-serif;font-size:13px;font-weight:800;color:#fff;margin-left:6px;">▶ Watching Together</span>'
+    +'<span style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;margin-left:6px;">▶ Watching Together</span>'
     +'<span style="font-size:12px;color:rgba(255,255,255,.4);">with '+escapeHTML(_vc.partner||'partner')+'</span>'
     +'</div>'
     +'<div style="display:flex;gap:8px;align-items:center;">'
@@ -25473,7 +25473,7 @@ async function checkFriendTarget(val) {
             + '<div style="flex-shrink:0;">'+buildAvatarHTML(u.pfp||null, u.displayName||u.username, 44)+'</div>'
             + '<div style="flex:1;min-width:0;">'
             + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
-            + '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:14px;color:#fff;">'+escapeHTML(u.displayName||u.username)+'</span>'
+            + '<span style="font-family:var(--font-display);font-weight:800;font-size:14px;color:#fff;">'+escapeHTML(u.displayName||u.username)+'</span>'
             + statusLabel
             + '</div>'
             + '<div style="font-size:11.5px;color:rgba(255,255,255,.3);margin-top:2px;">@'+escapeHTML(u.username)+'</div>'
@@ -25608,7 +25608,7 @@ function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
     const equipped = activeDecoId === item.id;
     const pfp = CU?.pfp;
     const initLetter = (CU?.displayName||'U')[0].toUpperCase();
-    const avatarInner = pfp ? '<img src="'+pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : '<div style="width:100%;height:100%;background:'+item.color+'22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:Syne,sans-serif;font-weight:800;color:'+item.color+';">'+initLetter+'</div>';
+    const avatarInner = pfp ? '<img src="'+pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : '<div style="width:100%;height:100%;background:'+item.color+'22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:var(--font-display);font-weight:800;color:'+item.color+';">'+initLetter+'</div>';
     return '<div class="shop-item-card" style="background:rgba(255,255,255,.02);border-color:'+(equipped?item.color+'44':'rgba(255,255,255,.05)')+';text-align:center;" onmouseover="this.style.borderColor=\''+item.color+'44\'" onmouseout="this.style.borderColor=\''+(equipped?item.color+'44':'rgba(255,255,255,.05)')+'\'">'
       + '<div style="padding:20px 12px 10px;"><div style="position:relative;width:68px;height:68px;margin:0 auto 10px;"><div style="width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.06);overflow:hidden;box-shadow:0 4px 16px '+item.color+'15;">'+avatarInner+'</div>'
       + '<img src="'+item.src+'" style="position:absolute;inset:-7px;width:calc(100% + 14px);height:calc(100% + 14px);object-fit:contain;pointer-events:none;" onerror="this.style.display=\'none\'"></div></div>'
@@ -25684,7 +25684,7 @@ function renderAtelierTab(tab) {
 
       <!-- Welcome Banner -->
       <div style="margin-bottom:24px;">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:4px;">Welcome back${CU?.displayName ? ', '+CU.displayName : ''}</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:4px;">Welcome back${CU?.displayName ? ', '+CU.displayName : ''}</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.3);line-height:1.5;">Your Onyx balance: <span style="color:var(--accent);font-weight:700;">${bal}</span> · ${doneQ.length}/${allQ.length} quests done</div>
       </div>
 
@@ -25697,7 +25697,7 @@ function renderAtelierTab(tab) {
             <div style="width:40px;height:40px;border-radius:14px;background:${dailyDone?'rgba(62,207,110,.1)':'rgba(255,249,62,.1)'};display:flex;align-items:center;justify-content:center;font-size:20px;">🎁</div>
             <span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:${dailyDone?'rgba(62,207,110,.12)':'rgba(255,249,62,.12)'};color:${dailyDone?'#3ecf6e':'var(--accent)'};">${dailyDone?'CLAIMED':'CLAIM'}</span>
           </div>
-          <div style="font-family:'Syne',sans-serif;font-size:14.5px;font-weight:800;color:#fff;margin-bottom:5px;">Daily Onyx</div>
+          <div style="font-family:var(--font-display);font-size:14.5px;font-weight:800;color:#fff;margin-bottom:5px;">Daily Onyx</div>
           <div style="font-size:11px;color:rgba(255,255,255,.35);">+50 Onyx every day</div>
         </div>
         <!-- Browse Shop -->
@@ -25709,7 +25709,7 @@ function renderAtelierTab(tab) {
             </div>
             <span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(167,139,250,.12);color:#a78bfa;">SHOP</span>
           </div>
-          <div style="font-family:'Syne',sans-serif;font-size:14.5px;font-weight:800;color:#fff;margin-bottom:5px;">Browse Items</div>
+          <div style="font-family:var(--font-display);font-size:14.5px;font-weight:800;color:#fff;margin-bottom:5px;">Browse Items</div>
           <div style="font-size:11px;color:rgba(255,255,255,.35);">Themes, decorations & more</div>
         </div>
         <!-- Radiance -->
@@ -25721,7 +25721,7 @@ function renderAtelierTab(tab) {
             </div>
             ${hasRad||hasPlus?'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(62,207,110,.12);color:#3ecf6e;">ACTIVE</span>':'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(251,146,60,.12);color:#fb923c;">UPGRADE</span>'}
           </div>
-          <div style="font-family:'Syne',sans-serif;font-size:14.5px;font-weight:800;color:#fff;margin-bottom:5px;">${hasPlus?'Radiance+':hasRad?'Radiance':'Get Radiance'}</div>
+          <div style="font-family:var(--font-display);font-size:14.5px;font-weight:800;color:#fff;margin-bottom:5px;">${hasPlus?'Radiance+':hasRad?'Radiance':'Get Radiance'}</div>
           <div style="font-size:11px;color:rgba(255,255,255,.35);">${hasPlus?daysPlus+' days left':hasRad?daysRad+' days left':'Premium perks & badge'}</div>
         </div>
       </div>
@@ -25815,13 +25815,13 @@ function renderAtelierTab(tab) {
       ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,220,62,.08),rgba(255,249,62,.03));border:1.5px solid rgba(255,220,62,.18);border-radius:22px;padding:22px 26px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
         <div style="position:absolute;top:-30px;right:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,220,62,.06),transparent 70%);pointer-events:none;"></div>
         <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,220,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_radiancePlusImg('32')}</div>
-        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#ffd93e;letter-spacing:-.01em;">Radiance+ Active</div>
+        <div style="flex:1;"><div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#ffd93e;letter-spacing:-.01em;">Radiance+ Active</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
         <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:var(--red);font-size:12px;padding:9px 18px;cursor:pointer;transition:all .15s;flex-shrink:0;">Cancel</button>
       </div>`:hasRad?`<div style="background:linear-gradient(135deg,rgba(255,160,62,.06),rgba(255,160,62,.02));border:1.5px solid rgba(255,160,62,.15);border-radius:22px;padding:22px 26px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
         <div style="position:absolute;top:-30px;right:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,160,62,.06),transparent 70%);pointer-events:none;"></div>
         <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_radianceImg('32')}</div>
-        <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#ff9d3e;letter-spacing:-.01em;">Radiance Active</div>
+        <div style="flex:1;"><div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#ff9d3e;letter-spacing:-.01em;">Radiance Active</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">${daysRad} days remaining · Auto-renews · 600 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
         <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:var(--red);font-size:12px;padding:9px 18px;cursor:pointer;transition:all .15s;flex-shrink:0;">Cancel</button>
       </div>`:''}
@@ -25834,7 +25834,7 @@ function renderAtelierTab(tab) {
         <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,160,62,.15);border-radius:22px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,160,62,.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,160,62,.15)';this.style.transform=''">
           <div style="padding:24px 24px 18px;">
             <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">${_radianceImg('32')}</div>
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ff9d3e;margin-bottom:5px;">Radiance</div>
+            <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#ff9d3e;margin-bottom:5px;">Radiance</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Core perks for Fortized fans</div>
             <!-- Perk chips -->
             <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px;">
@@ -25845,7 +25845,7 @@ function renderAtelierTab(tab) {
           <div style="padding:0 18px 20px;">
             <div id="rad-price-sel-0" style="display:flex;flex-direction:column;gap:6px;">
               ${PRICES.basic.map((pl,i)=>`
-                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===1?'var(--accent)':'rgba(255,255,255,.04)'};color:${i===1?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;">
+                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===1?'var(--accent)':'rgba(255,255,255,.04)'};color:${i===1?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.07)'};font-family:var(--font-ui);font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;">
                   <span>${pl.days} Days</span>
                   <span>${pl.onyx} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">${i===1?' 🔥':''}</span>
                 </button>`).join('')}
@@ -25858,7 +25858,7 @@ function renderAtelierTab(tab) {
           <div class="best-ribbon">BEST VALUE</div>
           <div style="padding:24px 24px 18px;">
             <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">${_radiancePlusImg('32')}</div>
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ffd93e;margin-bottom:5px;">Radiance+</div>
+            <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#ffd93e;margin-bottom:5px;">Radiance+</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Everything unlocked</div>
             <!-- Perk chips — basic + plus -->
             <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px;">
@@ -25869,7 +25869,7 @@ function renderAtelierTab(tab) {
           <div style="padding:0 18px 20px;">
             <div style="display:flex;flex-direction:column;gap:6px;">
               ${PRICES.plus.map((pl,i)=>`
-                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===0?'linear-gradient(90deg,#ffd93e,#fff93e)':'rgba(255,255,255,.04)'};color:${i===0?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;">
+                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===0?'linear-gradient(90deg,#ffd93e,#fff93e)':'rgba(255,255,255,.04)'};color:${i===0?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.07)'};font-family:var(--font-ui);font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;">
                   <span>${pl.days} Days</span>
                   <span>${pl.onyx} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">${i===0?' 🔥':''}</span>
                 </button>`).join('')}
@@ -25937,7 +25937,7 @@ function renderAtelierTab(tab) {
         </div>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <span style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:${q.done?'rgba(255,255,255,.4)':'#fff'};letter-spacing:-.01em;">${q.title}</span>
+            <span style="font-family:var(--font-display);font-size:13.5px;font-weight:800;color:${q.done?'rgba(255,255,255,.4)':'#fff'};letter-spacing:-.01em;">${q.title}</span>
             <span style="font-size:8.5px;font-weight:800;padding:3px 8px;border-radius:100px;background:${catColor}10;color:${catColor};border:1px solid ${catColor}18;letter-spacing:.05em;">${q.daily?'DAILY':q.category.toUpperCase()}</span>
           </div>
           <div style="font-size:11.5px;color:rgba(255,255,255,.3);line-height:1.45;margin-bottom:10px;">${q.desc}</div>
@@ -25965,7 +25965,7 @@ function renderAtelierTab(tab) {
               <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="3"/>
               <circle cx="24" cy="24" r="20" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${20*2*Math.PI}" stroke-dashoffset="${20*2*Math.PI*(1-dailyDone/Math.max(dailyTotal,1))}" style="transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);filter:drop-shadow(0 0 6px rgba(255,249,62,.2));"/>
             </svg>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#fff;">${dailyDone}/${dailyTotal}</div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:12px;font-weight:800;color:#fff;">${dailyDone}/${dailyTotal}</div>
           </div>
           <div>
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;">Daily Quests</div>
@@ -25976,7 +25976,7 @@ function renderAtelierTab(tab) {
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:7px;padding:10px 16px;background:linear-gradient(135deg,rgba(255,249,62,.05),rgba(255,249,62,.02));border:1.5px solid rgba(255,249,62,.1);border-radius:14px;">
             <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;">
-            <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--accent);">${totalOnyx}</span>
+            <span style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--accent);">${totalOnyx}</span>
             <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;">earned</span>
           </div>
           <div style="display:flex;align-items:center;gap:7px;padding:10px 16px;background:rgba(62,207,110,.03);border:1.5px solid rgba(62,207,110,.08);border-radius:14px;">
@@ -25986,7 +25986,7 @@ function renderAtelierTab(tab) {
           </div>
           ${streak > 0 ? `<div style="display:flex;align-items:center;gap:7px;padding:10px 16px;background:linear-gradient(135deg,rgba(251,146,60,.05),rgba(251,146,60,.02));border:1.5px solid rgba(251,146,60,.1);border-radius:14px;">
             <span style="font-size:15px;">🔥</span>
-            <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fb923c;">${streak}</span>
+            <span style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fb923c;">${streak}</span>
             <span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:600;">day streak</span>
           </div>` : ''}
         </div>
@@ -26031,7 +26031,7 @@ function renderAtelierTab(tab) {
 
           ${!activeQ.length ? `<div style="text-align:center;padding:48px 24px;background:rgba(255,255,255,.015);border-radius:18px;border:1px solid rgba(255,255,255,.04);">
             <div style="font-size:40px;margin-bottom:12px;">🎉</div>
-            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:rgba(255,255,255,.5);margin-bottom:6px;">All Done!</div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:rgba(255,255,255,.5);margin-bottom:6px;">All Done!</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.25);">Come back tomorrow for new daily quests.</div>
           </div>` : ''}
         ` : `
@@ -26072,7 +26072,7 @@ function renderAtelierTab(tab) {
         <div style="flex:1;"></div>
         <div style="display:flex;align-items:center;gap:7px;padding:8px 14px;background:linear-gradient(135deg,rgba(255,249,62,.05),rgba(255,249,62,.02));border:1.5px solid rgba(255,249,62,.1);border-radius:12px;">
           <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(255,249,62,.2));">
-          <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--accent);text-shadow:0 1px 6px rgba(255,249,62,.1);">${bal}</span>
+          <span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--accent);text-shadow:0 1px 6px rgba(255,249,62,.1);">${bal}</span>
         </div>
       </div>
 
@@ -26144,7 +26144,7 @@ function renderAtelierTab(tab) {
                       </div>`
                       :`<div class="sic-price"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> 100</div>`}
                   </div>
-                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:#3ecf6e;flex-shrink:0;">Owned</div>'}
+                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:#3ecf6e;flex-shrink:0;">Owned</div>'}
                 </div>
               </div>
             </div>
@@ -26175,7 +26175,7 @@ function renderAtelierTab(tab) {
                   <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="font-size:24px;opacity:.25;">🔒</div></div>
                 </div>
                 <div style="padding:14px 16px;">
-                  <div style="font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;color:rgba(255,255,255,.55);margin-bottom:4px;">${it.n}</div>
+                  <div style="font-family:var(--font-display);font-size:12.5px;font-weight:800;color:rgba(255,255,255,.55);margin-bottom:4px;">${it.n}</div>
                   <div style="font-size:10.5px;color:rgba(255,255,255,.22);line-height:1.5;">${it.d}</div>
                 </div>
               </div>`).join('')}
@@ -26200,11 +26200,11 @@ function renderAtelierTab(tab) {
                     <span style="position:absolute;bottom:6px;right:10px;font-size:8px;color:${a.labelColor};font-weight:700;letter-spacing:.04em;">${a.name.toUpperCase()}</span>
                   </div>
                   <div style="padding:14px 16px;">
-                    <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;">${a.name}</div>
+                    <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;">${a.name}</div>
                     <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.4;margin-bottom:10px;">${a.desc}</div>
                     ${owned
                       ? '<div style="padding:7px 14px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:10px;color:#3ecf6e;font-size:11px;font-weight:700;text-align:center;">Owned</div>'
-                      : `<button onclick="event.stopPropagation();buyAppearance('${a.id}',${a.price})" style="width:100%;padding:8px 14px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> ${a.price} Onyx</button>`}
+                      : `<button onclick="event.stopPropagation();buyAppearance('${a.id}',${a.price})" style="width:100%;padding:8px 14px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> ${a.price} Onyx</button>`}
                   </div>
                 </div>`;
               }).join('')}
@@ -26217,10 +26217,10 @@ function renderAtelierTab(tab) {
             <div style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.12);border-radius:18px;padding:16px 18px;margin-bottom:28px;display:flex;align-items:center;gap:14px;">
               <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="/fortized badges/onyx.png" style="width:28px;height:28px;object-fit:contain;"></div>
               <div style="flex:1;min-width:0;">
-                <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">Onyx Badge</div>
+                <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">Onyx Badge</div>
                 <div style="font-size:11px;color:rgba(255,255,255,.3);">Evolves as you invest Onyx</div>
               </div>
-              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:8px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> 100</button>`:'<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>'}
+              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:8px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> 100</button>`:'<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>'}
             </div>` : ''}
             ${(shopCat==='All'||shopCat==='Decorations') ? `
             <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
@@ -26234,7 +26234,7 @@ function renderAtelierTab(tab) {
                 return `<div style="background:rgba(255,255,255,.02);border:1.5px solid ${equipped?d.color+'44':'rgba(255,255,255,.05)'};border-radius:16px;padding:16px 12px;text-align:center;transition:all .2s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='${d.color}33';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='${equipped?d.color+'44':'rgba(255,255,255,.05)'}';this.style.transform=''">
                   <div style="position:relative;width:56px;height:56px;margin:0 auto 10px;">
                     <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;overflow:hidden;">
-                      ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:`<div style="width:100%;height:100%;background:${d.color}22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:Syne,sans-serif;font-weight:800;color:${d.color};">U</div>`}
+                      ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:`<div style="width:100%;height:100%;background:${d.color}22;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:var(--font-display);font-weight:800;color:${d.color};">U</div>`}
                     </div>
                     <img src="${d.src}" style="position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);object-fit:contain;pointer-events:none;" onerror="this.style.display='none'">
                   </div>
@@ -26268,7 +26268,7 @@ function renderAtelierTab(tab) {
                   <div style="padding:20px 18px 14px;">
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${bundle.accent}" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-                      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;">${bundle.name}</div>
+                      <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:#fff;">${bundle.name}</div>
                     </div>
                     <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.5;margin-bottom:12px;">${bundle.desc}</div>
                     <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;">
@@ -26276,7 +26276,7 @@ function renderAtelierTab(tab) {
                     </div>
                     ${bundleOwned
                       ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:#3ecf6e;font-size:12px;font-weight:700;text-align:center;">Owned</div>'
-                      : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:#0f1119;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:3px;">${bundle.origPrice}</span> ${bundle.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${bundle.id}','${bundle.name}',${bundle.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;" title="Gift"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
+                      : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:#0f1119;border:none;border-radius:12px;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:3px;">${bundle.origPrice}</span> ${bundle.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${bundle.id}','${bundle.name}',${bundle.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;" title="Gift"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
                   </div>
                 </div>`;
               }).join('')}
@@ -26561,7 +26561,7 @@ function showAddAccountModal() {
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
           <div style="width:46px;height:46px;border-radius:14px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:22px;">👤</div>
           <div>
-            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;">Add Account</div>
+            <div style="font-family:var(--font-display);font-size:18px;font-weight:800;">Add Account</div>
             <div style="font-size:12px;color:var(--muted);">Sign in with another Fortized account</div>
           </div>
         </div>
@@ -26675,7 +26675,7 @@ function enforceAgeGate(contentEl, channelName, onAllow) {
     contentEl.innerHTML = `
       <div class="empty-state" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px;text-align:center;">
         <div style="font-size:54px;margin-bottom:16px;">🛡️</div>
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;">Age Restricted</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:8px;">Age Restricted</div>
         <div style="font-size:13.5px;color:var(--muted-light);max-width:320px;line-height:1.6;margin-bottom:20px;">
           This channel contains content not suitable for your age group.<br>
           <strong style="color:var(--accent);">#${escapeHTML(channelName)}</strong> requires users to be 18 or older.
@@ -26691,7 +26691,7 @@ function enforceAgeGate(contentEl, channelName, onAllow) {
     contentEl.innerHTML = `
       <div class="empty-state" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px;text-align:center;">
         <div style="font-size:54px;margin-bottom:16px;">⚠️</div>
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;color:var(--yellow);">Mature Content Warning</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:8px;color:var(--yellow);">Mature Content Warning</div>
         <div style="font-size:13.5px;color:var(--muted-light);max-width:340px;line-height:1.6;margin-bottom:20px;">
           <strong style="color:var(--accent);">#${escapeHTML(channelName)}</strong> may contain mature content. This channel has been flagged as 18+ by the Bastion owner.
         </div>
@@ -27667,7 +27667,7 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
   overlay.innerHTML = `
     <div style="background:var(--panel);border:1px solid rgba(255,249,62,.06);border-radius:16px;max-width:${isBanner?'680px':'480px'};width:100%;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.7);">
       <div style="padding:16px 20px 12px;border-bottom:1px solid rgba(255,255,255,.06);">
-        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;margin-bottom:2px;">Edit Image</div>
+        <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin-bottom:2px;">Edit Image</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <div style="font-size:12px;color:rgba(255,255,255,.4);">Scroll or drag slider to zoom</div>
           <div style="margin-left:auto;font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);color:rgba(255,249,62,.6);font-weight:600;">${shapeLabel}</div>
@@ -27696,7 +27696,7 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
         </div>
         <button onclick="resetCrop()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;padding:7px 14px;cursor:pointer;transition:all .15s;">Reset</button>
         <button onclick="document.getElementById('crop-modal-overlay').remove()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.6);font-size:12px;padding:7px 16px;cursor:pointer;transition:all .15s;">Cancel</button>
-        <button onclick="applyCrop()" style="background:linear-gradient(135deg,var(--accent),#e6e034);border:none;border-radius:10px;color:#0f1119;font-size:13px;font-weight:700;padding:8px 22px;cursor:pointer;font-family:'Syne',sans-serif;box-shadow:0 2px 10px rgba(255,249,62,.2);transition:all .15s;">Apply</button>
+        <button onclick="applyCrop()" style="background:linear-gradient(135deg,var(--accent),#e6e034);border:none;border-radius:10px;color:#0f1119;font-size:13px;font-weight:700;padding:8px 22px;cursor:pointer;font-family:var(--font-display);box-shadow:0 2px 10px rgba(255,249,62,.2);transition:all .15s;">Apply</button>
       </div>
     </div>`;
 
@@ -27963,10 +27963,10 @@ async function purchaseRadiance(isPlus, days, cost) {
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.88);backdrop-filter:blur(12px);z-index:9100;display:flex;align-items:center;justify-content:center;';
     ov.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:380px;width:90%;text-align:center;">
       <div style="font-size:40px;margin-bottom:14px;">😕</div>
-      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">Not Enough Onyx</div>
+      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Not Enough Onyx</div>
       <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong> but only have <strong>${balance} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong>.<br>Complete quests to earn more Onyx!</div>
       <div style="display:flex;gap:8px;">
-        <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:#0f1119;font-family:'Syne',sans-serif;font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
+        <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:#0f1119;font-family:var(--font-display);font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
         <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.06);color:var(--muted-light);border:1px solid var(--border);border-radius:10px;cursor:pointer;">Not Now</button>
       </div>
     </div>`;
@@ -28759,7 +28759,7 @@ function toggleOwnProfilePanel() {
     </div>
     <!-- Name block -->
     <div style="padding:10px 18px 0;">
-      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;cursor:pointer;line-height:1.2;transition:color .12s;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='#fff'">${escapeHTML(CU?.displayName||CU?.username||'')}</div>
+      <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;cursor:pointer;line-height:1.2;transition:color .12s;" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='#fff'">${escapeHTML(CU?.displayName||CU?.username||'')}</div>
       <div style="font-size:12px;color:rgba(255,255,255,.28);margin-top:3px;">@${escapeHTML(CU?.username||'')}</div>
       ${cs?.text?`<div style="display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:5px 13px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:12px;color:rgba(255,255,255,.5);">${cs.emoji||''} ${escapeHTML(cs.text)}</div>`:''}
     </div>
@@ -29196,7 +29196,7 @@ function _buildPreviewMockup(t, label) {
   const textDim2 = isLight ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.04)';
   const pfpHtml = CU?.pfp
     ? '<img src="'+CU.pfp+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
-    : '<div style="width:100%;height:100%;border-radius:50%;background:'+t.panel+';display:flex;align-items:center;justify-content:center;font-size:11px;font-family:Syne,sans-serif;font-weight:800;color:'+t.accent+';">'+uInitial+'</div>';
+    : '<div style="width:100%;height:100%;border-radius:50%;background:'+t.panel+';display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--font-display);font-weight:800;color:'+t.accent+';">'+uInitial+'</div>';
   return `
   <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:10px;">${label}</div>
   <div style="border-radius:16px;overflow:hidden;border:1.5px solid ${t.border};${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};">
@@ -29628,7 +29628,7 @@ function openThread(msgId, text, from) {
   panel.innerHTML = `
     <div class="thread-panel-header" style="padding:18px 22px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <span style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex:1;color:#fff;">Thread</span>
+      <span style="font-family:var(--font-display);font-size:17px;font-weight:800;flex:1;color:#fff;">Thread</span>
       <button onclick="_closeThread()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
     </div>
     <div class="thread-origin" style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.015);">
@@ -29865,7 +29865,7 @@ function openAdvancedSearch() {
         <div style="flex:1;"></div>
         <div style="display:flex;align-items:center;gap:4px;">
           <div style="font-size:10px;color:rgba(255,255,255,.2);">Sort:</div>
-          <select id="adv-search-sort" onchange="_advSearchSort=this.value;_runAdvSearch(document.getElementById('adv-search-input')?.value||'')" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:rgba(255,255,255,.6);font-size:10px;font-family:'DM Sans',sans-serif;padding:2px 6px;outline:none;cursor:pointer;">
+          <select id="adv-search-sort" onchange="_advSearchSort=this.value;_runAdvSearch(document.getElementById('adv-search-input')?.value||'')" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:rgba(255,255,255,.6);font-size:10px;font-family:var(--font-ui);padding:2px 6px;outline:none;cursor:pointer;">
             <option value="recent" selected>Most Recent</option>
             <option value="oldest">Oldest First</option>
             <option value="relevant">Most Relevant</option>
@@ -29886,7 +29886,7 @@ function openAdvancedSearch() {
     <div class="adv-search-results" id="adv-search-results">
       <div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">
         <div style="font-size:24px;margin-bottom:10px;opacity:.3;">🔍</div>
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:rgba(255,255,255,.3);margin-bottom:4px;">Deep Search</div>
+        <div style="font-family:var(--font-display);font-weight:700;font-size:14px;color:rgba(255,255,255,.3);margin-bottom:4px;">Deep Search</div>
         <div style="font-size:12px;">Search messages, members, files and links across all channels</div>
         <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
           <div style="font-size:10px;color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);padding:3px 10px;border-radius:6px;">from:username</div>
@@ -30232,7 +30232,7 @@ function _renderKeybindsSettings(main) {
   binds.forEach(b => { if (!sections[b.section]) sections[b.section] = []; sections[b.section].push(b); });
   let html = `<div style="padding:24px;">
     <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);">
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">Keyboard Shortcuts</div>
+      <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">Keyboard Shortcuts</div>
       <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;">Customize keyboard shortcuts to match your workflow. Click "Edit" to rebind any shortcut.</div>
     </div>`;
   Object.entries(sections).forEach(([name, items]) => {
@@ -31052,7 +31052,7 @@ function _showSlowModeSettings(bastionId, chName) {
   const current = _getSlowMode(bastionId, chName);
   const opts = [0, 30, 60, 300];
   const labels = ['Off', '30s', '1m', '5m'];
-  let html = '<div style="padding:20px;"><div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;margin-bottom:12px;">Slow Mode</div>';
+  let html = '<div style="padding:20px;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:12px;">Slow Mode</div>';
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
   opts.forEach((s,i) => {
     html += `<button class="btn-${s===current?'a':'g'}" style="padding:8px 16px;font-size:12px;" onclick="_setSlowMode('${escapeHTML(bastionId)}','${escapeHTML(chName)}',${s});document.getElementById('modal-slowmode')?.remove();">${labels[i]}</button>`;
@@ -31074,7 +31074,7 @@ async function renderFriendsSorted(mode) {
   let html = '';
   // Pending section first
   if (pending.length) {
-    html += `<div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Pending — ${pending.length}</div>`;
+    html += `<div style="font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Pending — ${pending.length}</div>`;
     pending.forEach(f => { html += `<div class="activity-item"><div class="act-icon">${buildAvatarHTML(null,f,40)}</div><div class="act-text"><p><strong>${escapeHTML(f)}</strong> sent you a friend request</p></div><div style="display:flex;gap:6px;"><button class="rn-accept" onclick="acceptFriend('${escapeHTML(f)}')">✓</button><button class="rn-decline" onclick="declineFriend('${escapeHTML(f)}')">✕</button></div></div>`; });
   }
   if (!friends.length) { list.innerHTML = html || `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('users','48')}</div><h3>No friends yet</h3><p>Add friends by username!</p><button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button></div>`; return; }
@@ -31086,7 +31086,7 @@ async function renderFriendsSorted(mode) {
   else if (_friendSortMode === 'alpha') sorted.sort((a,b) => a.localeCompare(b));
   else if (_friendSortMode === 'recent') sorted.reverse();
   html += `<div style="display:flex;align-items:center;gap:6px;margin:10px 0 8px;">
-    <span style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Friends — ${friends.length}</span>
+    <span style="font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Friends — ${friends.length}</span>
     <span style="margin-left:auto;display:flex;gap:4px;">
       <button class="asf-chip ${_friendSortMode==='online'?'active':''}" onclick="renderFriendsSorted('online')" style="font-size:10px;padding:2px 8px;">Online</button>
       <button class="asf-chip ${_friendSortMode==='alpha'?'active':''}" onclick="renderFriendsSorted('alpha')" style="font-size:10px;padding:2px 8px;">A-Z</button>
@@ -31205,7 +31205,7 @@ function _createPoll2(container, context) {
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
   const _renderPollCreate = () => {
     modal.innerHTML = `<div style="background:var(--panel);border:1px solid var(--border);border-radius:22px;max-width:420px;width:100%;padding:24px;">
-      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:14px;">Create Poll</div>
+      <div style="font-family:var(--font-display);font-size:17px;font-weight:800;margin-bottom:14px;">Create Poll</div>
       <input id="poll2-question" class="settings-input" placeholder="Ask a question…" style="margin-bottom:12px;font-size:14px;">
       <div id="poll2-options" style="margin-bottom:12px;">
         ${pollOptions.map((o,i)=>`<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">

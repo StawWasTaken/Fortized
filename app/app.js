@@ -28588,7 +28588,7 @@ async function saveAllSettings() {
   updateUserbar();
   applyRadianceFont();
   // Update snapshot so future edits compare against saved state
-  _settingsOriginal = CU ? JSON.parse(JSON.stringify({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme})) : null;
+  _settingsOriginal = CU ? structuredClone({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme}) : null;
   clearSettingsDirty();
   toast('Settings saved!', 'success');
   buildProfileView('myprofile');

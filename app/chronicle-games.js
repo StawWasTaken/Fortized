@@ -134,21 +134,22 @@ async function showChronicleIntro() {
 function showChronicleDashboard() {
   const dashboard = document.createElement('div');
   dashboard.id = 'chronicle-dashboard';
-  dashboard.style.cssText = `position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; font-family: ${CHRONICLE.FONT}; overflow: hidden;`;
+  dashboard.style.cssText = `position: fixed; inset: 0; background: linear-gradient(135deg, #f5ead6 0%, #ede4d3 100%); z-index: 9999; display: flex; flex-direction: column; font-family: ${CHRONICLE.FONT}; overflow: hidden;`;
 
+  // TOP BAR
   const topbar = document.createElement('div');
-  topbar.style.cssText = `display: flex; justify-content: space-between; align-items: center; padding: 18px 25px; border-bottom: 3px solid #000; background: #f9f9f9;`;
+  topbar.style.cssText = `display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; background: rgba(0,0,0,0.05); border-bottom: 2px solid rgba(0,0,0,0.1); box-shadow: 0 2px 8px rgba(0,0,0,0.08);`;
 
   const title = document.createElement('div');
-  title.style.cssText = `font-size: 16px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;`;
-  title.textContent = 'The Fortized Grand Chronicle';
+  title.style.cssText = `font-size: 20px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; color: #2c2416;`;
+  title.textContent = '⚔ The Fortized Grand Chronicle';
   topbar.appendChild(title);
 
   const closeBtn = document.createElement('button');
-  closeBtn.style.cssText = `width: 38px; height: 38px; background: #000; color: #fff; border: 3px solid #000; border-radius: 2px; font-size: 20px; cursor: pointer; font-weight: 700; box-shadow: 3px 3px 0 rgba(0,0,0,0.3); transition: all 0.2s;`;
+  closeBtn.style.cssText = `width: 40px; height: 40px; background: #8b4513; color: #fff; border: none; border-radius: 6px; font-size: 24px; cursor: pointer; font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.15);`;
   closeBtn.textContent = '✕';
-  closeBtn.onmouseover = () => { closeBtn.style.transform = 'translate(-2px, -2px)'; closeBtn.style.boxShadow = '5px 5px 0 rgba(0,0,0,0.3)'; };
-  closeBtn.onmouseout = () => { closeBtn.style.transform = 'none'; closeBtn.style.boxShadow = '3px 3px 0 rgba(0,0,0,0.3)'; };
+  closeBtn.onmouseover = () => { closeBtn.style.background = '#6d3410'; closeBtn.style.transform = 'scale(1.05)'; };
+  closeBtn.onmouseout = () => { closeBtn.style.background = '#8b4513'; closeBtn.style.transform = 'scale(1)'; };
   closeBtn.onclick = () => { pauseBgMusic(); dashboard.remove(); CHRONICLE.sessionStarted = false; };
   topbar.appendChild(closeBtn);
   dashboard.appendChild(topbar);
@@ -156,33 +157,36 @@ function showChronicleDashboard() {
   const main = document.createElement('div');
   main.style.cssText = `display: flex; flex: 1; gap: 20px; padding: 20px; overflow: hidden;`;
 
-  // LEFT PANEL - Events with UIBox2
+  // LEFT PANEL - Events
   const leftPanel = document.createElement('div');
-  leftPanel.style.cssText = `width: 140px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto;`;
+  leftPanel.style.cssText = `width: 160px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 8px;`;
+  leftPanel.style.scrollBehavior = 'smooth';
+
+  const eventsTitle = document.createElement('div');
+  eventsTitle.style.cssText = `font-size: 12px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #5d4e37; margin-bottom: 5px; padding: 0 10px;`;
+  eventsTitle.textContent = 'Events';
+  leftPanel.appendChild(eventsTitle);
 
   CHRONICLE.events.forEach((evt) => {
-    const btnWrapper = document.createElement('div');
-    btnWrapper.style.cssText = `position: relative; height: 70px;`;
-
-    // UIBox2 as background image
-    const uiboxImg = document.createElement('img');
-    uiboxImg.src = `${CHRONICLE.ASSET_PATH}UIBox2.png`;
-    uiboxImg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
-    btnWrapper.appendChild(uiboxImg);
-
-    // Button on top
     const btn = document.createElement('button');
-    btn.style.cssText = `position: absolute; inset: 0; background: transparent; border: 2px solid #000; cursor: ${evt.unlocked ? 'pointer' : 'default'}; font-family: ${CHRONICLE.FONT}; font-size: 10px; font-weight: 700; text-align: center; transition: all 0.2s; display: flex; align-items: center; justify-content: center; color: #000;`;
-    btn.textContent = evt.completed ? '✓' : evt.unlocked ? `E${evt.id}` : '🔒';
+    btn.style.cssText = `position: relative; padding: 14px; background: #fff; border: 2px solid #d4a574; border-radius: 8px; cursor: ${evt.unlocked ? 'pointer' : 'default'}; font-family: ${CHRONICLE.FONT}; font-size: 13px; font-weight: 700; text-align: center; transition: all 0.2s; color: #2c2416; box-shadow: 0 2px 6px rgba(0,0,0,0.08); opacity: ${evt.unlocked ? '1' : '0.6'};`;
 
-    if (evt.unlocked && !evt.completed) {
-      btn.onmouseover = () => { btn.style.transform = 'scale(1.05)'; };
-      btn.onmouseout = () => { btn.style.transform = 'scale(1)'; };
+    if (evt.completed) {
+      btn.textContent = `✓ ${evt.title}`;
+      btn.style.background = '#d4f1d4';
+      btn.style.borderColor = '#7cb342';
+      btn.style.color = '#33691e';
+    } else if (evt.unlocked) {
+      btn.textContent = evt.title;
+      btn.onmouseover = () => { btn.style.background = '#fef5e7'; btn.style.transform = 'translateY(-2px)'; btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)'; };
+      btn.onmouseout = () => { btn.style.background = '#fff'; btn.style.transform = 'translateY(0)'; btn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)'; };
       btn.onclick = () => launchEvent(evt.id);
+    } else {
+      btn.textContent = `🔒 Locked`;
+      btn.style.color = '#999';
     }
 
-    btnWrapper.appendChild(btn);
-    leftPanel.appendChild(btnWrapper);
+    leftPanel.appendChild(btn);
   });
 
   main.appendChild(leftPanel);
@@ -190,122 +194,125 @@ function showChronicleDashboard() {
   // CENTER PANEL - Game area
   const centerPanel = document.createElement('div');
   centerPanel.id = 'game-area';
-  centerPanel.style.cssText = `flex: 1; border: 4px solid #000; border-radius: 3px; background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); position: relative; overflow: hidden;`;
+  centerPanel.style.cssText = `flex: 1; background: linear-gradient(135deg, #e8dcc8 0%, #d9cebc 100%); position: relative; overflow: hidden; border-radius: 10px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.1);`;
 
   const mapImg = document.createElement('img');
   mapImg.src = `${CHRONICLE.ASSET_PATH}IRL Human World Map 1452.png`;
-  mapImg.style.cssText = `width: 100%; height: 100%; object-fit: cover; opacity: 0.12;`;
+  mapImg.style.cssText = `width: 100%; height: 100%; object-fit: cover; opacity: 0.25;`;
   centerPanel.appendChild(mapImg);
 
   main.appendChild(centerPanel);
 
-  // RIGHT PANEL - Stats with UIBox overlay
+  // RIGHT PANEL - Stats
   const rightPanel = document.createElement('div');
-  rightPanel.style.cssText = `width: 160px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto;`;
+  rightPanel.style.cssText = `width: 180px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding-left: 8px;`;
 
-  // Create stat box with UIBox image
-  function createStatBox(title, stats) {
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = `position: relative; min-height: 120px;`;
+  function createCard(title, content, icon = null) {
+    const card = document.createElement('div');
+    card.style.cssText = `background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 2px solid #e5d5c0;`;
 
-    const uiboxImg = document.createElement('img');
-    uiboxImg.src = `${CHRONICLE.ASSET_PATH}UIBox.png`;
-    uiboxImg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
-    wrapper.appendChild(uiboxImg);
+    const cardTitle = document.createElement('div');
+    cardTitle.style.cssText = `font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #5d4e37; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #d4a574;`;
+    cardTitle.textContent = title;
+    card.appendChild(cardTitle);
 
-    const box = document.createElement('div');
-    box.style.cssText = `position: absolute; inset: 0; border: 3px solid #000; padding: 12px; border-radius: 3px; background: rgba(255,255,255,0.75);`;
-
-    const titleEl = document.createElement('div');
-    titleEl.style.cssText = `font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #000;`;
-    titleEl.textContent = title;
-    box.appendChild(titleEl);
-
-    stats.forEach(stat => {
-      const row = document.createElement('div');
-      row.style.cssText = `display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 9px; font-weight: 700;`;
-      const icon = document.createElement('img');
-      icon.src = `${CHRONICLE.ASSET_PATH}${stat.icon}`;
-      icon.style.cssText = `width: 16px; height: 16px; object-fit: contain;`;
-      row.appendChild(icon);
-      const text = document.createElement('div');
-      text.textContent = `${stat.label}: ${stat.value}`;
-      row.appendChild(text);
-      box.appendChild(row);
-    });
-
-    wrapper.appendChild(box);
-    return wrapper;
+    card.appendChild(content);
+    return card;
   }
 
-  rightPanel.appendChild(createStatBox('Player', [
+  // Player stats card
+  const playerContent = document.createElement('div');
+  playerContent.style.cssText = `display: flex; flex-direction: column; gap: 8px;`;
+  [
     { icon: 'IconJesterHat.png', label: 'Joy', value: `${CHRONICLE.playerStats.joy}%` },
     { icon: 'IconCoin.png', label: 'FortCoin', value: CHRONICLE.playerStats.fortCoins },
     { icon: 'IconHammer.png', label: 'Hammer', value: CHRONICLE.playerStats.hammer }
-  ]));
+  ].forEach(stat => {
+    const row = document.createElement('div');
+    row.style.cssText = `display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: #2c2416;`;
+    const icon = document.createElement('img');
+    icon.src = `${CHRONICLE.ASSET_PATH}${stat.icon}`;
+    icon.style.cssText = `width: 18px; height: 18px; object-fit: contain;`;
+    row.appendChild(icon);
+    const label = document.createElement('span');
+    label.textContent = stat.label;
+    label.style.flex = '1';
+    row.appendChild(label);
+    const value = document.createElement('span');
+    value.textContent = stat.value;
+    value.style.fontWeight = '900';
+    value.style.color = '#8b4513';
+    row.appendChild(value);
+    playerContent.appendChild(row);
+  });
+  rightPanel.appendChild(createCard('Player Stats', playerContent));
 
-  rightPanel.appendChild(createStatBox('Global', [
+  // Global stats card
+  const globalContent = document.createElement('div');
+  globalContent.style.cssText = `display: flex; flex-direction: column; gap: 8px;`;
+  [
     { icon: 'IconKnight.png', label: 'Players', value: CHRONICLE.globalStats.totalPlayers },
-    { icon: 'IconSword.png', label: 'Battles', value: CHRONICLE.globalStats.battleWins }
-  ]));
+    { icon: 'IconSword.png', label: 'Victories', value: CHRONICLE.globalStats.battleWins }
+  ].forEach(stat => {
+    const row = document.createElement('div');
+    row.style.cssText = `display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: #2c2416;`;
+    const icon = document.createElement('img');
+    icon.src = `${CHRONICLE.ASSET_PATH}${stat.icon}`;
+    icon.style.cssText = `width: 18px; height: 18px; object-fit: contain;`;
+    row.appendChild(icon);
+    const label = document.createElement('span');
+    label.textContent = stat.label;
+    label.style.flex = '1';
+    row.appendChild(label);
+    const value = document.createElement('span');
+    value.textContent = stat.value.toLocaleString();
+    value.style.fontWeight = '900';
+    value.style.color = '#8b4513';
+    row.appendChild(value);
+    globalContent.appendChild(row);
+  });
+  rightPanel.appendChild(createCard('Global', globalContent));
 
-  // Battle box with UIBox
-  const battleWrapper = document.createElement('div');
-  battleWrapper.style.cssText = `position: relative; min-height: 100px;`;
-
-  const battleUibox = document.createElement('img');
-  battleUibox.src = `${CHRONICLE.ASSET_PATH}UIBox.png`;
-  battleUibox.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
-  battleWrapper.appendChild(battleUibox);
-
-  const battleBox = document.createElement('div');
-  battleBox.style.cssText = `position: absolute; inset: 0; border: 3px solid #000; padding: 12px; text-align: center; border-radius: 3px; background: rgba(255,255,255,0.75);`;
-
+  // Battle Timer card
+  const battleContent = document.createElement('div');
+  battleContent.style.cssText = `text-align: center;`;
+  const battleTime = document.createElement('div');
+  battleTime.style.cssText = `font-size: 28px; font-weight: 900; color: #8b4513; margin-bottom: 6px;`;
+  battleTime.textContent = '0:37';
+  battleContent.appendChild(battleTime);
   const battleLabel = document.createElement('div');
-  battleLabel.style.cssText = `font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;`;
-  battleLabel.textContent = '⚔ Battle';
-  battleBox.appendChild(battleLabel);
-
-  const battleTimer = document.createElement('div');
-  battleTimer.style.cssText = `font-size: 26px; font-weight: 700;`;
-  battleTimer.textContent = '0:37';
-  battleBox.appendChild(battleTimer);
-
-  battleWrapper.appendChild(battleBox);
-  rightPanel.appendChild(battleWrapper);
+  battleLabel.style.cssText = `font-size: 10px; color: #999;`;
+  battleLabel.textContent = 'Next Battle';
+  battleContent.appendChild(battleLabel);
+  rightPanel.appendChild(createCard('⚔ Battle', battleContent));
 
   main.appendChild(rightPanel);
   dashboard.appendChild(main);
 
   // BOTTOM - Chapter info
   const bottom = document.createElement('div');
-  bottom.style.cssText = `border-top: 3px solid #000; padding: 18px 20px; background: linear-gradient(135deg, #f5f1e8 0%, #e8e4db 100%);`;
+  bottom.style.cssText = `padding: 18px 30px; background: rgba(0,0,0,0.05); border-top: 2px solid rgba(0,0,0,0.1);`;
 
   const chapterLabel = document.createElement('div');
-  chapterLabel.style.cssText = `font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #666; margin-bottom: 4px;`;
-  chapterLabel.textContent = 'CHAPTER I';
+  chapterLabel.style.cssText = `font-size: 10px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #8b4513; margin-bottom: 6px;`;
+  chapterLabel.textContent = '📖 CHAPTER I: The War of the Shattered Pact';
   bottom.appendChild(chapterLabel);
 
-  const chapterTitle = document.createElement('div');
-  chapterTitle.style.cssText = `font-size: 18px; font-weight: 800; margin-bottom: 8px;`;
-  chapterTitle.textContent = 'The War of the Shattered Pact';
-  bottom.appendChild(chapterTitle);
-
   const chapterDesc = document.createElement('div');
-  chapterDesc.style.cssText = `font-size: 11px; line-height: 1.5; color: #444; margin-bottom: 10px;`;
+  chapterDesc.style.cssText = `font-size: 12px; line-height: 1.6; color: #5d4e37; margin-bottom: 12px;`;
   chapterDesc.textContent = 'The Treaty of the Silver Stream lies broken. Vastilly\'s banners march east — and you, a knight of the realm, are called to serve.';
   bottom.appendChild(chapterDesc);
 
   const progressBar = document.createElement('div');
-  progressBar.style.cssText = `width: 100%; height: 16px; border: 2px solid #000; background: white; border-radius: 2px; overflow: hidden; margin-bottom: 6px;`;
+  progressBar.style.cssText = `width: 100%; height: 20px; background: #fff; border: 2px solid #d4a574; border-radius: 6px; overflow: hidden; margin-bottom: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);`;
   const progressFill = document.createElement('div');
-  progressFill.style.cssText = `height: 100%; background: #000; width: 0%;`;
+  progressFill.style.cssText = `height: 100%; background: linear-gradient(90deg, #7cb342 0%, #558b2f 100%); width: 8%;`;
   progressBar.appendChild(progressFill);
   bottom.appendChild(progressBar);
 
   const progressText = document.createElement('div');
-  progressText.style.cssText = `font-size: 10px; font-weight: 700; color: #666;`;
-  progressText.textContent = '0 / 13 Events Complete';
+  progressText.style.cssText = `font-size: 11px; font-weight: 700; color: #8b4513;`;
+  progressText.textContent = '1 / 13 Events Complete';
   bottom.appendChild(progressText);
 
   dashboard.appendChild(bottom);

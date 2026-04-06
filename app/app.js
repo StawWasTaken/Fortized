@@ -15931,8 +15931,10 @@ function _showMaintenanceScreen() {
 // Instead of separate intervals each fetching global settings, use ONE.
 let _dismissedAnnouncement = null;
 let _lastAnnText = null;
+let _globalSettingsInterval = null;
 function _listenGlobalSettingsConsolidated() {
-  setInterval(async () => {
+  if (_globalSettingsInterval) clearInterval(_globalSettingsInterval);
+  _globalSettingsInterval = setInterval(async () => {
     try {
       const gs = await FortizedSocial.adminGetGlobalSettings();
       // Maintenance mode check
@@ -16033,8 +16035,10 @@ function _submitFeedback(rating, actionType, btn) {
 }
 
 // Poll for staff changes so sidebar button appears/disappears dynamically
+let _staffPollInterval = null;
 function _listenStaffChanges() {
-  setInterval(async () => {
+  if (_staffPollInterval) clearInterval(_staffPollInterval);
+  _staffPollInterval = setInterval(async () => {
     try {
       const staffData = await FortizedSocial.adminGetStaff(); // Reduced from 20s to 60s
       if (staffData && (staffData.admins || staffData.moderators)) {
@@ -16077,8 +16081,10 @@ function _listenStaffChanges() {
 }
 
 // Poll for force-refresh signal from admin
+let _forceRefreshInterval = null;
 function _listenForceRefresh() {
-  setInterval(async () => {
+  if (_forceRefreshInterval) clearInterval(_forceRefreshInterval);
+  _forceRefreshInterval = setInterval(async () => {
     try {
       const ts = await FortizedSocial.adminGetSignal('force_refresh');
       if (!ts) return;
@@ -16095,8 +16101,10 @@ function _listenForceRefresh() {
 }
 
 // Poll for session-clear signal from admin
+let _clearSessionsInterval = null;
 function _listenClearSessions() {
-  setInterval(async () => {
+  if (_clearSessionsInterval) clearInterval(_clearSessionsInterval);
+  _clearSessionsInterval = setInterval(async () => {
     try {
       const ts = await FortizedSocial.adminGetSignal('clear_sessions');
       if (!ts) return;
@@ -16115,12 +16123,18 @@ function _listenClearSessions() {
 }
 
 // Real-time bastion data sync — listens for changes to bastions the user belongs to
+const _bastionLiveRefs = [];
 function _listenBastionUpdates() {
+  // Clean up previous listeners to prevent leaks
+  _bastionLiveRefs.forEach(ref => { try { ref.off(); } catch(e) { console.debug('[Bastion] ref.off:', e?.message); } });
+  _bastionLiveRefs.length = 0;
   if (!CU?.bastions) return;
   CU.bastions.forEach((b, idx) => {
     const gid = b.globalId || b.name;
     if (!gid) return;
-    firebase.database().ref('globalBastions/' + gid).on('value', snap => {
+    const bastionRef = firebase.database().ref('globalBastions/' + gid);
+    _bastionLiveRefs.push(bastionRef);
+    bastionRef.on('value', snap => {
       if (!snap.exists()) return;
       const fresh = snap.val();
       const local = CU.bastions[idx];
@@ -16149,7 +16163,9 @@ function _listenBastionUpdates() {
       }
     });
     // Live listener for bastion member list — updates member list in real-time when someone joins/leaves
-    firebase.database().ref('globalBastions/' + gid + '/members').on('value', snap => {
+    const membersRef = firebase.database().ref('globalBastions/' + gid + '/members');
+    _bastionLiveRefs.push(membersRef);
+    membersRef.on('value', snap => {
       if (!snap.exists()) return;
       const raw = snap.val();
       if (!raw) return;
@@ -27595,9 +27611,12 @@ function _liveFormatPreview(text) {
 
 // Hook into buildChatInputBar — after textarea is inserted, setup live preview
 const _origAutoResize = typeof autoResize === 'function' ? autoResize : null;
+let _livePreviewObserver = null;
 function _hookLivePreviewOnInput() {
+  // Disconnect previous observer to prevent duplicates
+  if (_livePreviewObserver) { _livePreviewObserver.disconnect(); _livePreviewObserver = null; }
   // Observe DOM for new textareas in chat-input-row
-  const observer = new MutationObserver(mutations => {
+  const observer = _livePreviewObserver = new MutationObserver(mutations => {
     mutations.forEach(m => {
       m.addedNodes.forEach(n => {
         if (n.nodeType !== 1) return;

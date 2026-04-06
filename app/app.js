@@ -21435,22 +21435,22 @@ async function _pollSpotifyNowPlaying() {
         _updateUserbarActivity();
         _syncRailUserbarActivity();
         FortizedSocial.socketEmit('activity:set', { activity: activityState.primary, activityState: activityState });
-        try { firebase.database().ref('users/'+CU.username+'/gameActivity').set(activityState.primary); } catch {}
-        try { firebase.database().ref('users/'+CU.username+'/activityState').set(activityState); } catch {}
+        try { firebase.database().ref('users/'+CU.username+'/gameActivity').set(activityState.primary); } catch(e) { console.debug('[Activity] gameActivity write failed', e); }
+        try { firebase.database().ref('users/'+CU.username+'/activityState').set(activityState); } catch(e) { console.debug('[Activity] activityState write failed', e); }
         // Save Spotify data to database
-        try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch {}
+        try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch(e) { console.debug('[Spotify] nowPlaying write failed', e); }
         // Update profile widget if visible
         _updateSpotifyWidget();
       } else {
         CU.spotifyNowPlaying = { isPlaying: false };
-        try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch {}
+        try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch(e) { console.debug('[Spotify] nowPlaying write failed', e); }
         _updateSpotifyWidget();
         // Clear Spotify activity if it was set
         removeActivity('spotify');
       }
     } else if (res.status === 204) {
       CU.spotifyNowPlaying = { isPlaying: false };
-      try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch {}
+      try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch(e) { console.debug('[Spotify] nowPlaying write failed', e); }
       _updateSpotifyWidget();
       removeActivity('spotify');
     } else if (res.status === 401) {
@@ -22028,7 +22028,7 @@ async function showDMUserPanel(username) {
   panel.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center;">Loading\u2026</div>';
   subscribeProfileStatus(username);
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch {}
+  try { u = await FortizedSocial.getUserByName(username); } catch(e) { console.debug('[DM] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
   // Update DM welcome area with actual pfp
   const _wAv = document.getElementById('dm-welcome-av');
@@ -22039,8 +22039,8 @@ async function showDMUserPanel(username) {
   try {
     const pr = await FortizedSocial.queryPresence([username]);
     if (pr && pr[username]) { status = pr[username].status || 'offline'; }
-    else { try { status = await FortizedSocial.getStatus(username); } catch {} }
-  } catch { try { status = await FortizedSocial.getStatus(username); } catch {} }
+    else { try { status = await FortizedSocial.getStatus(username); } catch(e) { console.debug('[DM] status fallback failed', e); } }
+  } catch(e) { console.debug('[DM] presence query failed', e); try { status = await FortizedSocial.getStatus(username); } catch(e2) { console.debug('[DM] status fallback failed', e2); } }
   const sc = FtzStatus.color(status);
   const hasR = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
@@ -23357,7 +23357,7 @@ async function openPollChannel(chIdx) {
 }
 
 function _teardownPollLive() {
-  if (_pollLiveRef) { try { _pollLiveRef.off(); } catch {} _pollLiveRef = null; }
+  if (_pollLiveRef) { try { _pollLiveRef.off(); } catch(e) { console.debug('[Poll] live ref cleanup failed', e); } _pollLiveRef = null; }
 }
 
 function _renderPollCard(poll, chIdx) {
@@ -23644,7 +23644,7 @@ async function startVoiceCall(partner) {
 async function showCallingScreen(partner) {
   _closeEl('calling-screen-modal');
   let partnerPfp = null;
-  try { const pu = await FortizedSocial.getUserByName(partner); partnerPfp=pu?.pfp; } catch {}
+  try { const pu = await FortizedSocial.getUserByName(partner); partnerPfp=pu?.pfp; } catch(e) { console.debug('[VC] partner pfp lookup failed', e); }
 
   const modal = document.createElement('div');
   modal.id = 'calling-screen-modal';
@@ -23816,16 +23816,16 @@ async function endVoiceCall() {
   if (_vc._speakChecker) { clearInterval(_vc._speakChecker); _vc._speakChecker=null; }
   if (_vc.localStream) _vc.localStream.getTracks().forEach(t=>t.stop());
   if (_vc.screenStream) _vc.screenStream.getTracks().forEach(t=>t.stop());
-  if (_vc.pc) { try { _vc.pc.close(); } catch {} }
+  if (_vc.pc) { try { _vc.pc.close(); } catch(e) { console.debug('[VC] peer connection close failed', e); } }
   if (_vc.sigRef) {
     // Signal to partner that call ended
-    try { firebase.database().ref(_vc.sigRef).update({ended:true,endedBy:CU.username,ts:Date.now()}); } catch {}
-    try { firebase.database().ref(_vc.sigRef+'/ice').off(); } catch {}
-    try { firebase.database().ref(_vc.sigRef+'/answer').off(); } catch {}
-    try { firebase.database().ref(_vc.sigRef).off('value'); } catch {}
+    try { firebase.database().ref(_vc.sigRef).update({ended:true,endedBy:CU.username,ts:Date.now()}); } catch(e) { console.debug('[VC] signal ended write failed', e); }
+    try { firebase.database().ref(_vc.sigRef+'/ice').off(); } catch(e) { console.debug('[VC] ice listener cleanup failed', e); }
+    try { firebase.database().ref(_vc.sigRef+'/answer').off(); } catch(e) { console.debug('[VC] answer listener cleanup failed', e); }
+    try { firebase.database().ref(_vc.sigRef).off('value'); } catch(e) { console.debug('[VC] value listener cleanup failed', e); }
     // Clean up stale signal data after a short delay (let partner read the 'ended' flag first)
     const sigPath = _vc.sigRef;
-    setTimeout(() => { try { firebase.database().ref(sigPath).remove(); } catch {} }, 5000);
+    setTimeout(() => { try { firebase.database().ref(sigPath).remove(); } catch(e) { console.debug('[VC] signal cleanup failed', e); } }, 5000);
   }
   // Clean up ALL voice call UI elements
   document.getElementById('vc-remote-audio')?.remove();
@@ -23989,7 +23989,7 @@ async function renderVoiceCallUI(partner, isCaller) {
   _closeEl('vc-call-bar');
   // Fetch avatars
   let myPfp = CU.pfp, partnerPfp = null;
-  try { const pu = await FortizedSocial.getUserByName(partner); partnerPfp=pu?.pfp; } catch {}
+  try { const pu = await FortizedSocial.getUserByName(partner); partnerPfp=pu?.pfp; } catch(e) { console.debug('[VC] partner pfp lookup failed', e); }
 
   const room = document.createElement('div');
   room.id = 'vc-call-bar';
@@ -24261,7 +24261,7 @@ async function showIncomingCall(caller, offerSdp) {
   _startRingtone(); // callee also hears ringtone
   // Fetch caller pfp
   let callerPfp = null;
-  try { const cu = await FortizedSocial.getUserByName(caller); callerPfp = cu?.pfp; } catch {}
+  try { const cu = await FortizedSocial.getUserByName(caller); callerPfp = cu?.pfp; } catch(e) { console.debug('[VC] caller pfp lookup failed', e); }
 
   const modal = document.createElement('div');
   modal.id = 'incoming-call-modal';
@@ -24388,8 +24388,8 @@ function subscribeProfileStatus(username) {
 function unsubscribeProfileStatus(username) {
   const l = _profileStatusListeners[username];
   if(l){
-    try { FortizedSocial.sb.removeChannel(l.statusSub); } catch {}
-    try { FortizedSocial.sb.removeChannel(l.csSub); } catch {}
+    try { FortizedSocial.sb.removeChannel(l.statusSub); } catch(e) { console.debug('[Profile] status channel cleanup failed', e); }
+    try { FortizedSocial.sb.removeChannel(l.csSub); } catch(e) { console.debug('[Profile] customStatus channel cleanup failed', e); }
     delete _profileStatusListeners[username];
   }
 }
@@ -24494,7 +24494,7 @@ function _startRingtone() {
 }
 function _stopRingtone() {
   if (_ringtoneTimer) { clearTimeout(_ringtoneTimer); _ringtoneTimer=null; }
-  if (_ringtoneAudio) { try { _ringtoneAudio.pause(); _ringtoneAudio.currentTime=0; } catch {} _ringtoneAudio=null; }
+  if (_ringtoneAudio) { try { _ringtoneAudio.pause(); _ringtoneAudio.currentTime=0; } catch(e) { console.debug('[Ringtone] pause failed', e); } _ringtoneAudio=null; }
 }
 
 // ════════════════════════════════════════════
@@ -24767,7 +24767,7 @@ function broadcastIfChanged() {
       if (CU?.username) {
         firebase.database().ref('users/' + CU.username + '/activityState').set(activityState);
       }
-    } catch {}
+    } catch(e) { console.debug('[Activity] broadcast write failed', e); }
     _updateUserbarActivity();
     _syncRailUserbarActivity();
   }
@@ -24955,7 +24955,7 @@ function _startAutoActivityDetection() {
           setGameActivity(null);
         }
       }
-    } catch {}
+    } catch(e) { console.debug('[Activity] auto-detect poll failed', e); }
   }, AUTO_ACTIVITY_POLL_MS);
   // Run once immediately
   (async () => {
@@ -24965,7 +24965,7 @@ function _startAutoActivityDetection() {
       if (!procs) return;
       const detected = _matchRunningApp(procs);
       if (detected) setGameActivity(detected.name, detected.icon);
-    } catch {}
+    } catch(e) { console.debug('[Activity] initial detect failed', e); }
   })();
 }
 
@@ -24982,7 +24982,7 @@ async function detectGameActivity() {
       const detected = _matchRunningApp(procs);
       if (detected) return detected;
     }
-  } catch {}
+  } catch(e) { console.debug('[Activity] detectGameActivity failed', e); }
   return null;
 }
 
@@ -25449,8 +25449,8 @@ function _attachDMLiveEdits(user1, user2) {
   const ref = firebase.database().ref(path);
   // Detach old with proper handler references
   if (_dmEditListener) {
-    try { firebase.database().ref(_dmEditListener).off('child_changed', _dmEditHandler); } catch{}
-    try { firebase.database().ref(_dmEditListener).off('child_removed', _dmRemoveHandler); } catch{}
+    try { firebase.database().ref(_dmEditListener).off('child_changed', _dmEditHandler); } catch(e) { console.debug('[DM] edit listener cleanup failed', e); }
+    try { firebase.database().ref(_dmEditListener).off('child_removed', _dmRemoveHandler); } catch(e) { console.debug('[DM] remove listener cleanup failed', e); }
     _dmEditListener = null;
   }
   if (_dmRemoveListener) _dmRemoveListener = null;
@@ -25466,8 +25466,8 @@ function _attachChLiveEdits(bastionId, channelName) {
   const path = 'bastionMsgs/'+bastionId+'/'+channelName;
   // Detach previous listener to prevent memory leaks
   if (_chEditListenerPath && _chEditListenerPath !== path) {
-    try { firebase.database().ref(_chEditListenerPath).off('child_changed'); } catch{}
-    try { firebase.database().ref(_chEditListenerPath).off('child_removed'); } catch{}
+    try { firebase.database().ref(_chEditListenerPath).off('child_changed'); } catch(e) { console.debug('[Ch] edit listener cleanup failed', e); }
+    try { firebase.database().ref(_chEditListenerPath).off('child_removed'); } catch(e) { console.debug('[Ch] remove listener cleanup failed', e); }
   }
   if (_chEditListenerPath === path) return; // already attached
   _chEditListenerPath = path;
@@ -25583,7 +25583,7 @@ function _stopTypingBroadcast() {
 }
 
 function _listenTyping(partner) {
-  if (_typingListenerOff) { try{_typingListenerOff();}catch{} _typingListenerOff=null; }
+  if (_typingListenerOff) { try{_typingListenerOff();}catch(e){ console.debug('[Typing] listener cleanup failed', e); } _typingListenerOff=null; }
   // Firebase listener as fallback
   const ref = firebase.database().ref(_typingPath(CU.username, partner));
   const handler = ref.on('value', snap => {
@@ -26549,8 +26549,8 @@ async function switchToAccount(username) {
       localStorage.setItem('ftz_user_'+CU.username, JSON.stringify(CU));
     }
     // Set old account away, new account online
-    try { if (CU?.username) await FortizedSocial.setStatus(CU.username, 'away'); } catch {}
-    try { await FortizedSocial.setStatus(username, 'online'); } catch {}
+    try { if (CU?.username) await FortizedSocial.setStatus(CU.username, 'away'); } catch(e) { console.debug('[Account] status set away failed', e); }
+    try { await FortizedSocial.setStatus(username, 'online'); } catch(e) { console.debug('[Account] status set online failed', e); }
     // Set both localStorage keys for consistency
     localStorage.setItem('ftz_current', username);
     localStorage.setItem('fortized_current_user', username);
@@ -26565,11 +26565,11 @@ async function switchToAccount(username) {
         localStorage.setItem('ftz_user_'+user.username, JSON.stringify(user));
         localStorage.setItem('ftz_current', user.username);
         localStorage.setItem('fortized_current_user', user.username);
-        try { await FortizedSocial.setStatus(user.username, 'online'); } catch {}
+        try { await FortizedSocial.setStatus(user.username, 'online'); } catch(e) { console.debug('[Account] status set online failed', e); }
         window.location.reload();
         return;
       }
-    } catch {}
+    } catch(e) { console.warn('[Account] switch fetch failed', e); }
     toast('Account not found — please sign in again', 'error');
     toggleAccountSwitcher();
     showAddAccountModal();
@@ -26642,7 +26642,7 @@ async function submitAddAccount() {
     }
     // Method 2: FortizedSocial.loginUser (may not exist)
     if (!result && typeof FortizedSocial.loginUser === 'function') {
-      try { const r2 = await FortizedSocial.loginUser(username, password); if(r2?.username) result=r2; } catch {}
+      try { const r2 = await FortizedSocial.loginUser(username, password); if(r2?.username) result=r2; } catch(e) { console.debug('[Auth] loginUser fallback failed', e); }
     }
     // Method 3: Manual password check (fetch user + compare)
     if (!result) {
@@ -26669,8 +26669,8 @@ async function submitAddAccount() {
     localStorage.setItem('ftz_current', result.username);
     localStorage.setItem('fortized_current_user', result.username);
     // Update statuses
-    try { if (CU?.username) await FortizedSocial.setStatus(CU.username, 'away'); } catch {}
-    try { await FortizedSocial.setStatus(result.username, 'online'); } catch {}
+    try { if (CU?.username) await FortizedSocial.setStatus(CU.username, 'away'); } catch(e) { console.debug('[Auth] status away failed', e); }
+    try { await FortizedSocial.setStatus(result.username, 'online'); } catch(e) { console.debug('[Auth] status online failed', e); }
     document.getElementById('add-acct-modal')?.remove();
     toast('Switching to @'+result.username+'…', 'success');
     setTimeout(()=>window.location.reload(), 700);
@@ -26786,7 +26786,7 @@ async function loadFriendActivity() {
   try {
     const _actSlice = friends.slice(0, 10);
     let _actPresence = {};
-    try { const pr = await FortizedSocial.queryPresence(_actSlice); if (pr) _actPresence = pr; } catch {}
+    try { const pr = await FortizedSocial.queryPresence(_actSlice); if (pr) _actPresence = pr; } catch(e) { console.debug('[Activity] presence query failed', e); }
     const statuses = await Promise.all(_actSlice.map(async f => {
       try {
         const u = await FortizedSocial.getUserByName(f);
@@ -26965,7 +26965,7 @@ async function joinByInvite(code) {
           inviterName = inviteData.createdBy || b.owner;
         }
       }
-    } catch {}
+    } catch(e) { console.debug('[Invite] strategy 1 lookup failed', e); }
 
     // Strategy 2: Search all global bastions for matching invite code
     if (!foundBastion) {
@@ -27001,7 +27001,7 @@ async function joinByInvite(code) {
             }
             inviterName = found.createdBy || b.owner;
             // Sync this bastion to global so it's discoverable in future
-            try { await FortizedSocial.saveGlobalBastion(foundBastion.id, {...foundBastion, id: foundBastion.id}); } catch {}
+            try { await FortizedSocial.saveGlobalBastion(foundBastion.id, {...foundBastion, id: foundBastion.id}); } catch(e) { console.warn('[Invite] global bastion sync failed', e); }
             break;
           }
         }
@@ -27753,7 +27753,7 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
     try {
       const d = tc.getImageData(0, 0, tmp.width, tmp.height).data;
       for (let i=3; i<d.length; i+=4) { if(d[i]<255){_cropData.hasAlpha=true;break;} }
-    } catch {}
+    } catch(e) { console.debug('[Crop] alpha detection failed', e); }
     // Fit image (cover the crop area)
     const imgAspect = _cropImg.width / _cropImg.height;
     const canvasAspect = w / h;
@@ -27895,7 +27895,7 @@ function initCrossDeviceSync() {
     if (JSON.stringify(data.customStatus||null) !== JSON.stringify(CU.customStatus||null)) {
       if (data.customStatus) { CU.customStatus = data.customStatus; } else { delete CU.customStatus; }
       refreshCustomStatusBubble?.();
-      try { FtzStatus.restoreCustomTimer(); } catch {}
+      try { FtzStatus.restoreCustomTimer(); } catch(e) { console.debug('[Status] restoreCustomTimer failed', e); }
     }
     if (data.friends && JSON.stringify(data.friends) !== JSON.stringify(CU.friends)) {
       CU.friends = data.friends;
@@ -27920,7 +27920,7 @@ function initCrossDeviceSync() {
     if (!notif) return;
     // Auto-mark DM notifications as read if user is currently viewing that DM
     if (notif.type === 'dm' && notif.from && !notif.read && curDM === (notif.from||'').toLowerCase()) {
-      try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', notif.from).then(()=>updateNotifBadge()).catch(()=>{}); } catch {}
+      try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', notif.from).then(()=>updateNotifBadge()).catch(()=>{}); } catch(e) { console.debug('[Notif] auto-mark read failed', e); }
       return;
     }
     if (!shouldDeliverRealtimeNotif(notif)) return;
@@ -27944,7 +27944,7 @@ function initCrossDeviceSync() {
         });
         n.onclick = () => { window.focus(); n.close(); };
         setTimeout(() => n.close(), 8000);
-      } catch {}
+      } catch(e) { console.debug('[Notif] system notification failed', e); }
     }
     // Play sound
     playNotifSound(notif.type === 'mention' ? 'mention' : 'message');
@@ -27976,7 +27976,7 @@ function initCrossDeviceSync() {
 
 function stopCrossDeviceSync() {
   if (_profileSyncListener) {
-    try { firebase.database().ref('users/' + CU.username).off('value', _profileSyncListener); } catch {}
+    try { firebase.database().ref('users/' + CU.username).off('value', _profileSyncListener); } catch(e) { console.debug('[Sync] profile listener cleanup failed', e); }
     _profileSyncListener = null;
   }
 }
@@ -28075,7 +28075,7 @@ async function giftRadianceTo(friendUsername) {
           msg: `${CU.username} gifted you 30 days of Radiance! ✨`,
           time: new Date().toISOString()
         });
-      } catch {}
+      } catch(e) { console.warn('[Gift] radiance gift notification failed', e); }
       await saveUser();
       updateOnyxDisplay();
       distributeOnyxRevenue(cost);
@@ -28088,7 +28088,7 @@ async function giftRadianceTo(friendUsername) {
 async function cancelGiftRadiance(friendUsername) {
   showCustomConfirm(`Cancel ${friendUsername}'s gifted Radiance?`, async () => {
     if (CU.giftedRadiance) delete CU.giftedRadiance[friendUsername];
-    try { await FortizedSocial.adminUpdateUserField(friendUsername, 'radianceUntil', null); } catch {}
+    try { await FortizedSocial.adminUpdateUserField(friendUsername, 'radianceUntil', null); } catch(e) { console.warn('[Gift] cancel radiance failed', e); }
     await saveUser();
     toast('Gift cancelled.', 'info');
     renderAtelierTab('radiance');
@@ -28112,7 +28112,7 @@ async function createRadianceGiftLink() {
     CU.pendingGifts[code] = { type:'radiance', days:30, from:CU.username, created:new Date().toISOString(), claimed:false };
     try {
       await firebase.database().ref('gifts/' + code).set(CU.pendingGifts[code]);
-    } catch {}
+    } catch(e) { console.warn('[Gift] radiance link save failed', e); }
     await saveUser();
     updateOnyxDisplay();
     distributeOnyxRevenue(cost);
@@ -28140,7 +28140,7 @@ async function sendRadianceGiftToUser(friendUsername) {
       await firebase.database().ref('notifications/' + friendUsername).push({
         type:'gift', from:CU.username, msg:`${CU.username} sent you a Radiance gift!`, time:new Date().toISOString()
       });
-    } catch {}
+    } catch(e) { console.warn('[Gift] radiance DM gift failed', e); }
     await saveUser();
     updateOnyxDisplay();
     distributeOnyxRevenue(cost);
@@ -28176,7 +28176,7 @@ async function claimGift(giftCode) {
       await firebase.database().ref('notifications/' + gift.from).push({
         type:'gift_claimed', from:CU.username, msg:`${CU.username} claimed your ${gift.type==='radiance'?'Radiance':'item'} gift!`, time:new Date().toISOString()
       });
-    } catch {}
+    } catch(e) { console.debug('[Gift] claim notification failed', e); }
   } catch (e) { toast('Failed to claim gift.', 'error'); }
 }
 
@@ -28189,7 +28189,7 @@ async function createItemGiftLink(itemId, itemName, itemCost) {
     CU.pendingGifts[code] = { type:'item', itemId, itemName, cost:itemCost, from:CU.username, created:new Date().toISOString(), claimed:false };
     try {
       await firebase.database().ref('gifts/' + code).set(CU.pendingGifts[code]);
-    } catch {}
+    } catch(e) { console.warn('[Gift] item link save failed', e); }
     await saveUser();
     updateOnyxDisplay();
     distributeOnyxRevenue(itemCost);
@@ -28214,7 +28214,7 @@ async function sendItemGiftToUser(friendUsername, itemId, itemName, itemCost) {
       await firebase.database().ref('notifications/' + friendUsername).push({
         type:'gift', from:CU.username, msg:`${CU.username} sent you a gift: ${itemName}!`, time:new Date().toISOString()
       });
-    } catch {}
+    } catch(e) { console.warn('[Gift] item DM gift failed', e); }
     await saveUser();
     updateOnyxDisplay();
     distributeOnyxRevenue(itemCost);
@@ -28237,7 +28237,7 @@ function _renderGiftEmbed(type, giftCode) {
         const el = document.getElementById(embedId);
         if (el) el.outerHTML = _buildGiftEmbedHTML(type, giftCode, snap.val());
       }
-    } catch {}
+    } catch(e) { console.debug('[Gift] embed fetch failed', e); }
   }, 100);
   return `<span id="${embedId}">${initialHTML}</span>`;
 }
@@ -28712,7 +28712,7 @@ function initNotifToasts() {
 let _friendStatusSubs = {};
 function _subscribeFriendStatuses() {
   // Unsubscribe old Supabase channels
-  Object.values(_friendStatusSubs).forEach(sub => { try { FortizedSocial.sb.removeChannel(sub); } catch {} });
+  Object.values(_friendStatusSubs).forEach(sub => { try { FortizedSocial.sb.removeChannel(sub); } catch(e) { console.debug('[Friends] status sub cleanup failed', e); } });
   _friendStatusSubs = {};
   const friends = CU?.friends || [];
   if (!friends.length) return;
@@ -28746,7 +28746,7 @@ function _subscribeFriendStatuses() {
         })
         .subscribe();
       _friendStatusSubs[f] = sub;
-    } catch {}
+    } catch(e) { console.debug('[Friends] status sub failed for', f, e); }
   });
 }
 
@@ -28861,7 +28861,7 @@ function closeOwnProfilePanel() {
 async function showMiniProfilePreview(username, anchorEl) {
   document.getElementById('mini-profile-preview')?.remove();
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch {}
+  try { u = await FortizedSocial.getUserByName(username); } catch(e) { console.debug('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
   let status = 'offline';
   // Use live Socket.IO presence first, fallback to DB
@@ -28873,10 +28873,10 @@ async function showMiniProfilePreview(username, anchorEl) {
       if (presenceResult && presenceResult[username]) {
         status = presenceResult[username].status || 'offline';
       } else {
-        try { status = await FortizedSocial.getStatus(username); } catch {}
+        try { status = await FortizedSocial.getStatus(username); } catch(e) { console.debug('[Profile] status fallback failed', e); }
       }
-    } catch {
-      try { status = await FortizedSocial.getStatus(username); } catch {}
+    } catch(e) { console.debug('[Profile] presence query failed', e);
+      try { status = await FortizedSocial.getStatus(username); } catch(e2) { console.debug('[Profile] status fallback failed', e2); }
     }
   }
   subscribeProfileStatus(username);
@@ -29684,7 +29684,7 @@ function openThread(msgId, text, from) {
 }
 function _closeThread() {
   _stopThreadTypingBroadcast();
-  if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch {} _threadTypingListenerOff = null; }
+  if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch(e) { console.debug('[Thread] typing listener cleanup failed', e); } _threadTypingListenerOff = null; }
   if (_threadListener) { _threadListener(); _threadListener = null; }
   _activeThread = null;
   _closeEl('thread-panel-overlay');
@@ -29765,7 +29765,7 @@ function _stopThreadTypingBroadcast() {
 }
 
 function _listenThreadTyping(bid, chName, msgId) {
-  if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch {} _threadTypingListenerOff = null; }
+  if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch(e) { console.debug('[Thread] typing listener cleanup failed', e); } _threadTypingListenerOff = null; }
   const ref = firebase.database().ref(_threadTypingPath(bid, chName, msgId));
   const handler = ref.on('value', snap => {
     const data = snap.val() || {};
@@ -29837,7 +29837,7 @@ function _stopChannelTypingBroadcast() {
 }
 
 function listenChannelTyping(bid, chName) {
-  if (_chTypingListenerOff) { try { _chTypingListenerOff(); } catch {} _chTypingListenerOff = null; }
+  if (_chTypingListenerOff) { try { _chTypingListenerOff(); } catch(e) { console.debug('[Ch] typing listener cleanup failed', e); } _chTypingListenerOff = null; }
   const ref = firebase.database().ref(_chTypingPath(bid, chName));
   const handler = ref.on('value', snap => {
     const data = snap.val() || {};
@@ -29978,7 +29978,7 @@ function _runAdvSearch(q) {
             if (fn && fn.toLowerCase().includes((searchQ||q).toLowerCase()) && !memberResults.includes(fn)) memberResults.push(fn);
           }
         }
-      } catch {}
+      } catch(e) { console.debug('[Search] member search failed', e); }
       if (_advSearchFilter === 'members') {
         if (!memberResults.length) { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">No members found</div>'; return; }
         let html = '';
@@ -29988,7 +29988,7 @@ function _runAdvSearch(q) {
           try {
             const ud = await FortizedSocial.getUserByName(uname);
             if (ud) { pfp = ud.pfp || pfp; displayName = ud.displayName || uname; }
-          } catch {}
+          } catch(e) { console.debug('[Search] user lookup failed', e); }
           html += `<div class="asr-item" onclick="showMiniProfilePreview('${escapeHTML(uname)}',this)">
             <div class="asr-av">${pfp ? `<img src="${escapeHTML(pfp)}" onerror="this.src='${_defaultPfpUrl(uname)}'">` : buildAvatarHTML(null,uname,32)}</div>
             <div class="asr-body"><div class="asr-meta"><span class="asr-from">${escapeHTML(displayName)}</span></div><div class="asr-text" style="font-size:11px;color:var(--muted);">@${escapeHTML(uname)}</div></div>
@@ -30018,7 +30018,7 @@ function _runAdvSearch(q) {
             try {
               const snap = await firebase.database().ref(`bastionMsgs/${bid}/${chName}`).limitToLast(100).get();
               if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'ch'; v._loc = chName; allMsgs.push(v); });
-            } catch {}
+            } catch(e) { console.debug('[Search] channel search failed', e); }
           }
         }
       }
@@ -30031,7 +30031,7 @@ function _runAdvSearch(q) {
             const dmKey = [CU.username, fn].sort().join('__');
             const snap = await firebase.database().ref('dms/' + dmKey).limitToLast(50).get();
             if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'dm'; v._loc = fn; allMsgs.push(v); });
-          } catch {}
+          } catch(e) { console.debug('[Search] DM search failed', e); }
         }
       }
       // Search all bastions (not just current)
@@ -30045,12 +30045,12 @@ function _runAdvSearch(q) {
               try {
                 const snap = await firebase.database().ref(`bastionMsgs/${bid}/${chName}`).limitToLast(30).get();
                 if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'ch'; v._loc = chName; v._bastion = b.name; allMsgs.push(v); });
-              } catch {}
+              } catch(e) { console.debug('[Search] bastion search failed', e); }
             }
           }
         }
       }
-    } catch {}
+    } catch(e) { console.warn('[Search] message search failed', e); }
     let filtered = allMsgs.filter(m => m.text && m.from !== '__system__');
     // Apply text search
     if (searchQ) filtered = filtered.filter(m => (m.text||'').toLowerCase().includes(searchQ.toLowerCase()));
@@ -30082,7 +30082,7 @@ function _runAdvSearch(q) {
             if (fn && fn.toLowerCase().includes((searchQ||q).toLowerCase()) && !memberResults.includes(fn)) memberResults.push(fn);
           }
         }
-      } catch {}
+      } catch(e) { console.debug('[Search] quick member search failed', e); }
       if (memberResults.length) {
         memberHtml = `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);padding:8px 14px 4px;">Members</div>`;
         for (const uname of memberResults.slice(0, 5)) {
@@ -30192,7 +30192,7 @@ function _getKeybinds() {
         return custom ? {...def, keys: custom.keys} : def;
       });
     }
-  } catch {}
+  } catch(e) { console.debug('[Keybinds] load failed', e); }
   return _defaultKeybinds;
 }
 function _saveKeybinds(binds) {
@@ -30398,7 +30398,7 @@ function _playSoundClip(idx) {
 function _playCustomClip(idx) {
   const customs = JSON.parse(localStorage.getItem('ftz_soundboard_' + CU.username) || '[]');
   if (customs[idx]?.data) {
-    try { const a = new Audio(customs[idx].data); a.volume = 0.5; a.play(); } catch {}
+    try { const a = new Audio(customs[idx].data); a.volume = 0.5; a.play(); } catch(e) { console.debug('[Soundboard] play failed', e); }
   }
   toast('Playing ' + (customs[idx]?.name || 'clip'),'info');
 }
@@ -30908,7 +30908,7 @@ async function _updateEventsBadge(bastionId) {
       if (diff > 0 && diff < 3600000) upcomingSoon++; // within 1 hour
     });
     _setEventsBadge(liveCount + upcomingSoon, liveCount > 0);
-  } catch {}
+  } catch(e) { console.debug('[Events] badge update failed', e); }
 }
 
 function _setEventsBadge(count, isLive) {
@@ -30947,7 +30947,7 @@ async function _renderCalendar(bastionId) {
       snap.forEach(c => { const v = c.val(); v._key = c.key; events.push(v); });
     }
     window._eventsCache = { bastionId, events };
-  } catch {}
+  } catch(e) { console.warn('[Events] fetch failed', e); }
 
   const firstDay = new Date(_calYear, _calMonth, 1).getDay();
   const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
@@ -31050,7 +31050,7 @@ function _setSlowMode(bastionId, chName, seconds) {
   else localStorage.removeItem('ftz_slowmode_' + bastionId + '_' + chName);
   toast(seconds > 0 ? 'Slow mode: ' + seconds + 's' : 'Slow mode disabled','success');
   // Update via Firebase for all users
-  try { firebase.database().ref('bastionSettings/' + bastionId + '/slowmode/' + chName).set(seconds); } catch {}
+  try { firebase.database().ref('bastionSettings/' + bastionId + '/slowmode/' + chName).set(seconds); } catch(e) { console.warn('[SlowMode] save failed', e); }
 }
 // Sync slow mode from Firebase so all users see the setting
 function _syncSlowMode(bastionId, chName) {
@@ -31060,7 +31060,7 @@ function _syncSlowMode(bastionId, chName) {
       if (v > 0) localStorage.setItem('ftz_slowmode_' + bastionId + '_' + chName, v);
       else localStorage.removeItem('ftz_slowmode_' + bastionId + '_' + chName);
     });
-  } catch {}
+  } catch(e) { console.debug('[SlowMode] sync listener failed', e); }
 }
 function _checkSlowMode() {
   if (curBastion === null) return true;
@@ -31111,7 +31111,7 @@ async function renderFriendsSorted(mode) {
   if (!friends.length) { list.innerHTML = html || `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('users','48')}</div><h3>No friends yet</h3><p>Add friends by username!</p><button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button></div>`; return; }
   // Fetch statuses
   let statuses = {};
-  try { const snap = await firebase.database().ref('statuses').get(); if (snap.exists()) statuses = snap.val(); } catch {}
+  try { const snap = await firebase.database().ref('statuses').get(); if (snap.exists()) statuses = snap.val(); } catch(e) { console.debug('[Friends] status fetch failed', e); }
   let sorted = [...friends];
   if (_friendSortMode === 'online') sorted.sort((a,b) => { const sa = statuses[a]==='online'?2:statuses[a]==='away'?1:0; const sb = statuses[b]==='online'?2:statuses[b]==='away'?1:0; return sb-sa; });
   else if (_friendSortMode === 'alpha') sorted.sort((a,b) => a.localeCompare(b));
@@ -31156,7 +31156,7 @@ async function renderFriendsSorted(mode) {
       const actEl = document.getElementById('friend-sorted-act-'+f);
       if (actEl && activityText) actEl.textContent = '🎮 ' + activityText;
     });
-  } catch {}
+  } catch(e) { console.debug('[Friends] activity fetch failed', e); }
 }
 
 // ════════════════════════════════════════════
@@ -31312,7 +31312,7 @@ function _closeEl(id) { const el = document.getElementById(id); if (el) { el.sty
 function _updateLastSeen() {
   if (!CU?.username) return;
   const now = new Date().toISOString();
-  try { firebase.database().ref('users/' + CU.username + '/lastSeen').set(now); } catch {}
+  try { firebase.database().ref('users/' + CU.username + '/lastSeen').set(now); } catch(e) { console.debug('[LastSeen] write failed', e); }
 }
 // Update last seen every 2 minutes
 if (typeof window !== 'undefined') setInterval(_updateLastSeen, 120000);
@@ -31369,7 +31369,7 @@ async function _ensureJoysterAccount() {
       if (joysterUser.displayName !== 'Joyster') { joysterUser.displayName = 'Joyster'; needsUpdate = true; }
       if (needsUpdate) await FortizedSocial.saveUserObject(joysterUser);
     }
-  } catch {}
+  } catch(e) { console.warn('[System] Joyster account init failed', e); }
 }
 
 // ── Fortized System Account (auto-BOT) ──
@@ -31410,6 +31410,6 @@ async function _ensureFortizedAccount() {
       if (fortizedUser.displayName !== 'Fortized') { fortizedUser.displayName = 'Fortized'; needsUpdate = true; }
       if (needsUpdate) await FortizedSocial.saveUserObject(fortizedUser);
     }
-  } catch {}
+  } catch(e) { console.warn('[System] Fortized account init failed', e); }
 }
 

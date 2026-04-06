@@ -6207,8 +6207,8 @@ function _renderVoicePanel(ch, idx) {
       </div>
       <!-- Controls -->
       <div class="voice-controls" style="display:flex;gap:14px;align-items:center;padding:18px 28px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px;backdrop-filter:blur(10px);">
-        <button class="vc-btn ${isMuted?'active':''}" onclick="toggleVoiceMute()" title="${isMuted?'Unmute':'Mute'}" style="width:52px;height:52px;border-radius:50%;background:${isMuted?'rgba(248,113,113,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isMuted?'rgba(248,113,113,.35)':'rgba(255,255,255,.1)'};color:${isMuted?'#f87171':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)'" onmouseleave="this.style.transform='scale(1)'">${isMuted?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'}</button>
-        <button class="vc-btn ${isDeafened?'active':''}" onclick="toggleVoiceDeafen()" title="${isDeafened?'Undeafen':'Deafen'}" style="width:52px;height:52px;border-radius:50%;background:${isDeafened?'rgba(245,158,11,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isDeafened?'rgba(245,158,11,.35)':'rgba(255,255,255,.1)'};color:${isDeafened?'#f59e0b':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)'" onmouseleave="this.style.transform='scale(1)'">${isDeafened?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3z"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>'}</button>
+        <button class="vc-btn ${isMuted?'active':''}" onclick="toggleVoiceMute()" title="${isMuted?'Unmute':'Mute'}" style="width:52px;height:52px;border-radius:50%;background:${isMuted?'rgba(248,113,113,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isMuted?'rgba(248,113,113,.35)':'rgba(255,255,255,.1)'};color:${isMuted?'#f87171':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isMuted?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'}</button>
+        <button class="vc-btn ${isDeafened?'active':''}" onclick="toggleVoiceDeafen()" title="${isDeafened?'Undeafen':'Deafen'}" style="width:52px;height:52px;border-radius:50%;background:${isDeafened?'rgba(245,158,11,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isDeafened?'rgba(245,158,11,.35)':'rgba(255,255,255,.1)'};color:${isDeafened?'#f59e0b':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isDeafened?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3z"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>'}</button>
         <div style="width:1px;height:32px;background:rgba(255,255,255,.08);margin:0 4px;"></div>
         <button onclick="startScreenShare()" style="width:52px;height:52px;border-radius:50%;background:rgba(96,165,250,.08);border:1.5px solid rgba(96,165,250,.2);color:#60a5fa;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)';this.style.background='rgba(96,165,250,.15)'" onmouseleave="this.style.transform='scale(1)';this.style.background='rgba(96,165,250,.08)'" title="Share Screen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>
         <button onclick="startWatchTogether()" style="width:52px;height:52px;border-radius:50%;background:rgba(167,139,250,.08);border:1.5px solid rgba(167,139,250,.2);color:#a78bfa;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)';this.style.background='rgba(167,139,250,.15)'" onmouseleave="this.style.transform='scale(1)';this.style.background='rgba(167,139,250,.08)'" title="Watch Together"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg></button>
@@ -6388,7 +6388,7 @@ async function removeFriend(username){
 async function loadDiscover(){
   const grid=document.getElementById('discover-grid');
   if(!grid)return;
-  grid.innerHTML='<div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">' + Array(6).fill(0).map(() => '<div style="border-radius:18px;overflow:hidden;border:1px solid var(--border);"><div class="skeleton" style="height:120px;border-radius:0;"></div><div style="padding:16px;"><div class="skeleton skeleton-text" style="width:65%;height:14px;"></div><div class="skeleton skeleton-text" style="width:90%;margin-top:8px;"></div><div class="skeleton skeleton-text" style="width:40%;margin-top:8px;height:10px;"></div></div></div>').join('') + '</div>';
+  grid.innerHTML='<div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">' + Array(6).fill(0).map(() => '<div class="skeleton-card"><div class="skeleton skeleton-banner"></div><div class="skeleton-body"><div class="skeleton skeleton-text" style="width:65%;height:14px;"></div><div class="skeleton skeleton-text" style="width:90%;"></div><div class="skeleton skeleton-text" style="width:40%;height:10px;"></div></div></div>').join('') + '</div>';
   try{discoverData=Object.values(await FortizedSocial.getGlobalBastions()||{});}catch{discoverData=[];}
   // Strictly filter: only show bastions that are explicitly public
   discoverData = discoverData.filter(b => b.public === true || (b.public !== false && b.public !== undefined));
@@ -6427,7 +6427,7 @@ function renderDiscoverGrid(bastions){
   const grid=document.getElementById('discover-grid');
   if(!grid)return;
   const filtered=bastions.filter(b=>b.public!==false&&(discoverTab==='all'||(b.category||'').toLowerCase()===discoverTab));
-  if(!filtered.length){grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;"><div style="margin-bottom:14px;"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:6px;">No bastions found</div><div style="font-size:13px;color:rgba(255,255,255,.25);">Try a different category or search term</div></div>`;return;}
+  if(!filtered.length){grid.innerHTML=`<div style="grid-column:1/-1;" class="ftz-empty"><div class="ftz-empty-icon"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div><div class="ftz-empty-title">No bastions found</div><div class="ftz-empty-text">Try a different category or search term</div></div>`;return;}
   // Sort: trending (most members) first
   const sorted = [...filtered].sort((a,b) => (b.memberCount||0) - (a.memberCount||0));
   grid.innerHTML=sorted.map(b=>{
@@ -6441,7 +6441,7 @@ function renderDiscoverGrid(bastions){
       <div class="bc-banner">${b.icon?`<img src="${b.icon}" alt="">`:`<div style="position:relative;z-index:1;width:100%;height:100%;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(62,207,110,.04),rgba(18,22,40,.9));display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.2)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`}</div>
       <div class="bc-body">
         <div class="bc-meta"><div class="bc-icon">${b.icon?`<img src="${b.icon}" alt="">`:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.5)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>`}</div><div style="flex:1"></div>
-          ${joined?`<span style="font-size:10.5px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.15);padding:4px 12px;border-radius:10px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Joined</span>`:`<button style="padding:5px 16px;font-size:11px;font-weight:700;background:transparent;border:1px solid rgba(255,249,62,.2);border-radius:10px;color:var(--accent);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);" onclick="event.stopPropagation();promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" onmouseenter="this.style.background='rgba(255,249,62,.08)';this.style.borderColor='rgba(255,249,62,.4)';this.style.boxShadow='0 0 12px rgba(255,249,62,.1)'" onmouseleave="this.style.background='transparent';this.style.borderColor='rgba(255,249,62,.2)';this.style.boxShadow='none'">Join</button>`}
+          ${joined?`<span style="font-size:10.5px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.15);padding:4px 12px;border-radius:10px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Joined</span>`:`<button class="ftz-btn ftz-btn-accent ftz-btn-xs" style="padding:5px 16px;border-radius:10px;" onclick="event.stopPropagation();promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">Join</button>`}
         </div>
         <div class="bc-name">${escapeHTML(b.name)}</div>
         <div class="bc-desc">${escapeHTML((b.desc||'').slice(0,140))}</div>
@@ -8260,7 +8260,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;">
-        <button id="crm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Cancel</button>
+        <button id="crm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;">Cancel</button>
         <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:#0f1119;font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Create Room</button>
       </div>
     </div>
@@ -10986,7 +10986,7 @@ function deployArsenalBot(botId) {
         <div class="modal-sub" style="margin-bottom:14px;">Choose a bastion to deploy this bot to.</div>
         <div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;margin-bottom:16px;">
           ${bastions.map((b,i) => `
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .12s;" onmouseover="this.style.borderColor='rgba(167,139,250,.3)'" onmouseout="this.style.borderColor='var(--border)'" onclick="confirmDeployBot('${botId}',${i})">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .12s;" onclick="confirmDeployBot('${botId}',${i})">
               <span style="font-size:18px;">${b.emblem||'🏰'}</span>
               <div style="flex:1;"><div style="font-weight:600;font-size:13px;">${escapeHTML(b.name)}</div><div style="font-size:11px;color:var(--muted);">${(b.channels||[]).length} channels</div></div>
             </div>
@@ -11045,7 +11045,7 @@ function openDeployBotPicker() {
         <div class="modal-sub" style="margin-bottom:14px;">Choose one of your bots to deploy.</div>
         <div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;margin-bottom:16px;">
           ${myBots.map((bot,i) => `
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .12s;" onmouseover="this.style.borderColor='rgba(167,139,250,.3)'" onmouseout="this.style.borderColor='var(--border)'" onclick="deployMyBot(${i})">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .12s;" onclick="deployMyBot(${i})">
               <div class="bot-av" style="width:36px;height:36px;font-size:16px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:(bot.emblem||'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">')}</div>
               <div style="flex:1;"><div style="font-weight:600;font-size:13px;">${escapeHTML(bot.name)}</div><div style="font-size:11px;color:var(--muted);">${(bot.commands||[]).length} commands · ${(bot.scripts||[]).length} scripts</div></div>
             </div>
@@ -11965,7 +11965,7 @@ function buildProfileView(tab) {
               </div>
             </div>
             <!-- CTA -->
-            <button style="flex-shrink:0;padding:11px 24px;background:linear-gradient(135deg,var(--accent),#ffe566);color:#0f1119;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 4px 20px rgba(254,248,61,.2);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(254,248,61,.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(254,248,61,.2)'">
+            <button style="flex-shrink:0;padding:11px 24px;background:linear-gradient(135deg,var(--accent),#ffe566);color:#0f1119;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 4px 20px rgba(254,248,61,.2);">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
               Explore
             </button>
@@ -12650,7 +12650,7 @@ function buildProfileView(tab) {
           <div style="font-size:32px;margin-bottom:12px;opacity:.4;">🎨</div>
           <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:rgba(255,255,255,.6);margin-bottom:6px;">No owned appearances yet</div>
           <div style="font-size:12.5px;color:rgba(255,255,255,.3);max-width:300px;margin:0 auto 18px;line-height:1.55;">Visit the Atelier Shop to browse and purchase exclusive appearances with Onyx.</div>
-          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="background:#fef83d;color:#0f1119;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;padding:10px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 12px rgba(254,248,61,.15);" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(254,248,61,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 12px rgba(254,248,61,.15)'">Browse the Atelier Shop</button>
+          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="background:#fef83d;color:#0f1119;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800;padding:10px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 12px rgba(254,248,61,.15);">Browse the Atelier Shop</button>
         </div>
       `}
 
@@ -12930,7 +12930,7 @@ async function toggleNotifPanel() {
     <div class="npv-header">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       <h3>Inbox</h3>
-      <button onclick="markAllRead()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Mark all read</button>
+      <button onclick="markAllRead()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;">Mark all read</button>
       <button onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
     </div>
     <div class="npv-tabs" id="npv-tabs">
@@ -14059,7 +14059,7 @@ function showReportModal() {
 
         <div style="display:flex;gap:8px;">
           <button onclick="submitReport()" style="flex:1;background:rgba(248,113,113,.12);color:var(--red);border:1.5px solid rgba(248,113,113,.2);border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.2)'" onmouseout="this.style.background='rgba(248,113,113,.12)'">Submit Report</button>
-          <button onclick="this.closest('.modal-overlay').remove()" style="padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='rgba(255,255,255,.12)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">Cancel</button>
+          <button onclick="this.closest('.modal-overlay').remove()" style="padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;">Cancel</button>
         </div>
 
         <div style="margin-top:14px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;display:flex;align-items:center;gap:8px;">
@@ -14639,7 +14639,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
               : '';
             if (isPend && !canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
             if (isPend && canAct) return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
-            <button onclick="resolveReport(${i},'dismissed')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Dismiss</button>
+            <button onclick="resolveReport(${i},'dismissed')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">Dismiss</button>
             <button onclick="resolveReport(${i},'warned')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Warn</button>
             ${target?`<button onclick="resolveReport(${i},'suspended')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">⏳ Suspend</button>`:''}
             ${target?`<button onclick="resolveReport(${i},'banned')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
@@ -14918,7 +14918,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
                 : '';
               if (!canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
               return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
-              <button onclick="reviewNSFW(${i},'approve')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Dismiss</button>
+              <button onclick="reviewNSFW(${i},'approve')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">Dismiss</button>
               <button onclick="reviewNSFW(${i},'warn')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Warn</button>
               ${target?`<button onclick="reviewNSFW(${i},'suspend')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">⏳ Suspend</button>`:''}
               ${target?`<button onclick="reviewNSFW(${i},'ban')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
@@ -17201,7 +17201,7 @@ function _renderInviteFriendsList(list) {
         <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(r.displayName)}</div>
         <div style="font-size:11px;color:rgba(255,255,255,.3);">${isOnline ? FtzStatus.publicLabel(r.status) : 'Offline'}</div>
       </div>
-      <button onclick="_sendInviteDM(this,'${escapeHTML(r.username)}')" style="padding:6px 14px;border-radius:8px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'DM Sans',sans-serif;" onmouseenter="if(!this.disabled){this.style.background='rgba(255,249,62,.12)';this.style.borderColor='rgba(255,249,62,.3)';}" onmouseleave="if(!this.disabled){this.style.background='rgba(255,249,62,.06)';this.style.borderColor='rgba(255,249,62,.15)';}">Invite</button>
+      <button onclick="_sendInviteDM(this,'${escapeHTML(r.username)}')" style="padding:6px 14px;border-radius:8px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'DM Sans',sans-serif;">Invite</button>
     </div>`;
   }).join('');
 }
@@ -17342,7 +17342,7 @@ function _renderBastionInviteFriendsList(list) {
     const isOnline = FtzStatus.isPresent(r.status);
     const btnHTML = r.isMember
       ? `<span style="padding:6px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.25);">Joined</span>`
-      : `<button onclick="_sendBastionInviteDM(this,'${escapeHTML(r.username)}')" style="padding:6px 14px;border-radius:8px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'DM Sans',sans-serif;" onmouseenter="if(!this.disabled){this.style.background='rgba(255,249,62,.12)';this.style.borderColor='rgba(255,249,62,.3)';}" onmouseleave="if(!this.disabled){this.style.background='rgba(255,249,62,.06)';this.style.borderColor='rgba(255,249,62,.15)';}">Invite</button>`;
+      : `<button onclick="_sendBastionInviteDM(this,'${escapeHTML(r.username)}')" style="padding:6px 14px;border-radius:8px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'DM Sans',sans-serif;">Invite</button>`;
     return `<div class="bastion-invite-friend-row" data-username="${escapeHTML(r.username)}" data-displayname="${escapeHTML(r.displayName.toLowerCase())}" style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;transition:background .12s;cursor:default;">
       <div style="position:relative;flex-shrink:0;">
         <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.04);">${buildAvatarHTML(r.pfp,r.displayName,32)}</div>
@@ -19209,7 +19209,7 @@ function _openDisplayNameStyleModal() {
       <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Font</div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:20px;" id="dns-font-grid">
         ${DISPLAY_NAME_FONTS.map(f => `
-          <div class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')" style="padding:10px 6px;border-radius:10px;border:1.5px solid ${curFont===f.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curFont===f.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;text-align:center;transition:all .12s;" onmouseover="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.06)'">
+          <div class="dns-font-tile ${curFont===f.id?'sel':''}" data-font="${f.id}" onclick="_dnSelectFont('${f.id}')" style="padding:10px 6px;border-radius:10px;border:1.5px solid ${curFont===f.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curFont===f.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;text-align:center;transition:all .12s;">
             <div style="font-family:${f.css};font-weight:${f.weight};font-size:18px;color:#fff;margin-bottom:2px;">${f.sample}</div>
             <div style="font-size:9px;color:rgba(255,255,255,.3);font-weight:600;">${f.name}</div>
           </div>`).join('')}
@@ -19219,14 +19219,14 @@ function _openDisplayNameStyleModal() {
       <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Effect</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;" id="dns-effect-grid">
         ${DISPLAY_NAME_EFFECTS.map(e => `
-          <div class="dns-effect-tile ${curEffect===e.id?'sel':''}" data-effect="${e.id}" onclick="_dnSelectEffect('${e.id}')" style="padding:7px 16px;border-radius:10px;border:1.5px solid ${curEffect===e.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curEffect===e.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;font-size:12px;font-weight:600;transition:all .12s;${_getDisplayEffectCSS(e.id,curColor)}" onmouseover="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="if(!this.classList.contains('sel'))this.style.borderColor='rgba(255,255,255,.06)'">${e.name}</div>`).join('')}
+          <div class="dns-effect-tile ${curEffect===e.id?'sel':''}" data-effect="${e.id}" onclick="_dnSelectEffect('${e.id}')" style="padding:7px 16px;border-radius:10px;border:1.5px solid ${curEffect===e.id?'var(--accent)':'rgba(255,255,255,.06)'};background:${curEffect===e.id?'rgba(255,249,62,.06)':'rgba(255,255,255,.02)'};cursor:pointer;font-size:12px;font-weight:600;transition:all .12s;${_getDisplayEffectCSS(e.id,curColor)}">${e.name}</div>`).join('')}
       </div>
 
       <!-- Choose Colour -->
       <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Colour</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="dns-color-grid">
         ${DISPLAY_NAME_COLORS.map(c => `
-          <div class="dns-color-tile" data-color="${c}" onclick="_dnSelectColor('${c}')" style="width:26px;height:26px;border-radius:7px;background:${c};cursor:pointer;border:2px solid ${curColor===c?'#fff':'transparent'};transition:all .1s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform=''">
+          <div class="dns-color-tile" data-color="${c}" onclick="_dnSelectColor('${c}')" style="width:26px;height:26px;border-radius:7px;background:${c};cursor:pointer;border:2px solid ${curColor===c?'#fff':'transparent'};transition:all .1s;display:flex;align-items:center;justify-content:center;">
             ${curColor===c ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
           </div>`).join('')}
       </div>
@@ -21520,7 +21520,7 @@ function _filterWidgetGameSearch(q) {
         const existing = results.innerHTML;
         results.innerHTML = existing + newResults.map(g => {
           const has = owned.has(g.name.toLowerCase());
-          return `<div style="padding:8px 12px;border-radius:8px;cursor:${has?'default':'pointer'};transition:all .12s;color:${has?'rgba(255,255,255,.25)':'rgba(255,255,255,.7)'};font-size:13px;font-weight:${has?'400':'500'};${has?'':''}display:flex;align-items:center;justify-content:space-between;" ${has?'':`onclick="_addGameFromWidgetSearch('${escapeHTML(g.name)}','${g.icon||'🎮'}','${escapeHTML(g.genre||'Game')}',${g.coverUrl?`'${escapeHTML(g.coverUrl)}'`:'null'},${g.coverThumb?`'${escapeHTML(g.coverThumb)}'`:'null'})" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background='none'"`}>
+          return `<div style="padding:8px 12px;border-radius:8px;cursor:${has?'default':'pointer'};transition:all .12s;color:${has?'rgba(255,255,255,.25)':'rgba(255,255,255,.7)'};font-size:13px;font-weight:${has?'400':'500'};${has?'':''}display:flex;align-items:center;justify-content:space-between;" ${has?'':`onclick="_addGameFromWidgetSearch('${escapeHTML(g.name)}','${g.icon||'🎮'}','${escapeHTML(g.genre||'Game')}',${g.coverUrl?`'${escapeHTML(g.coverUrl)}'`:'null'},${g.coverThumb?`'${escapeHTML(g.coverThumb)}'`:'null'})"`}>
             <span>${escapeHTML(g.name)}</span>
             ${g._igdb ? '<span style="font-size:9px;color:rgba(62,207,110,.4);margin-left:6px;">IGDB</span>' : ''}
           </div>`;
@@ -21532,7 +21532,7 @@ function _filterWidgetGameSearch(q) {
   const shown = catalog.slice(0, maxItems);
   results.innerHTML = shown.map(g => {
     const has = owned.has(g.name.toLowerCase());
-    return `<div style="padding:8px 12px;border-radius:8px;cursor:${has?'default':'pointer'};transition:all .12s;color:${has?'rgba(255,255,255,.25)':'rgba(255,255,255,.7)'};font-size:13px;font-weight:${has?'400':'500'};display:flex;align-items:center;justify-content:space-between;" ${has?'':`onclick="_addGameFromWidgetSearch('${escapeHTML(g.name)}','${g.icon||'🎮'}','${escapeHTML(g.genre||'Game')}',${g.coverUrl?`'${escapeHTML(g.coverUrl)}'`:'null'},${g.coverThumb?`'${escapeHTML(g.coverThumb)}'`:'null'})" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background='none'"`}>
+    return `<div style="padding:8px 12px;border-radius:8px;cursor:${has?'default':'pointer'};transition:all .12s;color:${has?'rgba(255,255,255,.25)':'rgba(255,255,255,.7)'};font-size:13px;font-weight:${has?'400':'500'};display:flex;align-items:center;justify-content:space-between;" ${has?'':`onclick="_addGameFromWidgetSearch('${escapeHTML(g.name)}','${g.icon||'🎮'}','${escapeHTML(g.genre||'Game')}',${g.coverUrl?`'${escapeHTML(g.coverUrl)}'`:'null'},${g.coverThumb?`'${escapeHTML(g.coverThumb)}'`:'null'})"`}>
       <span>${escapeHTML(g.name)}</span>
     </div>`;
   }).join('');
@@ -23394,7 +23394,7 @@ function _renderPollCard(poll, chIdx) {
           <span>by ${escapeHTML(poll.createdBy || '?')}</span>
         </div>
       </div>
-      ${canDelete ? `<button onclick="_deletePoll('${escapeHTML(poll._key)}',${chIdx})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;opacity:.4;transition:opacity .15s;" onmouseover="this.style.opacity='1';this.style.color='var(--red)'" onmouseout="this.style.opacity='.4';this.style.color='var(--muted)'">×</button>` : ''}
+      ${canDelete ? `<button onclick="_deletePoll('${escapeHTML(poll._key)}',${chIdx})" class="ftz-delete-x" title="Delete poll">×</button>` : ''}
     </div>
     <div class="poll-card-body">${optionsHTML}</div>
     <div class="poll-card-footer">
@@ -25701,7 +25701,7 @@ function renderAtelierTab(tab) {
           <div style="font-size:11px;color:rgba(255,255,255,.35);">+50 Onyx every day</div>
         </div>
         <!-- Browse Shop -->
-        <div style="background:linear-gradient(135deg,rgba(167,139,250,.04),rgba(167,139,250,.01));border:1.5px solid rgba(167,139,250,.1);border-radius:18px;padding:22px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="switchAtelierTab('shop')" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.25)';this.style.borderColor='rgba(167,139,250,.22)'" onmouseout="this.style.transform='';this.style.boxShadow='none';this.style.borderColor='rgba(167,139,250,.1)'">
+        <div style="background:linear-gradient(135deg,rgba(167,139,250,.04),rgba(167,139,250,.01));border:1.5px solid rgba(167,139,250,.1);border-radius:18px;padding:22px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="switchAtelierTab('shop')">
           <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(167,139,250,.06),transparent 70%);pointer-events:none;"></div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
             <div style="width:40px;height:40px;border-radius:14px;background:rgba(167,139,250,.1);display:flex;align-items:center;justify-content:center;">
@@ -26152,7 +26152,7 @@ function renderAtelierTab(tab) {
 
           <!-- ── Glow Decorations Collection ── -->
           <div style="margin-bottom:36px;">
-            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(62,207,110,.04),rgba(251,146,60,.04),rgba(244,114,182,.03));border-color:rgba(255,255,255,.06);cursor:default;" onmouseover="this.style.borderColor='rgba(255,255,255,.12)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
+            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(62,207,110,.04),rgba(251,146,60,.04),rgba(244,114,182,.03));border-color:rgba(255,255,255,.06);cursor:default;">
               <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(96,165,250,.04),transparent 50%),radial-gradient(ellipse at 70% 50%,rgba(251,146,60,.04),transparent 50%);pointer-events:none;"></div>
               <div class="collection-bar-title" style="color:rgba(255,255,255,.75);">GLOW DECORATIONS</div>
               <div class="collection-bar-desc">Make your avatar shine with vibrant glow effects</div>
@@ -28749,7 +28749,7 @@ function toggleOwnProfilePanel() {
     </div>
     <!-- Avatar row -->
     <div style="display:flex;align-items:flex-end;gap:11px;padding:0 18px;margin-top:-32px;position:relative;z-index:2;">
-      <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:#161a28;box-shadow:0 6px 20px rgba(0,0,0,.6);flex-shrink:0;transition:transform .18s cubic-bezier(.22,1,.36,1);" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='none'">
+      <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:4px solid var(--panel);cursor:pointer;background:#161a28;box-shadow:0 6px 20px rgba(0,0,0,.6);flex-shrink:0;transition:transform .18s cubic-bezier(.22,1,.36,1);" onclick="closeOwnProfilePanel();viewUserProfile('${CU?.username||''}')">
         ${CU?.pfp?`<img src="${CU.pfp}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(CU?.displayName||CU?.username||'')}'">` : `<img src="${_defaultPfpUrl(CU?.displayName||CU?.username||'')}" style="width:100%;height:100%;object-fit:cover;">`}
       </div>
       <div style="display:flex;align-items:center;gap:7px;padding-bottom:7px;">

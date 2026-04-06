@@ -9023,13 +9023,13 @@ function renderBSettingsMain(tab) {
       <div class="bs-section-desc">Customize how your bastion appears across Fortized.</div>
       <div style="margin-bottom:18px;">
         <div class="settings-title">Banner</div>
-        <div style="height:160px;border-radius:12px;overflow:hidden;border:1.5px dashed var(--border);cursor:pointer;position:relative;" onclick="document.getElementById('bs-banner-upload').click()">
+        <div style="height:160px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,249,62,.1);cursor:pointer;position:relative;transition:all .2s;" onclick="document.getElementById('bs-banner-upload').click()" onmouseover="this.style.borderColor='rgba(255,249,62,.2);this.style.background='rgba(255,249,62,.02)'" onmouseout="this.style.borderColor='rgba(255,249,62,.1);this.style.background=''">
           ${b.banner?`<img src="${b.banner}" style="width:100%;height:100%;object-fit:cover;">`:'<div style="height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f1830,#1a0f30);color:var(--muted);font-size:13px;">🖼 Click to upload banner</div>'}
         </div>
         <input id="bs-banner-upload" type="file" accept="image/*" style="display:none;" onchange="updateBastionBanner(event)">
       </div>
       <div style="display:flex;gap:14px;margin-bottom:20px;">
-        <div style="width:80px;height:80px;border-radius:18px;background:var(--panel2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;overflow:hidden;" onclick="document.getElementById('bs-icon-upload').click()" id="bs-icon-prev">
+        <div style="width:80px;height:80px;border-radius:18px;background:var(--panel2);border:1.5px solid rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;overflow:hidden;transition:all .2s;" onclick="document.getElementById('bs-icon-upload').click()" id="bs-icon-prev" onmouseover="this.style.borderColor='rgba(255,249,62,.3)'" onmouseout="this.style.borderColor='rgba(255,249,62,.15)'">
           ${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`:`<span style="font-family:var(--font-display);font-weight:800;font-size:28px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}
         </div>
         <input id="bs-icon-upload" type="file" accept="image/*" style="display:none;" onchange="updateBastionIcon(event)">
@@ -10614,7 +10614,7 @@ function renderCreateBotStep(step) {
       <div class="modal-title" style="display:flex;align-items:center;gap:8px;"><img src="/Fortized Bot.png" style="width:22px;height:22px;"> Create a Bot</div>
       <div class="modal-sub" style="margin-bottom:16px;">Step 1 of 3 — Identity</div>
       <div style="display:flex;gap:14px;margin-bottom:16px;">
-        <div style="width:64px;height:64px;border-radius:16px;background:var(--panel2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;" onclick="document.getElementById('bot-avatar-upload').click()" id="bot-avatar-prev"><img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;border-radius:16px;"></div>
+        <div style="width:64px;height:64px;border-radius:16px;background:var(--panel2);border:1.5px solid rgba(255,249,62,.15);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;transition:all .2s;" onclick="document.getElementById('bot-avatar-upload').click()" id="bot-avatar-prev" onmouseover="this.style.borderColor='rgba(255,249,62,.3)'" onmouseout="this.style.borderColor='rgba(255,249,62,.15)'"><img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;border-radius:16px;"></div>
         <input id="bot-avatar-upload" type="file" accept="image/*" style="display:none;" onchange="previewBotAvatar(event)">
         <div style="flex:1;">
           <input class="modal-input" id="cbot-name" placeholder="Bot Name" maxlength="32">

@@ -6922,6 +6922,34 @@ function initFortizedUXResilience() {
           });
         }
 
+        // ── REFRESH OPEN PROFILE MODAL IF VISIBLE ──
+        // When a user's activity changes while their profile is open, re-render the activity section
+        const profileModal = document.getElementById('modal-user');
+        if (profileModal && profileModal.style.display !== 'none') {
+          const modalUser = document.querySelector('.up-username')?.textContent?.replace('@','') || null;
+          if (modalUser === data.username) {
+            // Update the activity content section of the open profile
+            const actSection = document.querySelector('.up-right-section:has(.up-right-section-title:contains("Active Now"))');
+            if (actSection && data.activityState?.activities?.length) {
+              // Trigger profile refresh for real-time activity updates
+              setTimeout(() => { viewUserProfile(data.username); }, 100);
+            }
+          }
+        }
+
+        // ── REFRESH MINI PROFILE PREVIEW IF VISIBLE ──
+        const miniProfile = document.getElementById('mini-profile-preview');
+        if (miniProfile) {
+          const miniUser = miniProfile.getAttribute('aria-label')?.split(' ').pop() || null;
+          if (miniUser === data.username && data.activityState?.activities?.length) {
+            // Update mini profile activity section
+            const actSection = miniProfile.querySelector('.mpp-section:has(.mpp-section-title:contains("Active Now"))');
+            if (actSection) {
+              setTimeout(() => { showMiniProfilePreview(data.username, miniProfile); }, 100);
+            }
+          }
+        }
+
         // ── DM FRIENDS HOME: update row visibility for "online" filter ──
         if ((CU?.friends||[]).includes(data.username)) {
           const friendRow = document.querySelector('.dm-friend-row[data-user="'+data.username+'"]');
@@ -6940,6 +6968,58 @@ function initFortizedUXResilience() {
           } catch {}
           // Refresh Active Now sidebar when a friend's status changes
           _debouncedActiveNowRefresh();
+        }
+      },
+      onActivityChange: function(data) {
+        if (!data || !data.username) return;
+        // Refresh open profile modal with new activity
+        const profileModal = document.getElementById('modal-user');
+        if (profileModal && profileModal.style.display !== 'none') {
+          const modalUser = document.querySelector('.up-username')?.textContent?.replace('@','') || null;
+          if (modalUser === data.username) {
+            // Re-render the profile to show updated activities
+            setTimeout(() => { viewUserProfile(data.username); }, 50);
+          }
+        }
+        // Refresh mini profile preview if open
+        const miniProfile = document.getElementById('mini-profile-preview');
+        if (miniProfile) {
+          const miniUser = miniProfile.getAttribute('aria-label')?.match(/(\S+)$/)?.[1] || null;
+          if (miniUser === data.username) {
+            // Refresh mini profile to show updated activities
+            const anchor = miniProfile.previousElementSibling || document.querySelector('[onclick*="showMiniProfilePreview"]');
+            if (anchor) {
+              miniProfile.remove();
+              showMiniProfilePreview(data.username, anchor);
+            }
+          }
+        }
+        // Update friend list activity display
+        const friendActEl = document.getElementById('dm-home-activity-'+data.username);
+        if (friendActEl && data.activityState?.activities?.length) {
+          const primaryActivity = data.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2))[0];
+          if (primaryActivity) {
+            const activityText = formatActivityDisplay(primaryActivity);
+            friendActEl.textContent = activityText ? '🎮 ' + activityText : '';
+          }
+        }
+        // Update pending friend request activity display
+        const pendActEl = document.getElementById('dm-home-pact-'+data.username);
+        if (pendActEl && data.activityState?.activities?.length) {
+          const primaryActivity = data.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2))[0];
+          if (primaryActivity) {
+            const activityText = formatActivityDisplay(primaryActivity);
+            pendActEl.textContent = activityText ? '🎮 ' + activityText : '';
+          }
+        }
+        // Update friend list sorted view
+        const sortedActEl = document.getElementById('friend-sorted-act-'+data.username);
+        if (sortedActEl && data.activityState?.activities?.length) {
+          const primaryActivity = data.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2))[0];
+          if (primaryActivity) {
+            const activityText = formatActivityDisplay(primaryActivity);
+            sortedActEl.textContent = activityText ? '🎮 ' + activityText : '';
+          }
         }
       },
       onMessage: function(room, msg) {
@@ -21283,8 +21363,9 @@ async function _pollSpotifyNowPlaying() {
         CU.gameActivity = activityState.primary;  // Keep backward compat
         _updateUserbarActivity();
         _syncRailUserbarActivity();
-        FortizedSocial.socketEmit('activity:set', { activity: _gameActivity });
-        try { firebase.database().ref('users/'+CU.username+'/gameActivity').set(_gameActivity); } catch {}
+        FortizedSocial.socketEmit('activity:set', { activity: activityState.primary, activityState: activityState });
+        try { firebase.database().ref('users/'+CU.username+'/gameActivity').set(activityState.primary); } catch {}
+        try { firebase.database().ref('users/'+CU.username+'/activityState').set(activityState); } catch {}
         // Save Spotify data to database
         try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch {}
         // Update profile widget if visible

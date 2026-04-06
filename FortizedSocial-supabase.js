@@ -842,7 +842,10 @@ const FortizedSocial = (() => {
         if (_socketCallbacks.onTyping) _socketCallbacks.onTyping(data.room, data.users);
       });
       _socket.on('presence:update', function(data) {
-        if (_socketCallbacks.onStatusChange) _socketCallbacks.onStatusChange({ username: data.username, status: data.status, gameActivity: data.gameActivity || null });
+        if (_socketCallbacks.onStatusChange) _socketCallbacks.onStatusChange({ username: data.username, status: data.status, gameActivity: data.gameActivity || null, activityState: data.activityState || null });
+      });
+      _socket.on('activity:changed', function(data) {
+        if (_socketCallbacks.onActivityChange) _socketCallbacks.onActivityChange({ username: data.username, activityState: data.activityState || null, gameActivity: data.gameActivity || null });
       });
       _socket.on('notification:new', function(notif) {
         if (_socketCallbacks.onNewNotification) _socketCallbacks.onNewNotification(notif);

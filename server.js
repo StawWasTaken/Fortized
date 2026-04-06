@@ -350,11 +350,27 @@ io.on('connection', (socket) => {
     if (!username) return;
     const entry = onlineUsers.get(username) || { socketId: socket.id };
     entry.gameActivity = data.activity || null;
+    entry.activityState = data.activityState || null;  // Store new multi-activity format
     onlineUsers.set(username, entry);
     const broadcastStatus = entry.status === 'invisible' ? 'offline' : entry.status;
     // Hide game activity if invisible (would leak presence)
     const broadcastActivity = entry.status === 'invisible' ? null : entry.gameActivity;
-    io.emit('presence:update', { username, status: broadcastStatus, gameActivity: broadcastActivity });
+    const broadcastActivityState = entry.status === 'invisible' ? null : entry.activityState;
+    io.emit('presence:update', { username, status: broadcastStatus, gameActivity: broadcastActivity, activityState: broadcastActivityState });
+  });
+
+  // Handle real-time activity updates from broadcastIfChanged()
+  socket.on('activity:update', (data) => {
+    if (!username) return;
+    const entry = onlineUsers.get(username) || { socketId: socket.id };
+    entry.activityState = data.activityState || null;
+    entry.gameActivity = data.activityState?.primary || null;  // Keep backward compat
+    onlineUsers.set(username, entry);
+    const broadcastStatus = entry.status === 'invisible' ? 'offline' : entry.status;
+    const broadcastActivityState = entry.status === 'invisible' ? null : entry.activityState;
+    const broadcastActivity = entry.status === 'invisible' ? null : entry.gameActivity;
+    // Broadcast activity update to all clients (includes real-time updates)
+    io.emit('activity:changed', { username, activityState: broadcastActivityState, gameActivity: broadcastActivity });
   });
 
   // ── Join a chat room (DM, bastion channel, group chat) ──

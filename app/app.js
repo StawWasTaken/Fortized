@@ -27792,12 +27792,45 @@ function applyCrop() {
     _cropData.x * scaleX, _cropData.y * scaleY,
     _cropImg.width * _cropData.scale * scaleX,
     _cropImg.height * _cropData.scale * scaleY);
-  // Preserve alpha → PNG; no alpha → JPEG
-  const result = _cropData.hasAlpha
-    ? out.toDataURL('image/png')
-    : out.toDataURL('image/jpeg', 0.93);
+
   document.getElementById('crop-modal-overlay')?.remove();
-  if (_cropCallback) _cropCallback(result);
+
+  // Use blob conversion for better compression and file handling
+  const mimeType = _cropData.hasAlpha ? 'image/png' : 'image/jpeg';
+  const quality = _cropData.hasAlpha ? 1 : 0.93;
+
+  out.toBlob((blob) => {
+    if (!blob) {
+      console.error('[Crop] Failed to create blob');
+      // Fallback to data URL
+      const fallback = _cropData.hasAlpha
+        ? out.toDataURL('image/png')
+        : out.toDataURL('image/jpeg', quality);
+      if (_cropCallback) _cropCallback(fallback);
+      return;
+    }
+
+    // Convert blob to data URL for storage (creates actual cropped image)
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target.result;
+      console.debug('[Crop] Image cropped and converted:', {
+        mimeType,
+        size: blob.size,
+        dimensions: `${outW}x${outH}`
+      });
+      if (_cropCallback) _cropCallback(result);
+    };
+    reader.onerror = () => {
+      console.error('[Crop] Failed to read blob');
+      // Fallback to toDataURL
+      const fallback = _cropData.hasAlpha
+        ? out.toDataURL('image/png')
+        : out.toDataURL('image/jpeg', quality);
+      if (_cropCallback) _cropCallback(fallback);
+    };
+    reader.readAsDataURL(blob);
+  }, mimeType, quality);
 }
 
 
@@ -27815,59 +27848,80 @@ function initCrossDeviceSync() {
   // 1. SUPABASE REAL-TIME: Listen for direct database changes (table editor, etc)
   // This catches changes made outside of Socket.IO (direct Supabase edits)
   if (typeof supabase !== 'undefined' && supabase.channel) {
-    _supabaseUserChannel = supabase.channel(`users:${CU.username}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'users', filter: `username=eq.${CU.username}` },
-        (payload) => {
-          if (!payload.new) return;
-          const newData = payload.new;
+    try {
+      _supabaseUserChannel = supabase.channel(`users:${CU.username}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'users', filter: `username=eq.${CU.username}` },
+          (payload) => {
+            try {
+              if (!payload.new) return;
+              const newData = payload.new;
+              console.debug('[Supabase Real-time] Change detected:', newData);
 
-          // IMPORTANT: Server data takes precedence over local cache
-          if (newData.display_name && newData.display_name !== CU.displayName) {
-            CU.displayName = newData.display_name;
-            updateUserbar();
+              // IMPORTANT: Server data takes precedence over local cache
+              if (newData.display_name && newData.display_name !== CU.displayName) {
+                console.debug('[Sync] Display name updated:', newData.display_name);
+                CU.displayName = newData.display_name;
+                updateUserbar();
+              }
+              if (newData.pfp && newData.pfp !== CU.pfp) {
+                console.debug('[Sync] Avatar updated');
+                CU.pfp = newData.pfp;
+                updateUserbar();
+                document.querySelectorAll('.msg-av-inner img, .ua img, .up-left-av img').forEach(img => {
+                  if (img.src !== newData.pfp) img.src = newData.pfp;
+                });
+              }
+              if (newData.banner && newData.banner !== CU.banner) {
+                console.debug('[Sync] Banner updated');
+                CU.banner = newData.banner;
+              }
+              if (newData.status && newData.status !== CU.status) {
+                console.debug('[Sync] Status updated:', newData.status);
+                CU.status = newData.status;
+                updateUserbar();
+              }
+              if (newData.onyx !== undefined && newData.onyx !== CU.onyx) {
+                console.debug('[Sync] Onyx updated:', newData.onyx);
+                CU.onyx = newData.onyx;
+                updateOnyxDisplay();
+              }
+              if (newData.friends && JSON.stringify(newData.friends) !== JSON.stringify(CU.friends)) {
+                console.debug('[Sync] Friends list updated');
+                CU.friends = newData.friends;
+              }
+              if (newData.bastions && JSON.stringify(newData.bastions) !== JSON.stringify(CU.bastions)) {
+                console.debug('[Sync] Bastions updated');
+                CU.bastions = newData.bastions;
+                renderRailBastions?.();
+              }
+              if (newData.group_chats && JSON.stringify(newData.group_chats) !== JSON.stringify(CU.groupChats)) {
+                console.debug('[Sync] Group chats updated');
+                CU.groupChats = newData.group_chats;
+                const scroll = document.getElementById('sidebar-scroll');
+                if (scroll) renderDMSidebar(scroll);
+              }
+              saveLocal();
+            } catch (e) {
+              console.error('[Supabase Sync Error]', e);
+            }
           }
-          if (newData.pfp && newData.pfp !== CU.pfp) {
-            CU.pfp = newData.pfp;
-            updateUserbar();
-            document.querySelectorAll('.msg-av-inner img, .ua img').forEach(img => {
-              if (img.src !== newData.pfp) img.src = newData.pfp;
-            });
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.debug('[Supabase] ✓ Real-time user listener SUBSCRIBED', `(user: ${CU.username})`);
+          } else if (status === 'CLOSED') {
+            console.debug('[Supabase] Real-time user listener closed - attempting to reconnect');
+            setTimeout(() => initCrossDeviceSync(), 5000);
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('[Supabase] Channel error - reconnecting');
+            setTimeout(() => initCrossDeviceSync(), 5000);
           }
-          if (newData.banner && newData.banner !== CU.banner) {
-            CU.banner = newData.banner;
-          }
-          if (newData.status && newData.status !== CU.status) {
-            CU.status = newData.status;
-            updateUserbar();
-          }
-          if (newData.onyx !== undefined && newData.onyx !== CU.onyx) {
-            CU.onyx = newData.onyx;
-            updateOnyxDisplay();
-          }
-          if (newData.friends && JSON.stringify(newData.friends) !== JSON.stringify(CU.friends)) {
-            CU.friends = newData.friends;
-          }
-          if (newData.bastions && JSON.stringify(newData.bastions) !== JSON.stringify(CU.bastions)) {
-            CU.bastions = newData.bastions;
-            renderRailBastions();
-          }
-          if (newData.group_chats && JSON.stringify(newData.group_chats) !== JSON.stringify(CU.groupChats)) {
-            CU.groupChats = newData.group_chats;
-            const scroll = document.getElementById('sidebar-scroll');
-            if (scroll) renderDMSidebar(scroll);
-          }
-          saveLocal();
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.debug('[Supabase] Real-time user listener subscribed');
-        } else if (status === 'CLOSED') {
-          console.debug('[Supabase] Real-time user listener closed');
-        }
-      });
+        });
+    } catch (e) {
+      console.error('[Supabase Setup Error]', e);
+    }
   }
 
   // 2. SOCKET.IO EVENTS: Listen to broadcasts from server

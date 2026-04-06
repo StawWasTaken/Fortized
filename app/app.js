@@ -289,8 +289,8 @@ const FtzStatus = (() => {
       '.mpp-status-dot[data-for="'+username+'"]',
       '.dm-home-status[data-for="'+username+'"]'
     ];
-    selectors.forEach(function(sel) {
-      document.querySelectorAll(sel).forEach(function(el) {
+    selectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => {
         el.dataset.dotStatus = s;
         el.innerHTML = dotSvg(s, el.dataset.dotSize || '12');
         el.style.background = 'none';
@@ -7471,14 +7471,14 @@ function initFortizedUXResilience() {
   try {
     firebase.database().ref('notifications/' + CU.username).on('value', async () => {
       if (_markingAllRead) return; // Skip refresh while mark-all-read is in progress
-      try { await updateNotifBadge(); } catch {}
+      try { await updateNotifBadge(); } catch(e) { console.debug('[Notif] Badge update:', e?.message); }
       // If notif panel is open, refresh it
-      if (notifPanelOpen) { try { await buildNotifList(); } catch {} }
+      if (notifPanelOpen) { try { await buildNotifList(); } catch(e) { console.debug('[Notif] List refresh:', e?.message); } }
     });
-  } catch {}
+  } catch(e) { console.warn('[Notif] Listener setup failed:', e?.message); }
   try { initIdleDetection(); } catch(e) { console.warn('[init] initIdleDetection:', e); }
   // Start Spotify polling if already connected
-  try { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); } catch {}
+  try { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); } catch(e) { console.warn('[Spotify] Init poll failed:', e?.message); }
   // Auto-detect game activity in Tauri desktop app (Discord-style)
   try { _startAutoActivityDetection(); } catch(e) { console.warn('[init] autoActivityDetection:', e); }
   try { restoreCustomStatusTimer(); } catch(e) { console.warn('[init] restoreCustomStatusTimer:', e); }
@@ -8097,7 +8097,7 @@ async function regenerateBastionTemplateLink(bastionIdx) {
   if(!b) return;
   // Delete old template if exists
   if(b.templateId) {
-    try { await firebase.database().ref('bastionTemplates/' + b.templateId).remove(); } catch {}
+    try { await firebase.database().ref('bastionTemplates/' + b.templateId).remove(); } catch(e) { console.warn('[Bastion] Template remove failed:', e?.message); }
   }
   b.templateLink = null;
   b.templateId = null;
@@ -8109,7 +8109,7 @@ async function deleteBastionTemplateLink(bastionIdx) {
   const b = CU.bastions?.[bastionIdx != null ? bastionIdx : curBastion];
   if(!b) return;
   if(b.templateId) {
-    try { await firebase.database().ref('bastionTemplates/' + b.templateId).remove(); } catch {}
+    try { await firebase.database().ref('bastionTemplates/' + b.templateId).remove(); } catch(e) { console.warn('[Bastion] Template remove failed:', e?.message); }
   }
   b.templateLink = null;
   b.templateId = null;
@@ -9945,7 +9945,7 @@ async function saveAppQuestions() {
     if (b.applicationQuestions) b.applicationQuestions[i] = el.value.trim();
   });
   await saveUser();
-  try { if (b.globalId) await FortizedSocial.updateBastionSettings?.(b.globalId, {applicationQuestions: b.applicationQuestions}); } catch {}
+  try { if (b.globalId) await FortizedSocial.updateBastionSettings?.(b.globalId, {applicationQuestions: b.applicationQuestions}); } catch(e) { console.warn('[Bastion] App questions sync:', e?.message); }
   toast('Application form saved!', 'success');
 }
 async function updateBastionIcon(e) {
@@ -10061,7 +10061,7 @@ async function loadBastionMembersList() {
   const el = document.getElementById('bsettings-members-list'); if(!el) return;
   el.innerHTML = '<div style="color:var(--muted);font-size:13px;">Loading…</div>';
   let members=[];
-  try { members = await FortizedSocial.getBastionMembers(b.globalId||b.name)||[]; } catch {}
+  try { members = await FortizedSocial.getBastionMembers(b.globalId||b.name)||[]; } catch(e) { console.warn('[Bastion] Members list load:', e?.message); }
   if(!members.length) members=[b.owner];
   const roles = b.roles||[];
   const memberRoles = b.memberRoles||{};
@@ -10138,7 +10138,7 @@ async function distributeOnyxRevenue(cost) {
       try {
         const u = await FortizedSocial.getUserByName('staw');
         if (u) await FortizedSocial.adminUpdateUserField('staw', 'onyx', (u.onyx || 0) + stawShare);
-      } catch {}
+      } catch(e) { console.warn('[Revenue] Staw share failed:', e?.message); }
     })());
   }
   if (fortizedShare > 0) {
@@ -10146,7 +10146,7 @@ async function distributeOnyxRevenue(cost) {
       try {
         const u = await FortizedSocial.getUserByName('fortized');
         if (u) await FortizedSocial.adminUpdateUserField('fortized', 'onyx', (u.onyx || 0) + fortizedShare);
-      } catch {}
+      } catch(e) { console.warn('[Revenue] Fortized share failed:', e?.message); }
     })());
   }
   if (perStaff > 0) {
@@ -10155,7 +10155,7 @@ async function distributeOnyxRevenue(cost) {
         try {
           const u = await FortizedSocial.getUserByName(member);
           if (u) await FortizedSocial.adminUpdateUserField(member, 'onyx', (u.onyx || 0) + perStaff);
-        } catch {}
+        } catch(e) { console.warn('[Revenue] Staff share failed for', member, e?.message); }
       })());
     }
   }
@@ -10236,7 +10236,7 @@ function confirmDeleteBastion(idx) {
   delBtn.onclick = async () => {
     if (inp.value.trim().toUpperCase() !== confirmWord) return;
     overlay.remove();
-    try { await firebase.database().ref('globalBastions/' + (b.globalId || b.name)).remove(); } catch {}
+    try { await firebase.database().ref('globalBastions/' + (b.globalId || b.name)).remove(); } catch(e) { console.warn('[Bastion] Global remove failed:', e?.message); }
     CU.bastions.splice(idx, 1);
     await saveUser();
     curBastion = null;
@@ -11049,7 +11049,7 @@ function confirmDeployBot(arsenalBotId, bastionIdx) {
   toast(`${arsenalBot.name} deployed to ${b.name}!`, 'success');
   // System message for bot integration
   const bCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
-  try { FortizedSocial.sendBastionChannelMessage(b.globalId||b.name, bCh.name, '__system__', '**'+arsenalBot.name+'** has been integrated into the bastion.'); } catch {}
+  try { FortizedSocial.sendBastionChannelMessage(b.globalId||b.name, bCh.name, '__system__', '**'+arsenalBot.name+'** has been integrated into the bastion.'); } catch(e) { console.debug('[Bot] System msg failed:', e?.message); }
 }
 
 function openDeployBotPicker() {
@@ -11103,7 +11103,7 @@ function deployMyBot(botIdx) {
   toast(`${bot.name} deployed!`, 'success');
   // System message for bot integration
   const bCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
-  try { FortizedSocial.sendBastionChannelMessage(b.globalId||b.name, bCh.name, '__system__', '**'+bot.name+'** has been integrated into the bastion.'); } catch {}
+  try { FortizedSocial.sendBastionChannelMessage(b.globalId||b.name, bCh.name, '__system__', '**'+bot.name+'** has been integrated into the bastion.'); } catch(e) { console.debug('[Bot] System msg failed:', e?.message); }
 }
 
 function toggleBastionBot(botId) {
@@ -17775,7 +17775,7 @@ async function joinBastionById(bastionId, hasInvite) {
     const wTemplate = localB.welcomeMessage || '**{user}** joined the bastion. Welcome!';
     const wMsg = wTemplate.replace(/\{user\}/g, '**'+wName+'**').replace(/\{bastion\}/g, '**'+(b.name||'Bastion')+'**').replace(/\{count\}/g, '');
     const wChName = localB.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
-    try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch {}
+    try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch(e) { console.debug('[Bastion] Welcome msg failed:', e?.message); }
   }
 }
 

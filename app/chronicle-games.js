@@ -404,65 +404,50 @@ function loadGame(eventId, container) {
 }
 
 function gameEvent1(container) {
+  // Dialogue game with CouncilChamber background
+  container.innerHTML = '';
+  const bg = document.createElement('img');
+  bg.src = `${CHRONICLE.ASSET_PATH}CouncilChamber.png`;
+  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;`;
+  container.parentElement.style.position = 'relative';
+  container.parentElement.appendChild(bg);
+
   let dialogueIndex = 0;
   const dialogues = [
-    { char: 'Cardinal Wealthplace', text: 'The Treaty of the Silver Stream is shattered...', img: 'Wealthplace.png' },
-    { char: 'Cardinal Wealthplace', text: 'What counsel do you offer, noble knight?', img: 'Wealthplace.png' },
-    { char: 'Cardinal Wealthplace', text: 'Our fate rests in your hands.', img: 'Wealthplace.png' }
+    { text: 'The Treaty of the Silver Stream is shattered...', img: 'Wealthplace.png' },
+    { text: 'What counsel do you offer, noble knight?', img: 'Wealthplace.png' },
+    { text: 'Our fate rests in your hands.', img: 'Wealthplace.png' }
   ];
 
   function render() {
-    container.innerHTML = '';
+    const existingBox = container.querySelector('[id="dialogue-box"]');
+    if (existingBox) existingBox.remove();
 
     if (dialogueIndex >= dialogues.length) {
-      const coins = 50;
-      const xp = 25;
-      CHRONICLE.playerStats.fortCoins += coins;
-      CHRONICLE.playerStats.xp += xp;
-      if (CHRONICLE.playerStats.xp >= 100) {
-        CHRONICLE.playerStats.level++;
-        CHRONICLE.playerStats.xp -= 100;
-      }
-      CHRONICLE.events[0].completed = true;
-      if (CHRONICLE.events[1]) CHRONICLE.events[1].unlocked = true;
-
-      container.innerHTML = '<div style="color: #fff; font-family: ' + CHRONICLE.FONT + '; text-align: center;"><div style="font-size: 32px; font-weight: 900; margin-bottom: 20px;">✓ Event Complete!</div><div style="font-size: 16px; margin: 10px 0;">+' + coins + ' FortCoins</div><div style="font-size: 16px;">+' + xp + ' XP</div></div>';
-      playSound('SoundWin.mp3', 0.6);
-      setTimeout(() => {
-        document.getElementById('game-overlay').remove();
-        resumeBgMusic();
-        CHRONICLE.currentGame = null;
-        // Refresh dashboard
-        document.getElementById('chronicle-dashboard').remove();
-        showChronicleDashboard();
-      }, 3000);
+      completeEvent(1, 50, 25);
       return;
     }
 
     const d = dialogues[dialogueIndex];
     const box = document.createElement('div');
-    box.style.cssText = `display: flex; gap: 15px; align-items: center; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 4px; border: 2px solid #fff; width: 80%; max-width: 600px;`;
+    box.id = 'dialogue-box';
+    box.style.cssText = `position: relative; display: flex; gap: 15px; align-items: center; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 4px; border: 3px solid #FFD700; width: 70%; max-width: 500px; z-index: 10;`;
 
     const portrait = document.createElement('img');
     portrait.src = `${CHRONICLE.ASSET_PATH}${d.img}`;
-    portrait.style.cssText = `height: 120px; width: auto; border: 2px solid #fff;`;
+    portrait.style.cssText = `height: 100px; width: auto; border: 2px solid #FFD700;`;
     box.appendChild(portrait);
 
     const textBox = document.createElement('div');
     textBox.style.cssText = `color: #fff; flex: 1;`;
-    const charName = document.createElement('div');
-    charName.style.cssText = `font-weight: 700; color: #FFD700; margin-bottom: 8px; font-family: ${CHRONICLE.FONT}; text-transform: uppercase;`;
-    charName.textContent = d.char;
-    textBox.appendChild(charName);
-
-    const dialogue = document.createElement('div');
-    dialogue.style.cssText = `font-size: 14px; line-height: 1.6; font-family: ${CHRONICLE.FONT};`;
-    dialogue.textContent = d.text;
-    textBox.appendChild(dialogue);
+    const text = document.createElement('div');
+    text.style.cssText = `font-size: 14px; line-height: 1.6; font-family: ${CHRONICLE.FONT}; margin-bottom: 10px;`;
+    text.textContent = d.text;
+    textBox.appendChild(text);
 
     const continueBtn = document.createElement('button');
-    continueBtn.style.cssText = `margin-top: 10px; padding: 8px 16px; background: #FFD700; color: #000; border: 2px solid #000; border-radius: 2px; font-family: ${CHRONICLE.FONT}; font-weight: 700; cursor: pointer; font-size: 11px;`;
-    continueBtn.textContent = 'Continue →';
+    continueBtn.style.cssText = `padding: 8px 16px; background: #FFD700; color: #000; border: 2px solid #FFD700; border-radius: 2px; font-family: ${CHRONICLE.FONT}; font-weight: 700; cursor: pointer; font-size: 12px;`;
+    continueBtn.textContent = dialogueIndex === dialogues.length - 1 ? 'Complete' : 'Continue →';
     continueBtn.onclick = () => { dialogueIndex++; render(); };
     textBox.appendChild(continueBtn);
 
@@ -474,13 +459,27 @@ function gameEvent1(container) {
 }
 
 function gameEvent2(container) {
+  // Catching game with SilverStream background
+  container.innerHTML = '';
+  const bg = document.createElement('img');
+  bg.src = `${CHRONICLE.ASSET_PATH}SilverStream.png`;
+  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;`;
+  container.parentElement.style.position = 'relative';
+  container.parentElement.appendChild(bg);
+
   let caught = 0;
   const needed = 5;
 
-  container.innerHTML = `<div style="color: #fff; text-align: center; font-family: ${CHRONICLE.FONT};"><div style="font-size: 14px; margin-bottom: 15px;">Click to catch falling items!</div><div style="font-size: 12px; margin-bottom: 20px;">Caught: <span id="caught-count">0</span>/${needed}</div></div>`;
+  const gameUI = document.createElement('div');
+  gameUI.style.cssText = `position: relative; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 10;`;
+
+  const label = document.createElement('div');
+  label.style.cssText = `color: #fff; font-size: 14px; font-family: ${CHRONICLE.FONT}; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 4px;`;
+  label.textContent = `Caught: ${caught}/${needed}`;
+  gameUI.appendChild(label);
 
   const btn = document.createElement('button');
-  btn.style.cssText = `width: 100px; height: 100px; background: #FFD700; border: 3px solid #fff; border-radius: 50%; font-size: 32px; cursor: pointer; transition: all 0.1s;`;
+  btn.style.cssText = `width: 100px; height: 100px; background: #FFD700; border: 3px solid #000; border-radius: 50%; font-size: 32px; cursor: pointer; transition: all 0.1s; box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);`;
   btn.textContent = '💰';
 
   btn.onclick = () => {
@@ -489,48 +488,43 @@ function gameEvent2(container) {
     playSound('SoundCoin.mp3', 0.4);
     setTimeout(() => { btn.style.transform = 'scale(1)'; }, 100);
 
-    document.getElementById('caught-count').textContent = caught;
+    label.textContent = `Caught: ${caught}/${needed}`;
 
     if (caught >= needed) {
       btn.disabled = true;
-      const coins = 75;
-      const xp = 30;
-      CHRONICLE.playerStats.fortCoins += coins;
-      CHRONICLE.playerStats.xp += xp;
-      if (CHRONICLE.playerStats.xp >= 100) {
-        CHRONICLE.playerStats.level++;
-        CHRONICLE.playerStats.xp -= 100;
-      }
-      CHRONICLE.events[1].completed = true;
-      if (CHRONICLE.events[2]) CHRONICLE.events[2].unlocked = true;
-
-      container.innerHTML = '<div style="color: #fff; font-family: ' + CHRONICLE.FONT + '; text-align: center;"><div style="font-size: 32px; font-weight: 900; margin-bottom: 20px;">✓ Raid Successful!</div><div style="font-size: 16px; margin: 10px 0;">+' + coins + ' FortCoins</div><div style="font-size: 16px;">+' + xp + ' XP</div></div>';
-      playSound('SoundWin.mp3', 0.6);
-      setTimeout(() => {
-        const overlay = document.getElementById('game-overlay');
-        if (overlay) overlay.remove();
-        resumeBgMusic();
-        CHRONICLE.currentGame = null;
-        // Refresh dashboard
-        const dashboard = document.getElementById('chronicle-dashboard');
-        if (dashboard) dashboard.remove();
-        showChronicleDashboard();
-      }, 3000);
+      completeEvent(2, 75, 30);
     }
   };
 
-  container.appendChild(btn);
+  gameUI.appendChild(btn);
+  container.appendChild(gameUI);
 }
 
 function simpleGame(container, eventId, title, clicks) {
+  // Simple clicking game using location images
+  container.innerHTML = '';
+  const locations = ['Battlefield', 'SupplyBox', 'TheCanals'];
+  const bgImage = locations[eventId % locations.length];
+
+  const bg = document.createElement('img');
+  bg.src = `${CHRONICLE.ASSET_PATH}${bgImage}.png`;
+  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;`;
+  container.parentElement.style.position = 'relative';
+  container.parentElement.appendChild(bg);
+
   let clicked = 0;
-  const btn = document.createElement('button');
-  btn.style.cssText = `width: 120px; height: 120px; background: #FFD700; border: 4px solid #fff; border-radius: 50%; font-size: 36px; cursor: pointer; transition: all 0.1s; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);`;
-  btn.textContent = '⚔';
+
+  const gameUI = document.createElement('div');
+  gameUI.style.cssText = `position: relative; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 10;`;
 
   const progress = document.createElement('div');
-  progress.style.cssText = `color: #fff; font-family: ${CHRONICLE.FONT}; font-size: 14px; margin-top: 15px;`;
+  progress.style.cssText = `color: #fff; font-family: ${CHRONICLE.FONT}; font-size: 14px; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 4px;`;
   progress.textContent = `${clicked}/${clicks}`;
+  gameUI.appendChild(progress);
+
+  const btn = document.createElement('button');
+  btn.style.cssText = `width: 120px; height: 120px; background: #FFD700; border: 4px solid #000; border-radius: 50%; font-size: 36px; cursor: pointer; transition: all 0.1s; box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);`;
+  btn.textContent = '⚔';
 
   btn.onclick = () => {
     clicked++;
@@ -544,30 +538,53 @@ function simpleGame(container, eventId, title, clicks) {
       btn.disabled = true;
       const coins = Math.floor(50 + (clicks * 5));
       const xp = Math.floor(20 + clicks);
-      CHRONICLE.playerStats.fortCoins += coins;
-      CHRONICLE.playerStats.xp += xp;
-      if (CHRONICLE.playerStats.xp >= 100) {
-        CHRONICLE.playerStats.level++;
-        CHRONICLE.playerStats.xp -= 100;
-      }
-      CHRONICLE.events[eventId - 1].completed = true;
-      if (eventId < 13 && CHRONICLE.events[eventId]) CHRONICLE.events[eventId].unlocked = true;
-
-      container.innerHTML = '<div style="color: #fff; font-family: ' + CHRONICLE.FONT + '; text-align: center;"><div style="font-size: 32px; font-weight: 900; margin-bottom: 20px;">✓ Complete!</div><div style="font-size: 16px; margin: 10px 0;">+' + coins + ' FortCoins</div><div style="font-size: 16px;">+' + xp + ' XP</div></div>';
-      playSound('SoundWin.mp3', 0.6);
-      setTimeout(() => {
-        const overlay = document.getElementById('game-overlay');
-        if (overlay) overlay.remove();
-        resumeBgMusic();
-        CHRONICLE.currentGame = null;
-        // Refresh dashboard
-        const dashboard = document.getElementById('chronicle-dashboard');
-        if (dashboard) dashboard.remove();
-        showChronicleDashboard();
-      }, 3000);
+      completeEvent(eventId, coins, xp);
     }
   };
 
-  container.appendChild(btn);
-  container.appendChild(progress);
+  gameUI.appendChild(btn);
+  container.appendChild(gameUI);
+}
+
+function completeEvent(eventId, coins, xp) {
+  // Award coins and XP
+  CHRONICLE.playerStats.fortCoins += coins;
+  CHRONICLE.playerStats.xp += xp;
+
+  if (CHRONICLE.playerStats.xp >= 100) {
+    CHRONICLE.playerStats.level++;
+    CHRONICLE.playerStats.xp -= 100;
+  }
+
+  CHRONICLE.events[eventId - 1].completed = true;
+  if (eventId < 13) {
+    CHRONICLE.events[eventId].unlocked = true;
+  }
+
+  // Show completion screen
+  const overlay = document.getElementById('game-overlay');
+  if (overlay) {
+    const content = overlay.querySelector(`[id="game-content-${eventId}"]`);
+    if (content) {
+      content.innerHTML = `<div style="color: #fff; font-family: ${CHRONICLE.FONT}; text-align: center; background: rgba(0,0,0,0.8); padding: 40px; border-radius: 8px;">
+        <div style="font-size: 48px; font-weight: 900; margin-bottom: 20px;">✓</div>
+        <div style="font-size: 28px; font-weight: 900; margin-bottom: 20px;">Event Complete!</div>
+        <div style="font-size: 18px; margin: 10px 0;">+${coins} FortCoins</div>
+        <div style="font-size: 18px;">+${xp} XP</div>
+      </div>`;
+    }
+  }
+
+  playSound('SoundWin.mp3', 0.6);
+
+  setTimeout(() => {
+    const overlay = document.getElementById('game-overlay');
+    if (overlay) overlay.remove();
+    resumeBgMusic();
+    CHRONICLE.currentGame = null;
+    // Refresh dashboard
+    const dashboard = document.getElementById('chronicle-dashboard');
+    if (dashboard) dashboard.remove();
+    showChronicleDashboard();
+  }, 2000);
 }

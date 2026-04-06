@@ -3678,7 +3678,7 @@ function switchNewDMTab(tab) {
   const dmPane = document.getElementById('ndm-pane-dm');
   const gcPane = document.getElementById('ndm-pane-gc');
   if (!dmBtn||!gcBtn||!dmPane||!gcPane) return;
-  const accentStyle = 'background:var(--accent);color:#0f1119;font-weight:700;';
+  const accentStyle = 'background:var(--accent);color:var(--rail);font-weight:700;';
   const inactiveStyle = 'background:transparent;color:var(--muted-light);font-weight:600;';
   if (tab === 'dm') {
     dmBtn.style.cssText += accentStyle; gcBtn.style.cssText += inactiveStyle;
@@ -4161,7 +4161,7 @@ async function addMembersToGC(gcId) {
       </div>
       <div style="display:flex;gap:8px;">
         <button onclick="this.closest('div[style]').closest('div[style]').remove()" style="flex:1;padding:9px;background:var(--panel2);border:1px solid var(--border);border-radius:11px;cursor:pointer;color:var(--muted-light);">Cancel</button>
-        <button id="add-gc-confirm" style="flex:1;padding:9px;background:var(--accent);color:#0f1119;font-weight:700;border:none;border-radius:11px;cursor:pointer;">Add</button>
+        <button id="add-gc-confirm" style="flex:1;padding:9px;background:var(--accent);color:var(--rail);font-weight:700;border:none;border-radius:11px;cursor:pointer;">Add</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
@@ -4210,7 +4210,7 @@ async function kickFromGC(gcId, target) {
       }
       toast(target+' was removed','success');
       openGroupChatView(gcId);
-    } catch(e){ toast('Failed to kick','error'); }
+    } catch(e){ console.error('[GC] Kick failed:', e); toast('Failed to kick member. Please try again.','error'); }
   });
 }
 
@@ -6563,7 +6563,7 @@ function _showBanScreen(ban) {
   const reason = ban.reason || ban.note || '';
   const category = ban.category || 'Account behavior';
   const bannedBy = ban.bannedBy || ban.by || 'Fortized Moderation';
-  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);">
+  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:var(--rail);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);">
     <div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
       <div style="width:68px;height:68px;border-radius:18px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
@@ -6613,7 +6613,7 @@ function _showSuspendScreen(data) {
       setTimeout(() => { location.reload(); }, msLeft + 1000);
     }
   }
-  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);">
+  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:var(--rail);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);">
     <div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
       <div style="width:68px;height:68px;border-radius:18px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
@@ -6648,7 +6648,7 @@ function _showSuspendScreen(data) {
         </div>
       </div>
       <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">Your account will be reactivated on <span style="color:var(--accent);font-weight:600;">${durationText}</span>. To appeal, visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Fortized Support</a></div>
-      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f59e0b;border:none;border-radius:10px;color:#0f1119;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;">Log Out</button>
+      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f59e0b;border:none;border-radius:10px;color:var(--rail);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;">Log Out</button>
     </div>
   </div>`;
 }
@@ -8267,7 +8267,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;">
         <button id="crm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-family:var(--font-ui);font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;">Cancel</button>
-        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:#0f1119;font-family:var(--font-display);font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Create Room</button>
+        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:var(--rail);font-family:var(--font-display);font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Create Room</button>
       </div>
     </div>
   </div>`;
@@ -9177,7 +9177,7 @@ function renderBSettingsMain(tab) {
 
       <!-- Sub-tabs for Emoji vs Stickers -->
       <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
-        <button id="bi-tab-emojis" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:#0f1119;border:none;" onclick="_switchBITab('emojis')">Custom Emojis</button>
+        <button id="bi-tab-emojis" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:var(--rail);border:none;" onclick="_switchBITab('emojis')">Custom Emojis</button>
         <button id="bi-tab-stickers" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBITab('stickers')">Stickers</button>
       </div>
 
@@ -9665,7 +9665,7 @@ function renderBSettingsMain(tab) {
 
       <!-- Sub-tabs: Deployed / My Bots / Marketplace -->
       <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
-        <button id="bots-tab-deployed" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:#0f1119;border:none;" onclick="_switchBotsSubTab('deployed')">Deployed</button>
+        <button id="bots-tab-deployed" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:var(--rail);border:none;" onclick="_switchBotsSubTab('deployed')">Deployed</button>
         <button id="bots-tab-mybots" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBotsSubTab('mybots')">My Bots</button>
         <button id="bots-tab-marketplace" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchBotsSubTab('marketplace')">Marketplace</button>
       </div>
@@ -11973,7 +11973,7 @@ function buildProfileView(tab) {
               </div>
             </div>
             <!-- CTA -->
-            <button style="flex-shrink:0;padding:11px 24px;background:linear-gradient(135deg,var(--accent),#ffe566);color:#0f1119;border:none;border-radius:11px;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 4px 20px rgba(254,248,61,.2);">
+            <button style="flex-shrink:0;padding:11px 24px;background:linear-gradient(135deg,var(--accent),#ffe566);color:var(--rail);border:none;border-radius:11px;font-family:var(--font-display);font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 4px 20px rgba(254,248,61,.2);">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
               Explore
             </button>
@@ -12658,7 +12658,7 @@ function buildProfileView(tab) {
           <div style="font-size:32px;margin-bottom:12px;opacity:.4;">🎨</div>
           <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:rgba(255,255,255,.6);margin-bottom:6px;">No owned appearances yet</div>
           <div style="font-size:12.5px;color:rgba(255,255,255,.3);max-width:300px;margin:0 auto 18px;line-height:1.55;">Visit the Atelier Shop to browse and purchase exclusive appearances with Onyx.</div>
-          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="background:#fef83d;color:#0f1119;border:none;border-radius:14px;font-family:var(--font-display);font-size:12.5px;font-weight:800;padding:10px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 12px rgba(254,248,61,.15);">Browse the Atelier Shop</button>
+          <button onclick="switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier')" style="background:#fef83d;color:var(--rail);border:none;border-radius:14px;font-family:var(--font-display);font-size:12.5px;font-weight:800;padding:10px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 12px rgba(254,248,61,.15);">Browse the Atelier Shop</button>
         </div>
       `}
 
@@ -12733,7 +12733,7 @@ function buildProfileView(tab) {
           <div style="font-size:44px;margin-bottom:14px;">🔒</div>
           <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Radiance+ Required</div>
           <div style="font-size:13.5px;color:rgba(255,255,255,.4);max-width:320px;margin:0 auto 22px;line-height:1.6;">Profile themes let you add a gradient stroke and custom colors around your profile card and avatar.</div>
-          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" style="background:#fef83d;color:#0f1119;border:none;border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:11px 24px;cursor:pointer;">Get Radiance+</button>
+          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" style="background:#fef83d;color:var(--rail);border:none;border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:11px 24px;cursor:pointer;">Get Radiance+</button>
         </div>
       </div>`;
     } else {
@@ -15690,7 +15690,7 @@ function _showScheduleActionModal() {
       const executeAt = new Date(timeStr).toISOString();
       const parts = actionStr.trim().split(/\s+/);
       const action = { type: parts[0]||'custom', target: parts.slice(1).join(' ')||'', executeAt, createdBy: CU.username, createdAt: new Date().toISOString(), status: 'pending' };
-      try { const acts = await FortizedSocial.adminGetScheduledActions(); acts.push(action); await FortizedSocial.adminSaveScheduledActions(acts); logAudit('schedule_action', action.target, action.type+' at '+timeStr); toast('Action scheduled','success'); _loadAdminPage('scheduled_actions'); } catch { toast('Failed to schedule','error'); }
+      try { const acts = await FortizedSocial.adminGetScheduledActions(); acts.push(action); await FortizedSocial.adminSaveScheduledActions(acts); logAudit('schedule_action', action.target, action.type+' at '+timeStr); toast('Action scheduled','success'); _loadAdminPage('scheduled_actions'); } catch(e) { console.error('[Admin] Schedule failed:', e); toast('Failed to schedule action. Please try again.','error'); }
     });
   });
 }
@@ -16373,7 +16373,7 @@ async function adminForceFriend(targetUsername) {
     logAudit('force_friend', targetUsername, 'Force-added by admin');
     toast('Force-friended '+targetUsername, 'success');
     adminSearchUser();
-  } catch(e) { console.error(e); toast('Failed to force friend','error'); }
+  } catch(e) { console.error('[Admin] Force friend failed:', e); toast('Failed to force friend. Please try again.','error'); }
 }
 
 function adminActionUser(username, action) {
@@ -17121,7 +17121,7 @@ async function adjustOnyx(direction) {
     toast(`${direction>0?'Gave':'Removed'} ${amount} Onyx ${direction>0?'to':'from'} ${username}. New balance: ${u.onyx}`,'success');
     document.getElementById('eco-amount').value='';
     document.getElementById('eco-reason').value='';
-  } catch { toast('Failed to save changes','error'); }
+  } catch(e) { console.error('[Settings] Save failed:', e); toast('Failed to save changes. Please try again.','error'); }
 }
 
 
@@ -17719,7 +17719,7 @@ async function acceptBastionInvite(btn, bastionId, inviteCode) {
       try { await FortizedSocial.incrementInviteUses(inviteCode); } catch {}
     }
     document.getElementById('invite-dialog-overlay')?.remove();
-  } catch { btn.disabled = false; btn.textContent = 'Accept Invite'; toast('Failed to join','error'); }
+  } catch(e) { console.error('[Bastion] Invite join failed:', e); btn.disabled = false; btn.textContent = 'Accept Invite'; toast('Failed to join bastion. Please try again.','error'); }
 }
 function handleInviteGuestContinue(btn, bastionId, inviteCode) {
   const nameInput = document.getElementById('invite-guest-name');
@@ -19206,7 +19206,7 @@ function _openDisplayNameStyleModal() {
   const dn = CU.displayName || CU.username;
   const avHtml = CU.pfp
     ? `<img src="${escapeHTML(CU.pfp)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-    : `<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;color:#0f1119;border-radius:50%;">${dn[0].toUpperCase()}</div>`;
+    : `<div style="width:100%;height:100%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;color:var(--rail);border-radius:50%;">${dn[0].toUpperCase()}</div>`;
   const profileTheme = (CU.radiancePlus && new Date(CU.radiancePlus) > new Date()) ? CU.profileTheme : null;
 
   document.querySelector('.dns-modal-overlay')?.remove();
@@ -21595,7 +21595,7 @@ function _renderProfileWidgetManager(mgr) {
   html += '</div>';
 
   if (!hasAnyEnabled) {
-    html += '<div style="text-align:center;padding:20px 10px;"><div style="font-size:22px;opacity:.15;margin-bottom:6px;">🧩</div><div style="color:rgba(255,255,255,.2);font-size:11.5px;font-weight:500;margin-bottom:10px;">No widgets on your board</div><button onclick="_openAddWidgetPanel()" style="padding:8px 18px;background:var(--accent);color:#0f1119;border:none;border-radius:8px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;">Add Widgets</button></div></div>';
+    html += '<div style="text-align:center;padding:20px 10px;"><div style="font-size:22px;opacity:.15;margin-bottom:6px;">🧩</div><div style="color:rgba(255,255,255,.2);font-size:11.5px;font-weight:500;margin-bottom:10px;">No widgets on your board</div><button onclick="_openAddWidgetPanel()" style="padding:8px 18px;background:var(--accent);color:var(--rail);border:none;border-radius:8px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;">Add Widgets</button></div></div>';
     mgr.innerHTML = html;
     return;
   }
@@ -22931,7 +22931,7 @@ function openStatusPicker() {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px;">
-          <button onclick="saveCustomStatus()" style="flex:1;background:var(--accent);color:#0f1119;border:none;border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Save Custom Status</button>
+          <button onclick="saveCustomStatus()" style="flex:1;background:var(--accent);color:var(--rail);border:none;border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Save Custom Status</button>
           <button onclick="clearCustomStatus()" style="width:44px;height:44px;border-radius:14px;background:rgba(248,113,113,.06);border:1.5px solid rgba(248,113,113,.12);color:rgba(248,113,113,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;" onmouseover="this.style.borderColor='rgba(248,113,113,.25)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='rgba(248,113,113,.12)';this.style.color='rgba(248,113,113,.6)'" title="Clear status"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
         </div>
       </div>
@@ -26160,7 +26160,7 @@ function renderAtelierTab(tab) {
                       </div>`
                       :`<div class="sic-price"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> 100</div>`}
                   </div>
-                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">Owned</div>'}
+                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">Owned</div>'}
                 </div>
               </div>
             </div>
@@ -26220,7 +26220,7 @@ function renderAtelierTab(tab) {
                     <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.4;margin-bottom:10px;">${a.desc}</div>
                     ${owned
                       ? '<div style="padding:7px 14px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:10px;color:var(--green);font-size:11px;font-weight:700;text-align:center;">Owned</div>'
-                      : `<button onclick="event.stopPropagation();buyAppearance('${a.id}',${a.price})" style="width:100%;padding:8px 14px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> ${a.price} Onyx</button>`}
+                      : `<button onclick="event.stopPropagation();buyAppearance('${a.id}',${a.price})" style="width:100%;padding:8px 14px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> ${a.price} Onyx</button>`}
                   </div>
                 </div>`;
               }).join('')}
@@ -26236,7 +26236,7 @@ function renderAtelierTab(tab) {
                 <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">Onyx Badge</div>
                 <div style="font-size:11px;color:rgba(255,255,255,.3);">Evolves as you invest Onyx</div>
               </div>
-              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:8px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> 100</button>`:'<div style="font-size:11px;font-weight:700;color:var(--green);">Owned</div>'}
+              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:8px 16px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> 100</button>`:'<div style="font-size:11px;font-weight:700;color:var(--green);">Owned</div>'}
             </div>` : ''}
             ${(shopCat==='All'||shopCat==='Decorations') ? `
             <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
@@ -26259,7 +26259,7 @@ function renderAtelierTab(tab) {
                     ? `<div style="font-size:10px;font-weight:700;color:${d.color};">Equipped</div>`
                     : owned
                       ? `<button onclick="event.stopPropagation();equipDecoration('${d.id}')" style="padding:4px 12px;background:${d.color}15;border:1px solid ${d.color}25;border-radius:8px;color:${d.color};font-size:10px;font-weight:700;cursor:pointer;">Equip</button>`
-                      : `<button onclick="event.stopPropagation();buyDecoration('${d.id}',${d.price})" style="padding:4px 12px;background:var(--accent);color:#0f1119;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:3px;"><img src='/Onyx.png' style='width:10px;height:10px;object-fit:contain;'> ${d.price}</button>`}
+                      : `<button onclick="event.stopPropagation();buyDecoration('${d.id}',${d.price})" style="padding:4px 12px;background:var(--accent);color:var(--rail);border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:3px;"><img src='/Onyx.png' style='width:10px;height:10px;object-fit:contain;'> ${d.price}</button>`}
                 </div>`;
               }).join('')}
             </div>` : ''}
@@ -26292,7 +26292,7 @@ function renderAtelierTab(tab) {
                     </div>
                     ${bundleOwned
                       ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:var(--green);font-size:12px;font-weight:700;text-align:center;">Owned</div>'
-                      : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:#0f1119;border:none;border-radius:12px;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:3px;">${bundle.origPrice}</span> ${bundle.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${bundle.id}','${bundle.name}',${bundle.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;" title="Gift"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
+                      : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:var(--rail);border:none;border-radius:12px;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:3px;">${bundle.origPrice}</span> ${bundle.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${bundle.id}','${bundle.name}',${bundle.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;" title="Gift"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
                   </div>
                 </div>`;
               }).join('')}
@@ -27712,7 +27712,7 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
         </div>
         <button onclick="resetCrop()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;padding:7px 14px;cursor:pointer;transition:all .15s;">Reset</button>
         <button onclick="document.getElementById('crop-modal-overlay').remove()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.6);font-size:12px;padding:7px 16px;cursor:pointer;transition:all .15s;">Cancel</button>
-        <button onclick="applyCrop()" style="background:linear-gradient(135deg,var(--accent),#e6e034);border:none;border-radius:10px;color:#0f1119;font-size:13px;font-weight:700;padding:8px 22px;cursor:pointer;font-family:var(--font-display);box-shadow:0 2px 10px rgba(255,249,62,.2);transition:all .15s;">Apply</button>
+        <button onclick="applyCrop()" style="background:linear-gradient(135deg,var(--accent),#e6e034);border:none;border-radius:10px;color:var(--rail);font-size:13px;font-weight:700;padding:8px 22px;cursor:pointer;font-family:var(--font-display);box-shadow:0 2px 10px rgba(255,249,62,.2);transition:all .15s;">Apply</button>
       </div>
     </div>`;
 
@@ -27982,7 +27982,7 @@ async function purchaseRadiance(isPlus, days, cost) {
       <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Not Enough Onyx</div>
       <div style="font-size:13.5px;color:var(--muted-light);line-height:1.6;margin-bottom:20px;">You need <strong style="color:var(--accent);">${cost} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong> but only have <strong>${balance} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></strong>.<br>Complete quests to earn more Onyx!</div>
       <div style="display:flex;gap:8px;">
-        <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:#0f1119;font-family:var(--font-display);font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
+        <button onclick="this.closest('[style*=fixed]').remove();switchAtelierTab('quests',document.getElementById('atnav-quests'))" style="flex:1;padding:10px;background:var(--accent);color:var(--rail);font-family:var(--font-display);font-weight:700;border:none;border-radius:10px;cursor:pointer;">Complete Quests</button>
         <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;background:rgba(255,255,255,.06);color:var(--muted-light);border:1px solid var(--border);border-radius:10px;cursor:pointer;">Not Now</button>
       </div>
     </div>`;
@@ -29717,7 +29717,7 @@ async function _sendThreadReply() {
     // Update thread badge on the parent message
     const safeParent = msgId.replace(/[^a-z0-9_\-]/gi, '-');
     _loadThreadBadge(bid, chName, msgId, safeParent, _activeThread.text||'', _activeThread.from||'');
-  } catch(e) { toast('Failed to reply','error'); }
+  } catch(e) { console.error('[Forum] Reply failed:', e); toast('Failed to reply. Please try again.','error'); }
 }
 
 // ── Thread typing indicator ───────────────────────
@@ -30766,7 +30766,7 @@ async function _publishEvent(bastionId, editKey) {
     _showEventPublished(link, editKey);
     _loadEvents(bastionId);
   } catch(err) {
-    toast('Failed to save event','error');
+    console.error('[Event] Save failed'); toast('Failed to save event. Please try again.','error');
     if (btn) { btn.disabled = false; btn.textContent = 'Publish Event'; }
   }
 }
@@ -30867,7 +30867,7 @@ function _reportEvent(bastionId, eventKey) {
         bastionId, eventKey, reporter: CU.username, reason, at: new Date().toISOString()
       });
       toast('Event reported. Thank you!','success');
-    } catch { toast('Failed to report','error'); }
+    } catch(e) { console.error('[Report] Submit failed:', e); toast('Failed to submit report. Please try again.','error'); }
   });
 }
 

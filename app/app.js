@@ -21594,9 +21594,9 @@ async function _toggleWidgetFromProfile(widgetId) {
   let w = widgets.find(w => w.id === widgetId);
   if (!w) { w = {id:widgetId,enabled:false,config:{}}; widgets.push(w); }
   w.enabled = !w.enabled;
-  _setProfileWidgets(widgets);
-  await saveUser();
-  // Re-render widgets on card
+  CU.profileWidgets = widgets;  // Update CU directly
+  await saveUser(true);  // Immediate save to ensure persistence
+  // Re-render widgets on card - using fresh CU data
   const wc = document.getElementById('up-widgets-container');
   if (wc) renderProfileWidgetsOnCard(CU, wc);
   const mgr = document.getElementById('up-widget-manager');
@@ -21609,8 +21609,8 @@ async function _updateWidgetFromProfile(widgetId, configPatch) {
   let w = widgets.find(w => w.id === widgetId);
   if (!w) { w = {id:widgetId,enabled:true,config:{}}; widgets.push(w); }
   Object.assign(w.config, configPatch);
-  _setProfileWidgets(widgets);
-  await saveUser();
+  CU.profileWidgets = widgets;  // Update CU directly
+  await saveUser(true);  // Immediate save to ensure persistence
   const wc = document.getElementById('up-widgets-container');
   if (wc) renderProfileWidgetsOnCard(CU, wc);
   toast('Widget updated', 'success');

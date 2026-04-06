@@ -11934,6 +11934,10 @@ function buildProfileNav(scroll) {
 function buildProfileView(tab) {
   const main = document.getElementById('profile-main');
   if (!main) return;
+  // Hide unsaved bar when switching tabs (only show on myprofile tab with actual changes)
+  if (tab !== 'myprofile') {
+    document.getElementById('unsaved-bar')?.classList.remove('show');
+  }
   // Update active nav
   document.querySelectorAll('.profile-nav-item').forEach(el => el.classList.remove('active'));
   const navItem = document.getElementById('pnav-' + tab);
@@ -28476,9 +28480,9 @@ function markSettingsDirty() {
 
   if (hasChanges && !_settingsDirty) {
     _settingsDirty = true;
-    // Only show bar if settings modal is actually open
-    const settingsModal = document.getElementById('modal-settings');
-    if (settingsModal && settingsModal.classList.contains('open')) {
+    // Only show bar if profile/myprofile tab is visible (not just modal open)
+    const dnInput = document.getElementById('dn-input');
+    if (dnInput && dnInput.closest('[style*="display"]') !== null) {
       document.getElementById('unsaved-bar')?.classList.add('show');
     }
   } else if (!hasChanges && _settingsDirty) {

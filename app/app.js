@@ -7461,12 +7461,7 @@ function initFortizedUXResilience() {
   setInterval(async()=>{try{await updateNotifBadge();}catch{}},120000); // Reduced to 2min (was 30s) — egress emergency
   // Real-time notification listener
   try {
-    firebase.database().ref('notifications/' + CU.username).on('value', async () => {
-      if (_markingAllRead) return; // Skip refresh while mark-all-read is in progress
-      try { await updateNotifBadge(); } catch(e) { console.debug('[Notif] Badge update:', e?.message); }
-      // If notif panel is open, refresh it
-      if (notifPanelOpen) { try { await buildNotifList(); } catch(e) { console.debug('[Notif] List refresh:', e?.message); } }
-    });
+    // Notification listeners are now handled via Socket.IO in initCrossDeviceSync()
   } catch(e) { console.warn('[Notif] Listener setup failed:', e?.message); }
   try { initIdleDetection(); } catch(e) { console.warn('[init] initIdleDetection:', e); }
   // Start Spotify polling if already connected
@@ -27795,17 +27790,14 @@ let _statusSyncListener = null;
 let _notifSyncListener = null;
 
 function initCrossDeviceSync() {
-  if (!CU?.username) return;
+  if (!CU?.username || !window.socket) return;
 
-  // 1. Live profile sync — when ANY user data changes on another device, update here
-  const profileRef = firebase.database().ref('users/' + CU.username);
-  _profileSyncListener = profileRef.on('value', snap => {
-    const data = snap.val();
-    if (!data || !data.username) return;
-    const changed = JSON.stringify(data) !== JSON.stringify(CU);
-    if (!changed) return;
+  // Listen to Socket.IO events (real-time, broadcasts to all clients)
+  // These events fire when ANY user makes changes (not just current user)
 
-    // Sync profile fields
+  // 1. Profile updates from any device
+  socket.on('profile:updated', (data) => {
+    if (data.username !== CU.username) return;
     if (data.pfp && data.pfp !== CU.pfp) {
       CU.pfp = data.pfp;
       updateUserbar();
@@ -27813,17 +27805,24 @@ function initCrossDeviceSync() {
         if (img.src !== data.pfp) img.src = data.pfp;
       });
     }
-    if (data.banner !== CU.banner) { CU.banner = data.banner; }
-    if (data.onyx !== undefined && data.onyx > (CU.onyx||0)) { CU.onyx = data.onyx; updateOnyxDisplay(); }
-    if (JSON.stringify(data.customStatus||null) !== JSON.stringify(CU.customStatus||null)) {
-      if (data.customStatus) { CU.customStatus = data.customStatus; } else { delete CU.customStatus; }
+    if (data.banner !== undefined && data.banner !== CU.banner) {
+      CU.banner = data.banner;
+    }
+    if (data.onyx !== undefined && data.onyx > (CU.onyx||0)) {
+      CU.onyx = data.onyx;
+      updateOnyxDisplay();
+    }
+    if (data.customStatus !== undefined) {
+      CU.customStatus = data.customStatus;
       refreshCustomStatusBubble?.();
-      try { FtzStatus.restoreCustomTimer(); } catch(e) { console.debug('[Status] restoreCustomTimer failed', e); }
+      try { FtzStatus.restoreCustomTimer(); } catch(e) { console.debug('[Status] timer failed', e); }
     }
-    if (data.friends && JSON.stringify(data.friends) !== JSON.stringify(CU.friends)) {
-      CU.friends = data.friends;
+    if (data.profileWidgets) {
+      CU.profileWidgets = data.profileWidgets;
+      if (curView === 'profile') renderProfileWidgetsTab();
     }
-    if (data.groupChats && JSON.stringify(data.groupChats) !== JSON.stringify(CU.groupChats)) {
+    if (data.friends) { CU.friends = data.friends; }
+    if (data.groupChats) {
       const hadNew = (data.groupChats||[]).length > (CU.groupChats||[]).length;
       CU.groupChats = data.groupChats;
       if (hadNew) {
@@ -27831,132 +27830,135 @@ function initCrossDeviceSync() {
         if (scroll) renderDMSidebar(scroll);
       }
     }
-
-    // NEW: Sync widgets — if widgets changed on another device, update profile immediately
-    if (data.profileWidgets && JSON.stringify(data.profileWidgets) !== JSON.stringify(CU.profileWidgets)) {
-      CU.profileWidgets = data.profileWidgets;
-      // Re-render widgets if profile page is open
-      if (curView === 'profile') {
-        setTimeout(() => renderProfileWidgetsTab(), 50);
-      }
-    }
-
-    // NEW: Sync verification status — verified on another device? Update here
-    if (data.verified !== undefined && data.verified !== CU.verified) {
-      CU.verified = data.verified;
-      if (data.verifiedAt) CU.verifiedAt = data.verifiedAt;
-      if (data.verifiedVersion) CU.verifiedVersion = data.verifiedVersion;
-      // If just verified on another device, close verification modal
-      if (data.verified && !CU.verified) closeModal('modal-verify-quiz');
-    }
-
-    // NEW: Sync date of birth (age verification) — if set on another device, update here
-    if (data.dateOfBirth && data.dateOfBirth !== CU.dateOfBirth) {
-      CU.dateOfBirth = data.dateOfBirth;
-      // Close age setup modal if one exists
-      if (document.getElementById('modal-dob-setup')) closeModal('modal-dob-setup');
-    }
-
-    // NEW: Sync activity status (what user is doing) — shows "Studying", "Working", etc.
-    if (data.currentActivity && JSON.stringify(data.currentActivity) !== JSON.stringify(CU.currentActivity)) {
-      CU.currentActivity = data.currentActivity;
-      // Update activity display in user profile if open
-      if (curView === 'profile') {
-        const actEl = document.getElementById('user-activity-display');
-        if (actEl && data.currentActivity?.activity) {
-          actEl.textContent = data.currentActivity.activity;
-        }
-      }
-    }
-
-    // NEW: Sync bastions (server membership)
-    if (data.bastions && JSON.stringify(data.bastions) !== JSON.stringify(CU.bastions)) {
+    if (data.bastions) {
       CU.bastions = data.bastions;
       renderRailBastions();
     }
-
-    // Update local cache
+    if (data.onboardingInterests) {
+      CU.onboardingInterests = data.onboardingInterests;
+    }
     saveLocal();
   });
 
-  // 2. Status sync — watch status changes on other devices
-  const statusRef = firebase.database().ref('statuses/' + CU.username);
-  _statusSyncListener = statusRef.on('value', snap => {
-    const remoteStatus = snap.val();
-    if (!remoteStatus) return;
-    // Only update if different from current display status (avoid overwriting local changes)
-    const visibleStatus = FtzStatus.visible(CU.status || 'online');
-    if (remoteStatus !== visibleStatus) {
-      // Status changed on another device, update UI
-      updateUserbar();
+  // 2. Presence/Status updates — when user changes status on another device
+  socket.on('presence:update', (data) => {
+    if (data.username === CU.username) {
+      // Status changed on another device
+      if (data.status && data.status !== CU.status) {
+        CU.status = data.status;
+        updateUserbar();
+      }
+      if (data.gameActivity !== undefined) {
+        CU.gameActivity = data.gameActivity;
+      }
+      if (data.activityState !== undefined) {
+        CU.activityState = data.activityState;
+      }
     }
   });
 
-  // 3. Notification sync — new notifications in real time
-  const notifRef = firebase.database().ref('notifications/' + CU.username);
-  _notifSyncListener = notifRef.on('child_added', snap => {
-    const notif = snap.val();
-    if (!notif) return;
-    if (notif.type === 'dm' && notif.from && !notif.read && curDM === (notif.from||'').toLowerCase()) {
-      try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', notif.from).then(()=>updateNotifBadge()).catch(()=>{}); } catch(e) { console.debug('[Notif] auto-mark read failed', e); }
-      return;
+  // 3. Activity changes
+  socket.on('activity:changed', (data) => {
+    if (data.username === CU.username) {
+      CU.currentActivity = data.gameActivity || data.activityState;
+      if (curView === 'profile') {
+        const actEl = document.getElementById('user-activity-display');
+        if (actEl) actEl.textContent = CU.currentActivity || 'Online';
+      }
     }
-    if (!shouldDeliverRealtimeNotif(notif)) return;
-    if (notifSettings.digestMode) { queueDigestNotif(notif); return; }
-    if (notif.type === 'dm' && notif.from) { unhideDMConversation('dm_' + notif.from); }
-    updateNotifBadge().catch(()=>{});
-    if (Notification?.permission === 'granted' && document.hidden && CU?.status !== 'dnd') {
-      let title = 'Fortized';
-      let body = 'You have a new notification';
-      if (notif.type === 'dm') { title = notif.from || 'New Message'; body = notif.data?.preview || 'Sent you a message'; }
-      else if (notif.type === 'friend_request') { title = notif.from || 'Friend Request'; body = 'Sent you a friend request'; }
-      else if (notif.type === 'mention') { title = notif.from || 'Mention'; body = 'Mentioned you'; }
+  });
+
+  // 4. Friend request notifications
+  socket.on('friend:request', (data) => {
+    if (data.to === CU.username) {
+      updateNotifBadge().catch(()=>{});
+      if (Notification?.permission === 'granted' && document.hidden && CU?.status !== 'dnd') {
+        try {
+          const n = new Notification('Friend Request', {
+            body: (data.from || 'Someone') + ' sent you a friend request',
+            icon: '/Fortized icon.png',
+            badge: '/Fortized icon.png',
+            tag: 'friend_request',
+          });
+          n.onclick = () => { window.focus(); n.close(); };
+          setTimeout(() => n.close(), 8000);
+        } catch(e) { console.debug('[Notif] failed', e); }
+      }
+      playNotifSound('message');
+    }
+  });
+
+  // 5. Friend accepted
+  socket.on('friend:accepted', (data) => {
+    if (data.from === CU.username || data.to === CU.username) {
+      // Refresh friend list
+      try { FortizedSocial.getUserByUsername(CU.username).then(user => {
+        if (user?.friends) { CU.friends = user.friends; saveLocal(); }
+      }).catch(()=>{}); } catch(e) { console.debug('[Friend] refresh failed', e); }
+    }
+  });
+
+  // 6. Notification broadcast
+  socket.on('notification:new', (notif) => {
+    if (notif.username === CU.username || notif.to === CU.username) {
+      updateNotifBadge().catch(()=>{});
+      if (notif.type === 'dm' && notif.from) {
+        unhideDMConversation('dm_' + notif.from);
+      }
+      if (Notification?.permission === 'granted' && document.hidden && CU?.status !== 'dnd') {
+        let title = 'Fortized', body = 'New notification';
+        if (notif.type === 'dm') { title = notif.from || 'New Message'; body = notif.preview || 'Sent you a message'; }
+        else if (notif.type === 'mention') { title = 'Mention'; body = (notif.from || 'Someone') + ' mentioned you'; }
+        try {
+          const n = new Notification(title, {
+            body, icon: '/Fortized icon.png', badge: '/Fortized icon.png', tag: notif.type || 'notif',
+          });
+          n.onclick = () => { window.focus(); n.close(); };
+          setTimeout(() => n.close(), 8000);
+        } catch(e) { console.debug('[Notif] failed', e); }
+      }
+      playNotifSound(notif.type === 'mention' ? 'mention' : 'message');
+    }
+  });
+
+  // 7. Bastion updates
+  socket.on('bastion:updated', (data) => {
+    if (data.bastionId && CU.bastions) {
+      const idx = CU.bastions.findIndex(b => (b.globalId || b.name) === data.bastionId);
+      if (idx >= 0) {
+        Object.assign(CU.bastions[idx], data.updates);
+        renderRailBastions();
+      }
+    }
+  });
+
+  // 8. Announcement broadcasts
+  socket.on('announcement:new', (data) => {
+    if (document.hidden && CU?.status !== 'dnd') {
       try {
-        const n = new Notification(title, {
-          body, icon: '/Fortized icon.png', badge: '/Fortized icon.png', tag: notif.type || 'general',
+        const n = new Notification('📢 Announcement', {
+          body: data.message || 'New announcement',
+          icon: '/Fortized icon.png',
+          badge: '/Fortized icon.png',
+          tag: 'announcement',
         });
         n.onclick = () => { window.focus(); n.close(); };
-        setTimeout(() => n.close(), 8000);
-      } catch(e) { console.debug('[Notif] system notification failed', e); }
+        setTimeout(() => n.close(), 10000);
+      } catch(e) { console.debug('[Announce] failed', e); }
     }
-    playNotifSound(notif.type === 'mention' ? 'mention' : 'message');
   });
 
-  // 4. Request notification permission
+  // 9. Request notification permission
   if (Notification?.permission === 'default') {
     setTimeout(() => {
-      Notification.requestPermission().then(p => {
-        if (p === 'granted') toast('🔔 Push notifications enabled!', 'success');
-      }).catch(()=>{});
+      Notification.requestPermission().catch(()=>{});
     }, 3000);
   }
-
-  // 5. Online presence — write to Supabase + Firebase
-  const presenceRef = firebase.database().ref('.info/connected');
-  presenceRef.on('value', snap => {
-    if (!snap.val()) return;
-    const statusRef = firebase.database().ref('statuses/' + CU.username);
-    const curStatus = CU.status || 'online';
-    const visibleStatus = FtzStatus.visible(curStatus);
-    statusRef.set(visibleStatus).catch(()=>{});
-    statusRef.onDisconnect().set('offline');
-    FortizedSocial.setStatus(CU.username, visibleStatus).catch(()=>{});
-  });
 }
 
 function stopCrossDeviceSync() {
-  if (_profileSyncListener) {
-    try { firebase.database().ref('users/' + CU.username).off('value', _profileSyncListener); } catch(e) { console.debug('[Sync] profile listener cleanup failed', e); }
-    _profileSyncListener = null;
-  }
-  if (_statusSyncListener) {
-    try { firebase.database().ref('statuses/' + CU.username).off('value', _statusSyncListener); } catch(e) { console.debug('[Sync] status listener cleanup failed', e); }
-    _statusSyncListener = null;
-  }
-  if (_notifSyncListener) {
-    try { firebase.database().ref('notifications/' + CU.username).off('child_added', _notifSyncListener); } catch(e) { console.debug('[Sync] notif listener cleanup failed', e); }
-    _notifSyncListener = null;
-  }
+  // Socket.IO listeners are auto-cleaned up on disconnect
+  // No manual cleanup needed
 }
 
 

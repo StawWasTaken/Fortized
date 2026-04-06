@@ -13002,19 +13002,65 @@ async function viewUserProfile(username) {
   const _memberSince = (u.joinedAt||u.createdAt) ? new Date(u.joinedAt||u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : null;
   const _userNote = _getUserNote(username);
 
-  // Build right-panel tab content (Activity tab — current activity, game activity, mutual friends)
+  // Build right-panel tab content (Activity tab — multi-activity support)
   const _activityContent = [];
-  if (u.gameActivity?.name) {
-    const ga = u.gameActivity;
-    const statusColor = FtzStatus.color(u.status || 'online');
-    const accentBg = statusColor + '06';
-    const accentBorder = statusColor + '18';
-    const coverHTML = ga.coverThumb
-      ? `<img src="${escapeHTML(ga.coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1.5px solid ${statusColor}22;box-shadow:0 4px 12px rgba(0,0,0,.2);">`
-      : `<span style="font-size:18px;">${ga.icon||'🎮'}</span>`;
-    const elapsedHTML = ga.startedAt ? `<div style="font-size:10px;color:${statusColor}88;margin-top:3px;display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Playing for ${_formatElapsed(ga.startedAt)}</div>` : '';
-    _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title" style="color:${statusColor}dd;">Now Playing</div><div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:${accentBg};border:1px solid ${accentBorder};border-radius:12px;"><div style="width:52px;height:68px;border-radius:8px;background:linear-gradient(135deg,${statusColor}15,${statusColor}08);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">${coverHTML}</div><div style="min-width:0;flex:1;"><div style="font-size:13.5px;font-weight:700;color:#fff;">${escapeHTML(ga.name)}</div>${ga.genre?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">${escapeHTML(ga.genre)}</div>`:''}${ga.details?`<div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:1px;opacity:.8;">${escapeHTML(ga.details)}</div>`:''}${elapsedHTML}</div></div></div>`);
+
+  // Support both new activityState and legacy gameActivity
+  let activitiesToDisplay = [];
+  if (u.activityState?.activities?.length) {
+    activitiesToDisplay = u.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2));
+  } else if (u.gameActivity?.name) {
+    // Convert legacy gameActivity to new format for display
+    activitiesToDisplay = [{
+      id: u.gameActivity._spotify ? 'spotify' : 'game',
+      type: u.gameActivity._spotify ? 'listening' : 'playing',
+      name: u.gameActivity.name,
+      icon: u.gameActivity.icon || '🎮',
+      since: u.gameActivity.since,
+      priority: u.gameActivity._spotify ? 3 : 2,
+      metadata: {
+        coverThumb: u.gameActivity.coverThumb,
+        genre: u.gameActivity.genre,
+        details: u.gameActivity.details,
+        startedAt: u.gameActivity.startedAt,
+        spotifyTrack: u.gameActivity.spotifyTrack,
+        spotifyArtist: u.gameActivity.spotifyArtist,
+        spotifyAlbumArt: u.gameActivity.spotifyAlbumArt
+      }
+    }];
   }
+
+  if (activitiesToDisplay.length) {
+    _activityContent.push(`
+      <div class="up-right-section">
+        <div class="up-right-section-title">Active Now</div>
+        <div class="activities-list">
+          ${activitiesToDisplay.map(activity => {
+            const statusColor = FtzStatus.color(u.status || 'online');
+            const displayText = formatActivityDisplay(activity);
+            const coverThumb = activity.metadata?.coverThumb || activity.metadata?.spotifyAlbumArt;
+            const icon = activity.icon || '🎮';
+            const elapsedHTML = activity.since
+              ? `<div style="font-size:10px;color:${statusColor}88;margin-top:3px;display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${_formatActivityElapsed(activity.since)}</div>`
+              : '';
+
+            return `<div class="activity-card ${activity.id === 'spotify' ? 'spotify' : ''}" style="background:linear-gradient(135deg,${statusColor}08,transparent);border-left-color:${statusColor};">
+              <div class="ac-icon" style="background:${statusColor}15;border-color:${statusColor}22;color:${statusColor};font-size:18px;width:40px;height:40px;">
+                ${coverThumb ? `<img src="${escapeHTML(coverThumb)}" style="width:100%;height:100%;border-radius:8px;object-fit:cover;">` : icon}
+              </div>
+              <div class="ac-content">
+                <div class="ac-title">${escapeHTML(displayText)}</div>
+                ${activity.state ? `<div class="ac-detail">${escapeHTML(activity.state)}</div>` : ''}
+                ${activity.metadata?.genre ? `<div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;">${escapeHTML(activity.metadata.genre)}</div>` : ''}
+                ${elapsedHTML}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    `);
+  }
+
   if (_mutualFriends.length) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${_mutualFriends.slice(0,12).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>12?`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.3);margin-left:-5px;border:2px solid var(--panel);font-weight:700;">+${_mutualFriends.length-12}</div>`:''}</div></div>`);
   if (!_activityContent.length) _activityContent.push(`<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">🎮</div><div style="color:rgba(255,255,255,.15);font-size:12.5px;font-weight:500;">No recent activity</div></div>`);
 

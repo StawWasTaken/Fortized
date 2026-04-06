@@ -196,18 +196,20 @@
             </div>
         </div>
     </div>
-  </div>
-
-  <!-- Footer -->
-  <div class="error-footer">
-    <p>Lost? <a href="/support">Contact support</a> &middot; <a href="/legal">Legal</a></p>
-  </div>
-</div>
 
 <script>
   // Show the attempted path
-  var pathEl = document.getElementById('error-path');
+  const pathEl = document.getElementById('path-display');
   if (pathEl) pathEl.textContent = window.location.pathname;
+
+  // Spotlight follows cursor
+  const spotlight = document.getElementById('spotlight');
+  if (spotlight) {
+    document.addEventListener('mousemove', (e) => {
+      spotlight.style.setProperty('--x', (e.clientX / window.innerWidth * 100) + '%');
+      spotlight.style.setProperty('--y', (e.clientY / window.innerHeight * 100) + '%');
+    });
+  }
 </script>
 </body>
 </html>

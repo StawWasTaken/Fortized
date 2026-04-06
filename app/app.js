@@ -3229,9 +3229,11 @@ async function renderDMFriendsHome() {
   if (filter === 'all' && pending.length) {
     html += `<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">PENDING — ${pending.length}</div>`;
     pending.forEach(f => {
+      // Get activity for pending user (will be updated when friend data loads)
+      let activityHTML = '';
       html += `<div id="dm-home-pending-${escapeHTML(f)}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;transition:background .12s;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background=''">
         <div style="position:relative;flex-shrink:0;"><div class="fa" id="dm-home-pav-${escapeHTML(f)}" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(null,f,40)}</div></div>
-        <div style="flex:1;min-width:0;"><div id="dm-home-pdn-${escapeHTML(f)}" style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div><div style="font-size:11.5px;color:var(--muted);">Incoming friend request</div></div>
+        <div style="flex:1;min-width:0;"><div id="dm-home-pdn-${escapeHTML(f)}" style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div><div style="font-size:11.5px;color:var(--muted);">Incoming friend request</div><div id="dm-home-pact-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;"></div></div>
         <div style="display:flex;gap:6px;">
           <button class="btn-a" style="padding:6px 14px;font-size:12px;" onclick="acceptFriend('${escapeHTML(f)}')">Accept</button>
           <button class="btn-g" style="padding:6px 14px;font-size:12px;" onclick="declineFriend('${escapeHTML(f)}')">Ignore</button>
@@ -3251,7 +3253,10 @@ async function renderDMFriendsHome() {
       </div>
       <div style="flex:1;min-width:0;">
         <div id="dm-home-dn-${escapeHTML(f)}" style="font-weight:700;font-size:13.5px;font-family:'Syne',sans-serif;">${escapeHTML(f)}</div>
-        <div class="dm-home-status-text" data-for="${escapeHTML(f)}" style="font-size:11px;color:rgba(255,255,255,.25);margin-top:2px;">Offline</div>
+        <div style="display:flex;flex-direction:column;gap:1px;margin-top:2px;">
+          <div class="dm-home-status-text" data-for="${escapeHTML(f)}" style="font-size:11px;color:rgba(255,255,255,.25);">Offline</div>
+          <div id="dm-home-activity-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.2);"></div>
+        </div>
       </div>
       <div style="display:flex;gap:6px;">
         <button style="padding:7px 16px;font-size:11px;font-weight:600;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:rgba(255,255,255,.45);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:5px;" onclick="event.stopPropagation();openDMView('${escapeHTML(f)}')" onmouseover="this.style.borderColor='rgba(255,249,62,.35)';this.style.color='var(--accent)';this.style.background='rgba(255,249,62,.04)';this.style.boxShadow='0 0 12px rgba(255,249,62,.08)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.45)';this.style.background='transparent';this.style.boxShadow='none'">
@@ -3313,6 +3318,26 @@ async function renderDMFriendsHome() {
         const csText = u.customStatus?.text || u.customStatus;
         stText.textContent = csText || FtzStatus.publicLabel(st);
       }
+
+      // Update activity display
+      let activityText = '';
+      if (u.activityState?.activities?.length) {
+        const primaryActivity = u.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2))[0];
+        if (primaryActivity) activityText = formatActivityDisplay(primaryActivity);
+      } else if (u.gameActivity?.name) {
+        activityText = formatActivityDisplay({
+          id: u.gameActivity._spotify ? 'spotify' : 'game',
+          type: u.gameActivity._spotify ? 'listening' : 'playing',
+          name: u.gameActivity.name,
+          metadata: { genre: u.gameActivity.genre }
+        });
+      }
+      const actEl = document.getElementById('dm-home-activity-'+f);
+      if (actEl) actEl.textContent = activityText ? '🎮 ' + activityText : '';
+
+      // Update pending activity display
+      const pendActEl = document.getElementById('dm-home-pact-'+f);
+      if (pendActEl) pendActEl.textContent = activityText ? '🎮 ' + activityText : '';
       // Track online count
       if (FtzStatus.isPresent(st)) {
         _onlineCount++;
@@ -28760,18 +28785,44 @@ async function showMiniProfilePreview(username, anchorEl) {
       </div>
       <div class="profile-custom-status cloud-status-bubble" data-for="${escapeHTML(username)}" style="${customStatus?.text ? 'display:inline-flex;' : 'display:none;'}font-size:10.5px;padding:4px 10px;align-items:center;gap:4px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:100px;color:rgba(255,255,255,.45);">${customStatus?.text ? `<span class="csb-emoji">${customStatus.emoji ? `<img src="${emojiToTwemojiUrl(customStatus.emoji)}" style="width:13px;height:13px;" onerror="this.outerHTML='${customStatus.emoji}'">` : ''}</span><span class="csb-text">${escapeHTML(customStatus.text).slice(0,30)}</span>` : ''}</div>
     </div>
-    <!-- Activity Status -->
-    ${u.gameActivity?.name ? (() => {
-      const ga = u.gameActivity;
+    <!-- Activity Status - Multi-activity support -->
+    ${(() => {
+      let activitiesToShow = [];
+      if (u.activityState?.activities?.length) {
+        activitiesToShow = u.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2)).slice(0, 2);
+      } else if (u.gameActivity?.name) {
+        activitiesToShow = [{
+          id: u.gameActivity._spotify ? 'spotify' : 'game',
+          type: u.gameActivity._spotify ? 'listening' : 'playing',
+          name: u.gameActivity.name,
+          icon: u.gameActivity.icon || '🎮',
+          since: u.gameActivity.since,
+          priority: u.gameActivity._spotify ? 3 : 2,
+          metadata: {
+            coverThumb: u.gameActivity.coverThumb,
+            genre: u.gameActivity.genre,
+            spotifyAlbumArt: u.gameActivity.spotifyAlbumArt
+          }
+        }];
+      }
+
+      if (!activitiesToShow.length) return '';
+
       const statusColor = FtzStatus.color(u.status || 'online');
-      const accentBg = statusColor + '08';
-      const accentBorder = statusColor + '15';
-      const _coverHTML = ga.coverThumb
-        ? `<img src="${escapeHTML(ga.coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.outerHTML='<span style=font-size:14px>${ga.icon||'🎮'}</span>'">`
-        : `<span style="font-size:14px;">${ga.icon||'🎮'}</span>`;
-      const _elapsedHTML = ga.since ? `<div style="font-size:9px;color:${statusColor}66;margin-top:1.5px;display:flex;align-items:center;gap:3px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${_formatActivityElapsed(ga.since)}</div>` : '';
-      return `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title" style="color:${statusColor}88;">Now Playing</div><div style="display:flex;align-items:center;gap:10px;padding:10px 11px;background:${accentBg};border:1px solid ${accentBorder};border-radius:10px;"><div style="width:36px;height:48px;border-radius:6px;background:linear-gradient(135deg,${statusColor}12,${statusColor}06);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:1px solid ${statusColor}22;">${_coverHTML}</div><div style="min-width:0;flex:1;"><div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ga.name)}</div>${ga.genre?`<div style="font-size:9.5px;color:rgba(255,255,255,.28);margin-top:1.5px;">${escapeHTML(typeof ga.genre==='string'?ga.genre:ga.genre[0]||'')}</div>`:''}${_elapsedHTML}</div></div></div>`;
-    })() : ''}
+      return `<div class="mpp-divider"></div><div class="mpp-section">
+        <div class="mpp-section-title" style="color:${statusColor}88;">Active Now</div>
+        ${activitiesToShow.map((a, idx) => {
+          const coverThumb = a.metadata?.coverThumb || a.metadata?.spotifyAlbumArt;
+          const accentBg = statusColor + (idx === 0 ? '08' : '04');
+          const accentBorder = statusColor + (idx === 0 ? '15' : '08');
+          const _coverHTML = coverThumb
+            ? `<img src="${escapeHTML(coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.outerHTML='<span style=font-size:14px>${a.icon||'🎮'}</span>'">`
+            : `<span style="font-size:14px;">${a.icon||'🎮'}</span>`;
+          const _elapsedHTML = a.since ? `<div style="font-size:9px;color:${statusColor}66;margin-top:1.5px;display:flex;align-items:center;gap:3px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${_formatActivityElapsed(a.since)}</div>` : '';
+          return `<div style="display:flex;align-items:center;gap:10px;padding:10px 11px;background:${accentBg};border:1px solid ${accentBorder};border-radius:10px;${idx > 0 ? 'margin-top:8px;' : ''}"><div style="width:36px;height:48px;border-radius:6px;background:linear-gradient(135deg,${statusColor}12,${statusColor}06);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:1px solid ${statusColor}22;">${_coverHTML}</div><div style="min-width:0;flex:1;"><div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(a.name)}</div>${a.metadata?.genre?`<div style="font-size:9.5px;color:rgba(255,255,255,.28);margin-top:1.5px;">${escapeHTML(typeof a.metadata.genre==='string'?a.metadata.genre:a.metadata.genre[0]||'')}</div>`:''}${_elapsedHTML}</div></div>`;
+        }).join('')}
+      </div>`;
+    })()}
     <!-- Badges -->
     <div class="mpp-badges-row">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>
     ${u.bio ? `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title">About Me</div><div class="mpp-section-body">${parseMD(escapeHTML(u.bio.slice(0,150)))}${u.bio.length>150?'…':''}</div></div>` : ''}
@@ -30923,9 +30974,36 @@ async function renderFriendsSorted(mode) {
   sorted.forEach(f => {
     const st = statuses[f] || 'offline';
     const stColor = st==='online'?'#3ecf6e':st==='away'?'#f59e0b':st==='dnd'?'#f87171':'#4a4a5a';
-    html += `<div class="activity-item"><div class="act-icon" style="position:relative;">${buildAvatarHTML(null,f,40)}<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${stColor};border:2px solid var(--panel);"></div></div><div class="act-text"><p style="font-weight:600;">${escapeHTML(f)}</p><span style="font-size:10px;color:${stColor};">${st}</span></div><div style="display:flex;gap:6px;"><button class="btn-g" style="padding:6px 12px;font-size:12px;" onclick="openDMView('${escapeHTML(f)}')" style="display:inline-flex;align-items:center;">${ftzIcon('chat','14')}</button><button class="btn-d" style="padding:6px 12px;font-size:12px;" onclick="removeFriend('${escapeHTML(f)}')">Remove</button></div></div>`;
+    html += `<div class="activity-item" id="friend-sorted-${escapeHTML(f)}"><div class="act-icon" style="position:relative;">${buildAvatarHTML(null,f,40)}<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${stColor};border:2px solid var(--panel);"></div></div><div class="act-text"><p style="font-weight:600;">${escapeHTML(f)}</p><div><span style="font-size:10px;color:${stColor};">${st}</span><span id="friend-sorted-act-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.2);margin-left:6px;"></span></div></div><div style="display:flex;gap:6px;"><button class="btn-g" style="padding:6px 12px;font-size:12px;" onclick="openDMView('${escapeHTML(f)}')" style="display:inline-flex;align-items:center;">${ftzIcon('chat','14')}</button><button class="btn-d" style="padding:6px 12px;font-size:12px;" onclick="removeFriend('${escapeHTML(f)}')">Remove</button></div></div>`;
   });
   list.innerHTML = html;
+
+  // Async: fetch user data to show activities
+  try {
+    const profiles = await (FortizedSocial.getUsersByNames ? FortizedSocial.getUsersByNames(sorted) : Promise.all(sorted.map(f => FortizedSocial.getUserByName(f))));
+    const profileMap = {};
+    (profiles || []).forEach(u => { if (u) profileMap[u.username] = u; });
+
+    sorted.forEach(f => {
+      const u = profileMap[f];
+      if (!u) return;
+
+      let activityText = '';
+      if (u.activityState?.activities?.length) {
+        const primaryActivity = u.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2))[0];
+        if (primaryActivity) activityText = formatActivityDisplay(primaryActivity);
+      } else if (u.gameActivity?.name) {
+        activityText = formatActivityDisplay({
+          id: u.gameActivity._spotify ? 'spotify' : 'game',
+          type: u.gameActivity._spotify ? 'listening' : 'playing',
+          name: u.gameActivity.name,
+          metadata: { genre: u.gameActivity.genre }
+        });
+      }
+      const actEl = document.getElementById('friend-sorted-act-'+f);
+      if (actEl && activityText) actEl.textContent = '🎮 ' + activityText;
+    });
+  } catch {}
 }
 
 // ════════════════════════════════════════════

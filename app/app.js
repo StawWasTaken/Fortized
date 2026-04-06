@@ -4607,7 +4607,7 @@ function selectChannel(idx) {
   // Clear unread for this channel
   if (curBastion !== null) clearChannelUnread(curBastion, idx);
   // Auto-clear mention notifications for this channel (Discord-style)
-  try { FortizedSocial.markNotificationReadBySource(CU.username, 'mention', null).then(()=>updateNotifBadge()).catch(()=>{}); } catch {}
+  try { FortizedSocial.markNotificationReadBySource(CU.username, 'mention', null).then(()=>updateNotifBadge()).catch(e => console.warn('[Notif] Clear mention read:', e?.message)); } catch(e) { console.warn('[Notif]', e?.message); }
   if (typeof closeMobileCtxSidebar === 'function') closeMobileCtxSidebar();
   // Remember last channel for this bastion
   if (curBastion !== null && CU.bastions?.[curBastion]) {
@@ -8115,6 +8115,8 @@ async function createBastion() {
   const err = document.getElementById('cb-error');
   if (!name) { if(err)err.textContent='Bastion name is required'; return; }
   if (err) err.textContent = '';
+  const createBtn = document.querySelector('#modal-create-bastion .btn-a, #modal-create-bastion .ftz-btn-accent');
+  if (createBtn) { createBtn.classList.add('btn-loading'); createBtn.disabled = true; }
 
   // Check if we have imported template data
   const imported = _importedTemplateData;
@@ -8178,6 +8180,7 @@ async function createBastion() {
     await saveUser();
   } catch {}
 
+  if (createBtn) { createBtn.classList.remove('btn-loading'); createBtn.disabled = false; }
   closeModal('modal-create-bastion');
   renderRailBastions();
   cbIconData = null;
@@ -8357,6 +8360,8 @@ async function joinBastionByCode() {
   const err = document.getElementById('join-error');
   if (!code) { if(err)err.textContent='Enter a code or name'; return; }
   if(err) err.textContent = '';
+  const joinBtn = document.querySelector('#modal-join-bastion .btn-a, #modal-join-bastion .ftz-btn-accent');
+  if (joinBtn) { joinBtn.classList.add('btn-loading'); joinBtn.disabled = true; }
 
   // Strategy 1: Check dedicated invites collection
   try {
@@ -8388,6 +8393,8 @@ async function joinBastionByCode() {
     closeModal('modal-join-bastion');
   } catch {
     if(err) err.textContent='Bastion not found. Check the code or name.';
+  } finally {
+    if (joinBtn) { joinBtn.classList.remove('btn-loading'); joinBtn.disabled = false; }
   }
 }
 
@@ -13208,7 +13215,7 @@ async function viewUserProfile(username) {
   }
 
   if (_mutualFriends.length) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${_mutualFriends.slice(0,12).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>12?`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.3);margin-left:-5px;border:2px solid var(--panel);font-weight:700;">+${_mutualFriends.length-12}</div>`:''}</div></div>`);
-  if (!_activityContent.length) _activityContent.push(`<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">🎮</div><div style="color:rgba(255,255,255,.15);font-size:12.5px;font-weight:500;">No recent activity</div></div>`);
+  if (!_activityContent.length) _activityContent.push(`<div class="ftz-empty"><div class="ftz-empty-icon">🎮</div><div class="ftz-empty-text">No recent activity</div></div>`);
 
   modalEl.innerHTML = `
     <div style="${themeBorder}">
@@ -13310,7 +13317,7 @@ async function viewUserProfile(username) {
             <div style="display:flex;flex-direction:column;gap:4px;">
               ${_mutualFriends.slice(0,20).map(f => { const mfd = _mutualFriendsData[f]; const mfPfp = mfd?.pfp || null; const mfDisplay = mfd?.displayName || f; return `<div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .14s;" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')" class="up-mutual-row"><div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;">${buildAvatarHTML(mfPfp,mfDisplay,30)}</div><div style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">${escapeHTML(mfDisplay)}</div></div>`; }).join('')}
             </div>
-          </div>` : `<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">👥</div><div style="color:rgba(255,255,255,.15);font-size:12.5px;font-weight:500;">No mutual friends</div></div>`}
+          </div>` : `<div class="ftz-empty"><div class="ftz-empty-icon">👥</div><div class="ftz-empty-text">No mutual friends</div></div>`}
         </div>` : ''}
       </div>
     </div>
@@ -14721,7 +14728,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         </div>
         <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.username)}';adminSearchUser();}},150);" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:#60a5fa;font-size:12px;cursor:pointer;">Inspect</button>
         <button onclick="unbanUser('${escapeHTML(b.username)}')" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Unban</button>
-      </div>`).join('')}</div>`:'<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">No bans</div>'}
+      </div>`).join('')}</div>`:'<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">No bans</div></div>'}
     </div>`;
   }
   else if (tab === 'suspensions') {
@@ -15514,7 +15521,7 @@ async function _loadAdminSuspensions() {
       }
     }
     suspensions.sort((a,b) => (b.active?1:0) - (a.active?1:0) || new Date(b.suspendedAt||0) - new Date(a.suspendedAt||0));
-    if (!suspensions.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">No suspensions found</div>'; return; }
+    if (!suspensions.length) { el.innerHTML = '<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">No suspensions found</div></div>'; return; }
     el.innerHTML = suspensions.map(s => `
       <div style="background:var(--panel,#1b1e25);border:1px solid ${s.active?'rgba(168,85,247,.15)':'rgba(255,255,255,.06)'};border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:6px;">
         <div style="width:8px;height:8px;border-radius:50%;background:${s.active?'#a855f7':'rgba(255,255,255,.15)'};${s.active?'box-shadow:0 0 6px rgba(168,85,247,.5);':''}flex-shrink:0;"></div>
@@ -15527,7 +15534,7 @@ async function _loadAdminSuspensions() {
         ${s.active?`<button onclick="FortizedSocial.adminUnsuspendUser('${escapeHTML(s.username)}').then(()=>{logAudit('unsuspend','${escapeHTML(s.username)}','Lifted by admin');toast('${escapeHTML(s.username)} unsuspended','success');_loadAdminPage('suspensions');});" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Unsuspend</button>`:''}
       </div>`).join('');
   } catch(e) {
-    el.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">Failed to load suspensions</div>';
+    el.innerHTML = '<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">Failed to load suspensions</div></div>';
   }
 }
 
@@ -15547,7 +15554,7 @@ async function _loadAdminSupportTickets() {
     _allTickets.sort((a,b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
     _renderTickets();
   } catch(e) {
-    el.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">Failed to load tickets</div>';
+    el.innerHTML = '<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">Failed to load tickets</div></div>';
   }
 }
 
@@ -15562,7 +15569,7 @@ function _renderTickets() {
   let tickets = _allTickets;
   if (filter === 'open') tickets = tickets.filter(t => t.status !== 'closed');
   if (filter === 'closed') tickets = tickets.filter(t => t.status === 'closed');
-  if (!tickets.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">No tickets found</div>'; return; }
+  if (!tickets.length) { el.innerHTML = '<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">No tickets found</div></div>'; return; }
   const catColors = {'ban-appeal':'#f87171','suspend-appeal':'#a855f7','report':'#fb923c','general':'#60a5fa','bug':'#3ecf6e','feedback':'#fbbf24','account-recovery':'#38bdf8'};
   el.innerHTML = tickets.map(t => {
     const catCol = catColors[t.category] || '#60a5fa';
@@ -20741,7 +20748,7 @@ function renderProfileWidgetsTab(main) {
         Add Widget
       </button>
     </div>
-    ${activeWidgetsHtml ? `<div style="display:flex;flex-direction:column;gap:0;margin-bottom:16px;">${activeWidgetsHtml}</div>` : `<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">🧩</div><div style="color:rgba(255,255,255,.2);font-size:13px;font-weight:500;">No widgets added yet</div></div>`}
+    ${activeWidgetsHtml ? `<div style="display:flex;flex-direction:column;gap:0;margin-bottom:16px;">${activeWidgetsHtml}</div>` : `<div class="ftz-empty"><div class="ftz-empty-icon">🧩</div><div class="ftz-empty-text">No widgets added yet</div></div>`}
   </div>`;
 }
 

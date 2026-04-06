@@ -37,7 +37,26 @@ app.use('/api', (req, res, next) => {
 });
 
 // ── JSON body parsing ─────────────────────────────
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+
+// ── Security headers ─────────────────────────────
+app.use((req, res, next) => {
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.set('X-Frame-Options', 'SAMEORIGIN');
+  res.set('X-XSS-Protection', '1; mode=block');
+  res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// ── Health check endpoint ─────────────────────────
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: Math.floor(process.uptime()),
+    connections: io.sockets.sockets.size,
+    onlineUsers: onlineUsers.size,
+  });
+});
 
 // ── IGDB API Proxy ────────────────────────────────
 // Proxies requests to IGDB (via Twitch auth) so the
@@ -601,14 +620,16 @@ io.on('connection', (socket) => {
   // ── Bulk Presence Query ──
   socket.on('presence:query', (usernames, callback) => {
     if (typeof callback !== 'function') return;
+    if (!Array.isArray(usernames) || usernames.length > 200) return callback({});
     const result = {};
-    (usernames || []).forEach(u => {
+    usernames.forEach(u => {
       const normalized = (u || '').trim().toLowerCase();
       const entry = onlineUsers.get(normalized);
       if (entry) {
         const s = entry.status === 'invisible' ? 'offline' : entry.status;
         const ga = entry.status === 'invisible' ? null : entry.gameActivity;
-        result[u] = { status: s, gameActivity: ga };
+        const as = entry.status === 'invisible' ? null : entry.activityState;
+        result[u] = { status: s, gameActivity: ga, activityState: as };
       } else {
         result[u] = { status: 'offline', gameActivity: null };
       }

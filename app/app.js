@@ -153,7 +153,7 @@ let isMuted = false;
 let isDeafened = false;
 let notifPanelOpen = false;
 let notifSettings = {messages:true,friendRequests:true,bastionActivity:true,mentions:true,sounds:true,priorityOnly:false,digestMode:false,priorityChannels:[]};
-let _globalSettings = JSON.parse(localStorage.getItem('ftz_global_settings')||'{"disableEmoticonConversion":false}');
+let _globalSettings = (() => { try { return JSON.parse(localStorage.getItem('ftz_global_settings')||'{"disableEmoticonConversion":false}'); } catch(e) { console.warn('[Settings] Parse failed, using defaults:', e); return {disableEmoticonConversion:false}; } })();
 function saveGlobalSettings() { localStorage.setItem('ftz_global_settings', JSON.stringify(_globalSettings)); }
 let replyingTo = null;
 let forwardMsgText = '';
@@ -1197,20 +1197,23 @@ function attachFile(inputId) { openFileUpload(inputId || 'ch-input'); }
 
 // ── Role System ──
 function isSuperAdmin() { return CU?.username && SUPER_ADMINS.includes(CU.username); }
+function _getStaffData() {
+  try { return JSON.parse(localStorage.getItem('ftz_staff')||'{}'); } catch(e) { console.warn('[Staff] Parse failed:', e); return {admins:[], moderators:[]}; }
+}
 function isAdmin() {
   if (isSuperAdmin()) return true;
-  const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
+  const staff = _getStaffData();
   return CU?.username && (staff.admins||[]).includes(CU.username);
 }
 function isModerator() {
   if (isAdmin()) return true;
-  const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
+  const staff = _getStaffData();
   return CU?.username && (staff.moderators||[]).includes(CU.username);
 }
 function getStaffRole(username) {
   if (!username) return null;
   if (SUPER_ADMINS.includes(username)) return 'superadmin';
-  const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
+  const staff = _getStaffData();
   if ((staff.admins||[]).includes(username)) return 'admin';
   if ((staff.moderators||[]).includes(username)) return 'moderator';
   return null;
@@ -1219,7 +1222,8 @@ function hasStaffAccess() { return isModerator(); } // any staff role
 
 async function logAudit(action, target, note='') {
   const entry = {action,target,note,by:CU?.username,at:new Date().toISOString()};
-  const log = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
+  let log = [];
+  try { log = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]'); } catch(e) { console.warn('[Audit] Parse failed:', e); }
   log.unshift(entry);
   localStorage.setItem('ftz_audit_log', JSON.stringify(log.slice(0,500)));
   try { await FortizedSocial.adminPushAuditLog(entry); } catch(e) { console.warn('[Audit] Push failed:', e?.message); }

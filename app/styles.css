@@ -4427,6 +4427,10 @@ button[style*="background: var(--accent)"]:active {
 }
 .icon-btn-muted:hover { color: #fff; }
 
+/* ── Game card hover ── */
+.game-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.15) !important; box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+.game-card-active:hover { border-color: var(--accent) !important; }
+
 /* ── Delete X button ── */
 .ftz-delete-x {
   background: none;

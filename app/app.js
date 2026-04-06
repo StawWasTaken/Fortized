@@ -6330,12 +6330,14 @@ async function sendFriendRequest(){
   const inp=document.getElementById('friend-target');
   const err=document.getElementById('friend-error');
   const succ=document.getElementById('friend-success');
+  const btn=document.getElementById('friend-send-btn');
   if(!inp)return;
   const username=inp.value.trim().toLowerCase();
   if(!username){if(err)err.textContent='Enter a username';return;}
   if(username===CU.username){if(err)err.textContent="Can't add yourself";return;}
   if(isUserBlocked(username)){if(err)err.textContent="Can't send friend requests to blocked users";return;}
   if(err)err.textContent='';if(succ)succ.textContent='';
+  if(btn)btn.classList.add('btn-loading');
   try{
     const r=await FortizedSocial.sendFriendRequest(CU.username, username);
     if(r.ok){
@@ -6349,6 +6351,7 @@ async function sendFriendRequest(){
       if(err) err.textContent=r.msg||'Failed';
     }
   } catch(e){ console.error(e); if(err) err.textContent='Connection error'; }
+  finally { if(btn) btn.classList.remove('btn-loading'); }
 }
 async function acceptFriend(username){
   try{
@@ -20590,7 +20593,7 @@ function renderGCGrid(games) {
     const addArgs = has
       ? 'removeGameFromCollectionByName(\'' + escapeHTML(g.name) + '\')'
       : 'addGameToCollection(\'' + escapeHTML(g.name) + '\',\'' + (g.icon||'\uD83C\uDFAE') + '\',\'' + escapeHTML(g.genre||'Game') + '\'' + (g.coverUrl ? ',\'' + escapeHTML(g.coverUrl) + '\'' : ',null') + (g.coverThumb ? ',\'' + escapeHTML(g.coverThumb) + '\'' : '') + ')';
-    html += '<div style="background:' + (has?'var(--accent-dim)':'rgba(255,255,255,.02)') + ';border:1.5px solid ' + (has?'var(--accent-mid)':'rgba(255,255,255,.05)') + ';border-radius:14px;cursor:pointer;overflow:hidden;transition:all .15s;" onclick="' + addArgs + '" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.borderColor=\'' + (has?'var(--accent)':'rgba(255,255,255,.15)') + '\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.3)\'" onmouseout="this.style.transform=\'\';this.style.borderColor=\'' + (has?'var(--accent-mid)':'rgba(255,255,255,.05)') + '\';this.style.boxShadow=\'none\'">'
+    html += '<div class="game-card' + (has?' game-card-active':'') + '" style="background:' + (has?'var(--accent-dim)':'rgba(255,255,255,.02)') + ';border:1.5px solid ' + (has?'var(--accent-mid)':'rgba(255,255,255,.05)') + ';border-radius:14px;cursor:pointer;overflow:hidden;transition:all .15s;" onclick="' + addArgs + '">'
       + (hasCover
         ? '<div style="width:100%;height:90px;overflow:hidden;position:relative;"><img src="' + escapeHTML(g.coverThumb||g.coverUrl) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML=\'<div style=text-align:center;padding:20px;font-size:28px;background:rgba(255,255,255,.02)>' + (g.icon||'🎮') + '</div>\'"></div>'
         : '<div style="text-align:center;padding:20px 8px 8px;font-size:32px;background:rgba(255,255,255,.015);">' + (g.icon||'\uD83C\uDFAE') + '</div>')

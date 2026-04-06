@@ -456,6 +456,7 @@ const FtzStatus = (() => {
       if (!CU?.username) return;
       _stopCompanionIdlePoll();
       if (typeof _stopAutoActivityDetection === 'function') _stopAutoActivityDetection();
+      stopCrossDeviceSync();
       // Use sendBeacon for reliable delivery — async fetch may not complete on unload
       if (navigator.sendBeacon) {
         navigator.sendBeacon('/api/presence/offline',
@@ -7301,8 +7302,9 @@ function initFortizedUXResilience() {
     if (_ob) _ob.classList.remove('visible');
     toast('Back online!', 'success');
   });
-  setTimeout(initCrossDeviceSync, 800);
-  setTimeout(initNotifToasts, 1200);
+  // Start listeners immediately (not delayed) for instant cross-device sync
+  initCrossDeviceSync();
+  setTimeout(initNotifToasts, 100);
   // Sync blocked list from Firebase (skip when offline)
   if(navigator.onLine) setTimeout(async()=>{try{const snap=await firebase.database().ref('users/'+CU.username+'/blockedUsers').get();if(snap.exists())localStorage.setItem('ftz_blocked',JSON.stringify(snap.val()));}catch(e){console.warn('[Sync] Blocked list sync failed:', e?.message);}},500);
 
@@ -16853,7 +16855,7 @@ async function completeVerification() {
   CU.verifiedVersion = 2;
   // Also award a small Onyx bonus for completing verification
   CU.onyx = (CU.onyx||0) + 25;
-  await saveUser();
+  await saveUser(true);
   updateOnyxDisplay();
   document.getElementById('verify-overlay')?.remove();
   toast('Verified — welcome to the fortress.', 'success');
@@ -16915,7 +16917,7 @@ async function saveDOB() {
     return;
   }
   CU.dateOfBirth = input.value;
-  await saveUser();
+  await saveUser(true);
   document.getElementById('dob-setup-overlay')?.remove();
   const tierLabels = { child: '🧒 Protected Mode (13–15)', teen: '🧑 Teen Mode (16–17)', adult: '🧑‍🦳 Adult Mode (18+)' };
   toast(`✅ Age verified — ${tierLabels[tier]}`, 'success');
@@ -27891,32 +27893,30 @@ function applyCrop() {
 // REAL-TIME CROSS-DEVICE SYNC
 // ════════════════════════════════════════════════════════
 let _profileSyncListener = null;
+let _statusSyncListener = null;
 let _notifSyncListener = null;
 
 function initCrossDeviceSync() {
   if (!CU?.username) return;
-  
-  // 1. Live profile sync — when pfp/banner/onyx changes on another device, update here
+
+  // 1. Live profile sync — when ANY user data changes on another device, update here
   const profileRef = firebase.database().ref('users/' + CU.username);
   _profileSyncListener = profileRef.on('value', snap => {
     const data = snap.val();
     if (!data || !data.username) return;
-    // Only update if data differs (to avoid overwriting local pending changes)
     const changed = JSON.stringify(data) !== JSON.stringify(CU);
     if (!changed) return;
-    // Selectively update UI-relevant fields
+
+    // Sync profile fields
     if (data.pfp && data.pfp !== CU.pfp) {
       CU.pfp = data.pfp;
       updateUserbar();
-      // Update all avatar instances
       document.querySelectorAll('.msg-av-inner img, .ua img').forEach(img => {
         if (img.src !== data.pfp) img.src = data.pfp;
       });
     }
     if (data.banner !== CU.banner) { CU.banner = data.banner; }
-    // Only accept higher onyx from remote (never overwrite local pending purchases/claims)
     if (data.onyx !== undefined && data.onyx > (CU.onyx||0)) { CU.onyx = data.onyx; updateOnyxDisplay(); }
-    // Don't sync status from Firebase — it's managed locally by FtzStatus to avoid conflicting states
     if (JSON.stringify(data.customStatus||null) !== JSON.stringify(CU.customStatus||null)) {
       if (data.customStatus) { CU.customStatus = data.customStatus; } else { delete CU.customStatus; }
       refreshCustomStatusBubble?.();
@@ -27928,35 +27928,85 @@ function initCrossDeviceSync() {
     if (data.groupChats && JSON.stringify(data.groupChats) !== JSON.stringify(CU.groupChats)) {
       const hadNew = (data.groupChats||[]).length > (CU.groupChats||[]).length;
       CU.groupChats = data.groupChats;
-      // Re-render DM sidebar so new group chats appear for all members
       if (hadNew) {
         const scroll = document.getElementById('sidebar-scroll');
         if (scroll) renderDMSidebar(scroll);
       }
     }
+
+    // NEW: Sync widgets — if widgets changed on another device, update profile immediately
+    if (data.profileWidgets && JSON.stringify(data.profileWidgets) !== JSON.stringify(CU.profileWidgets)) {
+      CU.profileWidgets = data.profileWidgets;
+      // Re-render widgets if profile page is open
+      if (curView === 'profile') {
+        setTimeout(() => renderProfileWidgetsTab(), 50);
+      }
+    }
+
+    // NEW: Sync verification status — verified on another device? Update here
+    if (data.verified !== undefined && data.verified !== CU.verified) {
+      CU.verified = data.verified;
+      if (data.verifiedAt) CU.verifiedAt = data.verifiedAt;
+      if (data.verifiedVersion) CU.verifiedVersion = data.verifiedVersion;
+      // If just verified on another device, close verification modal
+      if (data.verified && !CU.verified) closeModal('modal-verify-quiz');
+    }
+
+    // NEW: Sync date of birth (age verification) — if set on another device, update here
+    if (data.dateOfBirth && data.dateOfBirth !== CU.dateOfBirth) {
+      CU.dateOfBirth = data.dateOfBirth;
+      // Close age setup modal if one exists
+      if (document.getElementById('modal-dob-setup')) closeModal('modal-dob-setup');
+    }
+
+    // NEW: Sync activity status (what user is doing) — shows "Studying", "Working", etc.
+    if (data.currentActivity && JSON.stringify(data.currentActivity) !== JSON.stringify(CU.currentActivity)) {
+      CU.currentActivity = data.currentActivity;
+      // Update activity display in user profile if open
+      if (curView === 'profile') {
+        const actEl = document.getElementById('user-activity-display');
+        if (actEl && data.currentActivity?.activity) {
+          actEl.textContent = data.currentActivity.activity;
+        }
+      }
+    }
+
+    // NEW: Sync bastions (server membership)
+    if (data.bastions && JSON.stringify(data.bastions) !== JSON.stringify(CU.bastions)) {
+      CU.bastions = data.bastions;
+      renderRailBastions();
+    }
+
     // Update local cache
     saveLocal();
   });
 
-  // 2. Notification sync — new notifications in real time
+  // 2. Status sync — watch status changes on other devices
+  const statusRef = firebase.database().ref('statuses/' + CU.username);
+  _statusSyncListener = statusRef.on('value', snap => {
+    const remoteStatus = snap.val();
+    if (!remoteStatus) return;
+    // Only update if different from current display status (avoid overwriting local changes)
+    const visibleStatus = FtzStatus.visible(CU.status || 'online');
+    if (remoteStatus !== visibleStatus) {
+      // Status changed on another device, update UI
+      updateUserbar();
+    }
+  });
+
+  // 3. Notification sync — new notifications in real time
   const notifRef = firebase.database().ref('notifications/' + CU.username);
   _notifSyncListener = notifRef.on('child_added', snap => {
     const notif = snap.val();
     if (!notif) return;
-    // Auto-mark DM notifications as read if user is currently viewing that DM
     if (notif.type === 'dm' && notif.from && !notif.read && curDM === (notif.from||'').toLowerCase()) {
       try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', notif.from).then(()=>updateNotifBadge()).catch(()=>{}); } catch(e) { console.debug('[Notif] auto-mark read failed', e); }
       return;
     }
     if (!shouldDeliverRealtimeNotif(notif)) return;
     if (notifSettings.digestMode) { queueDigestNotif(notif); return; }
-    // Auto-unhide DM conversations when new messages arrive
-    if (notif.type === 'dm' && notif.from) {
-      unhideDMConversation('dm_' + notif.from);
-    }
-    // Update badge
+    if (notif.type === 'dm' && notif.from) { unhideDMConversation('dm_' + notif.from); }
     updateNotifBadge().catch(()=>{});
-    // Show system notification if supported + permission granted (DND suppresses)
     if (Notification?.permission === 'granted' && document.hidden && CU?.status !== 'dnd') {
       let title = 'Fortized';
       let body = 'You have a new notification';
@@ -27971,11 +28021,10 @@ function initCrossDeviceSync() {
         setTimeout(() => n.close(), 8000);
       } catch(e) { console.debug('[Notif] system notification failed', e); }
     }
-    // Play sound
     playNotifSound(notif.type === 'mention' ? 'mention' : 'message');
   });
 
-  // 3. Request notification permission
+  // 4. Request notification permission
   if (Notification?.permission === 'default') {
     setTimeout(() => {
       Notification.requestPermission().then(p => {
@@ -27983,9 +28032,8 @@ function initCrossDeviceSync() {
       }).catch(()=>{});
     }, 3000);
   }
-  
-  // 4. Online presence — write to Supabase + Firebase on focus/blur/unload
-  // Respect user's chosen status (DND, invisible, away) instead of always broadcasting 'online'
+
+  // 5. Online presence — write to Supabase + Firebase
   const presenceRef = firebase.database().ref('.info/connected');
   presenceRef.on('value', snap => {
     if (!snap.val()) return;
@@ -27994,7 +28042,6 @@ function initCrossDeviceSync() {
     const visibleStatus = FtzStatus.visible(curStatus);
     statusRef.set(visibleStatus).catch(()=>{});
     statusRef.onDisconnect().set('offline');
-    // Also write to Supabase for consistency
     FortizedSocial.setStatus(CU.username, visibleStatus).catch(()=>{});
   });
 }
@@ -28003,6 +28050,14 @@ function stopCrossDeviceSync() {
   if (_profileSyncListener) {
     try { firebase.database().ref('users/' + CU.username).off('value', _profileSyncListener); } catch(e) { console.debug('[Sync] profile listener cleanup failed', e); }
     _profileSyncListener = null;
+  }
+  if (_statusSyncListener) {
+    try { firebase.database().ref('statuses/' + CU.username).off('value', _statusSyncListener); } catch(e) { console.debug('[Sync] status listener cleanup failed', e); }
+    _statusSyncListener = null;
+  }
+  if (_notifSyncListener) {
+    try { firebase.database().ref('notifications/' + CU.username).off('child_added', _notifSyncListener); } catch(e) { console.debug('[Sync] notif listener cleanup failed', e); }
+    _notifSyncListener = null;
   }
 }
 

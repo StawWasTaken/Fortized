@@ -11437,7 +11437,7 @@ function renderEmojiTab(tabId) {
       html += personalEmojis.map((e,i) => `
         <div onclick="insertFortizedEmoji('${escapeHTML(e.name)}','${escapeHTML(e.data)}')"
              onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(e.name)}:'"
-             oncontextmenu="event.preventDefault();if(confirm('Delete :${escapeHTML(e.name)}:?'))deletePersonalEmoji(${i})"
+             oncontextmenu="event.preventDefault();showCustomConfirm('Delete :${escapeHTML(e.name)}:?',function(){deletePersonalEmoji(${i})})"
              title=":${escapeHTML(e.name)}:"
              style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;position:relative;"
             >

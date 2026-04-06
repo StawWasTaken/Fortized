@@ -1243,12 +1243,12 @@ function toast(msg, type='info') {
 // ════════════════════════════════════════════
 // Soft refresh: re-render current view without full page reload
 function _ftzSoftRefresh() {
-  if (_currentView === 'home') { try { renderHomePanel(); } catch {} }
-  else if (_currentView === 'dms' || _currentView === 'friends') { try { showDMFriendsHome(); } catch {} }
-  else if (_currentView === 'discover') { try { renderDiscoverGrid(); } catch {} }
-  else if (_currentView === 'atelier') { try { refreshCU().then(()=>{ switchAtelierTab(_atelierTab||'overview'); }).catch(()=>{ switchAtelierTab(_atelierTab||'overview'); }); } catch {} }
+  if (_currentView === 'home') { try { renderHomePanel(); } catch(e) { console.warn('[Refresh] Home failed:', e?.message); } }
+  else if (_currentView === 'dms' || _currentView === 'friends') { try { showDMFriendsHome(); } catch(e) { console.warn('[Refresh] DMs failed:', e?.message); } }
+  else if (_currentView === 'discover') { try { renderDiscoverGrid(); } catch(e) { console.warn('[Refresh] Discover failed:', e?.message); } }
+  else if (_currentView === 'atelier') { try { refreshCU().then(()=>{ switchAtelierTab(_atelierTab||'overview'); }).catch(()=>{ switchAtelierTab(_atelierTab||'overview'); }); } catch(e) { console.warn('[Refresh] Atelier failed:', e?.message); } }
   else if (_currentView === 'bastion' && curBastion !== null) {
-    try { if (curChannel === 'overview') renderOverviewRoom(); else if (curChannel !== null) selectChannel(curChannel); } catch {}
+    try { if (curChannel === 'overview') renderOverviewRoom(); else if (curChannel !== null) selectChannel(curChannel); } catch(e) { console.warn('[Refresh] Bastion failed:', e?.message); }
   }
   // Spin the refresh icon
   const btn = document.getElementById('tb-nav-refresh');
@@ -7285,6 +7285,16 @@ function initFortizedUXResilience() {
     const _ob = document.getElementById('offline-banner');
     if (_ob) _ob.classList.add('visible');
   }
+  // Auto-show/hide offline banner on connectivity change
+  window.addEventListener('offline', () => {
+    const _ob = document.getElementById('offline-banner');
+    if (_ob) _ob.classList.add('visible');
+  });
+  window.addEventListener('online', () => {
+    const _ob = document.getElementById('offline-banner');
+    if (_ob) _ob.classList.remove('visible');
+    toast('Back online!', 'success');
+  });
   setTimeout(initCrossDeviceSync, 800);
   setTimeout(initNotifToasts, 1200);
   // Sync blocked list from Firebase (skip when offline)

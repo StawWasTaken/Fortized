@@ -22756,10 +22756,10 @@ function openFileUpload(context) {
 }
 
 
-function _closeEl(id){var e=document.getElementById(id);if(e)e.remove();}
+function _closeEl(id){const e=document.getElementById(id);if(e)e.remove();}
 function _closeWTPlayer(){_closeEl('wt-player-overlay');if(_vc)_vc.watchingTogether=false;}
 
-function _clearAttachment(){var b=document.getElementById("attach-preview-bar");if(b)b.remove();window._pendingAttachment=null;}
+function _clearAttachment(){const b=document.getElementById("attach-preview-bar");if(b)b.remove();window._pendingAttachment=null;}
 function showAttachmentPreview(name, type, dataUrl, size, context) {
   document.getElementById('attach-preview-bar')?.remove();
   const bar = document.createElement('div');
@@ -22857,7 +22857,7 @@ const STATUS_PRESETS = [
   {emoji:'😊',text:'Feeling great!',color:'#fde68a'},
 ];
 
-function _closeStatusPicker(){var s=document.getElementById("ftz-status-picker");if(s)s.remove();}
+function _closeStatusPicker(){const s=document.getElementById("ftz-status-picker");if(s)s.remove();}
 function openStatusPicker() {
   _closeStatusPicker();
   const cur = CU?.customStatus || {};
@@ -23242,8 +23242,8 @@ function previewForumPostImage(input) {
   reader.readAsDataURL(file);
 }
 
-function _closeNewPost(){var p=document.querySelector(".ftz-new-post-overlay");if(p)p.remove();else{var all=document.querySelectorAll("div[style*='position:fixed']");all.forEach(function(el){if(el.querySelector("#fp-title"))el.remove();});}}
-function _submitNewPost(chIdx){var o=document.querySelector(".ftz-new-post-overlay");submitForumPost(chIdx,o);}
+function _closeNewPost(){const p=document.querySelector(".ftz-new-post-overlay");if(p)p.remove();else{const all=document.querySelectorAll("div[style*='position:fixed']");all.forEach(el=>{if(el.querySelector("#fp-title"))el.remove();});}}
+function _submitNewPost(chIdx){const o=document.querySelector(".ftz-new-post-overlay");submitForumPost(chIdx,o);}
 async function submitForumPost(chIdx, overlay) {
   const title = (document.getElementById('fp-title')||{}).value&&document.getElementById('fp-title').value.trim();
   const body = (document.getElementById('fp-body')||{}).value&&document.getElementById('fp-body').value.trim();
@@ -23253,7 +23253,7 @@ async function submitForumPost(chIdx, overlay) {
   const tags = tagsRaw.split(',').map(function(t){return t.trim();}).filter(Boolean).slice(0,5);
   const b = CU.bastions&&CU.bastions[curBastion]; if (!b) return;
   if (!b.channels[chIdx].posts) b.channels[chIdx].posts = [];
-  var fpImgData = window._fpImgData || null;
+  const fpImgData = window._fpImgData || null;
   b.channels[chIdx].posts.unshift({id:'fp-'+Date.now(),title,body,tags,image:fpImgData,author:CU.username,createdAt:new Date().toISOString(),replies:[]});
   window._fpImgData = null;
   await saveUser();
@@ -27524,35 +27524,35 @@ function _setupLivePreview(ta) {
   if (ta._livePreviewInit) return;
   ta._livePreviewInit = true;
   // Wrap textarea in a relative container if not already
-  var parent = ta.parentNode;
+  const parent = ta.parentNode;
   if (!parent.classList.contains('ci-preview-wrap')) {
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'ci-preview-wrap';
     wrap.style.cssText = 'position:relative;flex:1;min-width:0;display:flex;';
     parent.insertBefore(wrap, ta);
     wrap.appendChild(ta);
     // Create overlay div
-    var preview = document.createElement('div');
+    const preview = document.createElement('div');
     preview.className = 'ci-preview';
     wrap.appendChild(preview);
     ta._previewEl = preview;
   }
   // Sync on input
-  ta.addEventListener('input', function() { _updateLivePreview(ta); });
-  ta.addEventListener('scroll', function() { if (ta._previewEl) ta._previewEl.scrollTop = ta.scrollTop; });
+  ta.addEventListener('input', () => _updateLivePreview(ta));
+  ta.addEventListener('scroll', () => { if (ta._previewEl) ta._previewEl.scrollTop = ta.scrollTop; });
   // Initial render
   _updateLivePreview(ta);
 }
 
 function _updateLivePreview(ta) {
-  var el = ta._previewEl;
+  const el = ta._previewEl;
   if (!el) return;
-  var val = ta.value;
+  const val = ta.value;
   if (!val) { el.innerHTML = ''; ta.style.color = ''; return; }
   // Check if there's any formatting syntax — if not, don't show overlay
   if (!/[*~`|=@#\[]/.test(val)) { el.innerHTML = ''; ta.style.color = ''; return; }
   // Apply live formatting
-  var html = _liveFormatPreview(val);
+  const html = _liveFormatPreview(val);
   // Only use overlay if formatting was actually applied
   if (html !== escapeHTML(val)) {
     el.innerHTML = html;
@@ -27567,7 +27567,7 @@ function _updateLivePreview(ta) {
 }
 
 function _liveFormatPreview(text) {
-  var s = escapeHTML(text);
+  let s = escapeHTML(text);
   // Block code ``` ... ``` — render as code style
   s = s.replace(/```([^`]*?)```/g, '<span class="ci-code">```$1```</span>');
   // Inline code
@@ -27594,15 +27594,15 @@ function _liveFormatPreview(text) {
 }
 
 // Hook into buildChatInputBar — after textarea is inserted, setup live preview
-var _origAutoResize = typeof autoResize === 'function' ? autoResize : null;
+const _origAutoResize = typeof autoResize === 'function' ? autoResize : null;
 function _hookLivePreviewOnInput() {
   // Observe DOM for new textareas in chat-input-row
-  var observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(m) {
-      m.addedNodes.forEach(function(n) {
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(m => {
+      m.addedNodes.forEach(n => {
         if (n.nodeType !== 1) return;
-        var tas = n.querySelectorAll ? n.querySelectorAll('.chat-input-row textarea') : [];
-        tas.forEach(function(ta) { _setupLivePreview(ta); });
+        const tas = n.querySelectorAll ? n.querySelectorAll('.chat-input-row textarea') : [];
+        tas.forEach(ta => _setupLivePreview(ta));
         if (n.matches && n.matches('.chat-input-row textarea')) _setupLivePreview(n);
       });
     });
@@ -28427,21 +28427,21 @@ function clearSettingsDirty() {
 // Module-level helper to blend two colors for profile card backgrounds
 function _blendColorsForProfileCard(color1, color2) {
   // Parse hex colors
-  var c1 = parseInt(color1.substring(1), 16);
-  var c2 = parseInt(color2.substring(1), 16);
+  const c1 = parseInt(color1.substring(1), 16);
+  const c2 = parseInt(color2.substring(1), 16);
 
   // Extract RGB components
-  var r1 = (c1 >> 16) & 255, g1 = (c1 >> 8) & 255, b1 = c1 & 255;
-  var r2 = (c2 >> 16) & 255, g2 = (c2 >> 8) & 255, b2 = c2 & 255;
+  const r1 = (c1 >> 16) & 255, g1 = (c1 >> 8) & 255, b1 = c1 & 255;
+  const r2 = (c2 >> 16) & 255, g2 = (c2 >> 8) & 255, b2 = c2 & 255;
 
   // Average the colors (50/50 blend)
-  var r = Math.round((r1 + r2) / 2);
-  var g = Math.round((g1 + g2) / 2);
-  var b = Math.round((b1 + b2) / 2);
+  let r = Math.round((r1 + r2) / 2);
+  let g = Math.round((g1 + g2) / 2);
+  let b = Math.round((b1 + b2) / 2);
 
   // Desaturate to reduce color intensity (make it more neutral/light)
-  var brightness = (r + g + b) / 3;
-  var desaturate = 0.4;  // 40% saturation
+  const brightness = (r + g + b) / 3;
+  const desaturate = 0.4;  // 40% saturation
   r = Math.round(r * desaturate + brightness * (1 - desaturate));
   g = Math.round(g * desaturate + brightness * (1 - desaturate));
   b = Math.round(b * desaturate + brightness * (1 - desaturate));

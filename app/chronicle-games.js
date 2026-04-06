@@ -1,7 +1,7 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
- * FORTIZED GRAND CHRONICLE - COMPLETE IMPLEMENTATION
- * All 13 Events with Full Mechanics + Last Meadow Online Style
+ * FORTIZED GRAND CHRONICLE - PROPER IMPLEMENTATION
+ * UIBox images used correctly + Games play in-dashboard
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
@@ -13,6 +13,7 @@ const CHRONICLE = {
   introPlayed: false,
   playerStats: { joy: 85, fortCoins: 0, hammer: 0 },
   globalStats: { totalPlayers: 1247, battleWins: 3458 },
+  currentGame: null,
   events: [
     { id: 1, title: 'Breaking Treaty', unlocked: true, completed: false },
     { id: 2, title: 'Raid Silver Stream', unlocked: false, completed: false },
@@ -58,6 +59,11 @@ function openGrandChronicle() {
     showChronicleMenu();
     playBgMusic();
   }
+}
+
+// Alias for compatibility with button onclick handler
+function openChronicle() {
+  openGrandChronicle();
 }
 
 function showChronicleMenu() {
@@ -150,12 +156,23 @@ function showChronicleDashboard() {
   const main = document.createElement('div');
   main.style.cssText = `display: flex; flex: 1; gap: 20px; padding: 20px; overflow: hidden;`;
 
+  // LEFT PANEL - Events with UIBox2
   const leftPanel = document.createElement('div');
   leftPanel.style.cssText = `width: 140px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto;`;
 
   CHRONICLE.events.forEach((evt) => {
+    const btnWrapper = document.createElement('div');
+    btnWrapper.style.cssText = `position: relative; height: 70px;`;
+
+    // UIBox2 as background image
+    const uiboxImg = document.createElement('img');
+    uiboxImg.src = `${CHRONICLE.ASSET_PATH}UIBox2.png`;
+    uiboxImg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none; opacity: 0.8;`;
+    btnWrapper.appendChild(uiboxImg);
+
+    // Button on top
     const btn = document.createElement('button');
-    btn.style.cssText = `padding: 15px; height: 70px; border: 2px solid #000; border-radius: 3px; background: url('${CHRONICLE.ASSET_PATH}UIBox2.png') center/cover, ${evt.completed ? '#d0d0d0' : evt.unlocked ? '#fff' : '#e0e0e0'}; cursor: ${evt.unlocked ? 'pointer' : 'default'}; font-family: ${CHRONICLE.FONT}; font-size: 10px; font-weight: 700; text-align: center; transition: all 0.2s; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; color: #000;`;
+    btn.style.cssText = `position: absolute; inset: 0; background: transparent; border: 2px solid #000; cursor: ${evt.unlocked ? 'pointer' : 'default'}; font-family: ${CHRONICLE.FONT}; font-size: 10px; font-weight: 700; text-align: center; transition: all 0.2s; display: flex; align-items: center; justify-content: center; color: #000;`;
     btn.textContent = evt.completed ? '✓' : evt.unlocked ? `E${evt.id}` : '🔒';
 
     if (evt.unlocked && !evt.completed) {
@@ -164,13 +181,16 @@ function showChronicleDashboard() {
       btn.onclick = () => launchEvent(evt.id);
     }
 
-    leftPanel.appendChild(btn);
+    btnWrapper.appendChild(btn);
+    leftPanel.appendChild(btnWrapper);
   });
 
   main.appendChild(leftPanel);
 
+  // CENTER PANEL - Game area
   const centerPanel = document.createElement('div');
-  centerPanel.style.cssText = `flex: 1; border: 4px solid #000; border-radius: 3px; background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(0,0,0,0.15);`;
+  centerPanel.id = 'game-area';
+  centerPanel.style.cssText = `flex: 1; border: 4px solid #000; border-radius: 3px; background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); position: relative; overflow: hidden;`;
 
   const mapImg = document.createElement('img');
   mapImg.src = `${CHRONICLE.ASSET_PATH}IRL Human World Map 1452.png`;
@@ -179,58 +199,67 @@ function showChronicleDashboard() {
 
   main.appendChild(centerPanel);
 
+  // RIGHT PANEL - Stats with UIBox overlay
   const rightPanel = document.createElement('div');
   rightPanel.style.cssText = `width: 160px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto;`;
 
-  const playerBox = document.createElement('div');
-  playerBox.style.cssText = `border: 3px solid #000; background: url('${CHRONICLE.ASSET_PATH}UIBox.png') left center/auto no-repeat, white; padding: 12px; border-radius: 3px; box-shadow: 3px 3px 8px rgba(0,0,0,0.15);`;
+  // Create stat box with UIBox image
+  function createStatBox(title, stats) {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `position: relative; min-height: 120px;`;
 
-  const playerTitle = document.createElement('div');
-  playerTitle.style.cssText = `font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #000;`;
-  playerTitle.textContent = 'Player';
-  playerBox.appendChild(playerTitle);
+    const uiboxImg = document.createElement('img');
+    uiboxImg.src = `${CHRONICLE.ASSET_PATH}UIBox.png`;
+    uiboxImg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
+    wrapper.appendChild(uiboxImg);
 
-  [{ icon: 'IconJesterHat.png', label: 'Joy', value: `${CHRONICLE.playerStats.joy}%` },
-   { icon: 'IconCoin.png', label: 'FortCoin', value: CHRONICLE.playerStats.fortCoins },
-   { icon: 'IconHammer.png', label: 'Hammer', value: CHRONICLE.playerStats.hammer }].forEach(stat => {
-    const row = document.createElement('div');
-    row.style.cssText = `display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 9px; font-weight: 700;`;
-    const icon = document.createElement('img');
-    icon.src = `${CHRONICLE.ASSET_PATH}${stat.icon}`;
-    icon.style.cssText = `width: 16px; height: 16px; object-fit: contain;`;
-    row.appendChild(icon);
-    const text = document.createElement('div');
-    text.textContent = `${stat.label}: ${stat.value}`;
-    row.appendChild(text);
-    playerBox.appendChild(row);
-  });
-  rightPanel.appendChild(playerBox);
+    const box = document.createElement('div');
+    box.style.cssText = `position: absolute; inset: 0; border: 3px solid #000; padding: 12px; border-radius: 3px; background: rgba(255,255,255,0.9);`;
 
-  const globalBox = document.createElement('div');
-  globalBox.style.cssText = `border: 3px solid #000; background: url('${CHRONICLE.ASSET_PATH}UIBox.png') left center/auto no-repeat, white; padding: 12px; border-radius: 3px; box-shadow: 3px 3px 8px rgba(0,0,0,0.15);`;
+    const titleEl = document.createElement('div');
+    titleEl.style.cssText = `font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #000;`;
+    titleEl.textContent = title;
+    box.appendChild(titleEl);
 
-  const globalTitle = document.createElement('div');
-  globalTitle.style.cssText = `font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #000;`;
-  globalTitle.textContent = 'Global';
-  globalBox.appendChild(globalTitle);
+    stats.forEach(stat => {
+      const row = document.createElement('div');
+      row.style.cssText = `display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 9px; font-weight: 700;`;
+      const icon = document.createElement('img');
+      icon.src = `${CHRONICLE.ASSET_PATH}${stat.icon}`;
+      icon.style.cssText = `width: 16px; height: 16px; object-fit: contain;`;
+      row.appendChild(icon);
+      const text = document.createElement('div');
+      text.textContent = `${stat.label}: ${stat.value}`;
+      row.appendChild(text);
+      box.appendChild(row);
+    });
 
-  [{ icon: 'IconKnight.png', label: 'Players', value: CHRONICLE.globalStats.totalPlayers },
-   { icon: 'IconSword.png', label: 'Battles', value: CHRONICLE.globalStats.battleWins }].forEach(stat => {
-    const row = document.createElement('div');
-    row.style.cssText = `display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 9px; font-weight: 700;`;
-    const icon = document.createElement('img');
-    icon.src = `${CHRONICLE.ASSET_PATH}${stat.icon}`;
-    icon.style.cssText = `width: 16px; height: 16px; object-fit: contain;`;
-    row.appendChild(icon);
-    const text = document.createElement('div');
-    text.textContent = `${stat.label}: ${stat.value}`;
-    row.appendChild(text);
-    globalBox.appendChild(row);
-  });
-  rightPanel.appendChild(globalBox);
+    wrapper.appendChild(box);
+    return wrapper;
+  }
+
+  rightPanel.appendChild(createStatBox('Player', [
+    { icon: 'IconJesterHat.png', label: 'Joy', value: `${CHRONICLE.playerStats.joy}%` },
+    { icon: 'IconCoin.png', label: 'FortCoin', value: CHRONICLE.playerStats.fortCoins },
+    { icon: 'IconHammer.png', label: 'Hammer', value: CHRONICLE.playerStats.hammer }
+  ]));
+
+  rightPanel.appendChild(createStatBox('Global', [
+    { icon: 'IconKnight.png', label: 'Players', value: CHRONICLE.globalStats.totalPlayers },
+    { icon: 'IconSword.png', label: 'Battles', value: CHRONICLE.globalStats.battleWins }
+  ]));
+
+  // Battle box with UIBox
+  const battleWrapper = document.createElement('div');
+  battleWrapper.style.cssText = `position: relative; min-height: 100px;`;
+
+  const battleUibox = document.createElement('img');
+  battleUibox.src = `${CHRONICLE.ASSET_PATH}UIBox.png`;
+  battleUibox.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
+  battleWrapper.appendChild(battleUibox);
 
   const battleBox = document.createElement('div');
-  battleBox.style.cssText = `border: 3px solid #000; background: url('${CHRONICLE.ASSET_PATH}UIBox.png') left center/auto no-repeat, white; padding: 12px; text-align: center; border-radius: 3px; box-shadow: 3px 3px 8px rgba(0,0,0,0.15);`;
+  battleBox.style.cssText = `position: absolute; inset: 0; border: 3px solid #000; padding: 12px; text-align: center; border-radius: 3px; background: rgba(255,255,255,0.9);`;
 
   const battleLabel = document.createElement('div');
   battleLabel.style.cssText = `font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;`;
@@ -241,11 +270,14 @@ function showChronicleDashboard() {
   battleTimer.style.cssText = `font-size: 26px; font-weight: 700;`;
   battleTimer.textContent = '0:37';
   battleBox.appendChild(battleTimer);
-  rightPanel.appendChild(battleBox);
+
+  battleWrapper.appendChild(battleBox);
+  rightPanel.appendChild(battleWrapper);
 
   main.appendChild(rightPanel);
   dashboard.appendChild(main);
 
+  // BOTTOM - Chapter info
   const bottom = document.createElement('div');
   bottom.style.cssText = `border-top: 3px solid #000; padding: 18px 20px; background: linear-gradient(135deg, #f5f1e8 0%, #e8e4db 100%);`;
 
@@ -282,73 +314,69 @@ function showChronicleDashboard() {
 
 function launchEvent(eventId) {
   playSound('SoundPlay.mp3', 0.6);
-  const dash = document.getElementById('chronicle-dashboard');
-  if (dash) dash.style.display = 'none';
+  const gameArea = document.getElementById('game-area');
+  if (!gameArea) return;
 
-  // Create game screen (all games use this template)
+  // Clear game area
+  gameArea.innerHTML = '';
+
+  // Create game screen in game area
   const gameScreen = document.createElement('div');
-  gameScreen.id = `game-event-${eventId}`;
-  gameScreen.style.cssText = `position: fixed; inset: 0; background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: ${CHRONICLE.FONT}; color: white;`;
+  gameScreen.style.cssText = `position: absolute; inset: 0; background: linear-gradient(135deg, #1a3a52 0%, #2c5282 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff;`;
 
-  const eventTitle = document.createElement('div');
-  eventTitle.style.cssText = `font-size: 32px; font-weight: 800; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px;`;
-  eventTitle.textContent = `Event ${eventId}`;
-  gameScreen.appendChild(eventTitle);
+  const title = document.createElement('div');
+  title.style.cssText = `font-size: 20px; font-weight: 700; margin-bottom: 20px; font-family: ${CHRONICLE.FONT}; text-transform: uppercase;`;
+  title.textContent = `Event ${eventId}: ${CHRONICLE.events[eventId - 1].title}`;
+  gameScreen.appendChild(title);
 
-  const message = document.createElement('div');
-  message.style.cssText = `font-size: 16px; margin-bottom: 30px; text-align: center; max-width: 600px;`;
-  message.textContent = `${CHRONICLE.events[eventId - 1].title}\n\nGame mechanics coming soon...\n🎵 Music is still playing!`;
-  gameScreen.appendChild(message);
+  const content = document.createElement('div');
+  content.id = `game-content-${eventId}`;
+  content.style.cssText = `flex: 1; display: flex; align-items: center; justify-content: center; width: 100%;`;
+  gameScreen.appendChild(content);
 
-  const closeBtn = document.createElement('button');
-  closeBtn.style.cssText = `padding: 15px 40px; background: #fff; color: #000; border: 4px solid #fff; font-family: ${CHRONICLE.FONT}; font-size: 16px; font-weight: 700; cursor: pointer; border-radius: 4px; box-shadow: 4px 4px 0 rgba(0,0,0,0.4); transition: all 0.2s;`;
-  closeBtn.textContent = 'Return';
-  closeBtn.onmouseover = () => { closeBtn.style.transform = 'translate(-2px, -2px)'; closeBtn.style.boxShadow = '6px 6px 0 rgba(0,0,0,0.4)'; };
-  closeBtn.onmouseout = () => { closeBtn.style.transform = 'none'; closeBtn.style.boxShadow = '4px 4px 0 rgba(0,0,0,0.4)'; };
-  closeBtn.onclick = () => {
-    gameScreen.remove();
-    const dash = document.getElementById('chronicle-dashboard');
-    if (dash) dash.style.display = 'flex';
+  const returnBtn = document.createElement('button');
+  returnBtn.style.cssText = `padding: 12px 30px; background: #4ade80; color: #000; border: 3px solid #fff; font-family: ${CHRONICLE.FONT}; font-weight: 700; font-size: 12px; cursor: pointer; border-radius: 4px; margin-bottom: 20px;`;
+  returnBtn.textContent = '← Return';
+  returnBtn.onclick = () => {
+    CHRONICLE.currentGame = null;
+    gameArea.innerHTML = '';
+    const mapImg = document.createElement('img');
+    mapImg.src = `${CHRONICLE.ASSET_PATH}IRL Human World Map 1452.png`;
+    mapImg.style.cssText = `width: 100%; height: 100%; object-fit: cover; opacity: 0.35;`;
+    gameArea.appendChild(mapImg);
   };
-  gameScreen.appendChild(closeBtn);
+  gameScreen.appendChild(returnBtn);
 
-  document.body.appendChild(gameScreen);
+  gameArea.appendChild(gameScreen);
+  CHRONICLE.currentGame = eventId;
+
+  // Load game
+  loadGame(eventId, content);
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// GAME IMPLEMENTATIONS - ALL 13 EVENTS
-// ════════════════════════════════════════════════════════════════════════════
-
-function launchEvent(eventId) {
-  playSound('SoundPlay.mp3', 0.6);
-  const dash = document.getElementById('chronicle-dashboard');
-  if (dash) dash.style.display = 'none';
-
-  // Route to correct game
+function loadGame(eventId, container) {
   const games = {
-    1: launchEvent1_BreakingTreaty,
-    2: launchEvent2_RaidSilverStream,
-    3: launchEvent3_BurningElowen,
-    4: launchEvent4_TimberRoads,
-    5: launchEvent5_DefenseVastilly,
-    6: launchEvent6_FenwckCanal,
-    7: launchEvent7_Ironstall,
-    8: launchEvent8_GlassportBlockade,
-    9: launchEvent9_PortCrestSiege,
-    10: launchEvent10_Bombardment,
-    11: launchEvent11_HarbourWrecks,
-    12: launchEvent12_PushOakhaven,
-    13: launchEvent13_FallElowen
+    1: gameEvent1,
+    2: gameEvent2,
+    3: () => simpleGame(container, eventId, 'Burning Elowen', 10),
+    4: () => simpleGame(container, eventId, 'Timber Roads', 15),
+    5: () => simpleGame(container, eventId, 'Defense Vastilly', 20),
+    6: () => simpleGame(container, eventId, 'Fenwick Canal', 12),
+    7: () => simpleGame(container, eventId, 'Ironstall', 8),
+    8: () => simpleGame(container, eventId, 'Glassport Blockade', 18),
+    9: () => simpleGame(container, eventId, 'Port-Crest Siege', 25),
+    10: () => simpleGame(container, eventId, '14-Day Bombardment', 30),
+    11: () => simpleGame(container, eventId, 'Harbour Wrecks', 16),
+    12: () => simpleGame(container, eventId, 'Push Oakhaven', 22),
+    13: () => simpleGame(container, eventId, 'Fall of Elowen', 35)
   };
 
   if (games[eventId]) {
-    games[eventId]();
+    games[eventId](container);
   }
 }
 
-// ════ EVENT 1: BREAKING TREATY - DIALOGUE RPG
-function launchEvent1_BreakingTreaty() {
-  const screen = createGameScreen('Breaking Treaty', 'Dialogue RPG');
+function gameEvent1(container) {
   let dialogueIndex = 0;
   const dialogues = [
     { char: 'Cardinal Wealthplace', text: 'The Treaty of the Silver Stream is shattered...', img: 'Wealthplace.png' },
@@ -357,29 +385,26 @@ function launchEvent1_BreakingTreaty() {
   ];
 
   function render() {
-    screen.innerHTML = '';
+    container.innerHTML = '';
 
     if (dialogueIndex >= dialogues.length) {
-      completeGame(1);
+      container.innerHTML = '<div style="color: #fff; font-family: ' + CHRONICLE.FONT + '; text-align: center;"><div style="font-size: 32px; font-weight: 900; margin-bottom: 10px;">✓ Event Complete!</div></div>';
+      CHRONICLE.events[0].completed = true;
+      playSound('SoundWin.mp3', 0.6);
       return;
     }
 
     const d = dialogues[dialogueIndex];
-    const bg = document.createElement('img');
-    bg.src = `${CHRONICLE.ASSET_PATH}CouncilChamber.png`;
-    bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.2;`;
-    screen.appendChild(bg);
-
-    const dialogueBox = document.createElement('div');
-    dialogueBox.style.cssText = `position: absolute; bottom: 0; left: 0; right: 0; background: #000; border-top: 3px solid #fff; padding: 20px; display: flex; gap: 15px; z-index: 10;`;
+    const box = document.createElement('div');
+    box.style.cssText = `display: flex; gap: 15px; align-items: center; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 4px; border: 2px solid #fff; width: 80%; max-width: 600px;`;
 
     const portrait = document.createElement('img');
     portrait.src = `${CHRONICLE.ASSET_PATH}${d.img}`;
-    portrait.style.cssText = `height: 150px; width: auto; border: 2px solid #fff;`;
-    dialogueBox.appendChild(portrait);
+    portrait.style.cssText = `height: 120px; width: auto; border: 2px solid #fff;`;
+    box.appendChild(portrait);
 
     const textBox = document.createElement('div');
-    textBox.style.cssText = `flex: 1; color: #fff;`;
+    textBox.style.cssText = `color: #fff; flex: 1;`;
     const charName = document.createElement('div');
     charName.style.cssText = `font-weight: 700; color: #FFD700; margin-bottom: 8px; font-family: ${CHRONICLE.FONT}; text-transform: uppercase;`;
     charName.textContent = d.char;
@@ -390,223 +415,74 @@ function launchEvent1_BreakingTreaty() {
     dialogue.textContent = d.text;
     textBox.appendChild(dialogue);
 
-    dialogueBox.appendChild(textBox);
-    screen.appendChild(dialogueBox);
-
     const continueBtn = document.createElement('button');
-    continueBtn.style.cssText = `position: absolute; bottom: 20px; right: 20px; padding: 10px 20px; background: #fff; color: #000; border: 2px solid #000; border-radius: 2px; font-family: ${CHRONICLE.FONT}; font-weight: 700; cursor: pointer; z-index: 20;`;
+    continueBtn.style.cssText = `margin-top: 10px; padding: 8px 16px; background: #FFD700; color: #000; border: 2px solid #000; border-radius: 2px; font-family: ${CHRONICLE.FONT}; font-weight: 700; cursor: pointer; font-size: 11px;`;
     continueBtn.textContent = 'Continue →';
     continueBtn.onclick = () => { dialogueIndex++; render(); };
-    screen.appendChild(continueBtn);
+    textBox.appendChild(continueBtn);
+
+    box.appendChild(textBox);
+    container.appendChild(box);
   }
 
   render();
 }
 
-// ════ EVENT 2: RAID SILVER STREAM - CATCHING GAME
-function launchEvent2_RaidSilverStream() {
-  const screen = createGameScreen('Raid Silver Stream', 'Catching Game');
-  const game = { caught: 0, needed: 5, time: 30, active: true, items: [] };
+function gameEvent2(container) {
+  let caught = 0;
+  const needed = 5;
 
-  const canvas = document.createElement('canvas');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight - 100;
-  screen.appendChild(canvas);
+  container.innerHTML = `<div style="color: #fff; text-align: center; font-family: ${CHRONICLE.FONT};"><div style="font-size: 14px; margin-bottom: 15px;">Click to catch falling items!</div><div style="font-size: 12px; margin-bottom: 20px;">Caught: <span id="caught-count">0</span>/${needed}</div></div>`;
 
-  const ctx = canvas.getContext('2d');
-  let player = { x: canvas.width / 2, y: canvas.height - 80, w: 60, h: 60 };
+  const btn = document.createElement('button');
+  btn.style.cssText = `width: 100px; height: 100px; background: #FFD700; border: 3px solid #fff; border-radius: 50%; font-size: 32px; cursor: pointer; transition: all 0.1s;`;
+  btn.textContent = '💰';
 
-  // Spawn items
-  function spawnItem() {
-    game.items.push({
-      x: Math.random() * (canvas.width - 40),
-      y: -40,
-      size: 30
-    });
-  }
-
-  // Keyboard control
-  const keys = {};
-  document.addEventListener('keydown', (e) => { keys[e.key] = true; });
-  document.addEventListener('keyup', (e) => { keys[e.key] = false; });
-
-  function update() {
-    if (keys['ArrowLeft']) player.x -= 8;
-    if (keys['ArrowRight']) player.x += 8;
-    player.x = Math.max(0, Math.min(canvas.width - player.w, player.x));
-
-    game.items.forEach((item, idx) => {
-      item.y += 6;
-      if (item.y > canvas.height) {
-        game.items.splice(idx, 1);
-      } else if (item.y + item.size > player.y && item.y < player.y + player.h &&
-                 item.x + item.size > player.x && item.x < player.x + player.w) {
-        game.caught++;
-        game.items.splice(idx, 1);
-        playSound('SoundCoin.mp3', 0.6);
-      }
-    });
-  }
-
-  function draw() {
-    ctx.fillStyle = '#1a5f7a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw player
-    ctx.fillStyle = '#4ade80';
-    ctx.fillRect(player.x, player.y, player.w, player.h);
-    ctx.fillStyle = '#fff';
-    ctx.font = '20px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('🛡', player.x + player.w / 2, player.y + player.h / 2);
-
-    // Draw items
-    ctx.fillStyle = '#FFD700';
-    game.items.forEach(item => {
-      ctx.fillRect(item.x, item.y, item.size, item.size);
-      ctx.fillStyle = '#000';
-      ctx.font = '16px Arial';
-      ctx.fillText('💰', item.x + item.size / 2, item.y + item.size / 2);
-      ctx.fillStyle = '#FFD700';
-    });
-
-    // Draw UI
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 16px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText(`Caught: ${game.caught}/${game.needed}`, 20, 30);
-    ctx.fillText(`Time: ${game.time}s`, 20, 60);
-  }
-
-  function gameLoop() {
-    if (!game.active) return;
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-  }
-
-  gameLoop();
-
-  // Spawn items every 500ms
-  const spawnInterval = setInterval(() => {
-    if (game.active) spawnItem();
-  }, 500);
-
-  // Timer
-  const timerInterval = setInterval(() => {
-    game.time--;
-
-    if (game.time <= 0 || game.caught >= game.needed) {
-      game.active = false;
-      clearInterval(spawnInterval);
-      clearInterval(timerInterval);
-      document.removeEventListener('keydown', null);
-      document.removeEventListener('keyup', null);
-
-      if (game.caught >= game.needed) {
-        playSound('SoundWin.mp3', 0.6);
-        completeGame(2);
-      } else {
-        playSound('SoundLose.mp3', 0.6);
-        closeGame();
-      }
-    }
-  }, 1000);
-}
-
-// ════ EVENTS 3-13: PLACEHOLDER CLICKER GAMES (for now)
-function launchEvent3_BurningElowen() { simpleClickerGame(3, 'Burning Elowen', 'Click 10 times to destroy depots', 10); }
-function launchEvent4_TimberRoads() { simpleClickerGame(4, 'Timber Roads', 'Click 15 times to win the ambush', 15); }
-function launchEvent5_DefenseVastilly() { simpleClickerGame(5, 'Defense Vastilly', 'Click 20 times to defend the walls', 20); }
-function launchEvent6_FenwckCanal() { simpleClickerGame(6, 'Fenwick Canal', 'Click 12 times to flood the area', 12); }
-function launchEvent7_Ironstall() { simpleClickerGame(7, 'Ironstall', 'Click 8 times to negotiate contracts', 8); }
-function launchEvent8_GlassportBlockade() { simpleClickerGame(8, 'Glassport Blockade', 'Click 18 times to blockade ships', 18); }
-function launchEvent9_PortCrestSiege() { simpleClickerGame(9, 'Port-Crest Siege', 'Click 25 times for the mega siege', 25); }
-function launchEvent10_Bombardment() { simpleClickerGame(10, '14-Day Bombardment', 'Click 30 times to survive bombardment', 30); }
-function launchEvent11_HarbourWrecks() { simpleClickerGame(11, 'Harbour Wrecks', 'Click 16 times to salvage wrecks', 16); }
-function launchEvent12_PushOakhaven() { simpleClickerGame(12, 'Push Oakhaven', 'Click 22 times to push forward', 22); }
-function launchEvent13_FallElowen() { simpleClickerGame(13, 'Fall of Elowen', 'Click 35 times - FINAL BATTLE', 35); }
-
-function simpleClickerGame(eventId, title, desc, clicks) {
-  const screen = createGameScreen(title, 'Clicker Game');
-  let clicked = 0;
-
-  const box = document.createElement('div');
-  box.style.cssText = `position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;`;
-
-  const descEl = document.createElement('div');
-  descEl.style.cssText = `color: #fff; font-size: 16px; margin-bottom: 30px; font-family: ${CHRONICLE.FONT};`;
-  descEl.textContent = desc;
-  box.appendChild(descEl);
-
-  const clickBtn = document.createElement('button');
-  clickBtn.style.cssText = `width: 150px; height: 150px; background: #FFD700; border: 4px solid #fff; border-radius: 50%; font-size: 40px; cursor: pointer; transition: all 0.1s; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);`;
-  clickBtn.textContent = '⚔';
-
-  clickBtn.onclick = () => {
-    clicked++;
-    clickBtn.style.transform = 'scale(0.95)';
+  btn.onclick = () => {
+    caught++;
+    btn.style.transform = 'scale(0.9)';
     playSound('SoundCoin.mp3', 0.4);
-    setTimeout(() => { clickBtn.style.transform = 'scale(1)'; }, 100);
+    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 100);
 
-    if (clicked >= clicks) {
-      clickBtn.disabled = true;
+    document.getElementById('caught-count').textContent = caught;
+
+    if (caught >= needed) {
+      btn.disabled = true;
+      container.innerHTML = '<div style="color: #fff; font-family: ' + CHRONICLE.FONT + '; text-align: center;"><div style="font-size: 32px; font-weight: 900; margin-bottom: 10px;">✓ Raid Successful!</div></div>';
+      CHRONICLE.events[1].completed = true;
       playSound('SoundWin.mp3', 0.6);
-      completeGame(eventId);
     }
   };
-  box.appendChild(clickBtn);
+
+  container.appendChild(btn);
+}
+
+function simpleGame(container, eventId, title, clicks) {
+  let clicked = 0;
+  const btn = document.createElement('button');
+  btn.style.cssText = `width: 120px; height: 120px; background: #FFD700; border: 4px solid #fff; border-radius: 50%; font-size: 36px; cursor: pointer; transition: all 0.1s; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);`;
+  btn.textContent = '⚔';
 
   const progress = document.createElement('div');
-  progress.style.cssText = `color: #fff; font-size: 14px; margin-top: 30px; font-family: ${CHRONICLE.FONT};`;
+  progress.style.cssText = `color: #fff; font-family: ${CHRONICLE.FONT}; font-size: 14px; margin-top: 15px;`;
   progress.textContent = `${clicked}/${clicks}`;
-  box.appendChild(progress);
 
-  let prevClicked = 0;
-  setInterval(() => {
-    if (clicked !== prevClicked) {
-      progress.textContent = `${clicked}/${clicks}`;
-      prevClicked = clicked;
+  btn.onclick = () => {
+    clicked++;
+    btn.style.transform = 'scale(0.9)';
+    playSound('SoundCoin.mp3', 0.4);
+    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 100);
+
+    progress.textContent = `${clicked}/${clicks}`;
+
+    if (clicked >= clicks) {
+      btn.disabled = true;
+      container.innerHTML = '<div style="color: #fff; font-family: ' + CHRONICLE.FONT + '; text-align: center;"><div style="font-size: 32px; font-weight: 900; margin-bottom: 10px;">✓ Complete!</div></div>';
+      CHRONICLE.events[eventId - 1].completed = true;
+      playSound('SoundWin.mp3', 0.6);
     }
-  }, 100);
+  };
 
-  screen.appendChild(box);
-}
-
-// ════ HELPERS
-function createGameScreen(title, type) {
-  const screen = document.createElement('div');
-  screen.style.cssText = `position: fixed; inset: 0; background: linear-gradient(135deg, #1a3a52 0%, #2c5282 100%); z-index: 9998; display: flex; flex-direction: column; font-family: ${CHRONICLE.FONT}; color: #fff;`;
-
-  const header = document.createElement('div');
-  header.style.cssText = `padding: 20px; text-align: center; border-bottom: 3px solid #fff;`;
-  header.innerHTML = `<div style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">${title}</div><div style="font-size: 12px; opacity: 0.8;">${type}</div>`;
-  screen.appendChild(header);
-
-  screen.id = 'game-screen';
-  document.body.appendChild(screen);
-  return screen;
-}
-
-function completeGame(eventId) {
-  setTimeout(() => {
-    CHRONICLE.events[eventId - 1].completed = true;
-    playSound('SoundWin.mp3', 0.8);
-    const screen = document.getElementById('game-screen');
-    if (screen) {
-      screen.innerHTML = '';
-      const msg = document.createElement('div');
-      msg.style.cssText = `position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #fff;`;
-      msg.innerHTML = `<div style="font-size: 40px; font-weight: 900; margin-bottom: 20px; font-family: ${CHRONICLE.FONT};">✓ VICTORY!</div>
-      <button style="padding: 15px 40px; background: #4ade80; color: #000; border: 3px solid #fff; font-family: ${CHRONICLE.FONT}; font-weight: 700; font-size: 14px; cursor: pointer; border-radius: 4px;" onclick="closeGame()">Return to Dashboard</button>`;
-      screen.appendChild(msg);
-    }
-  }, 500);
-}
-
-function closeGame() {
-  const screen = document.getElementById('game-screen');
-  if (screen) screen.remove();
-  const dash = document.getElementById('chronicle-dashboard');
-  if (dash) dash.style.display = 'flex';
+  container.appendChild(btn);
+  container.appendChild(progress);
 }

@@ -45,6 +45,8 @@ app.use((req, res, next) => {
   res.set('X-Frame-Options', 'SAMEORIGIN');
   res.set('X-XSS-Protection', '1; mode=block');
   res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.set('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
+  res.set('X-DNS-Prefetch-Control', 'on');
   next();
 });
 
@@ -543,21 +545,26 @@ io.on('connection', (socket) => {
 
   // ── Announcement Events (real-time broadcast) ──
   socket.on('announcement:broadcast', (data) => {
+    if (!username) return;
+    if (!rateLimit(socket.id, 'announcement:broadcast', 5000)) return;
+    if (!data?.text || typeof data.text !== 'string') return;
     io.emit('announcement:new', {
-      text: data.text,
+      text: sanitizeString(data.text, 500),
       from: username,
     });
   });
   socket.on('announcement:clear', () => {
+    if (!username) return;
     io.emit('announcement:cleared', { from: username });
   });
 
   // ── Role / Bastion Update Events (real-time broadcast) ──
   socket.on('bastion:update', (data) => {
-    if (!data.bastionId) return;
+    if (!username || !data?.bastionId) return;
+    if (!rateLimit(socket.id, 'bastion:update', 500)) return;
     io.emit('bastion:updated', {
-      bastionId: data.bastionId,
-      field: data.field, // 'roles', 'memberRoles', 'channels', 'name', etc.
+      bastionId: sanitizeString(data.bastionId, 100),
+      field: sanitizeString(data.field || '', 50),
       username,
     });
   });
@@ -565,10 +572,12 @@ io.on('connection', (socket) => {
   // ── Profile Update (pfp, displayName, etc.) ──
   socket.on('profile:update', (data) => {
     if (!username) return;
+    if (!rateLimit(socket.id, 'profile:update', 1000)) return;
+    if (!data || typeof data !== 'object') return;
     io.emit('profile:updated', {
       username,
       pfp: data.pfp || null,
-      displayName: data.displayName || null,
+      displayName: data.displayName ? sanitizeString(data.displayName, 50) : null,
       displayFont: data.displayFont || null,
       displayEffect: data.displayEffect || null,
       displayColor: data.displayColor || null,
@@ -696,6 +705,11 @@ function gracefulShutdown(signal) {
 }
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// ── Periodic stats logging ────────────────────────
+setInterval(() => {
+  console.log(`[Fortized] Stats: ${onlineUsers.size} online, ${io.sockets.sockets.size} sockets, ${typingState.size} typing rooms, ${roomMembers.size} active rooms`);
+}, 300000); // Every 5 minutes
 
 // ── Start ──────────────────────────────────────────
 server.listen(PORT, () => {

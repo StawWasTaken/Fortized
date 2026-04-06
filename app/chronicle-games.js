@@ -181,15 +181,15 @@ async function showIntro() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// DIALOGUE GAME
+// DIALOGUE GAME - ENHANCED WITH ANIMATIONS & CHARACTER PERSONALITY
 // ════════════════════════════════════════════════════════════════════════════
 
 async function gameDialogue(eventId, title, npcImage, dialogues, reward) {
   const screen = document.createElement('div');
   screen.style.cssText = `
-    position: fixed; inset: 0; background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4);
     z-index: 9999; display: flex; align-items: center; justify-content: center;
-    font-family: ${FONT}; padding: 20px;
+    font-family: ${FONT}; padding: 20px; backdrop-filter: blur(3px);
   `;
 
   let idx = 0;
@@ -198,65 +198,207 @@ async function gameDialogue(eventId, title, npcImage, dialogues, reward) {
     screen.innerHTML = '';
 
     if (idx >= dialogues.length) {
-      screen.remove();
-      bgMusicStop();
-      sound('SoundWin.mp3');
-      markEventComplete(eventId, reward);
-      toast('✓ Dialogue complete!', 'success');
+      const endScreen = document.createElement('div');
+      endScreen.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
+        z-index: 10001; display: flex; align-items: center; justify-content: center;
+        animation: fadeIn 0.5s ease-out;
+      `;
+
+      const endCard = document.createElement('div');
+      endCard.style.cssText = `
+        background: white; border: 3px solid #FFD700;
+        border-radius: 16px; padding: 50px; max-width: 500px;
+        width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        text-align: center; animation: slideUp 0.6s ease-out;
+      `;
+
+      const endTitle = document.createElement('h2');
+      endTitle.style.cssText = `
+        margin: 0 0 20px 0; font-size: 32px; color: #000;
+        text-transform: uppercase; letter-spacing: 2px;
+      `;
+      endTitle.textContent = 'COUNSEL ACCEPTED';
+      endCard.appendChild(endTitle);
+
+      const endMsg = document.createElement('p');
+      endMsg.style.cssText = `
+        margin: 0 0 30px 0; color: #333; font-size: 16px;
+        line-height: 1.8;
+      `;
+      endMsg.textContent = 'Your wisdom guides the realm forward.';
+      endCard.appendChild(endMsg);
+
+      const rewardDisplay = document.createElement('div');
+      rewardDisplay.style.cssText = `
+        background: #FFF8DC; border: 2px solid #FFD700;
+        border-radius: 8px; padding: 15px; margin-bottom: 20px;
+        font-size: 18px; font-weight: 700; color: #FFD700;
+      `;
+      rewardDisplay.textContent = `+${reward} FortCoins`;
+      endCard.appendChild(rewardDisplay);
+
+      endScreen.appendChild(endCard);
+      document.body.appendChild(endScreen);
+
+      setTimeout(() => {
+        screen.remove();
+        endScreen.remove();
+        bgMusicStop();
+        sound('SoundWin.mp3');
+        markEventComplete(eventId, reward);
+        toast('✓ Dialogue complete!', 'success');
+      }, 2000);
       return;
     }
 
     const card = document.createElement('div');
     card.style.cssText = `
-      background: white; border: 2px solid #000;
-      border-radius: 12px; padding: 30px; max-width: 700px;
-      width: 90%; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-      display: flex; gap: 20px;
+      background: white; border: 3px solid #FFD700;
+      border-radius: 16px; padding: 30px; max-width: 800px;
+      width: 95%; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex; gap: 25px; animation: slideUp 0.5s ease-out;
     `;
 
-    // NPC Image
+    // Character container
+    const charContainer = document.createElement('div');
+    charContainer.style.cssText = `
+      flex-shrink: 0; position: relative; width: 220px;
+    `;
+
+    // Character portrait background
+    const portraitBg = document.createElement('div');
+    portraitBg.style.cssText = `
+      width: 220px; height: 220px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      border-radius: 12px; padding: 3px; box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+    `;
+
     const npc = document.createElement('img');
     npc.src = ASSET + npcImage;
-    npc.style.cssText = `height: 200px; width: auto; flex-shrink: 0;`;
-    card.appendChild(npc);
+    npc.style.cssText = `
+      height: 100%; width: 100%; object-fit: cover; border-radius: 10px;
+      display: block; background: #f5f5f5;
+    `;
+    portraitBg.appendChild(npc);
+    charContainer.appendChild(portraitBg);
+
+    // Character name badge
+    const nameBadge = document.createElement('div');
+    nameBadge.style.cssText = `
+      background: #000; color: #FFD700; padding: 8px 12px;
+      border-radius: 6px; text-align: center; margin-top: 12px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px;
+    `;
+    nameBadge.textContent = 'Cardinal Wealthplace';
+    charContainer.appendChild(nameBadge);
+
+    card.appendChild(charContainer);
 
     // Text content
     const content = document.createElement('div');
-    content.style.cssText = `flex: 1; display: flex; flex-direction: column; justify-content: space-between;`;
-
-    const speaker = document.createElement('h3');
-    speaker.style.cssText = `
-      margin: 0 0 10px 0; color: #000; font-size: 14px;
-      text-transform: uppercase; letter-spacing: 1px;
+    content.style.cssText = `
+      flex: 1; display: flex; flex-direction: column; justify-content: space-between;
     `;
-    speaker.textContent = 'Cardinal Wealthplace';
-    content.appendChild(speaker);
 
+    // Progress indicator
+    const progress = document.createElement('div');
+    progress.style.cssText = `
+      display: flex; gap: 6px; margin-bottom: 15px;
+    `;
+    for (let i = 0; i < dialogues.length; i++) {
+      const dot = document.createElement('div');
+      dot.style.cssText = `
+        width: 8px; height: 8px; border-radius: 50%;
+        background: ${i <= idx ? '#000' : '#ddd'};
+        transition: all 0.3s;
+      `;
+      progress.appendChild(dot);
+    }
+    content.appendChild(progress);
+
+    // Dialogue text with animation
     const text = document.createElement('p');
     text.style.cssText = `
-      margin: 0 0 20px 0; color: #333; font-size: 15px;
-      line-height: 1.6;
+      margin: 0 0 25px 0; color: #333; font-size: 16px;
+      line-height: 1.8; min-height: 60px; animation: fadeIn 0.6s ease-out;
     `;
     text.textContent = dialogues[idx];
     content.appendChild(text);
 
+    // Button container
+    const btnContainer = document.createElement('div');
+    btnContainer.style.cssText = `
+      display: flex; gap: 10px;
+    `;
+
     const btn = document.createElement('button');
     btn.style.cssText = `
-      background: #000; color: white; border: none;
-      padding: 10px 20px; border-radius: 6px; font-family: ${FONT};
-      font-weight: 700; cursor: pointer; align-self: flex-start;
-      text-transform: uppercase; font-size: 12px;
-      transition: all 0.2s;
+      background: #000; color: #FFD700; border: 2px solid #FFD700;
+      padding: 12px 28px; border-radius: 8px; font-family: ${FONT};
+      font-weight: 700; cursor: pointer; text-transform: uppercase;
+      font-size: 12px; letter-spacing: 1px; transition: all 0.3s;
+      flex: 1;
     `;
-    btn.textContent = idx === dialogues.length - 1 ? 'FINISH' : 'NEXT';
-    btn.onmouseover = () => btn.style.opacity = '0.9';
-    btn.onmouseout = () => btn.style.opacity = '1';
+    btn.textContent = idx === dialogues.length - 1 ? '✓ FINISH' : '→ CONTINUE';
+    btn.onmouseover = () => {
+      btn.style.background = '#FFD700';
+      btn.style.color = '#000';
+      btn.style.transform = 'scale(1.05)';
+    };
+    btn.onmouseout = () => {
+      btn.style.background = '#000';
+      btn.style.color = '#FFD700';
+      btn.style.transform = 'scale(1)';
+    };
     btn.onclick = () => {
       sound('SoundUiSelect.mp3');
       idx++;
       render();
     };
-    content.appendChild(btn);
+    btnContainer.appendChild(btn);
+
+    // Skip button
+    if (idx < dialogues.length - 1) {
+      const skipBtn = document.createElement('button');
+      skipBtn.style.cssText = `
+        background: transparent; color: #666; border: 2px solid #ddd;
+        padding: 12px 20px; border-radius: 8px; font-family: ${FONT};
+        font-weight: 700; cursor: pointer; text-transform: uppercase;
+        font-size: 11px; transition: all 0.3s;
+      `;
+      skipBtn.textContent = 'SKIP';
+      skipBtn.onmouseover = () => {
+        skipBtn.style.borderColor = '#000';
+        skipBtn.style.color = '#000';
+      };
+      skipBtn.onmouseout = () => {
+        skipBtn.style.borderColor = '#ddd';
+        skipBtn.style.color = '#666';
+      };
+      skipBtn.onclick = () => {
+        sound('SoundUiSelect.mp3');
+        idx = dialogues.length;
+        render();
+      };
+      btnContainer.appendChild(skipBtn);
+    }
+
+    content.appendChild(btnContainer);
+
+    // Add style animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
 
     card.appendChild(content);
     screen.appendChild(card);

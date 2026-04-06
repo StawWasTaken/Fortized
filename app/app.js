@@ -4634,8 +4634,8 @@ function selectChannel(idx) {
         const div = document.createElement('div');
         div.id = 'vc-ch-extra';
         div.style.cssText = 'display:flex;gap:6px;padding:4px 8px;';
-        div.innerHTML = '<button onclick="startScreenShare()" title="Share Screen" style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);color:#60a5fa;padding:4px 10px;border-radius:8px;font-size:11.5px;cursor:pointer;">🖥 Screen</button>'
-          + '<button onclick="startWatchTogether()" title="Watch Together" style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);color:#a78bfa;padding:4px 10px;border-radius:8px;font-size:11.5px;cursor:pointer;">▶ Watch</button>';
+        div.innerHTML = '<button onclick="startScreenShare()" title="Share Screen" style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);color:var(--blue);padding:4px 10px;border-radius:8px;font-size:11.5px;cursor:pointer;">🖥 Screen</button>'
+          + '<button onclick="startWatchTogether()" title="Watch Together" style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);color:var(--purple);padding:4px 10px;border-radius:8px;font-size:11.5px;cursor:pointer;">▶ Watch</button>';
         vcBar.appendChild(div);
       }
     }
@@ -6157,7 +6157,7 @@ function showBotProfilePreview(botId, el) {
     </div>
     <div style="padding:12px 16px;">
       <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:10px;">${escapeHTML(bot.bio||'No description')}</div>
-      ${(bot.commands||[]).length?`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Commands</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${(bot.commands||[]).slice(0,6).map(c=>`<span style="font-family:monospace;font-size:10px;padding:2px 6px;border-radius:5px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.15);color:#60a5fa;">${escapeHTML(typeof c==='string'?c:'!'+c.name)}</span>`).join('')}</div>`:''}
+      ${(bot.commands||[]).length?`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;">Commands</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${(bot.commands||[]).slice(0,6).map(c=>`<span style="font-family:monospace;font-size:10px;padding:2px 6px;border-radius:5px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.15);color:var(--blue);">${escapeHTML(typeof c==='string'?c:'!'+c.name)}</span>`).join('')}</div>`:''}
     </div>`;
   document.body.appendChild(panel);
   setTimeout(() => document.addEventListener('mousedown', function _close(ev) {
@@ -6210,8 +6210,8 @@ function _renderVoicePanel(ch, idx) {
         <button class="vc-btn ${isMuted?'active':''}" onclick="toggleVoiceMute()" title="${isMuted?'Unmute':'Mute'}" style="width:52px;height:52px;border-radius:50%;background:${isMuted?'rgba(248,113,113,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isMuted?'rgba(248,113,113,.35)':'rgba(255,255,255,.1)'};color:${isMuted?'#f87171':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isMuted?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'}</button>
         <button class="vc-btn ${isDeafened?'active':''}" onclick="toggleVoiceDeafen()" title="${isDeafened?'Undeafen':'Deafen'}" style="width:52px;height:52px;border-radius:50%;background:${isDeafened?'rgba(245,158,11,.18)':'rgba(255,255,255,.06)'};border:1.5px solid ${isDeafened?'rgba(245,158,11,.35)':'rgba(255,255,255,.1)'};color:${isDeafened?'#f59e0b':'#fff'};cursor:pointer;font-size:20px;transition:all .2s;display:flex;align-items:center;justify-content:center;">${isDeafened?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3z"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>'}</button>
         <div style="width:1px;height:32px;background:rgba(255,255,255,.08);margin:0 4px;"></div>
-        <button onclick="startScreenShare()" style="width:52px;height:52px;border-radius:50%;background:rgba(96,165,250,.08);border:1.5px solid rgba(96,165,250,.2);color:#60a5fa;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)';this.style.background='rgba(96,165,250,.15)'" onmouseleave="this.style.transform='scale(1)';this.style.background='rgba(96,165,250,.08)'" title="Share Screen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>
-        <button onclick="startWatchTogether()" style="width:52px;height:52px;border-radius:50%;background:rgba(167,139,250,.08);border:1.5px solid rgba(167,139,250,.2);color:#a78bfa;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)';this.style.background='rgba(167,139,250,.15)'" onmouseleave="this.style.transform='scale(1)';this.style.background='rgba(167,139,250,.08)'" title="Watch Together"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg></button>
+        <button onclick="startScreenShare()" style="width:52px;height:52px;border-radius:50%;background:rgba(96,165,250,.08);border:1.5px solid rgba(96,165,250,.2);color:var(--blue);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)';this.style.background='rgba(96,165,250,.15)'" onmouseleave="this.style.transform='scale(1)';this.style.background='rgba(96,165,250,.08)'" title="Share Screen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>
+        <button onclick="startWatchTogether()" style="width:52px;height:52px;border-radius:50%;background:rgba(167,139,250,.08);border:1.5px solid rgba(167,139,250,.2);color:var(--purple);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.08)';this.style.background='rgba(167,139,250,.15)'" onmouseleave="this.style.transform='scale(1)';this.style.background='rgba(167,139,250,.08)'" title="Watch Together"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg></button>
         <div style="width:1px;height:32px;background:rgba(255,255,255,.08);margin:0 4px;"></div>
         <button class="vc-btn" onclick="disconnectVoice()" title="Leave Call" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,rgba(239,68,68,.25),rgba(220,38,38,.2));border:2px solid rgba(239,68,68,.4);color:#ef4444;cursor:pointer;font-size:22px;transition:all .2s;display:flex;align-items:center;justify-content:center;" onmouseenter="this.style.transform='scale(1.1)';this.style.background='rgba(239,68,68,.35)'" onmouseleave="this.style.transform='scale(1)';this.style.background='linear-gradient(135deg,rgba(239,68,68,.25),rgba(220,38,38,.2))'"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1-.22 1.12.43 2.33.66 3.6.66.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.5c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.1.32.01.7-.22.98L6.6 10.8z" transform="rotate(135 12 12)"/></svg></button>
       </div>
@@ -6572,7 +6572,7 @@ function _showBanScreen(ban) {
         </svg>
       </div>
       <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px;">Account Banned</div>
-      <div style="font-size:14px;color:#8b95a8;margin-bottom:28px;line-height:1.7;">Our content monitors have determined that your behavior at Fortized has been in violation of our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Terms of Use</a>.</div>
+      <div style="font-size:14px;color:#8b95a8;margin-bottom:28px;line-height:1.7;">Our content monitors have determined that your behavior at Fortized has been in violation of our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a>.</div>
       <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:20px 24px;text-align:left;margin-bottom:24px;">
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="color:#5a6478;font-size:13px;">Reviewed</span>
@@ -6592,7 +6592,7 @@ function _showBanScreen(ban) {
           <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(bannedBy)}</span>
         </div>
       </div>
-      <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">If you wish to appeal, please visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Fortized Support</a></div>
+      <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">If you wish to appeal, please visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Fortized Support</a></div>
       <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f87171;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;">Log Out</button>
     </div>
   </div>`;
@@ -6623,7 +6623,7 @@ function _showSuspendScreen(data) {
         </svg>
       </div>
       <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px;">Account Suspended</div>
-      <div style="font-size:14px;color:#8b95a8;margin-bottom:28px;line-height:1.7;">Our content monitors have determined that your behavior at Fortized has been in violation of our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Terms of Use</a>. As a result, your account has been temporarily suspended.</div>
+      <div style="font-size:14px;color:#8b95a8;margin-bottom:28px;line-height:1.7;">Our content monitors have determined that your behavior at Fortized has been in violation of our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a>. As a result, your account has been temporarily suspended.</div>
       <div style="background:#13161d;border:1px solid #252b3a;border-radius:14px;padding:20px 24px;text-align:left;margin-bottom:24px;">
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="color:#5a6478;font-size:13px;">Reviewed</span>
@@ -6647,7 +6647,7 @@ function _showSuspendScreen(data) {
           <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(moderator)}</span>
         </div>
       </div>
-      <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">Your account will be reactivated on <span style="color:#fff93e;font-weight:600;">${durationText}</span>. To appeal, visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Fortized Support</a></div>
+      <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">Your account will be reactivated on <span style="color:var(--accent);font-weight:600;">${durationText}</span>. To appeal, visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Fortized Support</a></div>
       <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f59e0b;border:none;border-radius:10px;color:#0f1119;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;">Log Out</button>
     </div>
   </div>`;
@@ -6685,7 +6685,7 @@ function _showWarningOverlay(reason, issuedBy, contentData) {
         <span style="color:#c8d0dc;font-size:13px;font-weight:600;">${escapeHTML(safeMod)}</span>
       </div>
     </div>
-    <div style="font-size:12px;color:#5a6478;margin-bottom:20px;">Please review our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Terms of Use</a> to avoid further action on your account.</div>
+    <div style="font-size:12px;color:#5a6478;margin-bottom:20px;">Please review our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-weight:600;">Terms of Use</a> to avoid further action on your account.</div>
     <button onclick="document.getElementById('ftz-warning-overlay').remove()" class="warning-ack-btn">Acknowledge</button>
   </div>`;
   document.body.appendChild(overlay);
@@ -7288,7 +7288,7 @@ function initFortizedUXResilience() {
   setTimeout(initCrossDeviceSync, 800);
   setTimeout(initNotifToasts, 1200);
   // Sync blocked list from Firebase (skip when offline)
-  if(navigator.onLine) setTimeout(async()=>{try{const snap=await firebase.database().ref('users/'+CU.username+'/blockedUsers').get();if(snap.exists())localStorage.setItem('ftz_blocked',JSON.stringify(snap.val()));}catch{}},500);
+  if(navigator.onLine) setTimeout(async()=>{try{const snap=await firebase.database().ref('users/'+CU.username+'/blockedUsers').get();if(snap.exists())localStorage.setItem('ftz_blocked',JSON.stringify(snap.val()));}catch(e){console.warn('[Sync] Blocked list sync failed:', e?.message);}},500);
 
   setTimeout(_ensureJoysterAccount, 4000);
   setTimeout(_ensureFortizedAccount, 4500);
@@ -8891,7 +8891,7 @@ function openBoostModal() {
     <div style="display:grid;gap:12px;">${tierCards}</div>
     ${level>=3?`<div style="text-align:center;margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:14px;">
       <span style="font-size:22px;">👑</span>
-      <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:#fbbf24;margin-top:6px;">Sovereign Level — Maximum Boost!</div>
+      <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--gold);margin-top:6px;">Sovereign Level — Maximum Boost!</div>
     </div>`:''}
     <div class="modal-actions" style="margin-top:18px;">
       <button class="btn-g" onclick="closeModal('modal-boost')">Close</button>
@@ -9367,10 +9367,10 @@ function renderBSettingsMain(tab) {
       <div style="display:grid;gap:12px;">${tierCards}</div>
       ${level>=3?`<div style="text-align:center;margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:14px;">
         <span style="font-size:22px;">👑</span>
-        <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:#fbbf24;margin-top:6px;">Sovereign Level — Maximum Boost!</div>
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--gold);margin-top:6px;">Sovereign Level — Maximum Boost!</div>
         <div style="margin-top:12px;">
           <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:rgba(255,255,255,.6);">Upload Limit</div>
-          <div style="font-size:13px;color:#fbbf24;font-weight:700;">50 MB per file (up from 8 MB)</div>
+          <div style="font-size:13px;color:var(--gold);font-weight:700;">50 MB per file (up from 8 MB)</div>
         </div>
       </div>`:''}
       ${level>0?`<div style="margin-top:16px;padding:14px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;">
@@ -9637,7 +9637,7 @@ function renderBSettingsMain(tab) {
   }
   else if (tab==='danger') {
     main.innerHTML = `
-      <div class="bs-section-title" style="color:#f87171;">Delete Bastion</div>
+      <div class="bs-section-title" style="color:var(--red);">Delete Bastion</div>
       <div class="bs-section-desc">Irreversible actions. Proceed with caution.</div>
       ${b.owner===CU.username?`<div style="padding:16px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:16px;margin-bottom:14px;">
         <div style="font-weight:700;margin-bottom:6px;">Transfer Ownership</div>
@@ -10186,7 +10186,7 @@ function confirmDeleteBastion(idx) {
   overlay.className = 'input-dialog-overlay';
   overlay.innerHTML = `<div class="input-dialog" style="max-width:420px;">
     <h3 style="color:var(--red);margin-bottom:10px;">🛑 Delete "${escapeHTML(b.name)}"?</h3>
-    <p style="margin-bottom:8px;">This action is <strong style="color:#f87171;">permanent</strong> and cannot be undone. All channels, messages, and members will be lost forever.</p>
+    <p style="margin-bottom:8px;">This action is <strong style="color:var(--red);">permanent</strong> and cannot be undone. All channels, messages, and members will be lost forever.</p>
     <p style="margin-bottom:14px;font-size:12.5px;color:var(--muted-light);">Consider transferring ownership instead — your bastion lives on with someone else in charge.</p>
     <div class="input-dialog-actions" style="margin-bottom:16px;">
       <button class="btn-g" style="flex:1;justify-content:center;" id="cdb-transfer">Transfer Ownership Instead</button>
@@ -10934,7 +10934,7 @@ function renderArsenalView(main) {
       </div>
       <div style="font-size:13px;color:var(--muted-light);margin-bottom:20px;">Browse bots created by the community. Deploy them to your Bastions with one click.</div>
       <div style="display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;" id="arsenal-chips">
-        <button class="gif-chip active" onclick="_arsenalFilter(this,'all')" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(167,139,250,.15);background:rgba(167,139,250,.07);color:#a78bfa;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:var(--font-ui);">All</button>
+        <button class="gif-chip active" onclick="_arsenalFilter(this,'all')" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(167,139,250,.15);background:rgba(167,139,250,.07);color:var(--purple);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:var(--font-ui);">All</button>
         ${categories.map(c => `<button class="gif-chip" onclick="_arsenalFilter(this,'${escapeHTML(c)}')" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.03);color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:var(--font-ui);">${escapeHTML(c)}</button>`).join('')}
       </div>
       <div class="arsenal-grid" id="arsenal-grid">
@@ -10951,11 +10951,11 @@ function renderArsenalCard(bot) {
         <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"><span class="badge-tooltip">Bot - Automated or system-managed account.</span></span></div>
         <div style="font-size:11px;color:var(--muted);">by @${escapeHTML(bot.owner)} · v${bot.version}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:3px;font-size:12px;color:#fbbf24;">⭐ ${bot.rating}</div>
+      <div style="display:flex;align-items:center;gap:3px;font-size:12px;color:var(--gold);">⭐ ${bot.rating}</div>
     </div>
     <div style="font-size:12.5px;color:var(--muted-light);line-height:1.5;">${escapeHTML(bot.bio)}</div>
     <div style="display:flex;flex-wrap:wrap;gap:4px;">
-      ${(bot.commands||[]).map(c => `<span style="font-family:monospace;font-size:10.5px;padding:2px 7px;border-radius:6px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.15);color:#a78bfa;">${escapeHTML(typeof c==='string'?c:'!'+c.name)}</span>`).join('')}
+      ${(bot.commands||[]).map(c => `<span style="font-family:monospace;font-size:10.5px;padding:2px 7px;border-radius:6px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.15);color:var(--purple);">${escapeHTML(typeof c==='string'?c:'!'+c.name)}</span>`).join('')}
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
       <span style="font-size:11px;color:var(--muted);">${bot.reviews} reviews</span>
@@ -12366,7 +12366,7 @@ function buildProfileView(tab) {
         ${(()=>{
           const blocked = CU?.blockedUsers || [];
           if (!blocked.length) return '<div style="padding:24px;text-align:center;color:rgba(255,255,255,.25);font-size:13px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;">No blocked users</div>';
-          return blocked.map(u => '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;margin-bottom:4px;"><span style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">@'+escapeHTML(u)+'</span><button onclick="toggleBlockUser(\''+escapeHTML(u)+'\');setTimeout(()=>buildProfileView(\'safety\'),300)" style="padding:5px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:11px;font-weight:600;cursor:pointer;">Unblock</button></div>').join('');
+          return blocked.map(u => '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;margin-bottom:4px;"><span style="font-size:13px;color:rgba(255,255,255,.6);font-weight:600;">@'+escapeHTML(u)+'</span><button onclick="toggleBlockUser(\''+escapeHTML(u)+'\');setTimeout(()=>buildProfileView(\'safety\'),300)" style="padding:5px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:11px;font-weight:600;cursor:pointer;">Unblock</button></div>').join('');
         })()}
       </div>
       <div class="settings-section-title">IGNORED USERS</div>
@@ -12395,7 +12395,7 @@ function buildProfileView(tab) {
       <div style="padding:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;">
         <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px;">Local Storage</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:16px;">Clear locally cached data. This will not affect your account data stored on our servers.</div>
-        <button style="padding:8px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:10px;color:#f87171;font-size:12px;font-weight:600;cursor:pointer;" onclick="showCustomConfirm('Clear all local cache? You will need to re-login.',()=>{localStorage.clear();location.reload();})">Clear Local Cache</button>
+        <button style="padding:8px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:10px;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;" onclick="showCustomConfirm('Clear all local cache? You will need to re-login.',()=>{localStorage.clear();location.reload();})">Clear Local Cache</button>
       </div>
     </div>`;
   }
@@ -12504,10 +12504,10 @@ function buildProfileView(tab) {
                   </div>
                 </div>
                 <div style="display:flex;gap:7px;align-items:flex-start;">
-                  <div style="width:24px;height:24px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#a78bfa;">K</div>
+                  <div style="width:24px;height:24px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:var(--purple);">K</div>
                   <div style="min-width:0;">
                     <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:1px;">
-                      <span style="font-size:9px;font-weight:700;color:#a78bfa;">Knight</span>
+                      <span style="font-size:9px;font-weight:700;color:var(--purple);">Knight</span>
                       <span style="font-size:7px;color:${t.muted};">Today 14:34</span>
                     </div>
                     <div style="font-size:9px;color:${textMain};line-height:1.45;">Hey, welcome aboard! 🎉</div>
@@ -12540,7 +12540,7 @@ function buildProfileView(tab) {
               </div>
               <div style="display:flex;align-items:center;gap:4px;padding:3px 4px;border-radius:4px;">
                 <div style="width:16px;height:16px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;"></div>
-                <span style="font-size:8px;color:#a78bfa;font-weight:600;">Knight</span>
+                <span style="font-size:8px;color:var(--purple);font-weight:600;">Knight</span>
               </div>
             </div>
           </div>
@@ -13031,7 +13031,7 @@ async function buildNotifList() {
     else if(n.type==='mention') text='<strong>'+escapeHTML(n.from||'')+'</strong> mentioned you';
     else if(n.type==='call') text='<strong>'+escapeHTML(n.from||'')+'</strong> called you';
     else if(n.type==='support_ticket') {
-      const st = n.data?.status==='closed'?'<span style="color:#3ecf6e;">Closed</span>':'<span style="color:#38bdf8;">Open</span>';
+      const st = n.data?.status==='closed'?'<span style="color:var(--green);">Closed</span>':'<span style="color:#38bdf8;">Open</span>';
       text='<strong>Support Ticket</strong>: '+escapeHTML((n.data?.subject||'').slice(0,50))+' — '+st;
     }
     else text='New notification';
@@ -13040,7 +13040,7 @@ async function buildNotifList() {
     const actions = _stillPending
       ? '<div class="np-actions"><button class="np-accept" onclick="event.stopPropagation();acceptFriend(\''+escapeHTML(n.from||'')+'\');buildNotifList()">Accept</button></div>'
       : (n.type==='friend_request' && _alreadyFriends
-        ? '<div class="np-actions"><span style="font-size:11px;color:#3ecf6e;font-weight:600;">Friends</span></div>'
+        ? '<div class="np-actions"><span style="font-size:11px;color:var(--green);font-weight:600;">Friends</span></div>'
         : '');
     // Use user's actual profile picture for personal notifications
     const _nu = _notifUsers[n.from];
@@ -14467,7 +14467,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div class="hq-panel-head">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             <h3>Activity Feed</h3>
-            <div style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;color:#3ecf6e;font-weight:600;"><div style="width:5px;height:5px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px #3ecf6e88;animation:adm-badge-pulse 2s infinite;"></div>LIVE</div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;color:var(--green);font-weight:600;"><div style="width:5px;height:5px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px #3ecf6e88;animation:adm-badge-pulse 2s infinite;"></div>LIVE</div>
           </div>
           <div style="max-height:300px;overflow-y:auto;" id="hq-live-feed">
             ${auditLog.slice(0,10).map(e=>{
@@ -14655,18 +14655,18 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
               : (targetRole === 'admin' && !isSuperAdmin()) ? '<div style="padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:rgba(248,113,113,.7);font-size:12px;font-weight:600;">🔒 This user is an Admin — only Superadmins can take action.</div>'
               : (targetRole === 'moderator' && !isAdmin()) ? '<div style="padding:10px 14px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.12);border-radius:8px;color:rgba(96,165,250,.7);font-size:12px;font-weight:600;">🔒 This user is a Moderator — only Admins and Superadmins can take action.</div>'
               : '';
-            if (isPend && !canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
+            if (isPend && !canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
             if (isPend && canAct) return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
             <button onclick="resolveReport(${i},'dismissed')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">Dismiss</button>
             <button onclick="resolveReport(${i},'warned')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Warn</button>
             ${target?`<button onclick="resolveReport(${i},'suspended')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">⏳ Suspend</button>`:''}
-            ${target?`<button onclick="resolveReport(${i},'banned')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
+            ${target?`<button onclick="resolveReport(${i},'banned')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
             <div style="flex:1;"></div>
-            ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;">🔍 Inspect ${escapeHTML(target)}</button>`:''}
-            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
+            ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:var(--blue);font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;">🔍 Inspect ${escapeHTML(target)}</button>`:''}
+            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
           </div>`;
             return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
-            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
+            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
           </div>`;
           })()}
         </div>
@@ -14703,7 +14703,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       ${reps.length===0?'<div style="text-align:center;padding:80px 20px;color:rgba(255,255,255,.3);"><div style="margin-bottom:12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(62,207,110,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-size:14px;">No reports — all clear!</div></div>':
       `${pendingReps.length>0?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 16px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.08);border-radius:10px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span style="font-family:var(--font-display);font-size:13px;font-weight:700;color:#f87171;">${pendingReps.length} report${pendingReps.length>1?'s':''} pending review</span>
+        <span style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--red);">${pendingReps.length} report${pendingReps.length>1?'s':''} pending review</span>
       </div>`:''}
       <div style="display:flex;flex-direction:column;gap:14px;">
         ${sortedReps.map((r)=>{
@@ -14718,7 +14718,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
         <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Bans (${bans.length})</div>
-        <button onclick="showCustomInput('Ban User','Enter username to ban:',(name)=>{if(!name)return;showCustomInput('Ban Reason','Enter reason:',(reason)=>{if(!reason)return;const b=JSON.parse(localStorage.getItem('ftz_bans')||'[]');const obj={username:name.trim(),reason,bannedBy:CU.username,bannedAt:new Date().toISOString()};b.push(obj);localStorage.setItem('ftz_bans',JSON.stringify(b));_saveBanToFirebase(obj);logAudit('ban',name.trim(),reason);toast(name.trim()+' banned','success');_loadAdminPage('bans');})})" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;">+ Ban User</button>
+        <button onclick="showCustomInput('Ban User','Enter username to ban:',(name)=>{if(!name)return;showCustomInput('Ban Reason','Enter reason:',(reason)=>{if(!reason)return;const b=JSON.parse(localStorage.getItem('ftz_bans')||'[]');const obj={username:name.trim(),reason,bannedBy:CU.username,bannedAt:new Date().toISOString()};b.push(obj);localStorage.setItem('ftz_bans',JSON.stringify(b));_saveBanToFirebase(obj);logAudit('ban',name.trim(),reason);toast(name.trim()+' banned','success');_loadAdminPage('bans');})})" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;">+ Ban User</button>
       </div>
       ${bans.length?`<div style="display:flex;flex-direction:column;gap:8px;">${bans.map((b,i)=>`<div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
         <div style="flex:1;">
@@ -14726,8 +14726,8 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div style="font-size:11.5px;color:rgba(255,255,255,.4);">Reason: ${escapeHTML(b.reason||'–')}</div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Banned by ${escapeHTML(b.bannedBy||'admin')} ${b.bannedAt?' · '+new Date(b.bannedAt).toLocaleDateString():''}</div>
         </div>
-        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.username)}';adminSearchUser();}},150);" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:#60a5fa;font-size:12px;cursor:pointer;">Inspect</button>
-        <button onclick="unbanUser('${escapeHTML(b.username)}')" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Unban</button>
+        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.username)}';adminSearchUser();}},150);" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:var(--blue);font-size:12px;cursor:pointer;">Inspect</button>
+        <button onclick="unbanUser('${escapeHTML(b.username)}')" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:var(--green);font-size:12px;cursor:pointer;">Unban</button>
       </div>`).join('')}</div>`:'<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">No bans</div></div>'}
     </div>`;
   }
@@ -14823,7 +14823,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
           <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;">🎟️ Trial Link</div>
           <select class="settings-input" id="trial-days" style="margin-bottom:11px;"><option value="7">7 days</option><option value="14">14 days</option><option value="30" selected>30 days</option></select>
-          <button onclick="generateTrialLink()" style="width:100%;padding:8px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);border-radius:9px;color:#3ecf6e;cursor:pointer;font-weight:700;">Generate Trial Link</button>
+          <button onclick="generateTrialLink()" style="width:100%;padding:8px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);border-radius:9px;color:var(--green);cursor:pointer;font-weight:700;">Generate Trial Link</button>
           <div id="trial-link-result" style="margin-top:10px;"></div>
         </div>
       </div>
@@ -14870,7 +14870,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       <div id="audit-log-container" style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
         ${log.length?log.map(e=>`<div class="audit-row" data-action="${escapeHTML(e.action||'')}" data-text="${escapeHTML((e.action||'')+(e.target||'')+(e.by||'')+(e.note||''))}" style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
           <div style="font-size:10.5px;font-family:monospace;color:rgba(255,255,255,.22);flex-shrink:0;min-width:130px;">${e.at?new Date(e.at).toLocaleString():(e.timestamp?new Date(e.timestamp).toLocaleString():'')}</div>
-          <div style="flex:1;font-size:12.5px;min-width:0;"><strong style="color:#f87171;">${escapeHTML(e.action||'?')}</strong> <span style="color:rgba(255,255,255,.5);">·</span> ${escapeHTML(e.target||'')}${e.note?` <span style="color:rgba(255,255,255,.3);">— ${escapeHTML(e.note)}</span>`:''}</div>
+          <div style="flex:1;font-size:12.5px;min-width:0;"><strong style="color:var(--red);">${escapeHTML(e.action||'?')}</strong> <span style="color:rgba(255,255,255,.5);">·</span> ${escapeHTML(e.target||'')}${e.note?` <span style="color:rgba(255,255,255,.3);">— ${escapeHTML(e.note)}</span>`:''}</div>
           <div style="font-size:11.5px;color:rgba(255,255,255,.3);flex-shrink:0;">by ${escapeHTML(e.by||'?')}</div>
         </div>`).join(''):'<div style="padding:18px;text-align:center;color:rgba(255,255,255,.3);">No events</div>'}
       </div>
@@ -14924,7 +14924,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.04);">
               <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.25);align-self:center;margin-right:4px;">AI Verdict:</span>
               <button onclick="nsfwAIFeedback(${i},true)" class="ai-fb-correct"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> AI was Right (NSFW)</button>
-              <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> AI was Wrong (NOT NSFW)</button>
+              <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> AI was Wrong (NOT NSFW)</button>
             </div>
             <!-- Actions (same style as reports) -->
             ${(()=>{
@@ -14934,15 +14934,15 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
                 : (uRole === 'admin' && !isSuperAdmin()) ? '<div style="padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:rgba(248,113,113,.7);font-size:12px;font-weight:600;">🔒 This user is an Admin — only Superadmins can take action.</div>'
                 : (uRole === 'moderator' && !isAdmin()) ? '<div style="padding:10px 14px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.12);border-radius:8px;color:rgba(96,165,250,.7);font-size:12px;font-weight:600;">🔒 This user is a Moderator — only Admins and Superadmins can take action.</div>'
                 : '';
-              if (!canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
+              if (!canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
               return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
               <button onclick="reviewNSFW(${i},'approve')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">Dismiss</button>
               <button onclick="reviewNSFW(${i},'warn')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Warn</button>
               ${target?`<button onclick="reviewNSFW(${i},'suspend')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">⏳ Suspend</button>`:''}
-              ${target?`<button onclick="reviewNSFW(${i},'ban')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
+              ${target?`<button onclick="reviewNSFW(${i},'ban')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
               <div style="flex:1;"></div>
-              ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;">🔍 Inspect ${escapeHTML(target)}</button>`:''}
-              ${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
+              ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:var(--blue);font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;">🔍 Inspect ${escapeHTML(target)}</button>`:''}
+              ${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
             </div>`;
             })()}
           </div>
@@ -14967,7 +14967,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
             <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Platform Controls</div>
-            <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.maintenanceMode?'checked':''} onchange="_updateGlobalSetting('maintenanceMode',this.checked)"><span style="font-size:12px;${gs.maintenanceMode?'color:#f87171;font-weight:600;':''}">Maintenance Mode</span></label>
+            <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.maintenanceMode?'checked':''} onchange="_updateGlobalSetting('maintenanceMode',this.checked)"><span style="font-size:12px;${gs.maintenanceMode?'color:var(--red);font-weight:600;':''}">Maintenance Mode</span></label>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.disableRegistration?'checked':''} onchange="_updateGlobalSetting('disableRegistration',this.checked)"><span style="font-size:12px;">Disable Registrations</span></label>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.enableNSFWScan!==false?'checked':''} onchange="_updateGlobalSetting('enableNSFWScan',this.checked)"><span style="font-size:12px;">NSFW AI Scanner</span></label>
             <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;"><input type="checkbox" ${gs.disableBastionCreation?'checked':''} onchange="_updateGlobalSetting('disableBastionCreation',this.checked)"><span style="font-size:12px;">Disable Bastion Creation</span></label>
@@ -15003,11 +15003,11 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <!-- Column 3: Deployment -->
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.12);border-radius:10px;padding:12px 14px;">
-            <div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;color:#f87171;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Deployment</div>
+            <div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;color:var(--red);display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Deployment</div>
             <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;">Push updates and manage active sessions.</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <button onclick="_forceRefreshAllUsers()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Migrate to Next Update</button>
-              <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Reset All Sessions</button>
+              <button onclick="_forceRefreshAllUsers()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Migrate to Next Update</button>
+              <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:var(--red);cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Reset All Sessions</button>
             </div>
           </div>
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
@@ -15047,34 +15047,34 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div style="background:var(--panel,#1b1e25);border:1px solid rgba(248,113,113,.15);border-radius:12px;padding:18px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span style="font-weight:700;color:#f87171;">Admins</span>
+            <span style="font-weight:700;color:var(--red);">Admins</span>
             <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${admins.length}</span>
           </div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Limited data access. Can moderate, manage economy, view age tiers (not precise ages).</div>
           ${admins.map((a,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span style="flex:1;font-weight:600;">${escapeHTML(a)}</span>
-            <button onclick="removeStaff('admin',${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
+            <button onclick="removeStaff('admin',${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
           </div>`).join('')||'<div style="color:rgba(255,255,255,.25);font-size:12px;padding:8px 0;">No admins yet</div>'}
           <div style="display:flex;gap:7px;margin-top:10px;">
             <input class="settings-input" id="new-admin-input" placeholder="Username" style="flex:1;">
-            <button onclick="addStaff('admin')" style="padding:7px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">Add</button>
+            <button onclick="addStaff('admin')" style="padding:7px 14px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">Add</button>
           </div>
         </div>
         <!-- Moderators -->
         <div style="background:var(--panel,#1b1e25);border:1px solid rgba(96,165,250,.15);border-radius:12px;padding:18px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-            <span style="font-weight:700;color:#60a5fa;">Moderators</span>
+            <span style="font-weight:700;color:var(--blue);">Moderators</span>
             <span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;">${moderators.length}</span>
           </div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;line-height:1.5;">Very limited power. Only moderation tools: NSFW detection, reports, restrained user lookup.</div>
           ${moderators.map((m,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg><span style="flex:1;font-weight:600;">${escapeHTML(m)}</span>
-            <button onclick="removeStaff('moderator',${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
+            <button onclick="removeStaff('moderator',${i})" style="padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);border-radius:7px;font-size:11.5px;cursor:pointer;">Remove</button>
           </div>`).join('')||'<div style="color:rgba(255,255,255,.25);font-size:12px;padding:8px 0;">No moderators yet</div>'}
           <div style="display:flex;gap:7px;margin-top:10px;">
             <input class="settings-input" id="new-mod-input" placeholder="Username" style="flex:1;">
-            <button onclick="addStaff('moderator')" style="padding:7px 14px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">Add</button>
+            <button onclick="addStaff('moderator')" style="padding:7px 14px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:var(--blue);border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">Add</button>
           </div>
         </div>
       </div>
@@ -15113,10 +15113,10 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>
       <!-- Feedback Summary -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
-        <div class="hq-stat" style="--stat-accent:#60a5fa;"><div class="hq-stat-val" style="color:#60a5fa;font-size:20px;">${feedbackData.length}</div><div class="hq-stat-label">Total Feedback</div></div>
-        <div class="hq-stat" style="--stat-accent:#3ecf6e;"><div class="hq-stat-val" style="color:#3ecf6e;font-size:20px;">${posCount}</div><div class="hq-stat-label">Positive</div></div>
+        <div class="hq-stat" style="--stat-accent:#60a5fa;"><div class="hq-stat-val" style="color:var(--blue);font-size:20px;">${feedbackData.length}</div><div class="hq-stat-label">Total Feedback</div></div>
+        <div class="hq-stat" style="--stat-accent:#3ecf6e;"><div class="hq-stat-val" style="color:var(--green);font-size:20px;">${posCount}</div><div class="hq-stat-label">Positive</div></div>
         <div class="hq-stat" style="--stat-accent:#f59e0b;"><div class="hq-stat-val" style="color:#f59e0b;font-size:20px;">${neuCount}</div><div class="hq-stat-label">Neutral</div></div>
-        <div class="hq-stat" style="--stat-accent:#f87171;"><div class="hq-stat-val" style="color:#f87171;font-size:20px;">${negCount}</div><div class="hq-stat-label">Negative</div></div>
+        <div class="hq-stat" style="--stat-accent:#f87171;"><div class="hq-stat-val" style="color:var(--red);font-size:20px;">${negCount}</div><div class="hq-stat-label">Negative</div></div>
       </div>
       <!-- Satisfaction Bar -->
       <div style="margin-bottom:20px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:12px;">
@@ -15127,9 +15127,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div style="height:100%;width:${(negCount/total*100).toFixed(0)}%;background:#f87171;"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px;">
-          <span style="color:#3ecf6e;">${(posCount/total*100).toFixed(0)}% positive</span>
+          <span style="color:var(--green);">${(posCount/total*100).toFixed(0)}% positive</span>
           <span style="color:#f59e0b;">${(neuCount/total*100).toFixed(0)}% neutral</span>
-          <span style="color:#f87171;">${(negCount/total*100).toFixed(0)}% negative</span>
+          <span style="color:var(--red);">${(negCount/total*100).toFixed(0)}% negative</span>
         </div>
       </div>
       <!-- Recent Feedback -->
@@ -15211,13 +15211,13 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div class="hq-panel-head">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <h3>Platform Status</h3>
-            ${statusMsg ? '<div style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;color:#3ecf6e;font-weight:600;"><div style="width:5px;height:5px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px #3ecf6e88;"></div>ACTIVE</div>' : ''}
+            ${statusMsg ? '<div style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;color:var(--green);font-weight:600;"><div style="width:5px;height:5px;border-radius:50%;background:#3ecf6e;box-shadow:0 0 6px #3ecf6e88;"></div>ACTIVE</div>' : ''}
           </div>
           <div style="padding:var(--space-lg);">
             <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Set a status message visible on the platform status page.</div>
             <textarea id="_status-msg" style="width:100%;height:100px;background:var(--surface-1);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:#fff;padding:var(--space-sm);font-family:inherit;font-size:13px;resize:vertical;">${escapeHTML(statusMsg)}</textarea>
             <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
-              <button class="hq-quick-btn" onclick="_updatePlatformStatus()" style="background:rgba(62,207,110,.08);border-color:rgba(62,207,110,.15);color:#3ecf6e;">Update Status</button>
+              <button class="hq-quick-btn" onclick="_updatePlatformStatus()" style="background:rgba(62,207,110,.08);border-color:rgba(62,207,110,.15);color:var(--green);">Update Status</button>
               <button class="hq-quick-btn" onclick="document.getElementById('_status-msg').value='';_updatePlatformStatus()">Clear Status</button>
             </div>
           </div>
@@ -15297,8 +15297,8 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <div style="display:flex;flex-direction:column;gap:var(--space-md);">
               <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:rgba(255,255,255,.5);">Radiance subscribers</span><span style="font-size:14px;font-weight:700;color:#ffd93e;">${radianceCount}</span></div>
               <div style="height:6px;background:var(--surface-1);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.min(convRate,100)}%;background:linear-gradient(90deg,#ffd93e,#ff9d3e);border-radius:3px;transition:width .5s;"></div></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:rgba(255,255,255,.5);">Conversion rate</span><span style="font-size:14px;font-weight:700;color:#3ecf6e;">${convRate}%</span></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:rgba(255,255,255,.5);">Total bastions</span><span style="font-size:14px;font-weight:700;color:#a78bfa;">${totalBastions}</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:rgba(255,255,255,.5);">Conversion rate</span><span style="font-size:14px;font-weight:700;color:var(--green);">${convRate}%</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:rgba(255,255,255,.5);">Total bastions</span><span style="font-size:14px;font-weight:700;color:var(--purple);">${totalBastions}</span></div>
             </div>
           </div>
         </div>
@@ -15530,8 +15530,8 @@ async function _loadAdminSuspensions() {
           <div style="font-size:11.5px;color:rgba(255,255,255,.4);">Reason: ${escapeHTML(s.reason||'–')} · Duration: ${escapeHTML(s.duration||'–')}</div>
           <div style="font-size:10.5px;color:rgba(255,255,255,.25);">By ${escapeHTML(s.suspendedBy||'admin')} · Until ${_fmtDateEU(s.until)}</div>
         </div>
-        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(s.username)}';adminSearchUser();}},150);" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:#60a5fa;font-size:12px;cursor:pointer;">Inspect</button>
-        ${s.active?`<button onclick="FortizedSocial.adminUnsuspendUser('${escapeHTML(s.username)}').then(()=>{logAudit('unsuspend','${escapeHTML(s.username)}','Lifted by admin');toast('${escapeHTML(s.username)} unsuspended','success');_loadAdminPage('suspensions');});" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:#3ecf6e;font-size:12px;cursor:pointer;">Unsuspend</button>`:''}
+        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(s.username)}';adminSearchUser();}},150);" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:var(--blue);font-size:12px;cursor:pointer;">Inspect</button>
+        ${s.active?`<button onclick="FortizedSocial.adminUnsuspendUser('${escapeHTML(s.username)}').then(()=>{logAudit('unsuspend','${escapeHTML(s.username)}','Lifted by admin');toast('${escapeHTML(s.username)} unsuspended','success');_loadAdminPage('suspensions');});" style="padding:4px 12px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.18);border-radius:7px;color:var(--green);font-size:12px;cursor:pointer;">Unsuspend</button>`:''}
       </div>`).join('');
   } catch(e) {
     el.innerHTML = '<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">Failed to load suspensions</div></div>';
@@ -15580,7 +15580,7 @@ function _renderTickets() {
         <div style="width:8px;height:8px;border-radius:50%;background:${isClosed?'rgba(255,255,255,.15)':'#3ecf6e'};${isClosed?'':'box-shadow:0 0 6px rgba(62,207,110,.5);'}flex-shrink:0;"></div>
         <div style="flex:1;font-weight:700;font-size:14px;">${escapeHTML(t.subject||'No Subject')}</div>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--radius-pill);background:${catCol}15;color:${catCol};border:1px solid ${catCol}25;">${escapeHTML((t.category||'general').replace(/-/g,' ').toUpperCase())}</span>
-        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--radius-pill);${isClosed?'background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);':'background:rgba(62,207,110,.1);color:#3ecf6e;'}">${isClosed?'CLOSED':'OPEN'}</span>
+        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--radius-pill);${isClosed?'background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);':'background:rgba(62,207,110,.1);color:var(--green);'}">${isClosed?'CLOSED':'OPEN'}</span>
       </div>
       <div style="font-size:12.5px;color:rgba(255,255,255,.55);margin-bottom:6px;line-height:1.5;white-space:pre-wrap;max-height:120px;overflow-y:auto;">${escapeHTML((t.message||'').slice(0,500))}</div>
       <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:rgba(255,255,255,.3);">
@@ -15588,8 +15588,8 @@ function _renderTickets() {
         <span>Email: ${escapeHTML(t.email||'–')}</span>
         <span>${_fmtDateEU(t.submittedAt)}</span>
         <div style="margin-left:auto;display:flex;gap:6px;">
-          ${!isClosed?`<button onclick="_closeTicket('${t.id}')" style="padding:4px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;">Close</button>`:`<button onclick="_reopenTicket('${t.id}')" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:#60a5fa;font-size:11px;cursor:pointer;">Reopen</button>`}
-          ${isSuperAdmin()?`<button onclick="_deleteTicket('${t.id}')" style="padding:4px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:7px;color:#f87171;font-size:11px;cursor:pointer;">Delete</button>`:''}
+          ${!isClosed?`<button onclick="_closeTicket('${t.id}')" style="padding:4px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;">Close</button>`:`<button onclick="_reopenTicket('${t.id}')" style="padding:4px 12px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:var(--blue);font-size:11px;cursor:pointer;">Reopen</button>`}
+          ${isSuperAdmin()?`<button onclick="_deleteTicket('${t.id}')" style="padding:4px 12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;">Delete</button>`:''}
         </div>
       </div>
     </div>`;
@@ -16198,10 +16198,10 @@ async function adminSearchUser() {
   const raw = document.getElementById('admin-user-search')?.value?.trim().toLowerCase();
   if (!raw) return;
   const result = document.getElementById('admin-user-result');
-  result.innerHTML = '<div style="color:rgba(248,113,113,.4);font-size:13px;display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;border:2px solid rgba(248,113,113,.3);border-top-color:#f87171;border-radius:50%;animation:spin .6s linear infinite;"></div>Scanning database…</div>';
+  result.innerHTML = '<div style="color:rgba(248,113,113,.4);font-size:13px;display:flex;align-items:center;gap:8px;"><div style="width:14px;height:14px;border:2px solid rgba(248,113,113,.3);border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite;"></div>Scanning database…</div>';
   let u = null;
   try { u = await FortizedSocial.getUserByName(raw); } catch(e){ console.error(e); }
-  if (!u) { result.innerHTML = '<div style="color:#f87171;font-size:13px;">Target not found in database.</div>'; return; }
+  if (!u) { result.innerHTML = '<div style="color:var(--red);font-size:13px;">Target not found in database.</div>'; return; }
   const username = u.username;
   const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
   const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
@@ -16233,8 +16233,8 @@ async function adminSearchUser() {
   const myRole = getStaffRole(CU.username);
   const targetStaffRole = getStaffRole(username);
   const targetStaffBadge = targetStaffRole === 'superadmin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(255,215,62,.15),rgba(255,215,62,.08));color:#ffd93e;padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(255,215,62,.2);">SUPER ADMIN</span>'
-    : targetStaffRole === 'admin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(248,113,113,.15),rgba(248,113,113,.08));color:#f87171;padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(248,113,113,.2);">ADMIN</span>'
-    : targetStaffRole === 'moderator' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(96,165,250,.08));color:#60a5fa;padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(96,165,250,.2);">MODERATOR</span>' : '';
+    : targetStaffRole === 'admin' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(248,113,113,.15),rgba(248,113,113,.08));color:var(--red);padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(248,113,113,.2);">ADMIN</span>'
+    : targetStaffRole === 'moderator' ? '<span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(96,165,250,.08));color:var(--blue);padding:3px 10px;border-radius:var(--radius-pill);border:1px solid rgba(96,165,250,.2);">MODERATOR</span>' : '';
   const canSeeEmail = isSuperAdmin() || isAdmin();
   const canSeePreciseAge = isSuperAdmin();
   const canSeeFullData = isAdmin();
@@ -16321,7 +16321,7 @@ async function adminSearchUser() {
         <!-- Right: Activity Timeline + Ban Info -->
         <div style="display:flex;flex-direction:column;gap:14px;">
           ${isBanned && banInfo ? `<div class="hq-panel">
-            <div class="hq-panel-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><h3 style="color:#f87171;">Ban Record</h3></div>
+            <div class="hq-panel-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><h3 style="color:var(--red);">Ban Record</h3></div>
             <div style="padding:12px 16px;">
               <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px;"><strong>Reason:</strong> ${escapeHTML(banInfo.reason||'No reason')}</div>
               ${banInfo.bannedBy?`<div style="font-size:11px;color:rgba(255,255,255,.3);">Banned by: ${escapeHTML(banInfo.bannedBy)} · ${banInfo.bannedAt?new Date(banInfo.bannedAt).toLocaleDateString():''}</div>`:''}
@@ -16687,16 +16687,16 @@ function showVerifyQuiz() {
         <div style="height:4px;background:linear-gradient(90deg,#f87171,var(--accent),#3ecf6e);"></div>
         <div style="padding:44px 40px 40px;text-align:center;">
           <img src="/FortizedSecurity logo.png" alt="Fortized Security" style="width:72px;height:72px;object-fit:contain;border-radius:18px;margin:0 auto 20px;display:block;" onerror="this.style.display='none'">
-          <div style="font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#f87171;margin-bottom:10px;">Fortized Security Department</div>
+          <div style="font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:10px;">Fortized Security Department</div>
           <div style="font-family:var(--font-display);font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:8px;">Identity Verification</div>
           <div style="font-size:14px;color:var(--muted-light);line-height:1.7;margin-bottom:28px;max-width:400px;margin-left:auto;margin-right:auto;">To protect our community, all users must verify their identity by completing a short safety knowledge check.</div>
           <div style="display:flex;gap:10px;justify-content:center;margin-bottom:28px;flex-wrap:wrap;">
             <div style="background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.12);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted-light);display:flex;align-items:center;gap:8px;"><span style="color:var(--accent);font-weight:700;">5</span>Questions</div>
-            <div style="background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.12);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted-light);display:flex;align-items:center;gap:8px;"><span style="color:#3ecf6e;font-weight:700;">4</span>To pass</div>
-            <div style="background:rgba(96,165,250,.04);border:1px solid rgba(96,165,250,.12);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted-light);display:flex;align-items:center;gap:8px;"><span style="color:#60a5fa;font-weight:700;">25</span>Onyx reward</div>
+            <div style="background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.12);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted-light);display:flex;align-items:center;gap:8px;"><span style="color:var(--green);font-weight:700;">4</span>To pass</div>
+            <div style="background:rgba(96,165,250,.04);border:1px solid rgba(96,165,250,.12);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted-light);display:flex;align-items:center;gap:8px;"><span style="color:var(--blue);font-weight:700;">25</span>Onyx reward</div>
           </div>
           <div style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.12);border-left:3px solid #f87171;border-radius:10px;padding:12px 16px;text-align:left;font-size:12.5px;color:var(--muted-light);line-height:1.6;margin-bottom:28px;">
-            <strong style="color:#f87171;">Required:</strong> This verification is mandatory. You cannot access Fortized until you pass the safety check. Questions are randomised from a pool.
+            <strong style="color:var(--red);">Required:</strong> This verification is mandatory. You cannot access Fortized until you pass the safety check. Questions are randomised from a pool.
           </div>
           <button onclick="document.getElementById('verify-intro').style.display='none';document.getElementById('verify-quiz').style.display='';" class="verify-begin-btn">Begin Verification</button>
         </div>
@@ -16762,13 +16762,13 @@ function answerQuiz(selectedIdx) {
   const sel = document.getElementById('qopt-'+selectedIdx);
   const isCorrect = sel && sel.dataset.correct === 'true';
   if (isCorrect) {
-    sel.style.cssText += ';border-color:#3ecf6e;background:rgba(62,207,110,.1);color:#3ecf6e;';
-    sel.querySelector('span').style.cssText += ';border-color:#3ecf6e;background:rgba(62,207,110,.15);color:#3ecf6e;';
+    sel.style.cssText += ';border-color:var(--green);background:rgba(62,207,110,.1);color:var(--green);';
+    sel.querySelector('span').style.cssText += ';border-color:var(--green);background:rgba(62,207,110,.15);color:var(--green);';
     quizCorrect++;
   } else {
-    sel.style.cssText += ';border-color:#f87171;background:rgba(248,113,113,.1);color:#f87171;';
-    sel.querySelector('span').style.cssText += ';border-color:#f87171;background:rgba(248,113,113,.15);color:#f87171;';
-    opts.forEach(o => { if (o.dataset.correct === 'true') { o.style.cssText += ';border-color:#3ecf6e;background:rgba(62,207,110,.06);color:#3ecf6e;'; o.querySelector('span').style.cssText += ';border-color:#3ecf6e;color:#3ecf6e;'; } });
+    sel.style.cssText += ';border-color:var(--red);background:rgba(248,113,113,.1);color:var(--red);';
+    sel.querySelector('span').style.cssText += ';border-color:var(--red);background:rgba(248,113,113,.15);color:var(--red);';
+    opts.forEach(o => { if (o.dataset.correct === 'true') { o.style.cssText += ';border-color:var(--green);background:rgba(62,207,110,.06);color:var(--green);'; o.querySelector('span').style.cssText += ';border-color:var(--green);color:var(--green);'; } });
   }
   quizAnswers.push(isCorrect);
   const seg = document.getElementById('qpb-'+quizIdx);
@@ -16792,7 +16792,7 @@ async function showQuizResult() {
       <div style="width:72px;height:72px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#3ecf6e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:#3ecf6e;margin-bottom:8px;letter-spacing:-.3px;">Verification Passed</div>
+      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:var(--green);margin-bottom:8px;letter-spacing:-.3px;">Verification Passed</div>
       <div style="font-size:13.5px;color:var(--muted-light);margin-bottom:6px;">You scored <strong style="color:#fff;">${quizCorrect} of ${QUIZ_QUESTIONS.length}</strong> correct.</div>
       <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">Your account has been verified by Fortized Security.</div>
       <div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.14);border-radius:8px;padding:6px 12px;margin-bottom:28px;">+25 Onyx Awarded</div>
@@ -16804,7 +16804,7 @@ async function showQuizResult() {
       <div style="width:72px;height:72px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M8 8l8 8M16 8l-8 8" stroke="#f87171" stroke-width="2.5" stroke-linecap="round"/></svg>
       </div>
-      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:#f87171;margin-bottom:8px;letter-spacing:-.3px;">Verification Failed</div>
+      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:var(--red);margin-bottom:8px;letter-spacing:-.3px;">Verification Failed</div>
       <div style="font-size:13.5px;color:var(--muted-light);margin-bottom:6px;">You scored <strong style="color:#fff;">${quizCorrect} of ${QUIZ_QUESTIONS.length}</strong> correct. You need at least <strong style="color:#fff;">4</strong> to pass.</div>
       <div style="font-size:12.5px;color:var(--muted);margin-bottom:28px;">Review the community guidelines and try again. Questions are randomised.</div>
       <button class="btn-a" onclick="QUIZ_QUESTIONS=_pickQuizQuestions();quizIdx=0;quizCorrect=0;quizAnswers=[];document.getElementById('quiz-result').style.display='none';document.getElementById('quiz-question-area').style.display='';document.getElementById('quiz-progress-bar').innerHTML=QUIZ_QUESTIONS.map((_,i)=>'<div id=qpb-'+i+' style=flex:1;height:5px;border-radius:99px;background:var(--border);transition:background\\x20.3s,box-shadow\\x20.3s></div>').join('');renderQuizQuestion();" style="padding:14px 36px;font-size:15px;">Try Again</button>`;
@@ -16934,7 +16934,7 @@ async function _loadNSFWModel() {
         try { await tf.ready(); } catch {}
       }
       _nsfwModel = await nsfwjs.load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/model/', { size: 299 });
-      if (_nsfwModel) { console.log('NSFWJS model loaded successfully (attempt ' + (attempt+1) + ')'); break; }
+      if (_nsfwModel) { console.debug('[NSFW] Model loaded (attempt ' + (attempt+1) + ')'); break; }
     } catch(e) {
       console.error('NSFWJS model load attempt ' + (attempt+1) + ' failed:', e);
       _nsfwModel = null;
@@ -17027,7 +17027,7 @@ async function _analyzeFrame(source, w, h) {
     const explicitScore = pornScore + hentaiScore;
     const combinedScore = explicitScore + (sexyScore * 0.5);
 
-    console.log('NSFW scan result:', JSON.stringify(predMap), '→ explicit:', explicitScore.toFixed(2), 'combined:', combinedScore.toFixed(2));
+    console.debug('[NSFW] scan:', JSON.stringify(predMap), '→ explicit:', explicitScore.toFixed(2), 'combined:', combinedScore.toFixed(2));
 
     if (explicitScore > 0.30) return { label: 'EXPLICIT', score: combinedScore.toFixed(2) };
     if (combinedScore > 0.45) return { label: 'SUGGESTIVE', score: combinedScore.toFixed(2) };
@@ -18050,8 +18050,8 @@ function renderAllUsersList(users) {
     const statusVal = _hqUserStatuses[u.username] || 'offline';
     const statusColor = statusVal === 'online' ? '#3ecf6e' : statusVal === 'away' ? '#f59e0b' : statusVal === 'dnd' ? '#f87171' : '#4a4a5a';
     const roleBadge = staffRole === 'superadmin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,215,62,.1);color:#ffd93e;">SA</span>'
-      : staffRole === 'admin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:#f87171;">ADM</span>'
-      : staffRole === 'moderator' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(96,165,250,.1);color:#60a5fa;">MOD</span>' : '<span style="font-size:8px;color:rgba(255,255,255,.15);">—</span>';
+      : staffRole === 'admin' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:var(--red);">ADM</span>'
+      : staffRole === 'moderator' ? '<span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(96,165,250,.1);color:var(--blue);">MOD</span>' : '<span style="font-size:8px;color:rgba(255,255,255,.15);">—</span>';
     const ageDays = u.dateOfBirth ? Math.floor((Date.now() - new Date(u.dateOfBirth)) / 86400000 / 365.25) : null;
     const joinDate = u.createdAt || u.joinedAt;
 
@@ -18253,15 +18253,15 @@ function renderAdminBastionsList(bastions) {
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-weight:700;font-size:13.5px;">${escapeHTML(b.name||'Unnamed')}</span>
           ${b.public===false?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);">PRIVATE</span>':''}
-          ${nsfwChannels?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:#f87171;">${nsfwChannels} NSFW</span>`:''}
+          ${nsfwChannels?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:var(--red);">${nsfwChannels} NSFW</span>`:''}
           ${boostLv?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,249,62,.08);color:#ffd93e;display:inline-flex;align-items:center;gap:2px;">${_boostSvg('9')} Lv${boostLv}</span>`:''}
         </div>
         <div style="font-size:11px;color:var(--muted);">Owner: <strong>${escapeHTML(b.owner||'?')}</strong> · ${memberCount} members · ${channelCount} channels</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.owner||'')}';adminSearchUser();}},150);" style="padding:5px 10px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:#60a5fa;font-size:11px;cursor:pointer;">Owner</button>
-        <button onclick="logAudit('bastion_review','${escapeHTML(b.name||'')}','Manual inspection');toast('Flagged for review','info')" style="padding:5px 10px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:7px;color:#f87171;font-size:11px;cursor:pointer;">Flag</button>
-        ${isSuperAdmin()?`<button onclick="_deleteBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}')" style="padding:5px 10px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);border-radius:7px;color:#f87171;font-size:11px;cursor:pointer;font-weight:700;">Delete</button>`:''}
+        <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.owner||'')}';adminSearchUser();}},150);" style="padding:5px 10px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:var(--blue);font-size:11px;cursor:pointer;">Owner</button>
+        <button onclick="logAudit('bastion_review','${escapeHTML(b.name||'')}','Manual inspection');toast('Flagged for review','info')" style="padding:5px 10px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;">Flag</button>
+        ${isSuperAdmin()?`<button onclick="_deleteBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}')" style="padding:5px 10px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;font-weight:700;">Delete</button>`:''}
       </div>
     </div>`}).join('');
 }
@@ -19497,7 +19497,7 @@ function initDesktopGameDetection() {
   // Listen for desktop app activity updates (v3.0.0)
   if (typeof window.fortizedDesktop.onActivityUpdate === 'function') {
     window.fortizedDesktop.onActivityUpdate((activityData) => {
-      console.log('[Fortized Desktop] Activity update:', activityData);
+      console.debug('[Desktop] Activity update:', activityData);
       // Send to server if user is authenticated
       if (CU?.username && FortizedSocial?.getSocket?.()) {
         try {
@@ -19513,7 +19513,7 @@ function initDesktopGameDetection() {
   // Register for desktop app connection events
   if (typeof window.fortizedDesktop.onAppConnected === 'function') {
     window.fortizedDesktop.onAppConnected((data) => {
-      console.log('[Fortized Desktop] App connected - Version:', data?.appVersion);
+      console.debug('[Desktop] App connected - Version:', data?.appVersion);
     });
   }
 
@@ -20258,7 +20258,7 @@ function renderGameCollectionTab(main) {
         + '<div style="flex:1;min-width:0;">'
         + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">'
         + '<span style="font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(g.name) + '</span>'
-        + (isPlaying ? '<span style="font-size:9px;font-weight:700;color:#3ecf6e;background:rgba(62,207,110,.12);padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.03em;flex-shrink:0;">Playing</span>' : '')
+        + (isPlaying ? '<span style="font-size:9px;font-weight:700;color:var(--green);background:rgba(62,207,110,.12);padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.03em;flex-shrink:0;">Playing</span>' : '')
         + (g.hidden ? '<span style="flex-shrink:0;opacity:.4;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></span>' : '')
         + '</div>'
         + (g.genre ? '<div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:2px;">' + escapeHTML(g.genre) + '</div>' : '')
@@ -20537,7 +20537,7 @@ function openGameCollectionPicker() {
   _checkIGDB().then(ok => {
     const badge = document.getElementById('gc-igdb-badge');
     if (badge) badge.innerHTML = ok
-      ? '<span style="color:#3ecf6e;">&#x2713;</span> Powered by <strong style="color:rgba(255,255,255,.5);">IGDB</strong> — search any game'
+      ? '<span style="color:var(--green);">&#x2713;</span> Powered by <strong style="color:rgba(255,255,255,.5);">IGDB</strong> — search any game'
       : 'Local catalog · Set TWITCH_CLIENT_ID & TWITCH_CLIENT_SECRET for IGDB';
     if (ok && CU.gameCollection?.length) _enrichGamesFromIGDB(CU.gameCollection);
   });
@@ -20717,7 +20717,7 @@ function renderProfileWidgetsTab(main) {
       const ARCHETYPE_TRAITS = ['Strategist','Explorer','Completionist','Speedrunner','Social','Competitive','Creative','Casual','Hardcore','Collector','Storyteller','PvP Lover','Co-op Fan','Solo Player','Min-Maxer','Roleplayer'];
       configHtml = `<div style="margin-top:8px;">
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
-          ${traits.map((t,i) => `<span style="padding:4px 10px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15);border-radius:8px;font-size:11px;font-weight:600;color:#fbbf24;display:flex;align-items:center;gap:4px;">${escapeHTML(t)} <span onclick="event.stopPropagation();_removeArchetypeTrait(${i})" style="cursor:pointer;opacity:.5;font-size:14px;">&times;</span></span>`).join('')}
+          ${traits.map((t,i) => `<span style="padding:4px 10px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15);border-radius:8px;font-size:11px;font-weight:600;color:var(--gold);display:flex;align-items:center;gap:4px;">${escapeHTML(t)} <span onclick="event.stopPropagation();_removeArchetypeTrait(${i})" style="cursor:pointer;opacity:.5;font-size:14px;">&times;</span></span>`).join('')}
         </div>
         ${traits.length < 4 ? `<select class="settings-input" style="padding:6px 10px;font-size:12px;" onchange="if(this.value)_addArchetypeTrait(this.value);this.value=''">
           <option value="">Add a trait (${4 - traits.length} left)</option>
@@ -20802,7 +20802,7 @@ function _openAddWidgetPanel() {
           </div>
         </div>
         ${isOn
-          ? `<span style="font-size:9px;font-weight:700;color:#3ecf6e;background:rgba(62,207,110,.1);padding:4px 10px;border-radius:6px;letter-spacing:.03em;text-transform:uppercase;">Active</span>`
+          ? `<span style="font-size:9px;font-weight:700;color:var(--green);background:rgba(62,207,110,.1);padding:4px 10px;border-radius:6px;letter-spacing:.03em;text-transform:uppercase;">Active</span>`
           : `<span style="font-size:9px;font-weight:700;color:rgba(255,255,255,.25);background:rgba(255,255,255,.04);padding:4px 10px;border-radius:6px;letter-spacing:.03em;text-transform:uppercase;">Add</span>`}
       </div>
       ${previewHtml}
@@ -21169,7 +21169,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;">Player Archetype</div>
         </div>
-        ${traits.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;">${traits.map(t => `<span style="padding:6px 14px;background:rgba(251,191,36,.08);border:1.5px solid rgba(251,191,36,.15);border-radius:20px;font-size:12px;font-weight:700;color:#fbbf24;display:flex;align-items:center;gap:5px;">
+        ${traits.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;">${traits.map(t => `<span style="padding:6px 14px;background:rgba(251,191,36,.08);border:1.5px solid rgba(251,191,36,.15);border-radius:20px;font-size:12px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:5px;">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           ${escapeHTML(t)}</span>`).join('')}</div>` : (isOwnProfile ? `<div style="text-align:center;padding:12px;color:rgba(255,255,255,.2);font-size:12px;">No traits added — customize in settings</div>` : `<div style="text-align:center;padding:12px;color:rgba(255,255,255,.2);font-size:12px;">No traits set</div>`)}
       </div>`;
@@ -21315,18 +21315,18 @@ async function _refreshSpotifyToken() {
 function _updateSpotifyWidget() {
   const spotifyData = CU.spotifyNowPlaying;
   if (!spotifyData) {
-    console.log('[Spotify Widget] No data to update');
+    console.debug('[Spotify] No data to update');
     return;
   }
 
   // Find all spotify widgets on the page (in profile cards, modals, etc)
   const spotifyWidgets = document.querySelectorAll('[style*="1DB954"]');
-  console.log('[Spotify Widget] Found', spotifyWidgets.length, 'potential widgets');
+  console.debug('[Spotify] Found', spotifyWidgets.length, 'widgets');
 
   spotifyWidgets.forEach(widget => {
     // Check if this is actually a spotify widget (has spotify-related content)
     if (widget.textContent.includes('Spotify') || widget.textContent.includes('SPOTIFY')) {
-      console.log('[Spotify Widget] Updating widget');
+      console.debug('[Spotify] Updating widget');
 
       if (spotifyData.isPlaying) {
         const progressPct = spotifyData.durationMs ? Math.min(100, (spotifyData.progressMs / spotifyData.durationMs) * 100) : 0;
@@ -21355,7 +21355,7 @@ function _updateSpotifyWidget() {
             </div>
           </div>
         `;
-        console.log('[Spotify Widget] Updated with playing track:', spotifyData.track);
+        console.debug('[Spotify] Updated with track:', spotifyData.track);
       }
     }
   });
@@ -21366,7 +21366,7 @@ async function _pollSpotifyNowPlaying() {
   if (!CU?.spotifyToken) return;
   // Auto-refresh token if expired (within 60 seconds of expiry)
   if (CU.spotifyTokenExpiry && Date.now() > CU.spotifyTokenExpiry - 60000) {
-    console.log('[Spotify] Token expiring soon, refreshing...');
+    console.debug('[Spotify] Token expiring soon, refreshing...');
     const refreshed = await _refreshSpotifyToken();
     if (!refreshed) {
       console.error('[Spotify] Token refresh failed');
@@ -21450,7 +21450,7 @@ async function _pollSpotifyNowPlaying() {
         await saveUser(true);
       }
       else {
-        console.log('[Spotify] Token refreshed, retrying poll...');
+        console.debug('[Spotify] Token refreshed, retrying poll...');
         return _pollSpotifyNowPlaying(); // retry with new token
       }
     } else {
@@ -21974,7 +21974,7 @@ async function openAddGameModal() {
           + '<div style="font-size:10.5px;color:var(--muted);">' + escapeHTML(name) + '</div>'
           + '</div>'
           + (added
-            ? '<span style="font-size:10px;font-weight:700;text-transform:uppercase;color:#3ecf6e;letter-spacing:.05em;">Added</span>'
+            ? '<span style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--green);letter-spacing:.05em;">Added</span>'
             : '<span style="font-size:10px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;">Add</span>')
           + '</div>';
       }).join('')
@@ -23109,7 +23109,7 @@ function openForumPost(chIdx, postIdx) {
   const manageHTML = canManage ? `
     <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0;">
       ${isAuthor ? `<button onclick="editForumPost(${chIdx},${postIdx})" style="background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:var(--accent);border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;">✏ Edit</button>` : ''}
-      <button onclick="showCustomConfirm('Delete this post permanently?',function(){deleteForumPost(${chIdx},${postIdx})})" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);color:#f87171;border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;">🗑 Delete</button>
+      <button onclick="showCustomConfirm('Delete this post permanently?',function(){deleteForumPost(${chIdx},${postIdx})})" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);color:var(--red);border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;">🗑 Delete</button>
     </div>` : '';
   wrap.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">'
     +'<div class="forum-detail-header">'
@@ -23752,7 +23752,7 @@ async function _vcSetup(isCaller) {
       audioEl.volume = 1.0;
       audioEl.style.display = 'none';
       audioEl.onerror = (err) => console.error('[Voice] Audio element error:', err);
-      audioEl.onloadedmetadata = () => console.log('[Voice] Remote audio metadata loaded');
+      audioEl.onloadedmetadata = () => console.debug('[Voice] Remote audio metadata loaded');
       document.body.appendChild(audioEl);
     }
     audioEl.srcObject = _vc.remoteStream;
@@ -23764,7 +23764,7 @@ async function _vcSetup(isCaller) {
         document.addEventListener('click', () => { audioEl.play().catch(()=>{}); }, {once: true});
       });
     }
-    console.log('[Voice] Incoming audio track received, stream:', e.streams[0]?.id);
+    console.debug('[Voice] Incoming audio track received, stream:', e.streams[0]?.id);
     // If a screen share video track arrives, show it in the call room
     if (e.track.kind === 'video') {
       _showScreenInRoom(true);
@@ -24081,7 +24081,7 @@ async function renderVoiceCallUI(partner, isCaller) {
   endBtn.onmouseenter = ()=>endBtn.style.transform='scale(1.08)';
   endBtn.onmouseleave = ()=>endBtn.style.transform='scale(1)';
   const endLbl = document.createElement('div');
-  endLbl.style.cssText = 'font-size:11px;color:#f87171;font-weight:700;';
+  endLbl.style.cssText = 'font-size:11px;color:var(--red);font-weight:700;';
   endLbl.textContent = 'Leave Call';
   endWrap.appendChild(endBtn); endWrap.appendChild(endLbl);
   controls.appendChild(endWrap);
@@ -25183,7 +25183,7 @@ async function openGameActivityPicker() {
           +'<div style="font-size:12.5px;font-weight:700;color:#fff;">'+escapeHTML(a.displayName)+'</div>'
           +(a.displayName !== a.procName ? '<div style="font-size:10px;color:var(--muted);">'+escapeHTML(a.procName)+'</div>' : '')
           +'</div>'
-          +(isActive ? '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:#3ecf6e;letter-spacing:.06em;">Active</span>' : '')
+          +(isActive ? '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--green);letter-spacing:.06em;">Active</span>' : '')
           +'</div>';
       }).join('')
       + '</div>';
@@ -25210,7 +25210,7 @@ function renderGameActivityOnProfile(u, containerEl) {
   div.innerHTML = (cover
     ? '<img src="'+escapeHTML(cover)+'" style="width:36px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML=\'<span style=font-size:24px;flex-shrink:0;>'+(ga.icon||'🎮')+'</span>\'">'
     : '<span style="font-size:24px;flex-shrink:0;">'+(ga.icon||'🎮')+'</span>')
-    +'<div style="flex:1;min-width:0;"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#3ecf6e;">Playing a Game</div>'
+    +'<div style="flex:1;min-width:0;"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--green);">Playing a Game</div>'
     +'<div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHTML(ga.name)+'</div>'
     +(ga.genre ? '<div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-top:1px;">'+escapeHTML(ga.genre)+'</div>' : '')
     +'</div>';
@@ -25309,7 +25309,7 @@ function _showWatchInRoom(vid) {
     +'<div style="display:flex;gap:8px;align-items:center;">'
     +'<button id="wt-sync-pause" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">⏸ Pause</button>'
     +'<button id="wt-sync-play" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">▶ Play</button>'
-    +'<button id="wt-close-btn" style="background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:#f87171;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">✕ Close</button>'
+    +'<button id="wt-close-btn" style="background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:var(--red);padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;">✕ Close</button>'
     +'</div>';
   // Video area
   const videoArea = document.createElement('div');
@@ -25483,7 +25483,7 @@ async function checkFriendTarget(val) {
         // Show user preview card
         if (preview) {
           let statusLabel = '';
-          if (isFriend) statusLabel = '<span style="font-size:10.5px;color:#3ecf6e;font-weight:700;padding:2px 8px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.15);border-radius:6px;">Already Friends</span>';
+          if (isFriend) statusLabel = '<span style="font-size:10.5px;color:var(--green);font-weight:700;padding:2px 8px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.15);border-radius:6px;">Already Friends</span>';
           else if (hasPending) statusLabel = '<span style="font-size:10.5px;color:var(--accent);font-weight:700;padding:2px 8px;background:rgba(254,248,61,.08);border:1px solid rgba(254,248,61,.12);border-radius:6px;">Pending</span>';
           preview.innerHTML = '<div style="display:flex;align-items:center;gap:12px;">'
             + '<div style="flex-shrink:0;">'+buildAvatarHTML(u.pfp||null, u.displayName||u.username, 44)+'</div>'
@@ -25723,7 +25723,7 @@ function renderAtelierTab(tab) {
             <div style="width:40px;height:40px;border-radius:14px;background:rgba(167,139,250,.1);display:flex;align-items:center;justify-content:center;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             </div>
-            <span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(167,139,250,.12);color:#a78bfa;">SHOP</span>
+            <span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(167,139,250,.12);color:var(--purple);">SHOP</span>
           </div>
           <div style="font-family:var(--font-display);font-size:14.5px;font-weight:800;color:#fff;margin-bottom:5px;">Browse Items</div>
           <div style="font-size:11px;color:rgba(255,255,255,.35);">Themes, decorations & more</div>
@@ -25735,7 +25735,7 @@ function renderAtelierTab(tab) {
             <div style="width:40px;height:40px;border-radius:14px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;">
               ${hasPlus ? _radiancePlusImg('20') : hasRad ? _radianceImg('20') : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'}
             </div>
-            ${hasRad||hasPlus?'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(62,207,110,.12);color:#3ecf6e;">ACTIVE</span>':'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(251,146,60,.12);color:#fb923c;">UPGRADE</span>'}
+            ${hasRad||hasPlus?'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(62,207,110,.12);color:var(--green);">ACTIVE</span>':'<span style="font-size:8.5px;font-weight:800;letter-spacing:.08em;padding:3px 10px;border-radius:8px;background:rgba(251,146,60,.12);color:#fb923c;">UPGRADE</span>'}
           </div>
           <div style="font-family:var(--font-display);font-size:14.5px;font-weight:800;color:#fff;margin-bottom:5px;">${hasPlus?'Radiance+':hasRad?'Radiance':'Get Radiance'}</div>
           <div style="font-size:11px;color:rgba(255,255,255,.35);">${hasPlus?daysPlus+' days left':hasRad?daysRad+' days left':'Premium perks & badge'}</div>
@@ -26120,9 +26120,9 @@ function renderAtelierTab(tab) {
           <div style="margin-bottom:36px;">
             <div class="collection-bar" style="background:linear-gradient(135deg,rgba(5,8,18,.95),rgba(10,18,40,.8),rgba(30,60,130,.3),rgba(96,165,250,.12));border-color:rgba(96,165,250,.12);" onclick="setShopCat('All');setShopTab('browse')" onmouseover="this.style.borderColor='rgba(96,165,250,.3)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)'">
               <div style="position:absolute;top:-30px;right:10px;width:160px;height:160px;background:radial-gradient(circle,rgba(96,165,250,.06) 0%,transparent 70%);pointer-events:none;"></div>
-              <div class="collection-bar-title" style="color:#60a5fa;text-shadow:0 2px 20px rgba(96,165,250,.35);">MIDNIGHT COLLECTION</div>
+              <div class="collection-bar-title" style="color:var(--blue);text-shadow:0 2px 20px rgba(96,165,250,.35);">MIDNIGHT COLLECTION</div>
               <div class="collection-bar-desc">Command the night with deep blue aesthetics</div>
-              <button class="collection-bar-btn" style="background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.2);color:#60a5fa;" onmouseover="this.style.background='rgba(96,165,250,.2)'" onmouseout="this.style.background='rgba(96,165,250,.1)'">
+              <button class="collection-bar-btn" style="background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.2);color:var(--blue);" onmouseover="this.style.background='rgba(96,165,250,.2)'" onmouseout="this.style.background='rgba(96,165,250,.1)'">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 Shop the Collection
               </button>
@@ -26160,7 +26160,7 @@ function renderAtelierTab(tab) {
                       </div>`
                       :`<div class="sic-price"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> 100</div>`}
                   </div>
-                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:#3ecf6e;flex-shrink:0;">Owned</div>'}
+                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">Owned</div>'}
                 </div>
               </div>
             </div>
@@ -26219,7 +26219,7 @@ function renderAtelierTab(tab) {
                     <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;">${a.name}</div>
                     <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.4;margin-bottom:10px;">${a.desc}</div>
                     ${owned
-                      ? '<div style="padding:7px 14px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:10px;color:#3ecf6e;font-size:11px;font-weight:700;text-align:center;">Owned</div>'
+                      ? '<div style="padding:7px 14px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:10px;color:var(--green);font-size:11px;font-weight:700;text-align:center;">Owned</div>'
                       : `<button onclick="event.stopPropagation();buyAppearance('${a.id}',${a.price})" style="width:100%;padding:8px 14px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> ${a.price} Onyx</button>`}
                   </div>
                 </div>`;
@@ -26236,7 +26236,7 @@ function renderAtelierTab(tab) {
                 <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:2px;">Onyx Badge</div>
                 <div style="font-size:11px;color:rgba(255,255,255,.3);">Evolves as you invest Onyx</div>
               </div>
-              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:8px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> 100</button>`:'<div style="font-size:11px;font-weight:700;color:#3ecf6e;">Owned</div>'}
+              ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:8px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> 100</button>`:'<div style="font-size:11px;font-weight:700;color:var(--green);">Owned</div>'}
             </div>` : ''}
             ${(shopCat==='All'||shopCat==='Decorations') ? `
             <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
@@ -26291,7 +26291,7 @@ function renderAtelierTab(tab) {
                       ${bundle.items.map(item => `<span style="font-size:10px;padding:3px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-weight:600;">${item}</span>`).join('')}
                     </div>
                     ${bundleOwned
-                      ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:#3ecf6e;font-size:12px;font-weight:700;text-align:center;">Owned</div>'
+                      ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:var(--green);font-size:12px;font-weight:700;text-align:center;">Owned</div>'
                       : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:#0f1119;border:none;border-radius:12px;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:3px;">${bundle.origPrice}</span> ${bundle.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${bundle.id}','${bundle.name}',${bundle.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;" title="Gift"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
                   </div>
                 </div>`;
@@ -28234,7 +28234,7 @@ function _buildGiftEmbedHTML(type, giftCode, giftData) {
     return `<div class="ftz-embed" style="--embed-color:#ffd93e;"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head">${giftSvg} Radiance Gift</div><div class="ftz-embed-body"><div class="ftz-embed-title">${escapeHTML(from)} gifts you Radiance</div><div class="ftz-embed-desc">30 days of Radiance perks — profile glow, custom banner, increased uploads & more</div></div>${claimed?'<div style="padding:6px 14px 12px;font-size:11px;color:rgba(255,255,255,.3);font-weight:600;">Already claimed</div>':'<div class="ftz-embed-btn primary" onclick="event.stopPropagation();claimGift(\''+escapeHTML(giftCode)+'\')">Claim Radiance</div>'}</div></div></div>`;
   } else {
     const itemName = giftData?.itemName || 'Shop Item';
-    return `<div class="ftz-embed" style="--embed-color:#a78bfa;"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head">${giftSvg} Item Gift</div><div class="ftz-embed-body"><div class="ftz-embed-title">${escapeHTML(from)} gifts you: ${escapeHTML(itemName)}</div><div class="ftz-embed-desc">A shop item gift from a friend</div></div>${claimed?'<div style="padding:6px 14px 12px;font-size:11px;color:rgba(255,255,255,.3);font-weight:600;">Already claimed</div>':'<div class="ftz-embed-btn primary" style="background:#a78bfa;" onclick="event.stopPropagation();claimGift(\''+escapeHTML(giftCode)+'\')">Claim Item</div>'}</div></div></div>`;
+    return `<div class="ftz-embed" style="--embed-color:var(--purple);"><div class="ftz-embed-inner"><div class="ftz-embed-stripe"></div><div class="ftz-embed-content"><div class="ftz-embed-head">${giftSvg} Item Gift</div><div class="ftz-embed-body"><div class="ftz-embed-title">${escapeHTML(from)} gifts you: ${escapeHTML(itemName)}</div><div class="ftz-embed-desc">A shop item gift from a friend</div></div>${claimed?'<div style="padding:6px 14px 12px;font-size:11px;color:rgba(255,255,255,.3);font-weight:600;">Already claimed</div>':'<div class="ftz-embed-btn primary" style="background:#a78bfa;" onclick="event.stopPropagation();claimGift(\''+escapeHTML(giftCode)+'\')">Claim Item</div>'}</div></div></div>`;
   }
 }
 
@@ -29251,10 +29251,10 @@ function _buildPreviewMockup(t, label) {
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:flex-start;">
-          <div style="width:26px;height:26px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#a78bfa;">K</div>
+          <div style="width:26px;height:26px;border-radius:50%;background:rgba(140,100,220,.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--purple);">K</div>
           <div style="min-width:0;">
             <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
-              <span style="font-size:10px;font-weight:700;color:#a78bfa;">Knight</span>
+              <span style="font-size:10px;font-weight:700;color:var(--purple);">Knight</span>
               <span style="font-size:8px;color:${t.muted};">Today 14:34</span>
             </div>
             <div style="font-size:10px;color:${textMain};line-height:1.4;">Hey, welcome aboard!</div>

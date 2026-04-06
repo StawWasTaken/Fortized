@@ -47,6 +47,7 @@ app.use((req, res, next) => {
   res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.set('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
   res.set('X-DNS-Prefetch-Control', 'on');
+  res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   next();
 });
 
@@ -96,6 +97,7 @@ async function getIGDBToken() {
 app.post('/api/igdb/search', async (req, res) => {
   const { query } = req.body;
   if (!query || typeof query !== 'string') return res.status(400).json({ error: 'query required' });
+  if (query.length > 200) return res.status(400).json({ error: 'query too long' });
   const token = await getIGDBToken();
   if (!token) return res.status(503).json({ error: 'IGDB not configured' });
   try {
@@ -187,7 +189,7 @@ app.post('/api/presence/offline', async (req, res) => {
   const { username } = req.body || {};
   if (!username || typeof username !== 'string') return res.status(400).json({ error: 'username required' });
   const u = username.trim().toLowerCase();
-  if (!u) return res.status(400).json({ error: 'invalid username' });
+  if (!u || u.length > 32) return res.status(400).json({ error: 'invalid username' });
 
   // Only mark offline if no active socket exists for this user
   const hasSocket = onlineUsers.has(u);
@@ -309,6 +311,7 @@ app.use((req, res, next) => {
 // These are ephemeral — Firebase remains the source of truth for persistence.
 // Socket.io handles the real-time broadcast layer.
 const onlineUsers = new Map();   // username -> { socketId, status, gameActivity }
+const userSockets = new Map();   // username -> Set<socketId> (multi-tab tracking)
 const typingState = new Map();   // roomKey -> Set<username>
 const roomMembers = new Map();   // roomKey -> Set<socketId>
 
@@ -349,8 +352,9 @@ io.on('connection', (socket) => {
 
   // ── Auth / Identify ──
   socket.on('identify', (data) => {
+    if (!data || typeof data !== 'object') return;
     username = (data.username || '').trim().toLowerCase();
-    if (!username) return;
+    if (!username || username.length > 32) return;
     // Tag socket so multi-tab disconnect check can find it
     socket.data = socket.data || {};
     socket.data.username = username;
@@ -362,6 +366,9 @@ io.on('connection', (socket) => {
       status,
       gameActivity,
     });
+    // Track multi-tab connections for fast disconnect lookups
+    if (!userSockets.has(username)) userSockets.set(username, new Set());
+    userSockets.get(username).add(socket.id);
     socket.join(`user:${username}`);
 
     // Persist online status to DB (user just connected)
@@ -392,7 +399,8 @@ io.on('connection', (socket) => {
 
   // ── Game / App Activity ──
   socket.on('activity:set', (data) => {
-    if (!username) return;
+    if (!username || !data || typeof data !== 'object') return;
+    if (!rateLimit(socket.id, 'activity:set', 500)) return;
     const entry = onlineUsers.get(username) || { socketId: socket.id };
     entry.gameActivity = data.activity || null;
     entry.activityState = data.activityState || null;  // Store new multi-activity format
@@ -406,7 +414,8 @@ io.on('connection', (socket) => {
 
   // Handle real-time activity updates from broadcastIfChanged()
   socket.on('activity:update', (data) => {
-    if (!username) return;
+    if (!username || !data || typeof data !== 'object') return;
+    if (!rateLimit(socket.id, 'activity:update', 500)) return;
     const entry = onlineUsers.get(username) || { socketId: socket.id };
     entry.activityState = data.activityState || null;
     entry.gameActivity = data.activityState?.primary || null;  // Keep backward compat
@@ -420,6 +429,8 @@ io.on('connection', (socket) => {
 
   // ── Join a chat room (DM, bastion channel, group chat) ──
   socket.on('room:join', (data) => {
+    if (!data || !data.type) return;
+    if (!rateLimit(socket.id, 'room:join', 200)) return;
     const key = roomKey(data.type, data.id1, data.id2);
     socket.join(key);
     if (!roomMembers.has(key)) roomMembers.set(key, new Set());
@@ -427,6 +438,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('room:leave', (data) => {
+    if (!data || !data.type) return;
     const key = roomKey(data.type, data.id1, data.id2);
     socket.leave(key);
     roomMembers.get(key)?.delete(socket.id);
@@ -464,7 +476,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('typing:stop', (data) => {
-    if (!username) return;
+    if (!username || !data || !data.type) return;
     const key = roomKey(data.type, data.id1, data.id2);
     typingState.get(key)?.delete(username);
     socket.to(key).emit('typing:update', { room: key, users: [...(typingState.get(key) || [])] });
@@ -526,6 +538,7 @@ io.on('connection', (socket) => {
   });
   socket.on('friend:accept', (data) => {
     if (!username || !data?.to) return;
+    if (!rateLimit(socket.id, 'friend:accept', 1000)) return;
     io.to(`user:${data.to}`).emit('friend:accepted', { from: username });
   });
 
@@ -555,6 +568,7 @@ io.on('connection', (socket) => {
   });
   socket.on('announcement:clear', () => {
     if (!username) return;
+    if (!rateLimit(socket.id, 'announcement:clear', 5000)) return;
     io.emit('announcement:cleared', { from: username });
   });
 
@@ -593,19 +607,21 @@ io.on('connection', (socket) => {
     if (!username) return;
     const prevEntry = onlineUsers.get(username);
 
+    // Remove this socket from the user's socket set
+    const sockets = userSockets.get(username);
+    if (sockets) {
+      sockets.delete(socket.id);
+      if (sockets.size === 0) userSockets.delete(username);
+    }
+
     // Only mark offline if the user doesn't have another active connection
-    // (handles multi-tab: if they still have a tab open, stay online)
-    const stillConnected = [...io.sockets.sockets.values()].some(s => {
-      return s.id !== socket.id && s.data?.username === username;
-    });
+    const stillConnected = sockets && sockets.size > 0;
 
     if (stillConnected) {
       // User still has other tabs — re-associate onlineUsers with a remaining socket
-      const remainingSocket = [...io.sockets.sockets.values()].find(s =>
-        s.id !== socket.id && s.data?.username === username
-      );
-      if (remainingSocket && prevEntry) {
-        onlineUsers.set(username, { ...prevEntry, socketId: remainingSocket.id });
+      const remainingSocketId = sockets.values().next().value;
+      if (remainingSocketId && prevEntry) {
+        onlineUsers.set(username, { ...prevEntry, socketId: remainingSocketId });
       }
     } else {
       // User is truly gone — remove from onlineUsers and broadcast offline
@@ -640,6 +656,7 @@ io.on('connection', (socket) => {
   // ── Bulk Presence Query ──
   socket.on('presence:query', (usernames, callback) => {
     if (typeof callback !== 'function') return;
+    if (!rateLimit(socket.id, 'presence:query', 2000)) return callback({});
     if (!Array.isArray(usernames) || usernames.length > 200) return callback({});
     const result = {};
     usernames.forEach(u => {

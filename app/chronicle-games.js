@@ -144,20 +144,18 @@ function showChronicleDashboard() {
   dashboard.id = 'chronicle-dashboard';
   dashboard.style.cssText = `position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; font-family: ${CHRONICLE.FONT}; overflow: hidden;`;
 
-  // TOP BAR
+  // TOP BAR with Chap1Title image
   const topbar = document.createElement('div');
-  topbar.style.cssText = `display: flex; justify-content: space-between; align-items: center; padding: 16px 25px; background: #000; border-bottom: 3px solid #000; box-shadow: 0 4px 12px rgba(0,0,0,0.2);`;
+  topbar.style.cssText = `display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #000; border-bottom: 3px solid #000;`;
 
-  const title = document.createElement('div');
-  title.style.cssText = `font-size: 18px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #fff;`;
-  title.textContent = 'The Fortized Grand Chronicle';
-  topbar.appendChild(title);
+  const titleImg = document.createElement('img');
+  titleImg.src = `${CHRONICLE.ASSET_PATH}Chap1Title.png`;
+  titleImg.style.cssText = `height: 50px; width: auto;`;
+  topbar.appendChild(titleImg);
 
   const closeBtn = document.createElement('button');
-  closeBtn.style.cssText = `width: 36px; height: 36px; background: #fff; color: #000; border: 2px solid #000; border-radius: 2px; font-size: 20px; cursor: pointer; font-weight: 700; transition: all 0.2s;`;
+  closeBtn.style.cssText = `width: 36px; height: 36px; background: #fff; color: #000; border: 2px solid #000; border-radius: 2px; font-size: 20px; cursor: pointer; font-weight: 700;`;
   closeBtn.textContent = '✕';
-  closeBtn.onmouseover = () => { closeBtn.style.background = '#f0f0f0'; closeBtn.style.transform = 'scale(1.08)'; };
-  closeBtn.onmouseout = () => { closeBtn.style.background = '#fff'; closeBtn.style.transform = 'scale(1)'; };
   closeBtn.onclick = () => { pauseBgMusic(); dashboard.remove(); CHRONICLE.sessionStarted = false; };
   topbar.appendChild(closeBtn);
   dashboard.appendChild(topbar);
@@ -165,207 +163,173 @@ function showChronicleDashboard() {
   const main = document.createElement('div');
   main.style.cssText = `display: flex; flex: 1; overflow: hidden;`;
 
-  // LEFT PANEL - Player Stats (Bottom-Left style)
+  // LEFT PANEL - Player Stats with UIBox
   const leftPanel = document.createElement('div');
-  leftPanel.style.cssText = `width: 200px; background: #f5f5f5; border-right: 3px solid #000; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;`;
-
-  const statsTitle = document.createElement('div');
-  statsTitle.style.cssText = `font-size: 13px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #000; border-bottom: 2px solid #000; padding-bottom: 8px;`;
-  statsTitle.textContent = 'Player Stats';
-  leftPanel.appendChild(statsTitle);
+  leftPanel.style.cssText = `width: 220px; background: #f5f5f5; border-right: 3px solid #000; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;`;
 
   // Level circle
   const levelCircle = document.createElement('div');
-  levelCircle.style.cssText = `width: 60px; height: 60px; border-radius: 50%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; margin: 0 auto;`;
+  levelCircle.style.cssText = `width: 70px; height: 70px; border-radius: 50%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 900; margin: 0 auto; border: 3px solid #fff;`;
+  levelCircle.id = 'level-display';
   levelCircle.textContent = `${CHRONICLE.playerStats.level}`;
-  levelCircle.title = `Level ${CHRONICLE.playerStats.level}`;
   leftPanel.appendChild(levelCircle);
 
   // XP Bar
+  const xpContainer = document.createElement('div');
   const xpLabel = document.createElement('div');
-  xpLabel.style.cssText = `font-size: 11px; font-weight: 700; color: #666; text-align: center; margin-bottom: 4px;`;
+  xpLabel.style.cssText = `font-size: 10px; font-weight: 700; color: #000; margin-bottom: 4px;`;
+  xpLabel.id = 'xp-label';
   xpLabel.textContent = `XP: ${CHRONICLE.playerStats.xp}/100`;
-  leftPanel.appendChild(xpLabel);
+  xpContainer.appendChild(xpLabel);
 
   const xpBar = document.createElement('div');
   xpBar.style.cssText = `width: 100%; height: 12px; background: #ddd; border: 2px solid #000; border-radius: 2px; overflow: hidden;`;
   const xpFill = document.createElement('div');
+  xpFill.id = 'xp-fill';
   xpFill.style.cssText = `height: 100%; background: #000; width: ${CHRONICLE.playerStats.xp}%;`;
   xpBar.appendChild(xpFill);
-  leftPanel.appendChild(xpBar);
+  xpContainer.appendChild(xpBar);
+  leftPanel.appendChild(xpContainer);
 
-  // Stats rows with larger icons
+  // UIBox wrapper for stat boxes
   [
-    { icon: 'IconJesterHat.png', label: 'Joy', value: `${CHRONICLE.playerStats.joy}%`, key: 'joy' },
-    { icon: 'IconCoin.png', label: 'FortCoins', value: CHRONICLE.playerStats.fortCoins, key: 'fortCoins' },
-    { icon: 'IconHammer.png', label: 'Upgrades', value: CHRONICLE.playerStats.upgrades, key: 'upgrades' }
+    { icon: 'IconJesterHat.png', label: 'Joy', id: 'joy-stat', value: `${CHRONICLE.playerStats.joy}%`, key: 'joy' },
+    { icon: 'IconCoin.png', label: 'FortCoins', id: 'coins-stat', value: CHRONICLE.playerStats.fortCoins, key: 'fortCoins' },
+    { icon: 'IconHammer.png', label: 'Upgrades', id: 'upgrades-stat', value: CHRONICLE.playerStats.upgrades, key: 'upgrades' }
   ].forEach(stat => {
-    const row = document.createElement('div');
-    row.style.cssText = `display: flex; align-items: center; gap: 10px; padding: 10px; background: #fff; border: 2px solid #000; border-radius: 4px;`;
+    const statBox = document.createElement('div');
+    statBox.style.cssText = `position: relative; height: 70px;`;
+
+    const uiboxImg = document.createElement('img');
+    uiboxImg.src = `${CHRONICLE.ASSET_PATH}UIBox.png`;
+    uiboxImg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
+    statBox.appendChild(uiboxImg);
+
+    const content = document.createElement('div');
+    content.style.cssText = `position: absolute; inset: 0; padding: 8px; display: flex; align-items: center; gap: 8px;`;
 
     const icon = document.createElement('img');
     icon.src = `${CHRONICLE.ASSET_PATH}${stat.icon}`;
-    icon.style.cssText = `width: 32px; height: 32px; object-fit: contain;`;
-    row.appendChild(icon);
+    icon.style.cssText = `width: 28px; height: 28px; object-fit: contain;`;
+    content.appendChild(icon);
 
     const info = document.createElement('div');
     info.style.cssText = `flex: 1;`;
     const label = document.createElement('div');
-    label.style.cssText = `font-size: 10px; font-weight: 700; color: #666;`;
+    label.style.cssText = `font-size: 9px; font-weight: 700; color: #666;`;
     label.textContent = stat.label;
     info.appendChild(label);
     const value = document.createElement('div');
-    value.style.cssText = `font-size: 14px; font-weight: 900; color: #000;`;
+    value.style.cssText = `font-size: 13px; font-weight: 900; color: #000;`;
+    value.id = stat.id;
     value.textContent = stat.value;
-    value.id = `stat-${stat.key}`;
     info.appendChild(value);
-    row.appendChild(info);
+    content.appendChild(info);
 
-    if (stat.key === 'joy' && CHRONICLE.playerStats.joy < 100) {
-      const restBtn = document.createElement('button');
-      restBtn.style.cssText = `padding: 4px 8px; background: #000; color: #fff; border: none; border-radius: 2px; font-size: 9px; font-weight: 700; cursor: pointer; white-space: nowrap;`;
-      restBtn.textContent = 'Rest';
-      restBtn.onclick = () => startResting();
-      row.appendChild(restBtn);
-    }
-
-    leftPanel.appendChild(row);
+    statBox.appendChild(content);
+    leftPanel.appendChild(statBox);
   });
 
   main.appendChild(leftPanel);
 
-  // CENTER PANEL - Map and Event Details
+  // CENTER PANEL - Map
   const centerPanel = document.createElement('div');
-  centerPanel.style.cssText = `flex: 1; background: #fff; border-right: 3px solid #000; display: flex; flex-direction: column; overflow: hidden;`;
+  centerPanel.style.cssText = `flex: 1; background: #fff; border-right: 3px solid #000; display: flex; flex-direction: column; overflow: hidden; position: relative;`;
 
-  // Map
+  // Map background
   const mapContainer = document.createElement('div');
   mapContainer.style.cssText = `flex: 1; position: relative; overflow: hidden;`;
   const mapImg = document.createElement('img');
   mapImg.src = `${CHRONICLE.ASSET_PATH}IRL Human World Map 1452.png`;
-  mapImg.style.cssText = `width: 100%; height: 100%; object-fit: cover; opacity: 0.3;`;
+  mapImg.style.cssText = `width: 100%; height: 100%; object-fit: cover;`;
   mapContainer.appendChild(mapImg);
   centerPanel.appendChild(mapContainer);
 
   // Event Details Box
   const detailsBox = document.createElement('div');
-  detailsBox.style.cssText = `padding: 20px; background: #f5f5f5; border-top: 3px solid #000; min-height: 140px; display: flex; flex-direction: column; gap: 10px;`;
+  detailsBox.style.cssText = `padding: 16px; background: #f5f5f5; border-top: 3px solid #000; min-height: 120px;`;
 
   const selectedEvent = CHRONICLE.events.find(e => e.unlocked && !e.completed) || CHRONICLE.events[0];
 
   const eventName = document.createElement('div');
-  eventName.style.cssText = `font-size: 16px; font-weight: 900; color: #000; text-transform: uppercase;`;
+  eventName.style.cssText = `font-size: 14px; font-weight: 900; color: #000; margin-bottom: 4px;`;
   eventName.textContent = selectedEvent.title;
   detailsBox.appendChild(eventName);
 
   const eventLocation = document.createElement('div');
-  eventLocation.style.cssText = `font-size: 12px; font-weight: 700; color: #666;`;
+  eventLocation.style.cssText = `font-size: 11px; font-weight: 700; color: #666; margin-bottom: 8px;`;
   eventLocation.textContent = `📍 ${selectedEvent.location}`;
   detailsBox.appendChild(eventLocation);
 
-  const eventDesc = document.createElement('div');
-  eventDesc.style.cssText = `font-size: 12px; line-height: 1.5; color: #333;`;
-  eventDesc.textContent = 'Complete this event to unlock the next challenge and earn rewards.';
-  detailsBox.appendChild(eventDesc);
-
   const playBtn = document.createElement('button');
-  playBtn.style.cssText = `padding: 12px 30px; background: #000; color: #fff; border: 2px solid #000; border-radius: 4px; font-family: ${CHRONICLE.FONT}; font-weight: 900; font-size: 13px; cursor: pointer; text-transform: uppercase; transition: all 0.2s; margin-top: 8px; width: fit-content;`;
+  playBtn.style.cssText = `padding: 10px 25px; background: #000; color: #fff; border: 2px solid #000; border-radius: 3px; font-family: ${CHRONICLE.FONT}; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase;`;
   playBtn.textContent = '▶ Play';
   playBtn.disabled = !selectedEvent.unlocked || CHRONICLE.playerStats.joy < 20;
   playBtn.style.opacity = playBtn.disabled ? '0.5' : '1';
   playBtn.style.cursor = playBtn.disabled ? 'not-allowed' : 'pointer';
-  playBtn.onmouseover = () => { if (!playBtn.disabled) playBtn.style.background = '#333'; };
-  playBtn.onmouseout = () => { if (!playBtn.disabled) playBtn.style.background = '#000'; };
   playBtn.onclick = () => launchEvent(selectedEvent.id);
   detailsBox.appendChild(playBtn);
 
   centerPanel.appendChild(detailsBox);
   main.appendChild(centerPanel);
 
-  // RIGHT PANEL - War Orders (Events List)
+  // RIGHT PANEL - War Orders with UIBox2
   const rightPanel = document.createElement('div');
-  rightPanel.style.cssText = `width: 180px; background: #f5f5f5; border-left: 3px solid #000; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;`;
+  rightPanel.style.cssText = `width: 160px; background: #f5f5f5; border-left: 3px solid #000; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;`;
 
   const ordersTitle = document.createElement('div');
-  ordersTitle.style.cssText = `font-size: 12px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #000; border-bottom: 2px solid #000; padding-bottom: 8px;`;
+  ordersTitle.style.cssText = `font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #000; border-bottom: 2px solid #000; padding-bottom: 6px;`;
   ordersTitle.textContent = 'War Orders';
   rightPanel.appendChild(ordersTitle);
 
+  // Global stats
   const globalBox = document.createElement('div');
-  globalBox.style.cssText = `padding: 12px; background: #fff; border: 2px solid #000; border-radius: 4px; margin-bottom: 10px;`;
+  globalBox.style.cssText = `position: relative; height: 50px; margin-bottom: 4px;`;
 
-  const playersRow = document.createElement('div');
-  playersRow.style.cssText = `display: flex; align-items: center; gap: 8px; margin-bottom: 6px;`;
-  const playersIcon = document.createElement('img');
-  playersIcon.src = `${CHRONICLE.ASSET_PATH}IconKnight.png`;
-  playersIcon.style.cssText = `width: 24px; height: 24px; object-fit: contain;`;
-  playersRow.appendChild(playersIcon);
-  const playersText = document.createElement('div');
-  playersText.style.cssText = `font-size: 11px; font-weight: 700;`;
-  playersText.textContent = `${CHRONICLE.globalStats.totalPlayers} Players`;
-  playersRow.appendChild(playersText);
-  globalBox.appendChild(playersRow);
+  const globalUibox = document.createElement('img');
+  globalUibox.src = `${CHRONICLE.ASSET_PATH}UIBox2.png`;
+  globalUibox.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
+  globalBox.appendChild(globalUibox);
 
-  const vicRow = document.createElement('div');
-  vicRow.style.cssText = `display: flex; align-items: center; gap: 8px;`;
-  const vicIcon = document.createElement('img');
-  vicIcon.src = `${CHRONICLE.ASSET_PATH}IconSword.png`;
-  vicIcon.style.cssText = `width: 24px; height: 24px; object-fit: contain;`;
-  vicRow.appendChild(vicIcon);
-  const vicText = document.createElement('div');
-  vicText.style.cssText = `font-size: 11px; font-weight: 700;`;
-  vicText.textContent = `${CHRONICLE.globalStats.victories} Victories`;
-  vicRow.appendChild(vicText);
-  globalBox.appendChild(vicRow);
+  const globalContent = document.createElement('div');
+  globalContent.style.cssText = `position: absolute; inset: 0; padding: 4px; font-size: 9px; font-weight: 700; display: flex; flex-direction: column; justify-content: center;`;
+  globalContent.textContent = `${CHRONICLE.globalStats.totalPlayers} 👥 | ${CHRONICLE.globalStats.victories} ⚔`;
+  globalBox.appendChild(globalContent);
   rightPanel.appendChild(globalBox);
 
+  // Event buttons with UIBox2
   CHRONICLE.events.forEach((evt) => {
+    const btnWrapper = document.createElement('div');
+    btnWrapper.style.cssText = `position: relative; height: 45px;`;
+
+    const uiboxImg = document.createElement('img');
+    uiboxImg.src = `${CHRONICLE.ASSET_PATH}UIBox2.png`;
+    uiboxImg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: stretch; pointer-events: none;`;
+    btnWrapper.appendChild(uiboxImg);
+
     const btn = document.createElement('button');
-    btn.style.cssText = `padding: 10px; background: #fff; border: 2px solid #000; border-radius: 3px; cursor: ${evt.unlocked ? 'pointer' : 'default'}; font-family: ${CHRONICLE.FONT}; font-size: 11px; font-weight: 700; text-align: center; transition: all 0.2s; color: #000; opacity: ${evt.unlocked ? '1' : '0.5'};`;
+    btn.style.cssText = `position: absolute; inset: 0; background: transparent; border: none; cursor: ${evt.unlocked ? 'pointer' : 'default'}; font-family: ${CHRONICLE.FONT}; font-size: 10px; font-weight: 700; text-align: center; transition: all 0.2s; color: #000;`;
 
     if (evt.completed) {
       btn.textContent = `✓ E${evt.id}`;
-      btn.style.background = '#d4f1d4';
     } else if (evt.unlocked) {
       btn.textContent = `E${evt.id}`;
-      btn.onmouseover = () => { btn.style.background = '#f0f0f0'; btn.style.transform = 'scale(1.05)'; };
-      btn.onmouseout = () => { btn.style.background = '#fff'; btn.style.transform = 'scale(1)'; };
-      btn.onclick = () => selectEvent(evt.id);
+      btn.onmouseover = () => { btn.style.transform = 'scale(1.08)'; };
+      btn.onmouseout = () => { btn.style.transform = 'scale(1)'; };
+      btn.onclick = () => launchEvent(evt.id);
     } else {
       btn.textContent = `🔒`;
+      btn.style.opacity = '0.4';
     }
 
-    rightPanel.appendChild(btn);
+    btnWrapper.appendChild(btn);
+    rightPanel.appendChild(btnWrapper);
   });
 
   main.appendChild(rightPanel);
   dashboard.appendChild(main);
 
   document.body.appendChild(dashboard);
-
-  function startResting() {
-    CHRONICLE.playerStats.isResting = true;
-    CHRONICLE.playerStats.restEndTime = Date.now() + 5000; // 5 seconds rest
-  }
-
-  function selectEvent(eventId) {
-    // Update details box with selected event
-    const event = CHRONICLE.events[eventId - 1];
-    const detailsBox = document.querySelector('[id*="details"]') || document.body;
-    // Implementation for switching event details
-  }
-
-  // Rest timer
-  setInterval(() => {
-    if (CHRONICLE.playerStats.isResting && CHRONICLE.playerStats.restEndTime) {
-      const remaining = CHRONICLE.playerStats.restEndTime - Date.now();
-      if (remaining <= 0) {
-        CHRONICLE.playerStats.joy = Math.min(100, CHRONICLE.playerStats.joy + 25);
-        CHRONICLE.playerStats.isResting = false;
-        document.getElementById('stat-joy').textContent = `${CHRONICLE.playerStats.joy}%`;
-      }
-    }
-  }, 100);
 }
 
 function launchEvent(eventId) {

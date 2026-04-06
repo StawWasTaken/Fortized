@@ -3467,19 +3467,11 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
   }
 }
 
-/* ── Z-Index Layer System ── */
-:root {
-  --z-base: 0;
-  --z-dropdown: 1000;
-  --z-sticky: 1100;
-  --z-fixed: 1200;
-  --z-overlay: 2000;
-  --z-modal: 3000;
-  --z-popover: 4000;
-  --z-tooltip: 5000;
-  --z-toast: 6000;
-  --z-max: 9999;
-}
+/* ── Z-Index Layer System ──
+   Canonical values defined in :root at top of file:
+   --z-dropdown:2000; --z-modal:5000; --z-tooltip:6000;
+   --z-overlay:8000; --z-max:9999;
+*/
 
 /* ── Focus-Visible for ALL interactive elements ── */
 button:focus-visible,

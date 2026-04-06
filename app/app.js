@@ -3502,7 +3502,7 @@ function showDMFriendsHome() {
           <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           </span>
-          <input type="text" id="dm-friends-search" placeholder="Search friends..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;" onfocus="this.style.borderColor='rgba(254,248,61,.3)';this.style.background='rgba(255,255,255,.05)'" onblur="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'">
+          <input type="text" id="dm-friends-search" placeholder="Search friends..." oninput="filterDMFriendsList(this.value)" style="width:100%;padding:10px 14px 10px 40px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,background .15s;">
         </div>
         <div id="dm-friends-tabs" style="display:flex;gap:6px;margin-bottom:20px;">
           <button class="disc-tab active" onclick="dmFriendsFilter('online',this)">Online</button>
@@ -11280,7 +11280,7 @@ function buildEmojiPicker() {
       <div style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);flex-shrink:0;">
         <div style="position:relative;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="epp-search-inp" placeholder="Search" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12px;padding:8px 12px 8px 32px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.boxShadow='none'" oninput="searchEmojis(this.value)">
+          <input class="epp-search-inp" placeholder="Search" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12px;padding:8px 12px 8px 32px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" oninput="searchEmojis(this.value)">
         </div>
       </div>
       <div id="epp-grid" style="flex:1;overflow-y:auto;padding:6px 8px;display:grid;grid-template-columns:repeat(8,1fr);gap:1px;max-height:340px;"></div>
@@ -11891,7 +11891,7 @@ function buildProfileNav(scroll) {
     <div style="padding:4px 6px 8px;">
       <div style="position:relative;">
         <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);display:flex;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-        <input type="text" placeholder="Search" style="width:100%;padding:7px 10px 7px 30px;border-radius:6px;border:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.15);color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='rgba(254,248,61,.2)'" onblur="this.style.borderColor='rgba(255,255,255,.05)'" oninput="(function(v,items){items.forEach(function(el){var t=el.textContent.toLowerCase();el.style.display=t.includes(v)?'':'none';});el.closest('.profile-nav')?.querySelectorAll('.profile-nav-section,.profile-nav-sep').forEach(function(s){s.style.display=v?'none':'';});}.call(null,this.value.toLowerCase(),this.closest('.profile-nav')?.querySelectorAll('.profile-nav-item')||[]))">
+        <input type="text" placeholder="Search" style="width:100%;padding:7px 10px 7px 30px;border-radius:6px;border:1px solid rgba(255,255,255,.05);background:rgba(0,0,0,.15);color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;" oninput="(function(v,items){items.forEach(function(el){var t=el.textContent.toLowerCase();el.style.display=t.includes(v)?'':'none';});el.closest('.profile-nav')?.querySelectorAll('.profile-nav-section,.profile-nav-sep').forEach(function(s){s.style.display=v?'none':'';});}.call(null,this.value.toLowerCase(),this.closest('.profile-nav')?.querySelectorAll('.profile-nav-item')||[]))">
       </div>
     </div>
     ${sections.map(s => {
@@ -14054,7 +14054,7 @@ function showReportModal() {
         </div>
 
         <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:8px;">Additional Context <span style="font-weight:500;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.15);">(optional)</span></div>
-        <textarea class="field-input" id="report-context" placeholder="Describe what happened in more detail…" rows="3" style="resize:none;margin-bottom:14px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:12px;padding:11px 14px;width:100%;color:#fff;font-family:var(--font-ui);font-size:13px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(248,113,113,.2)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'"></textarea>
+        <textarea class="field-input" id="report-context" placeholder="Describe what happened in more detail…" rows="3" style="resize:none;margin-bottom:14px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:12px;padding:11px 14px;width:100%;color:#fff;font-family:var(--font-ui);font-size:13px;outline:none;transition:border-color .2s;"></textarea>
         <div id="report-error" style="font-size:12px;color:var(--red);margin-bottom:8px;min-height:16px;"></div>
 
         <div style="display:flex;gap:8px;">
@@ -14734,7 +14734,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       <div style="display:flex;gap:8px;margin-bottom:20px;">
         <div style="position:relative;flex:1;max-width:400px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(248,113,113,.3)" stroke-width="2" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="admin-user-search" class="settings-input" placeholder="Enter target username…" style="padding-left:38px;background:rgba(248,113,113,.03);border:1.5px solid rgba(248,113,113,.1);font-size:13px;" onkeydown="if(event.key==='Enter')adminSearchUser()" onfocus="this.style.borderColor='rgba(248,113,113,.25)'" onblur="this.style.borderColor='rgba(248,113,113,.1)'">
+          <input id="admin-user-search" class="settings-input" placeholder="Enter target username…" style="padding-left:38px;background:rgba(248,113,113,.03);border:1.5px solid rgba(248,113,113,.1);font-size:13px;" onkeydown="if(event.key==='Enter')adminSearchUser()">
         </div>
         <button class="hq-quick-btn" onclick="adminSearchUser()" style="padding:9px 20px;font-size:12px;font-weight:700;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Scan</button>
       </div>
@@ -22195,7 +22195,7 @@ function openGiphyPicker(inputId) {
     <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="giphy-search-input" placeholder="Search Klipy" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="handleGiphySearch(this.value,'${esc}')">
+        <input id="giphy-search-input" placeholder="Search Klipy" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" oninput="handleGiphySearch(this.value,'${esc}')">
       </div>
     </div>
     <div id="gif-collection-view" class="gif-collection-grid">
@@ -22514,7 +22514,7 @@ function openStickerPicker(inputId) {
     <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="sticker-search-input" placeholder="Search stickers…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="_searchStickers(this.value)">
+        <input id="sticker-search-input" placeholder="Search stickers…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" oninput="_searchStickers(this.value)">
       </div>
     </div>
     ${bastionTabsHTML ? `<div class="spp-tabs"><button class="spp-tab active" onclick="_filterStickerBastion('all', event)">All</button>${bastionTabsHTML}</div>` : ''}
@@ -22642,7 +22642,7 @@ function openBotCommandPanel(inputId, context) {
     <div style="padding:10px 14px 0;flex-shrink:0;">
       <div class="chat-picker-search" style="padding:0;border:none;position:relative;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input placeholder="Search commands…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.18)';this.style.background='rgba(255,255,255,.06)';this.style.boxShadow='0 0 0 2px rgba(255,249,62,.04)'" onblur="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.035)';this.style.boxShadow='none'" oninput="_filterBotCmds(this.value,'${escapeHTML(inputId)}')">
+        <input placeholder="Search commands…" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12.5px;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;transition:all .18s;" oninput="_filterBotCmds(this.value,'${escapeHTML(inputId)}')">
       </div>
     </div>
     <div class="botcmd-list" id="botcmd-list"></div>
@@ -22896,7 +22896,7 @@ function openStatusPicker() {
           <button onclick="pickStatusEmoji()" id="status-emoji-btn" data-emoji="${escapeHTML(curEmoji)}" style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;" onmouseover="this.style.borderColor='rgba(254,248,61,.2)';this.style.background='rgba(254,248,61,.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.04)'">
             <img src="${twemojiUrl}" style="width:24px;height:24px;object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:20px;\\'>${curEmoji}</span>'">
           </button>
-          <input id="status-text-input" class="field-input" placeholder="What's happening?" value="${escapeHTML(cur.text||'')}" style="flex:1;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:14px;padding:11px 16px;color:#fff;font-family:var(--font-ui);font-size:13.5px;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(254,248,61,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'" maxlength="100" oninput="_updateStatusPreview()">
+          <input id="status-text-input" class="field-input" placeholder="What's happening?" value="${escapeHTML(cur.text||'')}" style="flex:1;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:14px;padding:11px 16px;color:#fff;font-family:var(--font-ui);font-size:13.5px;outline:none;transition:border-color .2s;" maxlength="100" oninput="_updateStatusPreview()">
         </div>
 
         <!-- Quick Presets -->
@@ -29644,7 +29644,7 @@ function openThread(msgId, text, from) {
       <span id="thread-typing-text"></span>
     </div>
     <div class="thread-compose" style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.05);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
-      <textarea id="thread-input" placeholder="Reply to thread…" rows="1" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;padding:8px 12px;font-family:inherit;font-size:12.5px;resize:none;min-height:36px;max-height:100px;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_sendThreadReply();}" oninput="_broadcastThreadTyping()"></textarea>
+      <textarea id="thread-input" placeholder="Reply to thread…" rows="1" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#fff;padding:8px 12px;font-family:inherit;font-size:12.5px;resize:none;min-height:36px;max-height:100px;outline:none;transition:border-color .15s;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_sendThreadReply();}" oninput="_broadcastThreadTyping()"></textarea>
       <button onclick="_sendThreadReply()" style="padding:8px 14px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .12s;" onmouseover="this.style.background='var(--accent)';this.style.color='#0f1119'" onmouseout="this.style.background='var(--accent-dim)';this.style.color='var(--accent)'">Reply</button>
     </div>`;
   document.body.appendChild(panel);

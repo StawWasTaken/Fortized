@@ -23058,13 +23058,13 @@ function openForumChannel(chIdx) {
   const b = CU.bastions&&CU.bastions[curBastion];
   const ch = b&&b.channels&&b.channels[chIdx];
   if (!ch) return;
-  document.querySelectorAll('.ch-item').forEach(function(el){el.classList.remove('active');});
+  document.querySelectorAll('.ch-item').forEach(el => el.classList.remove('active'));
   const sid = document.getElementById('ch-sb-'+chIdx);
   if (sid) sid.classList.add('active');
   const wrap = document.getElementById('bastion-chat-wrap');
   if (!wrap) return;
   const posts = ch.posts||[];
-  let postsHTML = posts.length ? posts.slice().reverse().map(function(p,ri){
+  let postsHTML = posts.length ? posts.slice().reverse().map((p, ri) => {
     const pi = posts.length-1-ri;
     return renderForumPostCard(p, chIdx, pi);
   }).join('') : '<div style="text-align:center;padding:60px 20px;color:var(--muted);"><div style="font-size:32px;margin-bottom:12px;opacity:.5;">'+ftzIcon('chat','32')+'</div><div style="font-size:14px;font-weight:600;margin-bottom:4px;">No posts yet</div><div style="font-size:12.5px;">Be the first to start a conversation!</div></div>';
@@ -23080,7 +23080,7 @@ function openForumChannel(chIdx) {
 function renderForumPostCard(p, chIdx, postIdx) {
   const ago = p.createdAt ? ftzTimeAgo(new Date(p.createdAt)) : '';
   const replyCount = (p.replies||[]).length;
-  const tags = (p.tags||[]).map(function(t){return '<span class="fpc-tag">'+escapeHTML(t)+'</span>';}).join('');
+  const tags = (p.tags||[]).map(t => '<span class="fpc-tag">'+escapeHTML(t)+'</span>').join('');
   const imgHTML = p.image ? '<img class="fpc-img" src="'+p.image+'" loading="lazy">' : '';
   return '<div class="forum-post-card" onclick="openForumPost('+chIdx+','+postIdx+')">'
     +imgHTML
@@ -23109,7 +23109,7 @@ function openForumPost(chIdx, postIdx) {
   const isAuthor = p.author === CU?.username;
   const isOwner = b.owner === CU?.username;
   const canManage = isAuthor || isOwner;
-  const repliesHTML = replies.map(function(r, ri){
+  const repliesHTML = replies.map((r, ri) => {
     const canDeleteReply = r.author === CU?.username || isOwner;
     return '<div class="forum-reply-card">'
       +'<div style="flex-shrink:0;">'+buildAvatarHTML(null,r.author,30)+'</div>'
@@ -23119,7 +23119,7 @@ function openForumPost(chIdx, postIdx) {
       +(canDeleteReply ? '<button class="forum-reply-delete" onclick="event.stopPropagation();deleteForumReply('+chIdx+','+postIdx+','+ri+')">×</button>' : '')
       +'</div>';
   }).join('');
-  const tagsHTML = (p.tags||[]).length ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">'+(p.tags||[]).map(function(t){return '<span class="fpc-tag">'+escapeHTML(t)+'</span>';}).join('')+'</div>' : '';
+  const tagsHTML = (p.tags||[]).length ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">'+(p.tags||[]).map(t => '<span class="fpc-tag">'+escapeHTML(t)+'</span>').join('')+'</div>' : '';
   const editedLabel = p.editedAt ? ' <span style="font-size:10.5px;color:var(--muted);font-style:italic;">(edited)</span>' : '';
   const manageHTML = canManage ? `
     <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0;">
@@ -23163,7 +23163,7 @@ function editForumPost(chIdx, postIdx) {
     +'<button class="btn-g" style="flex:1;" onclick="this.closest(\'.ftz-edit-post-overlay\').remove()">Cancel</button>'
     +'</div></div>';
   document.body.appendChild(overlay);
-  setTimeout(function(){document.getElementById('ep-title')?.focus();},50);
+  setTimeout(() => document.getElementById('ep-title')?.focus(), 50);
 }
 
 async function _saveEditedPost(chIdx, postIdx) {
@@ -23224,7 +23224,7 @@ function openNewForumPost(chIdx) {
     +'</div></div>';
   document.body.appendChild(overlay);
   window._fpImgData = null;
-  setTimeout(function(){document.getElementById('fp-title')&&document.getElementById('fp-title').focus();},50);
+  setTimeout(() => document.getElementById('fp-title')?.focus(), 50);
 }
 
 function previewForumPostImage(input) {
@@ -23250,7 +23250,7 @@ async function submitForumPost(chIdx, overlay) {
   if (!title) { toast('Add a title','error'); return; }
   if (!body) { toast('Add some content','error'); return; }
   const tagsRaw = (document.getElementById('fp-tags')||{}).value||'';
-  const tags = tagsRaw.split(',').map(function(t){return t.trim();}).filter(Boolean).slice(0,5);
+  const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0,5);
   const b = CU.bastions&&CU.bastions[curBastion]; if (!b) return;
   if (!b.channels[chIdx].posts) b.channels[chIdx].posts = [];
   const fpImgData = window._fpImgData || null;
@@ -25610,7 +25610,7 @@ let _atelierTab = 'overview';
 function switchAtelierTab(tab, el) {
   _atelierTab = tab;
   // Update sidebar nav active state
-  document.querySelectorAll('.atel-sb-item').forEach(function(i) {
+  document.querySelectorAll('.atel-sb-item').forEach(i => {
     i.classList.toggle('active', i.getAttribute('data-tab') === tab);
   });
   // Update topbar title to show current section
@@ -25661,7 +25661,7 @@ function _renderShopBundle(id, name, origPrice, price, items, gradient, borderCo
     + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="'+accent+'" stroke-width="2" style="opacity:.6;"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg><span class="sic-name" style="margin:0;">'+name+'</span></div>'
     + '<div class="sic-type" style="margin-bottom:8px;">Bundle</div>'
     + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">'
-    + items.map(function(it) { return '<span style="font-size:9.5px;padding:3px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-weight:600;">'+it+'</span>'; }).join('')
+    + items.map(it => '<span style="font-size:9.5px;padding:3px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-weight:600;">'+it+'</span>').join('')
     + '</div>'
     + (bundleOwned ? '<div class="sic-owned">Owned</div>' : '<div class="sic-price"><img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;"> <span style="text-decoration:line-through;opacity:.4;margin-right:3px;">'+origPrice+'</span> '+price+'</div>')
     + '</div></div>';
@@ -27433,8 +27433,8 @@ let _fmtSelStart = 0;
 let _fmtSelEnd = 0;
 
 function _initFmtPanel() {
-  document.addEventListener('mouseup', function(e) {
-    setTimeout(function() {
+  document.addEventListener('mouseup', (e) => {
+    setTimeout(() => {
       const panel = document.getElementById('fmt-sel-panel');
       if (!panel) return;
       // Check if any chat textarea has a selection
@@ -27609,7 +27609,7 @@ function _hookLivePreviewOnInput() {
   });
   observer.observe(document.body, {childList:true, subtree:true});
   // Also setup existing textareas
-  document.querySelectorAll('.chat-input-row textarea').forEach(function(ta) { _setupLivePreview(ta); });
+  document.querySelectorAll('.chat-input-row textarea').forEach(ta => _setupLivePreview(ta));
 }
 setTimeout(_hookLivePreviewOnInput, 800);
 

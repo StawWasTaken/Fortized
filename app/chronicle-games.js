@@ -405,15 +405,16 @@ function loadGame(eventId, container) {
 
 function gameEvent1(container) {
   // Dialogue game with CouncilChamber background
-  container.style.cssText = `position: relative; width: 100%; height: 100%;`;
+  container.innerHTML = '';
+  container.style.cssText = `position: relative; width: 100%; height: 100%; background: #000;`;
 
   const bg = document.createElement('img');
   bg.src = `${CHRONICLE.ASSET_PATH}CouncilChamber.png`;
-  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;`;
+  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;`;
   container.appendChild(bg);
 
   const overlay = document.createElement('div');
-  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.4); z-index: 2;`;
+  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.2); z-index: 1;`;
   container.appendChild(overlay);
 
   let dialogueIndex = 0;
@@ -424,7 +425,7 @@ function gameEvent1(container) {
   ];
 
   const dialogueContainer = document.createElement('div');
-  dialogueContainer.style.cssText = `position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 3;`;
+  dialogueContainer.style.cssText = `position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2;`;
   container.appendChild(dialogueContainer);
 
   function render() {
@@ -437,7 +438,7 @@ function gameEvent1(container) {
 
     const d = dialogues[dialogueIndex];
     const box = document.createElement('div');
-    box.style.cssText = `display: flex; gap: 20px; align-items: flex-start; background: rgba(0,0,0,0.9); padding: 25px; border-radius: 8px; border: 4px solid #FFD700; max-width: 600px; width: 85%;`;
+    box.style.cssText = `display: flex; gap: 20px; align-items: flex-start; background: rgba(0,0,0,0.95); padding: 25px; border-radius: 8px; border: 4px solid #FFD700; max-width: 600px; width: 85%; box-shadow: 0 8px 32px rgba(0,0,0,0.8);`;
 
     const portrait = document.createElement('img');
     portrait.src = `${CHRONICLE.ASSET_PATH}${d.img}`;
@@ -458,9 +459,11 @@ function gameEvent1(container) {
     textBox.appendChild(text);
 
     const continueBtn = document.createElement('button');
-    continueBtn.style.cssText = `padding: 10px 20px; background: #FFD700; color: #000; border: 2px solid #FFD700; border-radius: 4px; font-family: ${CHRONICLE.FONT}; font-weight: 900; cursor: pointer; font-size: 12px; text-transform: uppercase;`;
+    continueBtn.style.cssText = `padding: 10px 20px; background: #FFD700; color: #000; border: 2px solid #FFD700; border-radius: 4px; font-family: ${CHRONICLE.FONT}; font-weight: 900; cursor: pointer; font-size: 12px; text-transform: uppercase; transition: all 0.2s;`;
     continueBtn.textContent = dialogueIndex === dialogues.length - 1 ? 'Complete Event' : 'Continue →';
-    continueBtn.onclick = () => { dialogueIndex++; render(); };
+    continueBtn.onmouseover = () => continueBtn.style.background = '#FFC700';
+    continueBtn.onmouseout = () => continueBtn.style.background = '#FFD700';
+    continueBtn.onclick = (e) => { e.preventDefault(); dialogueIndex++; render(); };
     textBox.appendChild(continueBtn);
 
     box.appendChild(textBox);
@@ -472,22 +475,24 @@ function gameEvent1(container) {
 
 function gameEvent2(container) {
   // Catching game with SilverStream background
-  container.style.cssText = `position: relative; width: 100%; height: 100%;`;
+  container.innerHTML = '';
+  container.style.cssText = `position: relative; width: 100%; height: 100%; background: #000;`;
 
   const bg = document.createElement('img');
   bg.src = `${CHRONICLE.ASSET_PATH}SilverStream.png`;
-  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;`;
+  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;`;
   container.appendChild(bg);
 
   const overlay = document.createElement('div');
-  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.3); z-index: 2;`;
+  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.15); z-index: 1;`;
   container.appendChild(overlay);
 
   let caught = 0;
   const needed = 5;
 
   const gameUI = document.createElement('div');
-  gameUI.style.cssText = `position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; z-index: 3;`;
+  gameUI.style.cssText = `position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; z-index: 2;`;
+  container.appendChild(gameUI);
 
   const label = document.createElement('div');
   label.style.cssText = `color: #fff; font-size: 18px; font-family: ${CHRONICLE.FONT}; background: rgba(0,0,0,0.8); padding: 15px 30px; border-radius: 8px; border: 3px solid #FFD700; font-weight: 900;`;
@@ -513,29 +518,30 @@ function gameEvent2(container) {
   };
 
   gameUI.appendChild(btn);
-  container.appendChild(gameUI);
 }
 
 function simpleGame(container, eventId, title, clicks) {
   // Simple clicking game using location images
-  container.style.cssText = `position: relative; width: 100%; height: 100%;`;
+  container.innerHTML = '';
+  container.style.cssText = `position: relative; width: 100%; height: 100%; background: #000;`;
 
   const locations = ['Battlefield', 'SupplyBox', 'TheCanals'];
   const bgImage = locations[(eventId - 3) % locations.length];
 
   const bg = document.createElement('img');
   bg.src = `${CHRONICLE.ASSET_PATH}${bgImage}.png`;
-  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;`;
+  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;`;
   container.appendChild(bg);
 
   const overlay = document.createElement('div');
-  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.3); z-index: 2;`;
+  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.15); z-index: 1;`;
   container.appendChild(overlay);
 
   let clicked = 0;
 
   const gameUI = document.createElement('div');
-  gameUI.style.cssText = `position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; z-index: 3;`;
+  gameUI.style.cssText = `position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; z-index: 2;`;
+  container.appendChild(gameUI);
 
   const progress = document.createElement('div');
   progress.style.cssText = `color: #fff; font-family: ${CHRONICLE.FONT}; font-size: 18px; background: rgba(0,0,0,0.8); padding: 15px 30px; border-radius: 8px; border: 3px solid #FFD700; font-weight: 900;`;
@@ -563,7 +569,6 @@ function simpleGame(container, eventId, title, clicks) {
   };
 
   gameUI.appendChild(btn);
-  container.appendChild(gameUI);
 }
 
 function completeEvent(eventId, coins, xp) {

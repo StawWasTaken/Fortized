@@ -405,12 +405,16 @@ function loadGame(eventId, container) {
 
 function gameEvent1(container) {
   // Dialogue game with CouncilChamber background
-  container.innerHTML = '';
+  container.style.cssText = `position: relative; width: 100%; height: 100%;`;
+
   const bg = document.createElement('img');
   bg.src = `${CHRONICLE.ASSET_PATH}CouncilChamber.png`;
-  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;`;
-  container.parentElement.style.position = 'relative';
-  container.parentElement.appendChild(bg);
+  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;`;
+  container.appendChild(bg);
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.4); z-index: 2;`;
+  container.appendChild(overlay);
 
   let dialogueIndex = 0;
   const dialogues = [
@@ -419,9 +423,12 @@ function gameEvent1(container) {
     { text: 'Our fate rests in your hands.', img: 'Wealthplace.png' }
   ];
 
+  const dialogueContainer = document.createElement('div');
+  dialogueContainer.style.cssText = `position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 3;`;
+  container.appendChild(dialogueContainer);
+
   function render() {
-    const existingBox = container.querySelector('[id="dialogue-box"]');
-    if (existingBox) existingBox.remove();
+    dialogueContainer.innerHTML = '';
 
     if (dialogueIndex >= dialogues.length) {
       completeEvent(1, 50, 25);
@@ -430,29 +437,34 @@ function gameEvent1(container) {
 
     const d = dialogues[dialogueIndex];
     const box = document.createElement('div');
-    box.id = 'dialogue-box';
-    box.style.cssText = `position: relative; display: flex; gap: 15px; align-items: center; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 4px; border: 3px solid #FFD700; width: 70%; max-width: 500px; z-index: 10;`;
+    box.style.cssText = `display: flex; gap: 20px; align-items: flex-start; background: rgba(0,0,0,0.9); padding: 25px; border-radius: 8px; border: 4px solid #FFD700; max-width: 600px; width: 85%;`;
 
     const portrait = document.createElement('img');
     portrait.src = `${CHRONICLE.ASSET_PATH}${d.img}`;
-    portrait.style.cssText = `height: 100px; width: auto; border: 2px solid #FFD700;`;
+    portrait.style.cssText = `height: 140px; width: auto; border: 3px solid #FFD700; border-radius: 4px; flex-shrink: 0;`;
     box.appendChild(portrait);
 
     const textBox = document.createElement('div');
     textBox.style.cssText = `color: #fff; flex: 1;`;
+
+    const charName = document.createElement('div');
+    charName.style.cssText = `font-weight: 900; color: #FFD700; margin-bottom: 12px; font-family: ${CHRONICLE.FONT}; text-transform: uppercase; font-size: 13px;`;
+    charName.textContent = 'Cardinal Wealthplace';
+    textBox.appendChild(charName);
+
     const text = document.createElement('div');
-    text.style.cssText = `font-size: 14px; line-height: 1.6; font-family: ${CHRONICLE.FONT}; margin-bottom: 10px;`;
+    text.style.cssText = `font-size: 15px; line-height: 1.7; font-family: ${CHRONICLE.FONT}; margin-bottom: 15px;`;
     text.textContent = d.text;
     textBox.appendChild(text);
 
     const continueBtn = document.createElement('button');
-    continueBtn.style.cssText = `padding: 8px 16px; background: #FFD700; color: #000; border: 2px solid #FFD700; border-radius: 2px; font-family: ${CHRONICLE.FONT}; font-weight: 700; cursor: pointer; font-size: 12px;`;
-    continueBtn.textContent = dialogueIndex === dialogues.length - 1 ? 'Complete' : 'Continue →';
+    continueBtn.style.cssText = `padding: 10px 20px; background: #FFD700; color: #000; border: 2px solid #FFD700; border-radius: 4px; font-family: ${CHRONICLE.FONT}; font-weight: 900; cursor: pointer; font-size: 12px; text-transform: uppercase;`;
+    continueBtn.textContent = dialogueIndex === dialogues.length - 1 ? 'Complete Event' : 'Continue →';
     continueBtn.onclick = () => { dialogueIndex++; render(); };
     textBox.appendChild(continueBtn);
 
     box.appendChild(textBox);
-    container.appendChild(box);
+    dialogueContainer.appendChild(box);
   }
 
   render();
@@ -460,31 +472,35 @@ function gameEvent1(container) {
 
 function gameEvent2(container) {
   // Catching game with SilverStream background
-  container.innerHTML = '';
+  container.style.cssText = `position: relative; width: 100%; height: 100%;`;
+
   const bg = document.createElement('img');
   bg.src = `${CHRONICLE.ASSET_PATH}SilverStream.png`;
-  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;`;
-  container.parentElement.style.position = 'relative';
-  container.parentElement.appendChild(bg);
+  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;`;
+  container.appendChild(bg);
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.3); z-index: 2;`;
+  container.appendChild(overlay);
 
   let caught = 0;
   const needed = 5;
 
   const gameUI = document.createElement('div');
-  gameUI.style.cssText = `position: relative; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 10;`;
+  gameUI.style.cssText = `position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; z-index: 3;`;
 
   const label = document.createElement('div');
-  label.style.cssText = `color: #fff; font-size: 14px; font-family: ${CHRONICLE.FONT}; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 4px;`;
+  label.style.cssText = `color: #fff; font-size: 18px; font-family: ${CHRONICLE.FONT}; background: rgba(0,0,0,0.8); padding: 15px 30px; border-radius: 8px; border: 3px solid #FFD700; font-weight: 900;`;
   label.textContent = `Caught: ${caught}/${needed}`;
   gameUI.appendChild(label);
 
   const btn = document.createElement('button');
-  btn.style.cssText = `width: 100px; height: 100px; background: #FFD700; border: 3px solid #000; border-radius: 50%; font-size: 32px; cursor: pointer; transition: all 0.1s; box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);`;
+  btn.style.cssText = `width: 120px; height: 120px; background: #FFD700; border: 4px solid #000; border-radius: 50%; font-size: 48px; cursor: pointer; transition: all 0.1s; box-shadow: 0 0 30px rgba(255, 215, 0, 0.9);`;
   btn.textContent = '💰';
 
   btn.onclick = () => {
     caught++;
-    btn.style.transform = 'scale(0.9)';
+    btn.style.transform = 'scale(0.85)';
     playSound('SoundCoin.mp3', 0.4);
     setTimeout(() => { btn.style.transform = 'scale(1)'; }, 100);
 
@@ -502,33 +518,37 @@ function gameEvent2(container) {
 
 function simpleGame(container, eventId, title, clicks) {
   // Simple clicking game using location images
-  container.innerHTML = '';
+  container.style.cssText = `position: relative; width: 100%; height: 100%;`;
+
   const locations = ['Battlefield', 'SupplyBox', 'TheCanals'];
-  const bgImage = locations[eventId % locations.length];
+  const bgImage = locations[(eventId - 3) % locations.length];
 
   const bg = document.createElement('img');
   bg.src = `${CHRONICLE.ASSET_PATH}${bgImage}.png`;
-  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;`;
-  container.parentElement.style.position = 'relative';
-  container.parentElement.appendChild(bg);
+  bg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;`;
+  container.appendChild(bg);
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `position: absolute; inset: 0; background: rgba(0,0,0,0.3); z-index: 2;`;
+  container.appendChild(overlay);
 
   let clicked = 0;
 
   const gameUI = document.createElement('div');
-  gameUI.style.cssText = `position: relative; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 10;`;
+  gameUI.style.cssText = `position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; z-index: 3;`;
 
   const progress = document.createElement('div');
-  progress.style.cssText = `color: #fff; font-family: ${CHRONICLE.FONT}; font-size: 14px; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 4px;`;
+  progress.style.cssText = `color: #fff; font-family: ${CHRONICLE.FONT}; font-size: 18px; background: rgba(0,0,0,0.8); padding: 15px 30px; border-radius: 8px; border: 3px solid #FFD700; font-weight: 900;`;
   progress.textContent = `${clicked}/${clicks}`;
   gameUI.appendChild(progress);
 
   const btn = document.createElement('button');
-  btn.style.cssText = `width: 120px; height: 120px; background: #FFD700; border: 4px solid #000; border-radius: 50%; font-size: 36px; cursor: pointer; transition: all 0.1s; box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);`;
+  btn.style.cssText = `width: 130px; height: 130px; background: #FFD700; border: 4px solid #000; border-radius: 50%; font-size: 48px; cursor: pointer; transition: all 0.1s; box-shadow: 0 0 30px rgba(255, 215, 0, 0.9);`;
   btn.textContent = '⚔';
 
   btn.onclick = () => {
     clicked++;
-    btn.style.transform = 'scale(0.9)';
+    btn.style.transform = 'scale(0.85)';
     playSound('SoundCoin.mp3', 0.4);
     setTimeout(() => { btn.style.transform = 'scale(1)'; }, 100);
 

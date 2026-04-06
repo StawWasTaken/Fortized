@@ -963,7 +963,7 @@ function openExternalLink(e, url) {
 function _showLeavingFortizedModal(url, domain) {
   const overlay = document.createElement('div');
   overlay.className = 'input-dialog-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);animation:ftzFadeIn .15s ease;';
+  overlay.className = 'input-dialog-overlay ftz-confirm-overlay';
   // Bold the domain in the displayed URL
   const displayUrl = escapeHTML(url.length > 120 ? url.slice(0,120)+'…' : url).replace(escapeHTML(domain), '<strong style="color:#fff;">'+escapeHTML(domain)+'</strong>');
   overlay.innerHTML = `
@@ -1576,24 +1576,24 @@ function updateSidebar(v) {
     if (hdr) hdr.style.display = '';
     if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
     if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="New DM" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="Add Friend" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>`;
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" class="sidebar-hdr-btn" title="New DM"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button onclick="openModal('modal-add-friend')" class="sidebar-hdr-btn" title="Add Friend"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>`;
     renderDMSidebar(scroll);
   } else if (v==='dms' || v==='friends') {
     if (hdr) hdr.style.display = '';
     if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
     if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="New DM" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('gc')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="New Group Chat" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
-      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="Add Friend" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>`;
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" class="sidebar-hdr-btn" title="New DM"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('gc')" class="sidebar-hdr-btn" title="New Group Chat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+      <button onclick="openModal('modal-add-friend')" class="sidebar-hdr-btn" title="Add Friend"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></button>`;
     renderDMSidebar(scroll);
     if (v==='friends') { setTimeout(() => renderFriendsList('all'), 0); }
   } else if (v==='discover') {
     if (hdr) hdr.style.display = '';
     if (hdrTitle) hdrTitle.textContent = 'Direct Messages';
     if (hdrActs) hdrActs.innerHTML = `
-      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="New DM" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">${ftzIcon('pencil','14')}</button>
-      <button onclick="openModal('modal-add-friend')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:color .12s;" title="Add Friend" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">${ftzIcon('addUser','14')}</button>`;
+      <button onclick="openModal('modal-new-dm');switchNewDMTab('dm')" class="sidebar-hdr-btn" title="New DM">${ftzIcon('pencil','14')}</button>
+      <button onclick="openModal('modal-add-friend')" class="sidebar-hdr-btn" title="Add Friend">${ftzIcon('addUser','14')}</button>`;
     renderDMSidebar(scroll);
     loadDiscover();
   } else if (v==='atelier') {
@@ -3253,7 +3253,7 @@ async function renderDMFriendsHome() {
     pending.forEach(f => {
       // Get activity for pending user (will be updated when friend data loads)
       let activityHTML = '';
-      html += `<div id="dm-home-pending-${escapeHTML(f)}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;transition:background .12s;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background=''">
+      html += `<div id="dm-home-pending-${escapeHTML(f)}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;transition:background .12s;">
         <div style="position:relative;flex-shrink:0;"><div class="fa" id="dm-home-pav-${escapeHTML(f)}" style="width:40px;height:40px;font-size:15px;">${buildAvatarHTML(null,f,40)}</div></div>
         <div style="flex:1;min-width:0;"><div id="dm-home-pdn-${escapeHTML(f)}" style="font-weight:600;font-size:13.5px;">${escapeHTML(f)}</div><div style="font-size:11.5px;color:var(--muted);">Incoming friend request</div><div id="dm-home-pact-${escapeHTML(f)}" style="font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;"></div></div>
         <div style="display:flex;gap:6px;">
@@ -3268,7 +3268,7 @@ async function renderDMFriendsHome() {
   html += `<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">${filter==='online'?'ONLINE':'ALL FRIENDS'} — ${friends.length}</div>`;
 
   friends.forEach(f => {
-    html += `<div class="dm-friend-row" data-user="${escapeHTML(f)}" style="display:flex;align-items:center;gap:14px;padding:10px 16px;border-radius:12px;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:pointer;border:1px solid transparent;background:transparent;" onmouseenter="this.style.background='rgba(255,255,255,.025)';this.style.borderColor='rgba(255,255,255,.05)'" onmouseleave="this.style.background='';this.style.borderColor='transparent'" onclick="openDMView('${escapeHTML(f)}')">
+    html += `<div class="dm-friend-row" data-user="${escapeHTML(f)}" style="display:flex;align-items:center;gap:14px;padding:10px 16px;border-radius:12px;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:pointer;border:1px solid transparent;background:transparent;" onclick="openDMView('${escapeHTML(f)}')">
       <div style="position:relative;flex-shrink:0;">
         <div class="fa" id="dm-home-av-${escapeHTML(f)}" style="width:42px;height:42px;font-size:15px;border:2px solid rgba(255,255,255,.06);">${buildAvatarHTML(null,f,42)}</div>
         <span class="dm-home-status" data-for="${escapeHTML(f)}" style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;background:#6b7280;border:2.5px solid var(--bg);"></span>
@@ -3696,7 +3696,7 @@ function renderGCFriendPicker() {
   }
   // Use checkboxes
   picker.innerHTML = friends.map(f => `
-    <label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;cursor:pointer;transition:background .1s;" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='transparent'">
+    <label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;cursor:pointer;transition:background .1s;">
       <input type="checkbox" class="gc-member-cb" value="${escapeHTML(f)}" onchange="updateGCSelectedPreview()" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;">
       <div style="width:28px;height:28px;overflow:hidden;border-radius:50%;flex-shrink:0;">${buildAvatarHTML(null,f,28)}</div>
       <span style="font-size:13.5px;font-weight:600;">${escapeHTML(f)}</span>
@@ -3903,20 +3903,20 @@ async function showGCMemberPanel(meta) {
       </div>
       ${isOwner ? `
       <div style="display:flex;gap:6px;">
-        <button onclick="renameGroupChat('${escapeHTML(meta.id)}')" style="flex:1;padding:7px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:9px;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--muted-light);transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.07)'" onmouseleave="this.style.background='rgba(255,255,255,.04)'">Rename</button>
-        <button onclick="addMembersToGC('${escapeHTML(meta.id)}')" style="flex:1;padding:7px 10px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:9px;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--accent);transition:all .15s;" onmouseenter="this.style.background='rgba(255,249,62,.1)'" onmouseleave="this.style.background='rgba(255,249,62,.06)'">+ Add</button>
+        <button onclick="renameGroupChat('${escapeHTML(meta.id)}')" class="gc-btn gc-btn-default">Rename</button>
+        <button onclick="addMembersToGC('${escapeHTML(meta.id)}')" class="gc-btn gc-btn-accent">+ Add</button>
       </div>` : `
-      <button onclick="leaveGroupChat('${escapeHTML(meta.id)}')" style="width:100%;padding:7px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:9px;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--red);transition:all .15s;" onmouseenter="this.style.background='rgba(248,113,113,.1)'" onmouseleave="this.style.background='rgba(248,113,113,.06)'">Leave Group</button>`}
+      <button onclick="leaveGroupChat('${escapeHTML(meta.id)}')" class="gc-btn gc-btn-danger" style="width:100%;">Leave Group</button>`}
     </div>
     <div style="padding:8px 10px 4px;">
-      <div style="position:relative;"><svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search members..." oninput="_filterGCMembers(this.value)" style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:7px 12px 7px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:#fff;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'"></div>
+      <div class="ftz-search-wrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search members..." oninput="_filterGCMembers(this.value)" class="ftz-search-input"></div>
     </div>
     <div style="padding:6px 6px;flex:1;overflow-y:auto;">
       ${membersHtml}
     </div>
     ${isOwner ? `
     <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.04);">
-      <button onclick="deleteGroupChat('${escapeHTML(meta.id)}')" style="width:100%;padding:8px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:9px;cursor:pointer;font-size:12px;font-weight:600;color:var(--red);transition:all .15s;" onmouseenter="this.style.background='rgba(248,113,113,.1)'" onmouseleave="this.style.background='rgba(248,113,113,.06)'">Delete Group</button>
+      <button onclick="deleteGroupChat('${escapeHTML(meta.id)}')" class="gc-btn gc-btn-danger" style="width:100%;">Delete Group</button>
     </div>` : ''}`;
   // Inject into DMs view
   const dmsView = document.getElementById('view-dms');
@@ -5616,7 +5616,7 @@ function _buildForwardTargets(query) {
     friends.forEach(f => {
       const pfp = _pfpCache[f];
       const av = pfp ? `<img src="${escapeHTML(pfp)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" onerror="this.outerHTML=buildAvatarHTML(null,'${escapeHTML(f)}',28)">` : buildAvatarHTML(null, f, 28);
-      html += `<div class="forward-target-item" data-name="${escapeHTML(f)}" onclick="forwardTo('dm','${escapeHTML(f)}');closeModal('modal-forward');" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s;" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='none'">
+      html += `<div class="forward-target-item" data-name="${escapeHTML(f)}" onclick="forwardTo('dm','${escapeHTML(f)}');closeModal('modal-forward');" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s;">
         ${av}
         <div style="flex:1;min-width:0;">
           <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(f)}</div>
@@ -5630,7 +5630,7 @@ function _buildForwardTargets(query) {
   if (gcs.length) {
     html += `<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.18);padding:10px 4px 4px;">Group Chats</div>`;
     gcs.forEach(g => {
-      html += `<div class="forward-target-item" data-name="${escapeHTML(g.name||'')}" onclick="forwardTo('gc','${escapeHTML(g.id)}');closeModal('modal-forward');" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s;" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='none'">
+      html += `<div class="forward-target-item" data-name="${escapeHTML(g.name||'')}" onclick="forwardTo('gc','${escapeHTML(g.id)}');closeModal('modal-forward');" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s;">
         <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,${g.color||'#7c5cbf'},${g.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">${g.emoji||'👥'}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(g.name||'Group')}</div>
@@ -5647,7 +5647,7 @@ function _buildForwardTargets(query) {
     if (channels.length) {
       html += `<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.18);padding:10px 4px 4px;">${escapeHTML(b.name)}</div>`;
       channels.forEach(ch => {
-        html += `<div class="forward-target-item" data-name="${escapeHTML(ch.name)}" onclick="forwardTo('bastion','${bi}:${escapeHTML(ch.id)}');closeModal('modal-forward');" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s;" onmouseenter="this.style.background='rgba(255,255,255,.05)'" onmouseleave="this.style.background='none'">
+        html += `<div class="forward-target-item" data-name="${escapeHTML(ch.name)}" onclick="forwardTo('bastion','${bi}:${escapeHTML(ch.id)}');closeModal('modal-forward');" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s;">
           <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--muted);font-size:14px;">#</div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(ch.name)}</div>
@@ -6216,7 +6216,7 @@ function _renderVoicePanel(ch, idx) {
 function _renderVoiceAvatar(p) {
   const speakRing = p.speaking ? 'box-shadow:0 0 0 4px rgba(62,207,110,.5),0 0 20px rgba(62,207,110,.25);border-color:rgba(62,207,110,.6);' : '';
   const mutedIcon = p.muted ? '<div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:rgba(248,113,113,.9);display:flex;align-items:center;justify-content:center;border:3px solid var(--bg);z-index:2;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/></svg></div>' : '';
-  return `<div class="voice-avatar-card" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px;border-radius:16px;transition:all .2s;cursor:default;" onmouseenter="this.style.background='rgba(255,255,255,.04)'" onmouseleave="this.style.background='transparent'">
+  return `<div class="voice-avatar-card" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px;border-radius:16px;transition:all .2s;cursor:default;">
     <div class="voice-avatar-ring" style="position:relative;width:82px;height:82px;border-radius:50%;border:3px solid rgba(255,255,255,.1);overflow:visible;display:flex;align-items:center;justify-content:center;${speakRing}transition:all .25s;">
       <div style="width:76px;height:76px;border-radius:50%;overflow:hidden;">${buildAvatarHTML(p.pfp,p.name,76)}</div>
       ${mutedIcon}
@@ -6384,7 +6384,7 @@ async function removeFriend(username){
 async function loadDiscover(){
   const grid=document.getElementById('discover-grid');
   if(!grid)return;
-  grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted);"><div style="font-size:24px;margin-bottom:8px;animation:spin 1s linear infinite;">⏳</div>Loading bastions…</div>';
+  grid.innerHTML='<div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">' + Array(6).fill(0).map(() => '<div style="border-radius:18px;overflow:hidden;border:1px solid var(--border);"><div class="skeleton" style="height:120px;border-radius:0;"></div><div style="padding:16px;"><div class="skeleton skeleton-text" style="width:65%;height:14px;"></div><div class="skeleton skeleton-text" style="width:90%;margin-top:8px;"></div><div class="skeleton skeleton-text" style="width:40%;margin-top:8px;height:10px;"></div></div></div>').join('') + '</div>';
   try{discoverData=Object.values(await FortizedSocial.getGlobalBastions()||{});}catch{discoverData=[];}
   // Strictly filter: only show bastions that are explicitly public
   discoverData = discoverData.filter(b => b.public === true || (b.public !== false && b.public !== undefined));
@@ -6586,7 +6586,7 @@ function _showBanScreen(ban) {
         </div>
       </div>
       <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">If you wish to appeal, please visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Fortized Support</a></div>
-      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f87171;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;" onmouseover="this.style.opacity='.85';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)'">Log Out</button>
+      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f87171;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;">Log Out</button>
     </div>
   </div>`;
 }
@@ -6641,7 +6641,7 @@ function _showSuspendScreen(data) {
         </div>
       </div>
       <div style="font-size:12px;color:#5a6478;margin-bottom:24px;">Your account will be reactivated on <span style="color:#fff93e;font-weight:600;">${durationText}</span>. To appeal, visit <a href="/support#contact" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Fortized Support</a></div>
-      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f59e0b;border:none;border-radius:10px;color:#0f1119;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;" onmouseover="this.style.opacity='.85';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)'">Log Out</button>
+      <button onclick="localStorage.removeItem('ftz_current');localStorage.removeItem('fortized_current_user');window.location.href='/login'" style="padding:12px 48px;background:#f59e0b;border:none;border-radius:10px;color:#0f1119;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;">Log Out</button>
     </div>
   </div>`;
 }
@@ -8253,7 +8253,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;">
         <button id="crm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Cancel</button>
-        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:#0f1119;font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">Create Room</button>
+        <button id="crm-create" style="flex:1;padding:11px;background:var(--accent,#fff93e);border:none;border-radius:12px;color:#0f1119;font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Create Room</button>
       </div>
     </div>
   </div>`;
@@ -11329,7 +11329,7 @@ function renderEmojiTab(tabId) {
     if (freqList.length) {
       html += freqList.map(([emoji]) => {
         if (FORTIZED_EMOJI_MAP[emoji]) {
-          return `<div onclick="insertFortizedEmoji('${escapeHTML(emoji)}','${escapeHTML(FORTIZED_EMOJI_MAP[emoji])}')" title=":${escapeHTML(emoji)}:" style="width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:3px;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'" onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(emoji)}:'"><img src="${escapeHTML(FORTIZED_EMOJI_MAP[emoji])}" style="width:100%;height:100%;object-fit:contain;"></div>`;
+          return `<div onclick="insertFortizedEmoji('${escapeHTML(emoji)}','${escapeHTML(FORTIZED_EMOJI_MAP[emoji])}')" title=":${escapeHTML(emoji)}:" style="width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:3px;" onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(emoji)}:'"><img src="${escapeHTML(FORTIZED_EMOJI_MAP[emoji])}" style="width:100%;height:100%;object-fit:contain;"></div>`;
         }
         return renderEmojiCell(emoji);
       }).join('');
@@ -11368,7 +11368,7 @@ function renderEmojiTab(tabId) {
            onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:  (from ${escapeHTML(ce.bastion)})'"
            title=":${escapeHTML(ce.name)}: from ${escapeHTML(ce.bastion)}"
            style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
-           onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+          >
         <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
       </div>`).join('');
     grid.innerHTML = html;
@@ -11389,7 +11389,7 @@ function renderEmojiTab(tabId) {
              onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:'"
              title=":${escapeHTML(ce.name)}:"
              style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
-             onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+            >
           <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
         </div>`).join('');
     } else {
@@ -11422,7 +11422,7 @@ function renderEmojiTab(tabId) {
              oncontextmenu="event.preventDefault();if(confirm('Delete :${escapeHTML(e.name)}:?'))deletePersonalEmoji(${i})"
              title=":${escapeHTML(e.name)}:"
              style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;position:relative;"
-             onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+            >
           <img src="${escapeHTML(e.data)}" alt=":${escapeHTML(e.name)}:" style="width:100%;height:100%;object-fit:contain;">
         </div>`).join('');
     }
@@ -11459,7 +11459,7 @@ function renderEmojiTab(tabId) {
            onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(e.name)}:'"
            title=":${escapeHTML(e.name)}:"
            style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
-           onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+          >
         <img src="${escapeHTML(e.url)}" alt=":${escapeHTML(e.name)}:"
              style="width:100%;height:100%;object-fit:contain;"
              onerror="this.parentElement.innerHTML='<span style=\'font-size:9px;color:rgba(255,255,255,.2);text-align:center;word-break:break-all;padding:2px;\'>${escapeHTML(e.name.replace('knight_','').replace('joyster_','').replace('leafen_',''))}</span>'">
@@ -11475,7 +11475,7 @@ function renderEmojiTab(tabId) {
                onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:'"
                title=":${escapeHTML(ce.name)}:"
                style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;${!isRadiance ? 'opacity:.4;filter:grayscale(.5);' : ''}"
-               onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+              >
             <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
           </div>`).join('');
       } else {
@@ -11497,7 +11497,7 @@ function renderEmojiTab(tabId) {
                onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:'"
                title=":${escapeHTML(ce.name)}:"
                style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
-               onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">
+              >
             <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
           </div>`).join('');
       });
@@ -11719,7 +11719,7 @@ function searchEmojis(q) {
   if (!matches.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);">No results for "'+escapeHTML(q)+'"</div>'; return; }
   grid.style.gridTemplateColumns = 'repeat(8,1fr)';
   grid.innerHTML = matches.slice(0,64).map(m => {
-    if (m.type === 'ftz') return `<div onclick="insertFortizedEmoji('${escapeHTML(m.name)}','${escapeHTML(m.url)}')" title=":${escapeHTML(m.name)}:" style="width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:3px;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'"><img src="${escapeHTML(m.url)}" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.style.display='none'"></div>`;
+    if (m.type === 'ftz') return `<div onclick="insertFortizedEmoji('${escapeHTML(m.name)}','${escapeHTML(m.url)}')" title=":${escapeHTML(m.name)}:" style="width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:3px;"><img src="${escapeHTML(m.url)}" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.style.display='none'"></div>`;
     return renderEmojiCell(m.emoji);
   }).join('');
 }
@@ -12913,7 +12913,7 @@ async function toggleNotifPanel() {
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       <h3>Inbox</h3>
       <button onclick="markAllRead()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Mark all read</button>
-      <button onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
+      <button onclick="_closeEl('notif-panel-v2');_closeEl('notif-panel-v2-overlay');notifPanelOpen=false" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
     </div>
     <div class="npv-tabs" id="npv-tabs">
       <button class="npv-tab active" onclick="_setNotifTab('all',this)">All</button>
@@ -14019,7 +14019,7 @@ function showReportModal() {
             <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">Report ${targetLabel}</div>
             <div style="font-size:11px;color:rgba(255,255,255,.35);">Help us keep Fortized safe</div>
           </div>
-          <button onclick="this.closest('.modal-overlay').remove()" style="width:32px;height:32px;border-radius:10px;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          <button onclick="this.closest('.modal-overlay').remove()" style="width:32px;height:32px;border-radius:10px;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
       </div>
 
@@ -14619,18 +14619,18 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
               : (targetRole === 'admin' && !isSuperAdmin()) ? '<div style="padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:rgba(248,113,113,.7);font-size:12px;font-weight:600;">🔒 This user is an Admin — only Superadmins can take action.</div>'
               : (targetRole === 'moderator' && !isAdmin()) ? '<div style="padding:10px 14px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.12);border-radius:8px;color:rgba(96,165,250,.7);font-size:12px;font-weight:600;">🔒 This user is a Moderator — only Admins and Superadmins can take action.</div>'
               : '';
-            if (isPend && !canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}</div>`;
+            if (isPend && !canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
             if (isPend && canAct) return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
             <button onclick="resolveReport(${i},'dismissed')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Dismiss</button>
-            <button onclick="resolveReport(${i},'warned')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(245,158,11,.15)'" onmouseout="this.style.background='rgba(245,158,11,.08)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Warn</button>
-            ${target?`<button onclick="resolveReport(${i},'suspended')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(168,85,247,.15)'" onmouseout="this.style.background='rgba(168,85,247,.08)'">⏳ Suspend</button>`:''}
-            ${target?`<button onclick="resolveReport(${i},'banned')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">🔨 Ban</button>`:''}
+            <button onclick="resolveReport(${i},'warned')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Warn</button>
+            ${target?`<button onclick="resolveReport(${i},'suspended')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">⏳ Suspend</button>`:''}
+            ${target?`<button onclick="resolveReport(${i},'banned')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
             <div style="flex:1;"></div>
-            ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;" onmouseover="this.style.background='rgba(96,165,250,.15)'" onmouseout="this.style.background='rgba(96,165,250,.08)'">🔍 Inspect ${escapeHTML(target)}</button>`:''}
-            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}
+            ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;">🔍 Inspect ${escapeHTML(target)}</button>`:''}
+            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
           </div>`;
             return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
-            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}
+            ${isSuperAdmin()?`<button onclick="deleteReportForever(${i})" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
           </div>`;
           })()}
         </div>
@@ -14888,7 +14888,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.04);">
               <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.25);align-self:center;margin-right:4px;">AI Verdict:</span>
               <button onclick="nsfwAIFeedback(${i},true)" style="padding:6px 14px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:8px;color:#3ecf6e;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;" onmouseover="this.style.background='rgba(62,207,110,.15)'" onmouseout="this.style.background='rgba(62,207,110,.08)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> AI was Right (NSFW)</button>
-              <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> AI was Wrong (NOT NSFW)</button>
+              <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> AI was Wrong (NOT NSFW)</button>
             </div>
             <!-- Actions (same style as reports) -->
             ${(()=>{
@@ -14898,15 +14898,15 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
                 : (uRole === 'admin' && !isSuperAdmin()) ? '<div style="padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:rgba(248,113,113,.7);font-size:12px;font-weight:600;">🔒 This user is an Admin — only Superadmins can take action.</div>'
                 : (uRole === 'moderator' && !isAdmin()) ? '<div style="padding:10px 14px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.12);border-radius:8px;color:rgba(96,165,250,.7);font-size:12px;font-weight:600;">🔒 This user is a Moderator — only Admins and Superadmins can take action.</div>'
                 : '';
-              if (!canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}</div>`;
+              if (!canAct) return protectedMsg + `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}</div>`;
               return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;">
               <button onclick="reviewNSFW(${i},'approve')" style="padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Dismiss</button>
-              <button onclick="reviewNSFW(${i},'warn')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(245,158,11,.15)'" onmouseout="this.style.background='rgba(245,158,11,.08)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Warn</button>
-              ${target?`<button onclick="reviewNSFW(${i},'suspend')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(168,85,247,.15)'" onmouseout="this.style.background='rgba(168,85,247,.08)'">⏳ Suspend</button>`:''}
-              ${target?`<button onclick="reviewNSFW(${i},'ban')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">🔨 Ban</button>`:''}
+              <button onclick="reviewNSFW(${i},'warn')" style="padding:7px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;color:#f59e0b;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Warn</button>
+              ${target?`<button onclick="reviewNSFW(${i},'suspend')" style="padding:7px 16px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:8px;color:#a855f7;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">⏳ Suspend</button>`:''}
+              ${target?`<button onclick="reviewNSFW(${i},'ban')" style="padding:7px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🔨 Ban</button>`:''}
               <div style="flex:1;"></div>
-              ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;" onmouseover="this.style.background='rgba(96,165,250,.15)'" onmouseout="this.style.background='rgba(96,165,250,.08)'">🔍 Inspect ${escapeHTML(target)}</button>`:''}
-              ${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">🗑 Delete Forever</button>`:''}
+              ${target?`<button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(target)}';adminSearchUser();}},150);" style="padding:7px 16px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;">🔍 Inspect ${escapeHTML(target)}</button>`:''}
+              ${isSuperAdmin()?`<button onclick="reviewNSFW(${i},'delete')" style="padding:7px 16px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;">🗑 Delete Forever</button>`:''}
             </div>`;
             })()}
           </div>
@@ -14970,16 +14970,16 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <div style="font-weight:700;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;color:#f87171;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Deployment</div>
             <div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-bottom:10px;">Push updates and manage active sessions.</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <button onclick="_forceRefreshAllUsers()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Migrate to Next Update</button>
-              <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(248,113,113,.12)'" onmouseout="this.style.background='rgba(248,113,113,.06)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Reset All Sessions</button>
+              <button onclick="_forceRefreshAllUsers()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Migrate to Next Update</button>
+              <button onclick="_clearAllSessions()" style="padding:8px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:8px;color:#f87171;cursor:pointer;font-weight:700;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Reset All Sessions</button>
             </div>
           </div>
           <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;">
             <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Quick Actions</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <button onclick="_purgeDeletedMessages()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Purge Deleted Messages</button>
-              <button onclick="_syncAllToFirebase()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Sync Local to Firebase</button>
-              <button onclick="_exportAuditLog()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Audit Log</button>
+              <button onclick="_purgeDeletedMessages()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Purge Deleted Messages</button>
+              <button onclick="_syncAllToFirebase()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Sync Local to Firebase</button>
+              <button onclick="_exportAuditLog()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Audit Log</button>
             </div>
           </div>
         </div>
@@ -17115,13 +17115,13 @@ async function _showInviteFriendsPanel() {
     <div style="padding:20px 20px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <h3 style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite friends to Fortized</h3>
-        <button onclick="this.closest('.input-dialog-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:4px 8px;border-radius:8px;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.08)';this.style.color='#fff'" onmouseleave="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.4)'">&times;</button>
+        <button onclick="this.closest('.input-dialog-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:4px 8px;border-radius:8px;transition:all .15s;">&times;</button>
       </div>
       <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px;">You earn <strong style="color:var(--accent);">9 Onyx</strong> for each friend who joins!</div>
       <!-- Search -->
       <div style="position:relative;margin-bottom:14px;">
         <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="invite-friends-search" placeholder="Search friends..." autocomplete="off" style="width:100%;padding:9px 14px 9px 34px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'" oninput="_filterInviteFriends(this.value)">
+        <input type="text" id="invite-friends-search" placeholder="Search friends..." autocomplete="off" style="width:100%;padding:9px 14px 9px 34px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;" oninput="_filterInviteFriends(this.value)">
       </div>
     </div>
     <!-- Friends list -->
@@ -17174,7 +17174,7 @@ function _renderInviteFriendsList(list) {
   el.innerHTML = list.map(r => {
     const statusColor = FtzStatus.color(r.status);
     const isOnline = FtzStatus.isPresent(r.status);
-    return `<div class="invite-friend-row" data-username="${escapeHTML(r.username)}" data-displayname="${escapeHTML(r.displayName.toLowerCase())}" style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;transition:background .12s;cursor:default;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background='transparent'">
+    return `<div class="invite-friend-row" data-username="${escapeHTML(r.username)}" data-displayname="${escapeHTML(r.displayName.toLowerCase())}" style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;transition:background .12s;cursor:default;">
       <div style="position:relative;flex-shrink:0;">
         <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.04);">${buildAvatarHTML(r.pfp,r.displayName,32)}</div>
         <span style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${statusColor};border:2.5px solid var(--panel,#13161d);"></span>
@@ -17266,12 +17266,12 @@ async function showBastionInviteUI(bastionIdx) {
     <div style="padding:20px 20px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <h3 style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite friends to ${escapeHTML(b.name)}</h3>
-        <button onclick="this.closest('.input-dialog-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:4px 8px;border-radius:8px;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.08)';this.style.color='#fff'" onmouseleave="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.4)'">&times;</button>
+        <button onclick="this.closest('.input-dialog-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:4px 8px;border-radius:8px;transition:all .15s;">&times;</button>
       </div>
       <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:14px;display:flex;align-items:center;gap:8px;">${b.icon?`<img src="${escapeHTML(b.icon)}" style="width:18px;height:18px;border-radius:6px;object-fit:cover;">`:`<span style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`} <span style="font-weight:600;color:rgba(255,255,255,.6);">${escapeHTML(b.name)}</span></div>
       <div style="position:relative;margin-bottom:14px;">
         <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="bastion-invite-search" placeholder="Search friends..." autocomplete="off" style="width:100%;padding:9px 14px 9px 34px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.06)'" oninput="_filterBastionInviteFriends(this.value)">
+        <input type="text" id="bastion-invite-search" placeholder="Search friends..." autocomplete="off" style="width:100%;padding:9px 14px 9px 34px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;" oninput="_filterBastionInviteFriends(this.value)">
       </div>
     </div>
     <div id="bastion-invite-friends-list" style="flex:1;overflow-y:auto;padding:0 10px 10px;min-height:120px;max-height:340px;">
@@ -17325,7 +17325,7 @@ function _renderBastionInviteFriendsList(list) {
     const btnHTML = r.isMember
       ? `<span style="padding:6px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.25);">Joined</span>`
       : `<button onclick="_sendBastionInviteDM(this,'${escapeHTML(r.username)}')" style="padding:6px 14px;border-radius:8px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.15);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'DM Sans',sans-serif;" onmouseenter="if(!this.disabled){this.style.background='rgba(255,249,62,.12)';this.style.borderColor='rgba(255,249,62,.3)';}" onmouseleave="if(!this.disabled){this.style.background='rgba(255,249,62,.06)';this.style.borderColor='rgba(255,249,62,.15)';}">Invite</button>`;
-    return `<div class="bastion-invite-friend-row" data-username="${escapeHTML(r.username)}" data-displayname="${escapeHTML(r.displayName.toLowerCase())}" style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;transition:background .12s;cursor:default;" onmouseenter="this.style.background='rgba(255,255,255,.03)'" onmouseleave="this.style.background='transparent'">
+    return `<div class="bastion-invite-friend-row" data-username="${escapeHTML(r.username)}" data-displayname="${escapeHTML(r.displayName.toLowerCase())}" style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;transition:background .12s;cursor:default;">
       <div style="position:relative;flex-shrink:0;">
         <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.04);">${buildAvatarHTML(r.pfp,r.displayName,32)}</div>
         <span style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:${statusColor};border:2.5px solid var(--panel,#13161d);"></span>
@@ -19184,7 +19184,7 @@ function _openDisplayNameStyleModal() {
     <div style="flex:1;padding:28px 24px;overflow-y:auto;min-width:0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
         <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:800;color:#fff;">Display Name Style</div>
-        <button onclick="this.closest('.dns-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.4);cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
+        <button onclick="this.closest('.dns-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.4);cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
       </div>
 
       <!-- Choose Font -->
@@ -19285,7 +19285,7 @@ function _openDisplayNameStyleModal() {
       <div style="flex:1;"></div>
       <!-- Actions -->
       <div style="display:flex;gap:8px;margin-top:4px;">
-        <button onclick="_dnSurpriseMe()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-family:Syne,sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg> Randomise</button>
+        <button onclick="_dnSurpriseMe()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-family:Syne,sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg> Randomise</button>
         <button onclick="_dnApplyStyle()" style="flex:1;padding:10px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:Syne,sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .12s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">Apply Style</button>
       </div>
     </div>
@@ -19927,7 +19927,7 @@ function showIgnorePicker(username) {
               <span style="font-size:11px;color:rgba(255,255,255,.25);font-weight:600;">Select</span>
             </div>`).join('')}
         </div>
-        <button onclick="document.getElementById('modal-ignore-picker')?.remove()" style="width:100%;margin-top:14px;padding:10px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.45);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Cancel</button>
+        <button onclick="document.getElementById('modal-ignore-picker')?.remove()" style="width:100%;margin-top:14px;padding:10px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.45);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">Cancel</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -20672,7 +20672,7 @@ function renderProfileWidgetsTab(main) {
     }
     if (def.id === 'want_to_play') {
       configHtml = `<div style="margin-top:8px;">
-        <button onclick="_openWidgetGameSearch(event,'want_to_play')" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;" onmouseover="this.style.borderColor='rgba(255,255,255,.2)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.6)'">
+        <button onclick="_openWidgetGameSearch(event,'want_to_play')" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add game
         </button>
@@ -20786,7 +20786,7 @@ function _openAddWidgetPanel() {
           <h3 style="margin:0;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">Add Widgets</h3>
           <p style="margin:4px 0 0;font-size:11.5px;color:rgba(255,255,255,.3);">Choose widgets to display on your profile</p>
         </div>
-        <button onclick="this.closest('.pw-add-widget-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.4);cursor:pointer;width:34px;height:34px;display:flex;align-items:center;justify-content:center;transition:all .12s;font-size:16px;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
+        <button onclick="this.closest('.pw-add-widget-modal-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;color:rgba(255,255,255,.4);cursor:pointer;width:34px;height:34px;display:flex;align-items:center;justify-content:center;transition:all .12s;font-size:16px;">✕</button>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:4px 20px 24px;">
@@ -20989,7 +20989,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
             <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">Games I like</div>
             <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">Add up to 20 games</div>
           </div>
-          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event)" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:5px;" onmouseover="this.style.borderColor='rgba(255,255,255,.2)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.6)'">
+          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event)" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:5px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add game
           </button>` : ''}
@@ -21061,7 +21061,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
         html += `<div class="pw-widget" style="border-left:3px solid #1DB954;padding:12px 14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div class="pw-widget-title" style="color:#1DB954;margin-bottom:0;">${_spotifySvg} Listening to Spotify</div>
-            ${isOwnProfile ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" onmouseover="this.style.color='#f87171';this.style.background='rgba(248,113,113,.08)'" onmouseout="this.style.color='rgba(255,255,255,.2)';this.style.background='none'" title="Disconnect Spotify">Disconnect</button>` : ''}
+            ${isOwnProfile ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:12px;">
             ${spotifyData.albumArt ? `<img src="${escapeHTML(spotifyData.albumArt)}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(29,185,84,.15);">` : `<div style="width:52px;height:52px;border-radius:8px;background:rgba(29,185,84,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(29,185,84,.6)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`}
@@ -21087,7 +21087,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
         html += `<div class="pw-widget" style="border-left:3px solid #1DB954;padding:12px 14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
             <div class="pw-widget-title" style="color:#1DB954;margin-bottom:0;">${_spotifySvg} Spotify</div>
-            ${isConnected ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" onmouseover="this.style.color='#f87171';this.style.background='rgba(248,113,113,.08)'" onmouseout="this.style.color='rgba(255,255,255,.2)';this.style.background='none'" title="Disconnect Spotify">Disconnect</button>` : ''}
+            ${isConnected ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
           </div>
           ${isConnected
             ? '<div style="font-size:11.5px;color:rgba(255,255,255,.3);margin-top:6px;">Not currently playing anything.</div>'
@@ -21108,7 +21108,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
             </div>
             <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">Games on my wishlist</div>
           </div>
-          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event,'want_to_play')" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;" onmouseover="this.style.borderColor='rgba(255,255,255,.2)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.6)'">
+          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event,'want_to_play')" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add
           </button>` : ''}
@@ -21301,7 +21301,7 @@ function _updateSpotifyWidget() {
         widget.innerHTML = `
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div class="pw-widget-title" style="color:#1DB954;margin-bottom:0;">${_spotifySvg} Listening to Spotify</div>
-            <button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" onmouseover="this.style.color='#f87171';this.style.background='rgba(248,113,113,.08)'" onmouseout="this.style.color='rgba(255,255,255,.2)';this.style.background='none'" title="Disconnect Spotify">Disconnect</button>
+            <button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>
           </div>
           <div style="display:flex;align-items:center;gap:12px;">
             ${spotifyData.albumArt ? `<img src="${escapeHTML(spotifyData.albumArt)}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(29,185,84,.15);">` : `<div style="width:52px;height:52px;border-radius:8px;background:rgba(29,185,84,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(29,185,84,.6)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`}
@@ -21472,7 +21472,7 @@ function _openWidgetGameSearch(e, target) {
   if (rect.left + 280 > window.innerWidth) drop.style.left = (window.innerWidth - 288) + 'px';
   const owned = new Set((CU.gameCollection||[]).map(g => g.name.toLowerCase()));
   drop.innerHTML = `<div style="padding:10px 12px 8px;flex-shrink:0;">
-    <input id="pw-gs-input" placeholder="Search" style="width:100%;padding:8px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'" oninput="_filterWidgetGameSearch(this.value)">
+    <input id="pw-gs-input" placeholder="Search" style="width:100%;padding:8px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .15s;" oninput="_filterWidgetGameSearch(this.value)">
   </div>
   <div id="pw-gs-results" style="flex:1;overflow-y:auto;padding:4px 8px 10px;scrollbar-width:thin;"></div>`;
   document.body.appendChild(drop);
@@ -22897,7 +22897,7 @@ function openStatusPicker() {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px;">
-          <button onclick="saveCustomStatus()" style="flex:1;background:var(--accent);color:#0f1119;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''">Save Custom Status</button>
+          <button onclick="saveCustomStatus()" style="flex:1;background:var(--accent);color:#0f1119;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(255,249,62,.15);">Save Custom Status</button>
           <button onclick="clearCustomStatus()" style="width:44px;height:44px;border-radius:14px;background:rgba(248,113,113,.06);border:1.5px solid rgba(248,113,113,.12);color:rgba(248,113,113,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;" onmouseover="this.style.borderColor='rgba(248,113,113,.25)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='rgba(248,113,113,.12)';this.style.color='rgba(248,113,113,.6)'" title="Clear status"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
         </div>
       </div>
@@ -23074,8 +23074,8 @@ function openForumPost(chIdx, postIdx) {
   const editedLabel = p.editedAt ? ' <span style="font-size:10.5px;color:var(--muted);font-style:italic;">(edited)</span>' : '';
   const manageHTML = canManage ? `
     <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0;">
-      ${isAuthor ? `<button onclick="editForumPost(${chIdx},${postIdx})" style="background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:var(--accent);border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(255,249,62,.14)'" onmouseleave="this.style.background='rgba(255,249,62,.08)'">✏ Edit</button>` : ''}
-      <button onclick="showCustomConfirm('Delete this post permanently?',function(){deleteForumPost(${chIdx},${postIdx})})" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);color:#f87171;border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(248,113,113,.14)'" onmouseleave="this.style.background='rgba(248,113,113,.08)'">🗑 Delete</button>
+      ${isAuthor ? `<button onclick="editForumPost(${chIdx},${postIdx})" style="background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:var(--accent);border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;">✏ Edit</button>` : ''}
+      <button onclick="showCustomConfirm('Delete this post permanently?',function(){deleteForumPost(${chIdx},${postIdx})})" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);color:#f87171;border-radius:8px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;">🗑 Delete</button>
     </div>` : '';
   wrap.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">'
     +'<div class="forum-detail-header">'
@@ -24389,7 +24389,7 @@ function showPinnedMessages() {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-6 0v4.76"/></svg>
       <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex:1;color:#fff;">Pinned Messages</div>
       <span style="font-size:10px;color:rgba(255,255,255,.25);background:rgba(255,255,255,.04);padding:2px 10px;border-radius:100px;font-weight:600;">${pins.length}</span>
-      <button onclick="_closeEl('pins-panel');_closeEl('pins-panel-overlay')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
+      <button onclick="_closeEl('pins-panel');_closeEl('pins-panel-overlay')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
     </div>
     <div id="pins-list-content" style="flex:1;overflow-y:auto;padding:10px 14px;">${pins.length
       ? pins.map((p,i) => `<div class="asr-item" style="margin-bottom:4px;">
@@ -25672,7 +25672,7 @@ function renderAtelierTab(tab) {
       <!-- Quick Actions Row -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px;">
         <!-- Daily Claim -->
-        <div style="background:${dailyDone?'linear-gradient(135deg,rgba(62,207,110,.05),rgba(62,207,110,.02))':'linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02))'};border:1.5px solid ${dailyDone?'rgba(62,207,110,.12)':'rgba(255,249,62,.1)'};border-radius:18px;padding:22px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="claimDailyQuest()" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='none'">
+        <div style="background:${dailyDone?'linear-gradient(135deg,rgba(62,207,110,.05),rgba(62,207,110,.02))':'linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02))'};border:1.5px solid ${dailyDone?'rgba(62,207,110,.12)':'rgba(255,249,62,.1)'};border-radius:18px;padding:22px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="claimDailyQuest()">
           <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,${dailyDone?'rgba(62,207,110,.06)':'rgba(255,249,62,.06)'},transparent 70%);pointer-events:none;"></div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
             <div style="width:40px;height:40px;border-radius:14px;background:${dailyDone?'rgba(62,207,110,.1)':'rgba(255,249,62,.1)'};display:flex;align-items:center;justify-content:center;font-size:20px;">🎁</div>
@@ -25694,7 +25694,7 @@ function renderAtelierTab(tab) {
           <div style="font-size:11px;color:rgba(255,255,255,.35);">Themes, decorations & more</div>
         </div>
         <!-- Radiance -->
-        <div style="background:${hasRad||hasPlus?'linear-gradient(135deg,rgba(255,160,62,.05),rgba(255,160,62,.02))':'linear-gradient(135deg,rgba(251,146,60,.04),rgba(251,146,60,.01))'};border:1.5px solid ${hasRad||hasPlus?'rgba(255,160,62,.12)':'rgba(251,146,60,.08)'};border-radius:18px;padding:22px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="switchAtelierTab('radiance')" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='none'">
+        <div style="background:${hasRad||hasPlus?'linear-gradient(135deg,rgba(255,160,62,.05),rgba(255,160,62,.02))':'linear-gradient(135deg,rgba(251,146,60,.04),rgba(251,146,60,.01))'};border:1.5px solid ${hasRad||hasPlus?'rgba(255,160,62,.12)':'rgba(251,146,60,.08)'};border-radius:18px;padding:22px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onclick="switchAtelierTab('radiance')">
           <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(255,160,62,.06),transparent 70%);pointer-events:none;"></div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
             <div style="width:40px;height:40px;border-radius:14px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;">
@@ -25711,7 +25711,7 @@ function renderAtelierTab(tab) {
       <div style="margin-bottom:32px;">
         <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
           <span>Radiance Perks</span>
-          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('radiance')">See All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onclick="switchAtelierTab('radiance')">See All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
           ${PERKS.map(p => {
@@ -25739,7 +25739,7 @@ function renderAtelierTab(tab) {
       <div style="margin-bottom:32px;">
         <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
           <span>Quest Progress</span>
-          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('quests')">View All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onclick="switchAtelierTab('quests')">View All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
         </div>
         <!-- Progress bar -->
         <div style="margin-bottom:14px;padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;">
@@ -25767,7 +25767,7 @@ function renderAtelierTab(tab) {
       <div>
         <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
           <span>Explore the Shop</span>
-          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='rgba(255,249,62,.4)'" onclick="switchAtelierTab('shop')">See All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+          <span style="cursor:pointer;color:rgba(255,249,62,.4);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onclick="switchAtelierTab('shop')">See All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
           ${[{name:'Appearances',icon:ftzIcon('image','22'),color:'#a78bfa',desc:'Custom themes'},{name:'Decorations',icon:ftzIcon('star','22'),color:'#60a5fa',desc:'Avatar effects'},{name:'Bundles',icon:ftzIcon('gem','22'),color:'#fb923c',desc:'Value packs'}].map(it=>{
@@ -25798,13 +25798,13 @@ function renderAtelierTab(tab) {
         <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,220,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_radiancePlusImg('32')}</div>
         <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#ffd93e;letter-spacing:-.01em;">Radiance+ Active</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
-        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:var(--red);font-size:12px;padding:9px 18px;cursor:pointer;transition:all .15s;flex-shrink:0;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
+        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:var(--red);font-size:12px;padding:9px 18px;cursor:pointer;transition:all .15s;flex-shrink:0;">Cancel</button>
       </div>`:hasRad?`<div style="background:linear-gradient(135deg,rgba(255,160,62,.06),rgba(255,160,62,.02));border:1.5px solid rgba(255,160,62,.15);border-radius:22px;padding:22px 26px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
         <div style="position:absolute;top:-30px;right:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,160,62,.06),transparent 70%);pointer-events:none;"></div>
         <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_radianceImg('32')}</div>
         <div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#ff9d3e;letter-spacing:-.01em;">Radiance Active</div>
         <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">${daysRad} days remaining · Auto-renews · 600 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
-        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:var(--red);font-size:12px;padding:9px 18px;cursor:pointer;transition:all .15s;flex-shrink:0;" onmouseover="this.style.background='rgba(248,113,113,.14)'" onmouseout="this.style.background='rgba(248,113,113,.08)'">Cancel</button>
+        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:var(--red);font-size:12px;padding:9px 18px;cursor:pointer;transition:all .15s;flex-shrink:0;">Cancel</button>
       </div>`:''}
 
       <!-- Plans side by side -->
@@ -25826,7 +25826,7 @@ function renderAtelierTab(tab) {
           <div style="padding:0 18px 20px;">
             <div id="rad-price-sel-0" style="display:flex;flex-direction:column;gap:6px;">
               ${PRICES.basic.map((pl,i)=>`
-                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===1?'var(--accent)':'rgba(255,255,255,.04)'};color:${i===1?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;" onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
+                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===1?'var(--accent)':'rgba(255,255,255,.04)'};color:${i===1?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;">
                   <span>${pl.days} Days</span>
                   <span>${pl.onyx} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">${i===1?' 🔥':''}</span>
                 </button>`).join('')}
@@ -25850,7 +25850,7 @@ function renderAtelierTab(tab) {
           <div style="padding:0 18px 20px;">
             <div style="display:flex;flex-direction:column;gap:6px;">
               ${PRICES.plus.map((pl,i)=>`
-                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===0?'linear-gradient(90deg,#ffd93e,#fff93e)':'rgba(255,255,255,.04)'};color:${i===0?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;" onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'" onmouseout="this.style.filter='';this.style.transform=''">
+                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===0?'linear-gradient(90deg,#ffd93e,#fff93e)':'rgba(255,255,255,.04)'};color:${i===0?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.07)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;">
                   <span>${pl.days} Days</span>
                   <span>${pl.onyx} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">${i===0?' 🔥':''}</span>
                 </button>`).join('')}
@@ -26125,7 +26125,7 @@ function renderAtelierTab(tab) {
                       </div>`
                       :`<div class="sic-price"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> 100</div>`}
                   </div>
-                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:#3ecf6e;flex-shrink:0;">Owned</div>'}
+                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:#3ecf6e;flex-shrink:0;">Owned</div>'}
                 </div>
               </div>
             </div>
@@ -26257,7 +26257,7 @@ function renderAtelierTab(tab) {
                     </div>
                     ${bundleOwned
                       ? '<div style="padding:8px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;color:#3ecf6e;font-size:12px;font-weight:700;text-align:center;">Owned</div>'
-                      : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:#0f1119;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;" onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:3px;">${bundle.origPrice}</span> ${bundle.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${bundle.id}','${bundle.name}',${bundle.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'" title="Gift"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
+                      : `<div style="display:flex;gap:6px;"><button onclick="event.stopPropagation();buyBundle('${bundle.id}',${bundle.price})" style="flex:1;padding:9px 12px;background:var(--accent);color:#0f1119;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 16px rgba(255,249,62,.12);transition:all .15s;"><img src='/Onyx.png' style='width:13px;height:13px;object-fit:contain;'> <span style="text-decoration:line-through;opacity:.5;font-weight:400;margin-right:3px;">${bundle.origPrice}</span> ${bundle.price}</button><button onclick="event.stopPropagation();createItemGiftLink('${bundle.id}','${bundle.name}',${bundle.price})" style="padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;transition:all .15s;" title="Gift"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></button></div>`}
                   </div>
                 </div>`;
               }).join('')}
@@ -27675,9 +27675,9 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
           <input type="range" id="crop-zoom" min="50" max="300" value="100" style="flex:1;accent-color:var(--accent);cursor:pointer;" oninput="setCropZoom(this.value/100)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
         </div>
-        <button onclick="resetCrop()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;padding:7px 14px;cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.08)'" onmouseleave="this.style.background='rgba(255,255,255,.05)'">Reset</button>
-        <button onclick="document.getElementById('crop-modal-overlay').remove()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.6);font-size:12px;padding:7px 16px;cursor:pointer;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.08)'" onmouseleave="this.style.background='rgba(255,255,255,.05)'">Cancel</button>
-        <button onclick="applyCrop()" style="background:linear-gradient(135deg,var(--accent),#e6e034);border:none;border-radius:10px;color:#0f1119;font-size:13px;font-weight:700;padding:8px 22px;cursor:pointer;font-family:'Syne',sans-serif;box-shadow:0 2px 10px rgba(255,249,62,.2);transition:all .15s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">Apply</button>
+        <button onclick="resetCrop()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;padding:7px 14px;cursor:pointer;transition:all .15s;">Reset</button>
+        <button onclick="document.getElementById('crop-modal-overlay').remove()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.6);font-size:12px;padding:7px 16px;cursor:pointer;transition:all .15s;">Cancel</button>
+        <button onclick="applyCrop()" style="background:linear-gradient(135deg,var(--accent),#e6e034);border:none;border-radius:10px;color:#0f1119;font-size:13px;font-weight:700;padding:8px 22px;cursor:pointer;font-family:'Syne',sans-serif;box-shadow:0 2px 10px rgba(255,249,62,.2);transition:all .15s;">Apply</button>
       </div>
     </div>`;
 
@@ -28771,11 +28771,11 @@ function toggleOwnProfilePanel() {
     </div>
     <!-- Actions -->
     <div style="padding:7px 10px 12px;display:flex;gap:7px;">
-      <button onclick="closeOwnProfilePanel();showView('profile')" style="flex:1;padding:8px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;color:rgba(255,255,255,.55);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .14s;" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.85)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.55)'">
+      <button onclick="closeOwnProfilePanel();showView('profile')" style="flex:1;padding:8px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;color:rgba(255,255,255,.55);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .14s;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
         Edit Profile
       </button>
-      <button onclick="closeOwnProfilePanel();toggleAccountSwitcher()" style="flex:1;padding:8px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;color:rgba(255,255,255,.55);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .14s;white-space:nowrap;" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.85)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.55)'">
+      <button onclick="closeOwnProfilePanel();toggleAccountSwitcher()" style="flex:1;padding:8px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;color:rgba(255,255,255,.55);font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .14s;white-space:nowrap;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
         Switch
       </button>
@@ -29610,7 +29610,7 @@ function openThread(msgId, text, from) {
     <div class="thread-panel-header" style="padding:18px 22px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;flex-shrink:0;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex:1;color:#fff;">Thread</span>
-      <button onclick="_closeThread()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">✕</button>
+      <button onclick="_closeThread()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .12s;">✕</button>
     </div>
     <div class="thread-origin" style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.015);">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">

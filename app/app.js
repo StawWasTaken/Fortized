@@ -15748,7 +15748,7 @@ async function loadAllReportsFromFirebase() {
     // Push any local-only reports to Supabase
     for (const lr of local) {
       if (lr.id && !remoteMap.has(lr.id)) {
-        try { await FortizedSocial.adminSaveReport(lr); } catch {}
+        try { await FortizedSocial.adminSaveReport(lr); } catch(e) { console.warn('[Admin] Report save:', e?.message); }
       }
     }
     toast('Reports synced: '+merged.length+' total', 'success');
@@ -15790,7 +15790,7 @@ function _updateGlobalSetting(key, value) {
   localStorage.setItem('ftz_global_settings', JSON.stringify(gs));
   _globalSettings = gs;
   // Persist to Supabase for cross-device sync
-  try { FortizedSocial.adminSaveGlobalSettings(gs); } catch {}
+  try { FortizedSocial.adminSaveGlobalSettings(gs); } catch(e) { console.warn('[Admin] Global settings save:', e?.message); }
   // Apply side effects
   if (key === 'maintenanceMode') {
     if (value) {
@@ -16172,7 +16172,7 @@ function _listenBastionUpdates() {
 let _dmLiveRef = null;
 function _listenDmUpdates() {
   if (!CU?.username) return;
-  if (_dmLiveRef) { try { _dmLiveRef.off(); } catch {} }
+  if (_dmLiveRef) { try { _dmLiveRef.off(); } catch(e) { console.debug('[DM] Ref off:', e?.message); } }
   _dmLiveRef = firebase.database().ref('dmIndex/' + CU.username);
   _dmLiveRef.on('value', snap => {
     if (!snap.exists()) return;
@@ -16187,7 +16187,7 @@ function _listenDmUpdates() {
 let _groupDmRefs = [];
 function _listenGroupDmUpdates() {
   // Clean up old listeners
-  _groupDmRefs.forEach(r => { try { r.ref.off('value', r.cb); } catch {} });
+  _groupDmRefs.forEach(r => { try { r.ref.off('value', r.cb); } catch(e) { console.debug('[GC] Ref off:', e?.message); } });
   _groupDmRefs = [];
   if (!CU?.username) return;
   // Listen for changes to group DM metadata
@@ -16554,14 +16554,14 @@ function reviewNSFW(idx, action) {
     if ((action === 'ban' || action === 'remove') && item.hash) {
       _nsfwBannedHashes.push(item.hash);
       localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(_nsfwBannedHashes));
-      try { FortizedSocial.adminSaveNsfwBannedHashes(_nsfwBannedHashes); } catch {}
+      try { FortizedSocial.adminSaveNsfwBannedHashes(_nsfwBannedHashes); } catch(e) { console.warn('[NSFW] Hash save:', e?.message); }
     }
 
     // Remove from queue
     const itemId = item.id;
     queue.splice(idx, 1);
     localStorage.setItem('ftz_nsfw_queue', JSON.stringify(queue));
-    try { await FortizedSocial.adminSaveNsfwQueue(queue); } catch {}
+    try { await FortizedSocial.adminSaveNsfwQueue(queue); } catch(e) { console.warn('[NSFW] Queue save:', e?.message); }
     toast(action === 'approve' ? 'Content approved' : action === 'delete' ? 'Deleted forever' : 'Content ' + action + 'd', 'success');
     _loadAdminPage('nsfw_queue');
   });
@@ -16596,7 +16596,7 @@ async function nsfwAIFeedback(idx, aiWasCorrect) {
       if (!_nsfwBannedHashes.includes(item.hash)) {
         _nsfwBannedHashes.push(item.hash);
         localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(_nsfwBannedHashes));
-        try { FortizedSocial.adminSaveNsfwBannedHashes(_nsfwBannedHashes); } catch {}
+        try { FortizedSocial.adminSaveNsfwBannedHashes(_nsfwBannedHashes); } catch(e) { console.warn('[NSFW] Hash save:', e?.message); }
       }
     }
   } catch(e) { console.warn('AI feedback save failed:', e); }
@@ -17093,7 +17093,7 @@ function _flagNsfwContent(fileData, fileName, uploader, fileType, aiLabel, aiSco
   localStorage.setItem('ftz_nsfw_queue', JSON.stringify(queue));
 
   // Sync to Supabase
-  try { FortizedSocial.adminSaveNsfwQueue(queue); } catch {}
+  try { FortizedSocial.adminSaveNsfwQueue(queue); } catch(e) { console.warn('[NSFW] Queue save:', e?.message); }
 
   logAudit('nsfw_flagged', uploader, `AI flagged ${mediaType} "${fileName}" as ${aiLabel} (score: ${aiScore})`);
 }
@@ -17125,7 +17125,7 @@ async function adjustOnyx(direction) {
   if (!amount||amount<=0) { toast('Enter a valid amount','error'); return; }
   if (!reason) { toast('Reason is required','error'); return; }
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch {}
+  try { u = await FortizedSocial.getUserByName(username); } catch(e) { console.warn('[Admin] User lookup:', e?.message); }
   if (!u) { toast('User not found','error'); return; }
   const delta = direction > 0 ? amount : -amount;
   u.onyx = Math.max(0, (u.onyx||0) + delta);
@@ -17302,7 +17302,7 @@ async function showBastionInviteUI(bastionIdx) {
     if (!b.invites) b.invites = [];
     b.invites.push(newInv);
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
-    if (gid) { try { await firebase.database().ref('globalBastions/' + gid + '/invites').set(b.invites); } catch {} }
+    if (gid) { try { await firebase.database().ref('globalBastions/' + gid + '/invites').set(b.invites); } catch(e) { console.warn('[Invite] Sync failed:', e?.message); } }
   }
   const inviteLink = location.origin + '/app?invite=' + inviteCode;
   const friends = CU?.friends || [];
@@ -17730,7 +17730,7 @@ async function acceptBastionInvite(btn, bastionId, inviteCode) {
     await joinBastionById(bastionId, true);
     // Increment invite uses
     if (inviteCode) {
-      try { await FortizedSocial.incrementInviteUses(inviteCode); } catch {}
+      try { await FortizedSocial.incrementInviteUses(inviteCode); } catch(e) { console.warn('[Invite] Uses increment failed:', e?.message); }
     }
     document.getElementById('invite-dialog-overlay')?.remove();
   } catch(e) { console.error('[Bastion] Invite join failed:', e); btn.disabled = false; btn.textContent = 'Accept Invite'; toast('Failed to join bastion. Please try again.','error'); }
@@ -18192,7 +18192,7 @@ function leaveBastion(idx) {
     return;
   }
   showCustomConfirm('Leave "' + b.name + '"? You can rejoin with an invite.', async () => {
-    try { await FortizedSocial.removeBastionMember(b.globalId || b.name, CU.username); } catch {}
+    try { await FortizedSocial.removeBastionMember(b.globalId || b.name, CU.username); } catch(e) { console.warn('[Bastion] Leave member remove:', e?.message); }
     // Clean local memberRoles so member list doesn't ghost
     if(b.memberRoles) delete b.memberRoles[CU.username];
     CU.bastions.splice(idx, 1);
@@ -18324,7 +18324,7 @@ function generateTrialLink() {
   existing.push(trialData);
   localStorage.setItem('ftz_trial_links', JSON.stringify(existing));
   // Persist to Supabase for cross-device access
-  try { FortizedSocial.adminSetSignal('trial_link_' + code, trialData); } catch {}
+  try { FortizedSocial.adminSetSignal('trial_link_' + code, trialData); } catch(e) { console.warn('[Admin] Trial link save:', e?.message); }
   const el = document.getElementById('trial-link-result');
   if (el) {
     el.innerHTML = `
@@ -19842,7 +19842,7 @@ function _blockUserConfirm(username) {
         } catch {}
       }
       // Persist to Firebase
-      try { await firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked); } catch {}
+      try { await firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked); } catch(e) { console.warn('[Block] Save failed:', e?.message); }
       toast(`Blocked ${username}`, 'info');
       closeModal('modal-user');
       // Re-render messages to blur them
@@ -19854,7 +19854,7 @@ function _blockUserConfirm(username) {
 function _unblockUser(username) {
   const blocked = _getBlockedList().filter(u => u !== username);
   _saveBlockedList(blocked);
-  try { firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked.length ? blocked : null); } catch {}
+  try { firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked.length ? blocked : null); } catch(e) { console.warn('[Unblock] Save failed:', e?.message); }
   toast(`Unblocked ${username}`, 'success');
   closeModal('modal-user');
   _applyBlockBlurToExistingMessages(username, false);
@@ -19944,7 +19944,7 @@ function unignoreUser(username) {
   delete list[username];
   _saveIgnoreList(list);
   // Sync to Firebase
-  try { firebase.database().ref('users/' + CU.username + '/ignoredUsers/' + username).remove(); } catch {}
+  try { firebase.database().ref('users/' + CU.username + '/ignoredUsers/' + username).remove(); } catch(e) { console.warn('[Ignore] Remove sync:', e?.message); }
   toast(`Unignored ${username}`, 'success');
   try { closeModal('modal-user'); } catch {}
   _applyIgnoreBlurToExistingMessages(username, false);
@@ -19987,7 +19987,7 @@ function _applyIgnore(username, durationMs) {
   list[username] = Date.now() + durationMs;
   _saveIgnoreList(list);
   // Also persist to Firebase for cross-device sync
-  try { firebase.database().ref('users/' + CU.username + '/ignoredUsers/' + username).set(Date.now() + durationMs); } catch {}
+  try { firebase.database().ref('users/' + CU.username + '/ignoredUsers/' + username).set(Date.now() + durationMs); } catch(e) { console.warn('[Ignore] Set sync:', e?.message); }
   document.getElementById('modal-ignore-picker')?.remove();
   const dur = IGNORE_DURATIONS.find(d => d.ms === durationMs);
   toast(`Ignoring ${username} for ${dur ? dur.label : 'a while'}`, 'info');

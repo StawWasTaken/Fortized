@@ -291,6 +291,30 @@ const onlineUsers = new Map();   // username -> { socketId, status, gameActivity
 const typingState = new Map();   // roomKey -> Set<username>
 const roomMembers = new Map();   // roomKey -> Set<socketId>
 
+// ── Rate limiter for socket events ──
+const _rateLimits = new Map();  // socketId -> { event: lastTime }
+function rateLimit(socketId, event, cooldownMs = 100) {
+  const key = socketId + ':' + event;
+  const now = Date.now();
+  const last = _rateLimits.get(key) || 0;
+  if (now - last < cooldownMs) return false;
+  _rateLimits.set(key, now);
+  return true;
+}
+// Cleanup rate limits every minute
+setInterval(() => {
+  const cutoff = Date.now() - 60000;
+  for (const [k, v] of _rateLimits) {
+    if (v < cutoff) _rateLimits.delete(k);
+  }
+}, 60000);
+
+// ── Input sanitization helper ──
+function sanitizeString(str, maxLen = 500) {
+  if (typeof str !== 'string') return '';
+  return str.trim().slice(0, maxLen);
+}
+
 function roomKey(type, id1, id2) {
   if (type === 'dm') return `dm:${[id1, id2].sort().join('__')}`;
   if (type === 'bastion') return `bastion:${id1}:${id2}`;
@@ -394,6 +418,8 @@ io.on('connection', (socket) => {
   // Client sends message (after saving to Firebase), server broadcasts instantly.
   socket.on('message:send', (data) => {
     if (!username) return;
+    if (!rateLimit(socket.id, 'message:send', 200)) return;  // Rate limit: 5 msgs/sec max
+    if (!data || !data.type || !data.message) return;  // Validate required fields
     const key = roomKey(data.type, data.id1, data.id2);
     // Broadcast to everyone in the room (including sender for confirmation)
     io.to(key).emit('message:new', {
@@ -408,6 +434,8 @@ io.on('connection', (socket) => {
   // ── Typing Indicators ──
   socket.on('typing:start', (data) => {
     if (!username) return;
+    if (!rateLimit(socket.id, 'typing:start', 1000)) return;  // Rate limit: 1/sec
+    if (!data || !data.type) return;
     const key = roomKey(data.type, data.id1, data.id2);
     if (!typingState.has(key)) typingState.set(key, new Set());
     typingState.get(key).add(username);
@@ -588,6 +616,35 @@ io.on('connection', (socket) => {
     callback(result);
   });
 });
+
+// ── Global Error Handlers (prevent server crash) ──
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught Exception:', err.message);
+  console.error(err.stack);
+  // Don't exit — keep serving
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[WARN] Unhandled Promise Rejection:', reason);
+});
+
+// ── Express error middleware ──
+app.use((err, req, res, next) => {
+  console.error('[Express] Error:', err.message);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// ── Periodic cleanup of stale state ──
+setInterval(() => {
+  // Clean up stale typing indicators (> 15 seconds old)
+  for (const [key, typers] of typingState) {
+    if (typers.size === 0) typingState.delete(key);
+  }
+  // Clean up empty room member sets
+  for (const [key, members] of roomMembers) {
+    if (members.size === 0) roomMembers.delete(key);
+  }
+}, 30000);
 
 // ── Start ──────────────────────────────────────────
 server.listen(PORT, () => {

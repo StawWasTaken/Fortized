@@ -1257,12 +1257,35 @@ function _ftzSoftRefresh() {
 
 // Keybinds: Alt+← (back), Alt+→ (forward), Ctrl+R (soft refresh)
 document.addEventListener('keydown', function(e) {
+  // Skip keyboard shortcuts if user is typing in an input/textarea
+  const tag = document.activeElement?.tagName;
+  const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable;
+
   // Alt+ArrowLeft = Back
   if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); history.back(); return; }
   // Alt+ArrowRight = Forward
   if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); history.forward(); return; }
   // Ctrl+R = Full page reload
   if (e.ctrlKey && !e.shiftKey && e.key === 'r') { e.preventDefault(); location.reload(); return; }
+
+  // ── Quick Navigation Shortcuts (only when not typing) ──
+  if (isTyping) return;
+
+  // Ctrl+K = Focus search bar
+  if (e.ctrlKey && e.key === 'k') {
+    e.preventDefault();
+    const searchInput = document.querySelector('.tb-search input') || document.querySelector('#global-search');
+    if (searchInput) searchInput.focus();
+    return;
+  }
+  // Ctrl+Shift+M = Go to Messages/DMs
+  if (e.ctrlKey && e.shiftKey && e.key === 'M') { e.preventDefault(); showView('dms'); return; }
+  // Ctrl+Shift+H = Go to Home
+  if (e.ctrlKey && e.shiftKey && e.key === 'H') { e.preventDefault(); showView('home'); return; }
+  // Ctrl+Shift+D = Go to Discover
+  if (e.ctrlKey && e.shiftKey && e.key === 'D') { e.preventDefault(); showView('discover'); return; }
+  // Ctrl+Shift+A = Go to Atelier (profile/settings)
+  if (e.ctrlKey && e.shiftKey && e.key === 'A') { e.preventDefault(); showView('atelier'); return; }
 });
 
 // ════════════════════════════════════════════
@@ -3218,6 +3241,9 @@ async function renderDMFriendsHome() {
     </div>`;
     return;
   }
+
+  // Show skeleton loading state while data loads
+  list.innerHTML = friends.slice(0, 6).map(() => `<div style="display:flex;align-items:center;gap:14px;padding:10px 16px;"><div class="skeleton skeleton-avatar" style="width:42px;height:42px;flex-shrink:0;"></div><div style="flex:1;"><div class="skeleton skeleton-text" style="width:60%;"></div><div class="skeleton skeleton-text" style="width:40%;height:8px;"></div></div></div>`).join('');
 
   // Build friend cards with async status lookup
   let html = '';

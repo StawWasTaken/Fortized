@@ -3285,7 +3285,7 @@ async function renderDMFriendsHome() {
         </div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button style="padding:7px 16px;font-size:11px;font-weight:600;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:rgba(255,255,255,.45);cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:5px;" onclick="event.stopPropagation();openDMView('${escapeHTML(f)}')" onmouseover="this.style.borderColor='rgba(255,249,62,.35)';this.style.color='var(--accent)';this.style.background='rgba(255,249,62,.04)';this.style.boxShadow='0 0 12px rgba(255,249,62,.08)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.45)';this.style.background='transparent';this.style.boxShadow='none'">
+        <button class="friend-msg-btn" onclick="event.stopPropagation();openDMView('${escapeHTML(f)}')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Message</button>
       </div>
     </div>`;
@@ -3525,7 +3525,7 @@ function openDMView(username) {
   if (curGC) { const _el = document.getElementById('gc-msgs'); if (_el) _saveChatScroll('gc:'+curGC, _el); }
   if (curBastion !== null && curChannel !== null && curChannel !== 'overview') { const _el = document.getElementById('ch-msgs-'+curChannel); if (_el) _saveChatScroll('ch:'+curBastion+':'+curChannel, _el); }
   // Auto-clear DM notifications from this user (Discord-style)
-  try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', username).then(()=>updateNotifBadge()).catch(()=>{}); } catch {}
+  try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', username).then(()=>updateNotifBadge()).catch(e => console.warn('[Notif] Clear DM read failed:', e?.message)); } catch(e) { console.warn('[Notif]', e?.message); }
   // Auto-unhide conversation when opening it
   unhideDMConversation('dm_' + username);
   curDM = username;
@@ -3785,7 +3785,7 @@ async function openGroupChatView(gcId) {
   if (curGC && curGC !== gcId) { const _el = document.getElementById('gc-msgs'); if (_el) _saveChatScroll('gc:'+curGC, _el); }
   if (curBastion !== null && curChannel !== null && curChannel !== 'overview') { const _el = document.getElementById('ch-msgs-'+curChannel); if (_el) _saveChatScroll('ch:'+curBastion+':'+curChannel, _el); }
   // Auto-clear notifications from this group chat
-  try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', null).then(()=>updateNotifBadge()).catch(()=>{}); } catch {}
+  try { FortizedSocial.markNotificationReadBySource(CU.username, 'dm', null).then(()=>updateNotifBadge()).catch(e => console.warn('[Notif] Clear GC read failed:', e?.message)); } catch(e) { console.warn('[Notif]', e?.message); }
   // Auto-unhide group chat when opening it
   unhideDMConversation('gc_' + gcId);
   curGC = gcId;
@@ -4134,7 +4134,7 @@ async function renameGroupChat(gcId) {
       renderDMSidebar(document.getElementById('sidebar-scroll'));
       toast('Group renamed!','success');
       openGroupChatView(gcId);
-    } catch(e){ toast('Failed to rename','error'); }
+    } catch(e){ console.error('[GC] Rename failed:', e); toast('Failed to rename group. Please try again.','error'); }
   });
 }
 
@@ -4191,7 +4191,7 @@ async function addMembersToGC(gcId) {
       ov.remove();
       toast('Members added!','success');
       openGroupChatView(gcId);
-    } catch(e){ toast('Failed to add members','error'); }
+    } catch(e){ console.error('[GC] Add members failed:', e); toast('Failed to add members. Please try again.','error'); }
   });
 }
 
@@ -4890,7 +4890,7 @@ async function _sendAnnouncement(idx) {
   try {
     await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name, ch.name, CU.username, text);
     toast('Announcement published', 'success');
-  } catch { toast('Failed to publish', 'error'); }
+  } catch(e) { console.error('[Announce] Publish failed:', e); toast('Failed to publish announcement. Please try again.', 'error'); }
 }
 
 function autoModCheck(text, bastion) {
@@ -5117,7 +5117,7 @@ function appendMessage(container, msg, context, prevAuthor) {
       <span class="msg-system-icon">${msg.systemIcon||'→'}</span>
       <span class="msg-system-text">${parseMD(escapeHTML(msg.text||''))}</span>
       <span class="msg-system-time">${time}</span>
-      ${canDeleteSystem?`<button onclick="deleteMsg('${escapeHTML(id)}','${context}')" title="Delete" style="background:none;border:none;cursor:pointer;color:rgba(248,113,113,.4);padding:2px 4px;border-radius:6px;opacity:0;transition:opacity .15s,color .15s;margin-left:4px;display:flex;align-items:center;" onmouseover="this.style.color='rgba(248,113,113,.8)'" onmouseout="this.style.color='rgba(248,113,113,.4)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg></button>`:''}
+      ${canDeleteSystem?`<button onclick="deleteMsg('${escapeHTML(id)}','${context}')" title="Delete" class="msg-sys-delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg></button>`:''}
     </div>`;
     container.appendChild(row);
     return;
@@ -5591,7 +5591,7 @@ function _undoDelete() {
       if (curDM) { loadDMMessages(curDM); }
       else if (typeof curGC !== 'undefined' && curGC) { loadGCMessages(curGC); }
       else if (curBastion !== null) { const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel]; if (ch) loadChannelMessages(curChannel); }
-    }).catch(() => toast('Failed to restore','error'));
+    }).catch(e => { console.error('[Msg] Restore failed:', e); toast('Failed to restore message. Please try again.','error'); });
   }
   document.querySelector('.undo-toast')?.remove();
 }
@@ -5828,7 +5828,7 @@ async function toggleReaction(msgId, emoji, context) {
     FortizedSocial.socketEmit('reaction:toggle', { type: rType, id1: rid1, id2: rid2, messageId: msgId, emoji });
   } catch (err) {
     console.error('Reaction error:', err);
-    toast('Failed to react', 'error');
+    toast('Failed to react. Please try again.', 'error');
   }
 }
 function updateReactionUI(msgId, emoji, users, context) {
@@ -6363,7 +6363,7 @@ async function acceptFriend(username){
     renderDMSidebar(document.getElementById('sidebar-scroll'));
     // Auto-open DM
     openDMView(username);
-  } catch(e){ console.error(e); toast('Error accepting request','error'); }
+  } catch(e){ console.error('[Friends] Accept failed:', e); toast('Failed to accept friend request. Please try again.','error'); }
 }
 async function declineFriend(username){
   try{
@@ -6514,7 +6514,7 @@ async function promptJoinPublicBastion(bastionId){
       const wChName = localB.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
       try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch {}
     }
-  }catch(e){toast('Failed to join','error');console.error(e);}
+  }catch(e){toast('Failed to join bastion. Please try again.','error');console.error('[Bastion] Join failed:', e);}
 }
 
 // ════════════════════════════════════════════
@@ -6686,7 +6686,7 @@ function _showWarningOverlay(reason, issuedBy, contentData) {
       </div>
     </div>
     <div style="font-size:12px;color:#5a6478;margin-bottom:20px;">Please review our <a href="/terms" target="_blank" rel="noopener noreferrer" style="color:#fff93e;text-decoration:none;font-weight:600;">Terms of Use</a> to avoid further action on your account.</div>
-    <button onclick="document.getElementById('ftz-warning-overlay').remove()" style="padding:12px 48px;background:#fff93e;border:none;border-radius:10px;color:#0f1119;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;box-shadow:0 0 20px rgba(255,249,62,.2);" onmouseover="this.style.opacity='.85';this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 28px rgba(255,249,62,.35)'" onmouseout="this.style.opacity='1';this.style.transform='translateY(0)';this.style.boxShadow='0 0 20px rgba(255,249,62,.2)'">Acknowledge</button>
+    <button onclick="document.getElementById('ftz-warning-overlay').remove()" class="warning-ack-btn">Acknowledge</button>
   </div>`;
   document.body.appendChild(overlay);
 }
@@ -8064,7 +8064,7 @@ async function generateBastionTemplateLink(bastionIdx) {
     toast('Template link generated!', 'success');
     return link;
   } catch(e) {
-    toast('Failed to generate template link','error');
+    console.error('[Template] Link generation failed:', e); toast('Failed to generate template link. Please try again.','error');
     return null;
   }
 }
@@ -8217,7 +8217,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
     <div style="padding:26px 28px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
         <div style="font-family:var(--font-display);font-size:19px;font-weight:800;color:#fff;">Create Room</div>
-        <button id="crm-close" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:20px;padding:4px;line-height:1;transition:color .15s;" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.3)'">&times;</button>
+        <button id="crm-close" class="ftz-close-btn">&times;</button>
       </div>
       <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:20px;">in ${escapeHTML(b.name)}</div>
       <div style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:10px;">Room Type</div>
@@ -9868,7 +9868,7 @@ async function sendBastionAnnouncement() {
     await FortizedSocial.sendBastionChannelMessage(bastionId, channel, '__system__', prefix + msg);
     document.getElementById('announce-msg').value = '';
     toast('Announcement sent to #' + channel, 'success');
-  } catch (e) { toast('Failed to send announcement', 'error'); }
+  } catch (e) { console.error('[Announce] Send failed:', e); toast('Failed to send announcement. Please try again.', 'error'); }
 }
 // ── Bastion Starboard ──
 async function saveBastionStarboard() {
@@ -10649,7 +10649,7 @@ function renderCreateBotStep(step) {
       <div class="modal-sub" style="margin-bottom:16px;">Step 3 of 3 — What can your bot do?</div>
       <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;max-height:260px;overflow-y:auto;">
         ${BOT_PERMISSIONS.map(p => `
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .12s;" onmouseover="this.style.borderColor='rgba(167,139,250,.2)'" onmouseout="this.style.borderColor='var(--border)'">
+          <label class="bot-perm-label">
             <input type="checkbox" value="${p.key}" class="cbot-perm" ${['read_messages','send_messages','add_reactions'].includes(p.key)?'checked':''} style="accent-color:var(--accent);">
             <span style="font-size:14px;">${p.icon}</span>
             <div style="flex:1;">
@@ -11448,7 +11448,7 @@ function renderEmojiTab(tabId) {
         </div>`).join('');
     }
     if (personalEmojis.length < PERSONAL_EMOJI_LIMIT) {
-      html += `<div onclick="openPersonalEmojiUpload()" style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;color:rgba(255,255,255,.3);border:1.5px dashed rgba(255,255,255,.1);transition:all .12s;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.3)'">+</div>`;
+      html += `<div onclick="openPersonalEmojiUpload()" class="emoji-add-btn">+</div>`;
     }
     grid.innerHTML = html;
     return;
@@ -11694,9 +11694,7 @@ function renderEmojiCell(emoji) {
   const isFav = _favEmojis.includes(emoji);
   return `<div onclick="insertEmoji('${safe}')" oncontextmenu="event.preventDefault();toggleFavEmoji('${safe}')" data-tip="${escapeHTML(displayName)}${isFav ? ' ★ (Right-click to unfavorite)' : ' (Right-click to favorite)'}"
     onmouseenter="document.getElementById('epp-hover-label').textContent='${escapeHTML(displayName)}${isFav ? ' ★' : ''}'"
-    style="width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;padding:3px;position:relative;"
-    onmouseover="this.style.background='rgba(255,255,255,.07)';this.style.transform='scale(1.15)'"
-    onmouseout="this.style.background='transparent';this.style.transform=''">
+    class="emoji-cell" style="width:38px;height:38px;position:relative;">
     <img src="${url}" style="width:26px;height:26px;object-fit:contain;" loading="lazy" onerror="this.outerHTML='<span style=\\'font-size:22px;\\'>${emoji}</span>'">
     ${isFav ? '<span style="position:absolute;top:2px;right:2px;font-size:12px;color:var(--accent);">★</span>' : ''}
   </div>`;
@@ -12085,7 +12083,7 @@ function buildProfileView(tab) {
                   <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-top:6px;">Card Bg<br><span style="font-size:8px;color:rgba(255,255,255,.2);">(auto)</span></div>
                 </div>
               </div>
-              ${themeC1 ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(248,113,113,.2)\';this.style.color=\'rgba(248,113,113,.6)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.08)\';this.style.color=\'rgba(255,255,255,.4)\'">Reset Theme</button>' : ''}
+              ${themeC1 ? '<button onclick="CU.profileTheme=null;markSettingsDirty();buildProfileView(&#39;myprofile&#39;)" class="reset-theme-btn">Reset Theme</button>' : ''}
             </div>
             ${sep}
 
@@ -12096,7 +12094,7 @@ function buildProfileView(tab) {
               <div style="position:relative;">
                 <textarea class="settings-input" id="bio-input" rows="4" maxlength="300" style="resize:none;padding-bottom:28px;" oninput="markSettingsDirty();updateProfilePreview();document.getElementById('bio-char-count').textContent=(300-this.value.length)">${escapeHTML(CU.bio||'')}</textarea>
                 <span id="bio-char-count" style="position:absolute;bottom:10px;right:12px;font-size:11px;color:rgba(255,255,255,.25);">${300-(CU.bio||'').length}</span>
-                <button onclick="toggleEmojiPicker('bio-input')" style="position:absolute;bottom:8px;right:50px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:rgba(255,249,62,.7);border-radius:6px;width:24px;height:24px;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .12s;" onmouseover="this.style.background='rgba(255,249,62,.15)';this.style.borderColor='rgba(255,249,62,.3)';this.style.color='rgba(255,249,62,.9)'" onmouseout="this.style.background='rgba(255,249,62,.1)';this.style.borderColor='rgba(255,249,62,.2)';this.style.color='rgba(255,249,62,.7)'" data-tip="Add emoji">😀</button>
+                <button onclick="toggleEmojiPicker('bio-input')" class="emoji-insert-btn" style="position:absolute;bottom:8px;right:50px;" data-tip="Add emoji">😀</button>
               </div>
             </div>
             ${sep}
@@ -12302,12 +12300,12 @@ function buildProfileView(tab) {
 
       <!-- Quick actions -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;">
-        <a href="/support" target="_blank" rel="noopener noreferrer" style="text-decoration:none;padding:20px;background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(96,165,250,.02));border:1.5px solid rgba(96,165,250,.12);border-radius:18px;transition:all .2s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(96,165,250,.3)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(96,165,250,.08)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)';this.style.transform='';this.style.boxShadow=''">
+        <a href="/support" target="_blank" rel="noopener noreferrer" class="quick-action-card" style="background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(96,165,250,.02));border:1.5px solid rgba(96,165,250,.12);">
           <div style="font-size:28px;margin-bottom:10px;color:rgba(96,165,250,.7);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
           <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Get Help</div>
           <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;">Account issues, bastions, Radiance, and more</div>
         </a>
-        <a href="/blog" target="_blank" rel="noopener noreferrer" style="text-decoration:none;padding:20px;background:linear-gradient(135deg,rgba(254,248,61,.04),rgba(254,248,61,.01));border:1.5px solid rgba(254,248,61,.1);border-radius:18px;transition:all .2s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(254,248,61,.25)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(254,248,61,.06)'" onmouseout="this.style.borderColor='rgba(254,248,61,.1)';this.style.transform='';this.style.boxShadow=''">
+        <a href="/blog" target="_blank" rel="noopener noreferrer" class="quick-action-card" style="background:linear-gradient(135deg,rgba(254,248,61,.04),rgba(254,248,61,.01));border:1.5px solid rgba(254,248,61,.1);">
           <div style="font-size:28px;margin-bottom:10px;">📰</div>
           <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Blog & Updates</div>
           <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;">News, features, and announcements</div>
@@ -12339,7 +12337,7 @@ function buildProfileView(tab) {
           {label:'Terms of Service', url:'/terms', desc:'Our terms and community guidelines', color:'167,139,250'},
           {label:'Fortized Blog', url:'https://swiftaw.com/blog/c/fortized', desc:'News, updates, and announcements', color:'254,248,61'},
         ].map(link => `
-          <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:16px;padding:18px 20px;background:rgba(${link.color},.02);border:1.5px solid rgba(${link.color},.08);border-radius:16px;text-decoration:none;transition:all .18s cubic-bezier(.22,1,.36,1);cursor:pointer;" onmouseover="this.style.borderColor='rgba(${link.color},.22)';this.style.background='rgba(${link.color},.04)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(${link.color},.08)';this.style.background='rgba(${link.color},.02)';this.style.transform=''">
+          <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="legal-link-row" style="background:rgba(${link.color},.02);border:1.5px solid rgba(${link.color},.08);">
             <div style="flex:1;min-width:0;">
               <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;">${link.label}</div>
               <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.4;">${link.desc}</div>
@@ -12558,7 +12556,7 @@ function buildProfileView(tab) {
       const clickAction = isLocked ? "buyAppearance('" + t.id + "'," + t.cost + ")" : "selectAppearancePreview('" + t.id + "')";
       const opac = isLocked ? 'opacity:.55;' : '';
       return `
-      <div onclick="${clickAction}" style="border:1.5px solid ${borderCol};border-radius:16px;overflow:hidden;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);background:${bgCol};${opac}position:relative;" onmouseover="if(!${isActive})this.style.borderColor='rgba(254,248,61,.15)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.2)'" onmouseout="if(!${isActive})this.style.borderColor='${borderCol}';this.style.transform='';this.style.boxShadow=''">
+      <div onclick="${clickAction}" class="appearance-card" style="border:1.5px solid ${borderCol};border-radius:16px;background:${bgCol};${opac}">
         <!-- Accurate mini app preview -->
         <div style="height:130px;${t.bodyGrad ? 'background:'+t.bodyGrad : 'background:'+t.bg};display:flex;overflow:hidden;position:relative;border-radius:14px 14px 0 0;">
           <!-- Server icons -->
@@ -12747,7 +12745,7 @@ function buildProfileView(tab) {
         <div class="settings-section-title">PRESET THEMES</div>
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:28px;">
           ${PRESET_THEMES.map(t => `
-            <div onclick="applyPresetTheme('${t.c1}','${t.c2}')" style="cursor:pointer;padding:14px;border-radius:12px;border:2px solid ${pt.color1===t.c1&&pt.color2===t.c2?'var(--accent)':'rgba(255,255,255,.08)'};background:${pt.color1===t.c1&&pt.color2===t.c2?'rgba(255,249,62,.04)':'rgba(255,255,255,.01)'};transition:all .15s;display:flex;align-items:center;gap:10px;" onmouseover="this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="this.style.borderColor='${pt.color1===t.c1&&pt.color2===t.c2?'var(--accent)':'rgba(255,255,255,.08)'}'" data-theme-c1="${t.c1}" data-theme-c2="${t.c2}">
+            <div onclick="applyPresetTheme('${t.c1}','${t.c2}')" class="preset-theme-swatch" style="border:2px solid ${pt.color1===t.c1&&pt.color2===t.c2?'var(--accent)':'rgba(255,255,255,.08)'};background:${pt.color1===t.c1&&pt.color2===t.c2?'rgba(255,249,62,.04)':'rgba(255,255,255,.01)'};" data-theme-c1="${t.c1}" data-theme-c2="${t.c2}">
               <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,${t.c1},${t.c2});flex-shrink:0;border:2px solid rgba(255,255,255,.1);"></div>
               <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:#fff;">${t.name}</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:1px;">${t.c1} → ${t.c2}</div></div>
             </div>
@@ -13295,11 +13293,11 @@ async function viewUserProfile(username) {
         <!-- Board tab: widgets, games, general info -->
         <div id="up-tab-activity">
           <div class="up-right-section" id="up-widgets-container"></div>
-          ${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;text-align:center;"><button onclick="_openAddWidgetPanel()" style="padding:8px 20px;background:rgba(255,249,62,.06);border:1.5px solid rgba(255,249,62,.12);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:6px;" onmouseover="this.style.background='rgba(255,249,62,.1)';this.style.borderColor='rgba(255,249,62,.2)'" onmouseout="this.style.background='rgba(255,249,62,.06)';this.style.borderColor='rgba(255,249,62,.12)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Widgets</button></div>` : ''}
+          ${isOwn ? `<div id="up-widget-manager" style="margin-top:12px;padding:0 4px;text-align:center;"><button onclick="_openAddWidgetPanel()" class="add-widget-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Widgets</button></div>` : ''}
           ${games.length && !(u.profileWidgets||[]).some(w=>w.enabled && w.id==='game_collection') ? `<div class="up-right-section">
             <div class="up-right-section-title">Game Collection</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;">
-              ${games.map(g=>`<div style="display:flex;align-items:center;gap:9px;padding:11px 13px;background:rgba(255,255,255,.022);border:1px solid rgba(255,255,255,.04);border-radius:11px;cursor:default;transition:all .14s;" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.borderColor='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.022)';this.style.borderColor='rgba(255,255,255,.04)'"><span style="font-size:17px;">${g.coverUrl ? `<img src='${escapeHTML(g.coverUrl)}' style='width:24px;height:32px;border-radius:4px;object-fit:cover;'>` : (g.icon||ftzIcon('gamepad','15'))}</span><span style="font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</span></div>`).join('')}
+              ${games.map(g=>`<div class="game-col-item"><span style="font-size:17px;">${g.coverUrl ? `<img src='${escapeHTML(g.coverUrl)}' style='width:24px;height:32px;border-radius:4px;object-fit:cover;'>` : (g.icon||ftzIcon('gamepad','15'))}</span><span style="font-size:12.5px;color:rgba(255,255,255,.55);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</span></div>`).join('')}
             </div>
           </div>` : ''}
         </div>
@@ -14060,7 +14058,7 @@ function showReportModal() {
         <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(248,113,113,.45);margin-bottom:10px;">What's the issue?</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px;">
           ${REPORT_REASONS.map((r,i)=>`
-            <label id="rr-label-${i}" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.06);border-radius:11px;cursor:pointer;transition:all .12s;" onmouseover="this.style.borderColor='rgba(248,113,113,.15)';this.style.background='rgba(248,113,113,.03)'" onmouseout="if(!this.querySelector('input').checked){this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.02)'}">
+            <label id="rr-label-${i}" class="report-reason-label">
               <input type="radio" name="report-reason" value="${r}" onchange="selectReportReason(${i})" style="accent-color:var(--red);">
               <span style="font-size:12.5px;font-weight:500;color:rgba(255,255,255,.65);">${r}</span>
             </label>`).join('')}
@@ -14071,7 +14069,7 @@ function showReportModal() {
         <div id="report-error" style="font-size:12px;color:var(--red);margin-bottom:8px;min-height:16px;"></div>
 
         <div style="display:flex;gap:8px;">
-          <button onclick="submitReport()" style="flex:1;background:rgba(248,113,113,.12);color:var(--red);border:1.5px solid rgba(248,113,113,.2);border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:12px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.2)'" onmouseout="this.style.background='rgba(248,113,113,.12)'">Submit Report</button>
+          <button onclick="submitReport()" class="report-submit-btn">Submit Report</button>
           <button onclick="this.closest('.modal-overlay').remove()" style="padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;">Cancel</button>
         </div>
 
@@ -14239,7 +14237,7 @@ async function _openAdminUI() {
           <span style="font-size:10px;font-weight:800;color:${roleColor};letter-spacing:.04em;">${roleLabel.toUpperCase()}</span>
         </div>
         <span style="font-size:10.5px;color:rgba(255,255,255,.25);font-weight:500;">@${escapeHTML(CU.username)}</span>
-        <button onclick="_closeAdminPanel()" style="background:var(--accent-dim);border:1px solid var(--accent-mid);color:var(--accent);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;transition:.15s;display:flex;align-items:center;gap:5px;letter-spacing:.02em;opacity:.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.6'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>EXIT</button>
+        <button onclick="_closeAdminPanel()" class="admin-exit-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>EXIT</button>
       </div>`;
   startReportPolling();
   _setupAdminLiveSync();
@@ -14692,7 +14690,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           </div>
         </div>
         <div style="display:flex;gap:8px;">
-          <button onclick="loadAllReportsFromFirebase()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:12.5px;padding:8px 16px;cursor:pointer;font-weight:600;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Sync Firebase</button>
+          <button onclick="loadAllReportsFromFirebase()" class="admin-sync-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Sync Firebase</button>
         </div>
       </div>
       ${reps.length===0?'<div style="text-align:center;padding:80px 20px;color:rgba(255,255,255,.3);"><div style="margin-bottom:12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(62,207,110,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-size:14px;">No reports — all clear!</div></div>':
@@ -14918,7 +14916,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <!-- AI Feedback -->
             <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.04);">
               <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.25);align-self:center;margin-right:4px;">AI Verdict:</span>
-              <button onclick="nsfwAIFeedback(${i},true)" style="padding:6px 14px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:8px;color:#3ecf6e;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;" onmouseover="this.style.background='rgba(62,207,110,.15)'" onmouseout="this.style.background='rgba(62,207,110,.08)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> AI was Right (NSFW)</button>
+              <button onclick="nsfwAIFeedback(${i},true)" class="ai-fb-correct"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> AI was Right (NSFW)</button>
               <button onclick="nsfwAIFeedback(${i},false)" style="padding:6px 14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> AI was Wrong (NOT NSFW)</button>
             </div>
             <!-- Actions (same style as reports) -->
@@ -15636,7 +15634,7 @@ async function _broadcastAnnouncement() {
     toast('Announcement broadcast!','success');
     // Refresh the broadcast tab if it's open
     if (document.getElementById('_broadcast-msg')) _loadAdminPage('broadcast');
-  } catch { toast('Failed to broadcast','error'); }
+  } catch(e) { console.error('[Admin] Broadcast failed:', e); toast('Failed to broadcast. Please try again.','error'); }
 }
 async function _clearAnnouncement() {
   try {
@@ -16693,7 +16691,7 @@ function showVerifyQuiz() {
           <div style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.12);border-left:3px solid #f87171;border-radius:10px;padding:12px 16px;text-align:left;font-size:12.5px;color:var(--muted-light);line-height:1.6;margin-bottom:28px;">
             <strong style="color:#f87171;">Required:</strong> This verification is mandatory. You cannot access Fortized until you pass the safety check. Questions are randomised from a pool.
           </div>
-          <button onclick="document.getElementById('verify-intro').style.display='none';document.getElementById('verify-quiz').style.display='';" style="padding:14px 36px;background:var(--accent);border:none;border-radius:12px;color:#0f1119;font-family:var(--font-display);font-size:15px;font-weight:700;cursor:pointer;transition:all .18s;box-shadow:0 0 24px rgba(255,249,62,.2);" onmouseover="this.style.boxShadow='0 0 36px rgba(255,249,62,.35)';this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 0 24px rgba(255,249,62,.2)';this.style.transform='translateY(0)'">Begin Verification</button>
+          <button onclick="document.getElementById('verify-intro').style.display='none';document.getElementById('verify-quiz').style.display='';" class="verify-begin-btn">Begin Verification</button>
         </div>
       </div>
       <div id="verify-quiz" style="display:none;background:rgba(19,22,29,.96);border:1px solid #252b3a;border-radius:24px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.8);">
@@ -16744,7 +16742,7 @@ function renderQuizQuestion() {
     <div style="font-family:var(--font-display);font-size:17px;font-weight:700;color:#fff;line-height:1.5;margin-bottom:20px;padding:16px 18px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;">${escapeHTML(q.q)}</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       ${shuffledOpts.map((opt,i)=>`
-        <button id="qopt-${i}" data-correct="${opt===q.a}" onclick="answerQuiz(${i})" style="width:100%;padding:14px 18px;border-radius:12px;border:1.5px solid var(--border);background:rgba(255,255,255,.015);color:var(--muted-light);font-family:var(--font-ui);font-size:14px;text-align:left;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:12px;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.background='rgba(255,249,62,.03)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='rgba(255,255,255,.015)'">
+        <button id="qopt-${i}" data-correct="${opt===q.a}" onclick="answerQuiz(${i})" class="quiz-opt-btn">
           <span style="width:28px;height:28px;min-width:28px;border-radius:8px;border:1.5px solid var(--border);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-display);color:var(--muted-light);transition:all .18s;">${['A','B','C','D'][i]}</span>
           <span>${escapeHTML(opt)}</span>
         </button>`).join('')}
@@ -19317,7 +19315,7 @@ function _openDisplayNameStyleModal() {
       <!-- Actions -->
       <div style="display:flex;gap:8px;margin-top:4px;">
         <button onclick="_dnSurpriseMe()" style="flex:1;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.5);font-family:var(--font-display);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .12s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg> Randomise</button>
-        <button onclick="_dnApplyStyle()" style="flex:1;padding:10px;background:var(--accent);color:#0f1119;border:none;border-radius:10px;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;transition:all .12s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">Apply Style</button>
+        <button onclick="_dnApplyStyle()" class="ftz-btn-apply" style="flex:1;padding:10px;font-size:12px;">Apply Style</button>
       </div>
     </div>
   </div>`;
@@ -19643,7 +19641,7 @@ function showBastionInviteModal(bastion, inviteCode) {
           font-weight: 700;
           cursor: pointer;
           transition: all 0.25s;
-        " onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter='brightness(1)'">
+        " class="invite-accept-btn">
           Accept Invite
         </button>
         <button onclick="document.getElementById('bastionInviteModal').remove()" style="
@@ -19655,7 +19653,7 @@ function showBastionInviteModal(bastion, inviteCode) {
           font-weight: 600;
           cursor: pointer;
           transition: all 0.25s;
-        " onmouseover="this.style.borderColor='rgba(255, 249, 62, 0.2)'; this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'; this.style.color='var(--muted-light)'">
+        " class="invite-decline-btn">
           Decline
         </button>
       </div>
@@ -19737,9 +19735,7 @@ function renderGamePicker(apps, overlay) {
   const list = overlay.querySelector('#game-picker-list');
   if (!list) return;
   list.innerHTML = apps.map(app => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:border-color .15s;" 
-         onmouseenter="this.style.borderColor='var(--accent)'" 
-         onmouseleave="this.style.borderColor='var(--border)'"
+    <div class="game-picker-item"
          onclick="selectGameFromPicker('${escapeHTML(app.name)}','${app.icon||'🎮'}',this.closest('[style*=fixed]'))">
       <span style="font-size:22px;">${app.icon||'🎮'}</span>
       <span style="font-size:13px;font-weight:600;">${escapeHTML(app.name)}</span>
@@ -19952,7 +19948,7 @@ function showIgnorePicker(username) {
         </div>
         <div class="ignore-picker" style="display:flex;flex-direction:column;gap:6px;">
           ${IGNORE_DURATIONS.map((d, i) => `
-            <div class="ig-opt" onclick="_applyIgnore('${escapeHTML(username)}', ${d.ms})" style="display:flex;align-items:center;gap:12px;padding:11px 16px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.07);border-radius:12px;cursor:pointer;transition:all .15s;font-size:13.5px;color:rgba(255,255,255,.75);" onmouseover="this.style.borderColor='rgba(245,158,11,.3)';this.style.background='rgba(245,158,11,.05)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)';this.style.background='rgba(255,255,255,.03)'">
+            <div class="ig-opt-item" onclick="_applyIgnore('${escapeHTML(username)}', ${d.ms})">
               <span style="font-size:16px;">🔇</span>
               <span style="flex:1;font-weight:600;">${d.label}</span>
               <span style="font-size:11px;color:rgba(255,255,255,.25);font-weight:600;">Select</span>
@@ -20210,7 +20206,7 @@ function renderGameCollectionTab(main) {
       + (currentGame.genre ? '<div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:3px;">' + escapeHTML(currentGame.genre) + '</div>' : '')
       + '<div style="font-size:12px;color:rgba(62,207,110,.7);font-weight:600;">Now playing!</div>'
       + '</div>'
-      + '<button onclick="setGameActivity(null);renderGameCollectionTab(this.closest(\'.settings-main\'))" title="Stop" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(248,113,113,.3)\';this.style.color=\'var(--red)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.1)\';this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      + '<button onclick="setGameActivity(null);renderGameCollectionTab(this.closest(\'.settings-main\'))" title="Stop" class="game-stop-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
       + '</div>';
   }
 
@@ -20249,7 +20245,7 @@ function renderGameCollectionTab(main) {
       const isPlaying = currentGame?.name === g.name;
       const cover = g.coverUrl || g.coverThumb || _getManualCover(g.name);
       const lastPlayed = _formatLastPlayed(g.lastPlayed);
-      gamesListHtml += '<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;border:1.5px solid ' + (isPlaying ? 'rgba(62,207,110,.25)' : 'rgba(255,255,255,.05)') + ';background:' + (isPlaying ? 'rgba(62,207,110,.04)' : 'rgba(255,255,255,.02)') + ';transition:all .15s;" onmouseover="this.style.background=\'' + (isPlaying ? 'rgba(62,207,110,.07)' : 'rgba(255,255,255,.04)') + '\';this.style.borderColor=\'' + (isPlaying ? 'rgba(62,207,110,.35)' : 'rgba(255,255,255,.1)') + '\'" onmouseout="this.style.background=\'' + (isPlaying ? 'rgba(62,207,110,.04)' : 'rgba(255,255,255,.02)') + '\';this.style.borderColor=\'' + (isPlaying ? 'rgba(62,207,110,.25)' : 'rgba(255,255,255,.05)') + '\'">'
+      gamesListHtml += '<div class="game-list-item" style="border:1.5px solid ' + (isPlaying ? 'rgba(62,207,110,.25)' : 'rgba(255,255,255,.05)') + ';background:' + (isPlaying ? 'rgba(62,207,110,.04)' : 'rgba(255,255,255,.02)') + ';">'
         + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:48px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.06);" onerror="this.style.display=\'none\'">'
           : '<div style="width:48px;height:64px;border-radius:8px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">' + (g.icon||'🎮') + '</div>')
         + '<div style="flex:1;min-width:0;">'
@@ -20262,8 +20258,8 @@ function renderGameCollectionTab(main) {
         + (lastPlayed ? '<div style="font-size:10.5px;color:rgba(255,255,255,.2);">Last played ' + lastPlayed + '</div>' : '')
         + '</div>'
         + '<div style="display:flex;gap:4px;flex-shrink:0;">'
-        + '<button onclick="event.stopPropagation();_toggleGameVisibility(' + i + ',this)" title="' + (g.hidden ? 'Show' : 'Hide') + '" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.35);width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(255,255,255,.15)\';this.style.color=\'rgba(255,255,255,.6)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.06)\';this.style.color=\'rgba(255,255,255,.35)\'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + (g.hidden ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>') + '</svg></button>'
-        + '<button onclick="event.stopPropagation();removeGameFromCollection(' + i + ')" title="Remove" style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);color:rgba(248,113,113,.45);width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.borderColor=\'rgba(248,113,113,.25)\';this.style.color=\'#f87171\'" onmouseout="this.style.borderColor=\'rgba(248,113,113,.1)\';this.style.color=\'rgba(248,113,113,.45)\'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+        + '<button onclick="event.stopPropagation();_toggleGameVisibility(' + i + ',this)" title="' + (g.hidden ? 'Show' : 'Hide') + '" class="icon-btn-sm" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.06);color:rgba(255,255,255,.35);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + (g.hidden ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>') + '</svg></button>'
+        + '<button onclick="event.stopPropagation();removeGameFromCollection(' + i + ')" title="Remove" class="icon-btn-sm" style="background:rgba(248,113,113,.04);border-color:rgba(248,113,113,.1);color:rgba(248,113,113,.45);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
         + '</div></div>';
     });
     gamesListHtml += '</div>';
@@ -20368,7 +20364,7 @@ async function _refreshInlineDetectedApps() {
 
   container.innerHTML = enrichedApps.map(app => {
     const cover = app.coverUrl || app.coverThumb;
-    return '<div onclick="_addDetectedGame(\'' + escapeHTML(app.name).replace(/'/g,"\\'") + '\')" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.06);transition:all .15s;background:rgba(255,255,255,.02);" onmouseover="this.style.borderColor=\'rgba(62,207,110,.25)\';this.style.background=\'rgba(62,207,110,.04)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,.06)\';this.style.background=\'rgba(255,255,255,.02)\'">'
+    return '<div onclick="_addDetectedGame(\'' + escapeHTML(app.name).replace(/'/g,"\\'") + '\')" class="detected-game-item">'
       + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:40px;height:54px;border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
         : '<div style="width:40px;height:54px;border-radius:6px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">' + (app.icon||'🎮') + '</div>')
       + '<div style="flex:1;min-width:0;"><div style="font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHTML(app.name) + '</div>'
@@ -20411,7 +20407,7 @@ function _filterInlineGameSearch(query) {
   }
   container.innerHTML = matches.map(g => {
     const cover = _getManualCover(g.name);
-    return '<div onclick="_addDetectedGame(\'' + escapeHTML(g.name).replace(/'/g,"\\'") + '\');document.getElementById(\'inline-game-search\').value=\'\';document.getElementById(\'inline-game-search-results\').style.display=\'none\'" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;transition:background .12s;" onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'\'">'
+    return '<div onclick="_addDetectedGame(\'' + escapeHTML(g.name).replace(/'/g,"\\'") + '\');document.getElementById(\'inline-game-search\').value=\'\';document.getElementById(\'inline-game-search-results\').style.display=\'none\'" class="game-search-item">'
       + (cover ? '<img src="' + escapeHTML(cover) + '" style="width:28px;height:38px;border-radius:4px;object-fit:cover;flex-shrink:0;">' : '<div style="width:28px;height:38px;border-radius:4px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">' + (g.icon||'🎮') + '</div>')
       + '<div><div style="font-size:12px;font-weight:600;color:#fff;">' + escapeHTML(g.name) + '</div>'
       + '<div style="font-size:10px;color:var(--muted);">' + escapeHTML(g.genre||'Game') + '</div></div></div>';
@@ -20731,7 +20727,7 @@ function renderProfileWidgetsTab(main) {
         <div class="pw-cfg-desc">${def.desc}</div>
         ${configHtml}
       </div>
-      <button style="background:none;border:none;color:rgba(248,113,113,.5);cursor:pointer;padding:4px;border-radius:6px;transition:all .12s;display:flex;align-items:center;" title="Remove widget" onclick="toggleProfileWidget('${def.id}',null)" onmouseover="this.style.color='var(--red)';this.style.background='rgba(248,113,113,.1)'" onmouseout="this.style.color='rgba(248,113,113,.5)';this.style.background='none'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg></button>
+      <button class="widget-remove-btn" title="Remove widget" onclick="toggleProfileWidget('${def.id}',null)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg></button>
     </div>`;
   });
 
@@ -20740,7 +20736,7 @@ function renderProfileWidgetsTab(main) {
       <div>
         <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:rgba(255,255,255,.5);">Your Widgets</div>
       </div>
-      <button onclick="_openAddWidgetPanel()" style="padding:8px 18px;border-radius:10px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.7);font-family:var(--font-ui);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.color='var(--accent)';this.style.background='rgba(255,249,62,.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)';this.style.background='rgba(255,255,255,.03)'">
+      <button onclick="_openAddWidgetPanel()" class="widget-add-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add Widget
       </button>
@@ -20789,7 +20785,7 @@ function _openAddWidgetPanel() {
       previewHtml = `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">${['Strategist','Explorer','Competitive'].map(t => `<span style="font-size:9px;padding:3px 8px;border-radius:6px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.12);color:rgba(251,191,36,.6);font-weight:600;">${t}</span>`).join('')}</div>`;
     }
 
-    cardsHtml += `<div class="pw-widget-card" style="padding:16px;background:${isOn ? def.color+'08' : 'rgba(255,255,255,.02)'};border:1.5px solid ${isOn ? def.color+'30' : 'rgba(255,255,255,.06)'};border-radius:14px;transition:all .2s;cursor:pointer;${isOn ? `box-shadow:inset 0 0 0 1px ${def.color}08;` : ''}" onmouseover="this.style.borderColor='${def.color}50';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='${isOn ? def.color+'30' : 'rgba(255,255,255,.06)'}';this.style.transform='';this.style.boxShadow='${isOn ? `inset 0 0 0 1px ${def.color}08` : 'none'}'" onclick="${isOn ? `toggleProfileWidget('${def.id}',null);setTimeout(()=>_openAddWidgetPanel(),250)` : `_addWidgetFromPanel('${def.id}');setTimeout(()=>_openAddWidgetPanel(),250)`}">
+    cardsHtml += `<div class="pw-widget-card" style="padding:16px;background:${isOn ? def.color+'08' : 'rgba(255,255,255,.02)'};border:1.5px solid ${isOn ? def.color+'30' : 'rgba(255,255,255,.06)'};border-radius:14px;${isOn ? `box-shadow:inset 0 0 0 1px ${def.color}08;` : ''}" onclick="${isOn ? `toggleProfileWidget('${def.id}',null);setTimeout(()=>_openAddWidgetPanel(),250)` : `_addWidgetFromPanel('${def.id}');setTimeout(()=>_openAddWidgetPanel(),250)`}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:36px;height:36px;border-radius:10px;background:${def.color}15;display:flex;align-items:center;justify-content:center;color:${def.color};border:1px solid ${def.color}20;">${def.icon}</div>
@@ -21177,7 +21173,7 @@ function renderProfileWidgetsOnCard(u, containerEl) {
   if (isOwnProfile && !html) {
     html = `<div style="text-align:center;padding:20px 14px;">
       <div style="font-size:11px;color:rgba(255,255,255,.2);margin-bottom:8px;">No widgets added yet</div>
-      <button onclick="_openAddWidgetPanel()" style="padding:8px 18px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:10px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.1)'" onmouseout="this.style.background='rgba(255,249,62,.06)'">
+      <button onclick="_openAddWidgetPanel()" class="add-widget-btn">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Widgets
       </button>
     </div>`;
@@ -21588,7 +21584,7 @@ function _renderProfileWidgetManager(mgr) {
   let html = '<div style="border-top:1px solid rgba(255,255,255,.06);padding-top:12px;">';
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
   html += '<div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);">Manage Widgets</div>';
-  html += '<button onclick="_openAddWidgetPanel()" style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:6px;padding:3px 10px;cursor:pointer;transition:all .12s;" onmouseover="this.style.background=\'rgba(255,249,62,.1)\'" onmouseout="this.style.background=\'rgba(255,249,62,.06)\'">+ Add</button>';
+  html += '<button onclick="_openAddWidgetPanel()" class="add-widget-btn" style="padding:3px 10px;font-size:10px;">+ Add</button>';
   html += '</div>';
 
   if (!hasAnyEnabled) {
@@ -22227,7 +22223,7 @@ function openGiphyPicker(inputId) {
     </div>
     <div id="giphy-grid" style="flex:1;overflow-y:auto;padding:8px 10px;columns:2;column-gap:6px;scrollbar-width:thin;display:none;"></div>
     <div id="gif-back-bar" style="display:none;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;">
-      <button onclick="_gifBackToCollections('${esc}')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:rgba(255,255,255,.5);font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;padding:4px 6px;border-radius:8px;transition:all .15s;" onmouseover="this.style.color='#fff';this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.color='rgba(255,255,255,.5)';this.style.background='none'">
+      <button onclick="_gifBackToCollections('${esc}')" class="gif-back-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
         <span id="gif-back-label">Back to Collections</span>
       </button>
@@ -22534,7 +22530,7 @@ function openStickerPicker(inputId) {
     <div class="spp-grid" id="sticker-grid"></div>
     <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
       <span style="font-size:10px;color:rgba(255,255,255,.15);">${personalStickers.length}/${PERSONAL_STICKER_LIMIT} personal stickers</span>
-      <button onclick="openPersonalStickerUpload()" style="background:none;border:1px solid rgba(255,255,255,.08);border-radius:6px;color:rgba(255,255,255,.35);cursor:pointer;font-size:10px;padding:3px 8px;transition:all .12s;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.35)'">+ Upload</button>
+      <button onclick="openPersonalStickerUpload()" class="sticker-upload-btn">+ Upload</button>
     </div>
   `;
 
@@ -22861,7 +22857,7 @@ function openStatusPicker() {
   // Build preset chips
   const presetHTML = STATUS_PRESETS.map(p => {
     const pUrl = emojiToTwemojiUrl(p.emoji);
-    return `<button class="cloud-preset" onclick="document.getElementById('status-emoji-btn').dataset.emoji='${p.emoji}';document.getElementById('status-emoji-btn').innerHTML='<img src=\\'${pUrl}\\' style=\\'width:24px;height:24px;object-fit:contain;\\'>';document.getElementById('status-text-input').value='${escapeHTML(p.text)}';_updateStatusPreview()" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);cursor:pointer;transition:all .12s;white-space:nowrap;" onmouseover="this.style.borderColor='${p.color}44';this.style.background='${p.color}0d'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.background='rgba(255,255,255,.03)'"><img src="${pUrl}" style="width:16px;height:16px;object-fit:contain;"><span style="font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);">${escapeHTML(p.text)}</span></button>`;
+    return `<button class="cloud-preset" onclick="document.getElementById('status-emoji-btn').dataset.emoji='${p.emoji}';document.getElementById('status-emoji-btn').innerHTML='<img src=\\'${pUrl}\\' style=\\'width:24px;height:24px;object-fit:contain;\\'>';document.getElementById('status-text-input').value='${escapeHTML(p.text)}';_updateStatusPreview()"><img src="${pUrl}" style="width:16px;height:16px;object-fit:contain;"><span style="font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);">${escapeHTML(p.text)}</span></button>`;
   }).join('');
 
   overlay.innerHTML = `
@@ -22872,7 +22868,7 @@ function openStatusPicker() {
           <div>
             <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;">Set a custom status</div>
           </div>
-          <button onclick="_closeStatusPicker()" style="margin-left:auto;width:32px;height:32px;border-radius:10px;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.4)'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          <button onclick="_closeStatusPicker()" class="sp-close-btn" style="margin-left:auto;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
       </div>
 

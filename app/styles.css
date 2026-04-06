@@ -4673,4 +4673,654 @@ button[style*="background: var(--accent)"]:active {
   gap: 8px;
 }
 
+/* ── Close button (modal X buttons) ── */
+.ftz-close-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.3);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 4px;
+  line-height: 1;
+  transition: color .15s;
+}
+.ftz-close-btn:hover { color: rgba(255,255,255,.6); }
+.ftz-close-btn:active { color: rgba(255,255,255,.8); }
+
+/* ── Emoji cell hover (emoji picker grid items) ── */
+.emoji-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .12s;
+  padding: 3px;
+  border-radius: 8px;
+}
+.emoji-cell:hover { background: rgba(255,255,255,.07); transform: scale(1.15); }
+
+/* ── Emoji upload add button ── */
+.emoji-add-btn {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: rgba(255,255,255,.3);
+  border: 1.5px dashed rgba(255,255,255,.1);
+  transition: all .12s;
+  background: none;
+}
+.emoji-add-btn:hover { border-color: rgba(255,249,62,.3); color: var(--accent); }
+
+/* ── Report reason label ── */
+.report-reason-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.02);
+  border: 1.5px solid rgba(255,255,255,.06);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: all .12s;
+}
+.report-reason-label:hover { border-color: rgba(248,113,113,.15); background: rgba(248,113,113,.03); }
+.report-reason-label:has(input:checked) { border-color: rgba(248,113,113,.25); background: rgba(248,113,113,.06); }
+
+/* ── Report submit button ── */
+.report-submit-btn {
+  flex: 1;
+  background: rgba(248,113,113,.12);
+  color: var(--red);
+  border: 1.5px solid rgba(248,113,113,.2);
+  border-radius: 14px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 12px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.report-submit-btn:hover { background: rgba(248,113,113,.2); }
+.report-submit-btn:active { transform: scale(0.97); }
+
+/* ── Game picker item ── */
+.game-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.game-picker-item:hover { border-color: var(--accent); }
+.game-picker-item:active { transform: scale(0.98); }
+
+/* ── Ignore duration option ── */
+.ig-opt-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  background: rgba(255,255,255,.03);
+  border: 1.5px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all .15s;
+  font-size: 13.5px;
+  color: rgba(255,255,255,.75);
+}
+.ig-opt-item:hover { border-color: rgba(245,158,11,.3); background: rgba(245,158,11,.05); }
+.ig-opt-item:active { transform: scale(0.98); }
+
+/* ── Appearance theme card hover ── */
+.appearance-card {
+  overflow: hidden;
+  cursor: pointer;
+  transition: all .2s cubic-bezier(.22,1,.36,1);
+  position: relative;
+}
+.appearance-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+
+/* ── Bot permission label hover ── */
+.bot-perm-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all .12s;
+}
+.bot-perm-label:hover { border-color: rgba(167,139,250,.2); }
+.bot-perm-label:has(input:checked) { border-color: rgba(167,139,250,.3); background: rgba(167,139,250,.04); }
+
+/* ── Apply style button (display name modal) ── */
+.ftz-btn-apply {
+  background: var(--accent);
+  color: #0f1119;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .12s;
+}
+.ftz-btn-apply:hover { filter: brightness(1.1); }
+.ftz-btn-apply:active { transform: scale(0.97); }
+
+/* ── Invite modal buttons ── */
+.invite-accept-btn {
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .25s;
+}
+.invite-accept-btn:hover { filter: brightness(1.05); }
+.invite-accept-btn:active { transform: scale(0.97); }
+
+.invite-decline-btn {
+  background: transparent;
+  color: var(--muted-light);
+  border: 1px solid rgba(255,255,255,.1);
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .25s;
+}
+.invite-decline-btn:hover { border-color: rgba(255,249,62,.2); color: #fff; }
+.invite-decline-btn:active { transform: scale(0.97); }
+
+/* ── Cancel button (generic) ── */
+.ftz-cancel-btn {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255,255,255,.04);
+  border: 1.5px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  color: rgba(255,255,255,.45);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.ftz-cancel-btn:hover { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.12); }
+
+/* ── Friend message button ── */
+.friend-msg-btn {
+  padding: 7px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  color: rgba(255,255,255,.45);
+  cursor: pointer;
+  transition: all .2s cubic-bezier(.22,1,.36,1);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.friend-msg-btn:hover {
+  border-color: rgba(255,249,62,.35);
+  color: var(--accent);
+  background: rgba(255,249,62,.04);
+  box-shadow: 0 0 12px rgba(255,249,62,.08);
+}
+
+/* ── System message delete button ── */
+.msg-sys-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(248,113,113,.4);
+  padding: 2px 4px;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+  margin-left: 4px;
+  display: flex;
+  align-items: center;
+}
+.msg-row:hover .msg-sys-delete { opacity: 1; }
+.msg-sys-delete:hover { color: rgba(248,113,113,.8); }
+
+/* ── Warning acknowledge button ── */
+.warning-ack-btn {
+  padding: 12px 48px;
+  background: #fff93e;
+  border: none;
+  border-radius: 10px;
+  color: #0f1119;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .18s;
+  box-shadow: 0 0 20px rgba(255,249,62,.2);
+}
+.warning-ack-btn:hover {
+  opacity: .85;
+  transform: translateY(-1px);
+  box-shadow: 0 0 28px rgba(255,249,62,.35);
+}
+
+/* ── Reset theme button ── */
+.reset-theme-btn {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  color: rgba(255,255,255,.4);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .12s;
+}
+.reset-theme-btn:hover { border-color: rgba(248,113,113,.2); color: rgba(248,113,113,.6); }
+
+/* ── Emoji insert button (small accent) ── */
+.emoji-insert-btn {
+  background: rgba(255,249,62,.1);
+  border: 1px solid rgba(255,249,62,.2);
+  color: rgba(255,249,62,.7);
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all .12s;
+}
+.emoji-insert-btn:hover { background: rgba(255,249,62,.15); border-color: rgba(255,249,62,.3); color: rgba(255,249,62,.9); }
+
+/* ── Quick action card (settings about page) ── */
+.quick-action-card {
+  text-decoration: none;
+  padding: 20px;
+  border-radius: 18px;
+  transition: all .2s cubic-bezier(.22,1,.36,1);
+  cursor: pointer;
+}
+.quick-action-card:hover { transform: translateY(-2px); }
+
+/* ── Legal/link row ── */
+.legal-link-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  text-decoration: none;
+  transition: all .18s cubic-bezier(.22,1,.36,1);
+  cursor: pointer;
+}
+.legal-link-row:hover { transform: translateY(-1px); }
+
+/* ── Game collection item (profile) ── */
+.game-col-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 13px;
+  background: rgba(255,255,255,.022);
+  border: 1px solid rgba(255,255,255,.04);
+  border-radius: 11px;
+  cursor: default;
+  transition: all .14s;
+}
+.game-col-item:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.08); }
+
+/* ── Add widget button ── */
+.add-widget-btn {
+  padding: 8px 20px;
+  background: rgba(255,249,62,.06);
+  border: 1.5px solid rgba(255,249,62,.12);
+  border-radius: 10px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.add-widget-btn:hover { background: rgba(255,249,62,.1); border-color: rgba(255,249,62,.2); }
+.add-widget-btn:active { transform: scale(0.97); }
+
+/* ── Preset theme swatch ── */
+.preset-theme-swatch {
+  cursor: pointer;
+  padding: 14px;
+  border-radius: 12px;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.preset-theme-swatch:hover { border-color: rgba(255,255,255,.15) !important; }
+
+/* ── Admin exit button ── */
+.admin-exit-btn {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-mid);
+  color: var(--accent);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  transition: .15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: .02em;
+  opacity: .6;
+}
+.admin-exit-btn:hover { opacity: 1; }
+
+/* ── Admin sync button ── */
+.admin-sync-btn {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  color: rgba(255,255,255,.6);
+  font-size: 12.5px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all .15s;
+}
+.admin-sync-btn:hover { background: rgba(255,255,255,.1); }
+
+/* ── Quiz option button ── */
+.quiz-opt-btn {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: rgba(255,255,255,.015);
+  color: var(--muted-light);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all .18s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.quiz-opt-btn:hover { border-color: rgba(255,249,62,.25); background: rgba(255,249,62,.03); }
+
+/* ── Begin verification button ── */
+.verify-begin-btn {
+  padding: 14px 36px;
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  color: #0f1119;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .18s;
+  box-shadow: 0 0 24px rgba(255,249,62,.2);
+}
+.verify-begin-btn:hover { box-shadow: 0 0 36px rgba(255,249,62,.35); transform: translateY(-1px); }
+
+/* ── AI feedback buttons ── */
+.ai-fb-correct {
+  padding: 6px 14px;
+  background: rgba(62,207,110,.08);
+  border: 1px solid rgba(62,207,110,.2);
+  border-radius: 8px;
+  color: #3ecf6e;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.ai-fb-correct:hover { background: rgba(62,207,110,.15); }
+
+/* ── Game stop button ── */
+.game-stop-btn {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .12s;
+}
+.game-stop-btn:hover { border-color: rgba(248,113,113,.3); color: var(--red); }
+
+/* ── Game list item ── */
+.game-list-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  transition: all .15s;
+}
+.game-list-item:hover { filter: brightness(1.05); }
+
+/* ── Small icon button (game visibility/remove) ── */
+.icon-btn-sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .12s;
+  border: 1px solid;
+}
+.icon-btn-sm:hover { filter: brightness(1.3); }
+
+/* ── Detected game item ── */
+.detected-game-item {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.06);
+  transition: all .15s;
+  background: rgba(255,255,255,.02);
+}
+.detected-game-item:hover { border-color: rgba(62,207,110,.25); background: rgba(62,207,110,.04); }
+
+/* ── Game search result item ── */
+.game-search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .12s;
+}
+.game-search-item:hover { background: rgba(255,255,255,.04); }
+
+/* ── Widget remove button ── */
+.widget-remove-btn {
+  background: none;
+  border: none;
+  color: rgba(248,113,113,.5);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all .12s;
+  display: flex;
+  align-items: center;
+}
+.widget-remove-btn:hover { color: var(--red); background: rgba(248,113,113,.1); }
+
+/* ── Widget add button (settings variant) ── */
+.widget-add-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.7);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.widget-add-btn:hover { border-color: rgba(255,249,62,.25); color: var(--accent); background: rgba(255,249,62,.04); }
+
+/* ── GIF back button ── */
+.gif-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.5);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+  transition: all .15s;
+}
+.gif-back-btn:hover { color: #fff; background: rgba(255,255,255,.06); }
+
+/* ── Sticker upload button ── */
+.sticker-upload-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 6px;
+  color: rgba(255,255,255,.35);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 3px 8px;
+  transition: all .12s;
+}
+.sticker-upload-btn:hover { border-color: rgba(255,249,62,.3); color: var(--accent); }
+
+/* ── Status preset chip ── */
+.cloud-preset {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.03);
+  cursor: pointer;
+  transition: all .12s;
+  white-space: nowrap;
+}
+.cloud-preset:hover { border-color: rgba(255,255,255,.15); background: rgba(255,255,255,.06); }
+
+/* ── Status picker close button ── */
+.sp-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .12s;
+}
+.sp-close-btn:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); }
+
+/* ── Widget panel card ── */
+.pw-widget-card {
+  transition: all .2s;
+  cursor: pointer;
+}
+.pw-widget-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.25) !important; }
+
+/* ── Tooltip for data-tip attributes ── */
+[data-tip] { position: relative; }
+[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.9);
+  color: rgba(255,255,255,.85);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 999;
+  animation: ctxMenuIn .12s ease;
+}
+
+/* ── Skeleton shimmer for loading placeholders ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,.04) 25%, rgba(255,255,255,.08) 50%, rgba(255,255,255,.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+.skeleton-text { height: 12px; border-radius: 4px; }
+.skeleton-avatar { border-radius: 50%; }
+.skeleton-block { border-radius: var(--radius-md); }
+
+/* ── Focus-visible ring for keyboard navigation ── */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid rgba(255,249,62,.4);
+  outline-offset: 2px;
+}
+
+/* ── Reduced motion support ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 </style>

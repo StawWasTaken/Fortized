@@ -27792,11 +27792,73 @@ function applyCrop() {
 let _profileSyncListener = null;
 let _statusSyncListener = null;
 let _notifSyncListener = null;
+let _supabaseUserChannel = null; // Supabase real-time subscription
 
 function initCrossDeviceSync() {
-  if (!CU?.username || !window.socket) return;
+  if (!CU?.username) return;
 
-  // Listen to Socket.IO events (real-time, broadcasts to all clients)
+  // 1. SUPABASE REAL-TIME: Listen for direct database changes (table editor, etc)
+  // This catches changes made outside of Socket.IO (direct Supabase edits)
+  if (typeof supabase !== 'undefined' && supabase.channel) {
+    _supabaseUserChannel = supabase.channel(`users:${CU.username}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'users', filter: `username=eq.${CU.username}` },
+        (payload) => {
+          if (!payload.new) return;
+          const newData = payload.new;
+
+          // IMPORTANT: Server data takes precedence over local cache
+          if (newData.display_name && newData.display_name !== CU.displayName) {
+            CU.displayName = newData.display_name;
+            updateUserbar();
+          }
+          if (newData.pfp && newData.pfp !== CU.pfp) {
+            CU.pfp = newData.pfp;
+            updateUserbar();
+            document.querySelectorAll('.msg-av-inner img, .ua img').forEach(img => {
+              if (img.src !== newData.pfp) img.src = newData.pfp;
+            });
+          }
+          if (newData.banner && newData.banner !== CU.banner) {
+            CU.banner = newData.banner;
+          }
+          if (newData.status && newData.status !== CU.status) {
+            CU.status = newData.status;
+            updateUserbar();
+          }
+          if (newData.onyx !== undefined && newData.onyx !== CU.onyx) {
+            CU.onyx = newData.onyx;
+            updateOnyxDisplay();
+          }
+          if (newData.friends && JSON.stringify(newData.friends) !== JSON.stringify(CU.friends)) {
+            CU.friends = newData.friends;
+          }
+          if (newData.bastions && JSON.stringify(newData.bastions) !== JSON.stringify(CU.bastions)) {
+            CU.bastions = newData.bastions;
+            renderRailBastions();
+          }
+          if (newData.group_chats && JSON.stringify(newData.group_chats) !== JSON.stringify(CU.groupChats)) {
+            CU.groupChats = newData.group_chats;
+            const scroll = document.getElementById('sidebar-scroll');
+            if (scroll) renderDMSidebar(scroll);
+          }
+          saveLocal();
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.debug('[Supabase] Real-time user listener subscribed');
+        } else if (status === 'CLOSED') {
+          console.debug('[Supabase] Real-time user listener closed');
+        }
+      });
+  }
+
+  // 2. SOCKET.IO EVENTS: Listen to broadcasts from server
+  if (!window.socket) return;
+
+  // Listen to Socket.IO events (broadcasts to all clients)
   // These events fire when ANY user makes changes (not just current user)
 
   // 1. Profile updates from any device
@@ -27961,8 +28023,16 @@ function initCrossDeviceSync() {
 }
 
 function stopCrossDeviceSync() {
+  // Clean up Supabase real-time subscriptions
+  if (_supabaseUserChannel) {
+    try {
+      supabase.removeChannel(_supabaseUserChannel);
+      _supabaseUserChannel = null;
+    } catch(e) {
+      console.debug('[Supabase] Unsubscribe failed', e);
+    }
+  }
   // Socket.IO listeners are auto-cleaned up on disconnect
-  // No manual cleanup needed
 }
 
 

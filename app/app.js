@@ -50,9 +50,9 @@ function ftzIcon(name, size, color) {
   return out;
 }
 // Shorthand icon helpers — Radiance & Onyx use PNG images (displayed inline like SVGs), Boost uses SVG
-function _onyxImg(size){var s=size||'18';return '<img src="/fortized badges/onyx.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Onyx">';}
-function _radianceImg(size){var s=size||'16';return '<img src="/fortized badges/basic radiance.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Radiance">';}
-function _radiancePlusImg(size){var s=size||'16';return '<img src="/fortized badges/radiance+.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Radiance+">';}
+function _onyxImg(size){const s=size||'18';return '<img src="/fortized badges/onyx.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Onyx">';}
+function _radianceImg(size){const s=size||'16';return '<img src="/fortized badges/basic radiance.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Radiance">';}
+function _radiancePlusImg(size){const s=size||'16';return '<img src="/fortized badges/radiance+.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Radiance+">';}
 function _boostSvg(size){return ftzIcon('boost',size||'18','currentColor');}
 
 // ══════════════════════════════════════════════════════════
@@ -12145,7 +12145,7 @@ function buildProfileView(tab) {
                 <div style="display:flex;align-items:flex-end;gap:8px;margin-top:-38px;margin-bottom:12px;position:relative;z-index:2;">
                   <div style="width:76px;height:76px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(0,0,0,.6);flex-shrink:0;position:relative;">
                     ${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-family:var(--font-display);font-weight:800;font-size:22px;color:'+(themeC1||'var(--accent)')+';">'+(CU.displayName||CU.username)[0].toUpperCase()+'</span>'}
-                    ${CU.activeDecoration ? (function(){var d=PROFILE_DECORATIONS.find(function(d){return d.id===CU.activeDecoration});return d?'<img src="'+escapeHTML(d.src)+'" style="position:absolute;inset:-9px;width:calc(100%+18px);height:calc(100%+18px);object-fit:contain;pointer-events:none;z-index:2;" onerror="this.style.display=\'none\'">':'';})() : ''}
+                    ${CU.activeDecoration ? (()=>{const d=PROFILE_DECORATIONS.find(dec=>dec.id===CU.activeDecoration);return d?'<img src="'+escapeHTML(d.src)+'" style="position:absolute;inset:-9px;width:calc(100%+18px);height:calc(100%+18px);object-fit:contain;pointer-events:none;z-index:2;" onerror="this.style.display=\'none\'">':'';})() : ''}
                   </div>
                   <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;">${renderBadgesHTML(CU)}</div>
                 </div>
@@ -18919,7 +18919,7 @@ function parseMD(s) {
 
   // ═══════ RESTORE all protected HTML ═══════
   // Multiple passes to handle nested placeholders
-  for (var _rp = 0; _rp < 5; _rp++) {
+  for (let _rp = 0; _rp < 5; _rp++) {
     s = s.replace(/\x00MD(\d+)\x00/g, function(_, idx) { return _mdSlots[parseInt(idx)] || ''; });
   }
   return s;
@@ -28447,7 +28447,7 @@ function _blendColorsForProfileCard(color1, color2) {
   b = Math.round(b * desaturate + brightness * (1 - desaturate));
 
   // Lighten to ensure readability
-  var lighten = 0.25;  // Add 25% lightness
+  const lighten = 0.25;  // Add 25% lightness
   r = Math.min(255, Math.round(r + (255 - r) * lighten));
   g = Math.min(255, Math.round(g + (255 - g) * lighten));
   b = Math.min(255, Math.round(b + (255 - b) * lighten));
@@ -30556,7 +30556,7 @@ function _showEventMenu(e, bastionId, eventKey, canManage) {
 }
 
 // ── Event creation / edit form ──
-var _evFormBannerData = '';
+let _evFormBannerData = '';
 function _openEventForm(editKey) {
   const b = CU.bastions?.[curBastion];
   if (!b) return;
@@ -30640,7 +30640,7 @@ function _openEventForm(editKey) {
       if (prev) { prev.innerHTML = '<img src="' + _evFormBannerData + '">'; prev.classList.add('has-img'); }
       const zone = document.getElementById('ev-f-banner-zone');
       if (zone) {
-        var acts = zone.querySelector('.ev-banner-actions');
+        const acts = zone.querySelector('.ev-banner-actions');
         if (acts) acts.innerHTML = '<button type="button" class="btn-g ev-banner-btn" onclick="document.getElementById(\'ev-f-banner-file\').click()">Change Image</button>'
           + '<button type="button" class="btn-g ev-banner-btn ev-banner-remove" onclick="_evRemoveBanner()">Remove</button>';
       }
@@ -30651,13 +30651,13 @@ function _openEventForm(editKey) {
 
 function _evRemoveBanner() {
   _evFormBannerData = '';
-  var prev = document.getElementById('ev-f-banner-preview');
+  const prev = document.getElementById('ev-f-banner-preview');
   if (prev) { prev.innerHTML = ''; prev.classList.remove('has-img'); }
-  var fileInput = document.getElementById('ev-f-banner-file');
+  const fileInput = document.getElementById('ev-f-banner-file');
   if (fileInput) fileInput.value = '';
-  var zone = document.getElementById('ev-f-banner-zone');
+  const zone = document.getElementById('ev-f-banner-zone');
   if (zone) {
-    var acts = zone.querySelector('.ev-banner-actions');
+    const acts = zone.querySelector('.ev-banner-actions');
     if (acts) acts.innerHTML = '<button type="button" class="btn-g ev-banner-btn" onclick="document.getElementById(\'ev-f-banner-file\').click()">Upload Image</button>';
   }
 }
@@ -30674,7 +30674,7 @@ function _reviewEvent(bastionId, editKey) {
   if (isNaN(startDate.getTime())) { toast('Invalid date/time','error'); return; }
   const endDateStr = document.getElementById('ev-f-end-date')?.value;
   const endTimeStr = document.getElementById('ev-f-end-time')?.value;
-  var endDate = null;
+  let endDate = null;
   if (endDateStr && endTimeStr) {
     endDate = new Date(endDateStr + 'T' + endTimeStr);
     if (isNaN(endDate.getTime())) endDate = null;
@@ -30724,9 +30724,9 @@ function _reviewEvent(bastionId, editKey) {
 }
 
 function _evBackToForm() {
-  var preview = document.querySelector('.ev-preview-card');
+  const preview = document.querySelector('.ev-preview-card');
   if (preview) preview.remove();
-  var form = document.querySelector('.ev-form-card');
+  const form = document.querySelector('.ev-form-card');
   if (form) form.style.display = '';
 }
 
@@ -30741,7 +30741,7 @@ async function _publishEvent(bastionId, editKey) {
   const startDate = new Date(dateStr + 'T' + timeStr);
   const endDateStr = document.getElementById('ev-f-end-date')?.value;
   const endTimeStr = document.getElementById('ev-f-end-time')?.value;
-  var endDate = null;
+  let endDate = null;
   if (endDateStr && endTimeStr) {
     endDate = new Date(endDateStr + 'T' + endTimeStr);
     if (isNaN(endDate.getTime())) endDate = null;
@@ -30759,9 +30759,9 @@ async function _publishEvent(bastionId, editKey) {
   if (!editKey) ev.shareCode = Math.random().toString(36).slice(2,8).toUpperCase();
 
   try {
-    var savedKey = editKey;
+    let savedKey = editKey;
     if (editKey) {
-      const old = window._eventsCache?.events?.find(function(e){return e._key===editKey;});
+      const old = window._eventsCache?.events?.find(e => e._key===editKey);
       if (old?.rsvps) ev.rsvps = old.rsvps;
       if (old?.shareCode) ev.shareCode = old.shareCode;
       if (old?.status) ev.status = old.status;
@@ -30776,8 +30776,8 @@ async function _publishEvent(bastionId, editKey) {
     }
 
     // Show success with copy link
-    var shareCode = ev.shareCode;
-    var link = window.location.origin + '/app?event=' + shareCode + '&bastion=' + encodeURIComponent(bastionId);
+    const shareCode = ev.shareCode;
+    const link = window.location.origin + '/app?event=' + shareCode + '&bastion=' + encodeURIComponent(bastionId);
     _showEventPublished(link, editKey);
     _loadEvents(bastionId);
   } catch(err) {
@@ -30788,7 +30788,7 @@ async function _publishEvent(bastionId, editKey) {
 
 function _showEventPublished(link, wasEdit) {
   // Replace preview with success
-  var ov = document.querySelector('.input-dialog-overlay');
+  const ov = document.querySelector('.input-dialog-overlay');
   if (!ov) return;
   ov.innerHTML = '<div class="ev-form-card ev-published-card">'
     + '<div class="modal-bar"></div>'
@@ -30806,13 +30806,13 @@ function _showEventPublished(link, wasEdit) {
 }
 
 function _evCopyPublishedLink() {
-  var input = document.getElementById('ev-share-link');
+  const input = document.getElementById('ev-share-link');
   if (!input) return;
-  navigator.clipboard.writeText(input.value).then(function() {
+  navigator.clipboard.writeText(input.value).then(() => {
     toast('Link copied!','success');
-    var btn = input.parentElement?.querySelector('.ev-copy-link-btn');
-    if (btn) { btn.textContent = 'Copied!'; setTimeout(function(){ btn.textContent = 'Copy'; }, 1500); }
-  }).catch(function() { input.select(); document.execCommand('copy'); toast('Link copied!','success'); });
+    const btn = input.parentElement?.querySelector('.ev-copy-link-btn');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
+  }).catch(() => { input.select(); document.execCommand('copy'); toast('Link copied!','success'); });
 }
 
 // ── RSVP ──

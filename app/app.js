@@ -741,18 +741,18 @@ FORTIZED_EMOJIS_DATA.forEach(([name, ext]) => {
   FORTIZED_EMOJI_MAP[name] = FTZ_EMOJI_BASE + name + '.' + ext;
 });
 
-// Onboarding interests categories
+// Onboarding interests categories with SVG icons
 const ONBOARDING_INTERESTS = [
-  { id: 'gaming', label: '🎮 Gaming', desc: 'Multiplayer, strategy, RPGs' },
-  { id: 'music', label: '🎵 Music', desc: 'Genres, producers, concerts' },
-  { id: 'art', label: '🎨 Art', desc: 'Digital, traditional, design' },
-  { id: 'tech', label: '💻 Technology', desc: 'Programming, gadgets, AI' },
-  { id: 'sports', label: '⚽ Sports', desc: 'Teams, fitness, competition' },
-  { id: 'learning', label: '📚 Learning', desc: 'Education, languages, skills' },
-  { id: 'movies', label: '🎬 Movies & TV', desc: 'Series, films, streaming' },
-  { id: 'anime', label: '⛩️ Anime & Manga', desc: 'Series, manga, communities' },
-  { id: 'creativity', label: '✨ Creativity', desc: 'Writing, crafts, content' },
-  { id: 'community', label: '🤝 Community', desc: 'Social, events, groups' },
+  { id: 'gaming', label: 'Gaming', desc: 'Multiplayer, strategy, RPGs', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="12" r="1"/><circle cx="12" cy="3" r="1"/><circle cx="18" cy="12" r="1"/><circle cx="12" cy="21" r="1"/><path d="M6 12h12M12 3v18"/><path d="M7 8l10-5M7 16l10 5"/></svg>' },
+  { id: 'music', label: 'Music', desc: 'Genres, producers, concerts', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' },
+  { id: 'art', label: 'Art', desc: 'Digital, traditional, design', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M7 4h12M4 7v12a2 2 0 002 2h12a2 2 0 002-2V7"/><circle cx="8.5" cy="9.5" r="1.5" fill="currentColor"/></svg>' },
+  { id: 'tech', label: 'Technology', desc: 'Programming, gadgets, AI', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M2 17h20M6 21h12"/><circle cx="18" cy="9" r="1" fill="currentColor"/></svg>' },
+  { id: 'sports', label: 'Sports', desc: 'Teams, fitness, competition', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5 9l14 6M5 15l14-6"/></svg>' },
+  { id: 'learning', label: 'Learning', desc: 'Education, languages, skills', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5z"/><path d="M6.5 2v20M10 6h4M10 10h4M10 14h4"/></svg>' },
+  { id: 'movies', label: 'Movies & TV', desc: 'Series, films, streaming', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M2 7l3-4h14l3 4M7 12h10M7 16h10"/></svg>' },
+  { id: 'anime', label: 'Anime & Manga', desc: 'Series, manga, communities', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="2" fill="currentColor"/><circle cx="15" cy="8" r="2" fill="currentColor"/><path d="M9 10h6M8 14c1 2 2 3 4 3s3-1 4-3"/><path d="M2 12a10 10 0 1020 0 10 10 0 01-20 0z"/></svg>' },
+  { id: 'creativity', label: 'Creativity', desc: 'Writing, crafts, content', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' },
+  { id: 'community', label: 'Community', desc: 'Social, events, groups', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>' },
 ];
 
 // Constants for moderation and age tiers
@@ -16715,7 +16715,9 @@ async function showOnboarding() {
   step1.style.cssText = 'padding:48px 40px;text-align:center;';
   step1.innerHTML = `
     <div style="height:4px;background:linear-gradient(90deg,#fff93e,#667eea,#764ba2);position:absolute;top:0;left:0;right:0;"></div>
-    <div style="font-size:48px;margin-bottom:16px;">🎉</div>
+    <div style="width:48px;height:48px;margin:0 auto 16px;color:var(--accent);display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15 8H22V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V8H9L12 2Z"/><circle cx="12" cy="14" r="1.5" fill="currentColor"/></svg>
+    </div>
     <div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:#fff;margin-bottom:8px;">Let's Personalize Your Experience!</div>
     <div style="font-size:14.5px;color:var(--muted-light);line-height:1.7;margin-bottom:32px;">Choose what interests you most on Fortized. You can update these anytime.</div>
 
@@ -16724,9 +16726,9 @@ async function showOnboarding() {
         <button onclick="toggleInterest('${interest.id}')"
           class="interest-btn"
           data-interest="${interest.id}"
-          style="background:rgba(255,255,255,.04);border:2px solid var(--border);border-radius:14px;padding:14px 12px;cursor:pointer;transition:all .2s;font-size:12px;color:var(--muted-light);">
-          <div style="font-size:24px;margin-bottom:6px;">${interest.label.split(' ')[0]}</div>
-          <div style="font-weight:600;color:#fff;margin-bottom:3px;">${interest.label.split(' ').slice(1).join(' ')}</div>
+          style="background:rgba(255,255,255,.04);border:2px solid var(--border);border-radius:14px;padding:14px 12px;cursor:pointer;transition:all .2s;font-size:12px;color:var(--muted-light);display:flex;flex-direction:column;align-items:center;">
+          <div style="width:32px;height:32px;margin-bottom:10px;color:var(--accent);display:flex;align-items:center;justify-content:center;">${interest.svg}</div>
+          <div style="font-weight:600;color:#fff;margin-bottom:3px;line-height:1.3;">${interest.label}</div>
           <div style="font-size:10px;color:var(--muted);">${interest.desc}</div>
         </button>
       `).join('')}
@@ -16744,7 +16746,9 @@ async function showOnboarding() {
   step2.style.cssText = 'display:none;padding:48px 40px;text-align:center;';
   step2.innerHTML = `
     <div style="height:4px;background:linear-gradient(90deg,#fff93e,#667eea,#764ba2);position:absolute;top:0;left:0;right:0;"></div>
-    <div style="font-size:56px;margin-bottom:20px;">👋</div>
+    <div style="width:56px;height:56px;margin:0 auto 20px;color:var(--accent);display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M9 10h.01M13 10h.01M17 10h.01"/></svg>
+    </div>
     <div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:#fff;margin-bottom:12px;">Welcome to Fortized</div>
     <div style="font-size:14px;color:var(--muted-light);line-height:1.8;margin-bottom:24px;">
       You're now part of a global community. Create bastions, connect with friends, and build together.

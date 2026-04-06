@@ -28,11 +28,11 @@ body{background:var(--canvas-color);color:var(--text);font-family:'DM Sans',sans
 .rail-btn svg{width:26px;height:26px;flex-shrink:0;transition:transform .16s cubic-bezier(.22,1,.36,1);}
 .rail-home-logo{width:26px;height:26px;-webkit-mask:url('/Fortized logo.png') center/contain no-repeat;mask:url('/Fortized logo.png') center/contain no-repeat;background-color:rgba(255,255,255,.45);transition:transform .16s cubic-bezier(.22,1,.36,1),background-color .2s;}
 .rail-home-btn:hover .rail-home-logo{background-color:rgba(255,255,255,.9);transform:scale(1.06);}
-.rail-home-btn.active .rail-home-logo{background-color:#13161d;}
+.rail-home-btn.active .rail-home-logo{background-color:var(--bg);}
 .rail-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border-radius:15px;}
 .rail-btn:hover svg{transform:scale(1.06);}
-.rail-btn.active{background:var(--accent);color:#13161d;box-shadow:0 2px 12px rgba(255,249,62,.18);border-radius:17px;}
-.rail-btn.active svg{color:#13161d;}
+.rail-btn.active{background:var(--accent);color:var(--bg);box-shadow:0 2px 12px rgba(255,249,62,.18);border-radius:var(--radius-lg);}
+.rail-btn.active svg{color:var(--bg);}
 .rail-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .rail-btn.active::before,.rail-btn:hover::before{display:none;}
 /* Selected indicator pill on left side */
@@ -380,7 +380,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 .content{flex:1;overflow:hidden;position:relative;display:flex;min-width:0;min-height:0;}
 .view{display:none;flex:1;min-width:0;min-height:0;overflow:hidden;animation:viewFadeIn .2s ease;}.view.active{display:flex;}
 @keyframes viewFadeIn{from{opacity:0;}to{opacity:1;}}
-.app-loading{position:fixed;inset:0;background:linear-gradient(135deg,#0f1119,#13161d);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:24px;animation:forceHideLoading .4s ease 12s forwards;backdrop-filter:blur(2px);}
+.app-loading{position:fixed;inset:0;background:linear-gradient(135deg,var(--rail),var(--bg));display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:24px;animation:forceHideLoading .4s ease 12s forwards;backdrop-filter:blur(2px);}
 .app-loading::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(255,249,62,.02),transparent);pointer-events:none;}
 @keyframes forceHideLoading{to{opacity:0;pointer-events:none;visibility:hidden;z-index:-1;backdrop-filter:blur(0);}}
 .app-loading .app-loading-anim{width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 4px 20px rgba(255,249,62,.1));animation:pulse 2s ease-in-out infinite;}
@@ -3452,5 +3452,528 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 #chronicle-joy-percent {
   color: #000 !important;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL IMPROVEMENTS — Accessibility, Consistency, Polish
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Reduced Motion Support ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Z-Index Layer System ── */
+:root {
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-fixed: 1200;
+  --z-overlay: 2000;
+  --z-modal: 3000;
+  --z-popover: 4000;
+  --z-tooltip: 5000;
+  --z-toast: 6000;
+  --z-max: 9999;
+}
+
+/* ── Focus-Visible for ALL interactive elements ── */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* ── Active states for buttons ── */
+.btn-a:active, .btn-g:active, .btn-d:active,
+.ui-btn:active, .mpp-btn-primary:active, .mpp-btn-secondary:active {
+  transform: scale(0.97) !important;
+  transition-duration: 0.08s !important;
+}
+
+.rail-btn:active { transform: scale(0.93); }
+.rail-bastion:active { transform: scale(0.93); }
+.rt-action-btn:active { transform: scale(0.9); }
+.tb-actions button:active { transform: scale(0.9); }
+.ua-btns button:active { transform: scale(0.9); }
+.rail-ub-btns button:active { transform: scale(0.9); }
+
+/* ── Missing Hover Effects ── */
+.onyx-pill:hover {
+  background: var(--accent-mid);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255,249,62,.12);
+}
+
+.rp-news-item:hover {
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.08);
+  transform: translateY(-1px);
+}
+
+.bastion-quick-actions button:active {
+  transform: scale(0.96);
+}
+
+/* ── Scrollbar polish ── */
+.sidebar-scroll::-webkit-scrollbar,
+.active-now-list::-webkit-scrollbar,
+.home-feed::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb,
+.active-now-list::-webkit-scrollbar-thumb,
+.home-feed::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.06);
+  border-radius: 100px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover,
+.active-now-list::-webkit-scrollbar-thumb:hover,
+.home-feed::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,.12);
+}
+
+/* ── Skeleton loader for async content ── */
+@keyframes skeletonShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,.03) 25%, rgba(255,255,255,.06) 50%, rgba(255,255,255,.03) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-text {
+  height: 12px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.skeleton-card {
+  height: 80px;
+  border-radius: var(--radius-md);
+}
+
+/* ── Improved toast styling ── */
+.ftz-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  backdrop-filter: var(--blur-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  animation: toastIn 0.3s var(--ease-out), toastOut 0.3s var(--ease-out) forwards;
+  animation-delay: 0s, var(--toast-duration, 3s);
+  pointer-events: auto;
+  max-width: 380px;
+  line-height: 1.4;
+}
+
+.ftz-toast.success {
+  background: linear-gradient(135deg, rgba(62,207,110,.15), rgba(62,207,110,.05));
+  color: var(--green);
+  border-color: rgba(62,207,110,.2);
+}
+
+.ftz-toast.error {
+  background: linear-gradient(135deg, rgba(248,113,113,.15), rgba(248,113,113,.05));
+  color: var(--red);
+  border-color: rgba(248,113,113,.2);
+}
+
+.ftz-toast.info {
+  background: linear-gradient(135deg, rgba(96,165,250,.15), rgba(96,165,250,.05));
+  color: var(--blue);
+  border-color: rgba(96,165,250,.2);
+}
+
+.ftz-toast.warning {
+  background: linear-gradient(135deg, rgba(245,158,11,.15), rgba(245,158,11,.05));
+  color: var(--yellow);
+  border-color: rgba(245,158,11,.2);
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px) scale(0.95); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateX(20px) scale(0.95); }
+}
+
+/* ── Improved Modal Overlay ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modalOverlayIn 0.2s ease;
+}
+
+@keyframes modalOverlayIn {
+  from { opacity: 0; backdrop-filter: blur(0); }
+  to { opacity: 1; }
+}
+
+.modal-card {
+  background: var(--glass-heavy);
+  backdrop-filter: var(--blur-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-3);
+  animation: modalCardIn 0.25s var(--ease-out);
+  max-width: 92vw;
+  max-height: 85vh;
+  overflow: hidden;
+}
+
+@keyframes modalCardIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── Smooth image loading ── */
+img {
+  transition: opacity 0.2s ease;
+}
+
+img[loading="lazy"] {
+  opacity: 0;
+}
+
+img[loading="lazy"].loaded,
+img[loading="lazy"][complete] {
+  opacity: 1;
+}
+
+/* ── Better selection across dark theme ── */
+::selection {
+  background: rgba(255,249,62,.25);
+  color: #fff;
+}
+
+/* ── Improved channel item consistency ── */
+.ch-item-2027:active,
+.vc-item-2027:active,
+.friend-item:active,
+.ch-item:active {
+  transform: scale(0.98);
+  transition-duration: 0.06s;
+}
+
+/* ── Message row improvements ── */
+.msg-row {
+  transition: background 0.12s ease;
+}
+
+.msg-row:hover .msg-actions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.msg-actions {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 0.15s var(--ease-out);
+  pointer-events: none;
+}
+
+/* ── Embed card improvements ── */
+.embed-link-card,
+.embed-x-card,
+.embed-invite-card,
+.embed-spotify-card {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.embed-link-card:hover,
+.embed-x-card:hover {
+  border-color: rgba(255,255,255,.1);
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+}
+
+/* ── Reaction pill improvements ── */
+.r-pill:active {
+  transform: scale(0.92);
+  transition-duration: 0.06s;
+}
+
+/* ── Context menu improvements ── */
+.ctx-menu {
+  animation: ctxIn 0.12s var(--ease-out);
+}
+
+@keyframes ctxIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── Notification badge pulse ── */
+@keyframes notifBadgePulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(239,68,68,.5); }
+  50% { box-shadow: 0 2px 12px rgba(239,68,68,.7), 0 0 4px rgba(239,68,68,.3); }
+}
+
+/* ── Input field improvements ── */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus {
+  border-color: rgba(255,249,62,.25) !important;
+  box-shadow: 0 0 0 3px rgba(255,249,62,.06);
+}
+
+/* ── Mention color consistency using CSS vars ── */
+.mention-user { background: var(--state-info-dim); color: var(--blue); }
+.mention-user:hover { background: rgba(96,165,250,.22); }
+.mention-here { background: var(--state-success-dim); color: var(--green); }
+.mention-here:hover { background: rgba(62,207,110,.2); }
+.mention-role { background: rgba(167,139,250,.1); color: #a78bfa; }
+.mention-role:hover { background: rgba(167,139,250,.2); }
+.mention-room { background: rgba(167,139,250,.1); color: #a78bfa; }
+.mention-room:hover { background: rgba(167,139,250,.2); }
+
+/* ── Bot badge using CSS vars ── */
+.bot-badge {
+  background: var(--state-info-dim);
+  color: var(--blue);
+  border-color: rgba(96,165,250,.25);
+}
+
+/* ── Improved code block ── */
+.msg-code-block {
+  transition: border-color 0.15s ease;
+}
+
+.msg-code-block:hover {
+  border-color: rgba(255,255,255,.1);
+}
+
+.msg-code-block .code-copy:active {
+  transform: scale(0.92);
+}
+
+/* ── Loading spinner standardized ── */
+.pl-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,249,62,.12);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Improved spoiler ── */
+.msg-spoiler {
+  overflow: hidden;
+  transition: color 0.3s ease, background 0.3s ease, filter 0.3s ease;
+}
+
+/* ── Room topbar depth ── */
+.room-topbar {
+  box-shadow: 0 1px 0 rgba(0,0,0,.15);
+}
+
+/* ── Bastion dropdown action active state ── */
+.bastion-dropdown .bd-action:active,
+.bastion-name-dropdown .bnd-action:active {
+  transform: scale(0.98);
+  transition-duration: 0.06s;
+}
+
+/* ── Member list entry improvements ── */
+.ml-entry {
+  transition: background 0.12s ease, opacity 0.2s ease;
+}
+
+.ml-entry:active {
+  transform: scale(0.98);
+  transition-duration: 0.06s;
+}
+
+/* ── Suggest panel improvements ── */
+.suggest-panel .sp-item:active {
+  transform: scale(0.98);
+  transition-duration: 0.06s;
+}
+
+/* ── Consistent link styling ── */
+.msg-text a {
+  color: var(--blue);
+  text-decoration: none;
+  transition: color 0.12s ease;
+}
+
+.msg-text a:hover {
+  text-decoration: underline;
+  color: #93bbfd;
+}
+
+/* ── Profile card section transitions ── */
+.up-right-section {
+  animation: fadeIn 0.25s ease;
+}
+
+/* ── Improved DM friend row ── */
+.dm-friend-row:active {
+  transform: scale(0.995);
+  transition-duration: 0.06s;
+}
+
+/* ── Better placeholder styling ── */
+::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+input:focus::placeholder,
+textarea:focus::placeholder {
+  opacity: 0.4;
+}
+
+/* ── Realm card active press state ── */
+.realm-card:active {
+  transform: translateY(-2px) scale(0.98);
+  transition-duration: 0.1s;
+}
+
+/* ── Realm friend active press ── */
+.realm-friend:active {
+  transform: translateY(-1px) scale(0.95);
+  transition-duration: 0.1s;
+}
+
+/* ── Active now item press ── */
+.active-now-item:active {
+  transform: scale(0.98);
+  transition-duration: 0.06s;
+}
+
+/* ── Mini profile preview improvements ── */
+.mini-profile-preview {
+  animation: mppIn 0.2s var(--ease-out);
+}
+
+@keyframes mppIn {
+  from { opacity: 0; transform: scale(0.95) translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── Tooltip smooth appearance ── */
+[data-tip]:hover::before {
+  animation: tooltipIn 0.15s var(--ease-out);
+}
+
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── Smooth settings transitions ── */
+.settings-nav-item {
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.settings-nav-item:active {
+  transform: scale(0.97);
+  transition-duration: 0.06s;
+}
+
+/* ── Chat bar improvements ── */
+.chatbar-wrap {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chatbar-wrap:focus-within {
+  border-color: rgba(255,249,62,.15);
+  box-shadow: 0 0 0 3px rgba(255,249,62,.04);
+}
+
+/* ── Emoji/GIF/Sticker picker smooth entry ── */
+.chat-picker-base {
+  animation: pickerIn 0.2s var(--ease-out);
+}
+
+@keyframes pickerIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── Image hover zoom in messages ── */
+.msg-text img:not(.emoji-inline):hover {
+  filter: brightness(1.05);
+  transition: filter 0.15s ease;
+}
+
+/* ── Loading state for async buttons ── */
+.btn-loading {
+  pointer-events: none;
+  opacity: 0.6;
+  position: relative;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-left: 6px;
+}
+
+/* ── Border radius consistency overrides ── */
+.rail-btn:hover { border-radius: var(--radius-lg); }
+.rail-btn.active { border-radius: var(--radius-lg); }
+.rail-bastion:hover { border-radius: var(--radius-lg); }
+.rail-bastion.active { border-radius: var(--radius-lg); }
 
 </style>

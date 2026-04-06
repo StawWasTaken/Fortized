@@ -1225,21 +1225,17 @@ function toast(msg, type='info') {
   const container = document.getElementById('toast-container') || (() => {
     const c = document.createElement('div');
     c.id = 'toast-container';
-    c.style.cssText = 'position:fixed;bottom:80px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+    c.style.cssText = 'position:fixed;bottom:80px;right:20px;z-index:var(--z-toast,6000);display:flex;flex-direction:column-reverse;gap:8px;pointer-events:none;';
     document.body.appendChild(c);
     return c;
   })();
   const el = document.createElement('div');
-  const colors = {success:'var(--green)',error:'var(--red)',info:'var(--accent-mid)',warning:'var(--yellow)'};
-  const icons = {success:'\u2713',error:'\u2717',info:'\u24d8',warning:'\u26a0'};
-  el.style.cssText = `background:var(--panel2);border:1px solid ${colors[type]||colors.info};border-left:3px solid ${colors[type]||colors.info};border-radius:12px;padding:10px 16px;font-size:13.5px;color:var(--text);max-width:320px;box-shadow:0 4px 24px rgba(0,0,0,.4);animation:slideIn .2s ease;display:flex;align-items:center;gap:8px;pointer-events:auto;transition:opacity .25s,transform .25s;`;
-  el.innerHTML = `<span style="font-size:15px;flex-shrink:0;opacity:.7;">${icons[type]||icons.info}</span><span>${typeof msg==='string'?msg.replace(/</g,'&lt;'):msg}</span>`;
+  const icons = {success:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',error:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',info:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',warning:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'};
+  el.className = 'ftz-toast ' + (type || 'info');
+  el.style.setProperty('--toast-duration', '3s');
+  el.innerHTML = `<span style="flex-shrink:0;display:flex;">${icons[type]||icons.info}</span><span>${typeof msg==='string'?msg.replace(/</g,'&lt;'):msg}</span>`;
   container.appendChild(el);
-  setTimeout(() => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateX(20px)';
-    setTimeout(() => el.remove(), 300);
-  }, 3200);
+  setTimeout(() => el.remove(), 3500);
 }
 
 // ════════════════════════════════════════════

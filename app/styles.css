@@ -596,7 +596,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .r-pill:hover .r-super-btn{display:flex;}
 .r-super-btn:hover{background:rgba(255,215,62,.22);border-color:rgba(255,215,62,.4);transform:scale(1.1);}
 @keyframes sr-pulse{0%{transform:scale(1);}30%{transform:scale(1.3);}60%{transform:scale(0.95);}100%{transform:scale(1);}}
-.sr-particle{position:fixed;font-size:18px;pointer-events:none;z-index:99999;animation-duration:1s;animation-fill-mode:forwards;animation-timing-function:cubic-bezier(.2,.6,.3,1);}
+.sr-particle{position:fixed;font-size:18px;pointer-events:none;z-index:var(--z-max,9999);animation-duration:1s;animation-fill-mode:forwards;animation-timing-function:cubic-bezier(.2,.6,.3,1);}
 @keyframes sr-float{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-80px) scale(.6);}}
 @keyframes sr-spin{0%{opacity:1;transform:translateY(0) rotate(0deg) scale(1);}100%{opacity:0;transform:translateY(-70px) rotate(360deg) scale(.5);}}
 @keyframes sr-bounce{0%{opacity:1;transform:translate(0,0) scale(1);}50%{transform:translate(15px,-50px) scale(1.2);}100%{opacity:0;transform:translate(30px,-90px) scale(.4);}}
@@ -948,7 +948,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .quest-tab-chip:not(.active){color:rgba(255,255,255,.4);}
 .quest-tab-chip:not(.active):hover{background:var(--surface-2);color:rgba(255,255,255,.8);transform:translateY(-1px);}
 /* Daily Quest Popup — "Hearken" overlay */
-.quest-popup-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;transition:opacity .4s cubic-bezier(.22,1,.36,1);pointer-events:none;}
+.quest-popup-overlay{position:fixed;inset:0;z-index:var(--z-max,9999);display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;transition:opacity .4s cubic-bezier(.22,1,.36,1);pointer-events:none;}
 .quest-popup-overlay.visible{opacity:1;pointer-events:all;}
 .quest-popup-card{width:420px;max-width:92vw;background:linear-gradient(170deg,#0e1020 0%,#0a0d18 40%,#100c1e 100%);border:1.5px solid rgba(255,249,62,.12);border-radius:24px;overflow:hidden;transform:scale(.92) translateY(20px);transition:transform .45s cubic-bezier(.22,1,.36,1);box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 60px rgba(255,249,62,.06);}
 .quest-popup-overlay.visible .quest-popup-card{transform:scale(1) translateY(0);}
@@ -1745,10 +1745,10 @@ body.is-desktop-app .notif-panel{top:0;}
 
 /* ── BADGE SYSTEM ─────────────────────────────────── */
 .ftz-badge { display:inline-flex;align-items:center;justify-content:center;position:relative;width:22px;height:22px;flex-shrink:0;cursor:pointer;vertical-align:middle;margin:0 1px;transition:transform .18s cubic-bezier(.22,1,.36,1),filter .18s; }
-.ftz-badge:hover { transform:scale(1.18);filter:drop-shadow(0 0 8px currentColor);z-index:99999; }
+.ftz-badge:hover { transform:scale(1.18);filter:drop-shadow(0 0 8px currentColor);z-index:var(--z-max,9999); }
 .ftz-badge img { width:100%;height:100%;object-fit:contain;pointer-events:none; }
 .ftz-badge .badge-tooltip { display:none; }
-.ftz-badge-tip{position:fixed;left:0;top:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 14px;pointer-events:none;opacity:0;transition:opacity .14s,transform .14s;z-index:99999;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.6);font-size:12.5px;font-weight:600;color:#c8d0dc;transform:translateY(4px);}
+.ftz-badge-tip{position:fixed;left:0;top:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 14px;pointer-events:none;opacity:0;transition:opacity .14s,transform .14s;z-index:var(--z-max,9999);white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.6);font-size:12.5px;font-weight:600;color:#c8d0dc;transform:translateY(4px);}
 .ftz-badge-tip.visible{opacity:1;transform:translateY(0);}
 /* Badge glow accents per type */
 .ftz-badge.badge-superadmin { color:#fff93e; }
@@ -4281,6 +4281,20 @@ textarea:focus::placeholder {
   color: var(--red);
 }
 .gc-btn-danger:hover { background: rgba(248,113,113,.1); }
+
+.gc-kick-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 3px 5px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  opacity: 0;
+}
+.ml-entry:hover .gc-kick-btn { opacity: 0.6; }
+.gc-kick-btn:hover { color: var(--red) !important; opacity: 1 !important; background: rgba(248,113,113,.08); }
 
 /* ── Search input with icon ── */
 .ftz-search-wrap {

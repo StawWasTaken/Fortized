@@ -336,7 +336,7 @@ const FtzStatus = (() => {
     // Save manual status to localStorage for persistence across reloads
     try { localStorage.setItem('ftz_manual_status_' + CU.username, status); } catch {}
     _broadcast(status);
-    saveUser().catch(() => {});
+    saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     updateUserbar();
     refreshCustomStatusBubble();
   }
@@ -478,7 +478,7 @@ const FtzStatus = (() => {
       const uname = (CU.username || '').toLowerCase();
       if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(null);
     } catch {}
-    saveUser().catch(() => {});
+    saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     refreshCustomStatusBubble();
     toast('Custom status cleared', 'info');
   }
@@ -498,7 +498,7 @@ const FtzStatus = (() => {
       const uname = (CU.username || '').toLowerCase();
       if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(cs);
     } catch {}
-    saveUser().catch(() => {});
+    saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     refreshCustomStatusBubble();
   }
 
@@ -510,7 +510,7 @@ const FtzStatus = (() => {
       const uname = (CU.username || '').toLowerCase();
       if (uname) firebase.database().ref('users/' + uname + '/customStatus').set(null);
     } catch {}
-    saveUser().catch(() => {});
+    saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     refreshCustomStatusBubble();
   }
 
@@ -520,7 +520,7 @@ const FtzStatus = (() => {
     const remaining = new Date(cs.clearAt) - Date.now();
     if (remaining <= 0) {
       delete CU.customStatus;
-      saveUser().catch(() => {});
+      saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
       return;
     }
     _clearCustomTimer();
@@ -1875,9 +1875,13 @@ function closeMobileMemberPanel() {
 }
 function _updateMobileBackBtn() {}
 /* Close mobile sidebars on resize to desktop */
+let _resizeTimer;
 window.addEventListener('resize', function() {
-  if (!_isMobile()) { closeMobileSidebar(); _closeMobileSettings(); closeMobileMemberPanel(); }
-  updateUserbarWidth();
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    if (!_isMobile()) { closeMobileSidebar(); _closeMobileSettings(); closeMobileMemberPanel(); }
+    updateUserbarWidth();
+  }, 100);
 });
 
 // ── Mobile Bottom Tab Bar ──────────────────────────────
@@ -2626,7 +2630,7 @@ async function _loadRealmFriends(friends, container, countEl) {
 // ── Right panel friends loader (async with status) ──
 async function _loadRPFriends(friends, container, countEl) {
   if (!friends.length) {
-    container.innerHTML = '<div style="padding:20px;font-size:12px;color:var(--muted);text-align:center;"><div style="font-size:24px;opacity:.3;margin-bottom:6px;">👥</div>No friends yet — add friends by username!</div>';
+    container.innerHTML = '<div class="ftz-empty"><div class="ftz-empty-icon">👥</div><div class="ftz-empty-title">No friends yet</div><div class="ftz-empty-text">Add friends by username to get started!</div></div>';
     return;
   }
   const _rpSlice = friends.slice(0, 15);
@@ -3088,7 +3092,7 @@ async function renderDMSidebar(scroll) {
 
   // Render entries immediately (will be sorted async after fetching timestamps)
   if (_dmEntries.length === 0) {
-    html += '<div style="padding:14px;font-size:12px;color:var(--muted);text-align:center;">No conversations yet.<br><span style="font-size:11px;opacity:.6;">Start chatting with friends!</span></div>';
+    html += '<div class="ftz-empty" style="padding:14px;"><div class="ftz-empty-icon">💬</div><div class="ftz-empty-title">No conversations yet</div><div class="ftz-empty-text">Start chatting with friends!</div></div>';
   } else {
     html += '<div id="dm-sorted-list">';
     _dmEntries.forEach(entry => {
@@ -3569,7 +3573,7 @@ function openDMView(username) {
   loadDMMessages(username);
   setTimeout(() => { if (window.innerWidth > 768) showDMUserPanel(username); _initChatScroll(document.getElementById('dm-msgs')); }, 80);
   setTimeout(() => setupEmojiAutocomplete('dm-input'), 100);
-  ensureDMExists(username).catch(()=>{});
+  ensureDMExists(username).catch(e => console.warn('[DM] Failed to ensure DM:', e?.message));
   // Join Socket.io room for DM real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('dm', CU.username, username);
   _listenTyping(username);
@@ -3657,7 +3661,7 @@ async function sendDM() {
     await FortizedSocial.sendDMMessage(CU.username, curDM, text);
     FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: msg });
     _trackSendMsgQuest();
-  } catch { toast('Failed to send','error'); }
+  } catch { toast('Failed to send message. Check your connection.','error'); }
 }
 
 // ════════════════════════════════════════════════════
@@ -3963,7 +3967,7 @@ function _buildGCMemberEntry(m, meta, isOwner, statusMap) {
         ${isGCOwner?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);padding:1px 5px;border-radius:4px;flex-shrink:0;">OWNER</span>':''}
       </div>
     </div>
-    ${isOwner && m!==CU.username ? `<button onclick="event.stopPropagation();kickFromGC('${escapeHTML(meta.id)}','${escapeHTML(m)}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:6px;transition:all .15s;opacity:0;" onmouseenter="this.style.color='var(--red)';this.style.opacity='1'" onmouseleave="this.style.color='var(--muted)';this.style.opacity='0'" title="Kick">✕</button>`:''}
+    ${isOwner && m!==CU.username ? `<button onclick="event.stopPropagation();kickFromGC('${escapeHTML(meta.id)}','${escapeHTML(m)}')" class="gc-kick-btn" title="Kick">✕</button>`:''}
   </div>`;
 }
 function _filterGCMembers(query) {
@@ -4054,7 +4058,7 @@ async function sendGCMessage() {
   }
   _trackSendMsgQuest();
   try { await msgRef.set(msg); }
-  catch { toast('Failed to send','error'); }
+  catch { toast('Failed to send message. Check your connection.','error'); }
 }
 
 // ── GC Typing ──────────────────────────────────────
@@ -4225,7 +4229,7 @@ async function leaveGroupChat(gcId) {
       if (wrap) showDMFriendsHome();
       renderDMSidebar(document.getElementById('sidebar-scroll'));
       toast('Left the group','info');
-    } catch(e){ toast('Failed to leave','error'); }
+    } catch(e){ toast('Failed to leave. Please try again.','error'); }
   });
 }
 
@@ -4248,7 +4252,7 @@ async function deleteGroupChat(gcId) {
       if (wrap) showDMFriendsHome();
       renderDMSidebar(document.getElementById('sidebar-scroll'));
       toast('Group deleted','info');
-    } catch(e){ toast('Failed to delete','error'); }
+    } catch(e){ toast('Failed to delete. Please try again.','error'); }
   });
 }
 
@@ -4949,7 +4953,7 @@ async function sendChannelMsg(idx) {
   try {
     await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text);
     FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: msg });
-  } catch { toast('Failed to send','error'); }
+  } catch { toast('Failed to send message. Check your connection.','error'); }
   // Joyster: react to messages & detect emoji spam
   // Bot command handling — trigger deployed bots with ! prefix
   if (text.startsWith('!')) {
@@ -6374,7 +6378,7 @@ async function removeFriend(username){
       toast('Removed '+username,'info');
       renderFriendsList();
       renderDMSidebar(document.getElementById('sidebar-scroll'));
-    } catch(e){ console.error(e); toast('Error','error'); }
+    } catch(e){ console.error(e); toast('An error occurred. Please try again.','error'); }
   });
 }
 
@@ -6556,7 +6560,7 @@ function _showBanScreen(ban) {
   const reason = ban.reason || ban.note || '';
   const category = ban.category || 'Account behavior';
   const bannedBy = ban.bannedBy || ban.by || 'Fortized Moderation';
-  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:99999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
+  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
     <div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
       <div style="width:68px;height:68px;border-radius:18px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
@@ -6606,7 +6610,7 @@ function _showSuspendScreen(data) {
       setTimeout(() => { location.reload(); }, msLeft + 1000);
     }
   }
-  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:99999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
+  document.body.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;background:#0f1119;display:flex;align-items:center;justify-content:center;font-family:'Syne',system-ui,-apple-system,sans-serif;">
     <div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;border-radius:22px;width:100%;max-width:580px;padding:48px 40px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);">
       <div style="width:68px;height:68px;border-radius:18px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
@@ -6652,7 +6656,7 @@ function _showWarningOverlay(reason, issuedBy, contentData) {
   const safeMod = (issuedBy && typeof issuedBy === 'string') ? issuedBy : 'Fortized Moderation';
   const overlay = document.createElement('div');
   overlay.id = 'ftz-warning-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(8,10,15,.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .3s ease;';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(8,10,15,.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-family:"Syne",system-ui,-apple-system,sans-serif;animation:fadeIn .3s ease;';
   overlay.innerHTML = `<div style="background:rgba(19,22,29,.95);border:1px solid #252b3a;width:100%;max-width:520px;padding:40px 36px;text-align:center;border-radius:22px;box-shadow:0 32px 80px rgba(0,0,0,.7);">
     <div style="width:60px;height:60px;border-radius:16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
@@ -6731,11 +6735,15 @@ function runFortizedOnboarding() {
 }
 
 function initFortizedUXResilience() {
+  let _uxResizeTimer;
   window.addEventListener('resize', () => {
-    if (window.innerWidth > 900) {
-      document.getElementById('mobile-overlay')?.classList.remove('active');
-      document.getElementById('sidebar')?.classList.remove('mobile-open');
-    }
+    clearTimeout(_uxResizeTimer);
+    _uxResizeTimer = setTimeout(() => {
+      if (window.innerWidth > 900) {
+        document.getElementById('mobile-overlay')?.classList.remove('active');
+        document.getElementById('sidebar')?.classList.remove('mobile-open');
+      }
+    }, 100);
   });
   document.addEventListener('error', (e) => {
     const t = e.target;
@@ -7440,7 +7448,7 @@ function initFortizedUXResilience() {
       if (CU.gameCollection?.length && (!fresh.gameCollection?.length || fresh.gameCollection.length < CU.gameCollection.length)) fresh.gameCollection = CU.gameCollection;
         CU=fresh;saveLocal();updateUserbar();renderRailBastions();updateOnyxDisplay();
         // Re-persist radiance/quest data to DB if it was preserved from local cache
-        if(CU.radianceUntil||CU.radiancePlus||CU.completedQuests?.length) saveUser().catch(()=>{});
+        if(CU.radianceUntil||CU.radiancePlus||CU.completedQuests?.length) saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
       }
     }catch{}
   },1000);
@@ -9829,9 +9837,12 @@ function addBastionRule() {
   setTimeout(() => { const inputs = document.querySelectorAll('.bastion-rule-input'); if (inputs.length) inputs[inputs.length-1].focus(); }, 50);
 }
 function removeBastionRule(i) {
-  const b = CU.bastions?.[curBastion]; if (!b || !b.rules) return;
-  b.rules.splice(i, 1);
-  renderBSettingsMain('rules');
+  showCustomConfirm('Remove this rule?', () => {
+    const b = CU.bastions?.[curBastion]; if (!b || !b.rules) return;
+    b.rules.splice(i, 1);
+    renderBSettingsMain('rules');
+    toast('Rule removed', 'info');
+  });
 }
 async function saveBastionRules() {
   const b = CU.bastions?.[curBastion]; if (!b) return;
@@ -9895,9 +9906,12 @@ function addAppQuestion() {
   }, 50);
 }
 function removeAppQuestion(i) {
-  const b = CU.bastions?.[curBastion]; if (!b) return;
-  (b.applicationQuestions||[]).splice(i, 1);
-  renderBSettingsMain('overview');
+  showCustomConfirm('Remove this application question?', () => {
+    const b = CU.bastions?.[curBastion]; if (!b) return;
+    (b.applicationQuestions||[]).splice(i, 1);
+    renderBSettingsMain('overview');
+    toast('Question removed', 'info');
+  });
 }
 function updateAppQuestion(i, val) {
   const b = CU.bastions?.[curBastion]; if (!b) return;
@@ -9962,8 +9976,11 @@ async function addKeyword() {
   await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('automod');
 }
 async function removeKeyword(i) {
-  CU.bastions[curBastion].automod.keywords.splice(i,1);
-  await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('automod');
+  showCustomConfirm('Remove this keyword?', async () => {
+    CU.bastions[curBastion].automod.keywords.splice(i,1);
+    await saveUser(); _syncBastionToGlobal(curBastion); renderBSettingsMain('automod');
+    toast('Keyword removed', 'info');
+  });
 }
 async function saveAutoMod() {
   const ml = parseInt(document.getElementById('mention-limit')?.value)||10;
@@ -10051,7 +10068,7 @@ async function kickMember(username) {
       toast(`${username} kicked`,'info');
       loadBastionMembersList();
       renderMemberList();
-    } catch { toast('Error','error'); }
+    } catch { toast('An error occurred. Please try again.','error'); }
   });
 }
 async function unbanMember(i) {
@@ -10889,11 +10906,12 @@ function toggleBot(idx) {
 }
 
 function deleteBot(idx) {
-  if (!confirm('Permanently delete this bot? This cannot be undone.')) return;
-  CU.bots.splice(idx, 1);
-  saveUser();
-  buildProfileView('my_bots');
-  toast('Bot deleted', 'info');
+  showCustomConfirm('Permanently delete this bot? This cannot be undone.', () => {
+    CU.bots.splice(idx, 1);
+    saveUser();
+    buildProfileView('my_bots');
+    toast('Bot deleted', 'info');
+  });
 }
 
 // ─── Bot Arsenal (Community Hub) ───
@@ -13328,7 +13346,7 @@ async function quickAddFriend(username) {
       setTimeout(()=>spawnHeartAnimation(window.innerWidth/2+30, window.innerHeight/2-30), 120);
       setTimeout(()=>spawnHeartAnimation(window.innerWidth/2, window.innerHeight/2+20), 250);
     }
-  }catch{toast('Error','error');}
+  }catch{toast('An error occurred. Please try again.','error');}
 }
 
 // ════════════════════════════════════════════
@@ -15617,7 +15635,7 @@ async function _clearAnnouncement() {
     logAudit('clear_broadcast', 'all', '');
     toast('Announcement cleared','success');
     _loadAdminPage('broadcast');
-  } catch { toast('Failed','error'); }
+  } catch { toast('Something went wrong. Please try again.','error'); }
 }
 async function _updatePlatformStatus() {
   const msg = document.getElementById('_status-msg')?.value?.trim() || '';
@@ -15630,7 +15648,7 @@ async function _updatePlatformStatus() {
     toast('Status updated','success');
     // Refresh the broadcast tab
     _loadAdminPage('broadcast');
-  } catch { toast('Failed','error'); }
+  } catch { toast('Something went wrong. Please try again.','error'); }
 }
 function _exportAdminData(type) {
   let data;
@@ -15660,11 +15678,11 @@ function _showScheduleActionModal() {
 }
 async function _cancelScheduledAction(key) {
   if (!confirm('Cancel this scheduled action?')) return;
-  try { const acts = await FortizedSocial.adminGetScheduledActions(); acts.splice(key, 1); await FortizedSocial.adminSaveScheduledActions(acts); toast('Action cancelled','success'); _loadAdminPage('scheduled_actions'); } catch { toast('Failed','error'); }
+  try { const acts = await FortizedSocial.adminGetScheduledActions(); acts.splice(key, 1); await FortizedSocial.adminSaveScheduledActions(acts); toast('Action cancelled','success'); _loadAdminPage('scheduled_actions'); } catch { toast('Something went wrong. Please try again.','error'); }
 }
 
 async function _resetAllSessions() {
-  try { await FortizedSocial.adminSetSignal('reset_sessions', Date.now()); logAudit('reset_sessions', 'all', 'All sessions reset'); toast('All sessions reset','success'); } catch { toast('Failed','error'); }
+  try { await FortizedSocial.adminSetSignal('reset_sessions', Date.now()); logAudit('reset_sessions', 'all', 'All sessions reset'); toast('All sessions reset','success'); } catch { toast('Something went wrong. Please try again.','error'); }
 }
 
 async function deleteReportForever(idx) {
@@ -15719,7 +15737,7 @@ async function adminGiveOnyx() {
     document.getElementById('eco-username').value = '';
     document.getElementById('eco-amount').value = '';
     if (username===CU.username) await refreshCU();
-  } catch { toast('Error','error'); }
+  } catch { toast('An error occurred. Please try again.','error'); }
 }
 
 // ── Audit Log Filter ──
@@ -17096,13 +17114,13 @@ async function _showInviteFriendsPanel() {
   // Generate a personal invite code if not existing
   if (!CU.personalInviteCode) {
     CU.personalInviteCode = CU.username + '-' + Date.now().toString(36).toUpperCase();
-    saveUser().catch(()=>{});
+    saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
   }
   const link = location.origin + '/app?ref=' + CU.personalInviteCode;
   // Mark daily quest done
   if (!CU.questsDailyLog) CU.questsDailyLog = {};
   CU.questsDailyLog.invite = new Date().toDateString();
-  saveUser().catch(()=>{});
+  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
 
   const friends = CU?.friends || [];
 
@@ -17144,7 +17162,7 @@ async function _showInviteFriendsPanel() {
   // Load friends list async
   const listEl = document.getElementById('invite-friends-list');
   if (!friends.length) {
-    listEl.innerHTML = '<div style="padding:30px 20px;text-align:center;color:#949ba4;font-size:13px;"><div style="font-size:28px;margin-bottom:8px;opacity:.4;">👥</div>No friends yet — add friends to invite them!</div>';
+    listEl.innerHTML = '<div class="ftz-empty"><div class="ftz-empty-icon">👥</div><div class="ftz-empty-title">No friends yet</div><div class="ftz-empty-text">Add friends to invite them!</div></div>';
     return;
   }
 
@@ -17251,7 +17269,7 @@ async function showBastionInviteUI(bastionIdx) {
     const newInv = { code: inviteCode, createdBy: CU.username, created: new Date().toISOString(), uses: 0 };
     if (!b.invites) b.invites = [];
     b.invites.push(newInv);
-    saveUser().catch(()=>{});
+    saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     if (gid) { try { await firebase.database().ref('globalBastions/' + gid + '/invites').set(b.invites); } catch {} }
   }
   const inviteLink = location.origin + '/app?invite=' + inviteCode;
@@ -17292,7 +17310,7 @@ async function showBastionInviteUI(bastionIdx) {
   // Load friends
   const listEl = document.getElementById('bastion-invite-friends-list');
   if (!friends.length) {
-    listEl.innerHTML = '<div style="padding:30px 20px;text-align:center;color:#949ba4;font-size:13px;"><div style="font-size:28px;margin-bottom:8px;opacity:.4;">👥</div>No friends yet — add friends to invite them!</div>';
+    listEl.innerHTML = '<div class="ftz-empty"><div class="ftz-empty-icon">👥</div><div class="ftz-empty-title">No friends yet</div><div class="ftz-empty-text">Add friends to invite them!</div></div>';
     return;
   }
 
@@ -17383,7 +17401,7 @@ function _copyBastionInviteLink(btn) {
 function regeneratePersonalInvite() {
   const code = CU.username + '-' + Date.now().toString(36).toUpperCase();
   CU.personalInviteCode = code;
-  saveUser().catch(()=>{});
+  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
   const display = document.getElementById('invite-link-display');
   const link = location.origin + '/app?ref=' + code;
   if (display) {
@@ -17408,7 +17426,7 @@ function checkPersonalInviteLink() {
   // After 24h, inviter gets 9 Onyx — check on next load
   const joined = CU.joinedAt || new Date().toISOString();
   CU.joinedAt = joined;
-  saveUser().catch(()=>{});
+  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
   // Check if 24h have passed and award inviter
   if (CU.referredBy && !CU.referralRewarded) {
     const joinedDate = new Date(CU.joinedAt);
@@ -18209,7 +18227,7 @@ function renderAdminBastionsList(bastions) {
     const boostLv = b.boostLevel || 0;
     const nsfwChannels = (b.channels||[]).filter(c => c.nsfw).length;
     return `
-    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--border)'">
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;transition:border-color .15s;">
       <div style="width:42px;height:42px;border-radius:12px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0;">
         ${b.icon ? `<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:11px;">` : (b.emblem||'🏰')}
       </div>
@@ -20060,7 +20078,7 @@ function trackRadianceTime() {
   const elapsed = now - last;
   if (elapsed > 0 && elapsed < 86400000) CU.radianceTotalMs = (CU.radianceTotalMs||0) + elapsed;
   CU._radianceLastCheck = now.toISOString();
-  saveUser().catch(() => {});
+  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
 }
 function radianceBadgeHTML(user) {
   if (!user) return '';
@@ -20401,7 +20419,7 @@ function _toggleGameVisibility(idx, el) {
   const games = CU.gameCollection || [];
   if (!games[idx]) return;
   games[idx].hidden = !games[idx].hidden;
-  saveUser().catch(()=>{});
+  saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
   buildProfileView('game_collection');
 }
 
@@ -23412,17 +23430,18 @@ async function _unvotePoll(pollKey, chIdx) {
   } catch { toast('Failed', 'error'); }
 }
 
-async function _deletePoll(pollKey, chIdx) {
-  if (!confirm('Delete this poll? All votes will be lost.')) return;
-  const b = CU.bastions?.[curBastion];
-  const ch = b?.channels?.[chIdx];
-  if (!b || !ch) return;
-  const bastionId = b.globalId || b.name;
-  try {
-    await firebase.database().ref(_getPollDbPath(bastionId, ch.name) + '/' + pollKey).remove();
-    FortizedSocial.socketEmit('poll:update', { bastionId, channelName: ch.name, channelId: ch.name, action: 'delete', pollKey });
-    toast('Poll deleted', 'success');
-  } catch { toast('Failed', 'error'); }
+function _deletePoll(pollKey, chIdx) {
+  showCustomConfirm('Delete this poll? All votes will be lost.', async () => {
+    const b = CU.bastions?.[curBastion];
+    const ch = b?.channels?.[chIdx];
+    if (!b || !ch) return;
+    const bastionId = b.globalId || b.name;
+    try {
+      await firebase.database().ref(_getPollDbPath(bastionId, ch.name) + '/' + pollKey).remove();
+      FortizedSocial.socketEmit('poll:update', { bastionId, channelName: ch.name, channelId: ch.name, action: 'delete', pollKey });
+      toast('Poll deleted', 'success');
+    } catch { toast('Failed to delete poll', 'error'); }
+  });
 }
 
 function openCreatePollModal(chIdx) {
@@ -25015,7 +25034,7 @@ function setGameActivity(name, icon) {
   // Update CU and save
   if (CU) {
     CU.gameActivity = activityState.primary;
-    saveUser().catch(()=>{});
+    saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     if (activityState.primary) {
       firebase.database().ref('users/'+CU.username+'/gameActivity').set(activityState.primary).catch(()=>{});
       if (!activityState.primary._igdbEnriched) {
@@ -30773,7 +30792,7 @@ async function _rsvpEvent(bastionId, eventKey) {
     if (snap.exists()) { await firebase.database().ref(path).remove(); toast('RSVP removed','info'); }
     else { await firebase.database().ref(path).set(true); toast('RSVP confirmed!','success'); }
     _loadEvents(bastionId);
-  } catch { toast('Failed','error'); }
+  } catch { toast('Something went wrong. Please try again.','error'); }
 }
 
 // ── Start event early ──
@@ -30784,7 +30803,7 @@ async function _startEventEarly(bastionId, eventKey) {
       toast('Event is now LIVE!','success');
       _loadEvents(bastionId);
       _updateEventsBadge(bastionId);
-    } catch { toast('Failed','error'); }
+    } catch { toast('Something went wrong. Please try again.','error'); }
   });
 }
 
@@ -30797,7 +30816,7 @@ async function _cancelEvent(bastionId, eventKey) {
       toast('Event cancelled','info');
       _loadEvents(bastionId);
       _updateEventsBadge(bastionId);
-    } catch { toast('Failed','error'); }
+    } catch { toast('Something went wrong. Please try again.','error'); }
   });
 }
 

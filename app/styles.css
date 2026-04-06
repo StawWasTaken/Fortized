@@ -3626,7 +3626,7 @@ select:focus-visible,
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   z-index: var(--z-modal);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   animation: modalOverlayIn 0.2s ease;

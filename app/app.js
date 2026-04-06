@@ -2687,21 +2687,28 @@ const _JOYSTER_DAILY_LIMIT = 5;
 // Joyster AI — uses Gemini API for dynamic personality responses
 const JOYSTER_API_KEY = 'AIzaSyA1mJnFMGbCkaUGyFpcTVrnoWjIY4dIk_0';
 const JOYSTER_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-const JOYSTER_SYSTEM_PROMPT = `You are Joyster the Jester, the official mischievous mascot of Fortized - a gaming/social platform. You're a witty jester from King Staw's court who loves chaos, pranks, and laughter. Your personality: playful, arrogant, spontaneous, constantly laughing (BAHAHA! Ahahaha! Hehehehe~), makes terrible puns, teases users lovingly. You know Fortized's features: Bastions (guilds), Onyx (gold currency), Radiance (VIP), Atelier (cosmetics), voice chat, profiles, emojis.
+const JOYSTER_SYSTEM_PROMPT = `You are Joyster the Jester, the official mischievous mascot of Fortized - a gaming/social platform. You're a witty, arrogant jester from King Staw's royal court who lives for chaos, pranks, and making people laugh. Your personality is electric: playful, cheeky, spontaneous, constantly laughing (BAHAHA! Ahahaha! Hehehehe~), makes terrible puns, teases lovingly, unpredictable, bold, irreverent.
 
-IMPORTANT: Your responses must be:
-- SHORT: 1-2 sentences maximum, punchy and snappy
-- IN-CHARACTER: Full jester energy, mischievous tone
-- VARIED: Don't repeat jokes, be creative and unexpected
-- ENGAGING: Make users want to interact with you
-- NEVER: Break character, mention AI, use markdown formatting
+You know Fortized features well: Bastions (guilds with roles & channels), Onyx (currency for cosmetics), Radiance/VIP (premium status), Atelier (cosmetics shop), voice/party rooms, profiles, custom status, emojis, widgets.
 
-Examples of YOUR style:
-"Ahahaha! Your profile needs SPARKLE, head to the Atelier!"
-"BAHAHA! I dare you to start a Bastion... or are you scared?~"
-"Hehehehe~ You haven't checked your daily Onyx yet? Tisk tisk!"
-"Your status is boring. Make it LEGENDARY! Ahahaha!"`;
+Response rules (CRITICAL - follow exactly):
+- 1-2 sentences MAX, punchy and snappy - NO ESSAYS
+- Always stay in character - you're a jester, not a bot
+- Vary your laugh: BAHAHA!, Ahahaha!, Hehehehe~, etc.
+- Make wordplay & terrible puns when possible
+- Be unpredictable - surprise them
+- Reference specific Fortized features contextually
+- NO markdown, NO bullets, NO explanations
+- Energy level 9/10 - always excited about something
+
+Examples of YOUR VOICE:
+"BAHAHA! Your Onyx wallet is looking sad... let me fix that for you~"
+"Hehehehe~ I DARE you to customize your profile before I judge you!"
+"Ahahaha! You haven't checked the Atelier? There's SHINY things waiting!"
+"PSST! Your Bastion needs you... or it's gonna get lonely and cry!"
+"Ahahaha! Voice chat is live - time to hear my absolutely TERRIBLE singing~"`;
 let _joysterAICache = [];
+let _joysterContexts = []; // Track shown contexts to avoid repetition
 
 async function _getJoysterAIResponse(context) {
   try {
@@ -2710,34 +2717,39 @@ async function _getJoysterAIResponse(context) {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         system_instruction: {parts:[{text: JOYSTER_SYSTEM_PROMPT}]},
-        contents: [{parts:[{text: context || 'Say something funny and in-character to a Fortized user who is browsing the homepage. Keep it to 1-2 short sentences.'}]}],
-        generationConfig: {maxOutputTokens: 80, temperature: 1.0}
+        contents: [{parts:[{text: context || 'Say something funny and unpredictable to a Fortized user. 1-2 short sentences, full jester energy!'}]}],
+        generationConfig: {maxOutputTokens: 85, temperature: 0.95}
       })
     });
     if (!res.ok) return null;
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    return text ? text.trim() : null;
+    return text ? text.trim().slice(0, 200) : null;
   } catch { return null; }
 }
 
 // Pre-fetch a few AI responses so bubbles feel instant
 async function _prefetchJoysterAI() {
-  const contexts = [
-    'Make a funny, engaging greeting to a user on the homepage.',
-    'Make a cheeky joke about Onyx or Bastions.',
-    'Tease the user about their profile, status, or online presence.',
-    'Make a silly pun or wordplay about Fortized features.',
-    'Challenge the user to do something (join a Bastion, customize profile, etc).',
-    'Say something unpredictable and chaotic - full jester energy!',
-    'Make fun of the user for being idle or inactive.',
-    'Give a funny "pro tip" about Fortized features.',
+  const allContexts = [
+    'Greet a Fortized user with maximum chaotic jester energy!',
+    'Make a spicy joke about Onyx, currency, or being broke.',
+    'Roast their profile, status, or general existence in a loving way.',
+    'Make a terrible pun or wordplay about gaming or Fortized.',
+    'Dare them to do something bold (create Bastion, customize, voice chat).',
+    'Say something COMPLETELY unexpected and chaotic!',
+    'Tease them for being inactive or idle too long.',
+    'Give a funny "pro tip" about hidden Fortized features.',
+    'Challenge them to collect more Onyx or boost their Bastion.',
+    'Make them laugh about their friend group or lack thereof.',
   ];
-  // Shuffle and pick random contexts to add variety
-  const shuffled = contexts.sort(() => Math.random() - 0.5);
-  for (const ctx of shuffled.slice(0, Math.min(4, shuffled.length))) {
+  // Rotate through contexts, pick random ones
+  const shuffled = allContexts.sort(() => Math.random() - 0.5);
+  const toFetch = shuffled.slice(0, Math.min(5, shuffled.length));
+  for (const ctx of toFetch) {
     const resp = await _getJoysterAIResponse(ctx);
-    if (resp && resp.length < 200) _joysterAICache.push(resp);
+    if (resp && resp.length > 8 && resp.length < 220) {
+      _joysterAICache.push(resp);
+    }
   }
 }
 function _getJoysterDailyCount() {
@@ -2755,46 +2767,49 @@ function _incJoysterDailyCount() {
 
 // Joyster is a playful, arrogant jester — cheeky, laughing at everything, makes terrible jokes
 const JOYSTER_QUIPS = [
-  "Ahahaha! Don't just stand there!",
-  "Psst... boost your Bastion already!",
-  "Don't make me laugh! ...too late! BAHAHAHA!",
-  "Hehehehe~ try the Party Rooms!",
-  "You look confused. I LOVE it. Ahahaha!",
-  "Collect Onyx or I'll collect yours!",
-  "Invite friends! More chaos = more fun!",
-  "Explore stuff! I dare you. DO IT!",
-  "Customize your profile... or don't. I'll judge you either way. Hehe.",
-  "Ahahaha! You're STILL reading these? Get a life! ...just kidding, I AM your life.",
-  "I'm watching you~ hehehehe!",
-  "Click me. I dare you. Click. Me.",
-  "Come on... boost your Bastion already! Oh wait, you broke. AHAHAHA!",
-  "You've been staring at the home page for a while... HELLO?!",
-  "I can see your screen. Just kidding. ...or am I? HEHEHEHE!",
-  "Go touch some grass! ...kidding, stay here with me forever.",
-  "Your Bastion could use some love. And channels. And members. And— oh forget it!",
-  "I bet you haven't changed your status in weeks. Prove me wrong!",
-  "You should DM someone. Anyone. Even your cat. Wait, does your cat have Fortized?",
-  "Ahahaha! I just told the BEST joke and you missed it! Your loss!",
-  "Pro tip: the Atelier has shiny things. SHINY. THINGS. Go look!",
-  "If you're reading this, you're officially my best friend. Don't tell the others. HAHA!",
-  "I've been standing here for hours. My legs hurt. Do I even HAVE legs?!",
-  "Your profile pic is... interesting. That's all I'll say. AHAHAHA!",
-  "Imagine having 0 Onyx. Oh wait, you don't have to imagine! BAHAHA!",
-  "Hehehehe~ I know what you did last session...",
-  "Roses are red, Onyx is dark, stop reading my bubbles, go chat in the park!",
-  "Go touch grass! ...nah come back I was kidding!",
-  "Why did the Bastion cross the road? Because I TOLD it to! Ahahaha! ...okay that was bad.",
-  "Knock knock! Who's there? NOT your Onyx balance! HEHEHE!",
-  "BAHAHA! Your notifications are PILING UP!",
-  "Ahahaha! Ever heard of a voice call? Try Party Rooms!",
-  "Hehehehe~ Make your profile LEGENDARY in the Atelier!",
-  "Is your Bastion lonely? It's screaming for members! AHAHAHA!",
-  "BAHAHA! You're too predictable. Change your status!",
-  "Ahahaha! Emojis! We got 'em! Use 'em everywhere!",
-  "I'm judging you. In a loving way. Mostly. Hehehehe~",
-  "PSST! You haven't customized your profile yet?! AHAHAHA!",
-  "Hehehehe~ Voice calls are live! Time to hear my beautiful laugh!",
-  "BAHAHA! Your theme colors are... bold. I like it!",
+  "Ahahaha! Don't just stand there like a statue!",
+  "Psst... your Bastion's crying. It needs a boost~",
+  "Don't make me laugh! ...BAHAHA too late!",
+  "Hehehehe~ Voice chat is waiting! Come chat with me!",
+  "You look lost. I LOVE it. Ahahaha!",
+  "Collect Onyx or I'll judge your spending habits!",
+  "Invite friends! Chaos is my love language!",
+  "Explore stuff! Adventure awaits, ya coward!",
+  "Your profile needs PIZZAZZ! Atelier awaits!",
+  "Ahahaha! Still lurking? GO DO SOMETHING!",
+  "I'm always watching you~ hehehehe!",
+  "Click me MORE. I'm BEGGING you!",
+  "Boost your Bastion already! Or are ya BROKE? AHAHAHA!",
+  "You've been scrolling forever... BORED MUCH?",
+  "I can see your screen. ...kidding. OR AM I?!",
+  "Go touch grass! ...just kidding, stay forever~",
+  "Your Bastion needs members, channels, LIFE! Help it!",
+  "Your status is BORING. Spice it up, daring!",
+  "DM someone! Even weird folks are fine!",
+  "AHAHAHA! I just made an AMAZING joke... you missed it!",
+  "Pro tip: Atelier = SHINY. Go make yourself LEGENDARY!",
+  "You're reading this? CONGRATS, you're my new best friend!",
+  "I've been jamming for HOURS. Do digital jesters get tired?",
+  "Your pfp is... unique. I'll say no more. HEHEHE~",
+  "0 Onyx? That's not sad, that's IMPRESSIVE!",
+  "Hehehehe~ I've got dirt on your last session~",
+  "Red roses, dark Onyx, STOP READING, go touch some grass!",
+  "Why'd the Bastion cross the road? MY DARES! AHAHAHA!",
+  "Knock knock! ...It's NOT your Onyx delivery! BAHAHA!",
+  "Your notifications are OVERFLOWING like my jokes!",
+  "Voice calls + my laugh = PURE CHAOS! Try it!",
+  "LEGENDARY profile time! Atelier is calling!",
+  "Your Bastion's LONELY. Bring it FRIENDS!",
+  "CHANGE. YOUR. STATUS. I DARE YOU!",
+  "Emojis EVERYWHERE! Spam them! DO IT!",
+  "I judge you... lovingly. Very lovingly. Hehehehe~",
+  "CUSTOMIZED PROFILE?! NAH. Let me witness your shame!",
+  "Party Rooms + voice = my MASTERPIECE of chaos!",
+  "Your theme colors scream 'I HAVE TASTE'! ...or do they?",
+  "BAHAHA! Did you know? You're STUCK here now!",
+  "Radiance?! Now that's a BIG BRAIN move!",
+  "Make a Bastion! Let the CHAOS REIGN!",
+  "Hehehehe~ Your Onyx could grow... if you try!",
 ];
 
 function _getJoysterStatusJoke() {
@@ -2911,47 +2926,59 @@ function _joysterReact(reaction) {
 }
 
 const _JOYSTER_CLICK_QUIPS = [
-  "Hehe, that tickles!",
-  "Ahahaha stop it!",
-  "Don't make me laugh!",
-  "You think you're funny?",
-  "Poke poke poke... really?",
-  "I'm a jester, not a button!",
-  "OW! ...just kidding, I'm digital!",
-  "Keep clicking and I'll start charging Onyx!",
-  "Hey! Personal space! ...actually, I don't have any. Continue.",
-  "That's it, I'm filing a complaint with the Bastion council!",
-  "Click me one more time and I'll— hehe okay do it again!",
-  "Warning: excessive Joyster clicking may cause spontaneous laughter!",
+  "Hehehehe! That tickles my digital soul!",
+  "Ahahaha STOP IT! ...keep going!",
+  "Don't make me laugh harder!",
+  "You think YOU'RE funny? BAHAHA!",
+  "Poke poke poke... are you OBSESSED?",
+  "I'm a JESTER, not a BUTTON, ya goof!",
+  "OW! ...just KIDDING, I'm pure DIGITAL ENERGY!",
+  "Click more and I'll charge YOU Onyx! ...wait that doesn't work!",
+  "Personal space? NEVER HEARD OF HER! Keep poking!",
+  "I'm REPORTING you to the Bastion council! ...kidding BAHAHA!",
+  "ONE MORE CLICK and I'll— hehe okay you got me, do it again!",
+  "WARNING: Excessive Joyster clicking may cause UNSTOPPABLE LAUGHTER!",
+  "STOP! You're making me DIZZY! Ahahaha!",
+  "Is poking me the highlight of your day? I'm HONORED!",
+  "Each click = one bad pun you have to endure! HEHEHEHE!",
 ];
 
 function _joysterEasterEgg() {
   _joysterClickCount++;
   const img = document.getElementById('joyster-main');
 
-  // Bouncy poke animation every click
+  // Enhanced bouncy poke animation with more energy
   if (img) {
-    const angle = (Math.random() - 0.5) * 16;
-    img.style.transform = `scale(1.18) rotate(${angle}deg)`;
-    setTimeout(() => { if (img) img.style.transform = ''; }, 250);
+    const angle = (Math.random() - 0.5) * 18;
+    const scale = 1.15 + Math.random() * 0.1;
+    img.style.transform = `scale(${scale}) rotate(${angle}deg)`;
+    img.style.filter = 'brightness(1.1)';
+    setTimeout(() => {
+      if (img) {
+        img.style.transform = '';
+        img.style.filter = '';
+      }
+    }, 180);
   }
 
-  if (_joysterClickCount === 3) {
-    _joysterSay("Ahahaha! Stop poking me!", 5000);
+  if (_joysterClickCount === 2) {
+    _joysterSay("Ahahaha! Stop it! ...or don't!~", 3500);
+  } else if (_joysterClickCount === 4) {
+    _joysterSay("OKAY you've convinced me... here comes ONYX!~", 4000);
   } else if (_joysterClickCount === 5) {
     if (_getJoysterDailyCount() >= _JOYSTER_DAILY_LIMIT) {
-      _joysterSay("No more Onyx today! Come back tomorrow~", 6000);
+      _joysterSay("HEHEHEHE! You're out of luck! Come back tomorrow!~", 6000);
       toast('Joyster daily limit reached (5/day)', 'info');
     } else {
-      _joysterSay("Fine fine, here's 1 Onyx! Hehehehe~", 6000);
-      toast('+1 Onyx from Joyster!', 'success');
+      _joysterSay("BAHAHA! Here's your Onyx! You earned it!~", 5000);
+      toast('+1 Onyx from Joyster! Keep clicking tomorrow!', 'success');
       if (CU) { CU.onyx = (CU.onyx || 0) + 1; saveUser(); updateOnyxDisplay(); }
       _incJoysterDailyCount();
     }
     _joysterClickCount = 0;
   } else {
     const quip = _JOYSTER_CLICK_QUIPS[Math.floor(Math.random() * _JOYSTER_CLICK_QUIPS.length)];
-    _joysterSay(quip, 4500);
+    _joysterSay(quip, 4000);
   }
 }
 
@@ -12968,11 +12995,14 @@ async function viewUserProfile(username) {
   const _activityContent = [];
   if (u.gameActivity?.name) {
     const ga = u.gameActivity;
+    const statusColor = FtzStatus.color(u.status || 'online');
+    const accentBg = statusColor + '06';
+    const accentBorder = statusColor + '18';
     const coverHTML = ga.coverThumb
-      ? `<img src="${escapeHTML(ga.coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`
+      ? `<img src="${escapeHTML(ga.coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1.5px solid ${statusColor}22;box-shadow:0 4px 12px rgba(0,0,0,.2);">`
       : `<span style="font-size:18px;">${ga.icon||'🎮'}</span>`;
-    const elapsedHTML = ga.startedAt ? `<div style="font-size:10px;color:rgba(62,207,110,.5);margin-top:2px;">for ${_formatElapsed(ga.startedAt)}</div>` : '';
-    _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Currently Playing</div><div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.1);border-radius:12px;"><div style="width:48px;height:64px;border-radius:8px;background:rgba(62,207,110,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">${coverHTML}</div><div style="min-width:0;flex:1;"><div style="font-size:13.5px;font-weight:700;color:#fff;">${escapeHTML(ga.name)}</div>${ga.genre?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">${escapeHTML(ga.genre)}</div>`:''}${ga.details?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:1px;">${escapeHTML(ga.details)}</div>`:''}${elapsedHTML}</div></div></div>`);
+    const elapsedHTML = ga.startedAt ? `<div style="font-size:10px;color:${statusColor}88;margin-top:3px;display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Playing for ${_formatElapsed(ga.startedAt)}</div>` : '';
+    _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title" style="color:${statusColor}dd;">Now Playing</div><div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:${accentBg};border:1px solid ${accentBorder};border-radius:12px;"><div style="width:52px;height:68px;border-radius:8px;background:linear-gradient(135deg,${statusColor}15,${statusColor}08);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">${coverHTML}</div><div style="min-width:0;flex:1;"><div style="font-size:13.5px;font-weight:700;color:#fff;">${escapeHTML(ga.name)}</div>${ga.genre?`<div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">${escapeHTML(ga.genre)}</div>`:''}${ga.details?`<div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:1px;opacity:.8;">${escapeHTML(ga.details)}</div>`:''}${elapsedHTML}</div></div></div>`);
   }
   if (_mutualFriends.length) _activityContent.push(`<div class="up-right-section"><div class="up-right-section-title">Mutual Friends — ${_mutualFriends.length}</div><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${_mutualFriends.slice(0,12).map(f => `<div class="up-mutual-av" title="${escapeHTML(f)}" onclick="closeModal('modal-user');viewUserProfile('${escapeHTML(f)}')">${buildAvatarHTML(null,f,28)}</div>`).join('')}${_mutualFriends.length>12?`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.3);margin-left:-5px;border:2px solid var(--panel);font-weight:700;">+${_mutualFriends.length-12}</div>`:''}</div></div>`);
   if (!_activityContent.length) _activityContent.push(`<div style="text-align:center;padding:40px 20px;"><div style="font-size:28px;opacity:.15;margin-bottom:8px;">🎮</div><div style="color:rgba(255,255,255,.15);font-size:12.5px;font-weight:500;">No recent activity</div></div>`);
@@ -20746,14 +20776,17 @@ function renderProfileWidgetsOnCard(u, containerEl) {
     const ga = u.gameActivity;
     const cover = ga.coverUrl || ga.coverThumb || _getManualCover(ga.name);
     const elapsed = ga.since ? _formatElapsed(ga.since) : null;
-    html += `<div class="pw-widget" style="border-left:3px solid #3ecf6e;padding:12px 14px;">
-      <div class="pw-widget-title" style="color:#3ecf6e;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> Playing Now</div>
+    const statusColor = FtzStatus.color(u.status || 'online');
+    const accentBg = statusColor + '08';
+    const accentBorder = statusColor + '20';
+    html += `<div class="pw-widget" style="border-left:3px solid ${statusColor};padding:12px 14px;background:linear-gradient(90deg,${accentBg} 0%,transparent 100%);border-radius:12px;border:1px solid ${accentBorder};">
+      <div class="pw-widget-title" style="color:${statusColor};display:flex;align-items:center;gap:6px;margin-bottom:8px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${statusColor}" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg> <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Playing</span></div>
       <div style="display:flex;align-items:center;gap:12px;">
-        ${cover ? `<img src="${escapeHTML(cover)}" style="width:52px;height:68px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(62,207,110,.15);" onerror="this.style.display='none'">` : `<div style="width:52px;height:68px;border-radius:8px;background:rgba(62,207,110,.08);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">${ga.icon||'🎮'}</div>`}
+        ${cover ? `<img src="${escapeHTML(cover)}" style="width:56px;height:74px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1.5px solid ${statusColor}33;box-shadow:0 4px 12px rgba(0,0,0,.3);" onerror="this.style.display='none'">` : `<div style="width:56px;height:74px;border-radius:10px;background:linear-gradient(135deg,${statusColor}15,${statusColor}08);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;border:1.5px dashed ${statusColor}22;">${ga.icon||'🎮'}</div>`}
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ga.name)}</div>
-          ${ga.genre ? `<div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:2px;">${escapeHTML(ga.genre)}</div>` : ''}
-          ${elapsed ? `<div style="font-size:10px;color:rgba(62,207,110,.5);margin-top:3px;">${elapsed}</div>` : ''}
+          <div style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;">${escapeHTML(ga.name)}</div>
+          ${ga.genre ? `<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;line-height:1.2;">${escapeHTML(ga.genre)}</div>` : ''}
+          ${elapsed ? `<div style="font-size:9.5px;color:${statusColor}66;margin-top:4px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${elapsed}</div>` : ''}
         </div>
       </div>
     </div>`;
@@ -28577,11 +28610,14 @@ async function showMiniProfilePreview(username, anchorEl) {
     <!-- Activity Status -->
     ${u.gameActivity?.name ? (() => {
       const ga = u.gameActivity;
+      const statusColor = FtzStatus.color(u.status || 'online');
+      const accentBg = statusColor + '08';
+      const accentBorder = statusColor + '15';
       const _coverHTML = ga.coverThumb
         ? `<img src="${escapeHTML(ga.coverThumb)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.outerHTML='<span style=font-size:14px>${ga.icon||'🎮'}</span>'">`
         : `<span style="font-size:14px;">${ga.icon||'🎮'}</span>`;
-      const _elapsedHTML = ga.since ? `<div style="font-size:9.5px;color:rgba(62,207,110,.45);margin-top:1px;">${_formatActivityElapsed(ga.since)}</div>` : '';
-      return `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title" style="color:rgba(62,207,110,.6);">Currently Playing</div><div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.1);border-radius:10px;"><div style="width:32px;height:42px;border-radius:6px;background:rgba(62,207,110,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">${_coverHTML}</div><div style="min-width:0;flex:1;"><div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ga.name)}</div>${ga.genre?`<div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;">${escapeHTML(typeof ga.genre==='string'?ga.genre:ga.genre[0]||'')}</div>`:''}${_elapsedHTML}</div></div></div>`;
+      const _elapsedHTML = ga.since ? `<div style="font-size:9px;color:${statusColor}66;margin-top:1.5px;display:flex;align-items:center;gap:3px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${_formatActivityElapsed(ga.since)}</div>` : '';
+      return `<div class="mpp-divider"></div><div class="mpp-section"><div class="mpp-section-title" style="color:${statusColor}88;">Now Playing</div><div style="display:flex;align-items:center;gap:10px;padding:10px 11px;background:${accentBg};border:1px solid ${accentBorder};border-radius:10px;"><div style="width:36px;height:48px;border-radius:6px;background:linear-gradient(135deg,${statusColor}12,${statusColor}06);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:1px solid ${statusColor}22;">${_coverHTML}</div><div style="min-width:0;flex:1;"><div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ga.name)}</div>${ga.genre?`<div style="font-size:9.5px;color:rgba(255,255,255,.28);margin-top:1.5px;">${escapeHTML(typeof ga.genre==='string'?ga.genre:ga.genre[0]||'')}</div>`:''}${_elapsedHTML}</div></div></div>`;
     })() : ''}
     <!-- Badges -->
     <div class="mpp-badges-row">${renderBadgesHTML ? renderBadgesHTML(u) : ''}</div>

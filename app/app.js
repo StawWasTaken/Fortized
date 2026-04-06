@@ -1420,7 +1420,7 @@ function showView(v, _skipPush) {
   if (v === 'profile') {
     closeModal('modal-bsettings'); // close other if open
     openModal('modal-settings');
-    _settingsOriginal = CU ? JSON.parse(JSON.stringify({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme})) : null;
+    _settingsOriginal = CU ? structuredClone({displayName:CU.displayName,bio:CU.bio,email:CU.email,password:CU.password,pfp:CU.pfp,banner:CU.banner,socials:CU.socials,notifSettings:CU.notifSettings,pronouns:CU.pronouns,profileTheme:CU.profileTheme}) : null;
     clearSettingsDirty();
     buildProfileNav(document.getElementById('profile-nav'));
     buildProfileView('myprofile');
@@ -28535,11 +28535,11 @@ function resetSettingsChanges() {
     CU.email = _settingsOriginal.email;
     CU.pfp = _settingsOriginal.pfp;
     CU.banner = _settingsOriginal.banner;
-    CU.socials = _settingsOriginal.socials ? JSON.parse(JSON.stringify(_settingsOriginal.socials)) : {};
+    CU.socials = _settingsOriginal.socials ? structuredClone(_settingsOriginal.socials) : {};
     CU.password = _settingsOriginal.password;
-    CU.notifSettings = _settingsOriginal.notifSettings ? JSON.parse(JSON.stringify(_settingsOriginal.notifSettings)) : {};
+    CU.notifSettings = _settingsOriginal.notifSettings ? structuredClone(_settingsOriginal.notifSettings) : {};
     CU.pronouns = _settingsOriginal.pronouns || '';
-    CU.profileTheme = _settingsOriginal.profileTheme ? JSON.parse(JSON.stringify(_settingsOriginal.profileTheme)) : null;
+    CU.profileTheme = _settingsOriginal.profileTheme ? structuredClone(_settingsOriginal.profileTheme) : null;
     notifSettings = CU.notifSettings;
     saveLocal();
     updateUserbar();

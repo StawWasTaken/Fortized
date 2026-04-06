@@ -1751,15 +1751,15 @@ body.is-desktop-app .notif-panel{top:0;}
 .ftz-badge-tip{position:fixed;left:0;top:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 14px;pointer-events:none;opacity:0;transition:opacity .14s,transform .14s;z-index:var(--z-max,9999);white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.6);font-size:12.5px;font-weight:600;color:#c8d0dc;transform:translateY(4px);}
 .ftz-badge-tip.visible{opacity:1;transform:translateY(0);}
 /* Badge glow accents per type */
-.ftz-badge.badge-superadmin { color:#fff93e; }
+.ftz-badge.badge-superadmin { color:var(--accent); }
 .ftz-badge.badge-admin { color:var(--red); }
 .ftz-badge.badge-moderator { color:var(--blue); }
 .ftz-badge.badge-bot { color:var(--blue); }
 .ftz-badge.badge-radiance { color:#ff9c3c; }
-.ftz-badge.badge-radiance-plus { color:#fff93e; }
+.ftz-badge.badge-radiance-plus { color:var(--accent); }
 .ftz-badge.badge-beta { color:var(--red); }
 .ftz-badge.badge-quest { color:#9ca3af; }
-.ftz-badge.badge-onyx { color:#fff93e; }
+.ftz-badge.badge-onyx { color:var(--accent); }
 /* Badge row container */
 .ftz-badge-row { display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin-left:4px;overflow:visible; }
 
@@ -3254,7 +3254,7 @@ body.is-desktop-app .chronicle-win-controls{display:flex;}
 /* Activity Card Component - Discord-like polished design */
 .activity-card {
   background: linear-gradient(135deg, rgba(62,207,110,.06), rgba(62,207,110,.02));
-  border-left: 3px solid #3ecf6e;
+  border-left: 3px solid var(--green);
   border-radius: 12px;
   padding: 12px 14px;
   display: flex;
@@ -3773,9 +3773,9 @@ textarea:focus {
 .mention-user:hover { background: rgba(96,165,250,.22); }
 .mention-here { background: var(--state-success-dim); color: var(--green); }
 .mention-here:hover { background: rgba(62,207,110,.2); }
-.mention-role { background: rgba(167,139,250,.1); color: #a78bfa; }
+.mention-role { background: rgba(167,139,250,.1); color: var(--purple); }
 .mention-role:hover { background: rgba(167,139,250,.2); }
-.mention-room { background: rgba(167,139,250,.1); color: #a78bfa; }
+.mention-room { background: rgba(167,139,250,.1); color: var(--purple); }
 .mention-room:hover { background: rgba(167,139,250,.2); }
 
 /* ── Bot badge using CSS vars ── */
@@ -4805,7 +4805,7 @@ button[style*="background: var(--accent)"]:active {
 /* ── Apply style button (display name modal) ── */
 .ftz-btn-apply {
   background: var(--accent);
-  color: #0f1119;
+  color: var(--rail);
   border: none;
   border-radius: 10px;
   font-family: var(--font-display);
@@ -4898,10 +4898,10 @@ button[style*="background: var(--accent)"]:active {
 /* ── Warning acknowledge button ── */
 .warning-ack-btn {
   padding: 12px 48px;
-  background: #fff93e;
+  background: var(--accent);
   border: none;
   border-radius: 10px;
-  color: #0f1119;
+  color: var(--rail);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -5074,7 +5074,7 @@ button[style*="background: var(--accent)"]:active {
   background: var(--accent);
   border: none;
   border-radius: 12px;
-  color: #0f1119;
+  color: var(--rail);
   font-family: var(--font-display);
   font-size: 15px;
   font-weight: 700;
@@ -5090,7 +5090,7 @@ button[style*="background: var(--accent)"]:active {
   background: rgba(62,207,110,.08);
   border: 1px solid rgba(62,207,110,.2);
   border-radius: 8px;
-  color: #3ecf6e;
+  color: var(--green);
   font-size: 12px;
   cursor: pointer;
   font-weight: 600;
@@ -5329,6 +5329,29 @@ button[style*="background: var(--accent)"]:active {
   transition: all .15s;
 }
 .sp-emoji-btn:hover { border-color: rgba(254,248,61,.2); background: rgba(254,248,61,.04); }
+
+/* ── Section label (small uppercase) ── */
+.ftz-section-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 10px;
+}
+.ftz-section-label-accent { color: rgba(254,248,61,.4); }
+.ftz-section-label-muted { color: rgba(255,255,255,.2); }
+.ftz-section-label-danger { color: rgba(248,113,113,.45); }
+
+/* ── Heading display (large bold) ── */
+.ftz-heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: #fff;
+}
+.ftz-heading-sm { font-size: 13.5px; }
+.ftz-heading-md { font-size: 17px; }
+.ftz-heading-lg { font-size: 19px; }
+.ftz-heading-xl { font-size: 24px; }
 
 /* ── Tooltip for data-tip attributes ── */
 [data-tip] { position: relative; }

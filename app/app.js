@@ -808,7 +808,7 @@ async function _syncBastionToGlobal(bastionIdx) {
   } catch(e) {
     console.warn('Bastion sync to global failed:', e);
     // Retry once
-    try { await new Promise(r => setTimeout(r, 1000)); const b2 = CU?.bastions?.[bastionIdx]; if (b2?.globalId) await FortizedSocial.saveGlobalBastion(b2.globalId, {...b2, id: b2.globalId, owner: b2.owner || CU.username}); } catch {}
+    try { await new Promise(r => setTimeout(r, 1000)); const b2 = CU?.bastions?.[bastionIdx]; if (b2?.globalId) await FortizedSocial.saveGlobalBastion(b2.globalId, {...b2, id: b2.globalId, owner: b2.owner || CU.username}); } catch(e2) { console.warn('[Bastion] Retry sync also failed:', e2?.message); }
   }
 }
 // Pull fresh bastion data from global for non-owners so banner/emblem/roles/moods stay current
@@ -836,7 +836,7 @@ async function _syncBastionFromGlobal(bastionIdx) {
         renderRailBastions();
       }
     }
-  } catch {}
+  } catch(e) { console.warn('[Bastion] Sync from global failed:', e?.message); }
 }
 async function refreshCU() {
   if (!CU?.username) return;
@@ -915,7 +915,7 @@ async function refreshCU() {
       // Check for admin force-logout flag
       _checkForceLogout(fresh);
     }
-  } catch {}
+  } catch(e) { console.warn('[RefreshCU] Failed to refresh user data:', e?.message); }
 }
 function _checkForceLogout(user) {
   if (!user) return;
@@ -1215,7 +1215,7 @@ async function logAudit(action, target, note='') {
   const log = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
   log.unshift(entry);
   localStorage.setItem('ftz_audit_log', JSON.stringify(log.slice(0,500)));
-  try { await FortizedSocial.adminPushAuditLog(entry); } catch {}
+  try { await FortizedSocial.adminPushAuditLog(entry); } catch(e) { console.warn('[Audit] Push failed:', e?.message); }
 }
 
 // ════════════════════════════════════════════
@@ -2600,7 +2600,7 @@ function renderHomePanel() {
 async function _loadRealmFriends(friends, container, countEl) {
   const _realmSlice = friends.slice(0, 20);
   let _realmPresence = {};
-  try { const pr = await FortizedSocial.queryPresence(_realmSlice); if (pr) _realmPresence = pr; } catch {}
+  try { const pr = await FortizedSocial.queryPresence(_realmSlice); if (pr) _realmPresence = pr; } catch(e) { console.warn('[Presence] Realm query failed:', e?.message); }
   const results = await Promise.all(_realmSlice.map(async f => {
     try {
       const u = await FortizedSocial.getUserByName(f);
@@ -2635,7 +2635,7 @@ async function _loadRPFriends(friends, container, countEl) {
   }
   const _rpSlice = friends.slice(0, 15);
   let _rpPresence = {};
-  try { const pr = await FortizedSocial.queryPresence(_rpSlice); if (pr) _rpPresence = pr; } catch {}
+  try { const pr = await FortizedSocial.queryPresence(_rpSlice); if (pr) _rpPresence = pr; } catch(e) { console.warn('[Presence] RP query failed:', e?.message); }
   const results = await Promise.all(_rpSlice.map(async f => {
     try {
       const u = await FortizedSocial.getUserByName(f);
@@ -3141,14 +3141,14 @@ async function renderDMSidebar(scroll) {
   try {
     const presenceResult = await FortizedSocial.queryPresence(visibleFriends);
     if (presenceResult) _dmPresenceMap = presenceResult;
-  } catch {}
+  } catch(e) { console.warn('[Presence] DM query failed:', e?.message); }
 
   // Batch-fetch all friend profiles in ONE query instead of N separate queries
   let _friendProfileMap = {};
   try {
     const profiles = await (FortizedSocial.getUsersByNames ? FortizedSocial.getUsersByNames(visibleFriends) : Promise.all(visibleFriends.map(f => FortizedSocial.getUserByName(f))));
     (profiles || []).forEach(u => { if (u) _friendProfileMap[u.username] = u; });
-  } catch {}
+  } catch(e) { console.warn('[Friends] Batch profile fetch failed:', e?.message); }
 
   const friendPromises = visibleFriends.map(async f => {
     try {
@@ -3307,14 +3307,14 @@ async function renderDMFriendsHome() {
   try {
     const presenceResult = await FortizedSocial.queryPresence(allUsers);
     if (presenceResult) _friendPresenceMap = presenceResult;
-  } catch {}
+  } catch(e) { console.warn('[Presence] Home query failed:', e?.message); }
 
   // Batch-fetch all friend/pending profiles in ONE query instead of N separate queries
   let _homeProfileMap = {};
   try {
     const profiles = await (FortizedSocial.getUsersByNames ? FortizedSocial.getUsersByNames(allUsers) : Promise.all(allUsers.map(f => FortizedSocial.getUserByName(f))));
     (profiles || []).forEach(u => { if (u) _homeProfileMap[u.username] = u; });
-  } catch {}
+  } catch(e) { console.warn('[Friends] Home profile fetch failed:', e?.message); }
 
   let _onlineCount = 0;
   allUsers.forEach(async f => {
@@ -3417,7 +3417,7 @@ async function renderActiveNowSidebar(containerId) {
   try {
     const presenceResult = await FortizedSocial.queryPresence(friendsSlice);
     if (presenceResult) _anPresence = presenceResult;
-  } catch {}
+  } catch(e) { console.warn('[Presence] Announce query failed:', e?.message); }
 
   const results = await Promise.all(friendsSlice.map(async f => {
     try {
@@ -3802,7 +3802,7 @@ async function openGroupChatView(gcId) {
 
   // Load GC meta
   let meta = null;
-  try { meta = await firebase.database().ref('groupChats/'+gcId+'/meta').get().then(s=>s.val()); } catch {}
+  try { meta = await firebase.database().ref('groupChats/'+gcId+'/meta').get().then(s=>s.val()); } catch(e) { console.warn('[GC] Meta load failed:', e?.message); }
   if (!meta) { toast('Group not found','error'); return; }
 
   const topTitle = document.getElementById('topbar-title');
@@ -4579,7 +4579,7 @@ async function leaveBastion(idx) {
   const b=CU.bastions?.[idx];
   if (!b) return;
   closeModal('modal-leave-bastion');
-  try{await FortizedSocial.removeBastionMember(b.globalId||b.name,CU.username);}catch{}
+  try{await FortizedSocial.removeBastionMember(b.globalId||b.name,CU.username);}catch(e){console.warn('[Bastion] Leave failed:',e?.message);}
   // Clean local memberRoles so member list doesn't ghost
   if(b.memberRoles) delete b.memberRoles[CU.username];
   CU.bastions.splice(idx,1);
@@ -5500,7 +5500,7 @@ function deleteMsg(msgId, context) {
       const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
       // Capture message data for undo
       let msgSnapshot = null;
-      if (ref) { try { const snap = await ref.get(); if (snap.exists()) msgSnapshot = snap.val(); } catch {} }
+      if (ref) { try { const snap = await ref.get(); if (snap.exists()) msgSnapshot = snap.val(); } catch(e) { console.warn('[Msg] Snapshot fetch failed:', e?.message); } }
 
       // Delete from Supabase directly
       try {
@@ -5907,7 +5907,7 @@ async function renderMemberList() {
 
   // Build member list: always include self + owner + anyone in memberRoles + fetched list
   let members = [];
-  try { members = await FortizedSocial.getBastionMembers(b.globalId||b.name) || []; } catch {}
+  try { members = await FortizedSocial.getBastionMembers(b.globalId||b.name) || []; } catch(e) { console.warn('[Bastion] Member fetch failed:', e?.message); }
   const guaranteed = [b.owner, CU.username].filter(Boolean);
   guaranteed.forEach(u => { if (!members.includes(u)) members.push(u); });
   if (!members.length) members = guaranteed;
@@ -6485,7 +6485,7 @@ async function promptJoinPublicBastion(bastionId){
                       (u.bastions||[]).find(ub=>(ub.name||'').toLowerCase()===bidLower);
           if(found){b={...found,id:found.globalId||found.name,owner:found.owner||u.username};break;}
         }
-      }catch{}
+      }catch(e){console.warn('[Bastion] User lookup failed:',e?.message);}
     }
     if(!b){toast('Bastion not found. Try the exact name or use an invite link.','error');return;}
     const gid=b.id||b.globalId;
@@ -6501,7 +6501,7 @@ async function promptJoinPublicBastion(bastionId){
     try{
       const members=await FortizedSocial.getBastionMembers(gid)||[];
       await firebase.database().ref('globalBastions/'+gid+'/memberCount').set(members.length);
-    }catch{}
+    }catch(e){console.warn('[Bastion] Member count update failed:',e?.message);}
     renderRailBastions();
     toast('Joined '+b.name+'!','success');
     openBastion(CU.bastions.length-1);
@@ -6512,7 +6512,7 @@ async function promptJoinPublicBastion(bastionId){
       const membersList = await FortizedSocial.getBastionMembers(gid).catch(()=>[]) || [];
       const wMsg = wTemplate.replace(/\{user\}/g, '**'+wName+'**').replace(/\{bastion\}/g, '**'+b.name+'**').replace(/\{count\}/g, String(membersList.length||1));
       const wChName = localB.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
-      try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch {}
+      try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch(e) { console.warn('[Bastion] Welcome msg failed:', e?.message); }
     }
   }catch(e){toast('Failed to join bastion. Please try again.','error');console.error('[Bastion] Join failed:', e);}
 }
@@ -6864,7 +6864,7 @@ function initFortizedUXResilience() {
           return;
         } else {
           // Suspension expired — clear it
-          try { await FortizedSocial.adminUnsuspendUser(username); } catch {}
+          try { await FortizedSocial.adminUnsuspendUser(username); } catch(e) { console.warn('[Admin] Unsuspend failed:', e?.message); }
         }
       }
     } catch(e) { console.warn('Ban/suspension check skipped:', e); }
@@ -6878,7 +6878,7 @@ function initFortizedUXResilience() {
       _needsSave = true;
     }
   }
-  if (_needsSave && navigator.onLine) { try { await FortizedSocial.saveUserObject(CU); } catch {} }
+  if (_needsSave && navigator.onLine) { try { await FortizedSocial.saveUserObject(CU); } catch(e) { console.warn('[Init] User save failed:', e?.message); } }
 
   // Hide loading screen immediately once user data is ready
   const loader=document.getElementById('app-loading');
@@ -8585,7 +8585,7 @@ function renderOverviewRoom() {
   }
 
   // ── Upcoming Events (Guilded-style horizontal cards) ──
-  var bastionId = b.globalId || b.name;
+  const bastionId = b.globalId || b.name;
   html += '<div class="ov-section" id="ov-events-section">'
     + '<div class="ov-section-header">'
     + '<span class="ov-section-title">Upcoming events</span>'
@@ -8605,7 +8605,7 @@ function renderOverviewRoom() {
       + '<span class="ov-section-link" onclick="selectChannel(' + chs.indexOf(annChs[0]) + ')">See all</span>'
       + '</div><div class="ov-card-row">';
     annChs.forEach(function(ch){
-      var ri = chs.indexOf(ch);
+      const ri = chs.indexOf(ch);
       html += '<div class="ov-ann-card" onclick="selectChannel(' + ri + ');closeModal(\'modal-overview\')">'
         + '<div class="ov-ac-title">📢 ' + escapeHTML(ch.name) + '</div>'
         + '<div class="ov-ac-meta"><span>in #' + escapeHTML(ch.name) + '</span></div>'
@@ -8622,7 +8622,7 @@ function renderOverviewRoom() {
       + '<span class="ov-section-link" onclick="selectChannel(' + chs.indexOf(forumChs[0]) + ')">See all</span>'
       + '</div><div class="ov-card-row">';
     forumChs.forEach(function(ch){
-      var ri = chs.indexOf(ch);
+      const ri = chs.indexOf(ch);
       html += '<div class="ov-ann-card" onclick="openForumChannel(' + ri + ');closeModal(\'modal-overview\')">'
         + '<div class="ov-ac-title">' + ftzIcon('chat','14') + ' ' + escapeHTML(ch.name) + '</div>'
         + '<div class="ov-ac-meta"><span>Forum room</span></div>'
@@ -8633,7 +8633,7 @@ function renderOverviewRoom() {
 
   // ── Your Roles ──
   if (showRoles) {
-    var myRoles = ((b.memberRoles||{})[CU.username]||[]).map(function(rid){ return roles.find(function(r){return r.id===rid;}); }).filter(Boolean);
+    const myRoles = ((b.memberRoles||{})[CU.username]||[]).map(function(rid){ return roles.find(function(r){return r.id===rid;}); }).filter(Boolean);
     if (myRoles.length) {
       html += '<div class="ov-section">'
         + '<div class="ov-section-header"><span class="ov-section-title">Your Roles</span></div>'
@@ -8647,13 +8647,13 @@ function renderOverviewRoom() {
 
   // ── Invite section ──
   if (showInvite) {
-    var invites = b.invites || [];
-    var activeInvite = invites.find(function(inv){
+    const invites = b.invites || [];
+    const activeInvite = invites.find(function(inv){
       if (inv.expires && new Date(inv.expires) < new Date()) return false;
       if (inv.maxUses && inv.uses >= inv.maxUses) return false;
       return true;
     });
-    var inviteCode = activeInvite ? activeInvite.code : null;
+    const inviteCode = activeInvite ? activeInvite.code : null;
     html += '<div class="ov-section">'
       + '<div class="ov-section-header"><span class="ov-section-title">Invite Friends</span></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
@@ -8672,7 +8672,7 @@ function renderOverviewRoom() {
 
   // ── Post an announcement bar (like Guilded) ──
   if (canEdit && annChs.length > 0) {
-    var annIdx = chs.indexOf(annChs[0]);
+    const annIdx = chs.indexOf(annChs[0]);
     html += '<div class="ov-post-bar">'
       + '<input type="text" placeholder="Post an announcement…" readonly onclick="selectChannel(' + annIdx + ');closeModal(\'modal-overview\')" style="cursor:pointer;">'
       + '</div>';
@@ -8684,24 +8684,24 @@ function renderOverviewRoom() {
 
 // Load upcoming events into overview mini-cards
 async function _loadOverviewEvents(bastionId) {
-  var row = document.getElementById('ov-events-row');
+  const row = document.getElementById('ov-events-row');
   if (!row) return;
   try {
-    var snap = await firebase.database().ref('events/' + bastionId).get();
+    const snap = await firebase.database().ref('events/' + bastionId).get();
     if (!snap.exists()) { row.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px;">No upcoming events</div>'; return; }
-    var events = [];
-    snap.forEach(function(c){ var v = c.val(); v._key = c.key; events.push(v); });
-    var now = new Date();
-    var upcoming = events.filter(function(ev){ return !ev.cancelled && (new Date(ev.date) >= now || ev.status === 'live'); });
+    const events = [];
+    snap.forEach(function(c){ const v = c.val(); v._key = c.key; events.push(v); });
+    const now = new Date();
+    const upcoming = events.filter(function(ev){ return !ev.cancelled && (new Date(ev.date) >= now || ev.status === 'live'); });
     upcoming.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
     if (!upcoming.length) { row.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px;">No upcoming events</div>'; return; }
-    var html = '';
+    let html = '';
     upcoming.slice(0, 8).forEach(function(ev) {
-      var d = new Date(ev.date);
-      var rsvps = ev.rsvps ? Object.keys(ev.rsvps).length : 0;
-      var userRsvp = ev.rsvps?.[CU.username];
-      var isLive = ev.status === 'live';
-      var dateStr = d.toLocaleString('en',{weekday:'short'}) + ', ' + d.toLocaleString('en',{month:'short',day:'numeric'}) + ' at ' + d.toLocaleString('en',{hour:'numeric',minute:'2-digit'});
+      const d = new Date(ev.date);
+      const rsvps = ev.rsvps ? Object.keys(ev.rsvps).length : 0;
+      const userRsvp = ev.rsvps?.[CU.username];
+      const isLive = ev.status === 'live';
+      const dateStr = d.toLocaleString('en',{weekday:'short'}) + ', ' + d.toLocaleString('en',{month:'short',day:'numeric'}) + ' at ' + d.toLocaleString('en',{hour:'numeric',minute:'2-digit'});
       html += '<div class="ov-ev-mini' + (isLive ? ' ev-card-live' : '') + '">'
         + '<div class="ov-evm-title">' + (isLive ? '🔴 ' : '') + escapeHTML(ev.title||'Event') + '</div>'
         + '<div class="ov-evm-going">' + rsvps + ' are going</div>'
@@ -10176,7 +10176,7 @@ async function confirmLeaveBastion() {
   const b=CU.bastions[curBastion];
   document.getElementById('leave-title').textContent=`Leave ${b.name}?`;
   document.getElementById('leave-confirm-btn').onclick=async()=>{
-    try{await FortizedSocial.removeBastionMember(b.globalId||b.name,CU.username);}catch{}
+    try{await FortizedSocial.removeBastionMember(b.globalId||b.name,CU.username);}catch(e){console.warn('[Bastion] Leave failed:',e?.message);}
     if(b.memberRoles) delete b.memberRoles[CU.username];
     CU.bastions.splice(curBastion,1);
     await saveUser(); closeModal('modal-leave-bastion'); curBastion=null;
@@ -18551,7 +18551,7 @@ function parseMD(s) {
   });
   // 0b. Video attachments — full-featured video player
   s = s.replace(/\[FTZVID:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
-    var vid2='vid-'+Math.random().toString(36).slice(2);
+    const vid2='vid-'+Math.random().toString(36).slice(2);
     return '<div class="ftz-embed" style="--embed-color:#fef83d;max-width:480px;" tabindex="0" onkeydown="ftzVideoKey(\''+vid2+'\',event)">'
       +'<div class="ftz-embed-inner" style="flex-direction:column;">'
       // Video area
@@ -18603,7 +18603,7 @@ function parseMD(s) {
   });
   // 0c. Audio attachments — full-featured audio player
   s = s.replace(/\[FTZAUD:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
-    var aid='aud-'+Math.random().toString(36).slice(2);
+    const aid='aud-'+Math.random().toString(36).slice(2);
     return '<div class="ftz-embed" style="--embed-color:#fef83d;" tabindex="0" onkeydown="ftzAudioKey(\''+aid+'\',event)">'
       +'<div class="ftz-embed-inner">'
       +'<div class="ftz-embed-stripe"></div><div class="ftz-embed-content">'
@@ -18634,8 +18634,8 @@ function parseMD(s) {
   });
   // 0d. Generic file attachments — unified embed
   s = s.replace(/\[FTZFILE:([^\|]+)\|([^\|]+)\|([^\]]+)\]/g, function(_, name, sizeStr, data) {
-    var ext = (name.split('.').pop()||'').toLowerCase();
-    var ico = {pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',zip:'🗜',rar:'🗜',txt:'📃',mp3:'🎵',mp4:'🎬',png:'🖼',jpg:'🖼',jpeg:'🖼',gif:'🖼',webp:'🖼'}[ext]||'📎';
+    const ext = (name.split('.').pop()||'').toLowerCase();
+    const ico = {pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',zip:'🗜',rar:'🗜',txt:'📃',mp3:'🎵',mp4:'🎬',png:'🖼',jpg:'🖼',jpeg:'🖼',gif:'🖼',webp:'🖼'}[ext]||'📎';
     return '<div class="ftz-embed" style="--embed-color:rgba(255,255,255,.3);"><a href="'+data+'" download="'+escapeHTML(name)+'" style="text-decoration:none;color:inherit;"><div class="ftz-embed-inner">'
       +'<div class="ftz-embed-stripe"></div><div class="ftz-embed-content">'
       +'<div style="padding:12px 14px;display:flex;align-items:center;gap:12px;">'
@@ -18808,7 +18808,7 @@ function parseMD(s) {
   // Extract HTML tags + blocks into placeholders, format
   // only the plain text parts, then restore.
   // ═══════════════════════════════════════════════════════
-  var _mdSlots = [];
+  const _mdSlots = [];
   // Protect complete HTML blocks (divs, iframes, etc.) first
   s = s.replace(/<div[\s\S]*?<\/div>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
   s = s.replace(/<a[\s\S]*?<\/a>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
@@ -18857,7 +18857,7 @@ function parseMD(s) {
   // @user and @role mentions
   s = s.replace(/@([\w]+)/g, function(match, name) {
     if (name === 'everyone' || name === 'here') return match;
-    var h;
+    let h;
     if (curBastion !== null) {
       const b = CU?.bastions?.[curBastion];
       if (b) {
@@ -23076,7 +23076,7 @@ function renderForumPostCard(p, chIdx, postIdx) {
   const ago = p.createdAt ? ftzTimeAgo(new Date(p.createdAt)) : '';
   const replyCount = (p.replies||[]).length;
   const tags = (p.tags||[]).map(function(t){return '<span class="fpc-tag">'+escapeHTML(t)+'</span>';}).join('');
-  var imgHTML = p.image ? '<img class="fpc-img" src="'+p.image+'" loading="lazy">' : '';
+  const imgHTML = p.image ? '<img class="fpc-img" src="'+p.image+'" loading="lazy">' : '';
   return '<div class="forum-post-card" onclick="openForumPost('+chIdx+','+postIdx+')">'
     +imgHTML
     +'<div class="fpc-body">'
@@ -23223,15 +23223,15 @@ function openNewForumPost(chIdx) {
 }
 
 function previewForumPostImage(input) {
-  var file = input.files[0];
+  const file = input.files[0];
   if (!file) return;
   if (file.size > 4*1024*1024) { toast('Max 4MB','error'); return; }
-  var reader = new FileReader();
+  const reader = new FileReader();
   reader.onload = async function(e) {
-    var fileData = e.target.result;
+    const fileData = e.target.result;
     window._fpImgData = fileData;
-    var img = document.getElementById('fp-img-el');
-    var preview = document.getElementById('fp-img-preview');
+    const img = document.getElementById('fp-img-el');
+    const preview = document.getElementById('fp-img-preview');
     if (img && preview) { img.src = fileData; preview.style.display='block'; }
   };
   reader.readAsDataURL(file);
@@ -25609,8 +25609,8 @@ function switchAtelierTab(tab, el) {
     i.classList.toggle('active', i.getAttribute('data-tab') === tab);
   });
   // Update topbar title to show current section
-  var names = {overview:'Overview',shop:'Shop',radiance:'Radiance Dwelling',quests:'Quests'};
-  var tt = document.getElementById('topbar-title');
+  const names = {overview:'Overview',shop:'Shop',radiance:'Radiance Dwelling',quests:'Quests'};
+  const tt = document.getElementById('topbar-title');
   if (tt) tt.textContent = names[tab] || 'Atelier';
   updateAtelierSidebar();
   renderAtelierTab(tab);
@@ -27423,20 +27423,20 @@ function toggleEmoticonConversion(el) {
 // ════════════════════════════════════════════════════════
 // TEXT SELECTION FORMATTING PANEL
 // ════════════════════════════════════════════════════════
-var _fmtActiveTA = null;
-var _fmtSelStart = 0;
-var _fmtSelEnd = 0;
+let _fmtActiveTA = null;
+let _fmtSelStart = 0;
+let _fmtSelEnd = 0;
 
 function _initFmtPanel() {
   document.addEventListener('mouseup', function(e) {
     setTimeout(function() {
-      var panel = document.getElementById('fmt-sel-panel');
+      const panel = document.getElementById('fmt-sel-panel');
       if (!panel) return;
       // Check if any chat textarea has a selection
-      var textareas = document.querySelectorAll('.chat-input-row textarea');
-      var foundTA = null;
-      for (var i = 0; i < textareas.length; i++) {
-        var ta = textareas[i];
+      const textareas = document.querySelectorAll('.chat-input-row textarea');
+      let foundTA = null;
+      for (let i = 0; i < textareas.length; i++) {
+        const ta = textareas[i];
         if (ta.selectionStart !== ta.selectionEnd && document.activeElement === ta) {
           foundTA = ta;
           break;
@@ -27447,10 +27447,10 @@ function _initFmtPanel() {
       _fmtSelStart = foundTA.selectionStart;
       _fmtSelEnd = foundTA.selectionEnd;
       // Position panel above the textarea
-      var taRect = foundTA.getBoundingClientRect();
-      var panelW = 280;
-      var px = taRect.left + (taRect.width / 2) - (panelW / 2);
-      var py = taRect.top - 42;
+      const taRect = foundTA.getBoundingClientRect();
+      const panelW = 280;
+      let px = taRect.left + (taRect.width / 2) - (panelW / 2);
+      let py = taRect.top - 42;
       if (px < 8) px = 8;
       if (px + panelW > window.innerWidth - 8) px = window.innerWidth - panelW - 8;
       if (py < 8) py = taRect.bottom + 6;
@@ -27460,7 +27460,7 @@ function _initFmtPanel() {
     }, 10);
   });
   document.addEventListener('mousedown', function(e) {
-    var panel = document.getElementById('fmt-sel-panel');
+    const panel = document.getElementById('fmt-sel-panel');
     if (panel && panel.classList.contains('show') && !panel.contains(e.target)) {
       _hideFmtPanel();
     }
@@ -27468,20 +27468,20 @@ function _initFmtPanel() {
 }
 
 function _hideFmtPanel() {
-  var panel = document.getElementById('fmt-sel-panel');
+  const panel = document.getElementById('fmt-sel-panel');
   if (panel) panel.classList.remove('show');
   _fmtActiveTA = null;
 }
 
 function _fmtWrap(marker) {
   if (!_fmtActiveTA) return;
-  var ta = _fmtActiveTA;
-  var start = _fmtSelStart;
-  var end = _fmtSelEnd;
-  var val = ta.value;
-  var selected = val.substring(start, end);
+  const ta = _fmtActiveTA;
+  const start = _fmtSelStart;
+  const end = _fmtSelEnd;
+  const val = ta.value;
+  const selected = val.substring(start, end);
   if (!selected) { _hideFmtPanel(); return; }
-  var wrapped = marker + selected + marker;
+  const wrapped = marker + selected + marker;
   ta.value = val.substring(0, start) + wrapped + val.substring(end);
   ta.selectionStart = start;
   ta.selectionEnd = start + wrapped.length;
@@ -27492,16 +27492,16 @@ function _fmtWrap(marker) {
 
 function _fmtInsertLink() {
   if (!_fmtActiveTA) return;
-  var ta = _fmtActiveTA;
-  var start = _fmtSelStart;
-  var end = _fmtSelEnd;
-  var val = ta.value;
-  var selected = val.substring(start, end);
+  const ta = _fmtActiveTA;
+  const start = _fmtSelStart;
+  const end = _fmtSelEnd;
+  const val = ta.value;
+  const selected = val.substring(start, end);
   if (!selected) { _hideFmtPanel(); return; }
-  var wrapped = '[' + selected + '](url)';
+  const wrapped = '[' + selected + '](url)';
   ta.value = val.substring(0, start) + wrapped + val.substring(end);
   // Select "url" for easy replacement
-  var urlStart = start + selected.length + 3;
+  const urlStart = start + selected.length + 3;
   ta.selectionStart = urlStart;
   ta.selectionEnd = urlStart + 3;
   ta.focus();

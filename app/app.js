@@ -1989,7 +1989,7 @@ function updateAtelierSidebar() {
   updateOnyxDisplay();
   // Update sidebar active state
   const tab = _atelierTab || 'overview';
-  document.querySelectorAll('.atel-sb-item').forEach(function(el) {
+  document.querySelectorAll('.atel-sb-item').forEach(el => {
     el.classList.toggle('active', el.getAttribute('data-tab') === tab);
   });
 }
@@ -2004,7 +2004,7 @@ function renderAtelierSidebar(scroll) {
   try {
     const completed = CU?.completedQuests || [];
     const allQIds = ['daily_claim','send_msg','invite','join_bastion','add_friend','set_pfp','set_bio','five_friends','send_gif','create_bastion'];
-    activeQuests = allQIds.filter(function(id) { return !completed.includes(id); }).length;
+    activeQuests = allQIds.filter(id => !completed.includes(id)).length;
   } catch(e) {}
   const radianceIcon = hasPlus
     ? _radiancePlusImg('16')
@@ -4456,7 +4456,7 @@ function renderBastionSidebar(scroll) {
 
   // Forums
   let forumHTML='';
-  forumChs.forEach(function(ch){
+  forumChs.forEach(ch => {
     const ri=chs.indexOf(ch);
     const fu = getChannelUnread(curBastion, ri);
     const fuClass = fu.count > 0 && curChannel !== ri ? ' unread' : '';
@@ -4480,7 +4480,7 @@ function renderBastionSidebar(scroll) {
 
   // Announcements
   let announceHTML='';
-  announcementChs.forEach(function(ch){
+  announcementChs.forEach(ch => {
     const ri=chs.indexOf(ch);
     const au = getChannelUnread(curBastion, ri);
     const auClass = au.count > 0 && curChannel !== ri ? ' unread' : '';
@@ -4492,7 +4492,7 @@ function renderBastionSidebar(scroll) {
 
   // Polls
   let pollHTML='';
-  pollChs.forEach(function(ch){
+  pollChs.forEach(ch => {
     const ri=chs.indexOf(ch);
     const pu = getChannelUnread(curBastion, ri);
     const puClass = pu.count > 0 && curChannel !== ri ? ' unread' : '';
@@ -5046,7 +5046,7 @@ function renderMessages(container, msgs, context) {
 
 // Get all roles for a user across current bastion context
 function getUserRolesInBastion(username, bastionIdx) {
-  if (bastionIdx === null || bastionIdx === undefined) bastionIdx = curBastion;
+  bastionIdx ??= curBastion;
   const b = CU?.bastions?.[bastionIdx];
   if (!b) return [];
   const roles = b.roles || [];
@@ -8536,8 +8536,8 @@ function renderOverviewRoom() {
   const chs = b.channels || [];
   const roles = b.roles || [];
 
-  const annChs = chs.filter(function(c){ return c.type === 'announcement'; });
-  const forumChs = chs.filter(function(c){ return c.type === 'forum'; });
+  const annChs = chs.filter(c => c.type === 'announcement');
+  const forumChs = chs.filter(c => c.type === 'forum');
 
   const welcomeText = ov.welcomeText || b.desc || '';
   const showAnnouncements = ov.showAnnouncements !== false;
@@ -8604,7 +8604,7 @@ function renderOverviewRoom() {
       + '<span class="ov-section-title">Latest announcements</span>'
       + '<span class="ov-section-link" onclick="selectChannel(' + chs.indexOf(annChs[0]) + ')">See all</span>'
       + '</div><div class="ov-card-row">';
-    annChs.forEach(function(ch){
+    annChs.forEach(ch => {
       const ri = chs.indexOf(ch);
       html += '<div class="ov-ann-card" onclick="selectChannel(' + ri + ');closeModal(\'modal-overview\')">'
         + '<div class="ov-ac-title">📢 ' + escapeHTML(ch.name) + '</div>'
@@ -8621,7 +8621,7 @@ function renderOverviewRoom() {
       + '<span class="ov-section-title">Recent forum activity</span>'
       + '<span class="ov-section-link" onclick="selectChannel(' + chs.indexOf(forumChs[0]) + ')">See all</span>'
       + '</div><div class="ov-card-row">';
-    forumChs.forEach(function(ch){
+    forumChs.forEach(ch => {
       const ri = chs.indexOf(ch);
       html += '<div class="ov-ann-card" onclick="openForumChannel(' + ri + ');closeModal(\'modal-overview\')">'
         + '<div class="ov-ac-title">' + ftzIcon('chat','14') + ' ' + escapeHTML(ch.name) + '</div>'
@@ -8633,12 +8633,12 @@ function renderOverviewRoom() {
 
   // ── Your Roles ──
   if (showRoles) {
-    const myRoles = ((b.memberRoles||{})[CU.username]||[]).map(function(rid){ return roles.find(function(r){return r.id===rid;}); }).filter(Boolean);
+    const myRoles = ((b.memberRoles||{})[CU.username]||[]).map(rid => roles.find(r => r.id===rid)).filter(Boolean);
     if (myRoles.length) {
       html += '<div class="ov-section">'
         + '<div class="ov-section-header"><span class="ov-section-title">Your Roles</span></div>'
         + '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
-      myRoles.forEach(function(r){
+      myRoles.forEach(r => {
         html += '<span class="role-tag" style="color:' + r.color + ';background:' + r.color + '22;border:1px solid ' + r.color + '44;">' + escapeHTML(r.name) + '</span>';
       });
       html += '</div></div>';
@@ -8648,12 +8648,12 @@ function renderOverviewRoom() {
   // ── Invite section ──
   if (showInvite) {
     const invites = b.invites || [];
-    const activeInvite = invites.find(function(inv){
+    const activeInvite = invites.find(inv => {
       if (inv.expires && new Date(inv.expires) < new Date()) return false;
       if (inv.maxUses && inv.uses >= inv.maxUses) return false;
       return true;
     });
-    const inviteCode = activeInvite ? activeInvite.code : null;
+    const inviteCode = activeInvite?.code ?? null;
     html += '<div class="ov-section">'
       + '<div class="ov-section-header"><span class="ov-section-title">Invite Friends</span></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
@@ -8690,13 +8690,13 @@ async function _loadOverviewEvents(bastionId) {
     const snap = await firebase.database().ref('events/' + bastionId).get();
     if (!snap.exists()) { row.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px;">No upcoming events</div>'; return; }
     const events = [];
-    snap.forEach(function(c){ const v = c.val(); v._key = c.key; events.push(v); });
+    snap.forEach(c => { const v = c.val(); v._key = c.key; events.push(v); });
     const now = new Date();
-    const upcoming = events.filter(function(ev){ return !ev.cancelled && (new Date(ev.date) >= now || ev.status === 'live'); });
-    upcoming.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+    const upcoming = events.filter(ev => !ev.cancelled && (new Date(ev.date) >= now || ev.status === 'live'));
+    upcoming.sort((a,b) => new Date(a.date) - new Date(b.date));
     if (!upcoming.length) { row.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px;">No upcoming events</div>'; return; }
     let html = '';
-    upcoming.slice(0, 8).forEach(function(ev) {
+    upcoming.slice(0, 8).forEach(ev => {
       const d = new Date(ev.date);
       const rsvps = ev.rsvps ? Object.keys(ev.rsvps).length : 0;
       const userRsvp = ev.rsvps?.[CU.username];
@@ -18814,17 +18814,18 @@ function parseMD(s) {
   // ═══════════════════════════════════════════════════════
   const _mdSlots = [];
   // Protect complete HTML blocks (divs, iframes, etc.) first
-  s = s.replace(/<div[\s\S]*?<\/div>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
-  s = s.replace(/<a[\s\S]*?<\/a>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
-  s = s.replace(/<img[^>]*>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
-  s = s.replace(/<iframe[\s\S]*?<\/iframe>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
-  s = s.replace(/<video[\s\S]*?<\/video>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
-  s = s.replace(/<audio[\s\S]*?<\/audio>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
-  s = s.replace(/<button[\s\S]*?<\/button>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
-  s = s.replace(/<svg[\s\S]*?<\/svg>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
-  s = s.replace(/<span[^>]*>[\s\S]*?<\/span>/gi, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  const _slot = m => { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; };
+  s = s.replace(/<div[\s\S]*?<\/div>/gi, _slot);
+  s = s.replace(/<a[\s\S]*?<\/a>/gi, _slot);
+  s = s.replace(/<img[^>]*>/gi, _slot);
+  s = s.replace(/<iframe[\s\S]*?<\/iframe>/gi, _slot);
+  s = s.replace(/<video[\s\S]*?<\/video>/gi, _slot);
+  s = s.replace(/<audio[\s\S]*?<\/audio>/gi, _slot);
+  s = s.replace(/<button[\s\S]*?<\/button>/gi, _slot);
+  s = s.replace(/<svg[\s\S]*?<\/svg>/gi, _slot);
+  s = s.replace(/<span[^>]*>[\s\S]*?<\/span>/gi, _slot);
   // Protect any remaining HTML tags
-  s = s.replace(/<[^>]+>/g, function(m) { _mdSlots.push(m); return '\x00MD'+(_mdSlots.length-1)+'\x00'; });
+  s = s.replace(/<[^>]+>/g, _slot);
 
   // ── LAYER 1: Block-level elements (code blocks, quotes) ──
   // Triple backtick code blocks (```lang\ncode\n```)

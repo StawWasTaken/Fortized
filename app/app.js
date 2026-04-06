@@ -13856,12 +13856,22 @@ function showCustomInput(title,message,callback,defaultValue=''){
 }
 
 function showCustomConfirm(message,callback){
-  const overlay=document.createElement('div');overlay.className='input-dialog-overlay';
-  overlay.innerHTML=`<div class="input-dialog"><h3>Confirm</h3><p>${escapeHTML(message)}</p><div class="input-dialog-actions"><button class="btn-g" style="flex:1;justify-content:center;" id="cc-cancel">Cancel</button><button class="btn-d" style="flex:1;justify-content:center;" id="cc-ok">Confirm</button></div></div>`;
+  const overlay=document.createElement('div');
+  overlay.className='ftz-confirm-overlay';
+  overlay.innerHTML=`<div class="ftz-confirm-card">
+    <div class="ftz-confirm-title">Confirm</div>
+    <div class="ftz-confirm-text">${escapeHTML(message)}</div>
+    <div class="ftz-confirm-actions">
+      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">Cancel</button>
+      <button class="ftz-btn ftz-btn-danger" id="cc-ok">Confirm</button>
+    </div>
+  </div>`;
   document.body.appendChild(overlay);
   document.getElementById('cc-ok').onclick=()=>{overlay.remove();callback();};
   document.getElementById('cc-cancel').onclick=()=>overlay.remove();
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
   overlay.addEventListener('keydown',e=>{if(e.key==='Escape')overlay.remove();});
+  overlay.focus();
 }
 
 // ════════════════════════════════════════════

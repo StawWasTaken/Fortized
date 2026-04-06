@@ -741,23 +741,22 @@ FORTIZED_EMOJIS_DATA.forEach(([name, ext]) => {
   FORTIZED_EMOJI_MAP[name] = FTZ_EMOJI_BASE + name + '.' + ext;
 });
 
-const _ALL_QUIZ_QUESTIONS = [
-  {q:"What does 'NSFW' stand for?",a:"Not Safe For Work",opts:["Not Safe For Work","New Software For Web","No Spam For Winners","None So Far Witnessed"]},
-  {q:"Which of these is considered harassment?",a:"Repeatedly messaging someone after they ask you to stop",opts:["Sending a friend request","Sharing a meme","Repeatedly messaging someone after they ask you to stop","Joining a public Bastion"]},
-  {q:"What should you do if you see harmful content?",a:"Report it using the report button",opts:["Ignore it","Share it with friends","Report it using the report button","Delete your account"]},
-  {q:"Fortized's minimum age requirement is:",a:"13 years old",opts:["10 years old","13 years old","16 years old","18 years old"]},
-  {q:"How should you handle disagreements with other users?",a:"Communicate respectfully or use block/report",opts:["Threaten them","Spam their DMs","Communicate respectfully or use block/report","Share their personal info"]},
-  {q:"What is 'doxxing'?",a:"Publicly revealing someone's private information without consent",opts:["Sharing your own social media","Publicly revealing someone's private information without consent","Sending a message in a public Chamber","Changing your display name"]},
-  {q:"Is it allowed to share someone's personal information without their consent?",a:"No, never — it is a serious violation",opts:["Yes, if they are your friend","Only in group chats","No, never — it is a serious violation","Only if you are an admin"]},
-  {q:"What should you do if another user threatens you?",a:"Block, report, and save evidence",opts:["Threaten them back","Ignore it completely","Block, report, and save evidence","Post about it publicly"]},
-  {q:"Which of the following is NOT allowed on Fortized?",a:"Sending unsolicited explicit images",opts:["Creating a public Bastion","Sending unsolicited explicit images","Joining a voice channel","Changing your profile picture"]},
-  {q:"What is Bastion Sovereignty?",a:"Bastion owners have full control — staff never override admin settings",opts:["Staff can control any Bastion at any time","Bastion owners have full control — staff never override admin settings","Only paid users can create Bastions","Bastions are deleted after 30 days"]},
-  {q:"What happens if you repeatedly violate the Terms of Use?",a:"Your account may be suspended or permanently banned",opts:["Nothing, there are no consequences","You get unlimited warnings","Your account may be suspended or permanently banned","Your messages are hidden for 24 hours"]},
-  {q:"Under the EU Digital Services Act, which right do users have?",a:"The right to contest moderation decisions",opts:["Free premium membership","The right to contest moderation decisions","Unlimited file uploads","Access to staff tools"]},
+// Onboarding interests categories
+const ONBOARDING_INTERESTS = [
+  { id: 'gaming', label: '🎮 Gaming', desc: 'Multiplayer, strategy, RPGs' },
+  { id: 'music', label: '🎵 Music', desc: 'Genres, producers, concerts' },
+  { id: 'art', label: '🎨 Art', desc: 'Digital, traditional, design' },
+  { id: 'tech', label: '💻 Technology', desc: 'Programming, gadgets, AI' },
+  { id: 'sports', label: '⚽ Sports', desc: 'Teams, fitness, competition' },
+  { id: 'learning', label: '📚 Learning', desc: 'Education, languages, skills' },
+  { id: 'movies', label: '🎬 Movies & TV', desc: 'Series, films, streaming' },
+  { id: 'anime', label: '⛩️ Anime & Manga', desc: 'Series, manga, communities' },
+  { id: 'creativity', label: '✨ Creativity', desc: 'Writing, crafts, content' },
+  { id: 'community', label: '🤝 Community', desc: 'Social, events, groups' },
 ];
-// Randomly select 5 questions per verification attempt
-function _pickQuizQuestions() { const shuffled = [..._ALL_QUIZ_QUESTIONS].sort(() => Math.random() - 0.5); return shuffled.slice(0, 5); }
-let QUIZ_QUESTIONS = _pickQuizQuestions();
+
+// Constants for moderation and age tiers
+
 const REPORT_REASONS = ['Harassment','Hate Speech','NSFW / Explicit Content','Spam or Scam','Threats or Violence','Self-Harm or Suicide','Illegal Content','Other'];
 const AGE_TIERS = {CHILD:'child',TEEN:'teen',ADULT:'adult'};
 
@@ -6730,20 +6729,6 @@ function updateDOBField(){
   if(hint)hint.textContent=tier?'Age tier: '+labels[tier]:'⚠️ Must be 13+';
 }
 
-function runFortizedOnboarding() {
-  if (!CU?.username) return;
-  const k = 'ftz_onboarding_v2_' + CU.username;
-  if (localStorage.getItem(k)) return;
-  localStorage.setItem(k, '1');
-  const steps = [
-    '👋 Welcome to Fortized! Start with your first message in DMs.',
-    '🏰 Next: join or create your first Bastion.',
-    '🎙 Try voice once to unlock your social streak.',
-    '💡 Pro tip: upload one custom emoji to boost identity.'
-  ];
-  steps.forEach((s, i) => setTimeout(() => toast(s, 'info'), i * 3200));
-}
-
 function initFortizedUXResilience() {
   let _uxResizeTimer;
   window.addEventListener('resize', () => {
@@ -6896,7 +6881,8 @@ function initFortizedUXResilience() {
   _ftzRouter._initialLoad = true;
   _ftzRouter.applyInitialRoute();
   _ftzRouter._initialLoad = false;
-  setTimeout(runFortizedOnboarding, 1400);
+  // Trigger new onboarding for first-time users
+  setTimeout(showOnboarding, 600);
   initFortizedUXResilience();
 
   try { saveCurrentToAccounts(); } catch(e) { console.warn('[init] saveCurrentToAccounts:', e); }
@@ -7353,9 +7339,7 @@ function initFortizedUXResilience() {
     }
   }
 
-  // Show quiz or DOB if needed
-  if(!CU.verified || CU.verifiedVersion !== 2)setTimeout(showVerifyQuiz,400);
-  else if(!CU.dateOfBirth)setTimeout(showDOBSetup,600);
+  // Onboarding will be triggered if user is new
 
   // Check invite link
   try{checkInviteLink();}catch(e){console.warn('[Init] Invite link check:',e?.message);}
@@ -16713,153 +16697,119 @@ async function adminSearchBastion() {
 // HUMAN VERIFICATION QUIZ
 
 
-function showVerifyQuiz() {
-  document.getElementById('verify-overlay')?.remove();
-  QUIZ_QUESTIONS = _pickQuizQuestions();
+// ════════════════════════════════════════════
+// NEW ONBOARDING: Personalize Your Experience
+// ════════════════════════════════════════════
+
+async function showOnboarding() {
+  if (!CU?.username) return;
+  const k = 'ftz_onboarding_v3_' + CU.username;
+  if (localStorage.getItem(k)) return; // Already completed
+  localStorage.setItem(k, '1');
+
   const overlay = document.createElement('div');
-  overlay.id = 'verify-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.98);backdrop-filter:blur(32px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
-  overlay.innerHTML = `
-    <div style="width:100%;max-width:560px;">
-      <div id="verify-intro" style="background:rgba(19,22,29,.96);border:1px solid #252b3a;border-radius:24px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.8);">
-        <div style="height:4px;background:linear-gradient(90deg,#f87171,var(--accent),#3ecf6e);"></div>
-        <div style="padding:44px 40px 40px;text-align:center;">
-          <img src="/FortizedSecurity logo.png" alt="Fortized Security" style="width:72px;height:72px;object-fit:contain;border-radius:18px;margin:0 auto 20px;display:block;" onerror="this.style.display='none'">
-          <div style="font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:10px;">Fortized Security Department</div>
-          <div style="font-family:var(--font-display);font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:8px;">Identity Verification</div>
-          <div style="font-size:14px;color:var(--muted-light);line-height:1.7;margin-bottom:28px;max-width:400px;margin-left:auto;margin-right:auto;">To protect our community, all users must verify their identity by completing a short safety knowledge check.</div>
-          <div style="display:flex;gap:10px;justify-content:center;margin-bottom:28px;flex-wrap:wrap;">
-            <div style="background:rgba(255,249,62,.04);border:1px solid rgba(255,249,62,.12);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted-light);display:flex;align-items:center;gap:8px;"><span style="color:var(--accent);font-weight:700;">5</span>Questions</div>
-            <div style="background:rgba(62,207,110,.04);border:1px solid rgba(62,207,110,.12);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted-light);display:flex;align-items:center;gap:8px;"><span style="color:var(--green);font-weight:700;">4</span>To pass</div>
-            <div style="background:rgba(96,165,250,.04);border:1px solid rgba(96,165,250,.12);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted-light);display:flex;align-items:center;gap:8px;"><span style="color:var(--blue);font-weight:700;">25</span>Onyx reward</div>
-          </div>
-          <div style="background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.12);border-left:3px solid #f87171;border-radius:10px;padding:12px 16px;text-align:left;font-size:12.5px;color:var(--muted-light);line-height:1.6;margin-bottom:28px;">
-            <strong style="color:var(--red);">Required:</strong> This verification is mandatory. You cannot access Fortized until you pass the safety check. Questions are randomised from a pool.
-          </div>
-          <button onclick="document.getElementById('verify-intro').style.display='none';document.getElementById('verify-quiz').style.display='';" class="verify-begin-btn">Begin Verification</button>
-        </div>
-      </div>
-      <div id="verify-quiz" style="display:none;background:rgba(19,22,29,.96);border:1px solid #252b3a;border-radius:24px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.8);">
-        <div style="height:4px;background:linear-gradient(90deg,#f87171,var(--accent),#3ecf6e);"></div>
-        <div style="padding:32px 36px 36px;">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-            <img src="/FortizedSecurity logo.png" alt="" style="width:36px;height:36px;object-fit:contain;border-radius:10px;" onerror="this.style.display='none'">
-            <div>
-              <div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:#fff;">Safety Knowledge Check</div>
-              <div style="font-size:11px;color:var(--muted);">Powered by Fortized Security</div>
-            </div>
-            <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:6px;padding:4px 10px;" id="quiz-score-live">0/5</div>
-          </div>
-          <div id="quiz-progress-bar" style="display:flex;gap:4px;margin-bottom:24px;">
-            ${QUIZ_QUESTIONS.map((_,i)=>`<div id="qpb-${i}" style="flex:1;height:5px;border-radius:99px;background:var(--border);transition:background .3s,box-shadow .3s;"></div>`).join('')}
-          </div>
-          <div id="quiz-question-area"></div>
-          <div id="quiz-result" style="display:none;text-align:center;padding:10px 0;"></div>
-        </div>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  quizIdx = 0; quizCorrect = 0; quizAnswers = [];
-  renderQuizQuestion();
-}
+  overlay.id = 'onboarding-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.98);backdrop-filter:blur(32px);z-index:9100;display:flex;align-items:center;justify-content:center;padding:20px;';
 
-function renderQuizQuestion() {
-  const qEl = document.getElementById('quiz-question-area');
-  if (!qEl) return;
-  if (quizIdx >= QUIZ_QUESTIONS.length) { showQuizResult(); return; }
-  QUIZ_QUESTIONS.forEach((_,i) => {
-    const seg = document.getElementById('qpb-'+i);
-    if (!seg) return;
-    if (i < quizIdx) { seg.style.background = quizAnswers[i] ? '#3ecf6e' : '#f87171'; seg.style.boxShadow = quizAnswers[i] ? '0 0 8px rgba(62,207,110,.4)' : '0 0 8px rgba(248,113,113,.4)'; }
-    else if (i === quizIdx) { seg.style.background = 'var(--accent)'; seg.style.boxShadow = '0 0 8px rgba(255,249,62,.3)'; }
-    else { seg.style.background = 'var(--border)'; seg.style.boxShadow = 'none'; }
-  });
-  const scoreLive = document.getElementById('quiz-score-live');
-  if (scoreLive) scoreLive.textContent = quizCorrect + '/' + QUIZ_QUESTIONS.length;
-  const q = QUIZ_QUESTIONS[quizIdx];
-  // Shuffle options for each question to prevent memorisation
-  const shuffledOpts = [...q.opts].sort(() => Math.random() - 0.5);
-  qEl.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Question ${quizIdx+1} of ${QUIZ_QUESTIONS.length}</div>
-      <div style="font-size:11px;font-weight:700;color:${quizCorrect >= 4 ? '#3ecf6e' : quizCorrect >= 2 ? 'var(--accent)' : 'var(--muted)'};">${quizCorrect} correct</div>
+  const container = document.createElement('div');
+  container.style.cssText = 'width:100%;max-width:640px;background:rgba(19,22,29,.96);border:1px solid #252b3a;border-radius:28px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.8);';
+
+  // Step 1: Welcome & Interests
+  const step1 = document.createElement('div');
+  step1.id = 'onboarding-step-1';
+  step1.style.cssText = 'padding:48px 40px;text-align:center;';
+  step1.innerHTML = `
+    <div style="height:4px;background:linear-gradient(90deg,#fff93e,#667eea,#764ba2);position:absolute;top:0;left:0;right:0;"></div>
+    <div style="font-size:48px;margin-bottom:16px;">🎉</div>
+    <div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:#fff;margin-bottom:8px;">Let's Personalize Your Experience!</div>
+    <div style="font-size:14.5px;color:var(--muted-light);line-height:1.7;margin-bottom:32px;">Choose what interests you most on Fortized. You can update these anytime.</div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:32px;text-align:center;">
+      ${ONBOARDING_INTERESTS.map(interest => `
+        <button onclick="toggleInterest('${interest.id}')"
+          class="interest-btn"
+          data-interest="${interest.id}"
+          style="background:rgba(255,255,255,.04);border:2px solid var(--border);border-radius:14px;padding:14px 12px;cursor:pointer;transition:all .2s;font-size:12px;color:var(--muted-light);">
+          <div style="font-size:24px;margin-bottom:6px;">${interest.label.split(' ')[0]}</div>
+          <div style="font-weight:600;color:#fff;margin-bottom:3px;">${interest.label.split(' ').slice(1).join(' ')}</div>
+          <div style="font-size:10px;color:var(--muted);">${interest.desc}</div>
+        </button>
+      `).join('')}
     </div>
-    <div style="font-family:var(--font-display);font-size:17px;font-weight:700;color:#fff;line-height:1.5;margin-bottom:20px;padding:16px 18px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;">${escapeHTML(q.q)}</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      ${shuffledOpts.map((opt,i)=>`
-        <button id="qopt-${i}" data-correct="${opt===q.a}" onclick="answerQuiz(${i})" class="quiz-opt-btn">
-          <span style="width:28px;height:28px;min-width:28px;border-radius:8px;border:1.5px solid var(--border);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-display);color:var(--muted-light);transition:all .18s;">${['A','B','C','D'][i]}</span>
-          <span>${escapeHTML(opt)}</span>
-        </button>`).join('')}
-    </div>`;
+
+    <div style="display:flex;gap:12px;">
+      <button onclick="skipOnboarding()" style="flex:1;padding:12px 20px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--muted-light);font-weight:600;cursor:pointer;">Skip</button>
+      <button onclick="proceedOnboarding()" style="flex:1;padding:12px 20px;background:var(--accent);border:none;border-radius:10px;color:var(--rail);font-weight:700;cursor:pointer;">Next →</button>
+    </div>
+  `;
+
+  // Step 2: Welcome Message
+  const step2 = document.createElement('div');
+  step2.id = 'onboarding-step-2';
+  step2.style.cssText = 'display:none;padding:48px 40px;text-align:center;';
+  step2.innerHTML = `
+    <div style="height:4px;background:linear-gradient(90deg,#fff93e,#667eea,#764ba2);position:absolute;top:0;left:0;right:0;"></div>
+    <div style="font-size:56px;margin-bottom:20px;">👋</div>
+    <div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:#fff;margin-bottom:12px;">Welcome to Fortized</div>
+    <div style="font-size:14px;color:var(--muted-light);line-height:1.8;margin-bottom:24px;">
+      You're now part of a global community. Create bastions, connect with friends, and build together.
+    </div>
+
+    <div style="background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);border-radius:14px;padding:18px 16px;margin-bottom:32px;text-align:left;">
+      <div style="font-weight:700;color:var(--accent);margin-bottom:10px;">Pro Tips:</div>
+      <ul style="list-style:none;padding:0;margin:0;font-size:13px;color:var(--muted-light);line-height:2;">
+        <li>💬 Start a DM to chat one-on-one</li>
+        <li>🏰 Create a Bastion for your community</li>
+        <li>🎙 Join voice channels for real-time chat</li>
+        <li>⭐ Customize your profile with widgets</li>
+      </ul>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:20px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Welcome to Fortized from<br><strong style="color:#fff;">Team Fortized at Swiftaw</strong></div>
+      <button onclick="completeOnboarding()" style="padding:12px 32px;background:var(--accent);border:none;border-radius:10px;color:var(--rail);font-weight:700;cursor:pointer;font-size:14px;">Let's Go! →</button>
+    </div>
+  `;
+
+  container.appendChild(step1);
+  container.appendChild(step2);
+  overlay.appendChild(container);
+  document.body.appendChild(overlay);
 }
 
-function answerQuiz(selectedIdx) {
-  const opts = document.querySelectorAll('#quiz-question-area button');
-  opts.forEach(o => { o.onclick = null; o.style.cursor = 'default'; o.onmouseover = null; o.onmouseout = null; });
-  const sel = document.getElementById('qopt-'+selectedIdx);
-  const isCorrect = sel && sel.dataset.correct === 'true';
-  if (isCorrect) {
-    sel.style.cssText += ';border-color:var(--green);background:rgba(62,207,110,.1);color:var(--green);';
-    sel.querySelector('span').style.cssText += ';border-color:var(--green);background:rgba(62,207,110,.15);color:var(--green);';
-    quizCorrect++;
+function toggleInterest(id) {
+  const btn = document.querySelector(`[data-interest="${id}"]`);
+  if (!btn) return;
+  btn.classList.toggle('interest-selected');
+  const isSelected = btn.classList.contains('interest-selected');
+  if (isSelected) {
+    btn.style.background = 'rgba(255,249,62,.12)';
+    btn.style.borderColor = 'rgba(255,249,62,.3)';
+    btn.style.color = 'var(--accent)';
   } else {
-    sel.style.cssText += ';border-color:var(--red);background:rgba(248,113,113,.1);color:var(--red);';
-    sel.querySelector('span').style.cssText += ';border-color:var(--red);background:rgba(248,113,113,.15);color:var(--red);';
-    opts.forEach(o => { if (o.dataset.correct === 'true') { o.style.cssText += ';border-color:var(--green);background:rgba(62,207,110,.06);color:var(--green);'; o.querySelector('span').style.cssText += ';border-color:var(--green);color:var(--green);'; } });
-  }
-  quizAnswers.push(isCorrect);
-  const seg = document.getElementById('qpb-'+quizIdx);
-  if (seg) { seg.style.background = isCorrect ? '#3ecf6e' : '#f87171'; seg.style.boxShadow = isCorrect ? '0 0 8px rgba(62,207,110,.4)' : '0 0 8px rgba(248,113,113,.4)'; }
-  const scoreLive = document.getElementById('quiz-score-live');
-  if (scoreLive) { scoreLive.textContent = quizCorrect + '/' + QUIZ_QUESTIONS.length; scoreLive.style.color = isCorrect ? '#3ecf6e' : '#f87171'; setTimeout(() => { if (scoreLive) scoreLive.style.color = 'var(--muted)'; }, 600); }
-  quizIdx++;
-  setTimeout(renderQuizQuestion, 1100);
-}
-
-async function showQuizResult() {
-  const passed = quizCorrect >= 4;
-  const qEl = document.getElementById('quiz-question-area');
-  const res = document.getElementById('quiz-result');
-  if (qEl) qEl.style.display = 'none';
-  if (!res) return;
-  res.style.display = '';
-  if (passed) {
-    res.innerHTML = `
-      <img src="/FortizedSecurity logo.png" alt="" style="width:56px;height:56px;object-fit:contain;border-radius:16px;margin:0 auto 16px;display:block;" onerror="this.style.display='none'">
-      <div style="width:72px;height:72px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.2);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#3ecf6e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:var(--green);margin-bottom:8px;letter-spacing:-.3px;">Verification Passed</div>
-      <div style="font-size:13.5px;color:var(--muted-light);margin-bottom:6px;">You scored <strong style="color:#fff;">${quizCorrect} of ${QUIZ_QUESTIONS.length}</strong> correct.</div>
-      <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">Your account has been verified by Fortized Security.</div>
-      <div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.14);border-radius:8px;padding:6px 12px;margin-bottom:28px;">+25 Onyx Awarded</div>
-      <br>
-      <button class="btn-a" onclick="completeVerification()" style="padding:14px 36px;font-size:15px;">Enter Fortized →</button>`;
-  } else {
-    res.innerHTML = `
-      <img src="/FortizedSecurity logo.png" alt="" style="width:56px;height:56px;object-fit:contain;border-radius:16px;margin:0 auto 16px;display:block;opacity:.5;" onerror="this.style.display='none'">
-      <div style="width:72px;height:72px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M8 8l8 8M16 8l-8 8" stroke="#f87171" stroke-width="2.5" stroke-linecap="round"/></svg>
-      </div>
-      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:var(--red);margin-bottom:8px;letter-spacing:-.3px;">Verification Failed</div>
-      <div style="font-size:13.5px;color:var(--muted-light);margin-bottom:6px;">You scored <strong style="color:#fff;">${quizCorrect} of ${QUIZ_QUESTIONS.length}</strong> correct. You need at least <strong style="color:#fff;">4</strong> to pass.</div>
-      <div style="font-size:12.5px;color:var(--muted);margin-bottom:28px;">Review the community guidelines and try again. Questions are randomised.</div>
-      <button class="btn-a" onclick="QUIZ_QUESTIONS=_pickQuizQuestions();quizIdx=0;quizCorrect=0;quizAnswers=[];document.getElementById('quiz-result').style.display='none';document.getElementById('quiz-question-area').style.display='';document.getElementById('quiz-progress-bar').innerHTML=QUIZ_QUESTIONS.map((_,i)=>'<div id=qpb-'+i+' style=flex:1;height:5px;border-radius:99px;background:var(--border);transition:background\\x20.3s,box-shadow\\x20.3s></div>').join('');renderQuizQuestion();" style="padding:14px 36px;font-size:15px;">Try Again</button>`;
+    btn.style.background = 'rgba(255,255,255,.04)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--muted-light)';
   }
 }
 
-async function completeVerification() {
-  CU.verified = true;
-  CU.verifiedAt = new Date().toISOString();
-  CU.verifiedVersion = 2;
-  // Also award a small Onyx bonus for completing verification
-  CU.onyx = (CU.onyx||0) + 25;
-  await saveUser(true);
-  updateOnyxDisplay();
-  document.getElementById('verify-overlay')?.remove();
-  toast('Verified — welcome to the fortress.', 'success');
-  if (!CU.dateOfBirth) setTimeout(showDOBSetup, 400);
+function proceedOnboarding() {
+  const selected = document.querySelectorAll('.interest-selected');
+  const interests = Array.from(selected).map(el => el.dataset.interest);
+  CU.onboardingInterests = interests;
+
+  document.getElementById('onboarding-step-1').style.display = 'none';
+  document.getElementById('onboarding-step-2').style.display = '';
+}
+
+function skipOnboarding() {
+  document.getElementById('onboarding-overlay')?.remove();
+}
+
+function completeOnboarding() {
+  document.getElementById('onboarding-overlay')?.remove();
+  saveUser(true).catch(()=>{});
+  toast('✨ Welcome to Fortized!', 'success');
 }
 
 
@@ -16869,59 +16819,7 @@ async function completeVerification() {
 
 
 
-// ════════════════════════════════════════════
-// DATE OF BIRTH CAPTURE (first-time setup)
-// ════════════════════════════════════════════
-function showDOBSetup() {
-  if (CU.dateOfBirth) return; // already set
-  const overlay = document.createElement('div');
-  overlay.id = 'dob-setup-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(12,14,20,.97);backdrop-filter:blur(20px);z-index:6000;display:flex;align-items:center;justify-content:center;';
-  overlay.innerHTML = `
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:40px;max-width:440px;width:90%;text-align:center;">
-      <div style="width:70px;height:70px;background:var(--accent-dim);border:1px solid var(--accent-mid);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 20px;">🛡️</div>
-      <h2 style="font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:10px;">Age Verification</h2>
-      <p style="font-size:13.5px;color:var(--muted-light);line-height:1.65;margin-bottom:28px;">
-        Fortized uses your date of birth to protect you and ensure you only access age-appropriate content.<br><br>
-        <strong style="color:var(--accent);">Your date of birth cannot be changed without identity verification.</strong>
-      </p>
-      <div style="text-align:left;margin-bottom:20px;">
-        <div class="settings-title">Date of Birth</div>
-        <input type="date" id="dob-input" class="field-input"
-          max="${new Date(Date.now() - 13*365.25*24*60*60*1000).toISOString().split('T')[0]}"
-          min="${new Date(Date.now() - 120*365.25*24*60*60*1000).toISOString().split('T')[0]}"
-          style="margin-bottom:8px;">
-        <div style="font-size:12px;color:var(--muted);">You must be at least 13 years old to use Fortized.</div>
-      </div>
-      <div style="background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:20px;text-align:left;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Age Tiers</div>
-        <div style="font-size:12.5px;color:var(--muted-light);line-height:1.8;">
-          🧒 <strong>13–15:</strong> Full protection — NSFW content is fully hidden<br>
-          🧑 <strong>16–17:</strong> Friction gate — NSFW requires manual confirmation<br>
-          🧑‍🦳 <strong>18+:</strong> Full access with standard content controls
-        </div>
-      </div>
-      <div id="dob-error" style="font-size:12px;color:var(--red);margin-bottom:10px;min-height:16px;"></div>
-      <button class="btn-a" onclick="saveDOB()" style="width:100%;justify-content:center;font-size:14px;">Confirm My Age →</button>
-    </div>`;
-  document.body.appendChild(overlay);
-}
-
-async function saveDOB() {
-  const input = document.getElementById('dob-input');
-  const err = document.getElementById('dob-error');
-  if (!input || !input.value) { if(err) err.textContent = 'Please enter your date of birth.'; return; }
-  const tier = getAgeTier(input.value);
-  if (tier === null) {
-    if(err) err.textContent = 'You must be at least 13 years old to use Fortized.';
-    return;
-  }
-  CU.dateOfBirth = input.value;
-  await saveUser(true);
-  document.getElementById('dob-setup-overlay')?.remove();
-  const tierLabels = { child: '🧒 Protected Mode (13–15)', teen: '🧑 Teen Mode (16–17)', adult: '🧑‍🦳 Adult Mode (18+)' };
-  toast(`✅ Age verified — ${tierLabels[tier]}`, 'success');
-}
+// Age verification removed - replaced with onboarding personalization
 
 // ════════════════════════════════════════════
 // NSFW UPLOAD SCANNER (AI-based)

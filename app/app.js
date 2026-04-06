@@ -769,11 +769,18 @@ function saveLocal() {
 }
 let _saveUserTimer = null;
 let _saveUserPromise = null;
+let _isSaving = false; // Prevent concurrent saves
 async function saveUser(immediate) {
   saveLocal();
   if (!immediate && _saveUserTimer) clearTimeout(_saveUserTimer);
   const doSave = async () => {
+    // Wait for any in-flight save to complete
+    if (_isSaving) {
+      while (_isSaving) await new Promise(r => setTimeout(r, 50));
+      return;
+    }
     if (_saveUserPromise) await _saveUserPromise.catch(()=>{});
+    _isSaving = true;
     _saveUserPromise = (async () => {
       try {
         await FortizedSocial.saveUserObject(CU);
@@ -781,7 +788,7 @@ async function saveUser(immediate) {
         console.warn('saveUser failed, retrying:', e);
         try { await new Promise(r => setTimeout(r, 1000)); await FortizedSocial.saveUserObject(CU); }
         catch(e2) { console.error('saveUser retry failed:', e2); toast('Failed to save data. Check your connection.', 'error'); }
-      } finally { _saveUserPromise = null; }
+      } finally { _saveUserPromise = null; _isSaving = false; }
     })();
     return _saveUserPromise;
   };
@@ -1741,7 +1748,7 @@ function _updateUserbarActivity() {
         iconEl.style.background = 'rgba(29,185,84,.1)';
         iconEl.style.borderColor = 'rgba(29,185,84,.18)';
       } else if (primary.metadata?.coverThumb) {
-        iconEl.innerHTML = '<img src="'+escapeHTML(primary.metadata.coverThumb)+'" style="width:24px;height:32px;border-radius:4px;object-fit:cover;" onerror="this.outerHTML=\'<span style=font-size:15px>'+primary.icon+'</span>\'">';
+        iconEl.innerHTML = '<img src="'+escapeHTML(primary.metadata.coverThumb)+'" style="width:24px;height:32px;border-radius:4px;object-fit:cover;" onerror="this.parentElement.textContent=\''+escapeHTML(primary.icon)+'\';this.style.display=\'none\'">';
         iconEl.style.background = '';
         iconEl.style.borderColor = '';
       } else {
@@ -2054,8 +2061,8 @@ function buildAvatarHTML(pfp, name, size) {
   const defaultUrl = _defaultPfpUrl(name);
   const initial = (name||'?')[0].toUpperCase();
   const fs = Math.floor(size/2.2);
-  if (pfp) return '<img src="'+pfp+'" style="'+s+'" onerror="this.src=\''+defaultUrl+'\'">';
-  return '<img src="'+defaultUrl+'" style="'+s+'" onerror="this.outerHTML=\'<span style=\\\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\\\'>'+initial+'</span>\'">';
+  if (pfp) return '<img src="'+pfp+'" style="'+s+'" onerror="this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)">';
+  return '<img src="'+defaultUrl+'" style="'+s+'" onerror="this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)">';
 }
 function renderRailBastions() {
   const cont = document.getElementById('rail-bastions');
@@ -2353,7 +2360,7 @@ document.addEventListener('mouseover', function(e) {
     const rest = users.length - shown.length;
     let namesHTML = shown.map(u => `<span class="rt-user">${escapeHTML(u)}</span>`).join(', ');
     if (rest > 0) namesHTML += ` and <span class="rt-more">${rest} other${rest > 1 ? 's' : ''}</span>`;
-    tip.innerHTML = `<div class="rt-header"><span class="rt-emoji"><img src="${emojiToTwemojiUrl(emoji)}" alt="${emoji}" style="width:22px;height:22px;object-fit:contain;" onerror="this.outerHTML='${emoji}'"></span><span class="rt-label">reacted by</span></div><div class="rt-names">${namesHTML}</div>`;
+    tip.innerHTML = `<div class="rt-header"><span class="rt-emoji"><img src="${emojiToTwemojiUrl(emoji)}" alt="${emoji}" style="width:22px;height:22px;object-fit:contain;" onerror="this.parentElement.textContent='${emoji.replace(/'/g, "\\'")}';this.style.display='none'"></span><span class="rt-label">reacted by</span></div><div class="rt-names">${namesHTML}</div>`;
     document.body.appendChild(tip);
     _rTipEl = tip;
     const rect = pill.getBoundingClientRect();
@@ -28465,7 +28472,11 @@ function markSettingsDirty() {
 
   if (hasChanges && !_settingsDirty) {
     _settingsDirty = true;
-    document.getElementById('unsaved-bar')?.classList.add('show');
+    // Only show bar if settings modal is actually open
+    const settingsModal = document.getElementById('modal-settings');
+    if (settingsModal && settingsModal.classList.contains('open')) {
+      document.getElementById('unsaved-bar')?.classList.add('show');
+    }
   } else if (!hasChanges && _settingsDirty) {
     _settingsDirty = false;
     document.getElementById('unsaved-bar')?.classList.remove('show');

@@ -21,23 +21,22 @@ p{font-size:14px;color:rgba(255,255,255,.5);}
 <p id="msg">Please wait while we link your Spotify account.</p>
 </div>
 <script>
-(function() {
-  var params = new URLSearchParams(window.location.search);
-  var code = params.get('code');
-  var state = params.get('state');
-  var titleEl = document.getElementById('title');
-  var msgEl = document.getElementById('msg');
+(() => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  const titleEl = document.getElementById('title');
+  const msgEl = document.getElementById('msg');
 
   if (code && state) {
-    // Send the code + state to the server for token exchange
     fetch('https://fortized.onrender.com/api/spotify-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ state: state, code: code })
-    }).then(function(r) {
+      body: JSON.stringify({ state, code })
+    }).then(r => {
       if (!r.ok) throw new Error('Server returned ' + r.status);
       return r.json();
-    }).then(function(data) {
+    }).then(data => {
       if (data.ok) {
         titleEl.textContent = 'Spotify Connected!';
         msgEl.textContent = 'You can close this window now.';
@@ -45,8 +44,8 @@ p{font-size:14px;color:rgba(255,255,255,.5);}
         titleEl.textContent = 'Connection Failed';
         msgEl.textContent = data.error || 'Token exchange failed. Please try again.';
       }
-      setTimeout(function() { window.close(); }, 2000);
-    }).catch(function(err) {
+      setTimeout(() => window.close(), 2000);
+    }).catch(err => {
       titleEl.textContent = 'Connection Failed';
       msgEl.textContent = 'Could not reach the server (' + (err.message || 'unknown error') + '). The server may need to be restarted.';
     });

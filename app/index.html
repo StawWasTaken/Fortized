@@ -20,28 +20,29 @@
 <script>window._initialView = 'home';</script>
 <script>
 // Load CDN scripts with timeout
-window._cdnReady = new Promise(function(resolve) {
-  var loaded = 0, needed = 2, timer;
-  function done() { loaded++; if (loaded >= needed) { clearTimeout(timer); resolve(true); } }
-  function timeout() { console.warn('[Fortized] CDN scripts timed out — offline mode'); resolve(false); }
-  timer = setTimeout(timeout, 5000);
-  var s1 = document.createElement('script');
+window._cdnReady = new Promise((resolve) => {
+  let loaded = 0;
+  const needed = 2;
+  const done = () => { loaded++; if (loaded >= needed) { clearTimeout(timer); resolve(true); } };
+  const timeout = () => { console.warn('[Fortized] CDN scripts timed out — offline mode'); resolve(false); };
+  const timer = setTimeout(timeout, 5000);
+  const s1 = document.createElement('script');
   s1.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
   s1.onload = done; s1.onerror = done;
   document.head.appendChild(s1);
-  var s2 = document.createElement('script');
+  const s2 = document.createElement('script');
   s2.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
   s2.onload = done; s2.onerror = done;
   document.head.appendChild(s2);
 });
-window._cdnReady.then(function() {
-  var s3 = document.createElement('script');
+window._cdnReady.then(() => {
+  const s3 = document.createElement('script');
   s3.src = '/FortizedSocial-supabase.js';
-  function loadShim() {
-    var s4 = document.createElement('script');
+  const loadShim = () => {
+    const s4 = document.createElement('script');
     s4.src = '/firebase-compat-shim.js';
     document.head.appendChild(s4);
-  }
+  };
   s3.onload = loadShim;
   s3.onerror = loadShim;
   document.head.appendChild(s3);

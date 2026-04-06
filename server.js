@@ -471,11 +471,13 @@ io.on('connection', (socket) => {
   // ── Message Edit (live broadcast) ──
   socket.on('message:edit', (data) => {
     if (!username) return;
+    if (!rateLimit(socket.id, 'message:edit', 300)) return;
+    if (!data || !data.type || !data.messageId) return;
     const key = roomKey(data.type, data.id1, data.id2);
     io.to(key).emit('message:edited', {
       room: key,
       messageId: data.messageId,
-      newText: data.newText,
+      newText: sanitizeString(data.newText, 4000),
       editedBy: username,
     });
   });
@@ -483,6 +485,8 @@ io.on('connection', (socket) => {
   // ── Message Delete (live broadcast) ──
   socket.on('message:delete', (data) => {
     if (!username) return;
+    if (!rateLimit(socket.id, 'message:delete', 300)) return;
+    if (!data || !data.type || !data.messageId) return;
     const key = roomKey(data.type, data.id1, data.id2);
     io.to(key).emit('message:deleted', {
       room: key,
@@ -494,32 +498,39 @@ io.on('connection', (socket) => {
   // ── Reactions (live broadcast) ──
   socket.on('reaction:toggle', (data) => {
     if (!username) return;
+    if (!rateLimit(socket.id, 'reaction:toggle', 200)) return;
+    if (!data || !data.type || !data.messageId || !data.emoji) return;
     const key = roomKey(data.type, data.id1, data.id2);
     io.to(key).emit('reaction:update', {
       room: key,
       messageId: data.messageId,
-      emoji: data.emoji,
+      emoji: sanitizeString(data.emoji, 32),
       username,
     });
   });
 
   // ── Notifications (targeted) ──
   socket.on('notification:send', (data) => {
-    if (!data.to) return;
+    if (!data || !data.to || typeof data.to !== 'string') return;
+    if (!rateLimit(socket.id, 'notification:send', 500)) return;
     io.to(`user:${data.to}`).emit('notification:new', data.notification);
   });
 
   // ── Friend Request Events ──
   socket.on('friend:request', (data) => {
+    if (!username || !data?.to) return;
+    if (!rateLimit(socket.id, 'friend:request', 2000)) return;
     io.to(`user:${data.to}`).emit('friend:request:new', { from: username });
   });
   socket.on('friend:accept', (data) => {
+    if (!username || !data?.to) return;
     io.to(`user:${data.to}`).emit('friend:accepted', { from: username });
   });
 
   // ── Poll Events (real-time broadcast) ──
   socket.on('poll:update', (data) => {
-    if (!data.bastionId) return;
+    if (!username || !data?.bastionId) return;
+    if (!rateLimit(socket.id, 'poll:update', 500)) return;
     // Broadcast to all connected clients so sidebar badges + poll channels update
     io.emit('poll:updated', {
       bastionId: data.bastionId,
@@ -666,6 +677,25 @@ setInterval(() => {
     if (members.size === 0) roomMembers.delete(key);
   }
 }, 30000);
+
+// ── Graceful Shutdown ─────────────────────────────
+function gracefulShutdown(signal) {
+  console.log(`[Fortized] ${signal} received, shutting down gracefully...`);
+  io.close(() => {
+    console.log('[Fortized] Socket.io connections closed');
+    server.close(() => {
+      console.log('[Fortized] HTTP server closed');
+      process.exit(0);
+    });
+  });
+  // Force shutdown after 10 seconds
+  setTimeout(() => {
+    console.error('[Fortized] Forced shutdown after timeout');
+    process.exit(1);
+  }, 10000);
+}
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // ── Start ──────────────────────────────────────────
 server.listen(PORT, () => {

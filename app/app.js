@@ -3023,16 +3023,22 @@ function _joysterEasterEgg() {
     const feed = document.querySelector('.home-feed');
     if (feed && !_parallaxBound) {
       _parallaxBound = true;
+      let _parallaxTick = false;
       feed.addEventListener('scroll', () => {
-        const hero = document.getElementById('home-hero-area');
-        if (!hero) return;
-        const scrollY = feed.scrollTop;
-        const bg = hero.querySelector('.hero-knight-bg');
-        const joyster = document.getElementById('hero-joyster-wrap');
-        const floats = document.getElementById('hero-float-items');
-        if (bg) bg.style.transform = `translateY(${scrollY * 0.15}px)`;
-        if (joyster) joyster.style.transform = `translateY(${scrollY * 0.08}px)`;
-        if (floats) floats.style.transform = `translateY(${scrollY * 0.05}px)`;
+        if (_parallaxTick) return;
+        _parallaxTick = true;
+        requestAnimationFrame(() => {
+          _parallaxTick = false;
+          const hero = document.getElementById('home-hero-area');
+          if (!hero) return;
+          const scrollY = feed.scrollTop;
+          const bg = hero.querySelector('.hero-knight-bg');
+          const joyster = document.getElementById('hero-joyster-wrap');
+          const floats = document.getElementById('hero-float-items');
+          if (bg) bg.style.transform = `translateY(${scrollY * 0.15}px)`;
+          if (joyster) joyster.style.transform = `translateY(${scrollY * 0.08}px)`;
+          if (floats) floats.style.transform = `translateY(${scrollY * 0.05}px)`;
+        });
       }, {passive:true});
     }
   });

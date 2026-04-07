@@ -19,6 +19,26 @@
 <link rel="icon" type="image/png" href="/Fortized icon.png" id="favicon">
 <script>window._initialView = 'dms';</script>
 <script>
+// Suppress Socket.IO connection errors since we're using Supabase polling instead
+(function() {
+  if (!window.console) return;
+  const originalError = console.error;
+  const originalWarn = console.warn;
+
+  console.error = function(...args) {
+    const msg = (args[0]?.toString?.() || '').toLowerCase();
+    if (msg.includes('wss://') || msg.includes('socket.io') || msg.includes('websocket')) return;
+    originalError.apply(console, args);
+  };
+
+  console.warn = function(...args) {
+    const msg = (args[0]?.toString?.() || '').toLowerCase();
+    if (msg.includes('wss://') || msg.includes('socket.io') || msg.includes('websocket')) return;
+    originalWarn.apply(console, args);
+  };
+})();
+</script>
+<script>
 // Load CDN scripts with timeout
 window._cdnReady = new Promise(function(resolve) {
   var loaded = 0, needed = 2, timer;

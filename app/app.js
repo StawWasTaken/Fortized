@@ -7305,6 +7305,9 @@ function initFortizedUXResilience() {
       onProfileUpdate: function(data) {
         if (!data || !data.username) return;
 
+        // ── INVALIDATE CACHE for the updated user so others get fresh data ──
+        try { FortizedSocial.invalidateUserCache(data.username); } catch(e) {}
+
         // ── SELF PROFILE SYNC (cross-tab/device) ──
         if (data.username === CU.username) {
           if (data.pfp) CU.pfp = data.pfp;

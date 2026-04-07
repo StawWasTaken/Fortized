@@ -95,6 +95,13 @@ const FortizedSocial = (() => {
     }
   }
 
+  function invalidateUserCache(username) {
+    if (!username) return;
+    const normed = norm(username);
+    _cacheInvalidatePrefix('user:' + normed);
+    _cacheInvalidatePrefix('userEnf:' + normed);
+  }
+
   // ── Session ──────────────────────────────────────────
   function getCurrentUsername() {
     return localStorage.getItem('ftz_current') ||
@@ -1352,7 +1359,7 @@ const FortizedSocial = (() => {
       return result;
     },
     getUsersByNames,
-    getUserByName, saveUserObject,
+    getUserByName, saveUserObject, invalidateUserCache,
     getStatus, setStatus,
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,

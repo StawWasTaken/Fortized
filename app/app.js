@@ -7098,6 +7098,7 @@ function initFortizedUXResilience() {
       },
       onMessage: function(room, msg) {
         if (!room || !msg) return;
+        console.debug('[Socket.IO] Received message:new event', { room, msgId: msg.id, from: msg.from });
         // Handle DM messages
         if (room.startsWith('dm:') && curDM) {
           const expectedRoom = 'dm:' + [CU.username, curDM].sort().join('__');
@@ -7107,6 +7108,7 @@ function initFortizedUXResilience() {
               // Check if message already rendered (echo from own send)
               const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
               if (!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) {
+                console.debug('[onMessage] Adding DM message to display', { id: mid, from: msg.from });
                 const lastRows = msgsEl.querySelectorAll('.msg-row');
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'dm', lastAuthor);
@@ -7123,6 +7125,7 @@ function initFortizedUXResilience() {
             if (msgsEl) {
               const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
               if (!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) {
+                console.debug('[onMessage] Adding GC message to display', { id: mid, from: msg.from });
                 const lastRows = msgsEl.querySelectorAll('.msg-row');
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'gc', lastAuthor);
@@ -7142,6 +7145,7 @@ function initFortizedUXResilience() {
               if (msgsEl) {
                 const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
                 if (!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) {
+                  console.debug('[onMessage] Adding bastion message to display', { id: mid, from: msg.from });
                   const lastRows = msgsEl.querySelectorAll('.msg-row');
                   const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                   appendMessage(msgsEl, msg, 'ch', lastAuthor);

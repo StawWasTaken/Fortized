@@ -3594,6 +3594,9 @@ function openDMView(username) {
   ensureDMExists(username).catch(e => console.warn('[DM] Failed to ensure DM:', e?.message));
   // Join Socket.io room for DM real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('dm', CU.username, username);
+  // Start polling for instant message delivery
+  const dmKey = FortizedSocial.norm([CU.username, username].sort().join('__'));
+  try { FortizedSocial.startDMPolling?.(dmKey); } catch(e) { console.warn('[DMPolling] Failed to start:', e?.message); }
   _listenTyping(username);
 }
 function openDMChat(u) { openDMView(u); }

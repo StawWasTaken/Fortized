@@ -1081,105 +1081,61 @@ const FortizedSocial = (() => {
   let _subscriptions = [];
   let _callbacks = {};
 
+  let _dmPollingIntervals = new Map(); // Track polling intervals per DM conversation
+  let _lastDmTimestamp = new Map(); // Track last seen message timestamp per conversation
+
+  async function startDMPolling(dmKey) {
+    if (_dmPollingIntervals.has(dmKey)) return; // Already polling this conversation
+
+    console.log('[DMPolling] Starting polling for conversation:', dmKey);
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data } = await sb.from('dms')
+          .select('*')
+          .eq('dm_key', dmKey)
+          .order('timestamp', { ascending: false })
+          .limit(5);
+
+        if (data && data.length > 0) {
+          // Check for new messages since last poll
+          for (const row of data.reverse()) {
+            const msgTime = new Date(row.timestamp).getTime();
+            const lastTime = _lastDmTimestamp.get(dmKey) || 0;
+
+            if (msgTime > lastTime) {
+              const msg = _dmFromRow(row);
+              console.log('[DMPolling] 🔔 New message detected:', { from: msg.from, text: msg.text?.slice(0,30) });
+              if (_callbacks.onMessage) {
+                _callbacks.onMessage('dm:' + dmKey, msg);
+              }
+            }
+          }
+          _lastDmTimestamp.set(dmKey, new Date(data[0].timestamp).getTime());
+        }
+      } catch(e) {
+        console.warn('[DMPolling] Error polling:', e?.message);
+      }
+    }, 1000); // Poll every second for instant feel
+
+    _dmPollingIntervals.set(dmKey, pollInterval);
+  }
+
+  function stopDMPolling(dmKey) {
+    const interval = _dmPollingIntervals.get(dmKey);
+    if (interval) {
+      clearInterval(interval);
+      _dmPollingIntervals.delete(dmKey);
+      _lastDmTimestamp.delete(dmKey);
+      console.log('[DMPolling] Stopped polling for:', dmKey);
+    }
+  }
+
   function startSupabasePolling(username, callbacks) {
     _callbacks = callbacks || {};
     stopSupabasePolling();
 
-    console.log('[Fortized] Starting Supabase real-time subscriptions for instant message & profile sync');
-
-    // ── Subscribe to ALL DM message INSERTs ──
-    try {
-      const dmChannel = sb.channel('public:dms:*')
-        .on('postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'dms' },
-          (payload) => {
-            const msg = _dmFromRow(payload.new);
-            const key = payload.new.dm_key;
-            console.log('[RT] New DM:', { key, from: msg.from, id: msg.id });
-            if (_callbacks.onMessage) _callbacks.onMessage('dm:' + key, msg);
-          }
-        )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('✓ [Fortized] DM messages real-time active');
-          } else if (status === 'CHANNEL_ERROR') {
-            console.error('✗ [Fortized] DM subscription error');
-          } else if (status === 'TIMED_OUT') {
-            console.warn('[Fortized] DM subscription timeout - retrying...');
-          }
-        });
-      _subscriptions.push(dmChannel);
-    } catch(e) { console.error('[Fortized] DM subscription failed:', e?.message); }
-
-    // ── Subscribe to user profile UPDATEs ──
-    try {
-      const profileChannel = sb.channel('public:users:*')
-        .on('postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'users' },
-          (payload) => {
-            const user = _userFromRow(payload.new);
-            console.log('[RT] Profile update:', { username: user.username, pfp: !!user.pfp });
-            if (_callbacks.onProfileUpdate) {
-              _callbacks.onProfileUpdate({
-                username: user.username,
-                pfp: user.pfp,
-                displayName: user.displayName,
-                displayFont: user.displayFont,
-                displayEffect: user.displayEffect,
-                displayColor: user.displayColor,
-              });
-            }
-          }
-        )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('✓ [Fortized] Profile updates real-time active');
-          } else if (status === 'CHANNEL_ERROR') {
-            console.error('✗ [Fortized] Profile subscription error');
-          } else if (status === 'TIMED_OUT') {
-            console.warn('[Fortized] Profile subscription timeout - retrying...');
-          }
-        });
-      _subscriptions.push(profileChannel);
-    } catch(e) { console.error('[Fortized] Profile subscription failed:', e?.message); }
-
-    // ── Subscribe to GC message INSERTs ──
-    try {
-      const gcChannel = sb.channel('public:group_chat_messages:*')
-        .on('postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'group_chat_messages' },
-          (payload) => {
-            const msg = payload.new;
-            console.log('[RT] New GC message:', { gc_id: msg.gc_id, from: msg.from });
-            if (_callbacks.onMessage) _callbacks.onMessage('gc:' + msg.gc_id, msg);
-          }
-        )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('✓ [Fortized] GC messages real-time active');
-          }
-        });
-      _subscriptions.push(gcChannel);
-    } catch(e) { console.error('[Fortized] GC subscription failed:', e?.message); }
-
-    // ── Subscribe to bastion channel message INSERTs ──
-    try {
-      const chChannel = sb.channel('public:bastion_msgs:*')
-        .on('postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'bastion_msgs' },
-          (payload) => {
-            const msg = payload.new;
-            console.log('[RT] New channel message:', { bastion_id: msg.bastion_id, channel: msg.channel_id });
-            if (_callbacks.onMessage) _callbacks.onMessage('bastion:' + msg.bastion_id + ':' + msg.channel_id, msg);
-          }
-        )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('✓ [Fortized] Channel messages real-time active');
-          }
-        });
-      _subscriptions.push(chChannel);
-    } catch(e) { console.error('[Fortized] Channel subscription failed:', e?.message); }
+    console.log('[Fortized] Supabase real-time initialized (using active polling for instant delivery)');
   }
 
   function startPolling(username, callbacks) {
@@ -1486,6 +1442,7 @@ const FortizedSocial = (() => {
     adminSetSignal, adminGetSignal,
     adminPushFeedback,
     startPolling, stopPolling, listenBastionChannel, listenDM,
+    startDMPolling, stopDMPolling,
     initSocket, getSocket, isSocketReady, socketEmit,
     joinRoom, leaveRoom, queryPresence, disconnectSocket,
     playNotificationSound,

@@ -1081,11 +1081,55 @@ const FortizedSocial = (() => {
   function startSupabasePolling(username, callbacks) {
     _callbacks = callbacks || {};
     stopSupabasePolling();
-    // ── EGRESS EMERGENCY: All Supabase real-time subscriptions disabled ──
-    // Socket.io already handles notifications, DMs, and presence.
-    // Supabase real-time subscriptions generate continuous egress that is
-    // killing the free tier. Only Socket.io is used for real-time now.
-    console.log('[Fortized] Supabase real-time disabled — using Socket.io only');
+    // ── Re-enable Supabase real-time for critical operations ──
+    // Socket.io is unreliable for real-time sync. Use Supabase PostgreSQL pub/sub
+    // for messages and profile updates which need instant delivery.
+
+    // Subscribe to all DM messages via realtime
+    try {
+      const dmSub = sb
+        .channel('public:dms')
+        .on('postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'dms' },
+          (payload) => {
+            const msg = _dmFromRow(payload.new);
+            const key = payload.new.dm_key;
+            console.debug('[Supabase RT] DM message received:', { key, from: msg.from });
+            if (_callbacks.onMessage) _callbacks.onMessage('dm:' + key, msg);
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') console.log('[Fortized] DM real-time subscribed');
+        });
+      _subscriptions.push(dmSub);
+    } catch(e) { console.warn('[Fortized] DM subscription failed:', e?.message); }
+
+    // Subscribe to user profile updates
+    try {
+      const profileSub = sb
+        .channel('public:users')
+        .on('postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'users' },
+          (payload) => {
+            const user = _userFromRow(payload.new);
+            console.debug('[Supabase RT] Profile update received:', { username: user.username });
+            if (_callbacks.onProfileUpdate) {
+              _callbacks.onProfileUpdate({
+                username: user.username,
+                pfp: user.pfp,
+                displayName: user.displayName,
+                displayFont: user.displayFont,
+                displayEffect: user.displayEffect,
+                displayColor: user.displayColor,
+              });
+            }
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') console.log('[Fortized] Profile updates subscribed');
+        });
+      _subscriptions.push(profileSub);
+    } catch(e) { console.warn('[Fortized] Profile subscription failed:', e?.message); }
   }
 
   function startPolling(username, callbacks) {

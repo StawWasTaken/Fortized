@@ -851,12 +851,13 @@ async function refreshCU() {
     const prevRad = CU.radianceUntil, prevPlus = CU.radiancePlus;
     const prevBastions = CU.bastions;
     const prevStatus = CU.status;
-    const prevPfp = CU.pfp;
     const fresh = await Promise.race([
-      FortizedSocial.getUserByName(CU.username),
+      FortizedSocial.getUserByName(CU.username, { noCache: true }),
       new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))
     ]);
     if (fresh?.username) {
+      console.debug('[refreshCU] Fresh data from DB:', { username: fresh.username, pfp: fresh.pfp ? 'set' : 'null', friends: fresh.friends?.length || 0 });
+
       // Preserve radiance data if DB returned null but local had active values
       if(!fresh.radianceUntil && prevRad && new Date(prevRad)>new Date()) fresh.radianceUntil=prevRad;
       if(!fresh.radiancePlus && prevPlus && new Date(prevPlus)>new Date()) fresh.radiancePlus=prevPlus;
@@ -871,8 +872,8 @@ async function refreshCU() {
           return fb;
         });
       }
-      // Preserve local pfp if DB somehow returned null
-      if (!fresh.pfp && prevPfp) fresh.pfp = prevPfp;
+      // IMPORTANT: Trust database for PFP, messages, friends (don't preserve local copy)
+      // These fields are the source of truth from the database and should override local data
       // Preserve locally-known live status (Socket.IO is source of truth, not stale DB)
       if (prevStatus && prevStatus !== 'offline') fresh.status = prevStatus;
       // Preserve quest/onyx data — local is source of truth since saves may be in-flight
@@ -6805,39 +6806,55 @@ function initFortizedUXResilience() {
   username=username.replace(/^["']|["']$/g,'').trim();
   if (!username){window.location.href='/login';return;}
 
-  // Try cached user object first — instant load
-  const cached=localStorage.getItem('ftz_user_'+username);
-  if (cached){
-    try{CU=JSON.parse(cached);}catch{CU=null;}
-  }
-
-  if (!CU?.username){
-    if (!navigator.onLine || typeof FortizedSocial === 'undefined') {
-      // Offline or scripts failed with no cache — can't proceed
+  // CRITICAL: Always fetch fresh user data from database on page load
+  // This ensures PFP changes, messages, and friends sync properly across sessions
+  // Only use localStorage as a fallback if database fetch fails
+  let usedCache = false;
+  if (!navigator.onLine || typeof FortizedSocial === 'undefined') {
+    // Offline or scripts failed — use cache as fallback
+    const cached=localStorage.getItem('ftz_user_'+username);
+    if (cached){
+      try{CU=JSON.parse(cached);}catch{CU=null;}
+      usedCache = true;
+      console.debug('[Init] Using cached user data (offline mode)');
+    }
+    if (!CU?.username) {
       localStorage.removeItem('ftz_current');
       localStorage.removeItem('fortized_current_user');
       window.location.href='/login';
       return;
     }
-    // First load — must fetch from database
+  } else {
+    // Online — fetch fresh data from database (bypass cache to ensure latest)
     const lbl=document.querySelector('#app-loading .lbl');
     if(lbl)lbl.textContent='Fetching your profile…';
     try{
       CU=await Promise.race([
-        FortizedSocial.getUserByName(username),
+        FortizedSocial.getUserByName(username, { noCache: true }),
         new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),7000))
       ]);
     }catch(e){
       CU=null;
-      if(lbl)lbl.textContent='⚠️ Connection timeout. Retrying…';
-      // Try once more with longer timeout
+      if(lbl)lbl.textContent='⚠️ Connection timeout. Trying cache…';
+      // Fall back to cache if database fetch times out
+      const cached=localStorage.getItem('ftz_user_'+username);
+      if (cached){
+        try{CU=JSON.parse(cached);}catch{CU=null;}
+        usedCache = true;
+        console.warn('[Init] Cache fallback after timeout:', e?.message);
+      }
+    }
+    if (!CU?.username){
+      // Last attempt with longer timeout
       try{
         await new Promise(r=>setTimeout(r,1500));
         CU=await Promise.race([
-          FortizedSocial.getUserByName(username),
+          FortizedSocial.getUserByName(username, { noCache: true }),
           new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))
         ]);
-      }catch{CU=null;}
+      }catch(e){
+        console.warn('[Init] Retry failed:', e?.message);
+      }
     }
     if (!CU?.username){
       localStorage.removeItem('ftz_current');
@@ -6845,6 +6862,7 @@ function initFortizedUXResilience() {
       window.location.href='/login?error=auth_failed';
       return;
     }
+    // Always cache the fresh data
     localStorage.setItem('ftz_user_'+username,JSON.stringify(CU));
   }
 
@@ -6896,6 +6914,21 @@ function initFortizedUXResilience() {
   _ftzRouter._initialLoad = true;
   _ftzRouter.applyInitialRoute();
   _ftzRouter._initialLoad = false;
+
+  // CRITICAL: Sync fresh user data from database after page load
+  // This ensures changes (PFP, messages, friends) made in other sessions are visible
+  if (navigator.onLine && typeof FortizedSocial !== 'undefined') {
+    setTimeout(async () => {
+      try {
+        console.debug('[Init] Refreshing user data from database...');
+        const refreshed = await refreshCU();
+        console.debug('[Init] ✓ User data refreshed from database');
+      } catch(e) {
+        console.warn('[Init] Refresh failed but continuing:', e?.message);
+      }
+    }, 50);
+  }
+
   // Trigger new onboarding for first-time users
   setTimeout(showOnboarding, 600);
   initFortizedUXResilience();

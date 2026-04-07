@@ -130,8 +130,11 @@ const FortizedSocial = (() => {
     const isEnforce = cols === _USER_ENFORCE_COLS;
     const cacheKey = isEnforce ? 'userEnf:' + norm(username) : 'user:' + norm(username);
     const ttl = isEnforce ? _CACHE_TTL.userEnforce : _CACHE_TTL.user;
-    const cached = _cacheGetWithFallback(cacheKey, ttl);
-    if (cached !== undefined) return cached;
+    const skipCache = opts && opts.noCache; // Allow bypassing cache for critical loads
+    if (!skipCache) {
+      const cached = _cacheGetWithFallback(cacheKey, ttl);
+      if (cached !== undefined) return cached;
+    }
     const { data } = await sb.from('users').select(cols).eq('username', norm(username)).maybeSingle();
     const result = data ? _userFromRow(data) : null;
     _cacheSet(cacheKey, result, ttl);

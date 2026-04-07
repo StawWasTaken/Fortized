@@ -3683,12 +3683,14 @@ async function sendDM() {
   const isOutline = _outlineMode;
   _outlineMode = false;
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
-  if(msgsEl){
-    const lastRows=msgsEl.querySelectorAll('.msg-row');
-    const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
-    appendMessage(msgsEl,msg,'dm',lastAuthor);
-    scrollBottom('dm-msgs');
-  }
+  // Don't show optimistic render - wait for polling to deliver from database
+  // This prevents message duplication (showing once locally, once from DB)
+  // if(msgsEl){
+  //   const lastRows=msgsEl.querySelectorAll('.msg-row');
+  //   const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
+  //   appendMessage(msgsEl,msg,'dm',lastAuthor);
+  //   scrollBottom('dm-msgs');
+  // }
   try {
     await FortizedSocial.sendDMMessage(CU.username, curDM, text);
     console.debug('[sendDM] Message sent successfully');
@@ -4980,12 +4982,14 @@ async function sendChannelMsg(idx) {
   const isOutline = _outlineMode;
   _outlineMode = false;
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
-  if(msgsEl){
-    const lastRows=msgsEl.querySelectorAll('.msg-row');
-    const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
-    appendMessage(msgsEl,msg,'ch',lastAuthor);
-    scrollBottom('ch-msgs-'+idx);
-  }
+  // Don't show optimistic render - wait for polling to deliver from database
+  // This prevents message duplication (showing once locally, once from DB)
+  // if(msgsEl){
+  //   const lastRows=msgsEl.querySelectorAll('.msg-row');
+  //   const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
+  //   appendMessage(msgsEl,msg,'ch',lastAuthor);
+  //   scrollBottom('ch-msgs-'+idx);
+  // }
   // Award message reputation
   awardMessageRep(b.globalId||b.name, CU.username);
   _trackSendMsgQuest();

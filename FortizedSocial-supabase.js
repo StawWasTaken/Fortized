@@ -1085,19 +1085,29 @@ const FortizedSocial = (() => {
   let _lastDmTimestamp = new Map(); // Track last seen message timestamp per conversation
 
   async function startDMPolling(dmKey) {
-    if (_dmPollingIntervals.has(dmKey)) return; // Already polling this conversation
+    if (_dmPollingIntervals.has(dmKey)) {
+      console.log('[DMPolling] Already polling this conversation:', dmKey);
+      return;
+    }
 
-    console.log('[DMPolling] Starting polling for conversation:', dmKey);
+    console.log('[DMPolling] ✓ Starting polling for:', dmKey);
+    console.log('[DMPolling] Callbacks available:', { hasOnMessage: !!_callbacks.onMessage, callbackKeys: Object.keys(_callbacks) });
 
     const pollInterval = setInterval(async () => {
       try {
-        const { data } = await sb.from('dms')
+        const { data, error } = await sb.from('dms')
           .select('*')
           .eq('dm_key', dmKey)
           .order('timestamp', { ascending: false })
           .limit(5);
 
+        if (error) {
+          console.error('[DMPolling] Query error:', error.message);
+          return;
+        }
+
         if (data && data.length > 0) {
+          console.debug('[DMPolling] Fetched', data.length, 'messages, checking for new ones...');
           // Check for new messages since last poll
           for (const row of data.reverse()) {
             const msgTime = new Date(row.timestamp).getTime();
@@ -1105,20 +1115,26 @@ const FortizedSocial = (() => {
 
             if (msgTime > lastTime) {
               const msg = _dmFromRow(row);
-              console.log('[DMPolling] 🔔 New message detected:', { from: msg.from, text: msg.text?.slice(0,30) });
+              console.log('[DMPolling] 🔔 NEW MESSAGE:', { from: msg.from, text: msg.text?.slice(0,40), msgTime, lastTime });
               if (_callbacks.onMessage) {
+                console.log('[DMPolling] Invoking onMessage callback...');
                 _callbacks.onMessage('dm:' + dmKey, msg);
+              } else {
+                console.error('[DMPolling] ERROR: onMessage callback not found!');
               }
             }
           }
           _lastDmTimestamp.set(dmKey, new Date(data[0].timestamp).getTime());
+        } else {
+          console.debug('[DMPolling] No messages found for:', dmKey);
         }
       } catch(e) {
-        console.warn('[DMPolling] Error polling:', e?.message);
+        console.error('[DMPolling] Fatal error:', e?.message, e);
       }
     }, 1000); // Poll every second for instant feel
 
     _dmPollingIntervals.set(dmKey, pollInterval);
+    console.log('[DMPolling] ✓ Polling interval started, checking every 1 second');
   }
 
   function stopDMPolling(dmKey) {

@@ -3595,8 +3595,14 @@ function openDMView(username) {
   // Join Socket.io room for DM real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('dm', CU.username, username);
   // Start polling for instant message delivery
-  const dmKey = FortizedSocial.norm([CU.username, username].sort().join('__'));
-  try { FortizedSocial.startDMPolling?.(dmKey); } catch(e) { console.warn('[DMPolling] Failed to start:', e?.message); }
+  const dmKey = [CU.username.toLowerCase(), username.toLowerCase()].sort().join('__');
+  console.log('[DMPolling] Starting for dmKey:', dmKey);
+  if (FortizedSocial.startDMPolling) {
+    FortizedSocial.startDMPolling(dmKey);
+    console.log('[DMPolling] ✓ Polling started for DM conversation');
+  } else {
+    console.error('[DMPolling] startDMPolling function not found!');
+  }
   _listenTyping(username);
 }
 function openDMChat(u) { openDMView(u); }

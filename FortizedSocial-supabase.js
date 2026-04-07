@@ -465,7 +465,11 @@ const FortizedSocial = (() => {
     if (!toUsername) return { ok: false, msg: 'Enter a username.' };
     if (fromUsername === toUsername) return { ok: false, msg: "Can't add yourself." };
 
-    const [fu, tu] = await Promise.all([getUserByName(fromUsername), getUserByName(toUsername)]);
+    // Fetch fresh data to avoid stale friend lists
+    const [fu, tu] = await Promise.all([
+      getUserByName(fromUsername, { noCache: true }),
+      getUserByName(toUsername, { noCache: true })
+    ]);
     if (!fu) return { ok: false, msg: 'Your account not found.' };
     if (!tu) return { ok: false, msg: `User "${toUsername}" not found.` };
 
@@ -503,7 +507,11 @@ const FortizedSocial = (() => {
     myUsername   = norm(myUsername);
     fromUsername = norm(fromUsername);
     _cacheDel('user:' + myUsername); _cacheDel('user:' + fromUsername);
-    const [mu, fu] = await Promise.all([getUserByName(myUsername), getUserByName(fromUsername)]);
+    // Fetch fresh data to ensure friend lists are current
+    const [mu, fu] = await Promise.all([
+      getUserByName(myUsername, { noCache: true }),
+      getUserByName(fromUsername, { noCache: true })
+    ]);
     if (!mu || !fu) return { ok: false, msg: 'User not found.' };
 
     const myFriends  = [...(mu.friends || [])];
@@ -540,7 +548,10 @@ const FortizedSocial = (() => {
   async function declineFriendRequest(myUsername, fromUsername) {
     myUsername   = norm(myUsername);
     fromUsername = norm(fromUsername);
-    const [mu, fu] = await Promise.all([getUserByName(myUsername), getUserByName(fromUsername)]);
+    const [mu, fu] = await Promise.all([
+      getUserByName(myUsername, { noCache: true }),
+      getUserByName(fromUsername, { noCache: true })
+    ]);
     if (mu) await sb.from('users').update({
       friend_requests_received: (mu.friendRequestsReceived || []).filter(u => u !== fromUsername)
     }).eq('username', myUsername);
@@ -553,7 +564,10 @@ const FortizedSocial = (() => {
   async function removeFriend(myUsername, friendUsername) {
     myUsername     = norm(myUsername);
     friendUsername = norm(friendUsername);
-    const [mu, fu] = await Promise.all([getUserByName(myUsername), getUserByName(friendUsername)]);
+    const [mu, fu] = await Promise.all([
+      getUserByName(myUsername, { noCache: true }),
+      getUserByName(friendUsername, { noCache: true })
+    ]);
     if (mu) await sb.from('users').update({
       friends: (mu.friends || []).filter(u => u !== friendUsername)
     }).eq('username', myUsername);
@@ -572,14 +586,24 @@ const FortizedSocial = (() => {
     const cacheKey = 'dm:' + key + ':' + max;
     const cached = _cacheGet(cacheKey);
     if (cached !== undefined) return cached;
-    const { data } = await sb.from('dms').select('id,from,text,time,timestamp,edited,new_text,reactions,forwarded,forwarded_by')
-      .eq('dm_key', key)
-      .order('timestamp', { ascending: false })
-      .limit(max);
-    // Reverse to chronological order after fetching latest N
-    const result = (data || []).reverse().map(_dmFromRow);
-    _cacheSet(cacheKey, result, _CACHE_TTL.dmMessages);
-    return result;
+    try {
+      const { data, error } = await sb.from('dms').select('id,from,text,time,timestamp,edited,new_text,reactions,forwarded,forwarded_by')
+        .eq('dm_key', key)
+        .order('timestamp', { ascending: false })
+        .limit(max);
+      if (error) {
+        console.error('[getDMMessages] Query error:', error.message);
+        return [];
+      }
+      // Reverse to chronological order after fetching latest N
+      const result = (data || []).reverse().map(_dmFromRow);
+      console.debug('[getDMMessages]', { between: key, count: result.length, sample: result.slice(-3).map(m => ({ id: m.id, from: m.from, text: m.text.slice(0,40) })) });
+      _cacheSet(cacheKey, result, _CACHE_TTL.dmMessages);
+      return result;
+    } catch(e) {
+      console.error('[getDMMessages] Exception:', e.message);
+      return [];
+    }
   }
 
   function _dmFromRow(r) {

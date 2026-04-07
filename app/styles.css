@@ -710,9 +710,9 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .gif-cat-chip .gcc-count{font-size:9px;padding:1px 5px;background:rgba(255,249,62,.15);border-radius:var(--radius-pill);color:var(--accent);font-weight:700;}
 /* GIF collection grid (visual category cards) */
 .gif-collection-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;overflow-y:auto;flex:1;scrollbar-width:thin;}
-.gif-collection-card{position:relative;border-radius:12px;overflow:hidden;cursor:pointer;height:100px;background:var(--panel2,rgba(255,255,255,.03));border:1.5px solid rgba(255,255,255,.06);transition:all .22s cubic-bezier(.22,1,.36,1);}
+.gif-collection-card{position:relative;border-radius:12px;overflow:hidden;cursor:pointer;height:100px;background:rgba(0,0,0,.4);border:1.5px solid rgba(255,255,255,.06);transition:all .22s cubic-bezier(.22,1,.36,1);}
 .gif-collection-card:hover{border-color:rgba(255,249,62,.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
-.gif-collection-card img{width:100%;height:100%;object-fit:cover;opacity:.55;transition:opacity .22s;}
+.gif-collection-card img{width:100%;height:100%;object-fit:cover;opacity:1;background:rgba(0,0,0,.3);transition:opacity .22s;}
 .gif-collection-card:hover img{opacity:.75;}
 .gif-collection-card .gcc-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7),0 0 20px rgba(0,0,0,.3);letter-spacing:.01em;z-index:1;}
 .gif-collection-card .gcc-label svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));}

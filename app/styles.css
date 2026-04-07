@@ -655,13 +655,13 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .cit-btn{background:transparent;border:none;color:rgba(255,255,255,.32);cursor:pointer;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.22,1,.36,1);flex-shrink:0;position:relative;}
 .cit-btn:hover{background:rgba(255,249,62,.1);color:var(--accent);transform:scale(1.08);}
 .cit-btn.active{color:var(--accent);background:rgba(255,249,62,.12);box-shadow:0 0 12px rgba(255,249,62,.15);}
-.cit-btn::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%) scale(.9);background:var(--panel2);color:rgba(255,255,255,.7);font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;border:1px solid var(--border);}
-.cit-btn:hover::after{opacity:1;transform:translateX(-50%) scale(1);}
+.cit-btn::after,
+.cit-gif::after {
+  display: none !important;
+}
 .cit-sep{width:1px;height:18px;background:rgba(255,255,255,.06);margin:0 2px;flex-shrink:0;}
 .cit-gif{background:transparent;border:none;color:rgba(255,255,255,.32);cursor:pointer;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.22,1,.36,1);flex-shrink:0;position:relative;}
 .cit-gif:hover{background:rgba(255,249,62,.1);color:var(--accent);transform:scale(1.08);}
-.cit-gif::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%) scale(.9);background:var(--panel2);color:rgba(255,255,255,.7);font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;border:1px solid var(--border);}
-.cit-gif:hover::after{opacity:1;transform:translateX(-50%) scale(1);}
 .chat-input-row{display:flex;align-items:flex-end;padding:10px 12px 10px 10px;gap:5px;}
 .chat-input-row textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-ui);font-size:14.5px;resize:none;max-height:160px;min-height:28px;line-height:1.55;padding:6px 4px;position:relative;z-index:2;}
 .ci-preview-wrap textarea{width:100%;}
@@ -1081,7 +1081,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .hq-quick-btn:hover{background:var(--accent-dim);border-color:var(--accent-mid);color:var(--accent);}
 @media(max-width:768px){.admin-nav{width:56px;min-width:56px;}.adm-tab span:last-child,.adm-sec-label{display:none;}.adm-tab{justify-content:center;padding:10px;}}
 /* ── Settings modal (large modal for settings/bsettings) ──── */
-.settings-modal{max-width:1000px;width:calc(100vw - 40px);height:calc(100vh - 60px);max-height:calc(100vh - 60px);display:flex;flex-direction:column;overflow:hidden;border-radius:18px;}
+.settings-modal{max-width:1400px;width:calc(100vw - 40px);height:calc(100vh - 60px);max-height:calc(100vh - 60px);display:flex;flex-direction:column;overflow:hidden;border-radius:18px;}
 @media(max-width:768px){.settings-modal{width:calc(100vw - 12px);height:calc(100vh - 12px);border-radius:14px;}}
 /* ── Overview modal (Guilded-style) ──── */
 .overview-modal{max-width:calc(100vw - 40px);width:calc(100vh * 1.5);height:calc(100vh / 1.5);max-height:calc(100vh - 40px);display:flex;flex-direction:column;overflow:hidden;border-radius:18px;}
@@ -1739,7 +1739,7 @@ body.is-desktop-app .notif-panel{top:0;}
 .bastion-tmpl-link .btl-copy:hover{background:rgba(255,249,62,.18);}
 
 /* ── BADGE SYSTEM ─────────────────────────────────── */
-.ftz-badge { display:inline-flex;align-items:center;justify-content:center;position:relative;width:28px;height:28px;flex-shrink:0;cursor:pointer;vertical-align:middle;margin:0 3px;transition:transform .18s cubic-bezier(.22,1,.36,1),filter .18s; }
+.ftz-badge { display:inline-flex;align-items:center;justify-content:center;position:relative;width:28px;height:28px;flex-shrink:0;cursor:pointer;vertical-align:middle;margin:0 1px;transition:transform .18s cubic-bezier(.22,1,.36,1),filter .18s; }
 .ftz-badge:hover { transform:scale(1.18);filter:drop-shadow(0 0 8px currentColor);z-index:var(--z-max,9999); }
 .ftz-badge img { width:100%;height:100%;object-fit:contain;pointer-events:none; }
 .ftz-badge .badge-tooltip { display:none; }

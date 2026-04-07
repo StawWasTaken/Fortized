@@ -981,6 +981,9 @@ const FortizedSocial = (() => {
         if (banner && !navigator.onLine) banner.classList.add('visible');
       });
       _socket.on('message:new', function(data) {
+        // Supabase real-time now handles messages directly from DB
+        // Socket.IO message:new is kept as fallback only
+        console.debug('[Socket.IO] Received message:new (fallback):', data.room);
         if (_socketCallbacks.onMessage) _socketCallbacks.onMessage(data.room, data.message);
       });
       _socket.on('typing:update', function(data) {
@@ -1081,38 +1084,41 @@ const FortizedSocial = (() => {
   function startSupabasePolling(username, callbacks) {
     _callbacks = callbacks || {};
     stopSupabasePolling();
-    // ── Re-enable Supabase real-time for critical operations ──
-    // Socket.io is unreliable for real-time sync. Use Supabase PostgreSQL pub/sub
-    // for messages and profile updates which need instant delivery.
 
-    // Subscribe to all DM messages via realtime
+    console.log('[Fortized] Starting Supabase real-time subscriptions for instant message & profile sync');
+
+    // ── Subscribe to ALL DM message INSERTs ──
     try {
-      const dmSub = sb
-        .channel('public:dms')
+      const dmChannel = sb.channel('public:dms:*')
         .on('postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'dms' },
           (payload) => {
             const msg = _dmFromRow(payload.new);
             const key = payload.new.dm_key;
-            console.debug('[Supabase RT] DM message received:', { key, from: msg.from });
+            console.log('[RT] New DM:', { key, from: msg.from, id: msg.id });
             if (_callbacks.onMessage) _callbacks.onMessage('dm:' + key, msg);
           }
         )
         .subscribe((status) => {
-          if (status === 'SUBSCRIBED') console.log('[Fortized] DM real-time subscribed');
+          if (status === 'SUBSCRIBED') {
+            console.log('✓ [Fortized] DM messages real-time active');
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('✗ [Fortized] DM subscription error');
+          } else if (status === 'TIMED_OUT') {
+            console.warn('[Fortized] DM subscription timeout - retrying...');
+          }
         });
-      _subscriptions.push(dmSub);
-    } catch(e) { console.warn('[Fortized] DM subscription failed:', e?.message); }
+      _subscriptions.push(dmChannel);
+    } catch(e) { console.error('[Fortized] DM subscription failed:', e?.message); }
 
-    // Subscribe to user profile updates
+    // ── Subscribe to user profile UPDATEs ──
     try {
-      const profileSub = sb
-        .channel('public:users')
+      const profileChannel = sb.channel('public:users:*')
         .on('postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'users' },
           (payload) => {
             const user = _userFromRow(payload.new);
-            console.debug('[Supabase RT] Profile update received:', { username: user.username });
+            console.log('[RT] Profile update:', { username: user.username, pfp: !!user.pfp });
             if (_callbacks.onProfileUpdate) {
               _callbacks.onProfileUpdate({
                 username: user.username,
@@ -1126,10 +1132,54 @@ const FortizedSocial = (() => {
           }
         )
         .subscribe((status) => {
-          if (status === 'SUBSCRIBED') console.log('[Fortized] Profile updates subscribed');
+          if (status === 'SUBSCRIBED') {
+            console.log('✓ [Fortized] Profile updates real-time active');
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('✗ [Fortized] Profile subscription error');
+          } else if (status === 'TIMED_OUT') {
+            console.warn('[Fortized] Profile subscription timeout - retrying...');
+          }
         });
-      _subscriptions.push(profileSub);
-    } catch(e) { console.warn('[Fortized] Profile subscription failed:', e?.message); }
+      _subscriptions.push(profileChannel);
+    } catch(e) { console.error('[Fortized] Profile subscription failed:', e?.message); }
+
+    // ── Subscribe to GC message INSERTs ──
+    try {
+      const gcChannel = sb.channel('public:group_chat_messages:*')
+        .on('postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'group_chat_messages' },
+          (payload) => {
+            const msg = payload.new;
+            console.log('[RT] New GC message:', { gc_id: msg.gc_id, from: msg.from });
+            if (_callbacks.onMessage) _callbacks.onMessage('gc:' + msg.gc_id, msg);
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('✓ [Fortized] GC messages real-time active');
+          }
+        });
+      _subscriptions.push(gcChannel);
+    } catch(e) { console.error('[Fortized] GC subscription failed:', e?.message); }
+
+    // ── Subscribe to bastion channel message INSERTs ──
+    try {
+      const chChannel = sb.channel('public:bastion_msgs:*')
+        .on('postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'bastion_msgs' },
+          (payload) => {
+            const msg = payload.new;
+            console.log('[RT] New channel message:', { bastion_id: msg.bastion_id, channel: msg.channel_id });
+            if (_callbacks.onMessage) _callbacks.onMessage('bastion:' + msg.bastion_id + ':' + msg.channel_id, msg);
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('✓ [Fortized] Channel messages real-time active');
+          }
+        });
+      _subscriptions.push(chChannel);
+    } catch(e) { console.error('[Fortized] Channel subscription failed:', e?.message); }
   }
 
   function startPolling(username, callbacks) {
@@ -1149,10 +1199,15 @@ const FortizedSocial = (() => {
   }
 
   function stopSupabasePolling() {
-    _subscriptions.forEach(sub => {
-      try { sb.removeChannel(sub); } catch (_) {}
+    _subscriptions.forEach(channel => {
+      try {
+        sb.removeChannel(channel);
+      } catch (e) {
+        console.warn('[Fortized] Failed to remove channel:', e?.message);
+      }
     });
     _subscriptions = [];
+    console.log('[Fortized] Supabase real-time subscriptions stopped');
   }
 
   // ── EGRESS EMERGENCY: Supabase real-time subscriptions replaced with Socket.io ──

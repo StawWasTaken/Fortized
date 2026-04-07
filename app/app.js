@@ -7433,6 +7433,9 @@ function initFortizedUXResilience() {
       },
     };
     window._ftzSocketCallbacks = _socketCbs;
+    console.log('[Init] _socketCbs keys:', Object.keys(_socketCbs));
+    console.log('[Init] _socketCbs.onMessage exists?', !!_socketCbs.onMessage);
+    console.log('[Init] _socketCbs.onMessage type:', typeof _socketCbs.onMessage);
     FortizedSocial.initSocket(CU.username, _socketCbs);
     // Start Supabase real-time polling with callbacks for message delivery
     FortizedSocial.startPolling(CU.username, _socketCbs);

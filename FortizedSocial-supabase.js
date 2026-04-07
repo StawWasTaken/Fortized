@@ -277,7 +277,18 @@ const FortizedSocial = (() => {
     _cacheDel('user:' + norm(user.username));
     _cacheDel('userEnf:' + norm(user.username));
     const row = _userToRow(user);
-    await sb.from('users').upsert(row, { onConflict: 'username' });
+    console.debug('[saveUserObject] Saving user:', {
+      username: user.username,
+      pfp: user.pfp ? 'set' : 'null',
+      banner: user.banner ? 'set' : 'null',
+      onyx: user.onyx
+    });
+    const { data, error } = await sb.from('users').upsert(row, { onConflict: 'username' });
+    if (error) {
+      console.error('[saveUserObject] UPSERT FAILED:', error.message, error.code);
+      throw new Error(`Upsert failed: ${error.message}`);
+    }
+    console.debug('[saveUserObject] ✓ Successfully saved user data');
   }
 
   // ── Auth ─────────────────────────────────────────────
@@ -466,14 +477,23 @@ const FortizedSocial = (() => {
       return acceptFriendRequest(fromUsername, toUsername);
     }
 
-    await sb.from('users').update({ friend_requests_sent: [...sentReqs, toUsername] }).eq('username', fromUsername);
-    const theirReceived = tu.friendRequestsReceived || [];
-    if (!theirReceived.includes(fromUsername)) {
-      await sb.from('users').update({ friend_requests_received: [...theirReceived, fromUsername] }).eq('username', toUsername);
-    }
+    try {
+      const { error: err1 } = await sb.from('users').update({ friend_requests_sent: [...sentReqs, toUsername] }).eq('username', fromUsername);
+      if (err1) throw new Error(`Update sender failed: ${err1.message}`);
 
-    await addNotification(toUsername, { type: 'friend_request', from: fromUsername });
-    return { ok: true, msg: `Friend request sent to ${toUsername}!` };
+      const theirReceived = tu.friendRequestsReceived || [];
+      if (!theirReceived.includes(fromUsername)) {
+        const { error: err2 } = await sb.from('users').update({ friend_requests_received: [...theirReceived, fromUsername] }).eq('username', toUsername);
+        if (err2) throw new Error(`Update receiver failed: ${err2.message}`);
+      }
+
+      await addNotification(toUsername, { type: 'friend_request', from: fromUsername });
+      console.debug('[Friend Request] Sent from', fromUsername, 'to', toUsername);
+      return { ok: true, msg: `Friend request sent to ${toUsername}!` };
+    } catch (e) {
+      console.error('[sendFriendRequest Error]', e.message);
+      return { ok: false, msg: 'Failed to send request: ' + e.message };
+    }
   }
 
   async function acceptFriendRequest(myUsername, fromUsername) {
@@ -488,19 +508,28 @@ const FortizedSocial = (() => {
     if (!myFriends.includes(fromUsername))  myFriends.push(fromUsername);
     if (!hisFriends.includes(myUsername))   hisFriends.push(myUsername);
 
-    await sb.from('users').update({
-      friends: myFriends,
-      friend_requests_received: (mu.friendRequestsReceived || []).filter(u => u !== fromUsername),
-      friend_requests_sent: (mu.friendRequestsSent || []).filter(u => u !== fromUsername),
-    }).eq('username', myUsername);
-    await sb.from('users').update({
-      friends: hisFriends,
-      friend_requests_sent: (fu.friendRequestsSent || []).filter(u => u !== myUsername),
-      friend_requests_received: (fu.friendRequestsReceived || []).filter(u => u !== myUsername),
-    }).eq('username', fromUsername);
+    try {
+      const { error: err1 } = await sb.from('users').update({
+        friends: myFriends,
+        friend_requests_received: (mu.friendRequestsReceived || []).filter(u => u !== fromUsername),
+        friend_requests_sent: (mu.friendRequestsSent || []).filter(u => u !== fromUsername),
+      }).eq('username', myUsername);
+      if (err1) throw new Error(`Update my profile failed: ${err1.message}`);
 
-    await addNotification(fromUsername, { type: 'friend_accept', from: myUsername });
-    return { ok: true, msg: `You are now friends with ${fromUsername}!` };
+      const { error: err2 } = await sb.from('users').update({
+        friends: hisFriends,
+        friend_requests_sent: (fu.friendRequestsSent || []).filter(u => u !== myUsername),
+        friend_requests_received: (fu.friendRequestsReceived || []).filter(u => u !== myUsername),
+      }).eq('username', fromUsername);
+      if (err2) throw new Error(`Update their profile failed: ${err2.message}`);
+
+      await addNotification(fromUsername, { type: 'friend_accept', from: myUsername });
+      console.debug('[Friend Accept] Users', myUsername, 'and', fromUsername, 'are now friends');
+      return { ok: true, msg: `You are now friends with ${fromUsername}!` };
+    } catch (e) {
+      console.error('[acceptFriendRequest Error]', e.message);
+      return { ok: false, msg: 'Failed to accept: ' + e.message };
+    }
   }
 
   const acceptFriend = acceptFriendRequest;
@@ -570,29 +599,53 @@ const FortizedSocial = (() => {
 
     const row = { dm_key: key, id: msg.id, from: msg.from, text: msg.text, time: msg.time, timestamp: msg.timestamp };
     if (opts?.forwarded) { row.forwarded = true; row.forwarded_by = opts.forwardedBy || fromUsername; msg.forwarded = true; msg.forwardedBy = row.forwarded_by; }
-    await sb.from('dms').insert(row);
+
+    try {
+      const { data, error } = await sb.from('dms').insert(row);
+      if (error) {
+        console.error('[DM Insert Error]', error.message, error.code);
+        throw new Error(`DM insert failed: ${error.message} (${error.code})`);
+      }
+      console.debug('[DM Sent] Message inserted:', { from: fromUsername, to: toUsername, id: msg.id });
+    } catch (e) {
+      console.error('[sendDMMessage] Insert failed:', e.message);
+      throw e;
+    }
 
     // Update DM index for both users
-    const [myIdx, theirIdx] = await Promise.all([
-      _getDMIndex(fromUsername),
-      _getDMIndex(toUsername),
-    ]);
+    try {
+      const [myIdx, theirIdx] = await Promise.all([
+        _getDMIndex(fromUsername),
+        _getDMIndex(toUsername),
+      ]);
 
-    const updateIdx = async (username, partner, current) => {
-      const arr = Array.isArray(current) ? [...current] : [];
-      const filtered = arr.filter(u => u !== partner);
-      filtered.unshift(partner);
-      await sb.from('dm_index').upsert({ username, partners: filtered.slice(0, 30) }, { onConflict: 'username' });
-    };
-    await Promise.all([
-      updateIdx(fromUsername, toUsername, myIdx),
-      updateIdx(toUsername, fromUsername, theirIdx),
-    ]);
+      const updateIdx = async (username, partner, current) => {
+        const arr = Array.isArray(current) ? [...current] : [];
+        const filtered = arr.filter(u => u !== partner);
+        filtered.unshift(partner);
+        const { error } = await sb.from('dm_index').upsert({ username, partners: filtered.slice(0, 30) }, { onConflict: 'username' });
+        if (error) {
+          console.warn('[DM Index Update Error]', error.message);
+        }
+      };
+      await Promise.all([
+        updateIdx(fromUsername, toUsername, myIdx),
+        updateIdx(toUsername, fromUsername, theirIdx),
+      ]);
+    } catch (e) {
+      console.warn('[DM Index Update] Failed but continuing:', e.message);
+    }
 
-    await addNotification(toUsername, {
-      type: 'dm', from: fromUsername,
-      data: { preview: text.slice(0, 60) }
-    });
+    // Notify recipient
+    try {
+      await addNotification(toUsername, {
+        type: 'dm', from: fromUsername,
+        data: { preview: text.slice(0, 60) }
+      });
+    } catch (e) {
+      console.warn('[DM Notification] Failed but continuing:', e.message);
+    }
+
     return msg;
   }
 

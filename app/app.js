@@ -3676,9 +3676,13 @@ async function sendDM() {
   }
   try {
     await FortizedSocial.sendDMMessage(CU.username, curDM, text);
+    console.debug('[sendDM] Message sent successfully');
     FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: msg });
     _trackSendMsgQuest();
-  } catch { toast('Failed to send message. Check your connection.','error'); }
+  } catch (e) {
+    console.error('[sendDM Error]', e.message);
+    toast('Failed to send message: ' + e.message, 'error');
+  }
 }
 
 // ════════════════════════════════════════════════════

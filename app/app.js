@@ -1080,6 +1080,41 @@ function scrollBottom(id, instant) {
     if (_chatAutoScroll[el.id]) _chatAutoScroll[el.id].atBottom = true;
     // Re-scroll after images/embeds load to stay at bottom
     requestAnimationFrame(() => { if (el) el.scrollTop = el.scrollHeight; });
+    // Hide new messages bar when scrolling to present
+    const newMsgBar = id.includes('dm') ? 'dm-new-msgs-bar' : id.includes('gc') ? 'gc-new-msgs-bar' : null;
+    if (newMsgBar) document.getElementById(newMsgBar)?.classList.remove('show');
+  }
+}
+
+function markDMRead() {
+  document.getElementById('dm-new-msgs-bar')?.classList.remove('show');
+  if (curDM) FortizedSocial.markNotificationReadBySource('dm:'+curDM);
+}
+
+function markGCRead() {
+  document.getElementById('gc-new-msgs-bar')?.classList.remove('show');
+  if (typeof curGC !== 'undefined' && curGC) FortizedSocial.markNotificationReadBySource('gc:'+curGC);
+}
+
+function markChannelRead(bastionIdx) {
+  const bar = document.getElementById(`ch-new-msgs-bar-${bastionIdx}`);
+  if (bar) bar.classList.remove('show');
+  const b = CU?.bastions?.[bastionIdx];
+  if (b && curChannel !== null) {
+    const ch = b.channels?.[curChannel];
+    if (ch) FortizedSocial.markNotificationReadBySource(`ch:${b.globalId||b.name}:${ch.name}`);
+  }
+}
+
+function showNewMessagesBar(chatType, count = 1) {
+  const barId = chatType === 'dm' ? 'dm-new-msgs-bar' : chatType === 'gc' ? 'gc-new-msgs-bar' : `ch-new-msgs-bar-${chatType}`;
+  const textId = chatType === 'dm' ? 'dm-new-msgs-text' : chatType === 'gc' ? 'gc-new-msgs-text' : `ch-new-msgs-text-${chatType}`;
+  const bar = document.getElementById(barId);
+  const text = document.getElementById(textId);
+  if (bar && text) {
+    const msg = count === 1 ? '1 new message' : `${count} new messages`;
+    text.textContent = msg;
+    bar.classList.add('show');
   }
 }
 function scrollToMsg(msgId) {
@@ -1141,6 +1176,11 @@ function _notifyNewMsg(msgsElId){
   state.newCount++;
   const msgsEl=document.getElementById(msgsElId);
   if(!msgsEl)return;
+
+  // Show sticky notification banner
+  const chatType = msgsElId.includes('dm') ? 'dm' : msgsElId.includes('gc') ? 'gc' : msgsElId.match(/\d+/)?.[0];
+  if (chatType) showNewMessagesBar(chatType, state.newCount);
+
   // Insert the NEW bar before the first new (unread) message if not yet inserted
   if(!state.newBarInserted){
     state.newBarInserted=true;
@@ -3574,7 +3614,8 @@ function openDMView(username) {
         <span class="rt-name">${escapeHTML(username)}</span>
       </div>
       <div class="chat-msgs" id="dm-msgs">
-        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')">Return to Present</button></div>
+        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')">Jump to Present</button></div>
+        <div class="new-messages-bar" id="dm-new-msgs-bar"><span id="dm-new-msgs-text">1 new message</span><button onclick="markDMRead()">Mark as Read</button></div>
         <div class="chat-welcome">
           <div class="w-av" id="dm-welcome-av">${buildAvatarHTML(null,username,60)}</div>
           <h3 id="dm-welcome-name">${escapeHTML(username)}</h3>
@@ -3862,7 +3903,8 @@ async function openGroupChatView(gcId) {
         <span class="rt-desc">${(meta.members||[]).length} members</span>
       </div>
       <div class="chat-msgs" id="gc-msgs">
-        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('gc-msgs')">Return to Present</button></div>
+        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('gc-msgs')">Jump to Present</button></div>
+        <div class="new-messages-bar" id="gc-new-msgs-bar"><span id="gc-new-msgs-text">1 new message</span><button onclick="markGCRead()">Mark as Read</button></div>
         <div class="chat-welcome">
           <div class="w-av" style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:32px;">${meta.emoji||'👥'}</div>
           <h3>${escapeHTML(meta.name)}</h3>
@@ -4742,7 +4784,8 @@ function loadChatChannel(idx) {
         ${nsfwBadge}
       </div>
       <div class="chat-msgs" id="ch-msgs-${idx}">
-        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Return to Present</button></div>
+        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Jump to Present</button></div>
+        <div class="new-messages-bar" id="ch-new-msgs-bar-${idx}"><span id="ch-new-msgs-text-${idx}">1 new message</span><button onclick="markChannelRead(${idx})">Mark as Read</button></div>
         ${bannerSafe ? `<div style="width:100%;height:120px;position:relative;flex-shrink:0;overflow:hidden;border-bottom:1.5px solid var(--border);"><img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.88);" onerror="this.parentElement.style.display='none'"><div style="position:absolute;bottom:12px;left:16px;font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);">${escapeHTML(b.name||'')}</div></div>` : ''}
         <div class="chat-welcome">
           <div class="w-av" style="font-size:26px;background:var(--panel2);">${chTypeIcon}</div>

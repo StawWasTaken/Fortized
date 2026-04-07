@@ -755,12 +755,19 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Role accent stripe */
 .msg-role-stripe{position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:1px;opacity:.35;transition:opacity .2s;}
 /* Viewing older messages bar */
-.chat-past-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 16px;background:var(--glass-mid);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border-bottom:1px solid rgba(255,249,62,.1);font-size:12px;color:rgba(255,255,255,.5);transition:opacity .2s,transform .2s;opacity:0;transform:translateY(-100%);pointer-events:none;}
-.chat-past-bar.show{opacity:1;transform:translateY(0);pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.3);}
-.chat-past-bar button{background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);color:var(--accent);border-radius:var(--radius-pill);padding:3px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;font-family:var(--font-display);}
-.chat-past-bar button:hover{background:rgba(255,249,62,.18);}
-@keyframes pastBarPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,249,62,.15);}50%{box-shadow:0 0 0 6px rgba(255,249,62,0);}}
+.chat-past-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(96,165,250,.04));backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border-bottom:1px solid rgba(96,165,250,.15);font-size:13px;color:rgba(96,165,250,.85);transition:opacity .2s,transform .2s;opacity:0;transform:translateY(-100%);pointer-events:none;font-weight:500;}
+.chat-past-bar.show{opacity:1;transform:translateY(0);pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.3);}
+.chat-past-bar button{background:rgba(96,165,250,.15);border:1.5px solid rgba(96,165,250,.3);color:rgba(96,165,250,.95);border-radius:8px;padding:6px 18px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:var(--font-display);white-space:nowrap;}
+.chat-past-bar button:hover{background:rgba(96,165,250,.25);border-color:rgba(96,165,250,.5);transform:translateY(-1px);}
+.chat-past-bar button:active{transform:translateY(0);}
+@keyframes pastBarPulse{0%,100%{box-shadow:0 0 0 0 rgba(96,165,250,.15);}50%{box-shadow:0 0 0 6px rgba(96,165,250,0);}}
 .chat-past-bar button.has-new{animation:pastBarPulse 2s ease infinite;}
+
+/* New messages notification bar */
+.new-messages-bar{position:sticky;top:40px;z-index:19;display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 16px;background:linear-gradient(135deg,rgba(62,207,110,.12),rgba(62,207,110,.06));backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border-bottom:1px solid rgba(62,207,110,.18);font-size:12.5px;color:rgba(62,207,110,.8);transition:opacity .2s,transform .2s;opacity:0;transform:translateY(-100%);pointer-events:none;font-weight:500;}
+.new-messages-bar.show{opacity:1;transform:translateY(0);pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.new-messages-bar button{background:transparent;border:1px solid rgba(62,207,110,.3);color:rgba(62,207,110,.9);border-radius:6px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font-ui);}
+.new-messages-bar button:hover{background:rgba(62,207,110,.1);border-color:rgba(62,207,110,.5);}
 /* New messages floating button */
 .chat-new-msg-btn{position:absolute;bottom:80px;right:20px;z-index:15;display:none;align-items:center;gap:6px;background:var(--glass-heavy);border:1px solid rgba(255,249,62,.15);backdrop-filter:var(--blur-heavy);-webkit-backdrop-filter:var(--blur-heavy);border-radius:var(--radius-pill);padding:6px 16px;font-size:11.5px;font-weight:600;color:var(--accent);cursor:pointer;transition:all .15s;box-shadow:0 4px 20px rgba(0,0,0,.4);}
 .chat-new-msg-btn:hover{background:var(--panel2);border-color:rgba(255,249,62,.3);transform:translateY(-2px);}

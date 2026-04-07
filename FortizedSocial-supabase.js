@@ -240,7 +240,7 @@ const FortizedSocial = (() => {
     }
     return {
       username: norm(u.username),
-      password: u.password,
+      password: u.password || 'system',
       email: u.email || '',
       display_name: u.displayName || u.username,
       pfp: u.pfp || null,
@@ -254,15 +254,15 @@ const FortizedSocial = (() => {
       bastions: u.bastions || [],
       radiance_until: _isoToBigint(u.radianceUntil),
       radiance_plus: _isoToBigint(u.radiancePlus),
-      last_daily: u.lastDaily || null,
+      last_daily: _isoToBigint(u.lastDaily),
       blocked_users: u.blockedUsers || [],
       ignored_users: u.ignoredUsers || {},
       group_chats: u.groupChats || [],
       suspension: u.suspension || null,
-      suspended_until: u.suspendedUntil || null,
+      suspended_until: _isoToBigint(u.suspendedUntil),
       active_warning: u.activeWarning || null,
       game_activity: u.gameActivity || null,
-      last_seen: u.lastSeen || null,
+      last_seen: _isoToBigint(u.lastSeen),
       profile_theme: u.profileTheme || null,
       active_decoration: u.activeDecoration || null,
       bio: u.bio || '',
@@ -636,7 +636,7 @@ const FortizedSocial = (() => {
     const cached = _cacheGet(cacheKey);
     if (cached !== undefined) return cached;
     try {
-      const { data, error } = await sb.from('dms').select('id,from,text,time,timestamp,edited,new_text,reactions,forwarded,forwarded_by')
+      const { data, error } = await sb.from('dms').select('id,from,text,time,timestamp,edited,new_text,reactions')
         .eq('dm_key', key)
         .order('timestamp', { ascending: false })
         .limit(max);

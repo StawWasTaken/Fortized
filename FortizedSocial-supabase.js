@@ -1091,7 +1091,11 @@ const FortizedSocial = (() => {
     }
 
     console.log('[DMPolling] ✓ Starting polling for:', dmKey);
+    console.log('[DMPolling] Initial _callbacks:', _callbacks);
     console.log('[DMPolling] Callbacks available:', { hasOnMessage: !!_callbacks.onMessage, callbackKeys: Object.keys(_callbacks) });
+    if (!_callbacks.onMessage) {
+      console.warn('[DMPolling] WARNING: onMessage callback not set at poll start. _callbacks:', _callbacks);
+    }
 
     const pollInterval = setInterval(async () => {
       try {
@@ -1220,6 +1224,8 @@ const FortizedSocial = (() => {
     stopSupabasePolling();
 
     console.log('[Fortized] Supabase real-time initialized (using active polling for instant delivery)');
+    console.log('[Fortized] _callbacks set with keys:', Object.keys(_callbacks));
+    console.log('[Fortized] _callbacks.onMessage exists?', !!_callbacks.onMessage);
   }
 
   function startPolling(username, callbacks) {

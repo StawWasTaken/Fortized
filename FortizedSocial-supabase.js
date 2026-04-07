@@ -717,12 +717,13 @@ const FortizedSocial = (() => {
 
   function _dmFromPollingRow(r, msgData) {
     // Extract message from polling response where data might be in a JSON column
+    // Handle both schemas: old (direct text column) and new (data column as JSONB)
     return {
       id: msgData.id || r.id,
       from: msgData.from || r.from,
-      text: msgData.text || r.data?.text || '',
+      text: msgData.text || r.text || '',  // msgData.text for new schema, r.text for old schema
       time: msgData.time || r.time,
-      timestamp: msgData.timestamp || r.time,
+      timestamp: msgData.timestamp || r.timestamp || r.time,
       edited: msgData.edited || false,
       newText: msgData.newText || msgData.new_text || undefined,
       reactions: msgData.reactions || undefined,

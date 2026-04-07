@@ -643,17 +643,66 @@ const FortizedSocial = (() => {
     const cached = _cacheGet(cacheKey);
     if (cached !== undefined) return cached;
     try {
-      const { data, error } = await sb.from('dms').select('id,from,text,time,timestamp,edited,new_text,reactions')
+      // Parse users from dmKey (format: "user1__user2")
+      const [u1, u2] = key.split('__');
+
+      // Try old schema first with dm_key column
+      let { data, error } = await sb.from('dms')
+        .select('*')
         .eq('dm_key', key)
         .order('timestamp', { ascending: false })
         .limit(max);
+
+      // If that fails or returns empty, try new schema with from/username columns
+      if ((error || !data || data.length === 0) && u1 && u2) {
+        console.debug('[getDMMessages] Trying new schema with from/username columns');
+        // Query both directions: (from=u1 AND username=u2) OR (from=u2 AND username=u1)
+        const res1 = await sb.from('dms')
+          .select('*')
+          .eq('from', u1)
+          .eq('username', u2)
+          .order('time', { ascending: false })
+          .limit(Math.ceil(max / 2));
+
+        const res2 = await sb.from('dms')
+          .select('*')
+          .eq('from', u2)
+          .eq('username', u1)
+          .order('time', { ascending: false })
+          .limit(Math.ceil(max / 2));
+
+        if (!res1.error && !res2.error) {
+          data = [...(res1.data || []), ...(res2.data || [])].sort((a, b) => {
+            const timeA = a.time || a.timestamp || 0;
+            const timeB = b.time || b.timestamp || 0;
+            return new Date(timeB) - new Date(timeA);
+          }).slice(0, max);
+          error = null;
+        } else {
+          error = res1.error || res2.error;
+        }
+      }
+
       if (error) {
         console.error('[getDMMessages] Query error:', error.message);
         return [];
       }
+
       // Reverse to chronological order after fetching latest N
-      const result = (data || []).reverse().map(_dmFromRow);
-      console.debug('[getDMMessages]', { between: key, count: result.length, sample: result.slice(-3).map(m => ({ id: m.id, from: m.from, text: m.text.slice(0,40) })) });
+      const result = (data || []).reverse().map(r => {
+        // Handle both old schema (columns: id, from, text, time, timestamp, etc.)
+        // and new schema (columns: id, username, type, from, time, read, data)
+        if (r.text !== undefined) {
+          // Old schema - has direct text column
+          return _dmFromRow(r);
+        } else {
+          // New schema - text might be in data column (JSONB)
+          const msgData = typeof r.data === 'string' ? JSON.parse(r.data) : (r.data || {});
+          return _dmFromPollingRow(r, msgData);
+        }
+      });
+
+      console.debug('[getDMMessages]', { between: key, count: result.length, sample: result.slice(-3).map(m => ({ id: m.id, from: m.from, text: m.text?.slice(0,40) })) });
       _cacheSet(cacheKey, result, _CACHE_TTL.dmMessages);
       return result;
     } catch(e) {
@@ -664,6 +713,22 @@ const FortizedSocial = (() => {
 
   function _dmFromRow(r) {
     return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined };
+  }
+
+  function _dmFromPollingRow(r, msgData) {
+    // Extract message from polling response where data might be in a JSON column
+    return {
+      id: msgData.id || r.id,
+      from: msgData.from || r.from,
+      text: msgData.text || r.data?.text || '',
+      time: msgData.time || r.time,
+      timestamp: msgData.timestamp || r.time,
+      edited: msgData.edited || false,
+      newText: msgData.newText || msgData.new_text || undefined,
+      reactions: msgData.reactions || undefined,
+      forwarded: msgData.forwarded || false,
+      forwardedBy: msgData.forwardedBy || msgData.forwarded_by || undefined
+    };
   }
 
   async function sendDMMessage(fromUsername, toUsername, text, opts) {
@@ -1093,13 +1158,47 @@ const FortizedSocial = (() => {
     console.log('[DMPolling] ✓ Starting polling for:', dmKey);
     console.log('[DMPolling] Callbacks available:', { hasOnMessage: !!_callbacks.onMessage, callbackKeys: Object.keys(_callbacks) });
 
+    // Parse dmKey to get both users (dmKey is format "user1__user2")
+    const [user1, user2] = dmKey.split('__');
+
     const pollInterval = setInterval(async () => {
       try {
-        const { data, error } = await sb.from('dms')
+        // Try old schema first with dm_key
+        let { data, error } = await sb.from('dms')
           .select('*')
           .eq('dm_key', dmKey)
           .order('timestamp', { ascending: false })
           .limit(5);
+
+        // If that fails or returns empty, try new schema with from/username columns
+        if ((error || !data || data.length === 0) && user1 && user2) {
+          console.debug('[DMPolling] Trying new schema with from/username columns');
+          // Query both directions: (from=user1 AND username=user2) OR (from=user2 AND username=user1)
+          const res1 = await sb.from('dms')
+            .select('*')
+            .eq('from', user1)
+            .eq('username', user2)
+            .order('time', { ascending: false })
+            .limit(3);
+
+          const res2 = await sb.from('dms')
+            .select('*')
+            .eq('from', user2)
+            .eq('username', user1)
+            .order('time', { ascending: false })
+            .limit(3);
+
+          if (!res1.error && !res2.error) {
+            data = [...(res1.data || []), ...(res2.data || [])].sort((a, b) => {
+              const timeA = a.time || a.timestamp || 0;
+              const timeB = b.time || b.timestamp || 0;
+              return new Date(timeB) - new Date(timeA);
+            }).slice(0, 5);
+            error = null;
+          } else {
+            error = res1.error || res2.error;
+          }
+        }
 
         if (error) {
           console.error('[DMPolling] Query error:', error.message);
@@ -1110,11 +1209,31 @@ const FortizedSocial = (() => {
           console.debug('[DMPolling] Fetched', data.length, 'messages, checking for new ones...');
           // Check for new messages since last poll
           for (const row of data.reverse()) {
-            const msgTime = new Date(row.timestamp).getTime();
+            // Parse the data column to get message content (handle both schemas)
+            let msgData = {};
+            let msgTime = 0;
+
+            if (row.timestamp !== undefined) {
+              // Old schema - has direct timestamp column
+              msgTime = new Date(row.timestamp).getTime();
+            } else if (row.time !== undefined) {
+              // New schema - has time column, might also have data column
+              msgTime = new Date(row.time).getTime();
+              if (row.data && typeof row.data === 'object') {
+                msgData = row.data;
+              } else if (row.data && typeof row.data === 'string') {
+                try {
+                  msgData = JSON.parse(row.data);
+                } catch(e) {
+                  console.warn('[DMPolling] Failed to parse data column:', e.message);
+                }
+              }
+            }
+
             const lastTime = _lastDmTimestamp.get(dmKey) || 0;
 
             if (msgTime > lastTime) {
-              const msg = _dmFromRow(row);
+              const msg = row.text !== undefined ? _dmFromRow(row) : _dmFromPollingRow(row, msgData);
               console.log('[DMPolling] 🔔 NEW MESSAGE:', { from: msg.from, text: msg.text?.slice(0,40), msgTime, lastTime });
               if (_callbacks.onMessage) {
                 console.log('[DMPolling] Invoking onMessage callback...');
@@ -1124,7 +1243,18 @@ const FortizedSocial = (() => {
               }
             }
           }
-          _lastDmTimestamp.set(dmKey, new Date(data[0].timestamp).getTime());
+
+          // Update timestamp from most recent message
+          const lastRow = data[0];
+          let lastTime = 0;
+          if (lastRow.timestamp !== undefined) {
+            lastTime = new Date(lastRow.timestamp).getTime();
+          } else if (lastRow.time !== undefined) {
+            lastTime = new Date(lastRow.time).getTime();
+          }
+          if (lastTime > 0) {
+            _lastDmTimestamp.set(dmKey, lastTime);
+          }
         } else {
           console.debug('[DMPolling] No messages found for:', dmKey);
         }

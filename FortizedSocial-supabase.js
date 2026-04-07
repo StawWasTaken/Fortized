@@ -1147,6 +1147,74 @@ const FortizedSocial = (() => {
     }
   }
 
+  // ── Channel polling (for bastion channels) ──
+  let _channelPollingIntervals = new Map();
+  let _lastChannelTimestamp = new Map();
+
+  async function startChannelPolling(channelKey) {
+    if (_channelPollingIntervals.has(channelKey)) {
+      console.log('[ChannelPolling] Already polling this channel:', channelKey);
+      return;
+    }
+
+    console.log('[ChannelPolling] ✓ Starting polling for:', channelKey);
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data, error } = await sb.from('bastion_msgs')
+          .select('*')
+          .ilike('full_id', channelKey + '%')
+          .order('timestamp', { ascending: false })
+          .limit(5);
+
+        if (error) {
+          console.error('[ChannelPolling] Query error:', error.message);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          console.debug('[ChannelPolling] Fetched', data.length, 'messages, checking for new ones...');
+          for (const row of data.reverse()) {
+            const msgTime = new Date(row.timestamp).getTime();
+            const lastTime = _lastChannelTimestamp.get(channelKey) || 0;
+
+            if (msgTime > lastTime) {
+              const msg = {
+                id: row.id,
+                from: row.author || row.from,
+                text: row.content || row.text,
+                timestamp: row.timestamp,
+                reactions: row.reactions || {}
+              };
+              console.log('[ChannelPolling] 🔔 NEW MESSAGE:', { from: msg.from, text: msg.text?.slice(0,40), msgTime, lastTime });
+              if (_callbacks.onMessage) {
+                console.log('[ChannelPolling] Invoking onMessage callback...');
+                _callbacks.onMessage(channelKey, msg);
+              }
+            }
+          }
+          if (data.length > 0) {
+            const lastMsg = data[data.length - 1];
+            _lastChannelTimestamp.set(channelKey, new Date(lastMsg.timestamp).getTime());
+          }
+        }
+      } catch (err) {
+        console.error('[ChannelPolling] Exception:', err.message);
+      }
+    }, 2000);
+
+    _channelPollingIntervals.set(channelKey, pollInterval);
+  }
+
+  function stopChannelPolling(channelKey) {
+    const interval = _channelPollingIntervals.get(channelKey);
+    if (interval) {
+      clearInterval(interval);
+      _channelPollingIntervals.delete(channelKey);
+      _lastChannelTimestamp.delete(channelKey);
+      console.log('[ChannelPolling] Stopped polling for:', channelKey);
+    }
+  }
+
   function startSupabasePolling(username, callbacks) {
     _callbacks = callbacks || {};
     stopSupabasePolling();
@@ -1458,7 +1526,7 @@ const FortizedSocial = (() => {
     adminSetSignal, adminGetSignal,
     adminPushFeedback,
     startPolling, stopPolling, listenBastionChannel, listenDM,
-    startDMPolling, stopDMPolling,
+    startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,
     initSocket, getSocket, isSocketReady, socketEmit,
     joinRoom, leaveRoom, queryPresence, disconnectSocket,
     playNotificationSound,

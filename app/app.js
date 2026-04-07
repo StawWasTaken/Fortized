@@ -3630,11 +3630,16 @@ async function loadDMMessages(username) {
   const msgsEl = document.getElementById('dm-msgs');
   if (!msgsEl) return;
   if (_dmListener) { try{_dmListener();}catch(e){console.debug('[DM] Listener cleanup:',e?.message);} _dmListener=null; }
+  // Stop any existing DM polling for this conversation
+  const dmKey = [CU.username, username].sort().join('__');
+  FortizedSocial.stopDMPolling(dmKey);
   try {
     const msgs = await FortizedSocial.getDMMessages(CU.username, username);
     renderMessages(msgsEl, msgs||[], 'dm');
     if (!_restoreChatScroll('dm:'+username, msgsEl)) scrollBottom('dm-msgs', true);
     _attachDMLiveEdits(CU.username, username);
+    // Start polling for new DM messages to enable real-time sync across sessions
+    FortizedSocial.startDMPolling(dmKey);
     _dmListener = FortizedSocial.listenDM(CU.username, username, msg => {
       if (curDM!==username) return;
       // Handle edit/delete events from Supabase real-time
@@ -4798,6 +4803,9 @@ async function loadChannelMessages(idx) {
         }
       }
     });
+    // Start polling to enable real-time message sync across sessions
+    const channelKey = 'bastion:' + (b.globalId||b.name) + ':' + ch.name;
+    FortizedSocial.startChannelPolling(channelKey);
   } catch(e){console.warn('Channel load',e);}
 }
 
@@ -6582,7 +6590,7 @@ function _renderOffendingContent(data) {
     <span style="color:#5a6478;font-size:13px;">Flagged Media</span>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">${media.map(m => {
       if (m.type === 'video') { const _vp='rvid-'+Math.random().toString(36).slice(2); return `<div style="display:inline-block;max-width:200px;"><div class="ftz-vp" id="${_vp}-wrap" style="border-radius:8px;"><video id="${_vp}" src="${m.url}" style="max-width:200px;max-height:140px;display:block;cursor:pointer;" muted preload="metadata" crossorigin="anonymous" onclick="ftzVideoToggle('${_vp}')" ontimeupdate="ftzVideoTick('${_vp}')" onloadedmetadata="ftzVideoMeta('${_vp}')" onended="ftzVideoEnd('${_vp}')" onerror="ftzVideoError('${_vp}')"></video><div class="ftz-vp-overlay" id="${_vp}-overlay" onclick="ftzVideoToggle('${_vp}')"><div class="ftz-vp-overlay-btn" style="width:32px;height:32px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div></div></div>`; }
-      return `<img src="${m.url}" style="max-width:200px;max-height:140px;border-radius:8px;border:1px solid rgba(255,255,255,.06);object-fit:cover;" onerror="this.style.display='none'">`;
+      return `<img src="${m.url}" style="max-width:200px;max-height:140px;border-radius:8px;border:1px solid rgba(255,255,255,.06);object-fit:cover;background:rgba(0,0,0,.3);" onerror="this.style.display='none'">`;
     }).join('')}</div>
   </div>`;
   return html;
@@ -18582,7 +18590,7 @@ function parseMD(s) {
   // 0a. Sticker token from sticker picker
   s = s.replace(/\[FTZSTICKER:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);
-    return `<div style="margin:6px 0;max-width:180px;display:inline-block;cursor:pointer;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:180px;object-fit:contain;display:block;" loading="lazy" draggable="false"></div>`;
+    return `<div style="margin:6px 0;max-width:180px;display:inline-block;cursor:pointer;background:rgba(0,0,0,.2);border-radius:8px;padding:4px;" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" style="width:100%;max-height:180px;object-fit:contain;display:block;background:rgba(0,0,0,.15);" loading="lazy" draggable="false"></div>`;
   });
   // 0aa. :emoji_name: shortcodes → actual emoji / Fortized emoji / bastion custom emoji / personal emoji
   // Permission rules:
@@ -18630,8 +18638,8 @@ function parseMD(s) {
         + '<button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:\'' + fid + '\',url:\'' + safeSrc + '\'})" title="Save to favourites">&#11088;</button>'
         + '</div>';
     }
-    return '<div style="margin:5px 0;">'
-      + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:10px;display:block;cursor:pointer;" loading="lazy" onclick="_openMediaLightbox(this.src)">'
+    return '<div style="margin:5px 0;display:inline-block;background:rgba(0,0,0,.2);border-radius:10px;padding:3px;">'
+      + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;background:rgba(0,0,0,.15);" loading="lazy" onclick="_openMediaLightbox(this.src)">'
       + '</div>';
   });
   // 0b. Video attachments — full-featured video player

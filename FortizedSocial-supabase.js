@@ -1135,7 +1135,7 @@ const FortizedSocial = (() => {
       } catch(e) {
         console.error('[DMPolling] Fatal error:', e?.message, e);
       }
-    }, 1000); // Poll every second for instant feel
+    }, 3000); // Poll every 3 seconds (Socket.io handles instant delivery)
 
     _dmPollingIntervals.set(dmKey, pollInterval);
     console.log('[DMPolling] ✓ Polling interval started, checking every 1 second');
@@ -1219,9 +1219,61 @@ const FortizedSocial = (() => {
     }
   }
 
+  // ── Notification polling ──
+  let _notifPollingInterval = null;
+  let _lastNotifTime = 0;
+
+  async function startNotificationPolling(username) {
+    if (_notifPollingInterval) {
+      console.log('[NotifPolling] Already polling notifications');
+      return;
+    }
+
+    console.log('[NotifPolling] ✓ Starting polling for:', username);
+    _notifPollingInterval = setInterval(async () => {
+      try {
+        const { data, error } = await sb.from('notifications')
+          .select('*')
+          .eq('user', username)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error) {
+          console.error('[NotifPolling] Query error:', error.message);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          for (const notif of data) {
+            const notifTime = new Date(notif.created_at).getTime();
+            if (notifTime > _lastNotifTime) {
+              console.log('[NotifPolling] 🔔 NEW NOTIFICATION:', { type: notif.type, from: notif.from });
+              if (_callbacks.onNewNotification) {
+                _callbacks.onNewNotification(notif);
+              }
+              _lastNotifTime = notifTime;
+            }
+          }
+        }
+      } catch(e) {
+        console.error('[NotifPolling] Error:', e?.message);
+      }
+    }, 5000); // Poll every 5 seconds for notifications
+  }
+
+  function stopNotificationPolling() {
+    if (_notifPollingInterval) {
+      clearInterval(_notifPollingInterval);
+      _notifPollingInterval = null;
+      console.log('[NotifPolling] Stopped');
+    }
+  }
+
   function startSupabasePolling(username, callbacks) {
     _callbacks = callbacks || {};
     stopSupabasePolling();
+    // Start notification polling
+    startNotificationPolling(username);
 
     console.log('[Fortized] Supabase real-time initialized (using active polling for instant delivery)');
     console.log('[Fortized] _callbacks set with keys:', Object.keys(_callbacks));
@@ -1253,6 +1305,7 @@ const FortizedSocial = (() => {
       }
     });
     _subscriptions = [];
+    stopNotificationPolling();
     console.log('[Fortized] Supabase real-time subscriptions stopped');
   }
 

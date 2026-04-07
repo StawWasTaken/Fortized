@@ -7240,6 +7240,7 @@ function initFortizedUXResilience() {
         if (data.username === CU.username) {
           if (data.pfp) CU.pfp = data.pfp;
           if (data.displayName) CU.displayName = data.displayName;
+          saveLocal();
           try { updateUserbar(); } catch(e) { console.debug('[Userbar] Update failed:', e?.message); }
         }
 
@@ -7314,6 +7315,28 @@ function initFortizedUXResilience() {
         // Re-render DM sidebar when DM index changes (new conversation, reordered partners)
         const sb = document.getElementById('sidebar-scroll');
         if (sb) renderDMSidebar(sb);
+      },
+      onFriendRequest: function(data) {
+        if (!data || !data.from) return;
+        if (!CU.friendRequestsReceived) CU.friendRequestsReceived = [];
+        if (!CU.friendRequestsReceived.includes(data.from)) {
+          CU.friendRequestsReceived.push(data.from);
+          saveLocal();
+          updateNotificationBar();
+        }
+      },
+      onFriendAccepted: function(data) {
+        if (!data || !data.username) return;
+        if (!CU.friends) CU.friends = [];
+        if (!CU.friends.includes(data.username)) {
+          CU.friends.push(data.username);
+          if (CU.friendRequestsSent) {
+            const idx = CU.friendRequestsSent.indexOf(data.username);
+            if (idx >= 0) CU.friendRequestsSent.splice(idx, 1);
+          }
+          saveLocal();
+          updateNotificationBar();
+        }
       },
     };
     window._ftzSocketCallbacks = _socketCbs;

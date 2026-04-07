@@ -1083,6 +1083,7 @@ const FortizedSocial = (() => {
 
   let _dmPollingIntervals = new Map(); // Track polling intervals per DM conversation
   let _lastDmTimestamp = new Map(); // Track last seen message timestamp per conversation
+  let _recentDmMessageIds = new Map(); // Track recently delivered message IDs to prevent Socket.io + polling duplication
 
   async function startDMPolling(dmKey) {
     if (_dmPollingIntervals.has(dmKey)) {
@@ -1091,11 +1092,7 @@ const FortizedSocial = (() => {
     }
 
     console.log('[DMPolling] ✓ Starting polling for:', dmKey);
-    console.log('[DMPolling] Initial _callbacks:', _callbacks);
     console.log('[DMPolling] Callbacks available:', { hasOnMessage: !!_callbacks.onMessage, callbackKeys: Object.keys(_callbacks) });
-    if (!_callbacks.onMessage) {
-      console.warn('[DMPolling] WARNING: onMessage callback not set at poll start. _callbacks:', _callbacks);
-    }
 
     const pollInterval = setInterval(async () => {
       try {
@@ -1119,9 +1116,22 @@ const FortizedSocial = (() => {
 
             if (msgTime > lastTime) {
               const msg = _dmFromRow(row);
+              const msgId = msg.id || (msg.from + msg.timestamp);
+              // Skip if this message was recently delivered via Socket.io
+              const recentIds = _recentDmMessageIds.get(dmKey) || new Set();
+              if (recentIds.has(msgId)) {
+                console.log('[DMPolling] Skipping duplicate message (already delivered via Socket.io):', msgId);
+                continue;
+              }
               console.log('[DMPolling] 🔔 NEW MESSAGE:', { from: msg.from, text: msg.text?.slice(0,40), msgTime, lastTime });
               if (_callbacks.onMessage) {
                 console.log('[DMPolling] Invoking onMessage callback...');
+                // Track this message ID to prevent duplication
+                recentIds.add(msgId);
+                _recentDmMessageIds.set(dmKey, recentIds);
+                setTimeout(() => {
+                  recentIds.delete(msgId);
+                }, 5000); // Clear from recent set after 5 seconds
                 _callbacks.onMessage('dm:' + dmKey, msg);
               } else {
                 console.error('[DMPolling] ERROR: onMessage callback not found!');

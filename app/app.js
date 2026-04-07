@@ -5821,32 +5821,16 @@ async function toggleReaction(msgId, emoji, context) {
   if (!CU?.username) return;
   _trackReactionEmoji(emoji);
   const me = CU.username.toLowerCase();
-  let refPath = '';
-  if (context === 'dm' && curDM) {
-    const sorted = [me, curDM.toLowerCase()].sort().join('__');
-    refPath = `dms/${sorted}/${msgId}/reactions/${emoji}`;
-  } else if (context === 'gc' && typeof curGC !== 'undefined' && curGC) {
-    refPath = `groupChats/${curGC}/messages/${msgId}/reactions/${emoji}`;
-  } else if (context === 'ch' && curBastion !== null) {
-    const b = CU.bastions?.[curBastion];
-    const ch = b?.channels?.[curChannel];
-    if (!b || !ch) return;
-    const bid = b.globalId || b.name;
-    refPath = `bastionMsgs/${bid}/${ch.name}/${msgId}/reactions/${emoji}`;
-  }
-  if (!refPath) { toast('Could not react here', 'error'); return; }
+
   try {
-    const ref = firebase.database().ref(refPath);
-    const snap = await ref.get();
-    let users = snap.val() || [];
-    if (!Array.isArray(users)) users = Object.values(users);
-    if (users.includes(me)) {
-      users = users.filter(u => u !== me);
-    } else {
-      users.push(me);
+    // Use Supabase to toggle reactions instead of Firebase
+    const reactionResult = await FortizedSocial.toggleReaction(msgId, emoji, context, me);
+    if (!reactionResult) {
+      toast('Could not react here', 'error');
+      return;
     }
-    if (users.length === 0) await ref.remove();
-    else await ref.set(users);
+    const { users } = reactionResult;
+
     // Award reputation for reactions in bastions
     if (context === 'ch' && users.includes(me) && curBastion !== null) {
       const b = CU.bastions?.[curBastion];
@@ -5856,8 +5840,10 @@ async function toggleReaction(msgId, emoji, context) {
         if (msgAuthor && msgAuthor !== me) awardReactionRep(b.globalId||b.name, msgAuthor);
       }
     }
+
     // Update the UI locally
     updateReactionUI(msgId, emoji, users, context);
+
     // Broadcast reaction via Socket.io for real-time sync
     const rType = context === 'dm' ? 'dm' : context === 'gc' ? 'gc' : 'bastion';
     let rid1, rid2;

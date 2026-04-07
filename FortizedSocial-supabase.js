@@ -901,6 +901,76 @@ const FortizedSocial = (() => {
     }
   }
 
+  async function toggleReaction(msgId, emoji, context, username) {
+    username = norm(username);
+    try {
+      let reactions = {};
+      let updateSuccess = false;
+
+      if (context === 'dm') {
+        // DMs - find the message and toggle reaction
+        const { data, error: err1 } = await sb.from('dms')
+          .select('*')
+          .eq('id', msgId)
+          .maybeSingle();
+
+        if (err1 || !data) throw new Error('Message not found');
+
+        const msgData = typeof data.data === 'string' ? JSON.parse(data.data) : (data.data || {});
+        reactions = msgData.reactions || {};
+        const arr = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
+        const idx = arr.indexOf(username);
+        if (idx !== -1) arr.splice(idx, 1);
+        else arr.push(username);
+        if (arr.length) reactions[emoji] = arr;
+        else delete reactions[emoji];
+
+        msgData.reactions = Object.keys(reactions).length ? reactions : undefined;
+        const { error: err2 } = await sb.from('dms')
+          .update({ data: msgData })
+          .eq('id', msgId);
+
+        if (err2) throw new Error(`Update failed: ${err2.message}`);
+        updateSuccess = true;
+      } else if (context === 'gc') {
+        // Group chats - find and update reaction
+        const { data, error: err1 } = await sb.from('group_chat_messages')
+          .select('reactions')
+          .eq('id', msgId)
+          .maybeSingle();
+
+        if (err1 || !data) throw new Error('Message not found');
+
+        reactions = data?.reactions || {};
+        const arr = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
+        const idx = arr.indexOf(username);
+        if (idx !== -1) arr.splice(idx, 1);
+        else arr.push(username);
+        if (arr.length) reactions[emoji] = arr;
+        else delete reactions[emoji];
+
+        const { error: err2 } = await sb.from('group_chat_messages')
+          .update({ reactions: Object.keys(reactions).length ? reactions : null })
+          .eq('id', msgId);
+
+        if (err2) throw new Error(`Update failed: ${err2.message}`);
+        updateSuccess = true;
+      } else if (context === 'ch') {
+        // This is handled by addReaction, but return the reactions
+        // The UI will call addReaction directly for bastions
+        throw new Error('Use addReaction for bastion messages');
+      }
+
+      if (updateSuccess) {
+        console.debug('[toggleReaction] Reaction toggled:', { msgId, emoji, username, users: reactions[emoji] || [] });
+        return { users: reactions[emoji] || [] };
+      }
+    } catch(e) {
+      console.error('[toggleReaction] Failed:', e.message);
+      return null;
+    }
+  }
+
   // ── Global Bastions ──────────────────────────────────
   async function getGlobalBastions() {
     const cached = _cacheGetWithFallback('globalBastions', _CACHE_TTL.globalBastions);
@@ -1634,7 +1704,7 @@ const FortizedSocial = (() => {
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,
     getDMMessages, sendDMMessage, deleteMessage, getRecentDMPartners,
-    getBastionChannelMessages, sendBastionChannelMessage, addReaction,
+    getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,
     getGlobalBastions, saveGlobalBastion, getGlobalBastion,
     getBastionMembers, addBastionMember, removeBastionMember,
     getInvite, saveInvite, incrementInviteUses,

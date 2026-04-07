@@ -18550,9 +18550,6 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
             <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" title="Bot Commands" id="botcmd-btn-${emojiCtx}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3"/><line x1="13" y1="15" x2="17" y2="15"/></svg>
             </button>
-            <button class="cit-send" onclick="${sendCall}" title="Send (Enter)" data-tooltip="Send">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
           </div>
         </div>
       </div>

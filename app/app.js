@@ -7220,6 +7220,22 @@ function initFortizedUXResilience() {
           }
         }
       },
+      onNewNotification: function(notif) {
+        if (!notif || !notif.id) return;
+        // Add notification to CU's notifications array if not already there
+        if (!CU.notifications) CU.notifications = [];
+        const exists = CU.notifications.some(n => n.id === notif.id);
+        if (!exists) {
+          CU.notifications.push(notif);
+          saveLocal();
+        }
+        // Update notification badge
+        updateNotificationBar();
+        // Play notification sound if enabled
+        if (typeof FortizedSocial !== 'undefined' && typeof FortizedSocial.playNotificationSound === 'function') {
+          FortizedSocial.playNotificationSound();
+        }
+      },
       onAnnouncementNew: function(data) {
         // Trigger the announcement banner
         if (data.text) {

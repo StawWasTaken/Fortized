@@ -7097,7 +7097,60 @@ function initFortizedUXResilience() {
         }
       },
       onMessage: function(room, msg) {
-        // New messages handled by Supabase real-time listeners
+        if (!room || !msg) return;
+        // Handle DM messages
+        if (room.startsWith('dm:') && curDM) {
+          const expectedRoom = 'dm:' + [CU.username, curDM].sort().join('__');
+          if (room === expectedRoom) {
+            const msgsEl = document.getElementById('dm-msgs');
+            if (msgsEl) {
+              // Check if message already rendered (echo from own send)
+              const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
+              if (!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) {
+                const lastRows = msgsEl.querySelectorAll('.msg-row');
+                const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
+                appendMessage(msgsEl, msg, 'dm', lastAuthor);
+                scrollBottom('dm-msgs');
+              }
+            }
+          }
+        }
+        // Handle GC (Group Chat) messages
+        if (room.startsWith('gc:') && curGC) {
+          const expectedRoom = 'gc:' + curGC;
+          if (room === expectedRoom) {
+            const msgsEl = document.getElementById('gc-msgs');
+            if (msgsEl) {
+              const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
+              if (!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) {
+                const lastRows = msgsEl.querySelectorAll('.msg-row');
+                const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
+                appendMessage(msgsEl, msg, 'gc', lastAuthor);
+                scrollBottom('gc-msgs');
+              }
+            }
+          }
+        }
+        // Handle Bastion channel messages
+        if (room.startsWith('bastion:') && curBastion !== null && curChannel !== null) {
+          const b = CU.bastions?.[curBastion];
+          const ch = b?.channels?.[curChannel];
+          if (b && ch) {
+            const expectedRoom = 'bastion:' + (b.globalId || b.name) + ':' + ch.name;
+            if (room === expectedRoom) {
+              const msgsEl = document.getElementById('ch-msgs');
+              if (msgsEl) {
+                const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
+                if (!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) {
+                  const lastRows = msgsEl.querySelectorAll('.msg-row');
+                  const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
+                  appendMessage(msgsEl, msg, 'ch', lastAuthor);
+                  scrollBottom('ch-msgs');
+                }
+              }
+            }
+          }
+        }
       },
       onTyping: function(room, users) {
         if (!room || !users) return;

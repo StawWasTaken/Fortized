@@ -389,10 +389,16 @@ const FortizedSocial = (() => {
     username = norm(username);
     if (!VALID_STATUSES.has(status)) status = 'offline';
     _cacheSet('status:' + username, status, _CACHE_TTL.status);
-    await Promise.all([
-      sb.from('statuses').upsert({ username, status }, { onConflict: 'username' }),
-      sb.from('users').update({ status }).eq('username', username),
-    ]);
+    try {
+      const [res1, res2] = await Promise.all([
+        sb.from('statuses').upsert({ username, status }, { onConflict: 'username' }),
+        sb.from('users').update({ status }).eq('username', username),
+      ]);
+      if (res1.error) console.error('[setStatus] Statuses update failed:', res1.error.message);
+      if (res2.error) console.error('[setStatus] Users update failed:', res2.error.message);
+    } catch(e) {
+      console.error('[setStatus] Exception:', e.message);
+    }
   }
 
   // ── Notifications ────────────────────────────────────
@@ -421,21 +427,40 @@ const FortizedSocial = (() => {
     notif.read = false;
     _cacheDel('notifs:' + norm(toUsername));
     _cacheDel('unread:' + norm(toUsername));
-    await sb.from('notifications').insert({
-      id: notif.id,
-      username: norm(toUsername),
-      type: notif.type || null,
-      from: notif.from || null,
-      time: notif.time,
-      read: false,
-      data: notif.data || notif,
-    });
+    try {
+      const { error } = await sb.from('notifications').insert({
+        id: notif.id,
+        username: norm(toUsername),
+        type: notif.type || null,
+        from: notif.from || null,
+        time: notif.time,
+        read: false,
+        data: notif.data || notif,
+      });
+      if (error) {
+        console.error('[addNotification] Insert failed:', error.message);
+      } else {
+        console.debug('[addNotification] Sent to', toUsername, 'type:', notif.type);
+      }
+    } catch(e) {
+      console.error('[addNotification] Exception:', e.message);
+    }
   }
 
   async function markNotificationsRead(username) {
-    _cacheDel('notifs:' + norm(username));
-    _cacheDel('unread:' + norm(username));
-    await sb.from('notifications').update({ read: true }).eq('username', norm(username));
+    username = norm(username);
+    _cacheDel('notifs:' + username);
+    _cacheDel('unread:' + username);
+    try {
+      const { error } = await sb.from('notifications').update({ read: true }).eq('username', username);
+      if (error) {
+        console.error('[markNotificationsRead] Update failed:', error.message);
+      } else {
+        console.debug('[markNotificationsRead] Marked all read for', username);
+      }
+    } catch(e) {
+      console.error('[markNotificationsRead] Exception:', e.message);
+    }
   }
 
   async function markNotificationReadBySource(username, type, from) {
@@ -548,33 +573,57 @@ const FortizedSocial = (() => {
   async function declineFriendRequest(myUsername, fromUsername) {
     myUsername   = norm(myUsername);
     fromUsername = norm(fromUsername);
-    const [mu, fu] = await Promise.all([
-      getUserByName(myUsername, { noCache: true }),
-      getUserByName(fromUsername, { noCache: true })
-    ]);
-    if (mu) await sb.from('users').update({
-      friend_requests_received: (mu.friendRequestsReceived || []).filter(u => u !== fromUsername)
-    }).eq('username', myUsername);
-    if (fu) await sb.from('users').update({
-      friend_requests_sent: (fu.friendRequestsSent || []).filter(u => u !== myUsername)
-    }).eq('username', fromUsername);
-    return { ok: true };
+    try {
+      const [mu, fu] = await Promise.all([
+        getUserByName(myUsername, { noCache: true }),
+        getUserByName(fromUsername, { noCache: true })
+      ]);
+      if (mu) {
+        const { error: err1 } = await sb.from('users').update({
+          friend_requests_received: (mu.friendRequestsReceived || []).filter(u => u !== fromUsername)
+        }).eq('username', myUsername);
+        if (err1) throw new Error(`Decline for ${myUsername} failed: ${err1.message}`);
+      }
+      if (fu) {
+        const { error: err2 } = await sb.from('users').update({
+          friend_requests_sent: (fu.friendRequestsSent || []).filter(u => u !== myUsername)
+        }).eq('username', fromUsername);
+        if (err2) throw new Error(`Decline for ${fromUsername} failed: ${err2.message}`);
+      }
+      console.debug('[declineFriendRequest] Request declined:', { myUsername, fromUsername });
+      return { ok: true };
+    } catch(e) {
+      console.error('[declineFriendRequest Error]', e.message);
+      return { ok: false, msg: 'Failed to decline: ' + e.message };
+    }
   }
 
   async function removeFriend(myUsername, friendUsername) {
     myUsername     = norm(myUsername);
     friendUsername = norm(friendUsername);
-    const [mu, fu] = await Promise.all([
-      getUserByName(myUsername, { noCache: true }),
-      getUserByName(friendUsername, { noCache: true })
-    ]);
-    if (mu) await sb.from('users').update({
-      friends: (mu.friends || []).filter(u => u !== friendUsername)
-    }).eq('username', myUsername);
-    if (fu) await sb.from('users').update({
-      friends: (fu.friends || []).filter(u => u !== myUsername)
-    }).eq('username', friendUsername);
-    return { ok: true };
+    try {
+      const [mu, fu] = await Promise.all([
+        getUserByName(myUsername, { noCache: true }),
+        getUserByName(friendUsername, { noCache: true })
+      ]);
+      if (mu) {
+        const { error: err1 } = await sb.from('users').update({
+          friends: (mu.friends || []).filter(u => u !== friendUsername)
+        }).eq('username', myUsername);
+        if (err1) throw new Error(`Remove for ${myUsername} failed: ${err1.message}`);
+      }
+      if (fu) {
+        const { error: err2 } = await sb.from('users').update({
+          friends: (fu.friends || []).filter(u => u !== myUsername)
+        }).eq('username', friendUsername);
+        if (err2) throw new Error(`Remove for ${friendUsername} failed: ${err2.message}`);
+      }
+      console.debug('[removeFriend] Friend removed:', { myUsername, friendUsername });
+      return { ok: true };
+    } catch(e) {
+      console.error('[removeFriend Error]', e.message);
+      return { ok: false, msg: 'Failed to remove friend: ' + e.message };
+    }
   }
 
   // ── Direct Messages ──────────────────────────────────
@@ -748,26 +797,35 @@ const FortizedSocial = (() => {
 
   async function addReaction(bastionId, channelId, msgId, emoji, username) {
     username = norm(username);
-    const { data } = await sb.from('bastion_msgs')
-      .select('reactions')
-      .eq('bastion_id', bastionId)
-      .eq('channel_id', channelId)
-      .eq('id', msgId)
-      .maybeSingle();
+    try {
+      const { data, error: err1 } = await sb.from('bastion_msgs')
+        .select('reactions')
+        .eq('bastion_id', bastionId)
+        .eq('channel_id', channelId)
+        .eq('id', msgId)
+        .maybeSingle();
 
-    const reactions = data?.reactions || {};
-    const arr = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
-    const idx = arr.indexOf(username);
-    if (idx !== -1) arr.splice(idx, 1);
-    else arr.push(username);
-    if (arr.length) reactions[emoji] = arr;
-    else delete reactions[emoji];
+      if (err1) throw new Error(`Fetch reactions failed: ${err1.message}`);
 
-    await sb.from('bastion_msgs')
-      .update({ reactions: Object.keys(reactions).length ? reactions : null })
-      .eq('bastion_id', bastionId)
-      .eq('channel_id', channelId)
-      .eq('id', msgId);
+      const reactions = data?.reactions || {};
+      const arr = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
+      const idx = arr.indexOf(username);
+      if (idx !== -1) arr.splice(idx, 1);
+      else arr.push(username);
+      if (arr.length) reactions[emoji] = arr;
+      else delete reactions[emoji];
+
+      const { error: err2 } = await sb.from('bastion_msgs')
+        .update({ reactions: Object.keys(reactions).length ? reactions : null })
+        .eq('bastion_id', bastionId)
+        .eq('channel_id', channelId)
+        .eq('id', msgId);
+
+      if (err2) throw new Error(`Update reactions failed: ${err2.message}`);
+      console.debug('[addReaction] Reaction added:', { msgId, emoji, username });
+    } catch(e) {
+      console.error('[addReaction] Failed:', e.message);
+    }
   }
 
   // ── Global Bastions ──────────────────────────────────

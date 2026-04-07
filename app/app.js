@@ -7024,7 +7024,11 @@ function initFortizedUXResilience() {
         document.querySelectorAll('.ml-entry[data-member="'+data.username+'"]').forEach(el => {
           el.dataset.status = data.status;
           // Update opacity for offline dimming
-          el.style.opacity = isOnline ? '' : '.4';
+          if (isOnline) {
+            el.style.opacity = '1';
+          } else {
+            el.style.opacity = '0.4';
+          }
           // Re-sort member list if in a bastion view
           if (el.closest('#member-list')) _debouncedMemberListResort();
         });

@@ -7434,8 +7434,8 @@ function initFortizedUXResilience() {
     };
     window._ftzSocketCallbacks = _socketCbs;
     FortizedSocial.initSocket(CU.username, _socketCbs);
-    // Start Supabase real-time polling (merges with callbacks from initSocket above)
-    FortizedSocial.startPolling(CU.username, {});
+    // Start Supabase real-time polling with callbacks for message delivery
+    FortizedSocial.startPolling(CU.username, _socketCbs);
   } catch(e) { console.warn('[init] Socket.io/polling init:', e); }
   // Show offline banner immediately if we loaded from cache while offline
   if (!navigator.onLine) {

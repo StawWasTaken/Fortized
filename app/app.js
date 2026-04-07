@@ -7460,6 +7460,50 @@ function initFortizedUXResilience() {
           updateNotificationBar();
         }
       },
+      onFriendRequestsUpdate: function(data) {
+        if (!data) return;
+        console.debug('[onFriendRequestsUpdate] Friend requests changed:', { sent: data.sent?.length || 0, received: data.received?.length || 0 });
+        // Update the user object with fresh friend request data
+        CU.friendRequestsSent = data.sent || [];
+        CU.friendRequestsReceived = data.received || [];
+        saveLocal();
+        // Refresh friend request UI
+        try {
+          refreshFriendRequests();
+          updateNotificationBar();
+        } catch (e) {
+          console.warn('[onFriendRequestsUpdate] UI refresh failed:', e?.message);
+        }
+      },
+      onVoiceRoomUpdate: function(data) {
+        if (!data) return;
+        console.debug('[onVoiceRoomUpdate] Voice room changed:', { bastionId: data.bastionId, channelName: data.channelName, participants: data.participants?.length || 0 });
+        // Update voice room participant list
+        const voicePanel = document.querySelector(`[data-bastion-id="${CSS.escape(data.bastionId)}"][data-channel-name="${CSS.escape(data.channelName)}"]`);
+        if (voicePanel) {
+          // Update participants list if visible
+          const participantsList = voicePanel.querySelector('.vr-participants-list');
+          if (participantsList) {
+            participantsList.innerHTML = '';
+            (data.participants || []).forEach(username => {
+              const pEl = document.createElement('div');
+              pEl.className = 'vr-participant';
+              pEl.textContent = username;
+              participantsList.appendChild(pEl);
+            });
+          }
+        }
+        // Trigger room list refresh if it exists
+        try {
+          const roomList = document.getElementById('voice-rooms-list');
+          if (roomList) {
+            // Re-render voice rooms list
+            loadVoiceRooms();
+          }
+        } catch (e) {
+          console.warn('[onVoiceRoomUpdate] Voice rooms refresh failed:', e?.message);
+        }
+      },
     };
     window._ftzSocketCallbacks = _socketCbs;
     FortizedSocial.initSocket(CU.username, _socketCbs);

@@ -1416,9 +1416,148 @@ const FortizedSocial = (() => {
     }
   }
 
+  // ── Friend Request Polling ──
+  let _friendRequestPollingInterval = null;
+  let _lastFriendRequestState = { sent: 0, received: 0 };
+
+  async function startFriendRequestPolling(username) {
+    if (_friendRequestPollingInterval) {
+      console.log('[FriendRequestPolling] Already polling');
+      return;
+    }
+
+    username = norm(username);
+    console.log('[FriendRequestPolling] ✓ Starting polling for:', username);
+
+    _friendRequestPollingInterval = setInterval(async () => {
+      try {
+        const { data, error } = await sb.from('users')
+          .select('friend_requests_sent,friend_requests_received')
+          .eq('username', username)
+          .maybeSingle();
+
+        if (error) {
+          console.error('[FriendRequestPolling] Query error:', error.message);
+          return;
+        }
+
+        if (data) {
+          const sent = (data.friend_requests_sent || []).length;
+          const received = (data.friend_requests_received || []).length;
+
+          if (sent !== _lastFriendRequestState.sent || received !== _lastFriendRequestState.received) {
+            console.log('[FriendRequestPolling] 🔔 FRIEND REQUEST CHANGE:', { sent, received });
+            _lastFriendRequestState = { sent, received };
+            if (_callbacks.onFriendRequestsUpdate) {
+              _callbacks.onFriendRequestsUpdate({
+                sent: data.friend_requests_sent || [],
+                received: data.friend_requests_received || []
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[FriendRequestPolling] Error:', e?.message);
+      }
+    }, 4000); // Poll every 4 seconds
+  }
+
+  function stopFriendRequestPolling() {
+    if (_friendRequestPollingInterval) {
+      clearInterval(_friendRequestPollingInterval);
+      _friendRequestPollingInterval = null;
+      console.log('[FriendRequestPolling] Stopped');
+    }
+  }
+
+  // ── Voice Room Polling ──
+  let _voiceRoomPollingInterval = null;
+  let _lastVoiceRoomState = new Map();
+
+  async function startVoiceRoomPolling(username) {
+    if (_voiceRoomPollingInterval) {
+      console.log('[VoiceRoomPolling] Already polling');
+      return;
+    }
+
+    username = norm(username);
+    console.log('[VoiceRoomPolling] ✓ Starting polling for:', username);
+
+    _voiceRoomPollingInterval = setInterval(async () => {
+      try {
+        // Get user's bastion list
+        const { data: userData, error: userErr } = await sb.from('users')
+          .select('bastions')
+          .eq('username', username)
+          .maybeSingle();
+
+        if (userErr || !userData || !userData.bastions) {
+          return;
+        }
+
+        const bastions = userData.bastions;
+
+        // Check each bastion for voice room changes
+        for (const bastionId of bastions) {
+          const { data: bastionData, error: bastionErr } = await sb.from('global_bastions')
+            .select('voice_channels')
+            .eq('id', bastionId)
+            .maybeSingle();
+
+          if (bastionErr || !bastionData || !bastionData.voice_channels) {
+            continue;
+          }
+
+          const voiceChannels = bastionData.voice_channels;
+          for (const channelName in voiceChannels) {
+            const channel = voiceChannels[channelName];
+            const participants = channel.participants || [];
+            const key = bastionId + ':' + channelName;
+            const lastState = _lastVoiceRoomState.get(key);
+            const lastParticipants = lastState ? lastState.participants : [];
+
+            // Compare participant lists (as sorted JSON string)
+            const currentStr = JSON.stringify(participants.sort());
+            const lastStr = JSON.stringify(lastParticipants.sort());
+
+            if (currentStr !== lastStr) {
+              console.log('[VoiceRoomPolling] 🔔 VOICE ROOM CHANGE:', { bastionId, channelName, participants });
+              _lastVoiceRoomState.set(key, { participants });
+              if (_callbacks.onVoiceRoomUpdate) {
+                _callbacks.onVoiceRoomUpdate({
+                  bastionId,
+                  channelName,
+                  participants
+                });
+              }
+            } else if (!lastState) {
+              // Initialize state tracking
+              _lastVoiceRoomState.set(key, { participants });
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[VoiceRoomPolling] Error:', e?.message);
+      }
+    }, 4000); // Poll every 4 seconds
+  }
+
+  function stopVoiceRoomPolling() {
+    if (_voiceRoomPollingInterval) {
+      clearInterval(_voiceRoomPollingInterval);
+      _voiceRoomPollingInterval = null;
+      console.log('[VoiceRoomPolling] Stopped');
+    }
+  }
+
   function startSupabasePolling(username, callbacks) {
     _callbacks = callbacks || {};
     stopSupabasePolling();
+
+    // Start friend request polling
+    startFriendRequestPolling(username);
+    // Start voice room polling
+    startVoiceRoomPolling(username);
 
     console.log('[Fortized] Supabase real-time initialized (using active polling for instant delivery)');
   }
@@ -1448,6 +1587,9 @@ const FortizedSocial = (() => {
       }
     });
     _subscriptions = [];
+    // Stop all polling intervals
+    stopFriendRequestPolling();
+    stopVoiceRoomPolling();
     console.log('[Fortized] Supabase real-time subscriptions stopped');
   }
 
@@ -1728,6 +1870,7 @@ const FortizedSocial = (() => {
     adminPushFeedback,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,
+    startFriendRequestPolling, stopFriendRequestPolling, startVoiceRoomPolling, stopVoiceRoomPolling,
     initSocket, getSocket, isSocketReady, socketEmit,
     joinRoom, leaveRoom, queryPresence, disconnectSocket,
     playNotificationSound,

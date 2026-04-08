@@ -275,6 +275,69 @@ app.get('/api/spotify-tokens/:state', (req, res) => {
   res.json({ tokens: null }); // Not ready yet
 });
 
+// ── Bastion Invite API ────────────────────────────
+// Returns bastion info for an invite code (used by invite landing page + chat embeds)
+app.get('/api/bastion/invite/:code', async (req, res) => {
+  try {
+    const code = req.params.code;
+    if (!code) return res.json({ success: false, error: 'No invite code' });
+
+    // 1. Look up invite in the dedicated invites table
+    const { data: invData } = await sb.from('invites').select('data').eq('code', code).maybeSingle();
+    const invite = invData?.data || null;
+
+    let bastion = null;
+
+    // 2. If invite has a bastionId, fetch the bastion directly
+    if (invite?.bastionId) {
+      const { data: bData } = await sb.from('global_bastions').select('id,data').eq('id', invite.bastionId).maybeSingle();
+      if (bData?.data) bastion = { ...bData.data, id: bData.id };
+    }
+
+    // 3. Fallback: search all global bastions for the invite code
+    if (!bastion) {
+      const { data: allBastions } = await sb.from('global_bastions').select('id,data');
+      if (allBastions) {
+        for (const row of allBastions) {
+          const b = row.data;
+          if (!b || !b.invites) continue;
+          const found = b.invites.find(inv => inv.code === code);
+          if (found) {
+            if (found.expires && new Date(found.expires) < new Date()) continue;
+            if (found.maxUses && (found.uses || 0) >= found.maxUses) continue;
+            bastion = { ...b, id: row.id };
+            break;
+          }
+        }
+      }
+    }
+
+    if (!bastion) return res.json({ success: false, error: 'Invite not found or expired' });
+
+    // 4. Get member count
+    const { data: membersData } = await sb.from('bastion_members').select('members').eq('bastion_id', bastion.id).maybeSingle();
+    const memberCount = membersData?.members?.length || 1;
+
+    res.json({
+      success: true,
+      bastion: {
+        id: bastion.id,
+        name: bastion.name || 'Unnamed Bastion',
+        icon: bastion.icon || null,
+        emblem: bastion.emblem || null,
+        banner: bastion.banner || null,
+        desc: bastion.desc || bastion.description || '',
+        memberCount,
+        boostLevel: bastion.boostLevel || 0,
+        owner: bastion.owner || invite?.createdBy || null,
+      }
+    });
+  } catch (e) {
+    console.error('[API] bastion invite lookup failed:', e.message);
+    res.json({ success: false, error: 'Server error' });
+  }
+});
+
 // ── Serve static frontend ──────────────────────────
 // Disable caching for HTML files so code updates are picked up immediately
 app.use((req, res, next) => {

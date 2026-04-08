@@ -3533,6 +3533,7 @@ function _debouncedActiveNowRefresh() {
 function showDMFriendsHome() {
   curDM = null;
   curGC = null;
+  _currentGCMeta = null;
   const wrap = document.getElementById('dm-chat-wrap');
   if (!wrap) return;
   // Hide user panel when returning to friends home
@@ -3588,6 +3589,7 @@ function openDMView(username) {
   unhideDMConversation('dm_' + username);
   curDM = username;
   curGC = null;
+  _currentGCMeta = null;
   document.getElementById('gc-member-panel')?.remove();
   closeModal('modal-new-dm');
   showView('dms');
@@ -3747,6 +3749,15 @@ async function sendDM() {
 
 let curGC = null;        // current group chat id
 let _gcListener = null;  // Firebase listener unsubscribe
+let _currentGCMeta = null; // stored GC meta for live re-renders
+let _gcMemberResortTimer = null;
+function _debouncedGCMemberResort() {
+  if (_gcMemberResortTimer) clearTimeout(_gcMemberResortTimer);
+  _gcMemberResortTimer = setTimeout(() => {
+    _gcMemberResortTimer = null;
+    if (curGC && _currentGCMeta) showGCMemberPanel(_currentGCMeta);
+  }, 200);
+}
 
 // ── Modal tab switching ─────────────────────────────
 function switchNewDMTab(tab) {
@@ -3926,6 +3937,7 @@ async function openGroupChatView(gcId) {
 }
 
 async function showGCMemberPanel(meta) {
+  _currentGCMeta = meta; // store for live re-renders
   // Remove old GC panel if exists
   document.getElementById('gc-member-panel')?.remove();
   const panel = document.createElement('div');
@@ -4302,6 +4314,7 @@ async function leaveGroupChat(gcId) {
       await firebase.database().ref('users/'+CU.username+'/groupChats').set(gcs);
       await refreshCU();
       curGC = null;
+      _currentGCMeta = null;
       document.getElementById('gc-member-panel')?.remove();
       const wrap = document.getElementById('dm-chat-wrap');
       if (wrap) showDMFriendsHome();
@@ -4325,6 +4338,7 @@ async function deleteGroupChat(gcId) {
       await firebase.database().ref('groupChats/'+gcId).remove();
       await refreshCU();
       curGC = null;
+      _currentGCMeta = null;
       document.getElementById('gc-member-panel')?.remove();
       const wrap = document.getElementById('dm-chat-wrap');
       if (wrap) showDMFriendsHome();
@@ -7035,16 +7049,22 @@ function initFortizedUXResilience() {
           el.style.opacity = isOnline ? '' : '.4';
           // Re-sort member list if in a bastion view
           if (el.closest('#member-list')) _debouncedMemberListResort();
+          // Re-sort GC member panel if in a group chat view
+          if (el.closest('#gc-member-panel')) _debouncedGCMemberResort();
         });
 
         // ── UPDATE GAME/SPOTIFY ACTIVITY ──
-        if (data.gameActivity && data.gameActivity.name) {
-          const isSpotifyAct = !!data.gameActivity._spotify;
+        const _actPrimary = data.activityState?.activities?.length
+          ? data.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2))[0]
+          : null;
+        const _actGame = _actPrimary || data.gameActivity;
+        if (_actGame && _actGame.name) {
+          const isSpotifyAct = !!_actGame._spotify;
           document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-custom-status').forEach(el => {
             if (isSpotifyAct) {
               el.innerHTML = '<span style="opacity:.7;font-size:11px;color:#1DB954;">🎵 Listening to Spotify</span>';
             } else {
-              el.innerHTML = '<span style="opacity:.6;font-size:11px;">🎮 Playing ' + escapeHTML(data.gameActivity.name||'') + '</span>';
+              el.innerHTML = '<span style="opacity:.6;font-size:11px;">🎮 Playing ' + escapeHTML(_actGame.name||'') + '</span>';
             }
           });
         } else if (!isOnline) {
@@ -7153,6 +7173,26 @@ function initFortizedUXResilience() {
             sortedActEl.textContent = activityText ? '🎮 ' + activityText : '';
           }
         }
+        // ── UPDATE MEMBER LIST CUSTOM STATUS (bastion + GC) ──
+        document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-custom-status').forEach(el => {
+          if (data.activityState?.activities?.length) {
+            const _primary = data.activityState.activities.sort((a, b) => (b.priority || 2) - (a.priority || 2))[0];
+            if (_primary?._spotify) {
+              el.innerHTML = '<span style="opacity:.7;font-size:11px;color:#1DB954;">🎵 Listening to Spotify</span>';
+            } else if (_primary?.name) {
+              el.innerHTML = '<span style="opacity:.6;font-size:11px;">🎮 Playing ' + escapeHTML(_primary.name) + '</span>';
+            } else {
+              el.innerHTML = '';
+            }
+          } else if (data.gameActivity?.name) {
+            const _isSp = !!data.gameActivity._spotify;
+            el.innerHTML = _isSp
+              ? '<span style="opacity:.7;font-size:11px;color:#1DB954;">🎵 Listening to Spotify</span>'
+              : '<span style="opacity:.6;font-size:11px;">🎮 Playing ' + escapeHTML(data.gameActivity.name) + '</span>';
+          } else {
+            el.innerHTML = '';
+          }
+        });
       },
       onMessage: function(room, msg) {
         if (!room || !msg) return;
@@ -10293,7 +10333,8 @@ async function saveAutoMod() {
 }
 async function generateInvite() {
   const b = CU.bastions[curBastion];
-  const code = CU.username.slice(0,4)+(Date.now()).toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase();
+  const _bPrefix = (b.name||'b').replace(/[^a-zA-Z0-9]/g,'').slice(0,4).toLowerCase();
+  const code = _bPrefix + '-' + CU.username.slice(0,4) + '-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
   const expiryHours=parseInt(document.getElementById('invite-expiry')?.value)||0;
   const maxUses=parseInt(document.getElementById('invite-max-uses')?.value)||0;
   const invite = {code, uses:0, created:new Date().toISOString(), createdBy: CU.username};
@@ -13110,18 +13151,29 @@ async function updatePfp(e) {
   const file = e.target.files[0];
   if (!file) return;
   if (file.size > 8*1024*1024) { toast('Max 8MB', 'error'); return; }
+  const isGif = file.type === 'image/gif' || /\.gif$/i.test(file.name);
   const reader = new FileReader();
   reader.onload = async ev => {
     const fileData = ev.target.result;
-    showCropModal(fileData, 1, async (cropped) => {
-      CU.pfp = cropped;
+    if (isGif) {
+      // Skip crop modal for GIFs to preserve animation
+      CU.pfp = fileData;
       await saveUser();
       updateUserbar();
       buildProfileView('myprofile');
-      // Broadcast pfp change to other clients
-      try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { pfp: cropped, field: 'pfp' }); } catch(e){}
-      toast('Avatar updated! ✓', 'success');
-    });
+      try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { pfp: fileData, field: 'pfp' }); } catch(e){}
+      toast('Animated avatar updated! ✓', 'success');
+    } else {
+      showCropModal(fileData, 1, async (cropped) => {
+        CU.pfp = cropped;
+        await saveUser();
+        updateUserbar();
+        buildProfileView('myprofile');
+        // Broadcast pfp change to other clients
+        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { pfp: cropped, field: 'pfp' }); } catch(e){}
+        toast('Avatar updated! ✓', 'success');
+      });
+    }
   };
   reader.readAsDataURL(file);
 }
@@ -17366,7 +17418,7 @@ async function adjustOnyx(direction) {
 async function _showInviteFriendsPanel() {
   // Generate a personal invite code if not existing
   if (!CU.personalInviteCode) {
-    CU.personalInviteCode = CU.username + '-' + Date.now().toString(36).toUpperCase();
+    CU.personalInviteCode = CU.username + '-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
   }
   const link = location.origin + '/app?ref=' + CU.personalInviteCode;
@@ -17375,64 +17427,30 @@ async function _showInviteFriendsPanel() {
   CU.questsDailyLog.invite = new Date().toDateString();
   saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
 
-  const friends = CU?.friends || [];
-
   const ov = document.createElement('div');
   ov.className = 'input-dialog-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9900;display:flex;align-items:center;justify-content:center;padding:20px;animation:inviteOverlayIn .3s ease both;';
 
-  ov.innerHTML = `<div style="background:var(--panel,#13161d);border:1.5px solid rgba(255,249,62,.1);border-radius:18px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 80px rgba(255,249,62,.03);animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;overflow:hidden;">
+  ov.innerHTML = `<div style="background:var(--panel,#13161d);border:1.5px solid rgba(255,249,62,.1);border-radius:18px;width:100%;max-width:460px;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 80px rgba(255,249,62,.03);animation:invitePanelIn .25s cubic-bezier(.22,1,.36,1) both;overflow:hidden;">
     <!-- Header -->
-    <div style="padding:20px 20px 0;">
+    <div style="padding:20px 20px 14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <h3 style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite friends to Fortized</h3>
+        <h3 style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;margin:0;letter-spacing:-.02em;">Invite people to Fortized</h3>
         <button onclick="this.closest('.input-dialog-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;line-height:1;padding:4px 8px;border-radius:8px;transition:all .15s;">&times;</button>
       </div>
-      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px;">You earn <strong style="color:var(--accent);">9 Onyx</strong> for each friend who joins!</div>
-      <!-- Search -->
-      <div style="position:relative;margin-bottom:14px;">
-        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.2);" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="invite-friends-search" placeholder="Search friends..." autocomplete="off" style="width:100%;padding:9px 14px 9px 34px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#fff;font-family:var(--font-ui);font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;" oninput="_filterInviteFriends(this.value)">
-      </div>
-    </div>
-    <!-- Friends list -->
-    <div id="invite-friends-list" style="flex:1;overflow-y:auto;padding:0 10px 10px;min-height:120px;max-height:340px;">
-      <div style="padding:20px;text-align:center;color:rgba(255,255,255,.3);font-size:13px;">Loading friends...</div>
-    </div>
-    <!-- Copy link footer -->
-    <div style="padding:14px 20px;border-top:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.01);">
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Or, send an invite link to a friend</div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input type="text" id="invite-link-display" value="${link}" readonly style="flex:1;padding:9px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.6);font-size:12px;font-family:monospace;outline:none;cursor:text;min-width:0;" onclick="this.select()">
-        <button onclick="_copyInviteLink(this)" class="btn-a" style="padding:9px 18px;border-radius:10px;font-size:12.5px;font-weight:700;white-space:nowrap;">Copy</button>
+      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:16px;">You earn <strong style="color:var(--accent);">9 Onyx</strong> for each friend who joins!</div>
+      <div style="padding:16px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);">
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:10px;">Share this link with people outside of Fortized to invite them:</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="invite-link-display" value="${link}" readonly style="flex:1;padding:9px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.6);font-size:12px;font-family:monospace;outline:none;cursor:text;min-width:0;" onclick="this.select()">
+          <button onclick="_copyInviteLink(this)" class="btn-a" style="padding:9px 18px;border-radius:10px;font-size:12.5px;font-weight:700;white-space:nowrap;">Copy</button>
+        </div>
       </div>
     </div>
   </div>`;
 
   document.body.appendChild(ov);
   ov.onclick = e => { if (e.target === ov) ov.remove(); };
-
-  // Load friends list async
-  const listEl = document.getElementById('invite-friends-list');
-  if (!friends.length) {
-    listEl.innerHTML = '<div class="ftz-empty"><div class="ftz-empty-icon">👥</div><div class="ftz-empty-title">No friends yet</div><div class="ftz-empty-text">Add friends to invite them!</div></div>';
-    return;
-  }
-
-  const friendData = await Promise.all(friends.map(async f => {
-    try {
-      const u = await FortizedSocial.getUserByName(f);
-      const st = FtzStatus.sanitize(u?.status || 'offline');
-      return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st};
-    } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
-  }));
-
-  // Sort: online first
-  const online = friendData.filter(r => FtzStatus.isPresent(r.status));
-  const offline = friendData.filter(r => !FtzStatus.isPresent(r.status));
-  const sorted = [...online, ...offline];
-  window._inviteFriendsSorted = sorted;
-  _renderInviteFriendsList(sorted);
 }
 
 function _renderInviteFriendsList(list) {
@@ -17517,8 +17535,9 @@ async function showBastionInviteUI(bastionIdx) {
   if (active) {
     inviteCode = active.code;
   } else {
-    // Auto-generate an invite
-    inviteCode = Math.random().toString(36).slice(2,8).toUpperCase();
+    // Auto-generate a unique, identifiable invite code: bastion prefix + timestamp + random
+    const _bPrefix = (b.name||'b').replace(/[^a-zA-Z0-9]/g,'').slice(0,4).toLowerCase();
+    inviteCode = _bPrefix + '-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
     const newInv = { code: inviteCode, createdBy: CU.username, created: new Date().toISOString(), uses: 0 };
     if (!b.invites) b.invites = [];
     b.invites.push(newInv);
@@ -17652,7 +17671,7 @@ function _copyBastionInviteLink(btn) {
 }
 
 function regeneratePersonalInvite() {
-  const code = CU.username + '-' + Date.now().toString(36).toUpperCase();
+  const code = CU.username + '-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
   CU.personalInviteCode = code;
   saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
   const display = document.getElementById('invite-link-display');

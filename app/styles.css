@@ -2634,7 +2634,7 @@ body.is-desktop-app .notif-panel{top:0;}
 .profile-theme-card-border{background:var(--pt-gradient,rgba(255,255,255,.08));padding:2.5px;border-radius:20px;}
 
 /* Transparent PFP support — don't add opaque bg behind transparent avatars */
-.ua img,.fa img,.ml-av img,.msg-av-inner img,.mpp-av img,.profile-av-big img,.chat-welcome .w-av img,.ftz-notif-av img,.voice-avatar-ring img{background:#000!important;}
+.ua img,.fa img,.ml-av img,.msg-av-inner img,.mpp-av img,.profile-av-big img,.chat-welcome .w-av img,.ftz-notif-av img,.voice-avatar-ring img{background:transparent!important;}
 /* DM sidebar close button — appears on hover */
 .friend-item{position:relative;}
 .dm-close-btn{display:none;background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:14px;width:18px;height:18px;border-radius:4px;align-items:center;justify-content:center;transition:all .12s;line-height:1;padding:0;z-index:2;}

@@ -3614,7 +3614,7 @@ function openDMView(username) {
         <span class="rt-name">${escapeHTML(username)}</span>
       </div>
       <div class="chat-msgs" id="dm-msgs">
-        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')">Jump to Present</button></div>
+        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')">Return To Present</button></div>
         <div class="new-messages-bar" id="dm-new-msgs-bar"><span id="dm-new-msgs-text">1 new message</span><button onclick="markDMRead()">Mark as Read</button></div>
         <div class="chat-welcome">
           <div class="w-av" id="dm-welcome-av">${buildAvatarHTML(null,username,60)}</div>
@@ -3905,7 +3905,7 @@ async function openGroupChatView(gcId) {
         <span class="rt-desc">${(meta.members||[]).length} members</span>
       </div>
       <div class="chat-msgs" id="gc-msgs">
-        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('gc-msgs')">Jump to Present</button></div>
+        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('gc-msgs')">Return To Present</button></div>
         <div class="new-messages-bar" id="gc-new-msgs-bar"><span id="gc-new-msgs-text">1 new message</span><button onclick="markGCRead()">Mark as Read</button></div>
         <div class="chat-welcome">
           <div class="w-av" style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:32px;">${meta.emoji||'👥'}</div>
@@ -4796,7 +4796,7 @@ function loadChatChannel(idx) {
         ${nsfwBadge}
       </div>
       <div class="chat-msgs" id="ch-msgs-${idx}">
-        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Jump to Present</button></div>
+        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Return To Present</button></div>
         <div class="new-messages-bar" id="ch-new-msgs-bar-${idx}"><span id="ch-new-msgs-text-${idx}">1 new message</span><button onclick="markChannelRead(${idx})">Mark as Read</button></div>
         ${bannerSafe ? `<div style="width:100%;height:120px;position:relative;flex-shrink:0;overflow:hidden;border-bottom:1.5px solid var(--border);"><img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.88);" onerror="this.parentElement.style.display='none'"><div style="position:absolute;bottom:12px;left:16px;font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);">${escapeHTML(b.name||'')}</div></div>` : ''}
         <div class="chat-welcome">

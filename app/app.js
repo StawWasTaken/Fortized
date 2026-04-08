@@ -7240,6 +7240,7 @@ function initFortizedUXResilience() {
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'dm', lastAuthor);
                 scrollBottom('dm-msgs');
+                if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
               }
             }
           }
@@ -7257,6 +7258,7 @@ function initFortizedUXResilience() {
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'gc', lastAuthor);
                 scrollBottom('gc-msgs');
+                if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
               }
             }
           }
@@ -7268,7 +7270,7 @@ function initFortizedUXResilience() {
           if (b && ch) {
             const expectedRoom = 'bastion:' + (b.globalId || b.name) + ':' + ch.name;
             if (room === expectedRoom) {
-              const msgsEl = document.getElementById('ch-msgs');
+              const msgsEl = document.getElementById('ch-msgs-' + curChannel);
               if (msgsEl) {
                 const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
                 if (!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) {
@@ -7276,7 +7278,9 @@ function initFortizedUXResilience() {
                   const lastRows = msgsEl.querySelectorAll('.msg-row');
                   const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                   appendMessage(msgsEl, msg, 'ch', lastAuthor);
-                  scrollBottom('ch-msgs');
+                  scrollBottom('ch-msgs-' + curChannel);
+                  if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) { const isMention = (msg.text||'').includes('@'+CU.username); playNotifSound(isMention ? 'mention' : 'message'); }
+                }
                 }
               }
             }
@@ -25708,55 +25712,8 @@ function _showWatchInRoom(vid) {
 // ════════════════════════════════════════════
 // LIVE MESSAGE UPDATES (edit/delete/forward)
 // ════════════════════════════════════════════
-// Wire up Socket.io real-time message listeners (new/edit/delete) for other users
-(function _wireSocketMessageListeners() {
-  const _checkSocket = setInterval(() => {
-    const sock = typeof FortizedSocial !== 'undefined' && FortizedSocial.getSocket ? FortizedSocial.getSocket() : null;
-    if (!sock) return;
-    clearInterval(_checkSocket);
-    // Real-time new messages from other users via Socket.io relay
-    sock.on('message:new', data => {
-      if (!data || !data.message) return;
-      const msg = data.message;
-      if (msg.from === CU?.username) return; // Skip own echo
-      // Find the appropriate message container and append
-      const mid = msg.id || (msg.from + msg.timestamp);
-      // Check all visible message containers for duplicate
-      if (document.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return;
-      // Determine context from room key
-      const room = data.room || '';
-      if (room.startsWith('dm:')) {
-        const el = document.getElementById('dm-msgs');
-        if (el && curDM) { appendMessage(el, msg, 'dm', null); _notifyNewMsg('dm-msgs'); if (!isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message'); }
-      } else if (room.startsWith('bastion:')) {
-        // Verify the message is for the currently viewed bastion+channel
-        const b = CU.bastions?.[curBastion];
-        const chIdx = curChannel;
-        const ch = b?.channels?.[chIdx];
-        if (!b || !ch) return;
-        const expectedRoom = 'bastion:' + (b.globalId || b.name) + ':' + ch.name;
-        if (room !== expectedRoom) return;
-        const el = document.getElementById('ch-msgs-' + chIdx);
-        if (el) { appendMessage(el, msg, 'ch', null); _notifyNewMsg('ch-msgs-' + chIdx); if (!isUserBlocked(msg.from) && !isUserIgnored(msg.from)) { const isMention = (msg.text||'').includes('@'+CU.username); playNotifSound(isMention ? 'mention' : 'message'); } }
-      }
-    });
-    sock.on('message:edited', data => {
-      if (!data || !data.messageId) return;
-      const row = document.querySelector(`[data-msgid="${CSS.escape(data.messageId)}"]`);
-      if (!row) return;
-      const textEl = row.querySelector('.msg-text');
-      if (textEl && data.newText !== undefined) {
-        row.dataset.text = data.newText;
-        textEl.innerHTML = parseMD(escapeHTML(data.newText)) + '<span class="msg-edited">(edited)</span>';
-      }
-    });
-    // Real-time message deletion from other users
-    sock.on('message:deleted', data => {
-      if (!data || !data.messageId) return;
-      _liveRemoveMessage({ key: data.messageId });
-    });
-  }, 2000);
-})();
+// Primary real-time handlers are registered in _socketCbs (onMessage, onMessageEdited, onMessageDeleted)
+// via FortizedSocial.initSocket(). No duplicate listeners needed here.
 
 function _liveUpdateMessage(snap, context) {
   const msg = snap.val();

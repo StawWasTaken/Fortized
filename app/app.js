@@ -7281,7 +7281,6 @@ function initFortizedUXResilience() {
                   scrollBottom('ch-msgs-' + curChannel);
                   if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) { const isMention = (msg.text||'').includes('@'+CU.username); playNotifSound(isMention ? 'mention' : 'message'); }
                 }
-                }
               }
             }
           }

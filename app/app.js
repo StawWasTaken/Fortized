@@ -5537,7 +5537,45 @@ function deleteMsg(msgId, context) {
   const _curGC = typeof curGC !== 'undefined' ? curGC : null;
   const _curBastion = curBastion;
   const _curChannel = curChannel;
-  showCustomConfirm('Delete this message?', async () => {
+
+  // Build a preview of the message for the confirmation dialog
+  const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  let previewHTML = '';
+  if (row) {
+    const author = row.dataset.from || 'Unknown';
+    const textEl = row.querySelector('.msg-text');
+    const msgText = textEl ? textEl.textContent.slice(0, 200) : '';
+    const timeEl = row.querySelector('.msg-timestamp') || row.querySelector('.msg-time-small');
+    const time = timeEl ? timeEl.textContent : '';
+    previewHTML = `<div style="background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;margin:12px 0 16px;display:flex;gap:10px;align-items:flex-start;">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.06);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;">${buildAvatarHTML(_pfpCache[author]||null,author,32)}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><span style="font-weight:700;font-size:13px;color:rgba(255,255,255,.85);">${escapeHTML(author)}</span><span style="font-size:10px;color:rgba(255,255,255,.25);">${escapeHTML(time)}</span></div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(msgText)}${msgText.length >= 200 ? '...' : ''}</div>
+      </div>
+    </div>`;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:440px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="ftz-confirm-title" style="margin-bottom:0;">Delete Message</div>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:18px;line-height:1;padding:4px;">&times;</button>
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,.45);">Are you sure you want to delete this message?</div>
+    ${previewHTML}
+    <div class="ftz-confirm-actions">
+      <button class="ftz-btn ftz-btn-ghost" id="cc-cancel">Cancel</button>
+      <button class="ftz-btn ftz-btn-danger" id="cc-ok">Delete</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('cc-ok').onclick = () => { overlay.remove(); _executeDeleteMsg(msgId, context, _curDM, _curGC, _curBastion, _curChannel); };
+  document.getElementById('cc-cancel').onclick = () => overlay.remove();
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+}
+async function _executeDeleteMsg(msgId, context, _curDM, _curGC, _curBastion, _curChannel) {
     if (msgId.startsWith('local-')) {
       const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
       if (row) row.remove();
@@ -5627,7 +5665,6 @@ function deleteMsg(msgId, context) {
       console.error('Delete error:', e);
       toast('Failed to delete message: ' + (e.message||'unknown error'), 'error');
     }
-  });
 }
 function _showUndoDelete(ref, msgSnapshot, msgId, ctx, dm, gc, bastion, channel) {
   // Flush any pending undo — previous deletes are finalized
@@ -17550,7 +17587,13 @@ async function showBastionInviteUI(bastionIdx) {
     if (!b.invites) b.invites = [];
     b.invites.push(newInv);
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
-    if (gid) { try { await firebase.database().ref('globalBastions/' + gid + '/invites').set(b.invites); } catch(e) { console.warn('[Invite] Sync failed:', e?.message); } }
+    if (gid) {
+      try { await firebase.database().ref('globalBastions/' + gid + '/invites').set(b.invites); } catch(e) { console.warn('[Invite] Sync failed:', e?.message); }
+      // Also save to dedicated invites table so API can look it up
+      try { await FortizedSocial.saveInvite(inviteCode, {code: inviteCode, bastionId: gid, bastionName: b.name, createdBy: CU.username, created: newInv.created, expires: null, maxUses: 0, uses: 0}); } catch(e) { console.warn('[Invite] Supabase save failed:', e?.message); }
+      // Sync full bastion data to global so API has latest info
+      _syncBastionToGlobal(bi);
+    }
   }
   const inviteLink = location.origin + '/app?invite=' + inviteCode;
   const friends = CU?.friends || [];
@@ -17998,14 +18041,16 @@ async function joinBastionById(bastionId, hasInvite) {
   const all=await FortizedSocial.getGlobalBastions()||{};
   const bid = (bastionId||'').trim();
   const bidLower = bid.toLowerCase();
-  // Priority 1: Exact ID match
-  let b = Object.values(all).find(x => x.id === bid);
-  // Priority 2: Case-insensitive ID match
-  if (!b) b = Object.values(all).find(x => (x.id||'').toLowerCase() === bidLower);
+  let b = null, gid = bid;
+  // Priority 0: Direct key lookup (globalBastions are keyed by ID)
+  if (all[bid]) { b = all[bid]; b.id = bid; }
+  // Priority 1: Exact ID match on data
+  if (!b) { for (const [k,v] of Object.entries(all)) { if (v.id === bid) { b = v; gid = k; b.id = k; break; } } }
+  // Priority 2: Case-insensitive key/ID match
+  if (!b) { for (const [k,v] of Object.entries(all)) { if (k.toLowerCase() === bidLower || (v.id||'').toLowerCase() === bidLower) { b = v; gid = k; b.id = k; break; } } }
   // Priority 3: Name match as last resort
-  if (!b) b = Object.values(all).find(x => (x.name||'').toLowerCase() === bidLower);
+  if (!b) { for (const [k,v] of Object.entries(all)) { if ((v.name||'').toLowerCase() === bidLower) { b = v; gid = k; b.id = k; break; } } }
   if(!b){toast('Bastion not found.','error');return;}
-  const gid = b.id || b.globalId;
   const already=(CU.bastions||[]).some(ub=> gid && ub.globalId===gid);
   if(already){toast('Already joined!','info');openBastion((CU.bastions||[]).findIndex(ub=> gid && ub.globalId===gid));return;}
   if(!hasInvite && b.public===false){toast('This bastion is invite-only.','error');return;}

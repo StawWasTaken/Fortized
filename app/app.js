@@ -5508,15 +5508,16 @@ async function saveEdit(msgId) {
   if (row) row.dataset.text=newText;
   const textEl=row?.querySelector('.msg-text');
   if (textEl) textEl.innerHTML=parseMD(escapeHTML(newText))+'<span class="msg-edited">(edited)</span>';
-  // Persist to Firebase
+  // Persist edit to Supabase
   try {
-    const editData = {text:newText, edited:true, editedAt:new Date().toISOString()};
     if (curDM) {
-      await firebase.database().ref(`dms/${[CU.username,curDM].sort().join('__')}/${msgId}`).update(editData);
+      await FortizedSocial.editMessage('dm', { user1: CU.username, user2: curDM, messageId: msgId, newText });
+    } else if (typeof curGC !== 'undefined' && curGC) {
+      await FortizedSocial.editMessage('gc', { gcId: curGC, messageId: msgId, newText });
     } else {
       const b=CU.bastions?.[curBastion]; const ch=b?.channels?.[curChannel];
       const bid=b?.globalId||b?.name; const chName=ch?.name||'general';
-      await firebase.database().ref(`bastionMsgs/${bid}/${chName}/${msgId}`).update(editData);
+      await FortizedSocial.editMessage('bastion', { bastionId: bid, channelId: chName, messageId: msgId, newText });
     }
   } catch(e){ console.warn('Edit persist error',e); }
   // Broadcast edit via Socket.io so others see it in real-time
@@ -17581,7 +17582,14 @@ async function showBastionInviteUI(bastionIdx) {
   const b = CU?.bastions?.[bastionIdx ?? curBastion];
   if (!b) { toast('No bastion selected', 'error'); return; }
   const bi = bastionIdx ?? curBastion;
-  const gid = b.globalId || b.id;
+
+  // Ensure bastion has a globalId before creating invites
+  if (!b.globalId) {
+    b.globalId = (b.owner || CU.username) + '_' + Date.now();
+    await saveUser();
+    await FortizedSocial.addBastionMember(b.globalId, CU.username);
+  }
+  const gid = b.globalId;
 
   // Get or create an invite code for this bastion
   let inviteCode = '';
@@ -17988,7 +17996,7 @@ async function showBastionInviteDialog(bastion, inviterName, inviteCode) {
   if (isLoggedIn) {
     actionsHTML = `
       <div class="invite-actions">
-        <button class="invite-accept-btn" onclick="acceptBastionInvite(this,'${escapeHTML(bastion.id||bastion.name)}','${escapeHTML(inviteCode)}')">Accept Invite</button>
+        <button class="invite-accept-btn" onclick="acceptBastionInvite(this,'${escapeHTML(bastion.id||bastion.globalId||bastion.name)}','${escapeHTML(inviteCode)}')">Accept Invite</button>
         <button class="invite-decline-btn" onclick="document.getElementById('invite-dialog-overlay').remove()">Decline</button>
       </div>`;
   } else {

@@ -799,6 +799,18 @@ const FortizedSocial = (() => {
   }
 
   // ── Delete Messages ─────────────────────────────────
+  async function editMessage(type, opts) {
+    const editData = { text: opts.newText, edited: true, edited_at: new Date().toISOString() };
+    if (type === 'dm') {
+      const key = _dmKey(opts.user1, opts.user2);
+      await sb.from('dms').update(editData).eq('dm_key', key).eq('id', opts.messageId);
+    } else if (type === 'gc') {
+      await sb.from('group_chat_messages').update(editData).eq('gc_id', opts.gcId).eq('id', opts.messageId);
+    } else if (type === 'bastion') {
+      await sb.from('bastion_msgs').update(editData).eq('bastion_id', opts.bastionId).eq('channel_id', opts.channelId).eq('id', opts.messageId);
+    }
+  }
+
   async function deleteMessage(type, opts) {
     if (type === 'dm') {
       const key = _dmKey(opts.user1, opts.user2);
@@ -1845,7 +1857,7 @@ const FortizedSocial = (() => {
     getStatus, setStatus,
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,
-    getDMMessages, sendDMMessage, deleteMessage, getRecentDMPartners,
+    getDMMessages, sendDMMessage, editMessage, deleteMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,
     getGlobalBastions, saveGlobalBastion, getGlobalBastion,
     getBastionMembers, addBastionMember, removeBastionMember,

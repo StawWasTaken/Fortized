@@ -4463,7 +4463,7 @@ function renderBastionSidebar(scroll) {
   html+=`<div class="bastion-identity${bannerSrc?' ':' no-banner '}" style="position:relative;">
     ${bannerSrc?'':`<div class="bastion-emblem">${emblemHTML}</div>`}
     <div class="bastion-meta">
-      <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)} <span class="bm-chevron">▼</span></div>
+      <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)} ${boostLv>0?`<span style="display:inline-block;margin-left:6px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:5px;background:linear-gradient(135deg,${boostLv===1?'#60a5fa':boostLv===2?'#a78bfa':'#fbbf24'},${boostLv===1?'#60a5fa99':boostLv===2?'#a78bfa99':'#fbbf2499'});color:#fff;letter-spacing:.03em;">${boostLv===1?'🟦 T1':boostLv===2?'🟪 T2':'👑 T3'}</span>`:'<span style="display:inline-block;margin-left:6px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);">🔓 Boost</span>'} <span class="bm-chevron">▼</span></div>
       ${b.tagline?`<div class="bm-tagline">${escapeHTML(b.tagline)}</div>`:''}
     </div>
     <div id="bastion-name-dd-anchor"></div>
@@ -4471,6 +4471,16 @@ function renderBastionSidebar(scroll) {
 
   // ── Mood Bar ──
   html+=renderMoodBar(b);
+
+  // ── Custom Emojis Display ──
+  const emojis = b.customEmojis || [];
+  if (emojis.length > 0) {
+    const emojiDisplay = emojis.slice(0, 8).map(e => `<span title=":${e.name}:" style="cursor:default;font-size:16px;display:inline-block;">${e.data ? `<img src="${e.data}" style="width:20px;height:20px;display:inline-block;">` : '?'}</span>`).join('');
+    html += `<div style="padding:8px 16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);">
+      <span style="font-weight:700;">Custom Emojis (${emojis.length})</span>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;">${emojiDisplay}${emojis.length > 8 ? `<span style="font-size:12px;opacity:.6;">+${emojis.length - 8}</span>` : ''}</div>
+    </div>`;
+  }
 
   html+=`<div class="sidebar-divider"></div>`;
 
@@ -6486,15 +6496,16 @@ function _renderDiscoverFeatured(bastions){
   if(!el)return;
   const featured=bastions.filter(b=>b.public!==false).sort((a,b)=>(b.memberCount||0)-(a.memberCount||0)).slice(0,3);
   if(!featured.length){el.innerHTML='';return;}
-  el.innerHTML=`<div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:.04em;text-transform:uppercase;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Featured Bastions</div>
+  el.innerHTML=`<div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:.04em;text-transform:uppercase;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Trending Communities</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
   ${featured.map(b=>{
     const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
     const mc = b.memberCount||1;
-    return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid rgba(255,249,62,.12);border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(12px);" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 36px rgba(255,249,62,.06)';this.style.borderColor='rgba(255,249,62,.25)'" onmouseleave="this.style.transform='';this.style.boxShadow='';this.style.borderColor='rgba(255,249,62,.12)'">
-      <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,249,62,.1);overflow:hidden;">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}</div>
-      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.6);display:flex;align-items:center;gap:2px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg> Active</span>`:''}</div></div>
-      ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.12);padding:5px 12px;border-radius:10px;">Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);padding:5px 12px;border-radius:10px;">Join</span>`}
+    const boostBadge = (b.boostLevel||0)>0?(['🟦 Tier 1','🟪 Tier 2','👑 Tier 3'][(b.boostLevel||1)-1]):'';
+    return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,${(b.boostLevel||0)>0?'rgba(255,249,62,.08)':'rgba(255,249,62,.04)'},rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.12)'};border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(12px);" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px ${(b.boostLevel||0)>0?'rgba(255,249,62,.12)':'rgba(255,249,62,.06)'}';" onmouseleave="this.style.transform='';this.style.boxShadow='';">
+      <div style="width:52px;height:52px;border-radius:14px;background:${(b.boostLevel||0)>0?'linear-gradient(135deg,rgba(255,249,62,.15),rgba(255,249,62,.05))':'rgba(255,249,62,.06)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.1)'};overflow:hidden;">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}</div>
+      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)} ${boostBadge?'<span style="font-size:10px;margin-left:6px;font-weight:700;color:var(--accent);">'+boostBadge+'</span>':''}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.8);display:flex;align-items:center;gap:2px;font-weight:700;">🔥 Trending</span>`:`<span style="color:rgba(255,255,255,.4);">💤 ${mc>1?'Active':'Quiet'}</span>`}</div></div>
+      ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.12);padding:5px 12px;border-radius:10px;">✓ Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);padding:5px 12px;border-radius:10px;">+ Join</span>`}
     </div>`;
   }).join('')}</div>`;
 }
@@ -6510,19 +6521,20 @@ function renderDiscoverGrid(bastions){
     const cat=(b.category||'').toLowerCase();
     const mc = b.memberCount||1;
     const isTrending = mc >= 5;
-    // Generate sub-genre tags from category
+    const boostLevel = b.boostLevel||0;
     const tags = (b.tags || []).slice(0,3);
-    return `<div class="bc" onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">
-      <div class="bc-banner">${b.icon?`<img src="${b.icon}" alt="">`:`<div style="position:relative;z-index:1;width:100%;height:100%;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(62,207,110,.04),rgba(18,22,40,.9));display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.2)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`}</div>
+    return `<div class="bc" style="${boostLevel>0?'border-color:rgba(255,249,62,.25);box-shadow:0 0 20px rgba(255,249,62,.08);':''}" onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">
+      ${boostLevel>0?`<div style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:3px 8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:6px;color:var(--accent);z-index:2;">${['🟦','🟪','👑'][boostLevel-1]} T${boostLevel}</div>`:''}
+      <div class="bc-banner">${b.icon?`<img src="${b.icon}" alt="" style="${boostLevel>0?'filter:brightness(1.1);':''}">`:`<div style="position:relative;z-index:1;width:100%;height:100%;background:linear-gradient(135deg,${boostLevel>0?'rgba(255,249,62,.1)':'rgba(255,249,62,.06)'},${boostLevel>0?'rgba(62,207,110,.06)':'rgba(62,207,110,.04)'},rgba(18,22,40,.9));display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${boostLevel>0?'rgba(255,249,62,.35)':'rgba(255,249,62,.2)'}" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`}</div>
       <div class="bc-body">
-        <div class="bc-meta"><div class="bc-icon">${b.icon?`<img src="${b.icon}" alt="">`:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.5)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>`}</div><div style="flex:1"></div>
-          ${joined?`<span style="font-size:10.5px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.15);padding:4px 12px;border-radius:10px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Joined</span>`:`<button class="ftz-btn ftz-btn-accent ftz-btn-xs" style="padding:5px 16px;border-radius:10px;" onclick="event.stopPropagation();promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">Join</button>`}
+        <div class="bc-meta"><div class="bc-icon">${b.icon?`<img src="${b.icon}" alt="" style="${boostLevel>0?'filter:brightness(1.1);':''}">`:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.5)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>`}</div><div style="flex:1"></div>
+          ${joined?`<span style="font-size:10.5px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.15);padding:4px 12px;border-radius:10px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Joined</span>`:`<button class="ftz-btn ftz-btn-accent ftz-btn-xs" style="padding:5px 16px;border-radius:10px;" onclick="event.stopPropagation();promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">+ Join</button>`}
         </div>
         <div class="bc-name">${escapeHTML(b.name)}</div>
         <div class="bc-desc">${escapeHTML((b.desc||'').slice(0,140))}</div>
         <div class="bc-footer">
           <div class="bc-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</div>
-          ${isTrending?`<div style="display:flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:rgba(62,207,110,.7);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Trending</div>`:``}
+          ${isTrending?`<div style="display:flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:rgba(62,207,110,.7);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> 🔥 Trending</div>`:`<div style="display:flex;align-items:center;gap:3px;font-size:9.5px;color:rgba(255,255,255,.3);">💤 ${mc>1?'Active':'Quiet'}</div>`}
           ${cat?`<div class="bc-category">${escapeHTML(cat)}</div>`:''}
         </div>
         ${tags.length?`<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;">${tags.map(t=>`<span class="bc-tag">#${escapeHTML(t)}</span>`).join('')}</div>`:''}
@@ -7466,6 +7478,50 @@ function initFortizedUXResilience() {
           }
           saveLocal();
           updateNotificationBar();
+        }
+      },
+      onFriendRequestsUpdate: function(data) {
+        if (!data) return;
+        console.debug('[onFriendRequestsUpdate] Friend requests changed:', { sent: data.sent?.length || 0, received: data.received?.length || 0 });
+        // Update the user object with fresh friend request data
+        CU.friendRequestsSent = data.sent || [];
+        CU.friendRequestsReceived = data.received || [];
+        saveLocal();
+        // Refresh friend request UI
+        try {
+          refreshFriendRequests();
+          updateNotificationBar();
+        } catch (e) {
+          console.warn('[onFriendRequestsUpdate] UI refresh failed:', e?.message);
+        }
+      },
+      onVoiceRoomUpdate: function(data) {
+        if (!data) return;
+        console.debug('[onVoiceRoomUpdate] Voice room changed:', { bastionId: data.bastionId, channelName: data.channelName, participants: data.participants?.length || 0 });
+        // Update voice room participant list
+        const voicePanel = document.querySelector(`[data-bastion-id="${CSS.escape(data.bastionId)}"][data-channel-name="${CSS.escape(data.channelName)}"]`);
+        if (voicePanel) {
+          // Update participants list if visible
+          const participantsList = voicePanel.querySelector('.vr-participants-list');
+          if (participantsList) {
+            participantsList.innerHTML = '';
+            (data.participants || []).forEach(username => {
+              const pEl = document.createElement('div');
+              pEl.className = 'vr-participant';
+              pEl.textContent = username;
+              participantsList.appendChild(pEl);
+            });
+          }
+        }
+        // Trigger room list refresh if it exists
+        try {
+          const roomList = document.getElementById('voice-rooms-list');
+          if (roomList) {
+            // Re-render voice rooms list
+            loadVoiceRooms();
+          }
+        } catch (e) {
+          console.warn('[onVoiceRoomUpdate] Voice rooms refresh failed:', e?.message);
         }
       },
     };
@@ -8767,12 +8823,28 @@ function renderOverviewRoom() {
 
   html += '<div class="ov-content">';
 
+  // ── Owner Management Hub ──
+  if (isOwner) {
+    html += `<div style="padding:14px 16px;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));border:1px solid rgba(255,249,62,.15);border-radius:12px;margin-bottom:18px;">
+      <div style="font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+        <span style="font-size:16px;">⚙️</span> Management Hub
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('members');closeModal('modal-overview')">👥 Members</button>
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('roles');closeModal('modal-overview')">🎭 Roles</button>
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('channels');closeModal('modal-overview')">📝 Rooms</button>
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('invites');closeModal('modal-overview')">🔗 Invites</button>
+        <button class="btn-a" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:1/-1;" onclick="openBastionSettings('boost');closeModal('modal-overview')">${_boostSvg('13')} Boost Bastion</button>
+      </div>
+    </div>`;
+  }
+
   // ── Edit bar (top of content for admins) ──
   if (canEdit) {
-    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
-      + '<button class="btn-g" style="font-size:10px;padding:4px 10px;display:flex;align-items:center;gap:5px;" onclick="openOverviewEditor()">'
-      + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
-      + ' Customize</button></div>';
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">'
+      + '<button class="btn-g" style="font-size:11px;padding:6px 12px;display:flex;align-items:center;gap:5px;border-radius:8px;" onclick="openOverviewEditor()">'
+      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+      + ' Edit Bastion</button></div>';
   }
 
   // ── Upcoming Events (Guilded-style horizontal cards) ──
@@ -9058,43 +9130,71 @@ function openBoostModal() {
   const level = b.boostLevel || 0;
   const boostCost = 90;
   const tiers = [
-    {name:'Reinforced',perks:['25 custom emoji slots','Animated bastion icon','Custom invite background','128kbps voice quality'],color:'#60a5fa'},
-    {name:'Fortified',perks:['35 custom emoji slots','HD banner (1920×480)','256kbps HD voice quality','15 minute voice message limit','Custom role icons'],color:'#a78bfa'},
-    {name:'Sovereign',perks:['50 custom emoji slots','384kbps voice quality','Custom bastion splash screen','Priority support badge'],color:'#fbbf24'},
+    {name:'Reinforced',emoji:'🟦',tagline:'Your Bastion Awakens',perks:[{icon:'🎨',title:'Custom Emojis',desc:'25 custom emoji slots for member expression'},{icon:'✨',title:'Animated Icon',desc:'Make your bastion emblem come to life'},{icon:'🎯',title:'Identity',desc:'Stand out in discovery'}],color:'#60a5fa'},
+    {name:'Fortified',emoji:'🟪',tagline:'Full Potential Unlocked',perks:[{icon:'🎨',title:'35 Emoji Slots',desc:'Create a rich expression palette'},{icon:'🖼️',title:'HD Banners',desc:'1920×480 beautiful banners'},{icon:'👥',title:'Custom Role Icons',desc:'Unique icons for each role'},{icon:'🔊',title:'256kbps Voice',desc:'Crystal clear audio quality'}],color:'#a78bfa'},
+    {name:'Sovereign',emoji:'👑',tagline:'The Ultimate Experience',perks:[{icon:'🎨',title:'50 Emoji Slots',desc:'Maximum expression & identity'},{icon:'💎',title:'Premium Features',desc:'All systems fully unlocked'},{icon:'🏆',title:'Priority Support',desc:'Direct support channel'},{icon:'🔊',title:'384kbps Voice',desc:'Studio-quality audio'}],color:'#fbbf24'},
   ];
+
   const tierCards = tiers.map((t,i)=>{
     const lv=i+1;
     const isActive=level>=lv;
     const isNext=level===lv-1;
     const monthlyCost=boostCost*lv;
-    return `<div style="padding:16px;border-radius:14px;border:1.5px solid ${isActive?t.color+'55':'var(--border)'};background:${isActive?t.color+'10':'var(--panel)'};position:relative;${isNext?'box-shadow:0 0 20px '+t.color+'20;':''}">
-      ${isActive?`<div style="position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:var(--radius-pill);background:${t.color}22;color:${t.color};border:1px solid ${t.color}33;">ACTIVE</div>`:''}
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        ${_boostSvg('20')}
-        <div><div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:${t.color};">Level ${lv} — ${t.name}</div>
-          <div style="font-size:11px;color:var(--muted);">${monthlyCost} ${_onyxImg('13')}/month</div></div>
+    const perksHTML = t.perks.map(p=>`
+      <div style="padding:10px;background:${isActive?t.color+'08':'rgba(255,255,255,.02)'};border-radius:8px;border:1px solid ${isActive?t.color+'20':'var(--border)'};display:flex;gap:8px;align-items:flex-start;">
+        <span style="font-size:16px;flex-shrink:0;">${p.icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;font-weight:700;color:${isActive?'#fff':'var(--muted-light)'};">${p.title}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${p.desc}</div>
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
-        ${t.perks.map(p=>`<div style="font-size:12.5px;color:var(--muted-light);display:flex;align-items:center;gap:6px;"><span style="color:${isActive?'var(--green)':'var(--muted)'};">${isActive?'✓':'○'}</span>${p}</div>`).join('')}
+    `).join('');
+
+    return `<div style="padding:20px;border-radius:16px;border:1.5px solid ${isActive?t.color+'55':isNext?t.color+'33':'var(--border)'};background:${isActive?'linear-gradient(135deg,'+t.color+'08,'+t.color+'02)':isNext?'linear-gradient(135deg,'+t.color+'04,transparent)':'var(--panel)'};position:relative;${isNext?'box-shadow:0 0 30px '+t.color+'15;':''}transition:all .3s cubic-bezier(.22,1,.36,1);">
+      ${isActive?`<div style="position:absolute;top:12px;right:14px;font-size:11px;font-weight:800;padding:4px 10px;border-radius:var(--radius-pill);background:linear-gradient(135deg,${t.color},${t.color}dd);color:#fff;letter-spacing:.04em;text-transform:uppercase;">✓ ACTIVE</div>`:''}
+      <div style="margin-bottom:14px;">
+        <div style="font-size:28px;margin-bottom:6px;">${t.emoji}</div>
+        <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:${t.color};">TIER ${lv} — ${t.name}</div>
+        <div style="font-size:12px;color:var(--muted-light);margin-top:3px;font-style:italic;">"${t.tagline}"</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;font-weight:700;">${monthlyCost} ${_onyxImg('13')}/month</div>
       </div>
-      ${!isActive&&isNext?`<button class="btn-a" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">${_boostSvg('15')} Boost for ${monthlyCost} ${_onyxImg('14')}</button>`:''}
-      ${!isActive&&!isNext?`<div style="font-size:11px;color:var(--muted);text-align:center;">Requires Level ${lv-1} first</div>`:''}
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+        ${perksHTML}
+      </div>
+      ${!isActive&&isNext?`<button class="btn-a" onclick="boostBastion(${lv},${monthlyCost})" style="width:100%;font-size:13px;padding:12px;display:flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,${t.color},${t.color}dd);border:none;border-radius:10px;font-weight:700;transition:all .2s;">${_boostSvg('14')} Unlock Tier ${lv}</button>`:''}
+      ${!isActive&&!isNext?`<div style="font-size:11px;color:var(--muted);text-align:center;padding:10px;background:rgba(255,255,255,.02);border-radius:8px;font-weight:600;">Unlock Tier ${lv-1} first to access this</div>`:''}
     </div>`;
   }).join('');
+
   body.innerHTML = `
-    <div class="modal-title" style="display:flex;align-items:center;gap:8px;">${_boostSvg('22')} Boost ${escapeHTML(b.name)}</div>
-    <div class="modal-sub">Boost with ${_onyxImg('14')} Onyx to unlock perks for everyone.</div>
-    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;">
-      ${_onyxImg('22')}
-      <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Your Onyx Balance</div><div style="font-size:11px;color:var(--muted);">Available to spend</div></div>
-      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent);">${CU.onyx||0}</div>
+    <div style="margin-bottom:20px;">
+      <div style="font-family:var(--font-display);font-size:22px;font-weight:900;margin-bottom:6px;">⬆️ Boost ${escapeHTML(b.name)}</div>
+      <div style="font-size:13px;color:var(--muted-light);">Invest in your community. Unlock features that transform your bastion into a thriving ecosystem.</div>
     </div>
-    <div style="display:grid;gap:12px;">${tierCards}</div>
-    ${level>=3?`<div style="text-align:center;margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.15);border-radius:14px;">
-      <span style="font-size:22px;">👑</span>
-      <div style="font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--gold);margin-top:6px;">Sovereign Level — Maximum Boost!</div>
+
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));border:1px solid rgba(255,249,62,.15);border-radius:12px;margin-bottom:18px;">
+      ${_onyxImg('18')}
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:700;">Your Onyx Balance</div>
+        <div style="font-size:11px;color:var(--muted);">Available to invest</div>
+      </div>
+      <div style="font-family:var(--font-display);font-size:20px;font-weight:900;color:var(--accent);">${CU.onyx||0}</div>
+    </div>
+
+    <div style="display:grid;gap:12px;margin-bottom:20px;">${tierCards}</div>
+
+    ${level===0?`<div style="padding:14px 16px;background:rgba(62,207,110,.08);border:1px solid rgba(62,207,110,.15);border-radius:12px;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:rgba(62,207,110,.9);margin-bottom:4px;">💡 Getting Started</div>
+      <div style="font-size:11px;color:rgba(62,207,110,.7);">Start with Tier 1 to unlock custom emojis and watch your bastion come alive. Members will notice the difference instantly.</div>
     </div>`:''}
-    <div class="modal-actions" style="margin-top:18px;">
+
+    ${level>=3?`<div style="text-align:center;padding:20px;background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(251,191,36,.04));border:1px solid rgba(251,191,36,.2);border-radius:14px;margin-bottom:14px;">
+      <span style="font-size:36px;">👑</span>
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:900;color:var(--gold);margin-top:8px;">SOVEREIGN — Maximum Tier</div>
+      <div style="font-size:11px;color:var(--gold);margin-top:4px;opacity:.8;">Your bastion has reached its full potential</div>
+    </div>`:''}
+
+    <div class="modal-actions">
       <button class="btn-g" onclick="closeModal('modal-boost')">Close</button>
     </div>`;
   openModal('modal-boost');
@@ -10261,15 +10361,18 @@ async function loadBastionMembersList() {
     const uRoleIds = memberRoles[u]||[];
     const uRoles = roles.filter(r=>uRoleIds.includes(r.id));
     const roleTags = uRoles.map(r=>`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);border:1px solid ${r.color}33;color:${r.color};background:${r.color}15;">${escapeHTML(r.name)}</span>`).join(' ');
+    const repScore = getReputation(b.globalId||b.name, u);
+    const repTier = getRepTier(repScore);
+    const repBadge = repScore > 0 ? `<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);border:1px solid ${repTier.color}33;color:${repTier.color};background:${repTier.color}15;">${repTier.label}</span>` : '';
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:7px;">
       <div style="flex-shrink:0;">${buildAvatarHTML(null,u,36)}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-weight:600;">${escapeHTML(u)} ${u===b.owner?'<span style="font-size:10px;color:var(--accent);">[Owner]</span>':''}</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${roleTags||'<span style="font-size:11px;color:var(--muted);">No roles</span>'}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${roleTags||'<span style="font-size:11px;color:var(--muted);">No roles</span>'} ${repBadge}</div>
       </div>
       ${isOwner?`
-        <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="openAssignRoleUI('${escapeHTML(u)}')">&#x1F3F7; Roles</button>
-        ${u!==CU.username?`<button class="btn-d" style="font-size:12px;padding:5px 10px;" onclick="kickMember('${escapeHTML(u)}')">Kick</button>`:''}`:''}
+        <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="openAssignRoleUI('${escapeHTML(u)}')">🎭 Roles</button>
+        ${u!==CU.username?`<button class="btn-d" style="font-size:12px;padding:5px 10px;" onclick="kickMember('${escapeHTML(u)}')">⛔ Kick</button>`:''}`:''}
     </div>`;
   }).join('');
 }
@@ -18678,8 +18781,8 @@ function parseMD(s) {
         + '<button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:\'' + fid + '\',url:\'' + safeSrc + '\'})" title="Save to favourites">&#11088;</button>'
         + '</div>';
     }
-    return '<div style="margin:5px 0;display:inline-block;background:rgba(0,0,0,.2);border-radius:10px;padding:3px;">'
-      + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;background:rgba(0,0,0,.15);" loading="lazy" onclick="_openMediaLightbox(this.src)">'
+    return '<div style="margin:5px 0;display:inline-block;background:#000;border-radius:10px;padding:0;overflow:hidden;">'
+      + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;background:#000;object-fit:cover;" loading="lazy" onclick="_openMediaLightbox(this.src)">'
       + '</div>';
   });
   // 0b. Video attachments — full-featured video player
@@ -29752,11 +29855,12 @@ function renderMoodBar(b) {
     const dur = 6 + Math.random() * 5;
     particles += `<div class="mood-particle" style="left:${left}%;bottom:0;background:${particleColor};animation-delay:${delay}s;animation-duration:${dur}s;"></div>`;
   }
-  return `<div class="bastion-mood-bar" style="background:${tint};border:1px solid ${particleColor}12;" title="Bastion Mood: ${displayLabel}">
+  return `<div class="bastion-mood-bar" style="background:linear-gradient(90deg,${tint},${tint}ee);border:1.5px solid ${particleColor}25;box-shadow:0 4px 16px ${particleColor}15;backdrop-filter:blur(8px);" title="Bastion Mood: ${displayLabel}">
     <div class="mood-particles">${particles}</div>
-    <span class="mood-emoji">${displayEmoji}</span>
-    <span class="mood-label">${displayLabel}</span>
+    <span class="mood-emoji" style="font-size:18px;margin-right:8px;">${displayEmoji}</span>
+    <span class="mood-label" style="font-weight:700;letter-spacing:.02em;flex:1;">${displayLabel}</span>
     ${lockIcon}
+    <span style="font-size:11px;color:rgba(255,255,255,.5);margin-left:8px;">Bastion Atmosphere</span>
   </div>`;
 }
 

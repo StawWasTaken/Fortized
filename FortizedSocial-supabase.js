@@ -643,17 +643,66 @@ const FortizedSocial = (() => {
     const cached = _cacheGet(cacheKey);
     if (cached !== undefined) return cached;
     try {
-      const { data, error } = await sb.from('dms').select('id,from,text,time,timestamp,edited,new_text,reactions')
+      // Parse users from dmKey (format: "user1__user2")
+      const [u1, u2] = key.split('__');
+
+      // Try old schema first with dm_key column
+      let { data, error } = await sb.from('dms')
+        .select('*')
         .eq('dm_key', key)
         .order('timestamp', { ascending: false })
         .limit(max);
+
+      // If that fails or returns empty, try new schema with from/username columns
+      if ((error || !data || data.length === 0) && u1 && u2) {
+        console.debug('[getDMMessages] Trying new schema with from/username columns');
+        // Query both directions: (from=u1 AND username=u2) OR (from=u2 AND username=u1)
+        const res1 = await sb.from('dms')
+          .select('*')
+          .eq('from', u1)
+          .eq('username', u2)
+          .order('time', { ascending: false })
+          .limit(Math.ceil(max / 2));
+
+        const res2 = await sb.from('dms')
+          .select('*')
+          .eq('from', u2)
+          .eq('username', u1)
+          .order('time', { ascending: false })
+          .limit(Math.ceil(max / 2));
+
+        if (!res1.error && !res2.error) {
+          data = [...(res1.data || []), ...(res2.data || [])].sort((a, b) => {
+            const timeA = a.time || a.timestamp || 0;
+            const timeB = b.time || b.timestamp || 0;
+            return new Date(timeB) - new Date(timeA);
+          }).slice(0, max);
+          error = null;
+        } else {
+          error = res1.error || res2.error;
+        }
+      }
+
       if (error) {
         console.error('[getDMMessages] Query error:', error.message);
         return [];
       }
+
       // Reverse to chronological order after fetching latest N
-      const result = (data || []).reverse().map(_dmFromRow);
-      console.debug('[getDMMessages]', { between: key, count: result.length, sample: result.slice(-3).map(m => ({ id: m.id, from: m.from, text: m.text.slice(0,40) })) });
+      const result = (data || []).reverse().map(r => {
+        // Handle both old schema (columns: id, from, text, time, timestamp, etc.)
+        // and new schema (columns: id, username, type, from, time, read, data)
+        if (r.text !== undefined) {
+          // Old schema - has direct text column
+          return _dmFromRow(r);
+        } else {
+          // New schema - text might be in data column (JSONB)
+          const msgData = typeof r.data === 'string' ? JSON.parse(r.data) : (r.data || {});
+          return _dmFromPollingRow(r, msgData);
+        }
+      });
+
+      console.debug('[getDMMessages]', { between: key, count: result.length, sample: result.slice(-3).map(m => ({ id: m.id, from: m.from, text: m.text?.slice(0,40) })) });
       _cacheSet(cacheKey, result, _CACHE_TTL.dmMessages);
       return result;
     } catch(e) {
@@ -664,6 +713,23 @@ const FortizedSocial = (() => {
 
   function _dmFromRow(r) {
     return { id: r.id, from: r.from, text: r.text, time: r.time, timestamp: r.timestamp, edited: r.edited || false, newText: r.new_text || undefined, reactions: r.reactions || undefined, forwarded: r.forwarded || false, forwardedBy: r.forwarded_by || undefined };
+  }
+
+  function _dmFromPollingRow(r, msgData) {
+    // Extract message from polling response where data might be in a JSON column
+    // Handle both schemas: old (direct text column) and new (data column as JSONB)
+    return {
+      id: msgData.id || r.id,
+      from: msgData.from || r.from,
+      text: msgData.text || r.text || '',  // msgData.text for new schema, r.text for old schema
+      time: msgData.time || r.time,
+      timestamp: msgData.timestamp || r.timestamp || r.time,
+      edited: msgData.edited || false,
+      newText: msgData.newText || msgData.new_text || undefined,
+      reactions: msgData.reactions || undefined,
+      forwarded: msgData.forwarded || false,
+      forwardedBy: msgData.forwardedBy || msgData.forwarded_by || undefined
+    };
   }
 
   async function sendDMMessage(fromUsername, toUsername, text, opts) {
@@ -832,6 +898,76 @@ const FortizedSocial = (() => {
       console.debug('[addReaction] Reaction added:', { msgId, emoji, username });
     } catch(e) {
       console.error('[addReaction] Failed:', e.message);
+    }
+  }
+
+  async function toggleReaction(msgId, emoji, context, username) {
+    username = norm(username);
+    try {
+      let reactions = {};
+      let updateSuccess = false;
+
+      if (context === 'dm') {
+        // DMs - find the message and toggle reaction
+        const { data, error: err1 } = await sb.from('dms')
+          .select('*')
+          .eq('id', msgId)
+          .maybeSingle();
+
+        if (err1 || !data) throw new Error('Message not found');
+
+        const msgData = typeof data.data === 'string' ? JSON.parse(data.data) : (data.data || {});
+        reactions = msgData.reactions || {};
+        const arr = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
+        const idx = arr.indexOf(username);
+        if (idx !== -1) arr.splice(idx, 1);
+        else arr.push(username);
+        if (arr.length) reactions[emoji] = arr;
+        else delete reactions[emoji];
+
+        msgData.reactions = Object.keys(reactions).length ? reactions : undefined;
+        const { error: err2 } = await sb.from('dms')
+          .update({ data: msgData })
+          .eq('id', msgId);
+
+        if (err2) throw new Error(`Update failed: ${err2.message}`);
+        updateSuccess = true;
+      } else if (context === 'gc') {
+        // Group chats - find and update reaction
+        const { data, error: err1 } = await sb.from('group_chat_messages')
+          .select('reactions')
+          .eq('id', msgId)
+          .maybeSingle();
+
+        if (err1 || !data) throw new Error('Message not found');
+
+        reactions = data?.reactions || {};
+        const arr = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : [];
+        const idx = arr.indexOf(username);
+        if (idx !== -1) arr.splice(idx, 1);
+        else arr.push(username);
+        if (arr.length) reactions[emoji] = arr;
+        else delete reactions[emoji];
+
+        const { error: err2 } = await sb.from('group_chat_messages')
+          .update({ reactions: Object.keys(reactions).length ? reactions : null })
+          .eq('id', msgId);
+
+        if (err2) throw new Error(`Update failed: ${err2.message}`);
+        updateSuccess = true;
+      } else if (context === 'ch') {
+        // This is handled by addReaction, but return the reactions
+        // The UI will call addReaction directly for bastions
+        throw new Error('Use addReaction for bastion messages');
+      }
+
+      if (updateSuccess) {
+        console.debug('[toggleReaction] Reaction toggled:', { msgId, emoji, username, users: reactions[emoji] || [] });
+        return { users: reactions[emoji] || [] };
+      }
+    } catch(e) {
+      console.error('[toggleReaction] Failed:', e.message);
+      return null;
     }
   }
 
@@ -1083,7 +1219,6 @@ const FortizedSocial = (() => {
 
   let _dmPollingIntervals = new Map(); // Track polling intervals per DM conversation
   let _lastDmTimestamp = new Map(); // Track last seen message timestamp per conversation
-  let _recentDmMessageIds = new Map(); // Track recently delivered message IDs to prevent Socket.io + polling duplication
 
   async function startDMPolling(dmKey) {
     if (_dmPollingIntervals.has(dmKey)) {
@@ -1094,13 +1229,47 @@ const FortizedSocial = (() => {
     console.log('[DMPolling] ✓ Starting polling for:', dmKey);
     console.log('[DMPolling] Callbacks available:', { hasOnMessage: !!_callbacks.onMessage, callbackKeys: Object.keys(_callbacks) });
 
+    // Parse dmKey to get both users (dmKey is format "user1__user2")
+    const [user1, user2] = dmKey.split('__');
+
     const pollInterval = setInterval(async () => {
       try {
-        const { data, error } = await sb.from('dms')
+        // Try old schema first with dm_key
+        let { data, error } = await sb.from('dms')
           .select('*')
           .eq('dm_key', dmKey)
           .order('timestamp', { ascending: false })
           .limit(5);
+
+        // If that fails or returns empty, try new schema with from/username columns
+        if ((error || !data || data.length === 0) && user1 && user2) {
+          console.debug('[DMPolling] Trying new schema with from/username columns');
+          // Query both directions: (from=user1 AND username=user2) OR (from=user2 AND username=user1)
+          const res1 = await sb.from('dms')
+            .select('*')
+            .eq('from', user1)
+            .eq('username', user2)
+            .order('time', { ascending: false })
+            .limit(3);
+
+          const res2 = await sb.from('dms')
+            .select('*')
+            .eq('from', user2)
+            .eq('username', user1)
+            .order('time', { ascending: false })
+            .limit(3);
+
+          if (!res1.error && !res2.error) {
+            data = [...(res1.data || []), ...(res2.data || [])].sort((a, b) => {
+              const timeA = a.time || a.timestamp || 0;
+              const timeB = b.time || b.timestamp || 0;
+              return new Date(timeB) - new Date(timeA);
+            }).slice(0, 5);
+            error = null;
+          } else {
+            error = res1.error || res2.error;
+          }
+        }
 
         if (error) {
           console.error('[DMPolling] Query error:', error.message);
@@ -1111,41 +1280,59 @@ const FortizedSocial = (() => {
           console.debug('[DMPolling] Fetched', data.length, 'messages, checking for new ones...');
           // Check for new messages since last poll
           for (const row of data.reverse()) {
-            const msgTime = new Date(row.timestamp).getTime();
+            // Parse the data column to get message content (handle both schemas)
+            let msgData = {};
+            let msgTime = 0;
+
+            if (row.timestamp !== undefined) {
+              // Old schema - has direct timestamp column
+              msgTime = new Date(row.timestamp).getTime();
+            } else if (row.time !== undefined) {
+              // New schema - has time column, might also have data column
+              msgTime = new Date(row.time).getTime();
+              if (row.data && typeof row.data === 'object') {
+                msgData = row.data;
+              } else if (row.data && typeof row.data === 'string') {
+                try {
+                  msgData = JSON.parse(row.data);
+                } catch(e) {
+                  console.warn('[DMPolling] Failed to parse data column:', e.message);
+                }
+              }
+            }
+
             const lastTime = _lastDmTimestamp.get(dmKey) || 0;
 
             if (msgTime > lastTime) {
-              const msg = _dmFromRow(row);
-              const msgId = msg.id || (msg.from + msg.timestamp);
-              // Skip if this message was recently delivered via Socket.io
-              const recentIds = _recentDmMessageIds.get(dmKey) || new Set();
-              if (recentIds.has(msgId)) {
-                console.log('[DMPolling] Skipping duplicate message (already delivered via Socket.io):', msgId);
-                continue;
-              }
+              const msg = row.text !== undefined ? _dmFromRow(row) : _dmFromPollingRow(row, msgData);
               console.log('[DMPolling] 🔔 NEW MESSAGE:', { from: msg.from, text: msg.text?.slice(0,40), msgTime, lastTime });
               if (_callbacks.onMessage) {
                 console.log('[DMPolling] Invoking onMessage callback...');
-                // Track this message ID to prevent duplication
-                recentIds.add(msgId);
-                _recentDmMessageIds.set(dmKey, recentIds);
-                setTimeout(() => {
-                  recentIds.delete(msgId);
-                }, 5000); // Clear from recent set after 5 seconds
                 _callbacks.onMessage('dm:' + dmKey, msg);
               } else {
                 console.error('[DMPolling] ERROR: onMessage callback not found!');
               }
             }
           }
-          _lastDmTimestamp.set(dmKey, new Date(data[0].timestamp).getTime());
+
+          // Update timestamp from most recent message
+          const lastRow = data[0];
+          let lastTime = 0;
+          if (lastRow.timestamp !== undefined) {
+            lastTime = new Date(lastRow.timestamp).getTime();
+          } else if (lastRow.time !== undefined) {
+            lastTime = new Date(lastRow.time).getTime();
+          }
+          if (lastTime > 0) {
+            _lastDmTimestamp.set(dmKey, lastTime);
+          }
         } else {
           console.debug('[DMPolling] No messages found for:', dmKey);
         }
       } catch(e) {
         console.error('[DMPolling] Fatal error:', e?.message, e);
       }
-    }, 3000); // Poll every 3 seconds (Socket.io handles instant delivery)
+    }, 1000); // Poll every second for instant feel
 
     _dmPollingIntervals.set(dmKey, pollInterval);
     console.log('[DMPolling] ✓ Polling interval started, checking every 1 second');
@@ -1229,65 +1416,150 @@ const FortizedSocial = (() => {
     }
   }
 
-  // ── Notification polling ──
-  let _notifPollingInterval = null;
-  let _lastNotifTime = 0;
+  // ── Friend Request Polling ──
+  let _friendRequestPollingInterval = null;
+  let _lastFriendRequestState = { sent: 0, received: 0 };
 
-  async function startNotificationPolling(username) {
-    if (_notifPollingInterval) {
-      console.log('[NotifPolling] Already polling notifications');
+  async function startFriendRequestPolling(username) {
+    if (_friendRequestPollingInterval) {
+      console.log('[FriendRequestPolling] Already polling');
       return;
     }
 
-    console.log('[NotifPolling] ✓ Starting polling for:', username);
-    _notifPollingInterval = setInterval(async () => {
+    username = norm(username);
+    console.log('[FriendRequestPolling] ✓ Starting polling for:', username);
+
+    _friendRequestPollingInterval = setInterval(async () => {
       try {
-        const { data, error } = await sb.from('notifications')
-          .select('*')
-          .eq('user', username)
-          .order('created_at', { ascending: false })
-          .limit(10);
+        const { data, error } = await sb.from('users')
+          .select('friend_requests_sent,friend_requests_received')
+          .eq('username', username)
+          .maybeSingle();
 
         if (error) {
-          console.error('[NotifPolling] Query error:', error.message);
+          console.error('[FriendRequestPolling] Query error:', error.message);
           return;
         }
 
-        if (data && data.length > 0) {
-          for (const notif of data) {
-            const notifTime = new Date(notif.created_at).getTime();
-            if (notifTime > _lastNotifTime) {
-              console.log('[NotifPolling] 🔔 NEW NOTIFICATION:', { type: notif.type, from: notif.from });
-              if (_callbacks.onNewNotification) {
-                _callbacks.onNewNotification(notif);
-              }
-              _lastNotifTime = notifTime;
+        if (data) {
+          const sent = (data.friend_requests_sent || []).length;
+          const received = (data.friend_requests_received || []).length;
+
+          if (sent !== _lastFriendRequestState.sent || received !== _lastFriendRequestState.received) {
+            console.log('[FriendRequestPolling] 🔔 FRIEND REQUEST CHANGE:', { sent, received });
+            _lastFriendRequestState = { sent, received };
+            if (_callbacks.onFriendRequestsUpdate) {
+              _callbacks.onFriendRequestsUpdate({
+                sent: data.friend_requests_sent || [],
+                received: data.friend_requests_received || []
+              });
             }
           }
         }
-      } catch(e) {
-        console.error('[NotifPolling] Error:', e?.message);
+      } catch (e) {
+        console.error('[FriendRequestPolling] Error:', e?.message);
       }
-    }, 5000); // Poll every 5 seconds for notifications
+    }, 4000); // Poll every 4 seconds
   }
 
-  function stopNotificationPolling() {
-    if (_notifPollingInterval) {
-      clearInterval(_notifPollingInterval);
-      _notifPollingInterval = null;
-      console.log('[NotifPolling] Stopped');
+  function stopFriendRequestPolling() {
+    if (_friendRequestPollingInterval) {
+      clearInterval(_friendRequestPollingInterval);
+      _friendRequestPollingInterval = null;
+      console.log('[FriendRequestPolling] Stopped');
+    }
+  }
+
+  // ── Voice Room Polling ──
+  let _voiceRoomPollingInterval = null;
+  let _lastVoiceRoomState = new Map();
+
+  async function startVoiceRoomPolling(username) {
+    if (_voiceRoomPollingInterval) {
+      console.log('[VoiceRoomPolling] Already polling');
+      return;
+    }
+
+    username = norm(username);
+    console.log('[VoiceRoomPolling] ✓ Starting polling for:', username);
+
+    _voiceRoomPollingInterval = setInterval(async () => {
+      try {
+        // Get user's bastion list
+        const { data: userData, error: userErr } = await sb.from('users')
+          .select('bastions')
+          .eq('username', username)
+          .maybeSingle();
+
+        if (userErr || !userData || !userData.bastions) {
+          return;
+        }
+
+        const bastions = userData.bastions;
+
+        // Check each bastion for voice room changes
+        for (const bastionId of bastions) {
+          const { data: bastionData, error: bastionErr } = await sb.from('global_bastions')
+            .select('voice_channels')
+            .eq('id', bastionId)
+            .maybeSingle();
+
+          if (bastionErr || !bastionData || !bastionData.voice_channels) {
+            continue;
+          }
+
+          const voiceChannels = bastionData.voice_channels;
+          for (const channelName in voiceChannels) {
+            const channel = voiceChannels[channelName];
+            const participants = channel.participants || [];
+            const key = bastionId + ':' + channelName;
+            const lastState = _lastVoiceRoomState.get(key);
+            const lastParticipants = lastState ? lastState.participants : [];
+
+            // Compare participant lists (as sorted JSON string)
+            const currentStr = JSON.stringify(participants.sort());
+            const lastStr = JSON.stringify(lastParticipants.sort());
+
+            if (currentStr !== lastStr) {
+              console.log('[VoiceRoomPolling] 🔔 VOICE ROOM CHANGE:', { bastionId, channelName, participants });
+              _lastVoiceRoomState.set(key, { participants });
+              if (_callbacks.onVoiceRoomUpdate) {
+                _callbacks.onVoiceRoomUpdate({
+                  bastionId,
+                  channelName,
+                  participants
+                });
+              }
+            } else if (!lastState) {
+              // Initialize state tracking
+              _lastVoiceRoomState.set(key, { participants });
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[VoiceRoomPolling] Error:', e?.message);
+      }
+    }, 4000); // Poll every 4 seconds
+  }
+
+  function stopVoiceRoomPolling() {
+    if (_voiceRoomPollingInterval) {
+      clearInterval(_voiceRoomPollingInterval);
+      _voiceRoomPollingInterval = null;
+      console.log('[VoiceRoomPolling] Stopped');
     }
   }
 
   function startSupabasePolling(username, callbacks) {
     _callbacks = callbacks || {};
     stopSupabasePolling();
-    // Start notification polling
-    startNotificationPolling(username);
+
+    // Start friend request polling
+    startFriendRequestPolling(username);
+    // Start voice room polling
+    startVoiceRoomPolling(username);
 
     console.log('[Fortized] Supabase real-time initialized (using active polling for instant delivery)');
-    console.log('[Fortized] _callbacks set with keys:', Object.keys(_callbacks));
-    console.log('[Fortized] _callbacks.onMessage exists?', !!_callbacks.onMessage);
   }
 
   function startPolling(username, callbacks) {
@@ -1315,7 +1587,9 @@ const FortizedSocial = (() => {
       }
     });
     _subscriptions = [];
-    stopNotificationPolling();
+    // Stop all polling intervals
+    stopFriendRequestPolling();
+    stopVoiceRoomPolling();
     console.log('[Fortized] Supabase real-time subscriptions stopped');
   }
 
@@ -1572,7 +1846,7 @@ const FortizedSocial = (() => {
     getNotifications, addNotification, markNotificationsRead, markNotificationReadBySource, getUnreadCount,
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,
     getDMMessages, sendDMMessage, deleteMessage, getRecentDMPartners,
-    getBastionChannelMessages, sendBastionChannelMessage, addReaction,
+    getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,
     getGlobalBastions, saveGlobalBastion, getGlobalBastion,
     getBastionMembers, addBastionMember, removeBastionMember,
     getInvite, saveInvite, incrementInviteUses,
@@ -1596,6 +1870,7 @@ const FortizedSocial = (() => {
     adminPushFeedback,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,
+    startFriendRequestPolling, stopFriendRequestPolling, startVoiceRoomPolling, stopVoiceRoomPolling,
     initSocket, getSocket, isSocketReady, socketEmit,
     joinRoom, leaveRoom, queryPresence, disconnectSocket,
     playNotificationSound,

@@ -109,6 +109,7 @@ function setFaviconNotif(hasNotif) {
 // ════════════════════════════════════════════
 let CU = null;
 const _pfpCache = {};
+const _pfpCropCache = {}; // username -> {leftPct, topPct, widthPct} for GIF avatar CSS cropping
 const _liveStatusCache = {}; // username -> status, updated by real-time presence events
 let curBastion = null;
 let curChannel = null;
@@ -1679,11 +1680,7 @@ function updateUserbar() {
   const st = FtzStatus.sanitize(CU.status || 'online');
   // Avatar — 34px to match redesigned userbar
   if (ua) {
-    const _defPfp = _defaultPfpUrl(CU.displayName||CU.username);
-    const inner = CU.pfp
-      ? `<img src="${CU.pfp}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defPfp}'">`
-      : `<img src="${_defPfp}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">`;
-    ua.innerHTML = inner;
+    ua.innerHTML = buildAvatarHTML(CU.pfp, CU.displayName||CU.username, 34, CU.pfpCrop);
     // Add decoration overlay on userbar avatar
     if (CU.activeDecoration) {
       ua.style.position='relative'; ua.style.overflow='visible';
@@ -2101,13 +2098,20 @@ function _defaultPfpUrl(name) {
   const hash = (name||'').split('').reduce((a,c) => a + c.charCodeAt(0), 0);
   return hash % 2 === 0 ? '/default%20pfp.png' : '/default%20pfp2.png';
 }
-function buildAvatarHTML(pfp, name, size) {
+function buildAvatarHTML(pfp, name, size, cropData) {
   const s = 'width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;display:block;flex-shrink:0;';
   const defaultUrl = _defaultPfpUrl(name);
   const initial = (name||'?')[0].toUpperCase();
   const fs = Math.floor(size/2.2);
-  if (pfp) return '<img src="'+pfp+'" style="'+s+'" onerror="this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)">';
-  return '<img src="'+defaultUrl+'" style="'+s+'" onerror="this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)">';
+  const fallbackJS = 'this.onerror=null;this.style.display=\'none\';const sp=document.createElement(\'span\');sp.textContent=\''+initial+'\';sp.style.cssText=\'display:flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;font-size:'+fs+'px;background:var(--panel2,#1a1c2e);color:rgba(255,255,255,.6);font-family:var(--font-display);font-weight:800;flex-shrink:0;\';this.parentElement.insertBefore(sp,this)';
+  // GIF avatar with CSS-based crop (preserves animation)
+  if (pfp && cropData && cropData.widthPct) {
+    return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;display:block;">'
+      + '<img src="'+pfp+'" style="position:absolute;left:'+cropData.leftPct+'%;top:'+cropData.topPct+'%;width:'+cropData.widthPct+'%;height:auto;" onerror="'+fallbackJS+'">'
+      + '</div>';
+  }
+  if (pfp) return '<img src="'+pfp+'" style="'+s+'" onerror="'+fallbackJS+'">';
+  return '<img src="'+defaultUrl+'" style="'+s+'" onerror="'+fallbackJS+'">';
 }
 function renderRailBastions() {
   const cont = document.getElementById('rail-bastions');
@@ -4045,12 +4049,13 @@ async function showGCMemberPanel(meta) {
 function _buildGCMemberEntry(m, meta, isOwner, statusMap) {
   const isMe = m === CU.username;
   const displayN = isMe ? (CU.displayName||CU.username) : m;
-  const pfpSrc = isMe ? CU.pfp : null;
+  const pfpSrc = isMe ? CU.pfp : (_pfpCache[m] || null);
+  const pfpCrop = isMe ? CU.pfpCrop : (_pfpCropCache[m] || null);
   const isGCOwner = m === meta.owner;
   const st = statusMap ? (statusMap[m] || 'offline') : (isMe ? (CU.status||'online') : 'offline');
   const isOnline = st === 'online' || st === 'away' || st === 'dnd';
   return `<div class="ml-entry" data-member="${escapeHTML(m)}" data-status="${st}" onclick="showMiniProfilePreview('${escapeHTML(m)}',this)" style="${isOnline?'':'opacity:.4;'}">
-    <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${st}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(st, 10)}</span></div>
+    <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30,pfpCrop)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${st}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(st, 10)}</span></div>
     <div style="flex:1;min-width:0;">
       <div style="display:flex;align-items:center;gap:4px;">
         <div class="ml-name" style="color:${isGCOwner?'var(--accent)':'rgba(255,255,255,.6)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
@@ -6130,6 +6135,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
   const isMe = u === CU.username;
   const displayN = isMe ? (CU.displayName||CU.username) : u;
   const pfpSrc = isMe ? CU.pfp : (_pfpCache[u] || null);
+  const pfpCrop = isMe ? CU.pfpCrop : (_pfpCropCache[u] || null);
   const status = knownStatus || (isMe ? (CU.status||'online') : 'online');
   // Deferred fetch for profile data (status already live via Socket.IO onStatusChange)
   if (!isMe) {
@@ -6137,6 +6143,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
       FortizedSocial.getUserByName(u).then(ud => {
         if (!ud) return;
         if (ud.pfp) _pfpCache[u] = ud.pfp;
+        if (ud.pfpCrop) _pfpCropCache[u] = ud.pfpCrop;
         const entry = document.querySelector('.ml-entry[data-member="'+CSS.escape(u)+'"]');
         if (!entry) return;
         const nameEl = entry.querySelector('.ml-name');
@@ -6151,13 +6158,21 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
         }
         const avWrap = entry.querySelector('.ml-av-wrap');
         if (ud.pfp && avWrap) {
-          const existingImg = avWrap.querySelector('img:not(.profile-status-dot):not(.profile-decoration-overlay-ml)');
-          if (existingImg) {
-            existingImg.src = ud.pfp;
-            existingImg.onerror = function() { this.src = _defaultPfpUrl(u); };
-          } else {
+          const _uCrop = ud.pfpCrop || _pfpCropCache[u] || null;
+          const _isGifPfp = _uCrop && /\.gif|data:image\/gif/i.test(ud.pfp);
+          if (_isGifPfp) {
+            // GIF with crop: use CSS-based cropping to preserve animation
             const currentStatus = _liveStatusCache[u] || entry.dataset.status || status;
-            avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
+            avWrap.innerHTML = `<div style="width:34px;height:34px;border-radius:50%;overflow:hidden;position:relative;flex-shrink:0;"><img src="${escapeHTML(ud.pfp)}" style="position:absolute;left:${_uCrop.leftPct}%;top:${_uCrop.topPct}%;width:${_uCrop.widthPct}%;height:auto;" onerror="this.src='${_defaultPfpUrl(u)}'"></div><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
+          } else {
+            const existingImg = avWrap.querySelector('img:not(.profile-status-dot):not(.profile-decoration-overlay-ml)');
+            if (existingImg) {
+              existingImg.src = ud.pfp;
+              existingImg.onerror = function() { this.src = _defaultPfpUrl(u); };
+            } else {
+              const currentStatus = _liveStatusCache[u] || entry.dataset.status || status;
+              avWrap.innerHTML = `<img src="${escapeHTML(ud.pfp)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(u)}'"><span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${currentStatus}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;">${FtzStatus.dotSvg(currentStatus, 14)}</span>`;
+            }
           }
         }
         const badgesEl = entry.querySelector('.ml-badges');
@@ -6191,7 +6206,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
 
   return `<div class="ml-entry" data-member="${escapeHTML(u)}" data-status="${status}" onclick="showMiniProfilePreview('${escapeHTML(u)}',this)" style="${dimStyle}">
     <div class="ml-av-wrap profile-decoration-wrap" style="position:relative;display:inline-flex;flex-shrink:0;">
-      ${buildAvatarHTML(pfpSrc, displayN, 34)}
+      ${buildAvatarHTML(pfpSrc, displayN, 34, pfpCrop)}
       <span class="profile-status-dot" data-for="${escapeHTML(u)}" data-dot-size="14" data-dot-status="${status}" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;z-index:3;">${FtzStatus.dotSvg(status, 14)}</span>
       ${isMe && CU.profileDecoration ? `<img src="${escapeHTML(CU.profileDecoration)}" class="profile-decoration-overlay-ml">` : ''}
     </div>
@@ -7413,26 +7428,47 @@ function initFortizedUXResilience() {
         // ── SELF PROFILE SYNC (cross-tab/device) ──
         if (data.username === CU.username) {
           if (data.pfp) CU.pfp = data.pfp;
+          if (data.pfpCrop !== undefined) CU.pfpCrop = data.pfpCrop;
           if (data.displayName) CU.displayName = data.displayName;
           saveLocal();
           try { updateUserbar(); } catch(e) { console.debug('[Userbar] Update failed:', e?.message); }
         }
 
+        // ── CACHE PFP CROP DATA ──
+        if (data.pfpCrop !== undefined) {
+          if (data.pfpCrop) _pfpCropCache[data.username] = data.pfpCrop;
+          else delete _pfpCropCache[data.username];
+        }
+
         // ── UPDATE PFP EVERYWHERE ──
         if (data.pfp) {
           _pfpCache[data.username] = data.pfp;
+          const _upCrop = data.pfpCrop || _pfpCropCache[data.username] || null;
           // Bastion member list
-          document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-av-wrap img:not(.profile-status-dot):not(.profile-decoration-overlay-ml)').forEach(img => { img.src = data.pfp; });
+          document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .ml-av-wrap').forEach(avWrap => {
+            const _dn = data.displayName || data.username;
+            avWrap.querySelector('img:not(.profile-status-dot):not(.profile-decoration-overlay-ml)')?.remove();
+            avWrap.querySelector('div[style*="overflow:hidden"]')?.remove();
+            const dot = avWrap.querySelector('.profile-status-dot');
+            const dotHTML = dot ? dot.outerHTML : '';
+            if (dot) dot.remove();
+            avWrap.insertAdjacentHTML('afterbegin', buildAvatarHTML(data.pfp, _dn, 34, _upCrop) + dotHTML);
+          });
           // GC member list
-          document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .gc-ml-av img').forEach(img => { img.src = data.pfp; });
+          document.querySelectorAll('.ml-entry[data-member="'+data.username+'"] .gc-ml-av').forEach(avWrap => {
+            const _dn = data.displayName || data.username;
+            const dot = avWrap.querySelector('.profile-status-dot');
+            const dotHTML = dot ? dot.outerHTML : '';
+            avWrap.innerHTML = buildAvatarHTML(data.pfp, _dn, 30, _upCrop) + dotHTML;
+          });
           // Generic pfp-for markers
           document.querySelectorAll('img[data-pfp-for="'+data.username+'"]').forEach(img => { img.src = data.pfp; });
           // DM sidebar avatars
           const dmAv = document.getElementById('dm-av-'+data.username);
-          if (dmAv) dmAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 34);
+          if (dmAv) dmAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 34, _upCrop);
           // DM friends home avatars
           const dmHomeAv = document.getElementById('dm-home-av-'+data.username);
-          if (dmHomeAv) dmHomeAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 42);
+          if (dmHomeAv) dmHomeAv.innerHTML = buildAvatarHTML(data.pfp, data.displayName||data.username, 42, _upCrop);
           // Message avatars in active chat (if visible)
           document.querySelectorAll('.msg-av-inner[data-av-for="'+data.username+'"] img').forEach(img => { img.src = data.pfp; });
         }
@@ -13156,21 +13192,31 @@ async function updatePfp(e) {
   reader.onload = async ev => {
     const fileData = ev.target.result;
     if (isGif) {
-      // Skip crop modal for GIFs to preserve animation
-      CU.pfp = fileData;
-      await saveUser();
-      updateUserbar();
-      buildProfileView('myprofile');
-      try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { pfp: fileData, field: 'pfp' }); } catch(e){}
-      toast('Animated avatar updated! ✓', 'success');
+      // Show crop modal for GIF — applyCrop will return CSS crop params instead of canvas data
+      showCropModal(fileData, 1, async (result) => {
+        // result is {gifData, crop} from the GIF path in applyCrop
+        CU.pfp = result.gifData;
+        CU.pfpCrop = result.crop;
+        _pfpCropCache[CU.username] = result.crop;
+        await saveUser();
+        updateUserbar();
+        buildProfileView('myprofile');
+        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { pfp: result.gifData, pfpCrop: result.crop, field: 'pfp' }); } catch(e){}
+        toast('Animated avatar updated! ✓', 'success');
+      });
+      // Set the GIF flag on _cropData after showCropModal initializes it
+      _cropData._isGif = true;
+      _cropData._gifSrc = fileData;
     } else {
+      // Clear pfpCrop for non-GIF avatars
+      CU.pfpCrop = null;
+      delete _pfpCropCache[CU.username];
       showCropModal(fileData, 1, async (cropped) => {
         CU.pfp = cropped;
         await saveUser();
         updateUserbar();
         buildProfileView('myprofile');
-        // Broadcast pfp change to other clients
-        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { pfp: cropped, field: 'pfp' }); } catch(e){}
+        try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { pfp: cropped, pfpCrop: null, field: 'pfp' }); } catch(e){}
         toast('Avatar updated! ✓', 'success');
       });
     }
@@ -28107,6 +28153,20 @@ function applyCrop() {
   const dpr = window.devicePixelRatio || 1;
   const w = _cropCanvas.width / dpr;
   const h = _cropCanvas.height / dpr;
+
+  // GIF mode: calculate CSS crop percentages instead of canvas export (preserves animation)
+  if (_cropData._isGif && _cropData._gifSrc) {
+    const imgDisplayW = _cropImg.width * _cropData.scale;
+    const crop = {
+      leftPct: (_cropData.x / w) * 100,
+      topPct: (_cropData.y / h) * 100,
+      widthPct: (imgDisplayW / w) * 100
+    };
+    document.getElementById('crop-modal-overlay')?.remove();
+    if (_cropCallback) _cropCallback({ gifData: _cropData._gifSrc, crop: crop });
+    return;
+  }
+
   const outW = _cropData.ratio > 2 ? 960 : 480;
   const outH = _cropData.ratio > 2 ? Math.round(960 / _cropData.ratio) : 480;
   const out = document.createElement('canvas');

@@ -21276,22 +21276,22 @@ function renderProfileWidgetsOnCard(u, containerEl) {
     if (w.id === 'game_collection') {
       const max = w.config?.maxShow || 20;
       const visibleGames = games.slice(0, max);
-      html += `<div class="pw-widget" style="padding:16px;">
+      html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;padding:16px;border-radius:12px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div>
             <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;">Games I like</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">Add up to 20 games</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;">Add up to 20 games</div>
           </div>
-          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event)" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:5px;">
+          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event)" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:5px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add game
           </button>` : ''}
         </div>
         ${visibleGames.length ? `<div class="pw-gc-masonry">${visibleGames.map(g => {const _cv = g.coverUrl || _getManualCover(g.name); return `<div class="pw-gc-card">
-          ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02));">${g.icon||'🎮'}</div>`}
+          ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,.1);">${g.icon||'🎮'}</div>`}
           <div class="gc-hover-name">${escapeHTML(g.name)}</div>
           ${isOwnProfile ? `<button class="gc-delete-btn" onclick="event.stopPropagation();_removeGameFromCollection('${escapeHTML(g.name)}')" title="Remove"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>` : ''}
-        </div>`;}).join('')}</div>` : `<div style="text-align:center;padding:24px;color:rgba(255,255,255,.2);font-size:12px;">No games added yet</div>`}
+        </div>`;}).join('')}</div>` : `<div style="text-align:center;padding:24px;color:rgba(255,255,255,.4);font-size:12px;">No games added yet</div>`}
       </div>`;
     }
 
@@ -21299,10 +21299,10 @@ function renderProfileWidgetsOnCard(u, containerEl) {
       const fg = games.find(g => g.name === w.config.gameName) || (u.gameCollection||[]).find(g => g.name === w.config.gameName);
       if (fg) {
         const fgCover = fg.coverUrl || _getManualCover(fg.name);
-        html += `<div class="pw-widget" style="border-left:3px solid #f59e0b;">
-          <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Favourite Game</div>
+        html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;border-radius:12px;">
+          <div class="pw-widget-title" style="color:#fff;padding:16px 16px 0 16px;margin-bottom:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Favourite Game</div>
           <div class="pw-fav-large-card">
-            <div class="pfl-cover">${fgCover ? `<img src="${escapeHTML(fgCover)}" alt="${escapeHTML(fg.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.03));">${fg.icon||'⭐'}</div>`}</div>
+            <div class="pfl-cover">${fgCover ? `<img src="${escapeHTML(fgCover)}" alt="${escapeHTML(fg.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:rgba(255,255,255,.1);">${fg.icon||'⭐'}</div>`}</div>
             <div class="pfl-info">
               <div class="pfl-name">${escapeHTML(fg.name)}</div>
               <div class="pfl-genre">${escapeHTML(fg.genre||'Game')}</div>
@@ -21316,10 +21316,10 @@ function renderProfileWidgetsOnCard(u, containerEl) {
     if (w.id === 'games_rotation' && games.length) {
       const max = w.config?.maxShow || 6;
       const rotationGames = games.slice(0, max);
-      html += `<div class="pw-widget">
-        <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg> Currently Playing</div>
+      html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;border-radius:12px;">
+        <div class="pw-widget-title" style="color:#fff;padding:16px 16px 0 16px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg> Currently Playing</div>
         <div class="pw-rotation-carousel">${rotationGames.map(g => {const _cv = g.coverUrl||_getManualCover(g.name); return `<div class="pw-rotation-card">
-          ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(96,165,250,.02));">${g.icon||'🎮'}</div>`}
+          ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:28px;background:rgba(255,255,255,.1);">${g.icon||'🎮'}</div>`}
           <div class="prc-name">${escapeHTML(g.name)}</div>
         </div>`;}).join('')}</div>
       </div>`;
@@ -21332,15 +21332,15 @@ function renderProfileWidgetsOnCard(u, containerEl) {
         const bName = b.name || w.config.bastionName || 'Bastion';
         const bMembers = b.members?.length || 0;
         const bType = b.type || 'Community';
-        html += `<div class="pw-widget" style="border-left:3px solid #a78bfa;">
-          <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Primary Bastion</div>
-          <div class="pw-bastion-card" onclick="joinBastionFromWidget('${escapeHTML(bName)}',${bIdx})">
-            <div class="pw-bastion-emblem">${b.emblem ? `<img src="${escapeHTML(b.emblem)}">` : '🏰'}</div>
+        html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;padding:16px;border-radius:12px;">
+          <div class="pw-widget-title" style="color:#fff;margin-bottom:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Primary Bastion</div>
+          <div class="pw-bastion-card" style="background:rgba(255,255,255,.08);border-radius:10px;border:1px solid rgba(255,255,255,.12);padding:12px;cursor:pointer;transition:all .2s;" onclick="joinBastionFromWidget('${escapeHTML(bName)}',${bIdx})">
+            <div class="pw-bastion-emblem" style="width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px;">${b.emblem ? `<img src="${escapeHTML(b.emblem)}" style="width:100%;height:100%;border-radius:8px;object-fit:cover;">` : '🏰'}</div>
             <div class="pw-bastion-info">
-              <div class="pw-bastion-name">${escapeHTML(bName)}</div>
-              <div class="pw-bastion-meta">${bMembers} member${bMembers!==1?'s':''} · ${escapeHTML(bType)}</div>
+              <div class="pw-bastion-name" style="color:#fff;font-weight:700;margin-bottom:2px;">${escapeHTML(bName)}</div>
+              <div class="pw-bastion-meta" style="color:rgba(255,255,255,.6);font-size:11px;">${bMembers} member${bMembers!==1?'s':''} · ${escapeHTML(bType)}</div>
             </div>
-            <button class="pw-join-btn">Join</button>
+            <button class="pw-join-btn" style="background:#fff;color:#2e6f6e;padding:6px 14px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;margin-top:8px;width:100%;transition:all .2s;">Join</button>
           </div>
         </div>`;
       }

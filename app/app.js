@@ -5543,15 +5543,29 @@ function deleteMsg(msgId, context) {
   let previewHTML = '';
   if (row) {
     const author = row.dataset.from || 'Unknown';
+    const pfp = (author === CU.username) ? CU.pfp : (_pfpCache[author] || null);
     const textEl = row.querySelector('.msg-text');
-    const msgText = textEl ? textEl.textContent.slice(0, 200) : '';
+    // Get the text content for display
+    const msgText = textEl ? textEl.textContent.trim() : '';
+    // Also grab any images/attachments/embeds from the message
+    let attachHTML = '';
+    const imgs = row.querySelectorAll('.msg-text img:not(.emoji), .ftz-embed-gif img, .msg-attachment img');
+    if (imgs.length) {
+      attachHTML = '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">';
+      imgs.forEach((img, i) => { if (i < 3) attachHTML += `<img src="${escapeHTML(img.src)}" style="max-width:80px;max-height:60px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,.06);">`; });
+      if (imgs.length > 3) attachHTML += `<span style="font-size:10px;color:rgba(255,255,255,.3);align-self:center;">+${imgs.length-3} more</span>`;
+      attachHTML += '</div>';
+    }
     const timeEl = row.querySelector('.msg-timestamp') || row.querySelector('.msg-time-small');
     const time = timeEl ? timeEl.textContent : '';
-    previewHTML = `<div style="background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;margin:12px 0 16px;display:flex;gap:10px;align-items:flex-start;">
-      <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.06);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;">${buildAvatarHTML(_pfpCache[author]||null,author,32)}</div>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><span style="font-weight:700;font-size:13px;color:rgba(255,255,255,.85);">${escapeHTML(author)}</span><span style="font-size:10px;color:rgba(255,255,255,.25);">${escapeHTML(time)}</span></div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(msgText)}${msgText.length >= 200 ? '...' : ''}</div>
+    previewHTML = `<div style="background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;margin:12px 0 16px;">
+      <div style="display:flex;gap:10px;align-items:flex-start;">
+        <div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;overflow:hidden;">${buildAvatarHTML(pfp,author,34)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;"><span style="font-weight:700;font-size:13px;color:rgba(255,255,255,.85);">${escapeHTML(author)}</span><span style="font-size:10px;color:rgba(255,255,255,.25);">${escapeHTML(time)}</span></div>
+          ${msgText ? `<div style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.4;word-break:break-word;${msgText.length > 300 ? 'max-height:80px;overflow:hidden;' : ''}">${escapeHTML(msgText.slice(0,300))}${msgText.length > 300 ? '...' : ''}</div>` : ''}
+          ${attachHTML}
+        </div>
       </div>
     </div>`;
   }

@@ -803,12 +803,15 @@ const FortizedSocial = (() => {
     const editData = { text: opts.newText, edited: true };
     if (type === 'dm') {
       const key = _dmKey(opts.user1, opts.user2);
+      _cacheInvalidatePrefix('dm:' + key);
       const { error } = await sb.from('dms').update(editData).eq('dm_key', key).eq('id', opts.messageId);
       if (error) console.error('[editMessage] DM edit failed:', error.message);
     } else if (type === 'gc') {
+      _cacheInvalidatePrefix('gcm:' + opts.gcId);
       const { error } = await sb.from('group_chat_messages').update(editData).eq('gc_id', opts.gcId).eq('id', opts.messageId);
       if (error) console.error('[editMessage] GC edit failed:', error.message);
     } else if (type === 'bastion') {
+      _cacheDel('bm:' + opts.bastionId + ':' + opts.channelId);
       const { error } = await sb.from('bastion_msgs').update(editData).eq('bastion_id', opts.bastionId).eq('channel_id', opts.channelId).eq('id', opts.messageId);
       if (error) console.error('[editMessage] Bastion edit failed:', error.message);
     }
@@ -817,12 +820,15 @@ const FortizedSocial = (() => {
   async function deleteMessage(type, opts) {
     if (type === 'dm') {
       const key = _dmKey(opts.user1, opts.user2);
+      _cacheInvalidatePrefix('dm:' + key);
       const { error } = await sb.from('dms').delete().eq('dm_key', key).eq('id', opts.messageId);
       if (error) throw new Error('Failed to delete DM: ' + error.message);
     } else if (type === 'gc') {
+      _cacheInvalidatePrefix('gcm:' + opts.gcId);
       const { error } = await sb.from('group_chat_messages').delete().eq('gc_id', opts.gcId).eq('id', opts.messageId);
       if (error) throw new Error('Failed to delete GC message: ' + error.message);
     } else if (type === 'bastion') {
+      _cacheDel('bm:' + opts.bastionId + ':' + opts.channelId);
       const { error } = await sb.from('bastion_msgs').delete().eq('bastion_id', opts.bastionId).eq('channel_id', opts.channelId).eq('id', opts.messageId);
       if (error) throw new Error('Failed to delete bastion message: ' + error.message);
     } else {

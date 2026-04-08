@@ -3614,7 +3614,7 @@ function openDMView(username) {
         <span class="rt-name">${escapeHTML(username)}</span>
       </div>
       <div class="chat-msgs" id="dm-msgs">
-        <div class="msg-row chat-past-bar" id="dm-past-bar"><div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;margin:6px 16px;"><span style="font-size:13px;color:rgba(255,255,255,.6);">You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')" style="background:var(--accent);color:#13161d;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Return To Present</button></div></div>
+        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('dm-msgs')">Jump to Present</button></div>
         <div class="new-messages-bar" id="dm-new-msgs-bar"><span id="dm-new-msgs-text">1 new message</span><button onclick="markDMRead()">Mark as Read</button></div>
         <div class="chat-welcome">
           <div class="w-av" id="dm-welcome-av">${buildAvatarHTML(null,username,60)}</div>
@@ -3724,14 +3724,12 @@ async function sendDM() {
   const isOutline = _outlineMode;
   _outlineMode = false;
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
-  // Don't show optimistic render - wait for polling to deliver from database
-  // This prevents message duplication (showing once locally, once from DB)
-  // if(msgsEl){
-  //   const lastRows=msgsEl.querySelectorAll('.msg-row');
-  //   const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
-  //   appendMessage(msgsEl,msg,'dm',lastAuthor);
-  //   scrollBottom('dm-msgs');
-  // }
+  if(msgsEl){
+    const lastRows=msgsEl.querySelectorAll('.msg-row');
+    const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
+    appendMessage(msgsEl,msg,'dm',lastAuthor);
+    scrollBottom('dm-msgs');
+  }
   try {
     await FortizedSocial.sendDMMessage(CU.username, curDM, text);
     console.debug('[sendDM] Message sent successfully');
@@ -3905,7 +3903,7 @@ async function openGroupChatView(gcId) {
         <span class="rt-desc">${(meta.members||[]).length} members</span>
       </div>
       <div class="chat-msgs" id="gc-msgs">
-        <div class="msg-row chat-past-bar" id="gc-past-bar"><div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;margin:6px 16px;"><span style="font-size:13px;color:rgba(255,255,255,.6);">You're viewing older messages</span><button onclick="scrollBottom('gc-msgs')" style="background:var(--accent);color:#13161d;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Return To Present</button></div></div>
+        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('gc-msgs')">Jump to Present</button></div>
         <div class="new-messages-bar" id="gc-new-msgs-bar"><span id="gc-new-msgs-text">1 new message</span><button onclick="markGCRead()">Mark as Read</button></div>
         <div class="chat-welcome">
           <div class="w-av" style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,${meta.color||'#7c5cbf'},${meta.color2||'#3ecf6e'});display:flex;align-items:center;justify-content:center;font-size:32px;">${meta.emoji||'👥'}</div>
@@ -4463,7 +4461,7 @@ function renderBastionSidebar(scroll) {
   html+=`<div class="bastion-identity${bannerSrc?' ':' no-banner '}" style="position:relative;">
     ${bannerSrc?'':`<div class="bastion-emblem">${emblemHTML}</div>`}
     <div class="bastion-meta">
-      <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)} ${boostLv>0?'<span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px;font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;background:linear-gradient(135deg,'+(boostLv===1?'#60a5fa':boostLv===2?'#a78bfa':'#fbbf24')+','+(boostLv===1?'#60a5fa99':boostLv===2?'#a78bfa99':'#fbbf2499')+');color:#fff;letter-spacing:.03em;">'+_boostSvg('12')+' T'+boostLv+'</span>':'<span style="display:inline-flex;align-items:center;gap:3px;margin-left:8px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);">'+_boostSvg('12')+' Boost</span>'} <span class="bm-chevron">▼</span></div>
+      <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)} ${boostLv>0?`<span style="display:inline-block;margin-left:6px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:5px;background:linear-gradient(135deg,${boostLv===1?'#60a5fa':boostLv===2?'#a78bfa':'#fbbf24'},${boostLv===1?'#60a5fa99':boostLv===2?'#a78bfa99':'#fbbf2499'});color:#fff;letter-spacing:.03em;">${boostLv===1?'🟦 T1':boostLv===2?'🟪 T2':'👑 T3'}</span>`:'<span style="display:inline-block;margin-left:6px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);">🔓 Boost</span>'} <span class="bm-chevron">▼</span></div>
       ${b.tagline?`<div class="bm-tagline">${escapeHTML(b.tagline)}</div>`:''}
     </div>
     <div id="bastion-name-dd-anchor"></div>
@@ -4796,7 +4794,7 @@ function loadChatChannel(idx) {
         ${nsfwBadge}
       </div>
       <div class="chat-msgs" id="ch-msgs-${idx}">
-        <div class="msg-row chat-past-bar" id="ch-past-bar-${idx}"><div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;margin:6px 16px;"><span style="font-size:13px;color:rgba(255,255,255,.6);">You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')" style="background:var(--accent);color:#13161d;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Return To Present</button></div></div>
+        <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Jump to Present</button></div>
         <div class="new-messages-bar" id="ch-new-msgs-bar-${idx}"><span id="ch-new-msgs-text-${idx}">1 new message</span><button onclick="markChannelRead(${idx})">Mark as Read</button></div>
         ${bannerSafe ? `<div style="width:100%;height:120px;position:relative;flex-shrink:0;overflow:hidden;border-bottom:1.5px solid var(--border);"><img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.88);" onerror="this.parentElement.style.display='none'"><div style="position:absolute;bottom:12px;left:16px;font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);">${escapeHTML(b.name||'')}</div></div>` : ''}
         <div class="chat-welcome">
@@ -5035,14 +5033,12 @@ async function sendChannelMsg(idx) {
   const isOutline = _outlineMode;
   _outlineMode = false;
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
-  // Don't show optimistic render - wait for polling to deliver from database
-  // This prevents message duplication (showing once locally, once from DB)
-  // if(msgsEl){
-  //   const lastRows=msgsEl.querySelectorAll('.msg-row');
-  //   const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
-  //   appendMessage(msgsEl,msg,'ch',lastAuthor);
-  //   scrollBottom('ch-msgs-'+idx);
-  // }
+  if(msgsEl){
+    const lastRows=msgsEl.querySelectorAll('.msg-row');
+    const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
+    appendMessage(msgsEl,msg,'ch',lastAuthor);
+    scrollBottom('ch-msgs-'+idx);
+  }
   // Award message reputation
   awardMessageRep(b.globalId||b.name, CU.username);
   _trackSendMsgQuest();
@@ -6501,11 +6497,10 @@ function _renderDiscoverFeatured(bastions){
   ${featured.map(b=>{
     const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
     const mc = b.memberCount||1;
-    const boostLevel = b.boostLevel||0;
-    const boostColor = boostLevel===1?'#60a5fa':boostLevel===2?'#a78bfa':boostLevel===3?'#fbbf24':'';
-    return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,${boostLevel>0?'rgba(255,249,62,.08)':'rgba(255,249,62,.04)'},rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid ${boostLevel>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.12)'};border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(12px);" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px ${boostLevel>0?'rgba(255,249,62,.12)':'rgba(255,249,62,.06)'}';" onmouseleave="this.style.transform='';this.style.boxShadow='';">
-      <div style="width:52px;height:52px;border-radius:14px;background:${boostLevel>0?'linear-gradient(135deg,rgba(255,249,62,.15),rgba(255,249,62,.05))':'rgba(255,249,62,.06)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid ${boostLevel>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.1)'};overflow:hidden;">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}</div>
-      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)} ${boostLevel>0?'<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;margin-left:6px;font-weight:700;padding:2px 6px;border-radius:5px;background:linear-gradient(135deg,'+boostColor+','+boostColor+'88);color:#fff;">'+_boostSvg('10')+' T'+boostLevel+'</span>':''}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?'<span style="color:rgba(62,207,110,.8);display:flex;align-items:center;gap:2px;font-weight:700;">🔥 Trending</span>':'<span style="color:rgba(255,255,255,.4);">💤 '+(mc>1?'Active':'Quiet')+'</span>'}</div></div>
+    const boostBadge = (b.boostLevel||0)>0?(['🟦 Tier 1','🟪 Tier 2','👑 Tier 3'][(b.boostLevel||1)-1]):'';
+    return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,${(b.boostLevel||0)>0?'rgba(255,249,62,.08)':'rgba(255,249,62,.04)'},rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.12)'};border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(12px);" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px ${(b.boostLevel||0)>0?'rgba(255,249,62,.12)':'rgba(255,249,62,.06)'}';" onmouseleave="this.style.transform='';this.style.boxShadow='';">
+      <div style="width:52px;height:52px;border-radius:14px;background:${(b.boostLevel||0)>0?'linear-gradient(135deg,rgba(255,249,62,.15),rgba(255,249,62,.05))':'rgba(255,249,62,.06)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.1)'};overflow:hidden;">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}</div>
+      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)} ${boostBadge?'<span style="font-size:10px;margin-left:6px;font-weight:700;color:var(--accent);">'+boostBadge+'</span>':''}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.8);display:flex;align-items:center;gap:2px;font-weight:700;">🔥 Trending</span>`:`<span style="color:rgba(255,255,255,.4);">💤 ${mc>1?'Active':'Quiet'}</span>`}</div></div>
       ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.12);padding:5px 12px;border-radius:10px;">✓ Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);padding:5px 12px;border-radius:10px;">+ Join</span>`}
     </div>`;
   }).join('')}</div>`;
@@ -7037,11 +7032,7 @@ function initFortizedUXResilience() {
         document.querySelectorAll('.ml-entry[data-member="'+data.username+'"]').forEach(el => {
           el.dataset.status = data.status;
           // Update opacity for offline dimming
-          if (isOnline) {
-            el.style.opacity = '1';
-          } else {
-            el.style.opacity = '0.4';
-          }
+          el.style.opacity = isOnline ? '' : '.4';
           // Re-sort member list if in a bastion view
           if (el.closest('#member-list')) _debouncedMemberListResort();
         });
@@ -7527,9 +7518,6 @@ function initFortizedUXResilience() {
       },
     };
     window._ftzSocketCallbacks = _socketCbs;
-    console.log('[Init] _socketCbs keys:', Object.keys(_socketCbs));
-    console.log('[Init] _socketCbs.onMessage exists?', !!_socketCbs.onMessage);
-    console.log('[Init] _socketCbs.onMessage type:', typeof _socketCbs.onMessage);
     FortizedSocial.initSocket(CU.username, _socketCbs);
     // Start Supabase real-time polling with callbacks for message delivery
     FortizedSocial.startPolling(CU.username, _socketCbs);
@@ -21245,6 +21233,11 @@ function renderProfileWidgetsOnCard(u, containerEl) {
   const widgets = u.profileWidgets || [];
   const games = (u.gameCollection || []).filter(g => !g.hidden);
   const isOwnProfile = u.username === CU?.username;
+
+  // Ensure fresh Spotify data for own profile
+  if (isOwnProfile && CU?.spotifyToken) {
+    _pollSpotifyNowPlaying();
+  }
   let html = '';
 
   // "Now Playing" activity card (always shown when playing, like Discord)
@@ -21276,22 +21269,22 @@ function renderProfileWidgetsOnCard(u, containerEl) {
     if (w.id === 'game_collection') {
       const max = w.config?.maxShow || 20;
       const visibleGames = games.slice(0, max);
-      html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;padding:16px;border-radius:12px;">
+      html += `<div class="pw-widget" style="padding:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div>
             <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;">Games I like</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;">Add up to 20 games</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">Add up to 20 games</div>
           </div>
-          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event)" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:5px;">
+          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event)" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:5px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add game
           </button>` : ''}
         </div>
         ${visibleGames.length ? `<div class="pw-gc-masonry">${visibleGames.map(g => {const _cv = g.coverUrl || _getManualCover(g.name); return `<div class="pw-gc-card">
-          ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,.1);">${g.icon||'🎮'}</div>`}
+          ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02));">${g.icon||'🎮'}</div>`}
           <div class="gc-hover-name">${escapeHTML(g.name)}</div>
           ${isOwnProfile ? `<button class="gc-delete-btn" onclick="event.stopPropagation();_removeGameFromCollection('${escapeHTML(g.name)}')" title="Remove"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>` : ''}
-        </div>`;}).join('')}</div>` : `<div style="text-align:center;padding:24px;color:rgba(255,255,255,.4);font-size:12px;">No games added yet</div>`}
+        </div>`;}).join('')}</div>` : `<div style="text-align:center;padding:24px;color:rgba(255,255,255,.2);font-size:12px;">No games added yet</div>`}
       </div>`;
     }
 
@@ -21299,10 +21292,10 @@ function renderProfileWidgetsOnCard(u, containerEl) {
       const fg = games.find(g => g.name === w.config.gameName) || (u.gameCollection||[]).find(g => g.name === w.config.gameName);
       if (fg) {
         const fgCover = fg.coverUrl || _getManualCover(fg.name);
-        html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;border-radius:12px;">
-          <div class="pw-widget-title" style="color:#fff;padding:16px 16px 0 16px;margin-bottom:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Favourite Game</div>
+        html += `<div class="pw-widget" style="border-left:3px solid #f59e0b;">
+          <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Favourite Game</div>
           <div class="pw-fav-large-card">
-            <div class="pfl-cover">${fgCover ? `<img src="${escapeHTML(fgCover)}" alt="${escapeHTML(fg.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:rgba(255,255,255,.1);">${fg.icon||'⭐'}</div>`}</div>
+            <div class="pfl-cover">${fgCover ? `<img src="${escapeHTML(fgCover)}" alt="${escapeHTML(fg.name)}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.03));">${fg.icon||'⭐'}</div>`}</div>
             <div class="pfl-info">
               <div class="pfl-name">${escapeHTML(fg.name)}</div>
               <div class="pfl-genre">${escapeHTML(fg.genre||'Game')}</div>
@@ -21316,10 +21309,10 @@ function renderProfileWidgetsOnCard(u, containerEl) {
     if (w.id === 'games_rotation' && games.length) {
       const max = w.config?.maxShow || 6;
       const rotationGames = games.slice(0, max);
-      html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;border-radius:12px;">
-        <div class="pw-widget-title" style="color:#fff;padding:16px 16px 0 16px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg> Currently Playing</div>
+      html += `<div class="pw-widget">
+        <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg> Currently Playing</div>
         <div class="pw-rotation-carousel">${rotationGames.map(g => {const _cv = g.coverUrl||_getManualCover(g.name); return `<div class="pw-rotation-card">
-          ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:28px;background:rgba(255,255,255,.1);">${g.icon||'🎮'}</div>`}
+          ${_cv ? `<img src="${escapeHTML(_cv)}" alt="${escapeHTML(g.name)}">` : `<div style="width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(96,165,250,.02));">${g.icon||'🎮'}</div>`}
           <div class="prc-name">${escapeHTML(g.name)}</div>
         </div>`;}).join('')}</div>
       </div>`;
@@ -21332,15 +21325,15 @@ function renderProfileWidgetsOnCard(u, containerEl) {
         const bName = b.name || w.config.bastionName || 'Bastion';
         const bMembers = b.members?.length || 0;
         const bType = b.type || 'Community';
-        html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;padding:16px;border-radius:12px;">
-          <div class="pw-widget-title" style="color:#fff;margin-bottom:12px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Primary Bastion</div>
-          <div class="pw-bastion-card" style="background:rgba(255,255,255,.08);border-radius:10px;border:1px solid rgba(255,255,255,.12);padding:12px;cursor:pointer;transition:all .2s;" onclick="joinBastionFromWidget('${escapeHTML(bName)}',${bIdx})">
-            <div class="pw-bastion-emblem" style="width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px;">${b.emblem ? `<img src="${escapeHTML(b.emblem)}" style="width:100%;height:100%;border-radius:8px;object-fit:cover;">` : '🏰'}</div>
+        html += `<div class="pw-widget" style="border-left:3px solid #a78bfa;">
+          <div class="pw-widget-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Primary Bastion</div>
+          <div class="pw-bastion-card" onclick="joinBastionFromWidget('${escapeHTML(bName)}',${bIdx})">
+            <div class="pw-bastion-emblem">${b.emblem ? `<img src="${escapeHTML(b.emblem)}">` : '🏰'}</div>
             <div class="pw-bastion-info">
-              <div class="pw-bastion-name" style="color:#fff;font-weight:700;margin-bottom:2px;">${escapeHTML(bName)}</div>
-              <div class="pw-bastion-meta" style="color:rgba(255,255,255,.6);font-size:11px;">${bMembers} member${bMembers!==1?'s':''} · ${escapeHTML(bType)}</div>
+              <div class="pw-bastion-name">${escapeHTML(bName)}</div>
+              <div class="pw-bastion-meta">${bMembers} member${bMembers!==1?'s':''} · ${escapeHTML(bType)}</div>
             </div>
-            <button class="pw-join-btn" style="background:#fff;color:#2e6f6e;padding:6px 14px;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;margin-top:8px;width:100%;transition:all .2s;">Join</button>
+            <button class="pw-join-btn">Join</button>
           </div>
         </div>`;
       }
@@ -21348,47 +21341,47 @@ function renderProfileWidgetsOnCard(u, containerEl) {
 
     if (w.id === 'spotify') {
       const spotifyData = u.spotifyNowPlaying || null;
-      const _spotifySvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>';
+      const _spotifySvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="#3ecf6e"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>';
       if (spotifyData?.isPlaying) {
         // Calculate real-time progress based on elapsed time since data was fetched
         const elapsedMs = spotifyData.fetchedAt ? (Date.now() - spotifyData.fetchedAt) : 0;
         const currentProgressMs = Math.min(spotifyData.durationMs, (spotifyData.progressMs || 0) + elapsedMs);
         const progressPct = spotifyData.durationMs ? Math.min(100, (currentProgressMs / spotifyData.durationMs) * 100) : 0;
         const currentProgressStr = Math.floor(currentProgressMs/60000) + ':' + String(Math.floor((currentProgressMs%60000)/1000)).padStart(2,'0');
-        html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;padding:12px 14px;border-radius:12px;">
+        html += `<div class="pw-widget" style="border-left:3px solid #3ecf6e;padding:12px 14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <div class="pw-widget-title" style="color:#fff;margin-bottom:0;display:flex;align-items:center;gap:6px;">${_spotifySvg} <span>Listening to Spotify</span></div>
-            ${isOwnProfile ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
+            <div class="pw-widget-title" style="color:#3ecf6e;margin-bottom:0;">${_spotifySvg} Listening to Spotify</div>
+            ${isOwnProfile ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:12px;">
-            ${spotifyData.albumArt ? `<img src="${escapeHTML(spotifyData.albumArt)}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.1);">` : `<div style="width:52px;height:52px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`}
+            ${spotifyData.albumArt ? `<img src="${escapeHTML(spotifyData.albumArt)}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(29,185,84,.15);">` : `<div style="width:52px;height:52px;border-radius:8px;background:rgba(29,185,84,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(29,185,84,.6)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`}
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(spotifyData.track||'Unknown')}</div>
-              <div style="font-size:11px;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">by ${escapeHTML(spotifyData.artist||'Unknown artist')}</div>
-              ${spotifyData.album ? `<div style="font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">on ${escapeHTML(spotifyData.album)}</div>` : ''}
+              <div style="font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">by ${escapeHTML(spotifyData.artist||'Unknown artist')}</div>
+              ${spotifyData.album ? `<div style="font-size:10px;color:rgba(255,255,255,.2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">on ${escapeHTML(spotifyData.album)}</div>` : ''}
             </div>
           </div>
           <div style="margin-top:8px;">
-            <div style="width:100%;height:3px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;">
-              <div style="width:${progressPct}%;height:100%;background:#fff;border-radius:2px;transition:width 1s linear;"></div>
+            <div style="width:100%;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;">
+              <div style="width:${progressPct}%;height:100%;background:#3ecf6e;border-radius:2px;transition:width 1s linear;"></div>
             </div>
             <div style="display:flex;justify-content:space-between;margin-top:3px;">
-              <span style="font-size:9px;color:rgba(255,255,255,.5);">${escapeHTML(currentProgressStr)}</span>
-              <span style="font-size:9px;color:rgba(255,255,255,.5);">${escapeHTML(spotifyData.duration||'0:00')}</span>
+              <span style="font-size:9px;color:rgba(255,255,255,.2);">${escapeHTML(currentProgressStr)}</span>
+              <span style="font-size:9px;color:rgba(255,255,255,.2);">${escapeHTML(spotifyData.duration||'0:00')}</span>
             </div>
           </div>
         </div>`;
       } else if (isOwnProfile) {
         const hasValidToken = !!(u.spotifyToken && u.spotifyRefreshToken);
         const isConnected = !!u.spotifyConnected && hasValidToken;
-        html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;padding:12px 14px;border-radius:12px;">
+        html += `<div class="pw-widget" style="border-left:3px solid #3ecf6e;padding:12px 14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
-            <div class="pw-widget-title" style="color:#fff;margin-bottom:0;display:flex;align-items:center;gap:6px;">${_spotifySvg} <span>Spotify</span></div>
-            ${isConnected ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
+            <div class="pw-widget-title" style="color:#3ecf6e;margin-bottom:0;">${_spotifySvg} Spotify</div>
+            ${isConnected ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
           </div>
           ${isConnected
-            ? '<div style="font-size:11.5px;color:rgba(255,255,255,.6);margin-top:6px;">Not currently playing anything.</div>'
-            : '<button onclick="_connectSpotify()" style="margin-top:8px;padding:8px 16px;background:#2e6f6e;color:#fff;border:1px solid #3a8080;border-radius:8px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Connect Spotify</button>'}
+            ? '<div style="font-size:11.5px;color:rgba(255,255,255,.3);margin-top:6px;">Not currently playing anything.</div>'
+            : '<button onclick="_connectSpotify()" style="margin-top:8px;padding:8px 16px;background:#3ecf6e;color:#fff;border:none;border-radius:8px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Connect Spotify</button>'}
         </div>`;
       }
     }
@@ -21396,45 +21389,45 @@ function renderProfileWidgetsOnCard(u, containerEl) {
     // Want to Play widget
     if (w.id === 'want_to_play') {
       const wantList = u.wantToPlay || [];
-      html += `<div class="pw-widget" style="background:#d946a6;border:1px solid #e879b5;padding:16px;border-radius:12px;">
+      html += `<div class="pw-widget" style="padding:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
               <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;">Want to Play</div>
             </div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;">Games on my wishlist</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;">Games on my wishlist</div>
           </div>
-          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event,'want_to_play')" style="padding:6px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
+          ${isOwnProfile ? `<button onclick="_openWidgetGameSearch(event,'want_to_play')" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add
           </button>` : ''}
         </div>
         ${wantList.length ? `<div style="display:flex;flex-direction:column;gap:6px;">${wantList.map((g,i) => {
           const _cv = g.coverUrl || _getManualCover(g.name);
-          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.08);border-radius:10px;border:1px solid rgba(255,255,255,.15);" draggable="${isOwnProfile}" ondragstart="event.dataTransfer.setData('text/plain','${i}')" ondragover="event.preventDefault()" ondrop="event.preventDefault();_reorderWantToPlay(parseInt(event.dataTransfer.getData('text/plain')),${i})">
-            ${_cv ? `<img src="${escapeHTML(_cv)}" style="width:36px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.15);" onerror="this.style.display='none'">` : `<div style="width:36px;height:48px;border-radius:6px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg></div>`}
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:10px;border:1px solid rgba(255,255,255,.04);" draggable="${isOwnProfile}" ondragstart="event.dataTransfer.setData('text/plain','${i}')" ondragover="event.preventDefault()" ondrop="event.preventDefault();_reorderWantToPlay(parseInt(event.dataTransfer.getData('text/plain')),${i})">
+            ${_cv ? `<img src="${escapeHTML(_cv)}" style="width:36px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(244,114,182,.1);" onerror="this.style.display='none'">` : `<div style="width:36px;height:48px;border-radius:6px;background:rgba(244,114,182,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,114,182,.4)" stroke-width="2"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg></div>`}
             <div style="flex:1;min-width:0;">
               <div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.name)}</div>
-              ${g.genre ? `<div style="font-size:10px;color:rgba(255,255,255,.6);">${escapeHTML(g.genre)}</div>` : ''}
+              ${g.genre ? `<div style="font-size:10px;color:rgba(255,255,255,.3);">${escapeHTML(g.genre)}</div>` : ''}
             </div>
-            ${isOwnProfile ? `<button onclick="event.stopPropagation();_removeFromWantToPlay(${i})" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;padding:4px;display:flex;" title="Remove"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>` : ''}
+            ${isOwnProfile ? `<button onclick="event.stopPropagation();_removeFromWantToPlay(${i})" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;padding:4px;display:flex;" title="Remove"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>` : ''}
           </div>`;
-        }).join('')}</div>` : `<div style="text-align:center;padding:20px;color:rgba(255,255,255,.3);font-size:12px;">No games added yet</div>`}
+        }).join('')}</div>` : `<div style="text-align:center;padding:20px;color:rgba(255,255,255,.2);font-size:12px;">No games added yet</div>`}
       </div>`;
     }
 
     // Player Archetype widget
     if (w.id === 'player_archetype') {
       const traits = w.config?.traits || [];
-      html += `<div class="pw-widget" style="background:#d4af37;border:1px solid #e0c050;padding:16px;border-radius:12px;">
+      html += `<div class="pw-widget" style="border-left:3px solid #fbbf24;padding:16px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#1a1a1a;">Player Archetype</div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;">Player Archetype</div>
         </div>
-        ${traits.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;">${traits.map(t => `<span style="padding:6px 14px;background:rgba(26,26,26,.15);border:1px solid rgba(26,26,26,.3);border-radius:20px;font-size:12px;font-weight:700;color:#1a1a1a;display:flex;align-items:center;gap:5px;">
+        ${traits.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;">${traits.map(t => `<span style="padding:6px 14px;background:rgba(251,191,36,.08);border:1.5px solid rgba(251,191,36,.15);border-radius:20px;font-size:12px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:5px;">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          ${escapeHTML(t)}</span>`).join('')}</div>` : (isOwnProfile ? `<div style="text-align:center;padding:12px;color:rgba(26,26,26,.4);font-size:12px;">No traits added — customize in settings</div>` : `<div style="text-align:center;padding:12px;color:rgba(26,26,26,.4);font-size:12px;">No traits set</div>`)}
+          ${escapeHTML(t)}</span>`).join('')}</div>` : (isOwnProfile ? `<div style="text-align:center;padding:12px;color:rgba(255,255,255,.2);font-size:12px;">No traits added — customize in settings</div>` : `<div style="text-align:center;padding:12px;color:rgba(255,255,255,.2);font-size:12px;">No traits set</div>`)}
       </div>`;
     }
   });
@@ -21583,7 +21576,7 @@ function _updateSpotifyWidget() {
   }
 
   // Find all spotify widgets on the page (in profile cards, modals, etc)
-  const spotifyWidgets = document.querySelectorAll('[style*="1DB954"]');
+  const spotifyWidgets = document.querySelectorAll('[style*="3ecf6e"]');
   console.debug('[Spotify] Found', spotifyWidgets.length, 'widgets');
 
   spotifyWidgets.forEach(widget => {
@@ -21592,33 +21585,33 @@ function _updateSpotifyWidget() {
       console.debug('[Spotify] Updating widget');
 
       if (spotifyData.isPlaying) {
-        // Calculate real-time progress
+        // Calculate real-time progress based on elapsed time since data was fetched
         const elapsedMs = spotifyData.fetchedAt ? (Date.now() - spotifyData.fetchedAt) : 0;
         const currentProgressMs = Math.min(spotifyData.durationMs, (spotifyData.progressMs || 0) + elapsedMs);
         const progressPct = spotifyData.durationMs ? Math.min(100, (currentProgressMs / spotifyData.durationMs) * 100) : 0;
         const currentProgressStr = Math.floor(currentProgressMs/60000) + ':' + String(Math.floor((currentProgressMs%60000)/1000)).padStart(2,'0');
-        const _spotifySvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>';
+        const _spotifySvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="#3ecf6e"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>';
 
         widget.innerHTML = `
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <div class="pw-widget-title" style="color:#fff;margin-bottom:0;">${_spotifySvg} Listening to Spotify</div>
-            <button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>
+            <div class="pw-widget-title" style="color:#3ecf6e;margin-bottom:0;">${_spotifySvg} Listening to Spotify</div>
+            <button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>
           </div>
           <div style="display:flex;align-items:center;gap:12px;">
-            ${spotifyData.albumArt ? `<img src="${escapeHTML(spotifyData.albumArt)}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.1);">` : `<div style="width:52px;height:52px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`}
+            ${spotifyData.albumArt ? `<img src="${escapeHTML(spotifyData.albumArt)}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(62,207,110,.15);">` : `<div style="width:52px;height:52px;border-radius:8px;background:rgba(62,207,110,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(62,207,110,.6)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`}
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(spotifyData.track||'Unknown')}</div>
-              <div style="font-size:11px;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">by ${escapeHTML(spotifyData.artist||'Unknown artist')}</div>
-              ${spotifyData.album ? `<div style="font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">on ${escapeHTML(spotifyData.album)}</div>` : ''}
+              <div style="font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">by ${escapeHTML(spotifyData.artist||'Unknown artist')}</div>
+              ${spotifyData.album ? `<div style="font-size:10px;color:rgba(255,255,255,.2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">on ${escapeHTML(spotifyData.album)}</div>` : ''}
             </div>
           </div>
           <div style="margin-top:8px;">
-            <div style="width:100%;height:3px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;">
-              <div style="width:${progressPct}%;height:100%;background:#fff;border-radius:2px;transition:width 100ms linear;"></div>
+            <div style="width:100%;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;">
+              <div style="width:${progressPct}%;height:100%;background:#3ecf6e;border-radius:2px;transition:width 1s linear;"></div>
             </div>
             <div style="display:flex;justify-content:space-between;margin-top:3px;">
-              <span style="font-size:9px;color:rgba(255,255,255,.5);">${escapeHTML(currentProgressStr)}</span>
-              <span style="font-size:9px;color:rgba(255,255,255,.5);">${escapeHTML(spotifyData.duration||'0:00')}</span>
+              <span style="font-size:9px;color:rgba(255,255,255,.2);">${escapeHTML(currentProgressStr)}</span>
+              <span style="font-size:9px;color:rgba(255,255,255,.2);">${escapeHTML(spotifyData.duration||'0:00')}</span>
             </div>
           </div>
         `;
@@ -21664,7 +21657,7 @@ async function _pollSpotifyNowPlaying() {
           duration: durationStr,
           progress: progressStr,
           durationMs, progressMs,
-          fetchedAt: Date.now()  // Add timestamp for real-time progress calculation
+          fetchedAt: Date.now()
         };
         // Set Spotify activity using new v2 system
         addActivity({
@@ -21748,7 +21741,7 @@ async function _disconnectSpotify() {
 }
 
 // Auto-poll Spotify every 60 seconds if connected (reduced from 30s)
-setInterval(() => { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); }, 1000);
+setInterval(() => { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); }, 5000);
 
 async function _removeGameFromCollection(gameName) {
   if (!CU.gameCollection) return;

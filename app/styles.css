@@ -755,7 +755,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Role accent stripe */
 .msg-role-stripe{position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:1px;opacity:.35;transition:opacity .2s;}
 /* Viewing older messages bar - Fortized Yellow */
-.chat-past-bar{opacity:0;pointer-events:none;transition:opacity .2s;}
+.chat-past-bar{opacity:1;pointer-events:auto;transition:opacity .2s;}
 .chat-past-bar.show{opacity:1;pointer-events:auto;}
 .chat-past-bar button{background:var(--accent);border:none;color:#13161d;border-radius:8px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:all .1s;font-family:var(--font-display);white-space:nowrap;}
 .chat-past-bar button:hover{filter:brightness(1.1);}

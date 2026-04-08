@@ -800,14 +800,17 @@ const FortizedSocial = (() => {
 
   // ── Delete Messages ─────────────────────────────────
   async function editMessage(type, opts) {
-    const editData = { text: opts.newText, edited: true, edited_at: new Date().toISOString() };
+    const editData = { text: opts.newText, edited: true };
     if (type === 'dm') {
       const key = _dmKey(opts.user1, opts.user2);
-      await sb.from('dms').update(editData).eq('dm_key', key).eq('id', opts.messageId);
+      const { error } = await sb.from('dms').update(editData).eq('dm_key', key).eq('id', opts.messageId);
+      if (error) console.error('[editMessage] DM edit failed:', error.message);
     } else if (type === 'gc') {
-      await sb.from('group_chat_messages').update(editData).eq('gc_id', opts.gcId).eq('id', opts.messageId);
+      const { error } = await sb.from('group_chat_messages').update(editData).eq('gc_id', opts.gcId).eq('id', opts.messageId);
+      if (error) console.error('[editMessage] GC edit failed:', error.message);
     } else if (type === 'bastion') {
-      await sb.from('bastion_msgs').update(editData).eq('bastion_id', opts.bastionId).eq('channel_id', opts.channelId).eq('id', opts.messageId);
+      const { error } = await sb.from('bastion_msgs').update(editData).eq('bastion_id', opts.bastionId).eq('channel_id', opts.channelId).eq('id', opts.messageId);
+      if (error) console.error('[editMessage] Bastion edit failed:', error.message);
     }
   }
 

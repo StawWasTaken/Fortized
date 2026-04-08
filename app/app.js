@@ -21739,7 +21739,7 @@ async function _disconnectSpotify() {
 }
 
 // Auto-poll Spotify every 60 seconds if connected (reduced from 30s)
-setInterval(() => { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); }, 5000);
+setInterval(() => { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); }, 1000);
 
 async function _removeGameFromCollection(gameName) {
   if (!CU.gameCollection) return;

@@ -4470,6 +4470,16 @@ function renderBastionSidebar(scroll) {
   // ── Mood Bar ──
   html+=renderMoodBar(b);
 
+  // ── Custom Emojis Display ──
+  const emojis = b.customEmojis || [];
+  if (emojis.length > 0) {
+    const emojiDisplay = emojis.slice(0, 8).map(e => `<span title=":${e.name}:" style="cursor:default;font-size:16px;display:inline-block;">${e.data ? `<img src="${e.data}" style="width:20px;height:20px;display:inline-block;">` : '?'}</span>`).join('');
+    html += `<div style="padding:8px 16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);">
+      <span style="font-weight:700;">Custom Emojis (${emojis.length})</span>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;">${emojiDisplay}${emojis.length > 8 ? `<span style="font-size:12px;opacity:.6;">+${emojis.length - 8}</span>` : ''}</div>
+    </div>`;
+  }
+
   html+=`<div class="sidebar-divider"></div>`;
 
   // ── Overview, Events & Bastion Boosts (modal cards) ──

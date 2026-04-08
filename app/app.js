@@ -3726,9 +3726,9 @@ async function sendDM() {
   _outlineMode = false;
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
   try {
-    await FortizedSocial.sendDMMessage(CU.username, curDM, text);
+    const savedMsg = await FortizedSocial.sendDMMessage(CU.username, curDM, text);
     console.debug('[sendDM] Message sent successfully');
-    FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: msg });
+    FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: savedMsg || msg });
     _trackSendMsgQuest();
   } catch (e) {
     console.error('[sendDM Error]', e.message);
@@ -5024,8 +5024,8 @@ async function sendChannelMsg(idx) {
   awardMessageRep(b.globalId||b.name, CU.username);
   _trackSendMsgQuest();
   try {
-    await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text);
-    FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: msg });
+    const savedMsg = await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text);
+    FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: savedMsg || msg });
   } catch { toast('Failed to send message. Check your connection.','error'); }
   // Bot command handling — trigger deployed bots with ! prefix
   if (text.startsWith('!')) {

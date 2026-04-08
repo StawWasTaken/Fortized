@@ -21348,43 +21348,43 @@ function renderProfileWidgetsOnCard(u, containerEl) {
 
     if (w.id === 'spotify') {
       const spotifyData = u.spotifyNowPlaying || null;
-      const _spotifySvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>';
+      const _spotifySvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>';
       if (spotifyData?.isPlaying) {
         const progressPct = spotifyData.durationMs ? Math.min(100, (spotifyData.progressMs / spotifyData.durationMs) * 100) : 0;
-        html += `<div class="pw-widget" style="border-left:3px solid #1DB954;padding:12px 14px;">
+        html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;padding:12px 14px;border-radius:12px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <div class="pw-widget-title" style="color:#1DB954;margin-bottom:0;">${_spotifySvg} Listening to Spotify</div>
-            ${isOwnProfile ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
+            <div class="pw-widget-title" style="color:#fff;margin-bottom:0;display:flex;align-items:center;gap:6px;">${_spotifySvg} <span>Listening to Spotify</span></div>
+            ${isOwnProfile ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:12px;">
-            ${spotifyData.albumArt ? `<img src="${escapeHTML(spotifyData.albumArt)}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(29,185,84,.15);">` : `<div style="width:52px;height:52px;border-radius:8px;background:rgba(29,185,84,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(29,185,84,.6)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`}
+            ${spotifyData.albumArt ? `<img src="${escapeHTML(spotifyData.albumArt)}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.1);">` : `<div style="width:52px;height:52px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`}
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(spotifyData.track||'Unknown')}</div>
-              <div style="font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">by ${escapeHTML(spotifyData.artist||'Unknown artist')}</div>
-              ${spotifyData.album ? `<div style="font-size:10px;color:rgba(255,255,255,.2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">on ${escapeHTML(spotifyData.album)}</div>` : ''}
+              <div style="font-size:11px;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">by ${escapeHTML(spotifyData.artist||'Unknown artist')}</div>
+              ${spotifyData.album ? `<div style="font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">on ${escapeHTML(spotifyData.album)}</div>` : ''}
             </div>
           </div>
           <div style="margin-top:8px;">
-            <div style="width:100%;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;">
-              <div style="width:${progressPct}%;height:100%;background:#1DB954;border-radius:2px;transition:width 1s linear;"></div>
+            <div style="width:100%;height:3px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;">
+              <div style="width:${progressPct}%;height:100%;background:#fff;border-radius:2px;transition:width 1s linear;"></div>
             </div>
             <div style="display:flex;justify-content:space-between;margin-top:3px;">
-              <span style="font-size:9px;color:rgba(255,255,255,.2);">${escapeHTML(spotifyData.progress||'0:00')}</span>
-              <span style="font-size:9px;color:rgba(255,255,255,.2);">${escapeHTML(spotifyData.duration||'0:00')}</span>
+              <span style="font-size:9px;color:rgba(255,255,255,.5);">${escapeHTML(spotifyData.progress||'0:00')}</span>
+              <span style="font-size:9px;color:rgba(255,255,255,.5);">${escapeHTML(spotifyData.duration||'0:00')}</span>
             </div>
           </div>
         </div>`;
       } else if (isOwnProfile) {
         const hasValidToken = !!(u.spotifyToken && u.spotifyRefreshToken);
         const isConnected = !!u.spotifyConnected && hasValidToken;
-        html += `<div class="pw-widget" style="border-left:3px solid #1DB954;padding:12px 14px;">
+        html += `<div class="pw-widget" style="background:#2e6f6e;border:1px solid #3a8080;padding:12px 14px;border-radius:12px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
-            <div class="pw-widget-title" style="color:#1DB954;margin-bottom:0;">${_spotifySvg} Spotify</div>
-            ${isConnected ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
+            <div class="pw-widget-title" style="color:#fff;margin-bottom:0;display:flex;align-items:center;gap:6px;">${_spotifySvg} <span>Spotify</span></div>
+            ${isConnected ? `<button onclick="_disconnectSpotify()" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;transition:all .12s;" title="Disconnect Spotify">Disconnect</button>` : ''}
           </div>
           ${isConnected
-            ? '<div style="font-size:11.5px;color:rgba(255,255,255,.3);margin-top:6px;">Not currently playing anything.</div>'
-            : '<button onclick="_connectSpotify()" style="margin-top:8px;padding:8px 16px;background:#1DB954;color:#fff;border:none;border-radius:8px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Connect Spotify</button>'}
+            ? '<div style="font-size:11.5px;color:rgba(255,255,255,.6);margin-top:6px;">Not currently playing anything.</div>'
+            : '<button onclick="_connectSpotify()" style="margin-top:8px;padding:8px 16px;background:#2e6f6e;color:#fff;border:1px solid #3a8080;border-radius:8px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg> Connect Spotify</button>'}
         </div>`;
       }
     }

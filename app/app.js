@@ -8802,12 +8802,28 @@ function renderOverviewRoom() {
 
   html += '<div class="ov-content">';
 
+  // ── Owner Management Hub ──
+  if (isOwner) {
+    html += `<div style="padding:14px 16px;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));border:1px solid rgba(255,249,62,.15);border-radius:12px;margin-bottom:18px;">
+      <div style="font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+        <span style="font-size:16px;">⚙️</span> Management Hub
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('members');closeModal('modal-overview')">👥 Members</button>
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('roles');closeModal('modal-overview')">🎭 Roles</button>
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('channels');closeModal('modal-overview')">📝 Rooms</button>
+        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('invites');closeModal('modal-overview')">🔗 Invites</button>
+        <button class="btn-a" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:1/-1;" onclick="openBastionSettings('boost');closeModal('modal-overview')">${_boostSvg('13')} Boost Bastion</button>
+      </div>
+    </div>`;
+  }
+
   // ── Edit bar (top of content for admins) ──
   if (canEdit) {
-    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
-      + '<button class="btn-g" style="font-size:10px;padding:4px 10px;display:flex;align-items:center;gap:5px;" onclick="openOverviewEditor()">'
-      + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
-      + ' Customize</button></div>';
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">'
+      + '<button class="btn-g" style="font-size:11px;padding:6px 12px;display:flex;align-items:center;gap:5px;border-radius:8px;" onclick="openOverviewEditor()">'
+      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+      + ' Edit Bastion</button></div>';
   }
 
   // ── Upcoming Events (Guilded-style horizontal cards) ──
@@ -10324,15 +10340,18 @@ async function loadBastionMembersList() {
     const uRoleIds = memberRoles[u]||[];
     const uRoles = roles.filter(r=>uRoleIds.includes(r.id));
     const roleTags = uRoles.map(r=>`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);border:1px solid ${r.color}33;color:${r.color};background:${r.color}15;">${escapeHTML(r.name)}</span>`).join(' ');
+    const repScore = getReputation(b.globalId||b.name, u);
+    const repTier = getRepTier(repScore);
+    const repBadge = repScore > 0 ? `<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);border:1px solid ${repTier.color}33;color:${repTier.color};background:${repTier.color}15;">${repTier.label}</span>` : '';
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:7px;">
       <div style="flex-shrink:0;">${buildAvatarHTML(null,u,36)}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-weight:600;">${escapeHTML(u)} ${u===b.owner?'<span style="font-size:10px;color:var(--accent);">[Owner]</span>':''}</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${roleTags||'<span style="font-size:11px;color:var(--muted);">No roles</span>'}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${roleTags||'<span style="font-size:11px;color:var(--muted);">No roles</span>'} ${repBadge}</div>
       </div>
       ${isOwner?`
-        <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="openAssignRoleUI('${escapeHTML(u)}')">&#x1F3F7; Roles</button>
-        ${u!==CU.username?`<button class="btn-d" style="font-size:12px;padding:5px 10px;" onclick="kickMember('${escapeHTML(u)}')">Kick</button>`:''}`:''}
+        <button class="btn-g" style="font-size:12px;padding:5px 10px;" onclick="openAssignRoleUI('${escapeHTML(u)}')">🎭 Roles</button>
+        ${u!==CU.username?`<button class="btn-d" style="font-size:12px;padding:5px 10px;" onclick="kickMember('${escapeHTML(u)}')">⛔ Kick</button>`:''}`:''}
     </div>`;
   }).join('');
 }

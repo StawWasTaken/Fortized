@@ -3696,13 +3696,8 @@ async function loadDMMessages(username) {
       if (el) {
         const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
-        const dmEchoKey='dm|'+(msg.from||'')+'|'+(msg.text||'');
-        if(msg.from===CU.username && _sentEcho.has(dmEchoKey)){
-          _sentEcho.delete(dmEchoKey);
-        } else {
-          appendMessage(el,msg,'dm',null); _notifyNewMsg('dm-msgs');
-          if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
-        }
+        appendMessage(el,msg,'dm',null); _notifyNewMsg('dm-msgs');
+        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
       }
     });
   } catch(e){console.warn('DM load',e);}
@@ -3722,20 +3717,10 @@ async function sendDM() {
   clearChatInput(inp);
   const rep=replyingTo;
   cancelReply('dm');
-  const dmEchoKey='dm|'+CU.username+'|'+text;
-  _sentEcho.add(dmEchoKey);
-  setTimeout(()=>_sentEcho.delete(dmEchoKey),6000);
-  const msgsEl=document.getElementById('dm-msgs');
   _removeNewMsgBar('dm-msgs');
   const isOutline = _outlineMode;
   _outlineMode = false;
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
-  if(msgsEl){
-    const lastRows=msgsEl.querySelectorAll('.msg-row');
-    const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
-    appendMessage(msgsEl,msg,'dm',lastAuthor);
-    scrollBottom('dm-msgs');
-  }
   try {
     await FortizedSocial.sendDMMessage(CU.username, curDM, text);
     console.debug('[sendDM] Message sent successfully');
@@ -4097,7 +4082,6 @@ async function loadGCMessages(gcId) {
       const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
       if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
       const echoKey = 'gc|'+msg.from+'|'+(msg.text||'');
-      if (msg.from===CU.username && _sentEcho.has(echoKey)) { _sentEcho.delete(echoKey); return; }
       appendMessage(el, msg, 'gc', null);
       _notifyNewMsg('gc-msgs');
       if (msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
@@ -4139,18 +4123,7 @@ async function sendGCMessage() {
     time: now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
     timestamp: now.toISOString(),
   };
-  // Optimistic render
-  const msgsEl = document.getElementById('gc-msgs');
   _removeNewMsgBar('gc-msgs');
-  if (msgsEl) {
-    const echoKey = 'gc|'+CU.username+'|'+text;
-    _sentEcho.add(echoKey);
-    setTimeout(()=>_sentEcho.delete(echoKey), 6000);
-    const rows = msgsEl.querySelectorAll('.msg-row');
-    const lastAuthor = rows.length ? (rows[rows.length-1].dataset.from || null) : null;
-    appendMessage(msgsEl, msg, 'gc', lastAuthor);
-    scrollBottom('gc-msgs');
-  }
   _trackSendMsgQuest();
   try { await msgRef.set(msg); }
   catch { toast('Failed to send message. Check your connection.','error'); }
@@ -4865,14 +4838,9 @@ async function loadChannelMessages(idx) {
       if (el){
         const mid = msg.id != null ? msg.id : (msg.from+msg.timestamp);
         if (el.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) return; // already rendered
-        const echoKey = (msg.from||'') + '|' + (msg.text||'');
-        if (msg.from===CU.username && _sentEcho.has(echoKey)) {
-          _sentEcho.delete(echoKey); // suppress our own echo
-        } else {
-          appendMessage(el,msg,'ch',null);
-          _notifyNewMsg('ch-msgs-'+idx);
-          if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
-        }
+        appendMessage(el,msg,'ch',null);
+        _notifyNewMsg('ch-msgs-'+idx);
+        if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)){const isMention=(msg.text||'').includes('@'+CU.username);playNotifSound(isMention?'mention':'message');}
       }
     });
     // Start polling to enable real-time message sync across sessions
@@ -5044,20 +5012,10 @@ async function sendChannelMsg(idx) {
   _stopChannelTypingBroadcast();
   const rep=replyingTo;
   cancelReply('ch');
-  const echoKey = CU.username + '|' + text;
-  _sentEcho.add(echoKey);
-  setTimeout(() => _sentEcho.delete(echoKey), 5000);
-  const msgsEl=document.getElementById('ch-msgs-'+idx);
   _removeNewMsgBar('ch-msgs-'+idx);
   const isOutline = _outlineMode;
   _outlineMode = false;
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
-  if(msgsEl){
-    const lastRows=msgsEl.querySelectorAll('.msg-row');
-    const lastAuthor=lastRows.length?lastRows[lastRows.length-1].dataset.from:null;
-    appendMessage(msgsEl,msg,'ch',lastAuthor);
-    scrollBottom('ch-msgs-'+idx);
-  }
   // Award message reputation
   awardMessageRep(b.globalId||b.name, CU.username);
   _trackSendMsgQuest();
@@ -5065,9 +5023,9 @@ async function sendChannelMsg(idx) {
     await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text);
     FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: msg });
   } catch { toast('Failed to send message. Check your connection.','error'); }
-  // Joyster: react to messages & detect emoji spam
   // Bot command handling — trigger deployed bots with ! prefix
   if (text.startsWith('!')) {
+    const msgsEl=document.getElementById('ch-msgs-'+idx);
     _processBotCommands(text, b, ch, idx, msgsEl);
   }
 }

@@ -2599,13 +2599,59 @@ function renderHomePanel() {
   _startJoysterBubbles();
   if (_joysterAICache.length < 2) _prefetchJoysterAI();
 
-  // DYK strip
+  // DYK strip with rotating content
   const dykEl = document.getElementById('home-dyk-strip');
-  if (dykEl) dykEl.innerHTML = getDYKHtml();
+  if (dykEl) {
+    dykEl.innerHTML = getDYKHtml();
+    // Auto-rotate DYK every 10s
+    if (!window._dykRotateTimer) {
+      window._dykRotateTimer = setInterval(() => {
+        const el = document.getElementById('home-dyk-strip');
+        if (el && el.offsetParent) { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => { el.innerHTML = getDYKHtml(); el.style.opacity = '1'; }, 300); }
+      }, 10000);
+    }
+  }
 
   // Realm data
   const bastions = CU?.bastions||[];
   const friends0 = CU?.friends||[];
+
+  // ── Micro-status strip (live stats under hero) ──
+  const _hss = document.getElementById('hero-status-strip');
+  if (_hss) {
+    const onlineFriends = friends0.length; // will be updated async
+    const activeBastions = bastions.length;
+    _hss.innerHTML = `<span class="hss-item"><span class="hss-dot" style="background:#3ecf6e;box-shadow:0 0 6px rgba(62,207,110,.4);"></span><span id="hss-online">0</span> friends online</span>
+      <span class="hss-sep"></span>
+      <span class="hss-item"><span class="hss-dot" style="background:#a78bfa;"></span>${activeBastions} bastion${activeBastions!==1?'s':''}</span>`;
+    // Async update online count
+    if (friends0.length) {
+      FortizedSocial.queryPresence(friends0).then(p => {
+        if (!p) return;
+        const online = Object.values(p).filter(v => v.status === 'online' || v.status === 'away' || v.status === 'dnd').length;
+        const el = document.getElementById('hss-online');
+        if (el) el.textContent = online;
+      }).catch(()=>{});
+    }
+  }
+
+  // ── Quick action strip (continue where you left off) ──
+  const _qas = document.getElementById('home-quick-actions');
+  if (_qas) {
+    let quickHtml = '<div class="home-quick-strip">';
+    // Last bastion
+    if (bastions.length) {
+      const lb = bastions[0];
+      quickHtml += `<button class="hqs-btn" onclick="openBastion(0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 22V8l9-6 9 6v14"/><path d="M9 22V12h6v10"/></svg>${escapeHTML(lb.name||'Bastion')}</button>`;
+    }
+    // Last DM
+    if (friends0.length) {
+      const lastDM = friends0[0];
+      quickHtml += `<button class="hqs-btn" onclick="openDMView('${escapeHTML(lastDM)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>${escapeHTML(lastDM)}</button>`;
+    }
+    quickHtml += '</div>';
+    _qas.innerHTML = quickHtml;
+  }
 
   // Realm Bastions — horizontal scroll cards
   const realmB = document.getElementById('realm-bastions');
@@ -26924,9 +26970,21 @@ const DYK_FACTS = [
   'The Atelier economy runs entirely on Onyx — no real money is required.',
   'You can earn Onyx every day by claiming your Daily Reward in the Atelier.',
 ];
+const DYK_TIPS = [
+  'Hold Shift + Enter to add a new line without sending your message.',
+  'Double-click a message to edit it quickly.',
+  'You can drag bastions in the sidebar to reorder them.',
+  'Use /giphy in chat to search and send GIFs instantly.',
+  'Right-click anything for quick actions via the context menu.',
+];
 function getDYKHtml() {
-  const fact = DYK_FACTS[Math.floor(Math.random()*DYK_FACTS.length)];
-  return `<div class="realm-lore"><span class="rl-tag">Realm Lore</span><span class="rl-text">${escapeHTML(fact)}</span></div>`;
+  // Rotate between lore, tips, and announcements
+  const types = [{tag:'Realm Lore',items:DYK_FACTS,icon:'🧠'},{tag:'Pro Tip',items:DYK_TIPS,icon:'⚡'}];
+  // Include announcement if one exists
+  if (_globalSettings?.announcement) types.push({tag:'Announcement',items:[_globalSettings.announcement],icon:'📢'});
+  const t = types[Math.floor(Math.random()*types.length)];
+  const text = t.items[Math.floor(Math.random()*t.items.length)];
+  return `<div class="realm-lore" style="cursor:default;"><span class="rl-tag">${t.icon} ${t.tag}</span><span class="rl-text">${escapeHTML(text)}</span></div>`;
 }
 
 // ── Page loading skeleton helper ────────────────────

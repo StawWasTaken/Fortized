@@ -1901,7 +1901,7 @@ const FortizedSocial = (() => {
     adminGetScheduledActions, adminSaveScheduledActions,
     adminPushNsfwAIFeedback, adminSaveNsfwSafeHash,
     adminSetSignal, adminGetSignal,
-    adminPushFeedback,
+    adminPushFeedback, _adminKVGet,
     adminInvalidateCache,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,

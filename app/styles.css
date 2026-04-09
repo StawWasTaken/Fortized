@@ -1581,6 +1581,8 @@ body.is-desktop-app .sys-announce-bar{padding-right:140px;}
 .ftz-feedback-toast .fb-btn.fb-negative:hover{background:rgba(248,113,113,.12);}
 .ftz-feedback-toast .fb-dismiss{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .1s;}
 .ftz-feedback-toast .fb-dismiss:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);}
+.ftz-feedback-toast .fb-comment-wrap{margin-top:8px;animation:fadeIn .2s ease;}
+.ftz-feedback-toast .fb-comment-input{transition:border-color .15s;}.ftz-feedback-toast .fb-comment-input:focus{border-color:rgba(255,249,62,.25);}
 @keyframes callPulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.4);opacity:0}}
 @keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 @keyframes ctxIn{from{opacity:0;transform:scale(.96) translateY(-4px);}to{opacity:1;transform:none;}}

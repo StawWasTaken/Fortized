@@ -15473,15 +15473,24 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   }
   else if (tab === '_support_tickets') {
     const isSA = isSuperAdmin();
-    // Load feedback data from Supabase
+    // Load feedback data from Supabase (not Firebase)
     let feedbackData = [];
     try {
-      const fbSnap = await firebase.database().ref('feedback').limitToLast(50).get();
-      if (fbSnap.exists()) { fbSnap.forEach(c => { const v = c.val(); v._key = c.key; feedbackData.push(v); }); feedbackData.reverse(); }
+      const fbList = await FortizedSocial.adminPushFeedback ? ((await FortizedSocial._adminKVGet?.('feedback')) || []) : [];
+      // adminPushFeedback stores in admin_kv key 'feedback'
+      feedbackData = Array.isArray(fbList) ? fbList.slice().reverse() : [];
     } catch (e) { console.debug('[Admin] feedback fetch failed', e); }
+    // Fallback: also try Firebase for legacy data
+    if (!feedbackData.length) {
+      try {
+        const fbSnap = await firebase.database().ref('feedback').limitToLast(50).get();
+        if (fbSnap.exists()) { fbSnap.forEach(c => { const v = c.val(); v._key = c.key; feedbackData.push(v); }); feedbackData.reverse(); }
+      } catch (e) { console.debug('[Admin] Firebase feedback fallback failed', e); }
+    }
     const posCount = feedbackData.filter(f=>f.rating==='positive').length;
     const neuCount = feedbackData.filter(f=>f.rating==='neutral').length;
     const negCount = feedbackData.filter(f=>f.rating==='negative').length;
+    const withComments = feedbackData.filter(f=>f.comment).length;
     const total = feedbackData.length || 1;
     main.innerHTML = `<div style="padding:24px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
@@ -15490,19 +15499,27 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:3px;">${isSA ? 'All tickets & user feedback' : 'Non-sensitive tickets only'}</div>
         </div>
         <div style="display:flex;gap:8px;">
+          <select id="_fb-rating-filter" onchange="_filterFeedbackList()" style="background:var(--channel,#15171e);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;">
+            <option value="all">All Feedback</option>
+            <option value="positive">Positive</option>
+            <option value="neutral">Neutral</option>
+            <option value="negative">Negative</option>
+            <option value="comments">With Comments</option>
+          </select>
           <select id="_ticket-filter" onchange="_filterTickets()" style="background:var(--channel,#15171e);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;">
-            <option value="all">All</option>
+            <option value="all">All Tickets</option>
             <option value="open">Open</option>
             <option value="closed">Closed</option>
           </select>
         </div>
       </div>
       <!-- Feedback Summary -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
-        <div class="hq-stat" style="--stat-accent:#60a5fa;"><div class="hq-stat-val" style="color:var(--blue);font-size:20px;">${feedbackData.length}</div><div class="hq-stat-label">Total Feedback</div></div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;">
+        <div class="hq-stat" style="--stat-accent:#60a5fa;"><div class="hq-stat-val" style="color:var(--blue);font-size:20px;">${feedbackData.length}</div><div class="hq-stat-label">Total</div></div>
         <div class="hq-stat" style="--stat-accent:#3ecf6e;"><div class="hq-stat-val" style="color:var(--green);font-size:20px;">${posCount}</div><div class="hq-stat-label">Positive</div></div>
         <div class="hq-stat" style="--stat-accent:#f59e0b;"><div class="hq-stat-val" style="color:#f59e0b;font-size:20px;">${neuCount}</div><div class="hq-stat-label">Neutral</div></div>
         <div class="hq-stat" style="--stat-accent:#f87171;"><div class="hq-stat-val" style="color:var(--red);font-size:20px;">${negCount}</div><div class="hq-stat-label">Negative</div></div>
+        <div class="hq-stat" style="--stat-accent:#a78bfa;"><div class="hq-stat-val" style="color:#a78bfa;font-size:20px;">${withComments}</div><div class="hq-stat-label">With Comments</div></div>
       </div>
       <!-- Satisfaction Bar -->
       <div style="margin-bottom:20px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:12px;">
@@ -15521,22 +15538,28 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       <!-- Recent Feedback -->
       ${feedbackData.length ? `<div style="margin-bottom:20px;">
         <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Recent Feedback</div>
-        <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-height:200px;overflow-y:auto;">
-          ${feedbackData.slice(0,20).map(f => {
+        <div id="_fb-list" style="background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-height:320px;overflow-y:auto;">
+          ${feedbackData.slice(0,50).map(f => {
             const rColor = f.rating==='positive'?'#3ecf6e':f.rating==='negative'?'#f87171':'#f59e0b';
             const rIcon = f.rating==='positive'?'👍':f.rating==='negative'?'👎':'😐';
-            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
-              <span style="font-size:14px;">${rIcon}</span>
-              <div style="flex:1;min-width:0;">
-                <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);">${escapeHTML(f.user||'?')}</span>
-                <span style="font-size:11px;color:var(--muted);margin-left:6px;">${escapeHTML(f.action||'')}</span>
+            const typeBadge = f.type === 'quick' ? '<span style="font-size:9px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);color:var(--accent);padding:1px 5px;border-radius:4px;margin-left:4px;">Quick</span>' : '';
+            return `<div class="fb-list-row" data-rating="${f.rating||''}" data-has-comment="${f.comment?'1':'0'}" style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:14px;">${rIcon}</span>
+                <div style="flex:1;min-width:0;">
+                  <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);">${escapeHTML(f.user||'?')}</span>
+                  <span style="font-size:11px;color:var(--muted);margin-left:6px;">${escapeHTML(f.action||'')}</span>
+                  ${typeBadge}
+                  ${f.context?`<span style="font-size:9px;color:rgba(255,255,255,.2);margin-left:4px;">${escapeHTML(f.context)}</span>`:''}
+                </div>
+                <span style="font-size:10px;color:${rColor};font-weight:700;text-transform:uppercase;">${f.rating||''}</span>
+                <span style="font-size:10px;color:var(--muted);">${f.ts?formatTimeAgo(f.ts):''}</span>
               </div>
-              <span style="font-size:10px;color:${rColor};font-weight:700;text-transform:uppercase;">${f.rating||''}</span>
-              <span style="font-size:10px;color:var(--muted);">${f.ts?formatTimeAgo(f.ts):''}</span>
+              ${f.comment?`<div style="margin-top:6px;padding:6px 10px;background:rgba(255,255,255,.03);border-radius:8px;border-left:2px solid ${rColor};margin-left:24px;"><span style="font-size:11px;color:rgba(255,255,255,.5);">${escapeHTML(f.comment)}</span></div>`:''}
             </div>`;
           }).join('')}
         </div>
-      </div>` : ''}
+      </div>` : '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.3);font-size:13px;">No feedback yet</div>'}
       <!-- Support Tickets -->
       <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Support Tickets</div>
       <div id="admin-tickets-list"><div style="text-align:center;padding:40px;color:rgba(255,255,255,.3);">Loading tickets…</div></div>
@@ -16031,6 +16054,15 @@ async function _loadAdminSupportTickets() {
   }
 }
 
+function _filterFeedbackList() {
+  const filter = document.getElementById('_fb-rating-filter')?.value || 'all';
+  document.querySelectorAll('.fb-list-row').forEach(row => {
+    if (filter === 'all') { row.style.display = ''; return; }
+    if (filter === 'comments') { row.style.display = row.dataset.hasComment === '1' ? '' : 'none'; return; }
+    row.style.display = row.dataset.rating === filter ? '' : 'none';
+  });
+}
+
 function _filterTickets() {
   _renderTickets();
 }
@@ -16438,22 +16470,33 @@ function _dismissAnnouncement() {
 // Shows a non-intrusive feedback toast for platform actions.
 // Not every action triggers it — controlled by probability + cooldown.
 let _lastFeedbackTime = 0;
-const _FEEDBACK_COOLDOWN = 60000; // 1 min cooldown between feedback prompts
-const _FEEDBACK_CHANCE = 0.35; // 35% chance per eligible action
+const _FEEDBACK_COOLDOWN = 900000; // 15 min cooldown between feedback prompts
+const _FEEDBACK_CHANCE = 0.3; // 30% chance per eligible action
+const _FEEDBACK_MAX_PER_DAY = 3;
+function _getFeedbackCountToday() {
+  try { const d = JSON.parse(localStorage.getItem('ftz_fb_daily')||'{}'); if (d.date === new Date().toDateString()) return d.count || 0; } catch {} return 0;
+}
+function _incFeedbackCountToday() {
+  const today = new Date().toDateString();
+  try { const d = JSON.parse(localStorage.getItem('ftz_fb_daily')||'{}'); const count = (d.date === today ? (d.count||0) : 0) + 1; localStorage.setItem('ftz_fb_daily', JSON.stringify({date:today,count})); } catch {}
+}
 
 function showFeedbackToast(actionLabel, actionType, meta) {
   const now = Date.now();
-  // Respect cooldown
   if (now - _lastFeedbackTime < _FEEDBACK_COOLDOWN) return;
-  // Probability gate
+  if (_getFeedbackCountToday() >= _FEEDBACK_MAX_PER_DAY) return;
   if (Math.random() > _FEEDBACK_CHANCE) return;
   _lastFeedbackTime = now;
 
-  // Remove any existing feedback toast
   document.querySelector('.ftz-feedback-toast')?.remove();
+
+  // Determine context from current view
+  const context = curDM ? 'dm' : (typeof curGC !== 'undefined' && curGC) ? 'gc' : curBastion !== null ? 'bastion' : 'general';
 
   const el = document.createElement('div');
   el.className = 'ftz-feedback-toast';
+  el.dataset.actionType = actionType;
+  el.dataset.context = context;
   el.innerHTML = `
     <button class="fb-dismiss" onclick="this.parentElement.classList.remove('visible');setTimeout(()=>this.parentElement.remove(),300);">&times;</button>
     <div class="fb-header">
@@ -16462,35 +16505,59 @@ function showFeedbackToast(actionLabel, actionType, meta) {
     </div>
     <div class="fb-sub">How was your experience with <strong style="color:rgba(255,255,255,.7);">${escapeHTML(actionLabel)}</strong>?</div>
     <div class="fb-actions">
-      <button class="fb-btn fb-positive" onclick="_submitFeedback('positive','${escapeHTML(actionType)}',this)">Great</button>
-      <button class="fb-btn" onclick="_submitFeedback('neutral','${escapeHTML(actionType)}',this)">Okay</button>
-      <button class="fb-btn fb-negative" onclick="_submitFeedback('negative','${escapeHTML(actionType)}',this)">Not great</button>
+      <button class="fb-btn fb-positive" onclick="_selectFeedbackRating('positive',this)">Great</button>
+      <button class="fb-btn" onclick="_selectFeedbackRating('neutral',this)">Okay</button>
+      <button class="fb-btn fb-negative" onclick="_selectFeedbackRating('negative',this)">Not great</button>
+    </div>
+    <div class="fb-comment-wrap" style="display:none;">
+      <div style="font-size:10.5px;color:rgba(255,255,255,.35);margin-bottom:6px;">Want to add more details? (optional)</div>
+      <textarea class="fb-comment-input" placeholder="Tell us more..." maxlength="500" rows="2" style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;padding:8px 10px;font-family:inherit;font-size:12px;resize:none;outline:none;box-sizing:border-box;"></textarea>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <button class="fb-btn" onclick="_submitFeedbackWithComment(this)" style="flex:1;background:rgba(255,249,62,.08);border-color:rgba(255,249,62,.2);color:var(--accent);">Send</button>
+        <button class="fb-btn" onclick="_submitFeedbackWithComment(this,true)" style="flex:1;">Skip</button>
+      </div>
     </div>`;
   document.body.appendChild(el);
-  // Animate in after a brief delay
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
-  // Auto-dismiss after 15s
-  setTimeout(() => { if (el.parentElement) { el.classList.remove('visible'); setTimeout(()=>el.remove(),300); } }, 15000);
+  setTimeout(() => { if (el.parentElement && !el.dataset.rated) { el.classList.remove('visible'); setTimeout(()=>el.remove(),300); } }, 10000);
 }
 
-function _submitFeedback(rating, actionType, btn) {
+function _selectFeedbackRating(rating, btn) {
   const toast_el = btn.closest('.ftz-feedback-toast');
-  // Save to Firebase
+  if (!toast_el) return;
+  toast_el.dataset.rated = rating;
+  // Hide rating buttons, show comment input
+  const actions = toast_el.querySelector('.fb-actions'); if (actions) actions.style.display = 'none';
+  const sub = toast_el.querySelector('.fb-sub'); if (sub) sub.innerHTML = rating === 'positive' ? 'Glad to hear! Any details?' : rating === 'negative' ? 'Sorry about that. What went wrong?' : 'Thanks! Anything to add?';
+  const commentWrap = toast_el.querySelector('.fb-comment-wrap'); if (commentWrap) commentWrap.style.display = '';
+  const input = toast_el.querySelector('.fb-comment-input'); if (input) setTimeout(() => input.focus(), 100);
+}
+
+function _submitFeedbackWithComment(btn, skip) {
+  const toast_el = btn.closest('.ftz-feedback-toast');
+  if (!toast_el) return;
+  const rating = toast_el.dataset.rated || 'neutral';
+  const actionType = toast_el.dataset.actionType || '';
+  const context = toast_el.dataset.context || 'general';
+  const comment = skip ? '' : (toast_el.querySelector('.fb-comment-input')?.value?.trim() || '');
+
+  _incFeedbackCountToday();
   try {
     const fb = {
       user: CU?.username || 'unknown',
       action: actionType,
       rating,
-      ts: new Date().toISOString()
+      ts: new Date().toISOString(),
+      type: 'quick',
+      context,
+      ...(comment ? { comment } : {}),
     };
     FortizedSocial.adminPushFeedback(fb);
   } catch(e) { console.warn('[feedback]', e); }
-  // Animate out
-  if (toast_el) {
-    const _fbSub = toast_el.querySelector('.fb-sub'); if (_fbSub) _fbSub.textContent = 'Thanks for your feedback!';
-    const _fbActs = toast_el.querySelector('.fb-actions'); if (_fbActs) _fbActs.style.display = 'none';
-    setTimeout(() => { toast_el.classList.remove('visible'); setTimeout(()=>toast_el.remove(),300); }, 1500);
-  }
+
+  const _fbSub = toast_el.querySelector('.fb-sub'); if (_fbSub) _fbSub.textContent = 'Thanks for your feedback!';
+  const commentWrap = toast_el.querySelector('.fb-comment-wrap'); if (commentWrap) commentWrap.style.display = 'none';
+  setTimeout(() => { toast_el.classList.remove('visible'); setTimeout(()=>toast_el.remove(),300); }, 1200);
 }
 
 // Poll for staff changes so sidebar button appears/disappears dynamically

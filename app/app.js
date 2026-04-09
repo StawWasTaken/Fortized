@@ -14700,77 +14700,24 @@ function _teardownAdminLiveSync() {
 function _renderAdminNav(active) {
   const nav = document.getElementById('adm-nav'); if (!nav) return;
   const role = getStaffRole(CU.username);
-  const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
-  const pending = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
-  const nsfwQueue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
-  const tickets = JSON.parse(localStorage.getItem('ftz_support_tickets')||'{}');
-  const openTickets = Object.values(tickets).filter(t=>t.status==='open').length;
-  const modBadge = pending + nsfwQueue.length;
-  // SVG icons for admin nav
   const _admSvg = {
     dashboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
-    reports:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
-    bans:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
-    suspensions:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
-    nsfw:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>',
-    search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
-    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    economy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
-    bastions:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V8l9-6 9 6v14"/><path d="M9 22V12h6v10"/><path d="M1 22h22"/></svg>',
-    audit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
-    settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-    staff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-    tickets:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
-    broadcast:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.69 14a6.9 6.9 0 0 0 .31-2 6.9 6.9 0 0 0-.31-2"/><path d="M22.82 16a10 10 0 0 0 0-8"/><path d="M1 12s4-8 11-8"/><circle cx="5" cy="12" r="2"/><line x1="5" y1="10" x2="5" y2="2"/></svg>',
-    analytics:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
-    backup:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
-    scheduled:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="14 14 12 12 10 14"/></svg>',
-    network:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>',
     moderation:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>',
-    activity:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
-    system:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-    support:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    management:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    feedback:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
   };
-  // Redesigned 7-tab structure: Overview, Moderation, Members, Management, Activity, System, Support
-  const secs = [
-    {label:'OVERVIEW', items:[{id:'dashboard',svg:_admSvg.dashboard,label:'Overview'}]},
-    {label:'MODERATION', items:[
-      {id:'reports',svg:_admSvg.reports,label:'Reports',badge:pending},
-      {id:'nsfw_queue',svg:_admSvg.nsfw,label:'Content Review',badge:nsfwQueue.length},
-      ...(role!=='moderator'?[{id:'bans',svg:_admSvg.bans,label:'Banned Users'},{id:'suspensions',svg:_admSvg.suspensions,label:'Suspensions'}]:[]),
-    ]},
-    {label:'MEMBERS', items:[
-      {id:'users',svg:_admSvg.search,label:'Member Lookup'},
-      ...(role!=='moderator'?[{id:'all_users',svg:_admSvg.users,label:'Member List'}]:[]),
-    ]},
-    ...(role!=='moderator'?[{label:'MANAGEMENT', items:[
-      {id:'bastions',svg:_admSvg.bastions,label:'Bastions'},
-      ...(isAdmin()?[{id:'economy',svg:_admSvg.economy,label:'Economy'}]:[]),
-      ...(isSuperAdmin()?[{id:'broadcast',svg:_admSvg.broadcast,label:'Broadcast'}]:[]),
-      ...(isAdmin()?[{id:'scheduled_actions',svg:_admSvg.scheduled,label:'Scheduled Actions'}]:[]),
-    ]}]:[]),
-    ...(role!=='moderator'?[{label:'ACTIVITY', items:[
-      ...(isAdmin()?[{id:'audit',svg:_admSvg.audit,label:'Activity Log'}]:[]),
-      ...(isAdmin()?[{id:'network_monitor',svg:_admSvg.network,label:'Network Monitor'}]:[]),
-      ...(isSuperAdmin()?[{id:'analytics',svg:_admSvg.analytics,label:'Analytics'}]:[]),
-    ]}]:[]),
-    ...(isSuperAdmin()?[{label:'SYSTEM', items:[
-      {id:'backup_restore',svg:_admSvg.backup,label:'Backup & Restore'},
-      {id:'settings',svg:_admSvg.settings,label:'Configuration'},
-      {id:'staff',svg:_admSvg.staff,label:'Staff'},
-    ]}]:[]),
-    {label:'SUPPORT', items:[
-      ...(role!=='moderator'?[{id:'support_tickets',svg:_admSvg.tickets,label:'Inbox & Feedback',badge:openTickets}]:[]),
-    ]},
+  // Simplified 5-tab structure
+  const tabs = [
+    {id:'dashboard', svg:_admSvg.dashboard, label:'Overview'},
+    {id:'moderation', svg:_admSvg.moderation, label:'Moderation'},
+    {id:'members', svg:_admSvg.users, label:'Members'},
+    ...(role!=='moderator'?[{id:'platform', svg:_admSvg.management, label:'Platform Management'}]:[]),
+    {id:'feedback', svg:_admSvg.feedback, label:'Feedback'},
   ];
-  // Filter out empty sections
-  const filteredSecs = secs.filter(s => s.items.length > 0);
-  nav.innerHTML = filteredSecs.map(s=>`
-    <div class="adm-sec-label">${s.label}</div>
-    ${s.items.map(t=>`<div id="adm-tab-${t.id}" class="adm-tab${active===t.id?' active':''}" onclick="_loadAdminPage('${t.id}')">
-      ${t.svg}<span>${t.label}</span>
-      ${t.badge&&t.badge>0?`<span class="adm-badge">${t.badge}</span>`:''}
-    </div>`).join('')}`).join('');
+  nav.innerHTML = tabs.map(t=>`<div id="adm-tab-${t.id}" class="adm-tab${active===t.id?' active':''}" onclick="_loadAdminPage('${t.id}')">
+    ${t.svg}<span>${t.label}</span>
+  </div>`).join('');
 }
 
 function renderAdminPanel() { _renderAdminNav('dashboard'); _loadAdminPage('dashboard'); }
@@ -14779,20 +14726,29 @@ async function loadAdminTab(tab) { _loadAdminPage(tab); }
 async function _loadAdminPage(tab, _isAutoRefresh) {
   if (!_isAutoRefresh && _adminAutoRefresh) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; }
   _renderAdminNav(tab); adminTab = tab;
-  const main = document.getElementById('adm-content'); if (!main) return;
-  if (!_isAutoRefresh) main.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,.3);">Loading…</div>';
-  // Auto-refresh reports, nsfw_queue and support_tickets every 5 seconds
-  if (!_isAutoRefresh && (tab === 'reports' || tab === 'nsfw_queue' || tab === 'support_tickets')) {
+  // Legacy tabs (prefixed with _) render into sub-content if available; top-level tabs use main content
+  const _isLegacySub = tab.startsWith('_');
+  let main = (_isLegacySub && document.getElementById('adm-sub-content')) || document.getElementById('adm-content'); if (!main) return;
+  if (!_isAutoRefresh && !_isLegacySub) main.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,.3);">Loading…</div>';
+  // Auto-refresh moderation and feedback tabs
+  if (!_isAutoRefresh && (tab === 'moderation' || tab === 'feedback')) {
     _adminAutoRefresh = setInterval(() => {
       if (adminTab !== tab) { clearInterval(_adminAutoRefresh); _adminAutoRefresh = null; return; }
       _loadAdminPage(tab, true);
     }, 30000);
   }
 
+  // ── Consolidated tab routing (new tabs map to old rendering) ──
+  if (tab === 'moderation') { await _loadAdminModeration(main); return; }
+  if (tab === 'members') { await _loadAdminMembers(main); return; }
+  if (tab === 'platform') { await _loadAdminPlatform(main); return; }
+  if (tab === 'feedback') { await _loadAdminFeedback(main); return; }
+
+  // ── OVERVIEW (dashboard) ──
   if (tab === 'dashboard') {
-    const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
-    const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
-    const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
+    const reps = await FortizedSocial.adminGetReports().catch(()=>[]);
+    const bans = await FortizedSocial.adminGetBans().catch(()=>[]);
+    const staff = await FortizedSocial.adminGetStaff().catch(()=>({admins:[],moderators:[]}));
     const totalStaff = SUPER_ADMINS.length + (staff.admins||[]).length + (staff.moderators||[]).length;
     let totalUsers = '–', onlineCount = 0, radianceCount = 0, awayCount = 0, dndCount = 0, newestUsers = [], topOnyx = [];
     try {
@@ -14807,9 +14763,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       dndCount = usersList.filter(u => u.status === 'dnd').length;
     } catch (e) { console.warn('[Admin] stats fetch failed', e); }
     const pending = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
-    const nsfwQueue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
-    const auditLog = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
-    const tickets = JSON.parse(localStorage.getItem('ftz_support_tickets')||'{}');
+    const nsfwQueue = await FortizedSocial.adminGetNsfwQueue().catch(()=>[]);
+    const auditLog = await FortizedSocial.adminGetAuditLog().catch(()=>[]);
+    const tickets = await FortizedSocial.adminGetSupportTickets().catch(()=>({}));
     const openTickets = Object.values(tickets).filter(t=>t.status==='open').length;
 
     // Threat level calculation
@@ -14933,7 +14889,13 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>
     </div>`;
   }
-  else if (tab === 'reports') {
+  // ── Old tab IDs redirect to new consolidated tabs ──
+  else if (tab === 'reports' || tab === 'bans' || tab === 'suspensions' || tab === 'nsfw_queue') { await _loadAdminModeration(main, tab); return; }
+  else if (tab === 'users' || tab === 'all_users') { await _loadAdminMembers(main, tab); return; }
+  else if (tab === 'bastions' || tab === 'economy' || tab === 'broadcast' || tab === 'scheduled_actions' || tab === 'audit' || tab === 'network_monitor' || tab === 'analytics' || tab === 'backup_restore' || tab === 'settings' || tab === 'staff') { await _loadAdminPlatform(main, tab); return; }
+  else if (tab === 'support_tickets') { await _loadAdminFeedback(main, tab); return; }
+  // ── Legacy tab rendering (called by consolidated tabs) ──
+  else if (tab === '_reports') {
     const reps = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
     const pendingReps = reps.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned');
     const resolvedReps = reps.filter(r=>r.status==='resolved'||r.status==='dismissed'||r.status==='warned');
@@ -15132,7 +15094,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>`}
     </div>`;
   }
-  else if (tab === 'bans') {
+  else if (tab === '_bans') {
     const bans = JSON.parse(localStorage.getItem('ftz_bans')||'[]');
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
@@ -15150,7 +15112,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>`).join('')}</div>`:'<div class="ftz-empty" style="padding:30px 20px;"><div class="ftz-empty-text">No bans</div></div>'}
     </div>`;
   }
-  else if (tab === 'suspensions') {
+  else if (tab === '_suspensions') {
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
         <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Suspensions</div>
@@ -15160,7 +15122,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     </div>`;
     _loadAdminSuspensions();
   }
-  else if (tab === 'users') {
+  else if (tab === '_users') {
     main.innerHTML = `<div style="padding:24px 28px;">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
         <div>
@@ -15178,7 +15140,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       <div id="admin-user-result"></div>
     </div>`;
   }
-  else if (tab === 'all_users') {
+  else if (tab === '_all_users') {
     main.innerHTML = `<div style="padding:24px 28px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div>
@@ -15221,7 +15183,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     </div>`;
     await loadAllUsers(false);
   }
-  else if (tab === 'economy') {
+  else if (tab === '_economy') {
     const trialLinks = JSON.parse(localStorage.getItem('ftz_trial_links')||'[]');
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="font-family:var(--font-display);font-size:21px;font-weight:800;margin-bottom:20px;">Economy</div>
@@ -15257,7 +15219,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>`:''}
     </div>`;
   }
-  else if (tab === 'bastions') {
+  else if (tab === '_bastions') {
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div style="font-family:var(--font-display);font-size:21px;font-weight:800;">Bastions</div>
@@ -15268,7 +15230,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     </div>`;
     loadAdminBastions(false);
   }
-  else if (tab === 'audit') {
+  else if (tab === '_audit') {
     const allLog = JSON.parse(localStorage.getItem('ftz_audit_log')||'[]');
     const log = allLog.slice(0,200);
     const actionTypes = [...new Set(allLog.map(e=>e.action).filter(Boolean))].sort();
@@ -15295,7 +15257,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>
     </div>`;
   }
-  else if (tab === 'nsfw_queue') {
+  else if (tab === '_nsfw_queue') {
     const queue = JSON.parse(localStorage.getItem('ftz_nsfw_queue')||'[]');
     main.innerHTML = `<div style="padding:28px 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
@@ -15369,7 +15331,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>`}
     </div>`;
   }
-  else if (tab === 'settings' && isSuperAdmin()) {
+  else if (tab === '_settings' && isSuperAdmin()) {
     // Always fetch latest from Supabase for settings page
     try {
       const gs2 = await FortizedSocial.adminGetGlobalSettings();
@@ -15441,7 +15403,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>
     </div>`;
   }
-  else if (tab === 'staff' && isSuperAdmin()) {
+  else if (tab === '_staff' && isSuperAdmin()) {
     const staff = JSON.parse(localStorage.getItem('ftz_staff')||'{}');
     const admins = staff.admins || [];
     const moderators = staff.moderators || [];
@@ -15504,9 +15466,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       </div>
     </div>`;
   }
-  else if (tab === 'support_tickets') {
+  else if (tab === '_support_tickets') {
     const isSA = isSuperAdmin();
-    // Load feedback data from Firebase
+    // Load feedback data from Supabase
     let feedbackData = [];
     try {
       const fbSnap = await firebase.database().ref('feedback').limitToLast(50).get();
@@ -15578,7 +15540,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   }
   // ── NEW ADMIN TOOLS ──
 
-  else if (tab === 'broadcast') {
+  else if (tab === '_broadcast') {
     if (!isSuperAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
     // Fetch latest from Supabase to ensure we have current state
     let currentMsg = '', statusMsg = '';
@@ -15676,7 +15638,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     });
   }
 
-  else if (tab === 'analytics') {
+  else if (tab === '_analytics') {
     if (!isSuperAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
     let totalUsers=0,onlineNow=0,totalBastions=0,totalMsgs='–',radianceCount=0,topBastions=[];
     try {
@@ -15725,7 +15687,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     </div>`;
   }
 
-  else if (tab === 'backup_restore') {
+  else if (tab === '_backup_restore') {
     if (!isSuperAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
     main.innerHTML = `<div style="padding:var(--space-xl);">
       <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Backup & Restore</div>
@@ -15753,7 +15715,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     </div>`;
   }
 
-  else if (tab === 'scheduled_actions') {
+  else if (tab === '_scheduled_actions') {
     if (!isAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
     let scheduledItems = [];
     try { const acts = await FortizedSocial.adminGetScheduledActions(); scheduledItems = acts.map((v,i)=>({...v,_key:i})); } catch (e) { console.debug('[Admin] scheduled actions fetch failed', e); }
@@ -15781,7 +15743,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     </div>`;
   }
 
-  else if (tab === 'network_monitor') {
+  else if (tab === '_network_monitor') {
     if (!isAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
     let activeConnections = 0, dbSize = '–';
     try {
@@ -15817,6 +15779,90 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   }
 
   else main.innerHTML = '<div style="padding:32px;text-align:center;color:rgba(255,255,255,.3);">Unknown tab</div>';
+}
+
+// ── Consolidated Admin Tab Loaders ──────────────────────
+// Each renders a sub-nav bar + delegates to legacy tab rendering
+let _adminSubTab = {};
+
+function _adminSubNav(tabs, activeId, parentTab) {
+  return `<div style="display:flex;gap:6px;padding:0 var(--space-xl);margin-bottom:var(--space-lg);flex-wrap:wrap;">${tabs.map(t =>
+    `<button onclick="_adminSubTab['${parentTab}']='${t.id}';_loadAdminPage('_${t.id}')" style="padding:6px 14px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;border:1px solid ${activeId===t.id?'rgba(255,249,62,.25)':'rgba(255,255,255,.06)'};background:${activeId===t.id?'rgba(255,249,62,.08)':'rgba(255,255,255,.03)'};color:${activeId===t.id?'var(--accent)':'rgba(255,255,255,.45)'};">${t.label}${t.badge?` <span style="background:rgba(248,113,113,.2);color:#f87171;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;">${t.badge}</span>`:''}</button>`
+  ).join('')}</div>`;
+}
+
+async function _loadAdminModeration(main, subTab) {
+  const role = getStaffRole(CU.username);
+  const active = subTab || _adminSubTab.moderation || 'reports';
+  _adminSubTab.moderation = active;
+  const reports = await FortizedSocial.adminGetReports().catch(()=>[]);
+  const pending = reports.filter(r=>r.status!=='resolved'&&r.status!=='dismissed'&&r.status!=='warned').length;
+  const nsfwQueue = await FortizedSocial.adminGetNsfwQueue().catch(()=>[]);
+  const tabs = [
+    {id:'reports', label:'Reports', badge:pending},
+    {id:'nsfw_queue', label:'Content Review', badge:nsfwQueue.length},
+    ...(role!=='moderator'?[{id:'bans', label:'Bans'},{id:'suspensions', label:'Suspensions'}]:[]),
+  ];
+  // Store data in localStorage for legacy renderers to read
+  localStorage.setItem('ftz_reports', JSON.stringify(reports));
+  localStorage.setItem('ftz_nsfw_queue', JSON.stringify(nsfwQueue));
+  const bans = await FortizedSocial.adminGetBans().catch(()=>[]);
+  localStorage.setItem('ftz_bans', JSON.stringify(bans));
+  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'moderation') + '<div id="adm-sub-content"></div></div>';
+  const sub = document.getElementById('adm-sub-content');
+  if (sub) { const prev = main; main = sub; }
+  // Delegate to legacy tab renderer
+  await _loadAdminPage('_' + active);
+}
+
+async function _loadAdminMembers(main, subTab) {
+  const role = getStaffRole(CU.username);
+  const active = subTab || _adminSubTab.members || 'users';
+  _adminSubTab.members = active;
+  const tabs = [
+    {id:'users', label:'Lookup'},
+    ...(role!=='moderator'?[{id:'all_users', label:'All Members'}]:[]),
+  ];
+  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'members') + '<div id="adm-sub-content"></div></div>';
+  await _loadAdminPage('_' + active);
+}
+
+async function _loadAdminPlatform(main, subTab) {
+  const role = getStaffRole(CU.username);
+  const active = subTab || _adminSubTab.platform || 'staff';
+  _adminSubTab.platform = active;
+  const tabs = [
+    ...(isSuperAdmin()?[{id:'staff', label:'Staff'}]:[]),
+    ...(isSuperAdmin()?[{id:'settings', label:'Configuration'}]:[]),
+    ...(isAdmin()?[{id:'economy', label:'Economy'}]:[]),
+    {id:'bastions', label:'Bastions'},
+    ...(isSuperAdmin()?[{id:'broadcast', label:'Broadcast'}]:[]),
+    ...(isAdmin()?[{id:'audit', label:'Activity Log'}]:[]),
+    ...(isAdmin()?[{id:'scheduled_actions', label:'Scheduled'}]:[]),
+    ...(isSuperAdmin()?[{id:'backup_restore', label:'Backup'}]:[]),
+    ...(isSuperAdmin()?[{id:'analytics', label:'Analytics'}]:[]),
+    ...(isAdmin()?[{id:'network_monitor', label:'Network'}]:[]),
+  ];
+  // Refresh staff data from Supabase for legacy renderers
+  const staff = await FortizedSocial.adminGetStaff().catch(()=>({admins:[],moderators:[]}));
+  localStorage.setItem('ftz_staff', JSON.stringify(staff));
+  const auditLog = await FortizedSocial.adminGetAuditLog().catch(()=>[]);
+  localStorage.setItem('ftz_audit_log', JSON.stringify(auditLog));
+  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'platform') + '<div id="adm-sub-content"></div></div>';
+  await _loadAdminPage('_' + active);
+}
+
+async function _loadAdminFeedback(main, subTab) {
+  const active = subTab || _adminSubTab.feedback || 'support_tickets';
+  _adminSubTab.feedback = active;
+  const tickets = await FortizedSocial.adminGetSupportTickets().catch(()=>({}));
+  localStorage.setItem('ftz_support_tickets', JSON.stringify(tickets));
+  const openTickets = Object.values(tickets).filter(t=>t.status==='open').length;
+  const tabs = [
+    {id:'support_tickets', label:'Inbox & Tickets', badge:openTickets},
+  ];
+  main.innerHTML = '<div style="padding-top:var(--space-lg);">' + _adminSubNav(tabs, active, 'feedback') + '<div id="adm-sub-content"></div></div>';
+  await _loadAdminPage('_' + active);
 }
 
 function resolveReport(idx, action) {

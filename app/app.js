@@ -16482,10 +16482,11 @@ function _incFeedbackCountToday() {
 }
 
 function showFeedbackToast(actionLabel, actionType, meta) {
+  const _force = meta?._force;
   const now = Date.now();
-  if (now - _lastFeedbackTime < _FEEDBACK_COOLDOWN) return;
-  if (_getFeedbackCountToday() >= _FEEDBACK_MAX_PER_DAY) return;
-  if (Math.random() > _FEEDBACK_CHANCE) return;
+  if (!_force && now - _lastFeedbackTime < _FEEDBACK_COOLDOWN) return;
+  if (!_force && _getFeedbackCountToday() >= _FEEDBACK_MAX_PER_DAY) return;
+  if (!_force && Math.random() > _FEEDBACK_CHANCE) return;
   _lastFeedbackTime = now;
 
   document.querySelector('.ftz-feedback-toast')?.remove();

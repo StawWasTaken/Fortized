@@ -2700,7 +2700,7 @@ async function _loadRealmFriends(friends, container, countEl) {
     try {
       const u = await FortizedSocial.getUserByName(f);
       const _rLiveSt = _realmPresence[f]?.status;
-      const st = FtzStatus.sanitize(_rLiveSt !== undefined ? _rLiveSt : (u?.status || 'offline'));
+      const st = FtzStatus.sanitize(_rLiveSt !== undefined ? _rLiveSt : 'offline');
       return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st};
     } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
   }));
@@ -2735,7 +2735,7 @@ async function _loadRPFriends(friends, container, countEl) {
     try {
       const u = await FortizedSocial.getUserByName(f);
       const _rpLiveSt = _rpPresence[f]?.status;
-      const st = FtzStatus.sanitize(_rpLiveSt !== undefined ? _rpLiveSt : (u?.status || 'offline'));
+      const st = FtzStatus.sanitize(_rpLiveSt !== undefined ? _rpLiveSt : 'offline');
       return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, customStatus:u?.customStatus||null, game:u?.currentGame||null};
     } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
   }));
@@ -3526,7 +3526,7 @@ async function renderActiveNowSidebar(containerId) {
       // Use LIVE Socket.IO presence, fallback to DB status only if Socket.IO unavailable
       const liveSt = _anPresence[f]?.status;
       const liveGA = _anPresence[f]?.gameActivity;
-      const st = liveSt !== undefined ? liveSt : (u?.status || 'offline');
+      const st = liveSt !== undefined ? liveSt : 'offline';
       const csText = u?.customStatus?.text || (typeof u?.customStatus === 'string' ? u.customStatus : '');
       const gameAct = liveGA?.name || u?.gameActivity?.name || '';
       return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, customStatus:csText, gameActivity:gameAct};
@@ -27271,7 +27271,7 @@ async function loadFriendActivity() {
       try {
         const u = await FortizedSocial.getUserByName(f);
         const _actLiveSt = _actPresence[f]?.status;
-        const st = _actLiveSt !== undefined ? _actLiveSt : (u?.status || 'offline');
+        const st = _actLiveSt !== undefined ? _actLiveSt : 'offline';
         return { username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, game:u?.currentGame||null, customStatus:u?.customStatus||null };
       } catch { return { username:f, displayName:f, pfp:null, status:'offline', game:null }; }
     }));

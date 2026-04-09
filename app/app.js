@@ -2635,23 +2635,9 @@ function renderHomePanel() {
     }
   }
 
-  // ── Quick action strip (continue where you left off) ──
+  // Quick action strip removed — keeping it clean
   const _qas = document.getElementById('home-quick-actions');
-  if (_qas) {
-    let quickHtml = '<div class="home-quick-strip">';
-    // Last bastion
-    if (bastions.length) {
-      const lb = bastions[0];
-      quickHtml += `<button class="hqs-btn" onclick="openBastion(0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 22V8l9-6 9 6v14"/><path d="M9 22V12h6v10"/></svg>${escapeHTML(lb.name||'Bastion')}</button>`;
-    }
-    // Last DM
-    if (friends0.length) {
-      const lastDM = friends0[0];
-      quickHtml += `<button class="hqs-btn" onclick="openDMView('${escapeHTML(lastDM)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>${escapeHTML(lastDM)}</button>`;
-    }
-    quickHtml += '</div>';
-    _qas.innerHTML = quickHtml;
-  }
+  if (_qas) _qas.innerHTML = '';
 
   // Realm Bastions — horizontal scroll cards
   const realmB = document.getElementById('realm-bastions');

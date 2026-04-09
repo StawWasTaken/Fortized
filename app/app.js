@@ -323,6 +323,9 @@ const FtzStatus = (() => {
   function _broadcast(status) {
     if (!CU?.username) return;
     const vis = visible(status);
+    // Real-time: emit status:set so server broadcasts presence:update to all clients
+    FortizedSocial.socketEmit('status:set', { status: status });
+    // Persistence: write to Supabase (async, non-blocking)
     FortizedSocial.setStatus(CU.username, vis).catch(e => {
       console.warn('[FtzStatus] broadcast failed:', e);
     });

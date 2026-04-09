@@ -200,8 +200,8 @@ const FtzStatus = (() => {
   });
 
   const VALID = new Set(Object.keys(MODES));
-  const IDLE_TIMEOUT_ACTIVE  = 10 * 60 * 1000; // 10 min when tab visible
-  const IDLE_TIMEOUT_HIDDEN  = 60 * 1000;       // 1 min when tab hidden
+  const IDLE_TIMEOUT_ACTIVE  = 25 * 60 * 1000; // 25 min when tab visible
+  const IDLE_TIMEOUT_HIDDEN  = 5 * 60 * 1000;  // 5 min when tab hidden
 
   const CUSTOM_DURATIONS = Object.freeze([
     { id: '30m',     label: '30 min',     ms: 30 * 60000 },
@@ -456,18 +456,18 @@ const FtzStatus = (() => {
         firebase.database().ref('statuses/' + CU.username).onDisconnect().set('offline');
       } catch(e) { console.warn('[Status] onDisconnect setup failed:', e?.message); }
     }
-    window.addEventListener('beforeunload', () => {
+    // Mark offline ONLY when the tab is actually closed (not on navigation/refresh)
+    // Socket.IO disconnect on the server handles the real offline transition
+    window.addEventListener('pagehide', (e) => {
       if (!CU?.username) return;
       _stopCompanionIdlePoll();
       if (typeof _stopAutoActivityDetection === 'function') _stopAutoActivityDetection();
       stopCrossDeviceSync();
-      // Use sendBeacon for reliable delivery — async fetch may not complete on unload
-      if (navigator.sendBeacon) {
+      // Only send offline beacon if the page is NOT being cached (actual close, not bfcache)
+      if (!e.persisted && navigator.sendBeacon) {
         navigator.sendBeacon('/api/presence/offline',
           new Blob([JSON.stringify({ username: CU.username })], { type: 'application/json' }));
       }
-      // Also fire the normal broadcast as a fallback
-      _broadcast('offline');
     });
   }
 
@@ -3233,9 +3233,9 @@ async function renderDMSidebar(scroll) {
           if (u.displayFont && u.displayFont !== 'default') dnEl.style.fontFamily = _getDisplayFontCSS(u.displayFont);
           if (u.displayColor && u.displayColor !== '#fff') dnEl.style.cssText += _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor);
         }
-        // Use live Socket.IO presence, fallback to DB status only if Socket.IO unavailable
+        // Use live Socket.IO presence — default to offline if no live data (DB status can be stale)
         const liveSt = _dmPresenceMap[f]?.status;
-        const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : (u.status || 'offline'));
+        const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : 'offline');
         FtzStatus.updateDots(f, st);
       }
       let lastTime = 0;
@@ -3403,9 +3403,9 @@ async function renderDMFriendsHome() {
       const pdnEl = document.getElementById('dm-home-pdn-'+f);
       if (pdnEl) pdnEl.textContent = u.displayName || f;
 
-      // Use LIVE Socket.IO presence first, fallback to DB status only if Socket.IO unavailable
+      // Use LIVE Socket.IO presence — default to offline if no live data (DB status can be stale)
       const liveSt = _friendPresenceMap[f]?.status;
-      const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : (u.status || 'offline'));
+      const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : 'offline');
       const dot = document.querySelector(`.dm-home-status[data-for="${CSS.escape(f)}"]`);
       if (dot) { dot.style.background = FtzStatus.color(st); dot.style.boxShadow = '0 0 8px '+FtzStatus.color(st)+'55'; }
       const stText = document.querySelector(`.dm-home-status-text[data-for="${CSS.escape(f)}"]`);

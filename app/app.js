@@ -19048,18 +19048,36 @@ function parseMD(s) {
   s = s.replace(/https?:\/\/[^\s]*[?&]invite=([\w-]+)[^\s]*/gi, (url, code) => {
     const alreadyMember = (CU?.bastions||[]).some(b=>(b.invites||[]).some(inv=>inv.code===code));
     const embedId = 'bie-'+code.replace(/[^a-zA-Z0-9]/g,'');
-    // Render placeholder, then async-fetch real bastion data from API
-    setTimeout(() => {
-      fetch('/api/bastion/invite/'+encodeURIComponent(code)).then(r=>r.json()).then(d => {
-        const el = document.getElementById(embedId);
-        if (!el || !d.success) return;
-        const b = d.bastion;
-        const nameEl = el.querySelector('.bie-name'); if (nameEl) nameEl.textContent = b.name;
-        const iconEl = el.querySelector('.bie-icon'); if (iconEl) iconEl.innerHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.parentElement.innerHTML='<div class=bie-fallback>${(b.name||'B')[0]}</div>'">` : `<div class="bie-fallback">${(b.name||'B')[0]}</div>`;
-        const bannerEl = el.querySelector('.bie-banner'); if (bannerEl && b.banner) bannerEl.innerHTML = `<img src="${escapeHTML(b.banner)}" oncontextmenu="return false" draggable="false">`;
-        const descEl = el.querySelector('.bie-desc'); if (descEl && b.desc) { descEl.textContent = b.desc; descEl.style.display = ''; }
-        const statsEl = el.querySelector('.bie-stats'); if (statsEl) { const mc = b.memberCount||1; const oc = Math.max(1,Math.floor(mc*0.3)); statsEl.innerHTML = `<div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div>`; }
-      }).catch(()=>{});
+    // Try to populate embed from local bastions first, then API, then global search
+    setTimeout(async () => {
+      const el = document.getElementById(embedId);
+      if (!el) return;
+      let b = null;
+      // Strategy 1: Check user's own bastions
+      (CU?.bastions||[]).forEach(ub => { if ((ub.invites||[]).some(inv=>inv.code===code)) b = ub; });
+      // Strategy 2: Try API endpoint
+      if (!b) {
+        try {
+          const r = await fetch('/api/bastion/invite/'+encodeURIComponent(code));
+          const d = await r.json();
+          if (d.success && d.bastion) b = d.bastion;
+        } catch(e) { console.debug('[Embed] API fetch failed:', e); }
+      }
+      // Strategy 3: Search all global bastions client-side
+      if (!b) {
+        try {
+          const all = await FortizedSocial.getGlobalBastions() || {};
+          for (const [k,v] of Object.entries(all)) {
+            if ((v.invites||[]).some(inv=>inv.code===code)) { b = {...v, id: k}; break; }
+          }
+        } catch(e) { console.debug('[Embed] Global search failed:', e); }
+      }
+      if (!b) return;
+      const nameEl = el.querySelector('.bie-name'); if (nameEl) nameEl.textContent = b.name || 'Bastion';
+      const iconEl = el.querySelector('.bie-icon'); if (iconEl) iconEl.innerHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.parentElement.innerHTML='<div class=bie-fallback>${(b.name||'B')[0]}</div>'">` : `<div class="bie-fallback">${(b.name||'B')[0]}</div>`;
+      const bannerEl = el.querySelector('.bie-banner'); if (bannerEl && b.banner) bannerEl.innerHTML = `<img src="${escapeHTML(b.banner)}" oncontextmenu="return false" draggable="false">`;
+      const descEl = el.querySelector('.bie-desc'); if (descEl && (b.desc||b.description)) { descEl.textContent = b.desc||b.description; descEl.style.display = ''; }
+      const statsEl = el.querySelector('.bie-stats'); if (statsEl) { const mc = b.memberCount || Object.keys(b.memberRoles||{}).length || 1; const oc = Math.max(1,Math.floor(mc*0.3)); statsEl.innerHTML = `<div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div>`; }
     }, 50);
     return `<div class="bastion-invite-embed" id="${embedId}" onclick="joinByInvite('${escapeHTML(code)}')">
       <div class="bie-banner"></div>

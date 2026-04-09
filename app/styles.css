@@ -425,14 +425,14 @@ body.is-desktop-app .topbar{padding-right:0;}
 .uv-header-sub{font-size:13px;color:rgba(255,255,255,.4);margin-top:5px;}
 .uv-header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 /* ── REALM FEED (replaces stats + quick nav) ──── */
-.realm-section{padding:0 28px;margin-bottom:24px;}
-.realm-section-title{font-family:var(--font-display);font-size:15px;font-weight:700;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:10px;margin-bottom:14px;letter-spacing:.01em;}
-.realm-section-title::before{content:"";width:3.5px;height:18px;background:var(--accent);border-radius:2px;flex-shrink:0;box-shadow:0 0 8px rgba(255,249,62,.25);}
-.realm-section-title .rst-sub{font-family:var(--font-ui);font-size:11px;font-weight:500;color:var(--muted);margin-left:auto;}
+.realm-section{padding:0 28px;margin-bottom:28px;}
+.realm-section-title{font-family:var(--font-display);font-size:13px;font-weight:700;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:10px;margin-bottom:14px;letter-spacing:.06em;text-transform:uppercase;}
+.realm-section-title::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex-shrink:0;box-shadow:0 0 6px rgba(255,249,62,.2);}
+.realm-section-title .rst-sub{font-family:var(--font-ui);font-size:10px;font-weight:600;color:rgba(255,255,255,.25);margin-left:auto;text-transform:none;letter-spacing:.02em;}
 .realm-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;}
 .realm-scroll::-webkit-scrollbar{display:none;}
-.realm-card{min-width:200px;max-width:240px;background:linear-gradient(145deg,var(--panel),rgba(22,26,35,.9));border:1px solid var(--border);border-radius:18px;padding:18px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);}
-.realm-card:hover{border-color:rgba(255,249,62,.25);transform:translateY(-5px);box-shadow:0 14px 40px rgba(0,0,0,.3),0 0 20px rgba(255,249,62,.06);}
+.realm-card{min-width:180px;max-width:220px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;flex-shrink:0;}
+.realm-card:hover{border-color:rgba(255,249,62,.2);transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.25),0 0 16px rgba(255,249,62,.04);background:rgba(255,255,255,.04);}
 .realm-card .rc-emblem{width:40px;height:40px;border-radius:12px;background:var(--panel2);border:1px solid var(--border);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;margin-bottom:12px;}
 .realm-card .rc-emblem img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
 .realm-card .rc-name{font-family:var(--font-display);font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -440,23 +440,23 @@ body.is-desktop-app .topbar{padding-right:0;}
 .realm-card .rc-glow{position:absolute;top:0;left:0;right:0;height:2.5px;background:linear-gradient(90deg,var(--accent),rgba(255,249,62,.3),transparent);opacity:0;transition:opacity .25s;box-shadow:0 0 10px rgba(255,249,62,.15);}
 .realm-card:hover .rc-glow{opacity:.8;}
 /* Online friends horizontal scroll */
-.realm-friend{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:64px;cursor:pointer;transition:transform .18s;flex-shrink:0;text-decoration:none;}
-.realm-friend:hover{transform:translateY(-3px);}
-.realm-friend .rf-av{position:relative;width:46px;height:46px;border-radius:50%;overflow:visible;margin-bottom:4px;}
-.realm-friend .rf-av img,.realm-friend .rf-av .fa{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2.5px solid rgba(255,255,255,.15);transition:border-color .18s;}
-.realm-friend:hover .rf-av img,.realm-friend:hover .rf-av .fa{border-color:rgba(255,249,62,.25);}
-.realm-friend .rf-status{position:absolute;bottom:0;right:-2px;width:16px;height:16px;z-index:2;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.1);border-radius:50%;background:transparent;}
-.realm-friend .rf-name{font-size:10.5px;color:rgba(255,255,255,.55);max-width:68px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .18s;}
-.realm-friend:hover .rf-name{color:rgba(255,255,255,.8);}
+.realm-friend{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:60px;cursor:pointer;transition:transform .18s;flex-shrink:0;text-decoration:none;padding:6px 4px;border-radius:10px;}
+.realm-friend:hover{transform:translateY(-3px);background:rgba(255,255,255,.03);}
+.realm-friend .rf-av{position:relative;width:42px;height:42px;border-radius:50%;overflow:visible;margin-bottom:2px;}
+.realm-friend .rf-av img,.realm-friend .rf-av .fa{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.1);transition:border-color .18s;}
+.realm-friend:hover .rf-av img,.realm-friend:hover .rf-av .fa{border-color:rgba(255,249,62,.2);}
+.realm-friend .rf-status{position:absolute;bottom:0;right:-2px;width:14px;height:14px;z-index:2;display:flex;align-items:center;justify-content:center;border-radius:50%;background:transparent;}
+.realm-friend .rf-name{font-size:10px;color:rgba(255,255,255,.4);max-width:64px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .18s;}
+.realm-friend:hover .rf-name{color:rgba(255,255,255,.7);}
 /* Scrolled DYK — medieval parchment style */
-.realm-lore{display:flex;align-items:center;gap:12px;padding:14px 18px;background:linear-gradient(135deg,rgba(255,249,62,.05),rgba(255,200,62,.025));border:1px solid rgba(255,249,62,.1);border-radius:14px;font-size:12.5px;margin-bottom:20px;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(255,249,62,.04);}
-.realm-lore::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.015'/%3E%3C/svg%3E");opacity:.5;pointer-events:none;}
-.realm-lore .rl-tag{font-family:var(--font-display);font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;text-shadow:0 0 12px rgba(255,249,62,.3);}
-.realm-lore .rl-text{color:var(--muted-light);line-height:1.5;}
+.realm-lore{display:flex;align-items:center;gap:14px;padding:12px 18px;background:rgba(255,249,62,.03);border:1px solid rgba(255,249,62,.08);border-radius:12px;font-size:12px;margin-bottom:24px;position:relative;overflow:hidden;transition:opacity .3s;}
+.realm-lore .rl-tag{font-family:var(--font-display);font-size:9px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;background:rgba(255,249,62,.08);padding:3px 8px;border-radius:6px;flex-shrink:0;}
+.realm-lore .rl-text{color:rgba(255,255,255,.4);line-height:1.5;}
 
 /* ── HERO 2.0 ──────────────────────────────────── */
-.home-hero{width:100%;min-height:260px;background:transparent;position:relative;overflow:hidden;flex-shrink:0;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 36px;border-bottom:1px solid rgba(255,249,62,.06);}
-.home-hero::before{content:"";position:absolute;inset:0;background:url("/Fortized%20Grand%20Castle%20v2.png") center/cover no-repeat;opacity:.3;pointer-events:none;}
+.home-hero{width:100%;min-height:240px;background:linear-gradient(180deg,rgba(15,17,25,.3) 0%,rgba(15,17,25,.85) 100%);position:relative;overflow:hidden;flex-shrink:0;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 40px;border-bottom:1px solid rgba(255,249,62,.08);}
+.home-hero::before{content:"";position:absolute;inset:0;background:url("/Fortized%20Grand%20Castle%20v2.png") center/cover no-repeat;opacity:.4;pointer-events:none;}
+.home-hero::after{content:"";position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(transparent,var(--channel,#12141b));pointer-events:none;z-index:1;}
 /* Sparkle particles container */
 .hero-sparkles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
 .hero-sparkle{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,249,62,.7);box-shadow:0 0 6px rgba(255,249,62,.4);animation:sparkleDrift 6s ease-in-out infinite;opacity:0;}
@@ -466,12 +466,12 @@ body.is-desktop-app .topbar{padding-right:0;}
 .hero-float-item{position:absolute;font-size:20px;opacity:.12;animation:floatItem 12s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(255,249,62,.15));}
 @keyframes floatItem{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-20px) rotate(15deg);}}
 @keyframes revealUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
-.hero-left-content{position:relative;z-index:2;animation:revealUp .5s cubic-bezier(.22,1,.36,1) both;padding:28px 0;}
-.hero-greeting{font-size:14.5px;color:rgba(255,255,255,.6);margin-bottom:10px;display:flex;align-items:center;gap:6px;letter-spacing:.02em;}
-.home-hero h1{font-family:var(--font-display);font-size:36px;font-weight:800;letter-spacing:-1.2px;line-height:1.05;margin-bottom:16px;color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.4);}
-.home-hero h1 em{font-style:normal;color:var(--accent);text-shadow:0 0 24px rgba(255,249,62,.3),0 2px 16px rgba(0,0,0,.4);}
-.home-hero-actions{display:flex;gap:10px;flex-wrap:wrap;}
-.home-hero-actions .hero-btn{padding:11px 22px;border-radius:var(--radius-pill);font-family:var(--font-display);font-size:13.5px;font-weight:700;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);border:none;display:flex;align-items:center;gap:7px;letter-spacing:.01em;}
+.hero-left-content{position:relative;z-index:2;animation:revealUp .5s cubic-bezier(.22,1,.36,1) both;padding:32px 0 28px;}
+.hero-greeting{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px;display:flex;align-items:center;gap:6px;letter-spacing:.03em;text-transform:uppercase;font-weight:600;}
+.home-hero h1{font-family:var(--font-display);font-size:38px;font-weight:800;letter-spacing:-1.5px;line-height:1.0;margin-bottom:18px;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.5);}
+.home-hero h1 em{font-style:normal;color:var(--accent);text-shadow:0 0 30px rgba(255,249,62,.35),0 2px 20px rgba(0,0,0,.5);}
+.home-hero-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.home-hero-actions .hero-btn{padding:9px 20px;border-radius:var(--radius-pill);font-family:var(--font-display);font-size:12.5px;font-weight:700;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);border:none;display:flex;align-items:center;gap:6px;letter-spacing:.02em;}
 .home-hero-actions .hero-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
 .hero-btn-primary{background:var(--accent);color:#13161d;box-shadow:0 2px 12px rgba(255,249,62,.2),inset 0 1px 0 rgba(255,255,255,.15);}
 .hero-btn-primary:hover{background:#fffb5e;box-shadow:0 6px 24px rgba(255,249,62,.35),inset 0 1px 0 rgba(255,255,255,.2);}
@@ -481,8 +481,8 @@ body.is-desktop-app .topbar{padding-right:0;}
 .hero-btn-create:hover{background:rgba(167,139,250,.22);border-color:rgba(167,139,250,.45);box-shadow:0 4px 20px rgba(167,139,250,.15);animation:none;}
 @keyframes createPulse{0%,100%{box-shadow:0 0 12px rgba(167,139,250,.08);}50%{box-shadow:0 0 20px rgba(167,139,250,.15);}}
 /* Joyster character */
-.hero-joyster-wrap{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:center;height:220px;width:200px;animation:revealUp .6s cubic-bezier(.22,1,.36,1) .1s both;}
-.hero-joyster-img{height:195px;object-fit:contain;filter:drop-shadow(0 12px 36px rgba(255,249,62,.18)) drop-shadow(0 4px 12px rgba(0,0,0,.4));animation:joysterIdle 4s ease-in-out infinite;cursor:pointer;transition:transform .2s;}
+.hero-joyster-wrap{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:center;height:200px;width:180px;animation:revealUp .6s cubic-bezier(.22,1,.36,1) .1s both;}
+.hero-joyster-img{height:175px;object-fit:contain;filter:drop-shadow(0 8px 28px rgba(255,249,62,.15)) drop-shadow(0 4px 12px rgba(0,0,0,.4));animation:joysterIdle 4s ease-in-out infinite;cursor:pointer;transition:transform .2s;}
 .hero-joyster-img:hover{transform:scale(1.05);}
 @keyframes joysterIdle{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 /* Joyster speech bubble — sits inside .home-hero, positioned absolute */

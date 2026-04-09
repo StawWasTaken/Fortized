@@ -456,7 +456,7 @@ body.is-desktop-app .topbar{padding-right:0;}
 
 /* ── HERO 2.0 ──────────────────────────────────── */
 .home-hero{width:100%;min-height:260px;background:transparent;position:relative;overflow:hidden;flex-shrink:0;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 36px;border-bottom:1px solid rgba(255,249,62,.06);}
-.home-hero::before{content:"";position:absolute;inset:0;background:url("/fortized%20banner%20v2.png") center/cover no-repeat;opacity:.3;pointer-events:none;}
+.home-hero::before{content:"";position:absolute;inset:0;background:url("/Fortized%20Grand%20Castle%20v2.png") center/cover no-repeat;opacity:.3;pointer-events:none;}
 /* Sparkle particles container */
 .hero-sparkles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
 .hero-sparkle{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,249,62,.7);box-shadow:0 0 6px rgba(255,249,62,.4);animation:sparkleDrift 6s ease-in-out infinite;opacity:0;}

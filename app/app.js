@@ -14565,7 +14565,7 @@ async function submitReport() {
 // ════════════════════════════════════════════
 
 // ── Admin data sync helpers ──
-async function _syncAdminDataFromFirebase() {
+async function _syncAdminData() {
   try {
     const [reports, bans, staff, auditLog, gs, nsfwQueue, bannedHashes, tickets] = await Promise.all([
       FortizedSocial.adminGetReports().catch(()=>[]),
@@ -14591,22 +14591,26 @@ async function _syncAdminDataFromFirebase() {
   } catch(e) { console.warn('Admin sync partial fail:', e); }
 }
 
-async function _saveBanToFirebase(banObj) {
+async function _saveBanToServer(banObj) {
   try { await FortizedSocial.adminSaveBan(banObj); }
   catch(e) { console.error('Ban save failed:', e); toast('Failed to save ban to server.', 'error'); }
 }
-async function _removeBanFromFirebase(username) {
+const _saveBanToFirebase = _saveBanToServer; // backward compat alias
+async function _removeBanFromServer(username) {
   try { await FortizedSocial.adminRemoveBan(username); }
   catch(e) { console.error('Ban removal failed:', e); toast('Failed to remove ban from server.', 'error'); }
 }
-async function _saveStaffToFirebase(staff) {
+const _removeBanFromFirebase = _removeBanFromServer; // backward compat alias
+async function _saveStaffToServer(staff) {
   try { await FortizedSocial.adminSaveStaff(staff); }
   catch(e) { console.error('Staff save failed:', e); toast('Failed to save staff to server.', 'error'); }
 }
-async function _saveNsfwQueueToFirebase(queue) {
+const _saveStaffToFirebase = _saveStaffToServer; // backward compat alias
+async function _saveNsfwQueueToServer(queue) {
   try { await FortizedSocial.adminSaveNsfwQueue(queue); }
   catch(e) { console.error('NSFW queue save failed:', e); }
 }
+const _saveNsfwQueueToFirebase = _saveNsfwQueueToServer; // backward compat alias
 
 function tryOpenAdmin() {
   if (isSuperAdmin()) { adminAuthed = true; openAdminPanel(); return; }
@@ -14637,7 +14641,7 @@ function openAdminPanel() {
 
 async function _openAdminUI() {
   document.getElementById('admin-panel-overlay')?.remove();
-  await _syncAdminDataFromFirebase().catch(()=>{});
+  await _syncAdminData().catch(()=>{});
   const role = getStaffRole(CU.username);
   const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
   const roleColor = role === 'superadmin' ? '#ffd93e' : role === 'admin' ? '#f87171' : '#60a5fa';
@@ -14685,7 +14689,7 @@ function _setupAdminLiveSync() {
   // Poll Supabase for admin data updates (reduced from 10s to 60s to limit egress)
   _adminLiveSyncInterval = setInterval(async () => {
     try {
-      await _syncAdminDataFromFirebase();
+      await _syncAdminData();
       if (typeof adminTab !== 'undefined' && adminTab) {
         _renderAdminNav(adminTab);
         _loadAdminPage(adminTab, true);
@@ -14785,7 +14789,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <div style="font-size:11.5px;color:rgba(255,255,255,.3);">Operator: <span style="color:var(--accent);">${escapeHTML(CU.displayName||CU.username)}</span> · ${new Date().toLocaleString()} · Session Active</div>
         </div>
         <div style="display:flex;gap:var(--space-sm);">
-          <button class="hq-quick-btn" onclick="_syncAdminDataFromFirebase().then(()=>{toast('Data synced','success');_loadAdminPage('dashboard');})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync</button>
+          <button class="hq-quick-btn" onclick="_syncAdminData().then(()=>{toast('Data synced','success');_loadAdminPage('dashboard');})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync</button>
           <button class="hq-quick-btn" onclick="_loadAdminPage('all_users')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Users DB</button>
         </div>
       </div>
@@ -15078,7 +15082,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           </div>
         </div>
         <div style="display:flex;gap:8px;">
-          <button onclick="loadAllReportsFromFirebase()" class="admin-sync-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Sync Firebase</button>
+          <button onclick="loadAllReportsFromServer()" class="admin-sync-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Sync Server</button>
         </div>
       </div>
       ${reps.length===0?'<div style="text-align:center;padding:80px 20px;color:rgba(255,255,255,.3);"><div style="margin-bottom:12px;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(62,207,110,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-size:14px;">No reports — all clear!</div></div>':
@@ -15395,7 +15399,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
             <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Quick Actions</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
               <button onclick="_purgeDeletedMessages()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Purge Deleted Messages</button>
-              <button onclick="_syncAllToFirebase()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Sync Local to Firebase</button>
+              <button onclick="_syncAllToServer()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Sync Local to Server</button>
               <button onclick="_exportAuditLog()" style="padding:8px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:600;font-size:12px;width:100%;text-align:left;transition:.15s;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Audit Log</button>
             </div>
           </div>
@@ -15705,7 +15709,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         <div class="hq-panel">
           <div class="hq-panel-head"><h3>Deployment Actions</h3></div>
           <div style="padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);">
-            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_syncAdminDataFromFirebase().then(()=>{toast('Full sync complete','success')})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync Local ↔ Firebase</button>
+            <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="_syncAdminData().then(()=>{toast('Full sync complete','success')})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync Data</button>
             <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--yellow);border-color:rgba(245,158,11,.2);" onclick="if(confirm('Force refresh all connected users?')){_forceRefreshAllUsers();}">Force Refresh All Users</button>
             <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);color:var(--red);border-color:rgba(248,113,113,.2);" onclick="if(confirm('Reset ALL user sessions? Users will be logged out.')){_resetAllSessions();}">Reset All Sessions</button>
             <button class="hq-quick-btn" style="justify-content:center;padding:var(--space-md);" onclick="if(confirm('Purge soft-deleted messages from database?')){_purgeDeletedMessages();}">Purge Deleted Messages</button>
@@ -16186,7 +16190,7 @@ async function deleteReportForever(idx) {
   _loadAdminPage(adminTab);
 }
 
-async function loadAllReportsFromFirebase() {
+async function loadAllReportsFromServer() {
   toast('Syncing reports from Supabase…', 'info');
   try {
     const remote = await FortizedSocial.adminGetReports();
@@ -16296,7 +16300,7 @@ function _clearAllSessions() {
 // _broadcastAnnouncement is defined above (async version) — handles both overview and broadcast tabs
 
 function _purgeDeletedMessages() {
-  showCustomConfirm('Purge all messages marked as deleted by moderation from Firebase? This cannot be undone.', async () => {
+  showCustomConfirm('Purge all messages marked as deleted by moderation? This cannot be undone.', async () => {
     try {
       toast('Purging deleted messages...', 'info');
       logAudit('purge_deleted', 'system', 'Purge deleted messages triggered by ' + CU.username);
@@ -16307,7 +16311,7 @@ function _purgeDeletedMessages() {
   });
 }
 
-function _syncAllToFirebase() {
+function _syncAllToServer() {
   showCustomConfirm('Sync all local admin data (reports, bans, settings) to Supabase?', async () => {
     try {
       const reports = JSON.parse(localStorage.getItem('ftz_reports')||'[]');
@@ -17095,10 +17099,11 @@ function addStaff(role) {
     if (role === 'admin') staff.admins.push(username);
     else staff.moderators.push(username);
     localStorage.setItem('ftz_staff', JSON.stringify(staff));
-    _saveStaffToFirebase(staff);
+    _saveStaffToServer(staff);
     logAudit('add_'+role, username, 'Added by super admin');
     toast(`${username} is now a ${roleLabel}`, 'success');
-    loadAdminTab('staff');
+    _loadAdminPage('platform');
+    setTimeout(() => { _adminSubTab.platform = 'staff'; _loadAdminPage('_staff'); }, 100);
   });
 }
 
@@ -17114,12 +17119,12 @@ function removeStaff(role, idx) {
     if (role === 'admin') staff.admins = list;
     else staff.moderators = list;
     localStorage.setItem('ftz_staff', JSON.stringify(staff));
-    _saveStaffToFirebase(staff);
-    // Revoke their staff console access by clearing their auth flag via Firebase signal
+    _saveStaffToServer(staff);
     FortizedSocial.adminSetSignal('staff_revoked_' + username, Date.now()).catch(()=>{});
     logAudit('remove_'+role, username, 'Removed by super admin');
     toast(`${username} removed from ${roleLabel}s`, 'success');
-    loadAdminTab('staff');
+    _loadAdminPage('platform');
+    setTimeout(() => { _adminSubTab.platform = 'staff'; _loadAdminPage('_staff'); }, 100);
   });
 }
 
@@ -18527,7 +18532,7 @@ function startReportPolling() {
       return;
     }
     if (adminTab === 'reports' || adminTab === 'dashboard') {
-      _syncAdminDataFromFirebase().then(()=>{
+      _syncAdminData().then(()=>{
         _loadAdminPage(adminTab);
       }).catch(()=>{});
     }

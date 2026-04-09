@@ -14750,6 +14750,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
 
   // ── OVERVIEW (dashboard) ──
   if (tab === 'dashboard') {
+    FortizedSocial.adminInvalidateCache(); // Always fresh data
     const reps = await FortizedSocial.adminGetReports().catch(()=>[]);
     const bans = await FortizedSocial.adminGetBans().catch(()=>[]);
     const staff = await FortizedSocial.adminGetStaff().catch(()=>({admins:[],moderators:[]}));
@@ -15796,6 +15797,7 @@ function _adminSubNav(tabs, activeId, parentTab) {
 }
 
 async function _loadAdminModeration(main, subTab) {
+  FortizedSocial.adminInvalidateCache(); // Always fetch fresh from Supabase
   const role = getStaffRole(CU.username);
   const active = subTab || _adminSubTab.moderation || 'reports';
   _adminSubTab.moderation = active;
@@ -15832,6 +15834,7 @@ async function _loadAdminMembers(main, subTab) {
 }
 
 async function _loadAdminPlatform(main, subTab) {
+  FortizedSocial.adminInvalidateCache(); // Always fetch fresh from Supabase
   const role = getStaffRole(CU.username);
   const active = subTab || _adminSubTab.platform || 'staff';
   _adminSubTab.platform = active;
@@ -15857,6 +15860,7 @@ async function _loadAdminPlatform(main, subTab) {
 }
 
 async function _loadAdminFeedback(main, subTab) {
+  FortizedSocial.adminInvalidateCache(); // Always fetch fresh from Supabase
   const active = subTab || _adminSubTab.feedback || 'support_tickets';
   _adminSubTab.feedback = active;
   const tickets = await FortizedSocial.adminGetSupportTickets().catch(()=>({}));

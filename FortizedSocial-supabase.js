@@ -1844,6 +1844,19 @@ const FortizedSocial = (() => {
     await _adminKVSet('feedback', list.slice(-200));
   }
 
+  // Invalidate all admin-related caches so next fetch hits Supabase directly
+  function adminInvalidateCache() {
+    _cacheDel('reports');
+    _cacheDel('akv:bans');
+    _cacheDel('akv:staff');
+    _cacheDel('akv:audit_log');
+    _cacheDel('akv:nsfw_queue');
+    _cacheDel('akv:nsfw_banned_hashes');
+    _cacheDel('akv:support_tickets');
+    _cacheDel('akv:scheduled_actions');
+    _cacheDel('globalSettings');
+  }
+
   // ── Public API ───────────────────────────────────────
   return {
     sb, // Expose supabase client for direct calls in app code
@@ -1889,6 +1902,7 @@ const FortizedSocial = (() => {
     adminPushNsfwAIFeedback, adminSaveNsfwSafeHash,
     adminSetSignal, adminGetSignal,
     adminPushFeedback,
+    adminInvalidateCache,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,
     startFriendRequestPolling, stopFriendRequestPolling, startVoiceRoomPolling, stopVoiceRoomPolling,

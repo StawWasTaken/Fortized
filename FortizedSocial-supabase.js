@@ -1838,7 +1838,11 @@ const FortizedSocial = (() => {
   }
 
   // -- Feedback storage --
+  async function adminGetFeedback() {
+    return (await _adminKVGet('feedback')) || [];
+  }
   async function adminPushFeedback(entry) {
+    _cacheDel('akv:feedback');
     const list = (await _adminKVGet('feedback')) || [];
     list.push(entry);
     await _adminKVSet('feedback', list.slice(-200));
@@ -1854,6 +1858,7 @@ const FortizedSocial = (() => {
     _cacheDel('akv:nsfw_banned_hashes');
     _cacheDel('akv:support_tickets');
     _cacheDel('akv:scheduled_actions');
+    _cacheDel('akv:feedback');
     _cacheDel('globalSettings');
   }
 
@@ -1901,7 +1906,7 @@ const FortizedSocial = (() => {
     adminGetScheduledActions, adminSaveScheduledActions,
     adminPushNsfwAIFeedback, adminSaveNsfwSafeHash,
     adminSetSignal, adminGetSignal,
-    adminPushFeedback, _adminKVGet,
+    adminGetFeedback, adminPushFeedback,
     adminInvalidateCache,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,

@@ -15476,17 +15476,9 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     // Load feedback data from Supabase (not Firebase)
     let feedbackData = [];
     try {
-      const fbList = await FortizedSocial.adminPushFeedback ? ((await FortizedSocial._adminKVGet?.('feedback')) || []) : [];
-      // adminPushFeedback stores in admin_kv key 'feedback'
+      const fbList = await FortizedSocial.adminGetFeedback();
       feedbackData = Array.isArray(fbList) ? fbList.slice().reverse() : [];
     } catch (e) { console.debug('[Admin] feedback fetch failed', e); }
-    // Fallback: also try Firebase for legacy data
-    if (!feedbackData.length) {
-      try {
-        const fbSnap = await firebase.database().ref('feedback').limitToLast(50).get();
-        if (fbSnap.exists()) { fbSnap.forEach(c => { const v = c.val(); v._key = c.key; feedbackData.push(v); }); feedbackData.reverse(); }
-      } catch (e) { console.debug('[Admin] Firebase feedback fallback failed', e); }
-    }
     const posCount = feedbackData.filter(f=>f.rating==='positive').length;
     const neuCount = feedbackData.filter(f=>f.rating==='neutral').length;
     const negCount = feedbackData.filter(f=>f.rating==='negative').length;

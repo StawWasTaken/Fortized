@@ -6667,8 +6667,13 @@ function renderDiscoverGrid(bastions){
   if(!grid)return;
   const filtered=bastions.filter(b=>b.public!==false&&(discoverTab==='all'||(b.category||'').toLowerCase()===discoverTab));
   if(!filtered.length){grid.innerHTML=`<div style="grid-column:1/-1;" class="ftz-empty"><div class="ftz-empty-icon"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div><div class="ftz-empty-title">No bastions found</div><div class="ftz-empty-text">Try a different category or search term</div></div>`;return;}
-  // Sort: trending (most members) first
-  const sorted = [...filtered].sort((a,b) => (b.memberCount||0) - (a.memberCount||0));
+  // Sort: trending (most members) first, then newest
+  const sorted = [...filtered].sort((a,b) => {
+    const aMembers = a.memberCount||0, bMembers = b.memberCount||0;
+    if (aMembers !== bMembers) return bMembers - aMembers;
+    // Tie-break by creation date (newer first)
+    return (b.createdAt||'').localeCompare(a.createdAt||'');
+  });
   grid.innerHTML=sorted.map(b=>{
     const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
     const cat=(b.category||'').toLowerCase();
@@ -7378,7 +7383,7 @@ function initFortizedUXResilience() {
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'dm', lastAuthor);
                 scrollBottom('dm-msgs');
-                if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
+                if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) { playNotifSound('message'); _showBrowserNotif(msg.from, (msg.text||'').slice(0,100), 'dm-'+msg.from); }
               }
             }
           }
@@ -7396,7 +7401,7 @@ function initFortizedUXResilience() {
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'gc', lastAuthor);
                 scrollBottom('gc-msgs');
-                if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
+                if (msg.from !== CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) { playNotifSound('message'); _showBrowserNotif(msg.from, (msg.text||'').slice(0,100), 'gc-'+msg.from); }
               }
             }
           }
@@ -13822,7 +13827,10 @@ async function viewUserProfile(username) {
       <!-- Connections -->
       ${Object.values(socials).some(Boolean) ? `<div class="up-left-divider"></div><div class="up-left-section"><div class="up-left-section-title">Connections</div><div style="display:flex;flex-direction:column;gap:5px;">${_CONN_PLATFORMS.filter(p=>socials[p.key]).map(p=>`<a href="#" onclick="openExternalLink(event,'${escapeHTML(socials[p.key])}')" class="up-social-link" style="background:${p.color}0a;color:${p.color};border-color:${p.color}18;padding:7px 14px;font-size:11.5px;display:flex;align-items:center;gap:8px;">${_connIcon(p.key)} ${p.label}</a>`).join('')}</div></div>` : ''}
       <!-- Note -->
-      ${_userNote ? `<div class="up-left-section"><div class="up-left-section-title">Note</div><div style="font-size:12px;color:rgba(255,255,255,.32);font-style:italic;line-height:1.55;">${escapeHTML(_userNote.slice(0,200))}</div></div>` : ''}
+      ${!isOwn ? `<div class="up-left-section" onclick="_openUserNote('${escapeHTML(username)}')" style="cursor:pointer;" title="Click to edit note">
+        <div class="up-left-section-title" style="display:flex;align-items:center;gap:6px;">Note <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.3;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+        <div style="font-size:12px;color:rgba(255,255,255,.32);font-style:italic;line-height:1.55;">${_userNote ? escapeHTML(_userNote.slice(0,200)) : 'Click to add a note...'}</div>
+      </div>` : ''}
       <!-- Actions at bottom -->
       <div class="up-left-actions">
         ${isOwn ? `<button class="up-action-edit" onclick="closeModal('modal-user');showView('profile')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Profile</button>` :
@@ -27649,8 +27657,36 @@ async function _checkAndAwardPendingQuests() {
 // ════════════════════════════════════════════════════
 // SAVE ACCOUNT ON INIT (for account switcher)
 // ════════════════════════════════════════════════════
+// ── Push Notification Registration ──
+async function _initPushNotifications() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    if (Notification.permission === 'default') {
+      // Don't ask immediately — wait for user to interact
+      _dbg('[Push] Service worker registered, permission pending');
+    } else if (Notification.permission === 'granted') {
+      _dbg('[Push] Notifications already granted');
+    }
+  } catch(e) { _dbg('[Push] SW registration failed:', e); }
+}
+function askNotificationPermission() {
+  if (!('Notification' in window)) { toast('Notifications not supported','error'); return; }
+  Notification.requestPermission().then(p => {
+    if (p === 'granted') { toast('Notifications enabled!','success'); _initPushNotifications(); }
+    else toast('Notifications blocked','info');
+  });
+}
+// Show browser notification for DMs/mentions when tab not focused
+function _showBrowserNotif(title, body, tag) {
+  if (Notification.permission !== 'granted' || document.hasFocus()) return;
+  try { new Notification(title, { body, icon: '/Fortized icon.png', tag: tag || 'ftz-' + Date.now() }); } catch {}
+}
+
 function _postInitSetup() {
   saveCurrentToAccounts();
+  // Register service worker for push notifications
+  _initPushNotifications();
   // Update stat strip on atelier view balance updates
   setInterval(() => {
     const statO = document.getElementById('stat-onyx');

@@ -32,19 +32,19 @@ const FortizedSocial = (() => {
   // query avoided keeps the site alive.
   const _cache = {};
   const _CACHE_TTL = {
-    user: 120000,           // 2 min — user profiles
-    userEnforce: 60000,     // 1 min — ban/suspension checks
-    notifications: 120000,  // 2 min — notification list
-    unreadCount: 60000,     // 1 min — unread badge count
-    dmMessages: 60000,      // 1 min — DM message lists
-    bastionMsgs: 60000,     // 1 min — bastion channel messages
-    globalBastions: 300000, // 5 min — global bastion registry
-    globalBastion: 120000,  // 2 min — single bastion data
-    bastionMembers: 120000, // 2 min — bastion member lists
-    dmIndex: 60000,         // 1 min — DM partner index
-    adminKV: 120000,        // 2 min — admin key-value data
-    globalSettings: 300000, // 5 min — admin global settings
-    status: 30000,          // 30s  — user status
+    user: 300000,           // 5 min — user profiles (was 2min)
+    userEnforce: 120000,    // 2 min — ban/suspension checks (was 1min)
+    notifications: 300000,  // 5 min — notification list (was 2min)
+    unreadCount: 120000,    // 2 min — unread badge count (was 1min)
+    dmMessages: 120000,     // 2 min — DM message lists (was 1min)
+    bastionMsgs: 120000,    // 2 min — bastion channel messages (was 1min)
+    globalBastions: 600000, // 10 min — global bastion registry (was 5min)
+    globalBastion: 300000,  // 5 min — single bastion data (was 2min)
+    bastionMembers: 300000, // 5 min — bastion member lists (was 2min)
+    dmIndex: 120000,        // 2 min — DM partner index (was 1min)
+    adminKV: 300000,        // 5 min — admin key-value data (was 2min)
+    globalSettings: 600000, // 10 min — admin global settings (was 5min)
+    status: 60000,          // 1 min — user status (was 30s)
     reports: 120000,        // 2 min — admin reports
     staff: 300000,          // 5 min — staff list
   };

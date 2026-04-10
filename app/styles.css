@@ -2634,7 +2634,7 @@ body.is-desktop-app .notif-panel{top:0;}
 .r-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:4px 10px 4px 7px;font-size:13px;cursor:pointer;transition:all .15s;user-select:none;}
 .r-pill:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.15);}
 .r-pill .r-emoji{font-size:16px;line-height:1;}
-.r-pill .r-count{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);min-width:8px;text-align:center;}
+.r-pill .r-count{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);min-width:8px;text-align:center;font-variant-numeric:tabular-nums;}
 .r-pill.mine{background:var(--accent-dim);border-color:var(--accent-mid);}
 .r-pill.mine .r-count{color:var(--accent);}
 .r-pill.r-add-btn{background:transparent;border:1px dashed rgba(255,255,255,.1);border-radius:8px;padding:4px 8px;color:rgba(255,255,255,.3);cursor:pointer;transition:all .12s;font-size:14px;}

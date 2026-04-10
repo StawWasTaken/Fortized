@@ -7093,6 +7093,31 @@ function initFortizedUXResilience() {
     const _socketCbs = {
       initialStatus: CU.status || 'online',
       initialGameActivity: CU.gameActivity || null,
+      onConnected: function() {
+        // Socket just connected — refresh all presence-dependent UI with live data
+        _dbg('[Socket] Connected — refreshing presence for all visible UI');
+        // Re-render home screen friends if visible
+        if (document.getElementById('realm-friends')?.offsetParent) {
+          const friends = CU?.friends || [];
+          _loadRealmFriends(friends, document.getElementById('realm-friends'), document.getElementById('realm-online-count'));
+        }
+        // Re-render DM sidebar status dots
+        if (document.getElementById('dm-sorted-list')?.offsetParent) {
+          renderDMSidebar(document.getElementById('sidebar-scroll'));
+        }
+        // Re-render bastion member list if visible
+        if (curBastion !== null && document.getElementById('member-list')) {
+          renderMemberList();
+        }
+        // Re-render Active Now sidebar if visible
+        if (document.getElementById('home-active-now-list')?.offsetParent) {
+          renderActiveNowSidebar('home-active-now-list');
+        }
+        // Re-render friend activity if visible
+        if (document.getElementById('activity-feed')?.offsetParent) {
+          loadFriendActivity();
+        }
+      },
       onStatusChange: function(data) {
         if (!data || !data.username) return;
         // Cache the live status for use in renderMemberList fallback

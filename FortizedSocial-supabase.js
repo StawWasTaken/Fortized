@@ -1126,6 +1126,8 @@ const FortizedSocial = (() => {
           gameActivity: (callbacks || {}).initialGameActivity || null,
         });
         _socketRooms.forEach(function(room) { _socket.emit('room:join', room); });
+        // Notify app that socket is ready — triggers presence refresh
+        if (_socketCallbacks.onConnected) setTimeout(function() { _socketCallbacks.onConnected(); }, 500);
       });
       _socket.on('disconnect', function() {
         _socketReady = false;

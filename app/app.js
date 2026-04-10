@@ -12407,12 +12407,17 @@ function buildProfileNav(scroll) {
     {type:'section', label:'APP SETTINGS'},
     {type:'item', id:'appearance', icon:_svgIcons.appearance, label:'Appearance'},
     {type:'item', id:'notifications', icon:_svgIcons.notif_messages, label:'Notifications'},
+    {type:'item', id:'language', icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>', label:'Language'},
     {type:'item', id:'game_collection', icon:_svgIcons.game_collection, label:'Apps & Games'},
     {type:'item', id:'keybinds', icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8.01"/><line x1="10" y1="8" x2="10" y2="8.01"/><line x1="14" y1="8" x2="14" y2="8.01"/><line x1="18" y1="8" x2="18" y2="8.01"/><line x1="6" y1="12" x2="6" y2="12.01"/><line x1="18" y1="12" x2="18" y2="12.01"/><line x1="8" y1="16" x2="16" y2="16"/></svg>', label:'Keyboard Shortcuts'},
     {type:'sep'},
-    {type:'section', label:'ADVANCED'},
-    {type:'item', id:'my_data', icon:_svgIcons.my_data, label:'My Data'},
+    {type:'section', label:'PRIVACY & SAFETY'},
     {type:'item', id:'safety', icon:_svgIcons.safety, label:'Safety'},
+    {type:'item', id:'friend_privacy', icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6m3-3h-6"/></svg>', label:'Friend Requests'},
+    {type:'item', id:'authorized_apps', icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="1"/></svg>', label:'Authorized Apps'},
+    {type:'sep'},
+    {type:'section', label:'VOICE & VIDEO'},
+    {type:'item', id:'voice_settings', icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>', label:'Voice & Video'},
     {type:'sep'},
     {type:'section', label:'SUPPORT'},
     {type:'item', id:'quick_support', icon:_svgIcons.quick_support, label:'Quick Support'},
@@ -12938,8 +12943,63 @@ function buildProfileView(tab) {
     </div>`;
   }
 
+  else if (tab === 'language') {
+    const currentLang = localStorage.getItem('ftz_language') || 'en-GB';
+    const languages = [
+      {code:'en-GB',label:'English (UK)',flag:'🇬🇧'},{code:'fr-FR',label:'Français',flag:'🇫🇷'},
+      {code:'de-DE',label:'Deutsch',flag:'🇩🇪'},{code:'es-ES',label:'Español',flag:'🇪🇸'},
+      {code:'it-IT',label:'Italiano',flag:'🇮🇹'},{code:'pt-BR',label:'Português (Brasil)',flag:'🇧🇷'},
+      {code:'nl-NL',label:'Nederlands',flag:'🇳🇱'},{code:'pl-PL',label:'Polski',flag:'🇵🇱'},
+      {code:'ru-RU',label:'Русский',flag:'🇷🇺'},{code:'uk-UA',label:'Українська',flag:'🇺🇦'},
+      {code:'tr-TR',label:'Türkçe',flag:'🇹🇷'},{code:'ja-JP',label:'日本語',flag:'🇯🇵'},
+      {code:'ko-KR',label:'한국어',flag:'🇰🇷'},{code:'zh-CN',label:'中文 (简体)',flag:'🇨🇳'},
+      {code:'zh-TW',label:'中文 (繁體)',flag:'🇹🇼'},{code:'ar-SA',label:'العربية',flag:'🇸🇦'},
+      {code:'hi-IN',label:'हिन्दी',flag:'🇮🇳'},{code:'sv-SE',label:'Svenska',flag:'🇸🇪'},
+      {code:'da-DK',label:'Dansk',flag:'🇩🇰'},{code:'fi-FI',label:'Suomi',flag:'🇫🇮'},
+      {code:'no-NO',label:'Norsk',flag:'🇳🇴'},{code:'ro-RO',label:'Română',flag:'🇷🇴'},
+    ];
+    main.innerHTML = `<div class="settings-panel"><div class="settings-title">Language</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:16px;">Choose your language. Date and time formats adapt automatically.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
+        ${languages.map(l => `<div onclick="localStorage.setItem('ftz_language','${l.code}');toast('Language set to ${escapeHTML(l.label)}. Refresh to apply.','success');document.querySelectorAll('.lang-opt').forEach(e=>e.style.borderColor='rgba(255,255,255,.06)');this.style.borderColor='rgba(255,249,62,.4)';" class="lang-opt" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid ${currentLang===l.code?'rgba(255,249,62,.4)':'rgba(255,255,255,.06)'};background:${currentLang===l.code?'rgba(255,249,62,.05)':'rgba(255,255,255,.02)'};cursor:pointer;transition:all .12s;"><span style="font-size:18px;">${l.flag}</span><span style="font-size:13px;font-weight:600;color:${currentLang===l.code?'var(--accent)':'rgba(255,255,255,.6)'};">${l.label}</span></div>`).join('')}
+      </div></div>`;
+  }
+  else if (tab === 'friend_privacy') {
+    main.innerHTML = `<div class="settings-panel"><div class="settings-title">Friend Requests</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:20px;">Control who can send you friend requests.</div>
+      <div style="display:flex;flex-direction:column;gap:12px;max-width:500px;">
+        ${[{key:'allowEveryone',label:'Everyone',desc:'Anyone on Fortized can send you a friend request.'},{key:'allowBastionMembers',label:'Bastion Members',desc:'Members of your bastions can send you requests.'},{key:'allowFriendsOfFriends',label:'Friends of Friends',desc:'People with mutual friends can send you requests.'}].map(opt => {
+          const privacy = JSON.parse(localStorage.getItem('ftz_friend_privacy')||'{}');
+          return `<label style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);cursor:pointer;">
+            <input type="checkbox" ${privacy[opt.key]!==false?'checked':''} onchange="const p=JSON.parse(localStorage.getItem('ftz_friend_privacy')||'{}');p['${opt.key}']=this.checked;localStorage.setItem('ftz_friend_privacy',JSON.stringify(p));toast('Saved','success');" style="accent-color:var(--accent);width:16px;height:16px;">
+            <div><div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.7);">${opt.label}</div><div style="font-size:11px;color:rgba(255,255,255,.3);">${opt.desc}</div></div>
+          </label>`;
+        }).join('')}
+      </div></div>`;
+  }
+  else if (tab === 'authorized_apps') {
+    main.innerHTML = `<div class="settings-panel"><div class="settings-title">Authorized Apps</div>
+      <div class="ftz-empty" style="padding:40px;"><div class="ftz-empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/></svg></div><div class="ftz-empty-title">No Authorized Apps</div><div class="ftz-empty-text">When you authorize third-party apps, they'll appear here.<br>OAuth integration coming soon.</div></div></div>`;
+  }
+  else if (tab === 'voice_settings') {
+    main.innerHTML = `<div class="settings-panel"><div class="settings-title">Voice & Video</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:600px;">
+        <div><div class="settings-section-title">Input Device</div><select id="voice-input-device" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-size:13px;font-family:inherit;"><option value="default">Default</option></select></div>
+        <div><div class="settings-section-title">Output Device</div><select id="voice-output-device" style="width:100%;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-size:13px;font-family:inherit;"><option value="default">Default</option></select></div>
+      </div>
+      <div style="margin-top:20px;max-width:600px;"><div class="settings-section-title">Input Volume</div><input type="range" min="0" max="100" value="${localStorage.getItem('ftz_voice_volume')||'100'}" style="width:100%;accent-color:var(--accent);" oninput="localStorage.setItem('ftz_voice_volume',this.value);"></div>
+      <div style="margin-top:16px;"><label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" ${localStorage.getItem('ftz_noise_suppress')!=='false'?'checked':''} onchange="localStorage.setItem('ftz_noise_suppress',this.checked);toast('Saved','success');" style="accent-color:var(--accent);width:16px;height:16px;"><span style="font-size:13px;color:rgba(255,255,255,.6);">Noise Suppression</span></label></div>
+    </div>`;
+    if (navigator.mediaDevices?.enumerateDevices) {
+      navigator.mediaDevices.enumerateDevices().then(devices => {
+        const inputSel = document.getElementById('voice-input-device');
+        const outputSel = document.getElementById('voice-output-device');
+        devices.forEach(d => { const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || d.kind; if (d.kind==='audioinput'&&inputSel) inputSel.appendChild(o); if (d.kind==='audiooutput'&&outputSel) outputSel.appendChild(o); });
+      }).catch(()=>{});
+    }
+  }
+
   else if (tab === 'appearance') {
-    const currentTheme = localStorage.getItem(_appearanceKey()) || 'fortized_classic';
     const unlocked = CU?.unlockedAppearances || [];
     const allThemes = [
       {id:'fortized_classic', name:'Fortized Classic', desc:'The classic Fortized dark theme', bg:'#13161d', sidebar:'#181a1f', channel:'#15171e', panel:'#1b1e25', accent:'#fef83d', border:'#252b3a', muted:'#4e5a6f', bodyGrad:'', free:true},

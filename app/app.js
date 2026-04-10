@@ -7111,11 +7111,10 @@ function initFortizedUXResilience() {
           el.dataset.status = data.status;
           // Update opacity for offline dimming
           el.style.opacity = isOnline ? '' : '.4';
-          // Re-sort member list if in a bastion view
-          if (el.closest('#member-list')) _debouncedMemberListResort();
-          // Re-sort GC member panel if in a group chat view
-          if (el.closest('#gc-member-panel')) _debouncedGCMemberResort();
         });
+        // Always re-sort member list when any presence changes (user may not have a DOM entry yet)
+        if (curBastion !== null && document.getElementById('member-list')) _debouncedMemberListResort();
+        if (curGC && document.getElementById('gc-member-panel')) _debouncedGCMemberResort();
 
         // ── UPDATE GAME/SPOTIFY ACTIVITY ──
         const _actPrimary = data.activityState?.activities?.length

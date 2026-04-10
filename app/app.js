@@ -19189,33 +19189,41 @@ function parseMD(s) {
       const el = document.getElementById(embedId);
       if (!el) return;
       let b = null;
+      try {
       // Strategy 1: Check user's own bastions by invite code match
       (CU?.bastions||[]).forEach(ub => { if ((ub.invites||[]).some(inv=>inv.code===code)) b = ub; });
-      // Strategy 1b: If not found by code but user has bastions, try matching by globalId from invite data
+      if (b) console.debug('[Embed] Found via strategy 1 (local bastions)');
+      // Strategy 1b: Look up invite in Supabase to get bastionId, then match locally or fetch globally
       if (!b) {
         try {
           const invData = await FortizedSocial.getInvite(code);
           if (invData?.bastionId) {
+            // Try local match first
             const match = (CU?.bastions||[]).find(ub => ub.globalId === invData.bastionId);
-            if (match) b = match;
+            if (match) { b = match; console.debug('[Embed] Found via strategy 1b (invite->local)'); }
+            // If not local, fetch from global
+            if (!b) {
+              const gb = await FortizedSocial.getGlobalBastion(invData.bastionId);
+              if (gb) { b = {...gb, id: invData.bastionId}; console.debug('[Embed] Found via strategy 1b (invite->global)'); }
+            }
           }
-        } catch {}
+        } catch(e) { console.debug('[Embed] Strategy 1b failed:', e); }
       }
       // Strategy 2: Try API endpoint (server-side lookup)
       if (!b) {
         try {
           const r = await fetch('/api/bastion/invite/'+encodeURIComponent(code));
-          if (r.ok) { const d = await r.json(); if (d.success && d.bastion) b = d.bastion; }
-        } catch(e) { console.debug('[Embed] API failed:', e); }
+          if (r.ok) { const d = await r.json(); if (d.success && d.bastion) { b = d.bastion; console.debug('[Embed] Found via strategy 2 (API)'); } }
+        } catch(e) { console.debug('[Embed] Strategy 2 failed:', e); }
       }
       // Strategy 3: Search all global bastions client-side
       if (!b) {
         try {
           const all = await FortizedSocial.getGlobalBastions() || {};
           for (const [k,v] of Object.entries(all)) {
-            if ((v.invites||[]).some(inv=>inv.code===code)) { b = {...v, id: k}; break; }
+            if ((v.invites||[]).some(inv=>inv.code===code)) { b = {...v, id: k}; console.debug('[Embed] Found via strategy 3 (global search)'); break; }
           }
-        } catch(e) { console.debug('[Embed] Global search failed:', e); }
+        } catch(e) { console.debug('[Embed] Strategy 3 failed:', e); }
       }
       // Strategy 4: Search all users' bastions as last resort
       if (!b) {
@@ -19223,15 +19231,16 @@ function parseMD(s) {
           const allUsers = await FortizedSocial.getUsers();
           for (const user of allUsers) {
             for (const ub of (user.bastions||[])) {
-              if ((ub.invites||[]).some(inv=>inv.code===code)) { b = ub; break; }
+              if ((ub.invites||[]).some(inv=>inv.code===code)) { b = ub; console.debug('[Embed] Found via strategy 4 (user search)'); break; }
             }
             if (b) break;
           }
-        } catch(e) { console.debug('[Embed] User search failed:', e); }
+        } catch(e) { console.debug('[Embed] Strategy 4 failed:', e); }
       }
+      } catch(e) { console.error('[Embed] Unexpected error:', e); }
       // Update embed or show error
       const nameEl = el.querySelector('.bie-name');
-      if (!b) { if (nameEl) nameEl.textContent = 'Invite not found'; return; }
+      if (!b) { console.warn('[Embed] All strategies failed for code:', code); if (nameEl) nameEl.textContent = 'Invite expired'; return; }
       if (nameEl) nameEl.textContent = b.name || 'Bastion';
       const iconEl = el.querySelector('.bie-icon'); if (iconEl) iconEl.innerHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.parentElement.innerHTML='<div class=bie-fallback>${(b.name||'B')[0]}</div>'">` : `<div class="bie-fallback">${(b.name||'B')[0]}</div>`;
       const bannerEl = el.querySelector('.bie-banner'); if (bannerEl && b.banner) bannerEl.innerHTML = `<img src="${escapeHTML(b.banner)}" draggable="false">`;

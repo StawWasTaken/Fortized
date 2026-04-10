@@ -3682,15 +3682,6 @@ img {
   transition: opacity 0.2s ease;
 }
 
-img[loading="lazy"] {
-  opacity: 0;
-}
-
-img[loading="lazy"].loaded,
-img[loading="lazy"][complete] {
-  opacity: 1;
-}
-
 /* ── Better selection across dark theme ── */
 ::selection {
   background: rgba(255,249,62,.25);

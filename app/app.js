@@ -4154,6 +4154,8 @@ async function sendGCMessage() {
   if (!text && !window._pendingAttachment) return;
   clearChatInput(inp);
   _stopGCTypingBroadcast();
+  const rep = replyingTo;
+  cancelReply('gc');
 
   const now = new Date();
   const msgRef = firebase.database().ref('groupChats/'+curGC+'/messages').push();
@@ -4163,11 +4165,15 @@ async function sendGCMessage() {
     text,
     time: now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
     timestamp: now.toISOString(),
+    ...(rep ? {replyTo: rep} : {}),
   };
   _removeNewMsgBar('gc-msgs');
   _trackSendMsgQuest();
-  try { await msgRef.set(msg); }
-  catch { toast('Failed to send message. Check your connection.','error'); }
+  try {
+    await msgRef.set(msg);
+    // Emit via Socket.IO so other users see it in real-time
+    FortizedSocial.socketEmit('message:send', { type: 'gc', id1: curGC, message: msg });
+  } catch { toast('Failed to send message. Check your connection.','error'); }
 }
 
 // ── GC Typing ──────────────────────────────────────
@@ -5438,7 +5444,7 @@ function buildMsgActions(msg, context, id) {
 
 function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastionAdmin) {
   const inBastion = (context==='ch'||context==='channel');
-  const canPin = inBastion && (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username);
+  const canPin = inBastion ? (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username) : (curDM || curGC);
 
   if (_shiftHeld) {
     // Shift mode: Pin, Thread, Reply, Add Reaction, Edit, Forward, Delete
@@ -5477,7 +5483,7 @@ function _buildMsgActsInner(safeId, safeFrom, safeText, context, isOwn, isBastio
 function _showMsgMoreMenu(e, msgId, from, text, context, isOwn, isBastionAdmin) {
   e.stopPropagation();
   const inBastion = (context==='ch'||context==='channel');
-  const canPin = inBastion && (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username);
+  const canPin = inBastion ? (hasPerm('manage_messages') || CU?.bastions?.[curBastion]?.owner === CU?.username) : (curDM || curGC);
   const items = [];
   if (!isOwn) items.push({ icon: _ctxSvg('reply'), label: 'Reply', action: () => replyToMsg(msgId, from, context) });
   if (isOwn) items.push({ icon: _ctxSvg('edit'), label: 'Edit', action: () => editMsg(msgId) });
@@ -18972,7 +18978,7 @@ function parseMD(s) {
   s = s.replace(/\[FTZGIF:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);
     const gifId = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16) || ('gif-' + Math.random().toString(36).slice(2,8));
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
   // 0a. Sticker token from sticker picker
   s = s.replace(/\[FTZSTICKER:([^\]]+)\]/g, (_, url) => {
@@ -19022,7 +19028,7 @@ function parseMD(s) {
     if (isGif) {
       return '<div class="ftz-embed-gif" onclick="_openMediaLightbox(\'' + safeSrc + '\')">'
         + '<img src="' + safeSrc + '" loading="lazy">'
-        + '<button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:\'' + fid + '\',url:\'' + safeSrc + '\'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>'
+        + '<button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:\'' + fid + '\',url:\'' + safeSrc + '\'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>'
         + '</div>';
     }
     return '<div style="margin:5px 0;display:inline-block;border-radius:10px;padding:0;overflow:hidden;">'
@@ -19120,23 +19126,23 @@ function parseMD(s) {
     const cleanId = id.split('-').pop();
     const gifUrl = 'https://media.giphy.com/media/'+cleanId+'/giphy.gif';
     const fid = cleanId.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${gifUrl}')"><img src="${gifUrl}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${gifUrl}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${gifUrl}')"><img src="${gifUrl}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${gifUrl}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
   // 1a. Tenor GIF links — embed with fav button
   s = s.replace(/(https?:\/\/(?:media\.)?tenor\.com\/[^\s"'<>]+\.(?:gif|mp4))(?=[\s<]|$)/gi, (url) => {
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
     const isVideo = url.endsWith('.mp4');
-    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
   // 1ab. Klipy GIF links — auto-embed any klipy.com URL as inline GIF
   s = s.replace(/(https?:\/\/[^\s"'<>]*klipy\.[^\s"'<>]+\.(?:gif|webp|mp4))(?=[\s<]|$)/gi, (url) => {
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
     const isVideo = /\.mp4$/i.test(url);
-    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
   // 1ac. Klipy page links — resolve klipy.com/gifs/... or klipy.com/stickers/... to inline GIF
   s = s.replace(/https?:\/\/(?:www\.)?klipy\.com\/(?:gifs|stickers|clips)\/([\w-]+)[^\s]*/gi, (url, slug) => {
@@ -19150,7 +19156,7 @@ function parseMD(s) {
     if (/giphy\.com/i.test(url) || /klipy\./i.test(url)) return url;
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
   // 2. YouTube embed — all unified
   // YouTube Shorts — portrait 9:16 (same structure, just different aspect ratio)
@@ -22978,7 +22984,7 @@ async function _resolveKlipySlug(placeholderId, slug) {
       if (gifUrl) {
         const safe = escapeHTML(gifUrl);
         const gid = match.slug || match.id || slug;
-        el.innerHTML = `<img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${escapeHTML(String(gid))}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>`;
+        el.innerHTML = `<img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${escapeHTML(String(gid))}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff93e" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>`;
         el.style.minHeight = '';
         el.onclick = () => _openMediaLightbox(gifUrl);
         return;
@@ -25033,29 +25039,33 @@ function unsubscribeAllProfileStatus() {
 // ════════════════════════════════════════════
 // PIN MESSAGES
 // ════════════════════════════════════════════
-function getPinnedMessages(context) {
-  const key = context==='dm' ? 'ftz_pins_dm_'+[CU.username,curDM].sort().join('_') : 'ftz_pins_ch_'+curBastion+'_'+curChannel;
-  return JSON.parse(localStorage.getItem(key)||'[]');
+function _pinsKey() {
+  if (curDM) return 'ftz_pins_dm_'+[CU.username,curDM].sort().join('_');
+  if (curGC) return 'ftz_pins_gc_'+curGC;
+  if (curBastion !== null && curChannel !== null) {
+    const b = CU.bastions?.[curBastion];
+    return 'ftz_pins_ch_'+(b?.globalId||curBastion)+'_'+curChannel;
+  }
+  return 'ftz_pins_unknown';
 }
-function savePinnedMessages(context, arr) {
-  const key = context==='dm' ? 'ftz_pins_dm_'+[CU.username,curDM].sort().join('_') : 'ftz_pins_ch_'+curBastion+'_'+curChannel;
-  localStorage.setItem(key, JSON.stringify(arr.slice(0,50)));
+function getPinnedMessages() {
+  return JSON.parse(localStorage.getItem(_pinsKey())||'[]');
+}
+function savePinnedMessages(ctx, arr) {
+  localStorage.setItem(_pinsKey(), JSON.stringify(arr.slice(0,50)));
 }
 function pinMessage(msgId, text) {
-  const ctx = curDM?'dm':'ch';
-  const pins = getPinnedMessages(ctx);
+  const pins = getPinnedMessages();
   if (pins.find(p=>p.id===msgId)) { toast('Already pinned','info'); return; }
   const row = document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
   const from = row?.dataset.from||'';
   pins.unshift({id:msgId, text:text.slice(0,200), from, pinned:new Date().toISOString()});
-  savePinnedMessages(ctx, pins);
+  savePinnedMessages(null, pins);
   toast('Message pinned!','success');
-  // Refresh pins panel if open
   if (document.getElementById('pins-panel')) showPinnedMessages();
 }
 function showPinnedMessages() {
-  const ctx = curDM?'dm':'ch';
-  const pins = getPinnedMessages(ctx);
+  const pins = getPinnedMessages();
   document.getElementById('pins-panel')?.remove();
   document.getElementById('pins-panel-overlay')?.remove();
   // Centered modal overlay
@@ -25094,11 +25104,23 @@ function showPinnedMessages() {
     const btn = e.target.closest('[data-unpin-idx]');
     if (btn) { unpinMessage(btn.dataset.unpinId, parseInt(btn.dataset.unpinIdx)); }
   });
+  // Deferred PFP loading for pinned messages
+  pins.forEach(p => {
+    if (!p.from) return;
+    FortizedSocial.getUserByName(p.from).then(u => {
+      if (!u?.pfp) return;
+      panel.querySelectorAll(`.asr-av`).forEach(av => {
+        const parent = av.closest('.asr-item');
+        if (parent?.querySelector('.asr-from')?.textContent === p.from) {
+          av.innerHTML = buildAvatarHTML(u.pfp, p.from, 32);
+        }
+      });
+    }).catch(()=>{});
+  });
 }
 function unpinMessage(msgId, idx) {
-  const ctx = curDM?'dm':'ch';
-  const pins = getPinnedMessages(ctx).filter((p,i)=>i!==idx);
-  savePinnedMessages(ctx, pins);
+  const pins = getPinnedMessages().filter((p,i)=>i!==idx);
+  savePinnedMessages(null, pins);
   showPinnedMessages();
   toast('Message unpinned','info');
 }

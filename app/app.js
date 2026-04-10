@@ -19182,9 +19182,31 @@ function parseMD(s) {
   });
   // 5. Fortized invite/bastion link — unified embed card
   s = s.replace(/https?:\/\/[^\s]*[?&]invite=([\w-]+)[^\s]*/gi, (url, code) => {
-    const alreadyMember = (CU?.bastions||[]).some(b=>(b.invites||[]).some(inv=>inv.code===code));
-    const embedId = 'bie-'+code.replace(/[^a-zA-Z0-9]/g,'');
-    // Try to populate embed from multiple sources
+    let localBastion = null;
+    (CU?.bastions||[]).forEach(ub => { if ((ub.invites||[]).some(inv=>inv.code===code)) localBastion = ub; });
+    const alreadyMember = !!localBastion;
+    const embedId = 'bie-'+code.replace(/[^a-zA-Z0-9]/g,'') + '-' + Math.random().toString(36).slice(2,6);
+
+    // If user is already a member and we have local data, render immediately (no async needed)
+    if (localBastion) {
+      const b = localBastion;
+      const mc = b.memberCount || Object.keys(b.memberRoles||{}).length || 1;
+      const oc = Math.max(1,Math.floor(mc*0.3));
+      const iconHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">` : `<div class="bie-fallback">${(b.name||'B')[0]}</div>`;
+      const bannerHTML = b.banner ? `<img src="${escapeHTML(b.banner)}" draggable="false">` : '';
+      return `<div class="bastion-invite-embed" onclick="joinByInvite('${escapeHTML(code)}')">
+        <div class="bie-banner">${bannerHTML}</div>
+        <div class="bie-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> BASTION INVITE</div>
+        <div class="bie-body">
+          <div class="bie-header"><div class="bie-icon">${iconHTML}</div><div class="bie-name">${escapeHTML(b.name||'Bastion')}</div></div>
+          ${b.desc?`<div class="bie-desc">${escapeHTML(b.desc)}</div>`:''}
+          <div class="bie-stats"><div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div></div>
+          <button class="bie-join joined">Joined</button>
+        </div>
+      </div>`;
+    }
+
+    // Not a member — render placeholder and populate async
     setTimeout(async () => {
       const el = document.getElementById(embedId);
       if (!el) return;
@@ -19246,7 +19268,7 @@ function parseMD(s) {
       const bannerEl = el.querySelector('.bie-banner'); if (bannerEl && b.banner) bannerEl.innerHTML = `<img src="${escapeHTML(b.banner)}" draggable="false">`;
       const descEl = el.querySelector('.bie-desc'); if (descEl && (b.desc||b.description)) { descEl.textContent = b.desc||b.description; descEl.style.display = ''; }
       const statsEl = el.querySelector('.bie-stats'); if (statsEl) { const mc = b.memberCount || Object.keys(b.memberRoles||{}).length || 1; const oc = Math.max(1,Math.floor(mc*0.3)); statsEl.innerHTML = `<div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div>`; }
-    }, 50);
+    }, 200);
     return `<div class="bastion-invite-embed" id="${embedId}" onclick="joinByInvite('${escapeHTML(code)}')">
       <div class="bie-banner"></div>
       <div class="bie-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> BASTION INVITE</div>

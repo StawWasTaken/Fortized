@@ -19016,8 +19016,8 @@ function parseMD(s) {
         + '<button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:\'' + fid + '\',url:\'' + safeSrc + '\'})" title="Save to favourites">&#11088;</button>'
         + '</div>';
     }
-    return '<div style="margin:5px 0;display:inline-block;background:#000;border-radius:10px;padding:0;overflow:hidden;">'
-      + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;background:#000;object-fit:cover;" loading="lazy" onclick="_openMediaLightbox(this.src)">'
+    return '<div style="margin:5px 0;display:inline-block;border-radius:10px;padding:0;overflow:hidden;">'
+      + '<img src="' + safeSrc + '" style="max-width:360px;max-height:300px;border-radius:8px;display:block;cursor:pointer;object-fit:contain;" loading="lazy" onclick="_openMediaLightbox(this.src)">'
       + '</div>';
   });
   // 0b. Video attachments — full-featured video player

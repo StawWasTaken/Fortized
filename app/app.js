@@ -2699,13 +2699,14 @@ function renderHomePanel() {
 // ── Realm friends loader (horizontal avatars) ──
 async function _loadRealmFriends(friends, container, countEl) {
   const _realmSlice = friends.slice(0, 20);
-  let _realmPresence = {};
-  try { const pr = await FortizedSocial.queryPresence(_realmSlice); if (pr) _realmPresence = pr; } catch(e) { console.warn('[Presence] Realm query failed:', e?.message); }
+  let _realmPresence = null; // null = query failed, {} = query succeeded
+  try { _realmPresence = await FortizedSocial.queryPresence(_realmSlice); } catch(e) { console.warn('[Presence] Realm query failed:', e?.message); }
   const results = await Promise.all(_realmSlice.map(async f => {
     try {
       const u = await FortizedSocial.getUserByName(f);
-      const _rLiveSt = _realmPresence[f]?.status;
-      const st = FtzStatus.sanitize(_rLiveSt !== undefined ? _rLiveSt : 'offline');
+      const _rLiveSt = _realmPresence?.[f]?.status;
+      // If presence query worked, trust it. If it failed (null), use DB status as initial display.
+      const st = FtzStatus.sanitize(_rLiveSt !== undefined ? _rLiveSt : (_realmPresence === null ? (u?.status || 'offline') : 'offline'));
       return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st};
     } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
   }));
@@ -2734,13 +2735,13 @@ async function _loadRPFriends(friends, container, countEl) {
     return;
   }
   const _rpSlice = friends.slice(0, 15);
-  let _rpPresence = {};
-  try { const pr = await FortizedSocial.queryPresence(_rpSlice); if (pr) _rpPresence = pr; } catch(e) { console.warn('[Presence] RP query failed:', e?.message); }
+  let _rpPresence = null;
+  try { _rpPresence = await FortizedSocial.queryPresence(_rpSlice); } catch(e) { console.warn('[Presence] RP query failed:', e?.message); }
   const results = await Promise.all(_rpSlice.map(async f => {
     try {
       const u = await FortizedSocial.getUserByName(f);
-      const _rpLiveSt = _rpPresence[f]?.status;
-      const st = FtzStatus.sanitize(_rpLiveSt !== undefined ? _rpLiveSt : 'offline');
+      const _rpLiveSt = _rpPresence?.[f]?.status;
+      const st = FtzStatus.sanitize(_rpLiveSt !== undefined ? _rpLiveSt : (_rpPresence === null ? (u?.status || 'offline') : 'offline'));
       return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, customStatus:u?.customStatus||null, game:u?.currentGame||null};
     } catch { return {username:f, displayName:f, pfp:null, status:'offline'}; }
   }));
@@ -3243,10 +3244,9 @@ async function renderDMSidebar(scroll) {
   const visibleGCs = gcs.filter(gc => !hidden.includes('gc_' + gc.id));
 
   // Bulk-fetch live presence for all visible friends via Socket.IO
-  let _dmPresenceMap = {};
+  let _dmPresenceMap = null; // null = query failed
   try {
-    const presenceResult = await FortizedSocial.queryPresence(visibleFriends);
-    if (presenceResult) _dmPresenceMap = presenceResult;
+    _dmPresenceMap = await FortizedSocial.queryPresence(visibleFriends);
   } catch(e) { console.warn('[Presence] DM query failed:', e?.message); }
 
   // Batch-fetch all friend profiles in ONE query instead of N separate queries
@@ -3270,9 +3270,9 @@ async function renderDMSidebar(scroll) {
           if (u.displayFont && u.displayFont !== 'default') dnEl.style.fontFamily = _getDisplayFontCSS(u.displayFont);
           if (u.displayColor && u.displayColor !== '#fff') dnEl.style.cssText += _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor);
         }
-        // Use live Socket.IO presence — default to offline if no live data (DB status can be stale)
-        const liveSt = _dmPresenceMap[f]?.status;
-        const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : 'offline');
+        // Use live Socket.IO presence — if query failed (null), trust DB as initial display
+        const liveSt = _dmPresenceMap?.[f]?.status;
+        const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : (_dmPresenceMap === null ? (u?.status || 'offline') : 'offline'));
         FtzStatus.updateDots(f, st);
       }
       let lastTime = 0;
@@ -3408,11 +3408,10 @@ async function renderDMFriendsHome() {
 
   // Async: fetch real PFPs, display names, and statuses
   // First, bulk-fetch live presence via Socket.IO for ALL friends at once
-  let _friendPresenceMap = {};
+  let _friendPresenceMap = null; // null = query failed
   const allUsers = [...new Set([...friends, ...pending])];
   try {
-    const presenceResult = await FortizedSocial.queryPresence(allUsers);
-    if (presenceResult) _friendPresenceMap = presenceResult;
+    _friendPresenceMap = await FortizedSocial.queryPresence(allUsers);
   } catch(e) { console.warn('[Presence] Home query failed:', e?.message); }
 
   // Batch-fetch all friend/pending profiles in ONE query instead of N separate queries
@@ -3440,9 +3439,9 @@ async function renderDMFriendsHome() {
       const pdnEl = document.getElementById('dm-home-pdn-'+f);
       if (pdnEl) pdnEl.textContent = u.displayName || f;
 
-      // Use LIVE Socket.IO presence — default to offline if no live data (DB status can be stale)
-      const liveSt = _friendPresenceMap[f]?.status;
-      const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : 'offline');
+      // Use LIVE Socket.IO presence — if query failed, trust DB as initial display
+      const liveSt = _friendPresenceMap?.[f]?.status;
+      const st = FtzStatus.sanitize(liveSt !== undefined ? liveSt : (_friendPresenceMap === null ? (u?.status || 'offline') : 'offline'));
       const dot = document.querySelector(`.dm-home-status[data-for="${CSS.escape(f)}"]`);
       if (dot) { dot.style.background = FtzStatus.color(st); dot.style.boxShadow = '0 0 8px '+FtzStatus.color(st)+'55'; }
       const stText = document.querySelector(`.dm-home-status-text[data-for="${CSS.escape(f)}"]`);
@@ -3519,19 +3518,17 @@ async function renderActiveNowSidebar(containerId) {
 
   // Bulk-fetch live presence via Socket.IO FIRST (fast, real-time accurate)
   const friendsSlice = friends.slice(0, 30);
-  let _anPresence = {};
+  let _anPresence = null;
   try {
-    const presenceResult = await FortizedSocial.queryPresence(friendsSlice);
-    if (presenceResult) _anPresence = presenceResult;
+    _anPresence = await FortizedSocial.queryPresence(friendsSlice);
   } catch(e) { console.warn('[Presence] Announce query failed:', e?.message); }
 
   const results = await Promise.all(friendsSlice.map(async f => {
     try {
       const u = await FortizedSocial.getUserByName(f);
-      // Use LIVE Socket.IO presence, fallback to DB status only if Socket.IO unavailable
-      const liveSt = _anPresence[f]?.status;
-      const liveGA = _anPresence[f]?.gameActivity;
-      const st = liveSt !== undefined ? liveSt : 'offline';
+      const liveSt = _anPresence?.[f]?.status;
+      const liveGA = _anPresence?.[f]?.gameActivity;
+      const st = liveSt !== undefined ? liveSt : (_anPresence === null ? (u?.status || 'offline') : 'offline');
       const csText = u?.customStatus?.text || (typeof u?.customStatus === 'string' ? u.customStatus : '');
       const gameAct = liveGA?.name || u?.gameActivity?.name || '';
       return {username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, customStatus:csText, gameActivity:gameAct};
@@ -27387,13 +27384,13 @@ async function loadFriendActivity() {
   feedEl.innerHTML = '<div style="padding:20px;display:flex;justify-content:center;"><div class="pl-spinner" style="width:24px;height:24px;border-width:2px;"></div></div>';
   try {
     const _actSlice = friends.slice(0, 10);
-    let _actPresence = {};
-    try { const pr = await FortizedSocial.queryPresence(_actSlice); if (pr) _actPresence = pr; } catch(e) { _dbg('[Activity] presence query failed', e); }
+    let _actPresence = null;
+    try { _actPresence = await FortizedSocial.queryPresence(_actSlice); } catch(e) { _dbg('[Activity] presence query failed', e); }
     const statuses = await Promise.all(_actSlice.map(async f => {
       try {
         const u = await FortizedSocial.getUserByName(f);
-        const _actLiveSt = _actPresence[f]?.status;
-        const st = _actLiveSt !== undefined ? _actLiveSt : 'offline';
+        const _actLiveSt = _actPresence?.[f]?.status;
+        const st = _actLiveSt !== undefined ? _actLiveSt : (_actPresence === null ? (u?.status || 'offline') : 'offline');
         return { username:f, displayName:u?.displayName||f, pfp:u?.pfp||null, status:st, game:u?.currentGame||null, customStatus:u?.customStatus||null };
       } catch { return { username:f, displayName:f, pfp:null, status:'offline', game:null }; }
     }));

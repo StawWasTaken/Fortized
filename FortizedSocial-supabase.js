@@ -1862,6 +1862,25 @@ const FortizedSocial = (() => {
     _cacheDel('globalSettings');
   }
 
+  // ── File Storage (Supabase Storage CDN) ─────────────
+  async function uploadFile(fileName, fileBlob) {
+    const bucket = 'attachments';
+    const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,6) + '_' + safeName;
+    try {
+      const { data, error } = await sb.storage.from(bucket).upload(path, fileBlob, { upsert: false });
+      if (error) {
+        console.warn('[Storage] Upload failed:', error.message);
+        return { error: error.message };
+      }
+      const { data: pubUrl } = sb.storage.from(bucket).getPublicUrl(path);
+      return { path, url: pubUrl.publicUrl };
+    } catch (e) {
+      console.warn('[Storage] Upload exception:', e.message);
+      return { error: e.message };
+    }
+  }
+
   // ── Public API ───────────────────────────────────────
   return {
     sb, // Expose supabase client for direct calls in app code
@@ -1908,6 +1927,7 @@ const FortizedSocial = (() => {
     adminSetSignal, adminGetSignal,
     adminGetFeedback, adminPushFeedback,
     adminInvalidateCache,
+    uploadFile,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,
     startFriendRequestPolling, stopFriendRequestPolling, startVoiceRoomPolling, stopVoiceRoomPolling,

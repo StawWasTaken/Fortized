@@ -1203,7 +1203,7 @@ function _notifyNewMsg(msgsElId){
       const bar=document.createElement('div');
       bar.className='new-msg-bar';
       bar.id='new-msg-bar-'+msgsElId;
-      bar.innerHTML='<span class="new-msg-label">New</span>';
+      bar.innerHTML='<span class="new-msg-label">NEW MESSAGES</span>';
       // Insert before the last row (which is the first new message)
       lastRow.parentElement.insertBefore(bar,lastRow);
     }
@@ -5247,6 +5247,7 @@ function appendMessage(container, msg, context, prevAuthor) {
   }
   const isOwn=msg.from===CU?.username;
   const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):(msg.time||'');
+  const fullTime=msg.timestamp?new Date(msg.timestamp).toLocaleString([],{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
   const row=document.createElement('div');
   row.className=`msg-row ${isFirst?'msg-first':'msg-cont'}${isOwn?' own':''}`;
   row.dataset.msgid=id;
@@ -5286,7 +5287,7 @@ function appendMessage(container, msg, context, prevAuthor) {
         <div class="msg-header">
           <span class="msg-author" onclick="viewUserProfile('${safeFrom}')" style="cursor:pointer;${roleColor?'color:'+roleColor+';':''}" data-author="${safeFrom}">${safeFrom}</span>
           ${getMsgRoleTag(msg.from, context)}
-          <span class="msg-timestamp">·  ${time}</span>
+          <span class="msg-timestamp" data-tip="${escapeHTML(fullTime)}">·  ${time}</span>
         </div>
         <div class="msg-text" id="mt-${avId}">${parseMD(escapeHTML(msg.text||''))}${editTag}</div>
         ${reactHTML?`<div class="msg-reactions">${reactHTML}</div>`:''}
@@ -5325,7 +5326,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     const textId='mt-c-'+id.replace(/[^a-z0-9]/gi,'-');
     const stripeHTML2=roleColor?`<div class="msg-role-stripe" style="background:${roleColor};"></div>`:'';
     row.innerHTML=`${stripeHTML2}
-      <div class="msg-av-wrap"><span class="msg-time-small">${time}</span></div>
+      <div class="msg-av-wrap"><span class="msg-time-small" data-tip="${escapeHTML(fullTime)}">${time}</span></div>
       <div class="msg-content-col">
         ${fwdHTML}${replyHTML}
         <div class="msg-text" id="${textId}">${parseMD(escapeHTML(msg.text||''))}${editTag}</div>
@@ -23408,20 +23409,26 @@ function _clearAttachment(){document.getElementById("attach-preview-bar")?.remov
 // ═══════════════════════════════════════════════════════════
 // HANDLE CHAT SEND (with file attachment support)
 // ═══════════════════════════════════════════════════════════
-function handleChatSend(context, chIdx) {
+async function handleChatSend(context, chIdx) {
   const att = window._pendingAttachment;
   if (att) {
-    // Build embed token based on file type
     const isImage = att.type.startsWith('image/');
     const isVideo = att.type.startsWith('video/');
     const isAudio = att.type.startsWith('audio/');
     const sizeMB = (att.size/1024/1024).toFixed(2)+' MB';
+    let fileUrl = att.data; // fallback to base64
+    // Try uploading to Supabase Storage CDN (much smaller message text)
+    try {
+      const blob = await fetch(att.data).then(r => r.blob());
+      const result = await FortizedSocial.uploadFile(att.name, blob);
+      if (result.url) { fileUrl = result.url; }
+      else { _dbg('[Upload] Storage failed, using base64 fallback:', result.error); }
+    } catch(e) { _dbg('[Upload] Storage unavailable, using base64:', e.message); }
     let token;
-    if (isImage) token = '[FTZIMG:'+att.name+'|'+att.data+']';
-    else if (isVideo) token = '[FTZVID:'+att.name+'|'+att.data+']';
-    else if (isAudio) token = '[FTZAUD:'+att.name+'|'+att.data+']';
-    else token = '[FTZFILE:'+att.name+'|'+sizeMB+'|'+att.data+']';
-    // Prepend to chat input
+    if (isImage) token = '[FTZIMG:'+att.name+'|'+fileUrl+']';
+    else if (isVideo) token = '[FTZVID:'+att.name+'|'+fileUrl+']';
+    else if (isAudio) token = '[FTZAUD:'+att.name+'|'+fileUrl+']';
+    else token = '[FTZFILE:'+att.name+'|'+sizeMB+'|'+fileUrl+']';
     const inp = document.getElementById(context==='dm'?'dm-input':context==='gc'?'gc-input':'ch-input');
     if (inp) {
       const existing = inp.value.trim();

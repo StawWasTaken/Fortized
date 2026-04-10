@@ -23319,7 +23319,8 @@ function showAttachmentPreview(name, type, dataUrl, size, context) {
     <div class="cfp-name">${escapeHTML(name)} · ${sizeMB} MB</div>
   </div>`;
 
-  const inputId = context==='dm' ? 'dm-input' : context==='gc' ? 'gc-input' : 'ch-input';
+  // context may be 'dm', 'gc', 'ch' OR 'dm-input', 'gc-input', 'ch-input'
+  const inputId = context.endsWith('-input') ? context : (context==='dm' ? 'dm-input' : context==='gc' ? 'gc-input' : 'ch-input');
   const outerWrap = document.getElementById(inputId)?.closest('.chat-input-outer');
   if (outerWrap) outerWrap.insertBefore(bar, outerWrap.firstChild);
 }
@@ -27305,9 +27306,16 @@ function showContentWarning(reason) {
 
 // Message content pre-scan (keywords)
 const SAFETY_BLOCKLIST = ['n-word', 'slur', 'k-word']; // placeholders — extend as needed
+// Get authoritative live status for a user — prefers Socket.IO cache over stale DB
+function getLiveStatus(username) {
+  if (username === CU?.username) return CU.status || 'online';
+  return _liveStatusCache[username] || 'offline';
+}
+
 function contentSafetyCheck(text) {
   if (!text) return null;
-  const lower = text.toLowerCase();
+  // Skip safety check for messages with file attachment tokens (base64 data is naturally repetitive)
+  if (/\[FTZ(?:IMG|VID|AUD|FILE|GIF|STICKER):/.test(text)) return null;
   // Check for repeated patterns (spam)
   if (/(.)\1{9,}/.test(text)) return 'Repetitive characters detected (possible spam).';
   // Check for excessive caps

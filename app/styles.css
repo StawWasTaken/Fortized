@@ -1843,7 +1843,7 @@ body.is-desktop-app .notif-panel{top:0;}
 .ftz-embed-btn.primary:hover{filter:brightness(1.1);}
 /* ── Custom Video Player ── */
 .ftz-vp{position:relative;background:#000;width:100%;overflow:hidden;border-radius:12px 12px 0 0;}
-.ftz-vp video{width:100%;display:block;cursor:pointer;}
+.ftz-vp video{width:100%;max-height:360px;display:block;cursor:pointer;}
 .ftz-vp-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);transition:opacity .25s;cursor:pointer;z-index:2;}
 .ftz-vp-overlay.hidden{opacity:0;pointer-events:none;}
 .ftz-vp-overlay-btn{width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.5);border:2px solid rgba(255,249,62,.3);transition:transform .15s;}

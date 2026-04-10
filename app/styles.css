@@ -1309,6 +1309,10 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .new-msg-bar{display:flex;align-items:center;gap:0;margin:6px 0;position:relative;z-index:2;pointer-events:none;user-select:none;}
 .new-msg-bar::before,.new-msg-bar::after{content:'';flex:1;height:1px;background:var(--red);}
 .new-msg-bar .new-msg-label{padding:0 10px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--red);white-space:nowrap;}
+.load-more-bar{display:flex;justify-content:center;padding:8px 0;margin:4px 0;}
+.load-more-btn{padding:6px 16px;border-radius:var(--radius-pill);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.45);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;}
+.load-more-btn:hover{background:rgba(255,249,62,.06);border-color:rgba(255,249,62,.15);color:var(--accent);}
+.load-more-btn:disabled{opacity:.4;cursor:default;}
 /* ── Overview Room ──────────────────────── */
 .overview-room{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
 .ov-banner{position:relative;width:100%;height:220px;overflow:visible;flex-shrink:0;border-bottom:1.5px solid var(--border);}

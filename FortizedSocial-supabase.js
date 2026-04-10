@@ -851,23 +851,26 @@ const FortizedSocial = (() => {
   }
 
   // ── Bastion Messages ─────────────────────────────────
-  async function getBastionChannelMessages(bastionId, channelId) {
-    const cacheKey = 'bm:' + bastionId + ':' + channelId;
-    const cached = _cacheGet(cacheKey);
-    if (cached !== undefined) return cached;
+  async function getBastionChannelMessages(bastionId, channelId, limit, offset) {
+    const _limit = limit || 100;
+    const _offset = offset || 0;
+    if (!_offset) {
+      const cacheKey = 'bm:' + bastionId + ':' + channelId;
+      const cached = _cacheGet(cacheKey);
+      if (cached !== undefined) return cached;
+    }
     const { data } = await sb.from('bastion_msgs')
       .select('id,from,text,time,timestamp,edited,reactions')
       .eq('bastion_id', bastionId)
       .eq('channel_id', channelId)
       .order('timestamp', { ascending: false })
-      .limit(100);
-    // Reverse to chronological after fetching latest 100
+      .range(_offset, _offset + _limit - 1);
     const result = (data || []).reverse().map(r => ({
       id: r.id, from: r.from, text: r.text, time: r.time,
       timestamp: r.timestamp, edited: r.edited || false,
       reactions: r.reactions || undefined,
     }));
-    _cacheSet(cacheKey, result, _CACHE_TTL.bastionMsgs);
+    if (!_offset) _cacheSet('bm:' + bastionId + ':' + channelId, result, _CACHE_TTL.bastionMsgs);
     return result;
   }
 
@@ -1202,9 +1205,20 @@ const FortizedSocial = (() => {
   function getSocket() { return _socket; }
   function isSocketReady() { return _socketReady; }
 
+  // Client-side rate limiting for Socket.IO events
+  var _emitLastTime = {};
+  var _emitCooldowns = { 'status:set': 2000, 'typing:start': 1000, 'typing:stop': 1000, 'activity:set': 3000, 'activity:update': 3000 };
   function socketEmit(event, data) {
     try {
-      if (_socket && _socketReady) { _socket.emit(event, data); return true; }
+      if (!_socket || !_socketReady) return false;
+      var cooldown = _emitCooldowns[event];
+      if (cooldown) {
+        var now = Date.now();
+        if (_emitLastTime[event] && now - _emitLastTime[event] < cooldown) return false;
+        _emitLastTime[event] = now;
+      }
+      _socket.emit(event, data);
+      return true;
     } catch(_) {}
     return false;
   }

@@ -1333,6 +1333,21 @@ document.addEventListener('keydown', function(e) {
   // Ctrl+R = Full page reload
   if (e.ctrlKey && !e.shiftKey && e.key === 'r') { e.preventDefault(); location.reload(); return; }
 
+  // ── Up arrow in empty chat input = edit last message ──
+  if (isTyping && e.key === 'ArrowUp') {
+    const ta = document.activeElement;
+    if (ta && (ta.tagName === 'TEXTAREA' || ta.tagName === 'INPUT') && !ta.value.trim()) {
+      const container = ta.closest('.chat-input-outer')?.parentElement;
+      if (container) {
+        const msgsEl = container.querySelector('.chat-msgs,[id^="ch-msgs-"],[id="dm-msgs"],[id="gc-msgs"]');
+        if (msgsEl) {
+          const rows = msgsEl.querySelectorAll('.msg-row[data-from="'+CSS.escape(CU.username)+'"]');
+          if (rows.length) { e.preventDefault(); editMsg(rows[rows.length-1].dataset.msgid); return; }
+        }
+      }
+    }
+  }
+
   // ── Quick Navigation Shortcuts (only when not typing) ──
   if (isTyping) return;
 
@@ -3298,7 +3313,7 @@ async function renderDMSidebar(scroll) {
             else if (diffMin < 60) timeEl.textContent = diffMin + 'm';
             else if (diffHr < 24) timeEl.textContent = diffHr + 'h';
             else if (diffDay < 7) timeEl.textContent = diffDay + 'd';
-            else timeEl.textContent = d.toLocaleDateString('fr-FR', {month:'short', day:'numeric'});
+            else timeEl.textContent = d.toLocaleDateString('en-GB', {month:'short', day:'numeric'});
           }
         }
       }
@@ -4163,7 +4178,7 @@ async function sendGCMessage() {
     id: msgRef.key,
     from: CU.username,
     text,
-    time: now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+    time: now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
     timestamp: now.toISOString(),
     ...(rep ? {replyTo: rep} : {}),
   };
@@ -5136,8 +5151,17 @@ function _executeBotScript(script, ctx) {
 // MESSAGE RENDERING
 // ════════════════════════════════════════════
 function renderMessages(container, msgs, context) {
-  container.querySelectorAll('.msg-row,.date-div').forEach(el=>el.remove());
+  container.querySelectorAll('.msg-row,.date-div,.load-more-bar').forEach(el=>el.remove());
   if (!msgs.length) return;
+  // Add "Load More" button at top if we got a full page of messages
+  if (msgs.length >= 100) {
+    const loadMore = document.createElement('div');
+    loadMore.className = 'load-more-bar';
+    loadMore.innerHTML = '<button class="load-more-btn" onclick="_loadOlderMessages(this)">Load older messages</button>';
+    loadMore.dataset.context = context;
+    loadMore.dataset.offset = '100';
+    container.appendChild(loadMore);
+  }
   let lastDate=null, lastAuthor=null, lastTimestamp=null;
   msgs.forEach(msg=>{
     const d=msg.timestamp?new Date(msg.timestamp).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'Today';
@@ -5157,6 +5181,46 @@ function renderMessages(container, msgs, context) {
     lastAuthor=msg.from;
     lastTimestamp=msg.timestamp;
   });
+}
+
+async function _loadOlderMessages(btn) {
+  const bar = btn.closest('.load-more-bar');
+  if (!bar) return;
+  const context = bar.dataset.context;
+  const offset = parseInt(bar.dataset.offset) || 100;
+  btn.textContent = 'Loading...';
+  btn.disabled = true;
+  try {
+    let older = [];
+    if (context === 'ch' && curBastion !== null && curChannel !== null) {
+      const b = CU.bastions?.[curBastion]; const ch = b?.channels?.[curChannel];
+      if (b && ch) older = await FortizedSocial.getBastionChannelMessages(b.globalId||b.name, ch.name, 100, offset);
+    } else if (context === 'dm' && curDM) {
+      older = await FortizedSocial.getDMMessages(CU.username, curDM, 100);
+    }
+    if (older.length) {
+      const container = bar.parentElement;
+      const firstMsg = container.querySelector('.msg-row');
+      older.forEach(msg => {
+        const row = document.createElement('div');
+        row.style.display = 'contents';
+        container.insertBefore(row, bar.nextSibling);
+        appendMessage(container, msg, context, null);
+        // Move the appended row to after the load-more bar
+        const appended = container.lastChild;
+        if (appended && appended !== row) container.insertBefore(appended, firstMsg);
+      });
+      bar.dataset.offset = (offset + older.length).toString();
+      btn.textContent = 'Load older messages';
+      btn.disabled = false;
+      if (older.length < 100) bar.remove(); // No more messages
+    } else {
+      bar.remove(); // No more messages
+    }
+  } catch(e) {
+    btn.textContent = 'Failed — try again';
+    btn.disabled = false;
+  }
 }
 
 
@@ -5222,7 +5286,7 @@ function appendMessage(container, msg, context, prevAuthor) {
   if (document.querySelector(`[data-msgid="${CSS.escape(id)}"]`)) return;
   // System messages (join, bot deploy, etc.)
   if (msg.from === '__system__') {
-    const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+    const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
     const row=document.createElement('div');
     row.className='msg-row msg-system';
     row.dataset.msgid=id;
@@ -5249,8 +5313,8 @@ function appendMessage(container, msg, context, prevAuthor) {
     }
   }
   const isOwn=msg.from===CU?.username;
-  const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):(msg.time||'');
-  const fullTime=msg.timestamp?new Date(msg.timestamp).toLocaleString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
+  const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):(msg.time||'');
+  const fullTime=msg.timestamp?new Date(msg.timestamp).toLocaleString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
   const row=document.createElement('div');
   row.className=`msg-row ${isFirst?'msg-first':'msg-cont'}${isOwn?' own':''}`;
   row.dataset.msgid=id;
@@ -5849,14 +5913,14 @@ async function forwardTo(type, target) {
       await FortizedSocial.sendDMMessage(CU.username, target, text, { forwarded: true, forwardedBy: CU.username });
       toast('Forwarded to ' + target, 'success');
     } else if (type === 'gc') {
-      const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
+      const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
       await firebase.database().ref('groupChats/' + target + '/messages').push(msgObj);
       toast('Forwarded to group chat', 'success');
     } else if (type === 'bastion') {
       const [bi, chId] = target.split(':');
       const b = CU.bastions?.[parseInt(bi)];
       if (b) {
-        const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
+        const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
         await firebase.database().ref('bastionMsgs/' + (b.globalId || b.name) + '/' + chId).push(msgObj);
         toast('Forwarded to #' + ((b.channels||[]).find(c=>c.id===chId)?.name || chId), 'success');
       }
@@ -30600,7 +30664,7 @@ function _renderThreadReplies(replies) {
     <div class="thread-reply">
       <div class="tr-av">${buildAvatarHTML(null,r.from||'',28)}</div>
       <div class="tr-body">
-        <div class="tr-meta"><span class="tr-name">${escapeHTML(r.from||'')}</span><span class="tr-time">${r.timestamp?new Date(r.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):''}</span></div>
+        <div class="tr-meta"><span class="tr-name">${escapeHTML(r.from||'')}</span><span class="tr-time">${r.timestamp?new Date(r.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''}</span></div>
         <div class="tr-text">${parseMD(escapeHTML(r.text||''))}</div>
       </div>
     </div>`).join('');

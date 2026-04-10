@@ -9607,6 +9607,7 @@ function renderBSettingsMain(tab) {
           <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);flex:1;">${escapeHTML(cat.name)}</span>
           <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','text')">+ Text Room</button>
           <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="addChannelToCategory('${cat.id}','voice')">+ Party Room</button>
+          <button class="btn-g" style="font-size:11px;padding:3px 8px;" onclick="renameCategory('${cat.id}')">✏️</button>
           <button class="btn-d" style="font-size:11px;padding:3px 8px;" onclick="deleteCategory('${cat.id}')">✕</button>
         </div>
         ${catChs.map((ch,i)=>{const realIdx=(b.channels||[]).indexOf(ch);return `
@@ -18601,6 +18602,20 @@ async function addChannelToCategory(catId, type) {
   });
 }
 
+function renameCategory(catId) {
+  const b = CU.bastions?.[curBastion];
+  const cat = (b?.categories||[]).find(c=>c.id===catId);
+  if (!cat) return;
+  showCustomInput('Rename Category', 'New name:', async (name) => {
+    if (!name?.trim()) return;
+    cat.name = name.trim();
+    await saveUser();
+    _syncBastionToGlobal(curBastion);
+    renderBSettingsMain('channels');
+    renderBastionSidebar();
+    toast('Category renamed','success');
+  }, cat.name);
+}
 async function deleteCategory(catId) {
   showCustomConfirm('Delete this category? Channels inside will become uncategorized.', async () => {
     const b = CU.bastions[curBastion];

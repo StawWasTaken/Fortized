@@ -353,6 +353,38 @@ app.use(express.static(path.join(__dirname), {
   extensions: ['html'],
   index: 'index.html',
 }));
+// Vanity invite URL: /join/BASTION_NAME → redirect to /app?invite=CODE
+app.get('/join/:vanity', async (req, res) => {
+  try {
+    const vanity = req.params.vanity.toLowerCase();
+    // Search global_bastions for matching vanity URL or name
+    const { data: allBastions } = await sb.from('global_bastions').select('id,data');
+    if (allBastions) {
+      for (const row of allBastions) {
+        const b = row.data;
+        if (!b) continue;
+        if ((b.vanityUrl||'').toLowerCase() === vanity || (b.name||'').toLowerCase().replace(/[^a-z0-9]/g,'') === vanity) {
+          // Find an active invite
+          const invites = b.invites || [];
+          const active = invites.find(inv => {
+            if (inv.expires && new Date(inv.expires) < new Date()) return false;
+            if (inv.maxUses && (inv.uses||0) >= inv.maxUses) return false;
+            return true;
+          });
+          if (active) return res.redirect('/app?invite=' + active.code);
+          // No active invite — try the invites table
+          const { data: invData } = await sb.from('invites').select('data').eq('data->>bastionId', row.id).limit(1);
+          if (invData?.length) return res.redirect('/app?invite=' + (invData[0].data?.code || ''));
+        }
+      }
+    }
+    res.redirect('/app?error=vanity_not_found');
+  } catch (e) {
+    console.error('[Vanity] Lookup failed:', e.message);
+    res.redirect('/app');
+  }
+});
+
 // App subpage routes — each has its own index.html
 app.get('/app/messages', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'messages', 'index.html')));
 app.get('/app/discover', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'discover', 'index.html')));

@@ -12672,7 +12672,7 @@ function buildProfileView(tab) {
               </div>
               <div style="padding:0 16px 16px;">
                 <div style="display:flex;align-items:flex-end;gap:8px;margin-top:-38px;margin-bottom:12px;position:relative;z-index:2;">
-                  <div style="width:76px;height:76px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(0,0,0,.6);flex-shrink:0;position:relative;cursor:pointer;transition:opacity .2s;" onclick="document.getElementById('pfp-file-inp')?.click();" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                  <div style="width:76px;height:76px;border-radius:50%;border:4px solid var(--panel);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(0,0,0,.6);flex-shrink:0;position:relative;cursor:pointer;transition:opacity .2s;" onclick="_showAvatarPickerMenu(event)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                     ${CU.pfp ? '<img src="'+escapeHTML(CU.pfp)+'" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-family:var(--font-display);font-weight:800;font-size:22px;color:'+(themeC1||'var(--accent)')+';">'+(CU.displayName||CU.username)[0].toUpperCase()+'</span>'}
                     ${CU.activeDecoration ? (()=>{const d=PROFILE_DECORATIONS.find(dec=>dec.id===CU.activeDecoration);return d?'<img src="'+escapeHTML(d.src)+'" style="position:absolute;inset:-9px;width:calc(100%+18px);height:calc(100%+18px);object-fit:contain;pointer-events:none;z-index:2;" onerror="this.style.display=\'none\'">':'';})() : ''}
                   </div>
@@ -12944,25 +12944,53 @@ function buildProfileView(tab) {
   }
 
   else if (tab === 'language') {
-    const currentLang = localStorage.getItem('ftz_language') || 'en-GB';
+    const currentLang = localStorage.getItem('ftz_language') || 'en';
+    const timeFormat = localStorage.getItem('ftz_time_format') || '24h';
     const languages = [
-      {code:'en-GB',label:'English (UK)',flag:'🇬🇧'},{code:'fr-FR',label:'Français',flag:'🇫🇷'},
-      {code:'de-DE',label:'Deutsch',flag:'🇩🇪'},{code:'es-ES',label:'Español',flag:'🇪🇸'},
-      {code:'it-IT',label:'Italiano',flag:'🇮🇹'},{code:'pt-BR',label:'Português (Brasil)',flag:'🇧🇷'},
-      {code:'nl-NL',label:'Nederlands',flag:'🇳🇱'},{code:'pl-PL',label:'Polski',flag:'🇵🇱'},
-      {code:'ru-RU',label:'Русский',flag:'🇷🇺'},{code:'uk-UA',label:'Українська',flag:'🇺🇦'},
-      {code:'tr-TR',label:'Türkçe',flag:'🇹🇷'},{code:'ja-JP',label:'日本語',flag:'🇯🇵'},
-      {code:'ko-KR',label:'한국어',flag:'🇰🇷'},{code:'zh-CN',label:'中文 (简体)',flag:'🇨🇳'},
-      {code:'zh-TW',label:'中文 (繁體)',flag:'🇹🇼'},{code:'ar-SA',label:'العربية',flag:'🇸🇦'},
-      {code:'hi-IN',label:'हिन्दी',flag:'🇮🇳'},{code:'sv-SE',label:'Svenska',flag:'🇸🇪'},
-      {code:'da-DK',label:'Dansk',flag:'🇩🇰'},{code:'fi-FI',label:'Suomi',flag:'🇫🇮'},
-      {code:'no-NO',label:'Norsk',flag:'🇳🇴'},{code:'ro-RO',label:'Română',flag:'🇷🇴'},
+      {code:'en',label:'English',flag:'🇬🇧'},
+      {code:'fr',label:'Français',flag:'🇫🇷'},
+      {code:'ar',label:'العربية',flag:'🇸🇦'},
+      {code:'da',label:'Dansk',flag:'🇩🇰'},
+      {code:'de',label:'Deutsch',flag:'🇩🇪'},
+      {code:'es',label:'Español',flag:'🇪🇸'},
+      {code:'fi',label:'Suomi',flag:'🇫🇮'},
+      {code:'hi',label:'हिन्दी',flag:'🇮🇳'},
+      {code:'it',label:'Italiano',flag:'🇮🇹'},
+      {code:'ja',label:'日本語',flag:'🇯🇵'},
+      {code:'ko',label:'한국어',flag:'🇰🇷'},
+      {code:'nl',label:'Nederlands',flag:'🇳🇱'},
+      {code:'no',label:'Norsk',flag:'🇳🇴'},
+      {code:'pl',label:'Polski',flag:'🇵🇱'},
+      {code:'pt',label:'Português',flag:'🇧🇷'},
+      {code:'ro',label:'Română',flag:'🇷🇴'},
+      {code:'ru',label:'Русский',flag:'🇷🇺'},
+      {code:'sv',label:'Svenska',flag:'🇸🇪'},
+      {code:'tr',label:'Türkçe',flag:'🇹🇷'},
+      {code:'uk',label:'Українська',flag:'🇺🇦'},
+      {code:'zh',label:'中文',flag:'🇨🇳'},
     ];
-    main.innerHTML = `<div class="settings-panel"><div class="settings-title">Language</div>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:16px;">Choose your language. Date and time formats adapt automatically.</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
-        ${languages.map(l => `<div onclick="localStorage.setItem('ftz_language','${l.code}');toast('Language set to ${escapeHTML(l.label)}. Refresh to apply.','success');document.querySelectorAll('.lang-opt').forEach(e=>e.style.borderColor='rgba(255,255,255,.06)');this.style.borderColor='rgba(255,249,62,.4)';" class="lang-opt" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid ${currentLang===l.code?'rgba(255,249,62,.4)':'rgba(255,255,255,.06)'};background:${currentLang===l.code?'rgba(255,249,62,.05)':'rgba(255,255,255,.02)'};cursor:pointer;transition:all .12s;"><span style="font-size:18px;">${l.flag}</span><span style="font-size:13px;font-weight:600;color:${currentLang===l.code?'var(--accent)':'rgba(255,255,255,.6)'};">${l.label}</span></div>`).join('')}
-      </div></div>`;
+    main.innerHTML = `<div class="settings-panel">
+      <div class="settings-title">Language & Time</div>
+      <!-- Select Language -->
+      <div style="margin-bottom:24px;max-width:500px;">
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.75);margin-bottom:4px;">Select a Language</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-bottom:10px;">Choose the language you want Fortized to display.</div>
+        <select onchange="localStorage.setItem('ftz_language',this.value);toast('Language updated. Refresh to apply.','success');" style="width:100%;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;font-size:14px;font-family:inherit;cursor:pointer;appearance:auto;">
+          ${languages.map(l => `<option value="${l.code}" ${currentLang===l.code?'selected':''}>${l.flag}  ${l.label}</option>`).join('')}
+        </select>
+      </div>
+      <!-- Time Format -->
+      <div style="max-width:500px;">
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.75);margin-bottom:10px;">Time Format</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${[{val:'24h',label:'Default — 24-hour'},{val:'12h',label:'12-hour'}].map(opt => `
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 0;">
+              <input type="radio" name="time-format" value="${opt.val}" ${timeFormat===opt.val?'checked':''} onchange="localStorage.setItem('ftz_time_format',this.value);toast('Time format updated','success');" style="accent-color:var(--accent);width:16px;height:16px;">
+              <span style="font-size:13px;color:rgba(255,255,255,.65);">${opt.label}</span>
+            </label>`).join('')}
+        </div>
+      </div>
+    </div>`;
   }
   else if (tab === 'friend_privacy') {
     main.innerHTML = `<div class="settings-panel"><div class="settings-title">Friend Requests</div>
@@ -13403,6 +13431,65 @@ function buildProfileView(tab) {
 async function saveDisplayName(){const dn=document.getElementById('dn-input')?.value?.trim();if(!dn){toast('Name required','error');return;}const btn=document.querySelector('[onclick*="saveDisplayName"]');if(btn){btn.classList.add('btn-loading');btn.disabled=true;}CU.displayName=dn;await saveUser();if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}document.getElementById('ua-name').textContent=dn;buildProfileView('myprofile');try{const s=FortizedSocial.getSocket();if(s)s.emit('profile:update',{displayName:dn,field:'displayName'});}catch(e){}toast('Display name updated!','success');showFeedbackToast('editing your profile','profile_edit');}
 async function saveEmail(){const e=document.getElementById('email-input')?.value?.trim();const btn=document.querySelector('[onclick*="saveEmail"]');if(btn){btn.classList.add('btn-loading');btn.disabled=true;}CU.email=e;await saveUser();if(btn){btn.classList.remove('btn-loading');btn.disabled=false;}toast('Email updated!','success');}
 async function changePassword(){const old=document.getElementById('pw-old')?.value,nw=document.getElementById('pw-new')?.value,msg=document.getElementById('pw-msg');if(!old||!nw){if(msg){msg.style.color='var(--red)';msg.textContent='Fill both fields.';}return;}if(old!==CU.password){if(msg){msg.style.color='var(--red)';msg.textContent='Current password incorrect.';}return;}if(nw.length<6){if(msg){msg.style.color='var(--red)';msg.textContent='Too short.';}return;}CU.password=nw;await saveUser();if(msg){msg.style.color='var(--green)';msg.textContent='Password updated!';}document.getElementById('pw-old').value='';document.getElementById('pw-new').value='';}
+function _showAvatarPickerMenu(event) {
+  event.stopPropagation();
+  showCtxMenu(event.clientX, event.clientY, [{items:[
+    {icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', label:'Change Avatar', action:()=>_showAvatarPickerModal()},
+    {icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>', label:'Change Decoration', action:()=>{closeModal('modal-settings');switchAtelierTab('shop',document.getElementById('atnav-shop'));showView('atelier');}},
+  ]}]);
+}
+
+function _showAvatarPickerModal() {
+  const recentAvatars = JSON.parse(localStorage.getItem('ftz_recent_avatars_'+CU.username)||'[]');
+  const ov = document.createElement('div');
+  ov.className = 'ftz-confirm-overlay';
+  ov.innerHTML = `<div class="ftz-confirm-card" style="max-width:480px;padding:0;overflow:hidden;">
+    <div style="padding:20px 24px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;">Select an Image</div>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:rgba(255,255,255,.4);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;">&times;</button>
+    </div>
+    <div style="padding:0 24px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div onclick="this.closest('.ftz-confirm-overlay').remove();document.getElementById('pfp-file-inp')?.click();" style="padding:32px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;transition:all .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.5);">Upload Image</span>
+      </div>
+      <div onclick="this.closest('.ftz-confirm-overlay').remove();_pickGifAsAvatar();" style="padding:32px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;transition:all .15s;position:relative;" onmouseover="this.style.borderColor='rgba(255,249,62,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">
+        <span style="position:absolute;top:8px;right:8px;font-size:9px;font-weight:800;padding:2px 6px;background:rgba(255,255,255,.1);border-radius:4px;color:rgba(255,255,255,.4);">GIF</span>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h3m-3 0v4h3m3-8v8m4-8h-3v3h2"/></svg>
+        <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.5);">Choose GIF</span>
+      </div>
+    </div>
+    ${recentAvatars.length ? `<div style="padding:0 24px 20px;">
+      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">Recent Avatars</div>
+      <div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-bottom:10px;">Access your 6 most recent avatar uploads.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${recentAvatars.slice(0,6).map(url => `<div onclick="CU.pfp='${escapeHTML(url)}';saveUser();updateUserbar();buildProfileView('myprofile');this.closest('.ftz-confirm-overlay').remove();toast('Avatar updated!','success');" style="width:48px;height:48px;border-radius:50%;overflow:hidden;cursor:pointer;border:2px solid rgba(255,255,255,.08);transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(255,249,62,.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'"><img src="${escapeHTML(url)}" style="width:100%;height:100%;object-fit:cover;"></div>`).join('')}
+      </div>
+    </div>` : ''}
+    <div style="padding:12px 24px 16px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:rgba(255,255,255,.25);">Upload a PNG, JPG or GIF under 8 MB. Images should be at least 128×128.</div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+}
+
+function _pickGifAsAvatar() {
+  // Open GIF picker and use the selected GIF as avatar
+  toast('Search for a GIF and click it to use as your avatar!', 'info');
+  // Trigger the GIF picker with a special callback
+  window._gifAvatarMode = true;
+  const btn = document.querySelector('.cit-gif');
+  if (btn) btn.click();
+}
+
+// Save recent avatar to localStorage
+function _saveRecentAvatar(url) {
+  if (!url || url.startsWith('data:')) return; // don't save base64 (too large)
+  const key = 'ftz_recent_avatars_' + CU.username;
+  const recent = JSON.parse(localStorage.getItem(key)||'[]');
+  if (!recent.includes(url)) recent.unshift(url);
+  localStorage.setItem(key, JSON.stringify(recent.slice(0,6)));
+}
+
 async function updatePfp(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -13437,6 +13524,7 @@ async function updatePfp(e) {
         updateUserbar();
         buildProfileView('myprofile');
         try { const s = FortizedSocial.getSocket(); if(s) s.emit('profile:update', { pfp: cropped, pfpCrop: null, field: 'pfp' }); } catch(e){}
+        _saveRecentAvatar(cropped);
         toast('Avatar updated! ✓', 'success');
       });
     }
@@ -28098,7 +28186,7 @@ function _handleSmartSuggestion(ta) {
   let triggerChar = '';
   for (let i = pos-1; i >= Math.max(0, pos-40); i--) {
     const c = val[i];
-    if (c === '@' || c === '#' || c === '/') {
+    if (c === '@' || c === '#' || c === '/' || c === '!') {
       // Must be at start of word (start of input or preceded by space/newline)
       if (i === 0 || /[\s\n]/.test(val[i-1])) {
         triggerPos = i;
@@ -28178,6 +28266,27 @@ function _handleSmartSuggestion(ta) {
     });
     _sugResults = _sugResults.slice(0, 6);
   }
+  else if (triggerChar === '!') {
+    // Bot command suggestions
+    if (curBastion !== null) {
+      const b = CU?.bastions?.[curBastion];
+      const bots = b?.deployedBots || [];
+      const commands = [];
+      bots.forEach(bot => {
+        (bot.commands||[]).forEach(cmd => {
+          commands.push({label:cmd.name||cmd.trigger,desc:(bot.name||'Bot')+' — '+(cmd.description||cmd.response||'').slice(0,60),icon:'🤖',insert:'!'+cmd.name||cmd.trigger});
+        });
+      });
+      // Add built-in commands
+      [{label:'help',desc:'Show available commands',icon:'❓'},{label:'ping',desc:'Check bot response time',icon:'🏓'},{label:'info',desc:'Show bot information',icon:'ℹ️'}].forEach(c => {
+        if (c.label.startsWith(query)) commands.push({...c, type:'command', insert:'!'+c.label});
+      });
+      commands.forEach(c => {
+        if (c.label.toLowerCase().startsWith(query) || c.label.toLowerCase().includes(query)) _sugResults.push({type:'command',...c});
+      });
+      _sugResults = _sugResults.slice(0, 10);
+    }
+  }
 
   if (!_sugResults.length) { _hideSuggestPanel(); return false; }
   _sugSelected = 0;
@@ -28211,7 +28320,7 @@ function _renderSuggestPanel(ta) {
   const rect = ta.getBoundingClientRect();
   panel.style.cssText += `;position:fixed;bottom:${window.innerHeight-rect.top+6}px;left:${rect.left}px;display:flex;flex-direction:column;gap:2px;`;
 
-  const typeLabels = {'@':'Mentions','#':'Rooms & Categories','/':'Formatting'};
+  const typeLabels = {'@':'Mentions','#':'Rooms & Categories','/':'Formatting','!':'Bot Commands'};
   const queryText = ta.value.slice(_sugStartPos+1, ta.selectionStart);
   panel.innerHTML = `<div class="sp-header">${typeLabels[_sugType]||'Suggestions'} ${queryText?'— <span style="color:rgba(255,249,62,.7);">'+escapeHTML(queryText)+'</span>':''}</div>`;
   _sugResults.forEach((r, i) => {

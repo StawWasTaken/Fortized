@@ -19023,53 +19023,43 @@ function parseMD(s) {
   // 0b. Video attachments — full-featured video player
   s = s.replace(/\[FTZVID:([^\|]+)\|([^\]]+)\]/g, function(_, name, data) {
     const vid2='vid-'+Math.random().toString(36).slice(2);
-    return '<div class="ftz-embed" style="--embed-color:#fef83d;max-width:480px;" tabindex="0" onkeydown="ftzVideoKey(\''+vid2+'\',event)">'
-      +'<div class="ftz-embed-inner" style="flex-direction:column;">'
-      // Video area
-      +'<div class="ftz-vp" id="'+vid2+'-wrap">'
-      +'<video id="'+vid2+'" src="'+escapeHTML(data)+'" preload="metadata" oncontextmenu="return false" onclick="ftzVideoToggle(\''+vid2+'\')" ondblclick="ftzVideoFullscreen(\''+vid2+'\')" ontimeupdate="ftzVideoTick(\''+vid2+'\')" onloadedmetadata="ftzVideoMeta(\''+vid2+'\')" onended="ftzVideoEnd(\''+vid2+'\')" onprogress="ftzVideoBuffer(\''+vid2+'\')" onerror="ftzVideoError(\''+vid2+'\')" onwaiting="ftzVideoWaiting(\''+vid2+'\')" onplaying="ftzVideoPlaying(\''+vid2+'\')"></video>'
-      // Play overlay
+    return '<div class="ftz-embed" style="--embed-color:var(--accent);max-width:520px;padding:0;" tabindex="0" onkeydown="ftzVideoKey(\''+vid2+'\',event)">'
+      +'<div class="ftz-embed-inner" style="flex-direction:column;padding:0;border:none;background:transparent;">'
+      +'<div class="ftz-vp" id="'+vid2+'-wrap" style="border-radius:12px;overflow:hidden;">'
+      +'<video id="'+vid2+'" src="'+escapeHTML(data)+'" preload="metadata" style="width:100%;display:block;" oncontextmenu="return false" onclick="ftzVideoToggle(\''+vid2+'\')" ondblclick="ftzVideoFullscreen(\''+vid2+'\')" ontimeupdate="ftzVideoTick(\''+vid2+'\')" onloadedmetadata="ftzVideoMeta(\''+vid2+'\')" onended="ftzVideoEnd(\''+vid2+'\')" onprogress="ftzVideoBuffer(\''+vid2+'\')" onerror="ftzVideoError(\''+vid2+'\')" onwaiting="ftzVideoWaiting(\''+vid2+'\')" onplaying="ftzVideoPlaying(\''+vid2+'\')"></video>'
       +'<div class="ftz-vp-overlay" id="'+vid2+'-overlay" onclick="ftzVideoToggle(\''+vid2+'\')">'
       +'<div class="ftz-vp-overlay-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>'
       +'</div>'
-      // Buffering spinner
       +'<div id="'+vid2+'-spinner" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:3;pointer-events:none;">'
-      +'<div style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;"></div>'
+      +'<div style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;"></div>'
       +'</div>'
-      // Error overlay
       +'<div class="ftz-vp-error" id="'+vid2+'-error" style="display:none;">'
       +'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
       +'<span>Failed to load video</span>'
       +'</div>'
+      // Download button (hover)
+      +'<a href="'+escapeHTML(data)+'" download="'+escapeHTML(name)+'" onclick="event.stopPropagation()" class="ftz-media-dl" title="Download"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>'
       +'</div>'
       // Controls
-      +'<div class="ftz-vp-controls">'
-      // Progress bar
+      +'<div class="ftz-vp-controls" style="border-radius:0 0 12px 12px;">'
       +'<div class="ftz-vp-progress" onclick="ftzVideoSeek(\''+vid2+'\',event)" onmousemove="ftzVideoSeekPreview(\''+vid2+'\',event)">'
       +'<div class="ftz-vp-prog-buffer" id="'+vid2+'-buf"></div>'
-      +'<div class="ftz-vp-prog-fill" id="'+vid2+'-prog"></div>'
-      +'<div class="ftz-vp-prog-thumb" id="'+vid2+'-thumb"></div>'
+      +'<div class="ftz-vp-prog-fill" id="'+vid2+'-prog" style="background:var(--accent);"></div>'
+      +'<div class="ftz-vp-prog-thumb" id="'+vid2+'-thumb" style="background:var(--accent);"></div>'
       +'</div>'
-      // Control row
       +'<div class="ftz-vp-row">'
       +'<button class="ftz-vp-btn" id="'+vid2+'-btn" onclick="ftzVideoToggle(\''+vid2+'\')" title="Play/Pause"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>'
-      // Volume
       +'<div class="ftz-vp-vol-wrap">'
       +'<button class="ftz-vp-btn" onclick="ftzVideoMute(\''+vid2+'\')" id="'+vid2+'-vol-icon" title="Mute"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg></button>'
-      +'<div class="ftz-vp-vol-slider"><div class="ftz-vp-vol-track" onclick="ftzVideoVol(\''+vid2+'\',event)"><div class="ftz-vp-vol-fill" id="'+vid2+'-vol-fill" style="width:100%;"></div></div></div>'
+      +'<div class="ftz-vp-vol-slider"><div class="ftz-vp-vol-track" onclick="ftzVideoVol(\''+vid2+'\',event)"><div class="ftz-vp-vol-fill" id="'+vid2+'-vol-fill" style="width:100%;background:var(--accent);"></div></div></div>'
       +'</div>'
-      // Time
       +'<span class="ftz-vp-time"><span id="'+vid2+'-cur">0:00</span> / <span id="'+vid2+'-dur">--:--</span></span>'
       +'<div style="flex:1;"></div>'
-      // Speed
       +'<span class="ftz-vp-speed" id="'+vid2+'-speed" onclick="ftzVideoCycleSpeed(\''+vid2+'\')" title="Playback speed">1x</span>'
-      // PiP
       +'<button class="ftz-vp-btn" onclick="ftzVideoPiP(\''+vid2+'\')" title="Picture-in-Picture"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="11" y="9" width="10" height="7" rx="1" fill="currentColor" stroke="none" opacity=".5"/></svg></button>'
-      // Fullscreen
       +'<button class="ftz-vp-btn" onclick="ftzVideoFullscreen(\''+vid2+'\')" title="Fullscreen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>'
       +'</div></div>'
-      // Filename
-      +'<div class="ftz-vp-fname">'+escapeHTML(name)+'</div>'
+      +'<div class="ftz-vp-fname" style="padding:6px 12px;font-size:11px;color:rgba(255,255,255,.4);">'+escapeHTML(name)+'</div>'
       +'</div></div>';
   });
   // 0c. Audio attachments — full-featured audio player
@@ -23299,21 +23289,80 @@ function _closeWTPlayer(){_closeEl('wt-player-overlay');if(_vc)_vc.watchingToget
 function _clearAttachment(){const b=document.getElementById("attach-preview-bar");if(b)b.remove();window._pendingAttachment=null;}
 function showAttachmentPreview(name, type, dataUrl, size, context) {
   document.getElementById('attach-preview-bar')?.remove();
+  const isImage = type.startsWith('image/');
+  const isVideo = type.startsWith('video/');
+  const isAudio = type.startsWith('audio/');
+  const sizeMB = (size/1024/1024).toFixed(2);
+
   const bar = document.createElement('div');
   bar.id = 'attach-preview-bar';
-  bar.style.cssText = 'display:flex;align-items:center;gap:9px;padding:8px 12px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.06);border-radius:0 0 14px 14px;font-size:12.5px;flex-shrink:0;margin:0 14px 10px;border:1px solid rgba(255,255,255,.07);border-radius:12px;';
-  const isImage = type.startsWith('image/');
-  const sizeMB = (size/1024/1024).toFixed(2);
-  bar.innerHTML = (isImage
-    ? '<img src="'+dataUrl+'" style="height:42px;width:42px;object-fit:cover;border-radius:9px;flex-shrink:0;">'
-    : '<div style="width:42px;height:42px;border-radius:9px;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">📎</div>')
-    + '<div style="flex:1;min-width:0;"><div style="font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">'+escapeHTML(name)+'</div>'
-    + '<div style="font-size:11px;color:var(--muted);">'+sizeMB+' MB</div></div>'
-    + '<button onclick="_clearAttachment()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;">✕</button>';
+  bar.className = 'chatbar-file-preview';
+
+  let previewHTML = '';
+  if (isImage) {
+    previewHTML = `<img src="${escapeHTML(dataUrl)}" id="cfp-img-preview">`;
+  } else if (isVideo) {
+    previewHTML = `<video src="${escapeHTML(dataUrl)}" style="width:100%;max-height:160px;display:block;" muted></video>`;
+  } else if (isAudio) {
+    previewHTML = `<div style="width:100%;height:60px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.03);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
+  } else {
+    previewHTML = `<div style="width:100%;height:60px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.03);font-size:28px;">📎</div>`;
+  }
+
+  bar.innerHTML = `<div class="chatbar-file-card" id="cfp-card">
+    <div class="cfp-actions">
+      <button class="cfp-btn" onclick="_showModifyAttachment()" title="Modify Attachment"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button class="cfp-btn cfp-remove" onclick="_clearAttachment()" title="Remove"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg></button>
+    </div>
+    ${window._pendingAttachment?._spoiler ? '<div class="cfp-spoiler-overlay"><span class="cfp-spoiler-tag">Spoiler</span></div>' : ''}
+    ${previewHTML}
+    <div class="cfp-name">${escapeHTML(name)} · ${sizeMB} MB</div>
+  </div>`;
+
   const inputId = context==='dm' ? 'dm-input' : context==='gc' ? 'gc-input' : 'ch-input';
-  const inputWrap = document.getElementById(inputId)?.closest('.chat-input-wrap');
-  if (inputWrap) inputWrap.parentNode.insertBefore(bar, inputWrap);
+  const outerWrap = document.getElementById(inputId)?.closest('.chat-input-outer');
+  if (outerWrap) outerWrap.insertBefore(bar, outerWrap.firstChild);
 }
+
+function _showModifyAttachment() {
+  const att = window._pendingAttachment;
+  if (!att) return;
+  const isImage = att.type.startsWith('image/');
+  const overlay = document.createElement('div');
+  overlay.className = 'ftz-confirm-overlay';
+  overlay.innerHTML = `<div class="ftz-confirm-card" style="max-width:400px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="ftz-confirm-title" style="margin:0;">Modify Attachment</div>
+      <button onclick="this.closest('.ftz-confirm-overlay').remove()" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:18px;">&times;</button>
+    </div>
+    ${isImage ? `<img src="${escapeHTML(att.data)}" style="width:100%;max-height:200px;object-fit:contain;border-radius:10px;margin-bottom:12px;background:rgba(255,255,255,.03);">` : ''}
+    <div style="margin-bottom:8px;font-size:12px;font-weight:600;color:rgba(255,255,255,.5);">Filename</div>
+    <input id="_mod-att-name" value="${escapeHTML(att.name)}" style="width:100%;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:12px;">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.6);margin-bottom:16px;">
+      <input type="checkbox" id="_mod-att-spoiler" ${att._spoiler ? 'checked' : ''} style="accent-color:var(--accent);width:16px;height:16px;">
+      Mark as spoiler
+    </label>
+    <div class="ftz-confirm-actions">
+      <button class="ftz-btn ftz-btn-ghost" onclick="this.closest('.ftz-confirm-overlay').remove()">Cancel</button>
+      <button class="ftz-btn ftz-btn-danger" style="background:var(--accent);color:#13161d;border-color:var(--accent);" onclick="_applyModifyAttachment(this)">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+}
+
+function _applyModifyAttachment(btn) {
+  const att = window._pendingAttachment;
+  if (!att) return;
+  const newName = document.getElementById('_mod-att-name')?.value?.trim() || att.name;
+  const isSpoiler = document.getElementById('_mod-att-spoiler')?.checked || false;
+  att.name = newName;
+  att._spoiler = isSpoiler;
+  btn.closest('.ftz-confirm-overlay').remove();
+  showAttachmentPreview(att.name, att.type, att.data, att.size, att.context);
+}
+
+function _clearAttachment(){document.getElementById("attach-preview-bar")?.remove();window._pendingAttachment=null;}
 
 // ════════════════════════════════════════════
 // updateBastionBanner (duplicate guard)

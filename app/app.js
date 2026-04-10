@@ -19194,20 +19194,29 @@ function parseMD(s) {
   s = s.replace(/https?:\/\/[^\s]*[?&]invite=([\w-]+)[^\s]*/gi, (url, code) => {
     const alreadyMember = (CU?.bastions||[]).some(b=>(b.invites||[]).some(inv=>inv.code===code));
     const embedId = 'bie-'+code.replace(/[^a-zA-Z0-9]/g,'');
-    // Try to populate embed from local bastions first, then API, then global search
+    // Try to populate embed from multiple sources
     setTimeout(async () => {
       const el = document.getElementById(embedId);
       if (!el) return;
       let b = null;
-      // Strategy 1: Check user's own bastions
+      // Strategy 1: Check user's own bastions by invite code match
       (CU?.bastions||[]).forEach(ub => { if ((ub.invites||[]).some(inv=>inv.code===code)) b = ub; });
-      // Strategy 2: Try API endpoint
+      // Strategy 1b: If not found by code but user has bastions, try matching by globalId from invite data
+      if (!b) {
+        try {
+          const invData = await FortizedSocial.getInvite(code);
+          if (invData?.bastionId) {
+            const match = (CU?.bastions||[]).find(ub => ub.globalId === invData.bastionId);
+            if (match) b = match;
+          }
+        } catch {}
+      }
+      // Strategy 2: Try API endpoint (server-side lookup)
       if (!b) {
         try {
           const r = await fetch('/api/bastion/invite/'+encodeURIComponent(code));
-          const d = await r.json();
-          if (d.success && d.bastion) b = d.bastion;
-        } catch(e) { console.debug('[Embed] API fetch failed:', e); }
+          if (r.ok) { const d = await r.json(); if (d.success && d.bastion) b = d.bastion; }
+        } catch(e) { console.debug('[Embed] API failed:', e); }
       }
       // Strategy 3: Search all global bastions client-side
       if (!b) {
@@ -19218,10 +19227,24 @@ function parseMD(s) {
           }
         } catch(e) { console.debug('[Embed] Global search failed:', e); }
       }
-      if (!b) return;
-      const nameEl = el.querySelector('.bie-name'); if (nameEl) nameEl.textContent = b.name || 'Bastion';
+      // Strategy 4: Search all users' bastions as last resort
+      if (!b) {
+        try {
+          const allUsers = await FortizedSocial.getUsers();
+          for (const user of allUsers) {
+            for (const ub of (user.bastions||[])) {
+              if ((ub.invites||[]).some(inv=>inv.code===code)) { b = ub; break; }
+            }
+            if (b) break;
+          }
+        } catch(e) { console.debug('[Embed] User search failed:', e); }
+      }
+      // Update embed or show error
+      const nameEl = el.querySelector('.bie-name');
+      if (!b) { if (nameEl) nameEl.textContent = 'Invite not found'; return; }
+      if (nameEl) nameEl.textContent = b.name || 'Bastion';
       const iconEl = el.querySelector('.bie-icon'); if (iconEl) iconEl.innerHTML = b.icon ? `<img src="${escapeHTML(b.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.parentElement.innerHTML='<div class=bie-fallback>${(b.name||'B')[0]}</div>'">` : `<div class="bie-fallback">${(b.name||'B')[0]}</div>`;
-      const bannerEl = el.querySelector('.bie-banner'); if (bannerEl && b.banner) bannerEl.innerHTML = `<img src="${escapeHTML(b.banner)}" oncontextmenu="return false" draggable="false">`;
+      const bannerEl = el.querySelector('.bie-banner'); if (bannerEl && b.banner) bannerEl.innerHTML = `<img src="${escapeHTML(b.banner)}" draggable="false">`;
       const descEl = el.querySelector('.bie-desc'); if (descEl && (b.desc||b.description)) { descEl.textContent = b.desc||b.description; descEl.style.display = ''; }
       const statsEl = el.querySelector('.bie-stats'); if (statsEl) { const mc = b.memberCount || Object.keys(b.memberRoles||{}).length || 1; const oc = Math.max(1,Math.floor(mc*0.3)); statsEl.innerHTML = `<div class="bie-stat"><span class="bie-dot online"></span>${oc} Online</div><div class="bie-stat"><span class="bie-dot total"></span>${mc} Member${mc!==1?'s':''}</div>`; }
     }, 50);

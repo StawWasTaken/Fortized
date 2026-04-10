@@ -554,7 +554,7 @@ io.on('connection', (socket) => {
     io.to(key).emit('message:edited', {
       room: key,
       messageId: data.messageId,
-      newText: sanitizeString(data.newText, 4000),
+      newText: sanitizeString(data.newText, 500000),
       editedBy: username,
     });
   });

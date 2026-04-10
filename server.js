@@ -23,6 +23,7 @@ const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
   pingTimeout: 30000,
   pingInterval: 10000,
+  maxHttpBufferSize: 50 * 1024 * 1024, // 50MB max payload for file attachments
 });
 
 const PORT = process.env.PORT || 3000;

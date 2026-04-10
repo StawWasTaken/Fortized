@@ -3298,7 +3298,7 @@ async function renderDMSidebar(scroll) {
             else if (diffMin < 60) timeEl.textContent = diffMin + 'm';
             else if (diffHr < 24) timeEl.textContent = diffHr + 'h';
             else if (diffDay < 7) timeEl.textContent = diffDay + 'd';
-            else timeEl.textContent = d.toLocaleDateString([], {month:'short', day:'numeric'});
+            else timeEl.textContent = d.toLocaleDateString('fr-FR', {month:'short', day:'numeric'});
           }
         }
       }
@@ -4161,7 +4161,7 @@ async function sendGCMessage() {
     id: msgRef.key,
     from: CU.username,
     text,
-    time: now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+    time: now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
     timestamp: now.toISOString(),
   };
   _removeNewMsgBar('gc-msgs');
@@ -5216,7 +5216,7 @@ function appendMessage(container, msg, context, prevAuthor) {
   if (document.querySelector(`[data-msgid="${CSS.escape(id)}"]`)) return;
   // System messages (join, bot deploy, etc.)
   if (msg.from === '__system__') {
-    const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+    const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
     const row=document.createElement('div');
     row.className='msg-row msg-system';
     row.dataset.msgid=id;
@@ -5243,8 +5243,8 @@ function appendMessage(container, msg, context, prevAuthor) {
     }
   }
   const isOwn=msg.from===CU?.username;
-  const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):(msg.time||'');
-  const fullTime=msg.timestamp?new Date(msg.timestamp).toLocaleString([],{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
+  const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):(msg.time||'');
+  const fullTime=msg.timestamp?new Date(msg.timestamp).toLocaleString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
   const row=document.createElement('div');
   row.className=`msg-row ${isFirst?'msg-first':'msg-cont'}${isOwn?' own':''}`;
   row.dataset.msgid=id;
@@ -5541,7 +5541,13 @@ async function saveEdit(msgId) {
   const ta=document.getElementById('edit-ta');
   if (!ta) return;
   const newText=ta.value.trim();
-  if (!newText) return;
+  if (!newText) {
+    // Empty message — offer to delete
+    const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+    if (row) { cancelEdit(msgId, row.dataset.text||''); }
+    deleteMsg(msgId);
+    return;
+  }
   const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
   if (row) row.dataset.text=newText;
   const textEl=row?.querySelector('.msg-text');
@@ -5837,14 +5843,14 @@ async function forwardTo(type, target) {
       await FortizedSocial.sendDMMessage(CU.username, target, text, { forwarded: true, forwardedBy: CU.username });
       toast('Forwarded to ' + target, 'success');
     } else if (type === 'gc') {
-      const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
+      const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
       await firebase.database().ref('groupChats/' + target + '/messages').push(msgObj);
       toast('Forwarded to group chat', 'success');
     } else if (type === 'bastion') {
       const [bi, chId] = target.split(':');
       const b = CU.bastions?.[parseInt(bi)];
       if (b) {
-        const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
+        const msgObj = { from: CU.username, text, time: new Date().toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}), timestamp: Date.now(), forwarded: true, forwardedBy: CU.username };
         await firebase.database().ref('bastionMsgs/' + (b.globalId || b.name) + '/' + chId).push(msgObj);
         toast('Forwarded to #' + ((b.channels||[]).find(c=>c.id===chId)?.name || chId), 'success');
       }
@@ -18966,7 +18972,7 @@ function parseMD(s) {
   s = s.replace(/\[FTZGIF:([^\]]+)\]/g, (_, url) => {
     const safe = escapeHTML(url);
     const gifId = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16) || ('gif-' + Math.random().toString(36).slice(2,8));
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${gifId}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
   // 0a. Sticker token from sticker picker
   s = s.replace(/\[FTZSTICKER:([^\]]+)\]/g, (_, url) => {
@@ -19016,7 +19022,7 @@ function parseMD(s) {
     if (isGif) {
       return '<div class="ftz-embed-gif" onclick="_openMediaLightbox(\'' + safeSrc + '\')">'
         + '<img src="' + safeSrc + '" loading="lazy">'
-        + '<button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:\'' + fid + '\',url:\'' + safeSrc + '\'})" title="Save to favourites">&#11088;</button>'
+        + '<button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:\'' + fid + '\',url:\'' + safeSrc + '\'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>'
         + '</div>';
     }
     return '<div style="margin:5px 0;display:inline-block;border-radius:10px;padding:0;overflow:hidden;">'
@@ -19114,23 +19120,23 @@ function parseMD(s) {
     const cleanId = id.split('-').pop();
     const gifUrl = 'https://media.giphy.com/media/'+cleanId+'/giphy.gif';
     const fid = cleanId.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${gifUrl}')"><img src="${gifUrl}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${gifUrl}'})" title="Save to favourites">&#11088;</button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${gifUrl}')"><img src="${gifUrl}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${gifUrl}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
   // 1a. Tenor GIF links — embed with fav button
   s = s.replace(/(https?:\/\/(?:media\.)?tenor\.com\/[^\s"'<>]+\.(?:gif|mp4))(?=[\s<]|$)/gi, (url) => {
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
     const isVideo = url.endsWith('.mp4');
-    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
+    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
   // 1ab. Klipy GIF links — auto-embed any klipy.com URL as inline GIF
   s = s.replace(/(https?:\/\/[^\s"'<>]*klipy\.[^\s"'<>]+\.(?:gif|webp|mp4))(?=[\s<]|$)/gi, (url) => {
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
     const isVideo = /\.mp4$/i.test(url);
-    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
+    if (isVideo) return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><video src="${safe}" autoplay loop muted playsinline crossorigin="anonymous" style="width:100%;max-height:360px;display:block;"></video><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
   // 1ac. Klipy page links — resolve klipy.com/gifs/... or klipy.com/stickers/... to inline GIF
   s = s.replace(/https?:\/\/(?:www\.)?klipy\.com\/(?:gifs|stickers|clips)\/([\w-]+)[^\s]*/gi, (url, slug) => {
@@ -19144,7 +19150,7 @@ function parseMD(s) {
     if (/giphy\.com/i.test(url) || /klipy\./i.test(url)) return url;
     const safe = escapeHTML(url.trim());
     const fid = url.replace(/[^a-zA-Z0-9]/g,'').slice(-16);
-    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites">&#11088;</button></div>`;
+    return `<div class="ftz-embed-gif" onclick="_openMediaLightbox('${safe}')"><img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${fid}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button></div>`;
   });
   // 2. YouTube embed — all unified
   // YouTube Shorts — portrait 9:16 (same structure, just different aspect ratio)
@@ -22972,7 +22978,7 @@ async function _resolveKlipySlug(placeholderId, slug) {
       if (gifUrl) {
         const safe = escapeHTML(gifUrl);
         const gid = match.slug || match.id || slug;
-        el.innerHTML = `<img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${escapeHTML(String(gid))}',url:'${safe}'})" title="Save to favourites">&#11088;</button>`;
+        el.innerHTML = `<img src="${safe}" loading="lazy"><button class="chat-gif-fav-btn" onclick="event.stopPropagation();saveFavGif({id:'${escapeHTML(String(gid))}',url:'${safe}'})" title="Save to favourites"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>`;
         el.style.minHeight = '';
         el.onclick = () => _openMediaLightbox(gifUrl);
         return;
@@ -25286,6 +25292,39 @@ function ftzVideoSeekPreview(id, e) {
   const pct = Math.max(0, Math.min(100, ((e.clientX-rect.left)/rect.width)*100));
   thumb.style.left=pct+'%';
 }
+// Drag support for video/audio progress bars
+function _initMediaDrag(barEl, id, type) {
+  if (!barEl || barEl._dragInit) return;
+  barEl._dragInit = true;
+  barEl.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const seek = (ev) => {
+      const rect = barEl.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+      const el = document.getElementById(id);
+      if (el && el.duration) el.currentTime = pct * el.duration;
+    };
+    seek(e);
+    const move = (ev) => { seek(ev); };
+    const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+}
+// Auto-init drag on video/audio progress bars after render
+const _mediaDragObserver = new MutationObserver(() => {
+  document.querySelectorAll('.ftz-vp-progress:not([data-drag])').forEach(bar => {
+    bar.dataset.drag = '1';
+    const vid = bar.closest('.ftz-vp')?.querySelector('video');
+    if (vid) _initMediaDrag(bar, vid.id, 'video');
+  });
+  document.querySelectorAll('.ftz-ap-progress:not([data-drag])').forEach(bar => {
+    bar.dataset.drag = '1';
+    const aud = bar.closest('.ftz-embed')?.querySelector('audio');
+    if (aud) _initMediaDrag(bar, aud.id, 'audio');
+  });
+});
+_mediaDragObserver.observe(document.body, { childList: true, subtree: true });
 function ftzVideoFullscreen(id) {
   const wrap=document.getElementById(id+'-wrap');
   const v=document.getElementById(id);
@@ -30514,7 +30553,7 @@ function _renderThreadReplies(replies) {
     <div class="thread-reply">
       <div class="tr-av">${buildAvatarHTML(null,r.from||'',28)}</div>
       <div class="tr-body">
-        <div class="tr-meta"><span class="tr-name">${escapeHTML(r.from||'')}</span><span class="tr-time">${r.timestamp?new Date(r.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''}</span></div>
+        <div class="tr-meta"><span class="tr-name">${escapeHTML(r.from||'')}</span><span class="tr-time">${r.timestamp?new Date(r.timestamp).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):''}</span></div>
         <div class="tr-text">${parseMD(escapeHTML(r.text||''))}</div>
       </div>
     </div>`).join('');

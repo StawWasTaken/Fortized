@@ -1,4 +1,9 @@
 
+// ── Debug flag — set to true in console to enable verbose logging ──
+const FTZ_DEBUG = localStorage.getItem('ftz_debug') === 'true';
+const _dbg = FTZ_DEBUG ? console.debug.bind(console) : () => {};
+const _wrn = FTZ_DEBUG ? console.warn.bind(console) : () => {};
+
 // ══════════════════════════════════════════════════════════
 // SVG ICON SYSTEM  (replaces emoji icons throughout the UI)
 // ══════════════════════════════════════════════════════════
@@ -338,7 +343,7 @@ const FtzStatus = (() => {
     _autoAway = false;
     CU.status = status;
     // Save manual status to localStorage for persistence across reloads
-    try { localStorage.setItem('ftz_manual_status_' + CU.username, status); } catch (e) { console.debug('[Status] localStorage write failed', e); }
+    try { localStorage.setItem('ftz_manual_status_' + CU.username, status); } catch (e) { _dbg('[Status] localStorage write failed', e); }
     _broadcast(status);
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     updateUserbar();
@@ -357,7 +362,7 @@ const FtzStatus = (() => {
         updateUserbar();
         return;
       }
-    } catch (e) { console.debug('[Status] localStorage read failed', e); }
+    } catch (e) { _dbg('[Status] localStorage read failed', e); }
     // Default to online
     _manualStatus = CU.status || 'online';
     CU.status = _manualStatus;
@@ -417,7 +422,7 @@ const FtzStatus = (() => {
           _broadcast(CU.status);
           updateUserbar();
         }
-      } catch (e) { console.debug('[Status] idle poll failed', e); } finally { _companionIdlePollRunning = false; }
+      } catch (e) { _dbg('[Status] idle poll failed', e); } finally { _companionIdlePollRunning = false; }
     }, COMPANION_IDLE_POLL_MS);
   }
 
@@ -864,7 +869,7 @@ async function refreshCU() {
       new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))
     ]);
     if (fresh?.username) {
-      console.debug('[refreshCU] Fresh data from DB:', { username: fresh.username, pfp: fresh.pfp ? 'set' : 'null', friends: fresh.friends?.length || 0 });
+      _dbg('[refreshCU] Fresh data from DB:', { username: fresh.username, pfp: fresh.pfp ? 'set' : 'null', friends: fresh.friends?.length || 0 });
 
       // Preserve radiance data if DB returned null but local had active values
       if(!fresh.radianceUntil && prevRad && new Date(prevRad)>new Date()) fresh.radianceUntil=prevRad;
@@ -955,13 +960,13 @@ function escapeHTML(s) {
 
 function _getTrustedDomains() {
   const builtIn = ['youtube.com','youtu.be','spotify.com','github.com','twitter.com','x.com','twitch.tv','reddit.com','itch.io','roblox.com','steam','fortized.com','giphy.com','klipy.com','tenor.com'];
-  try { const user = JSON.parse(localStorage.getItem('ftz_trusted_domains')||'[]'); return [...builtIn, ...user]; } catch (e) { console.debug('[URL] trusted domains parse failed', e); return builtIn; }
+  try { const user = JSON.parse(localStorage.getItem('ftz_trusted_domains')||'[]'); return [...builtIn, ...user]; } catch (e) { _dbg('[URL] trusted domains parse failed', e); return builtIn; }
 }
 function _trustDomain(domain) {
   try {
     const user = JSON.parse(localStorage.getItem('ftz_trusted_domains')||'[]');
     if (!user.includes(domain)) { user.push(domain); localStorage.setItem('ftz_trusted_domains', JSON.stringify(user)); }
-  } catch (e) { console.debug('[URL] trust domain save failed', e); }
+  } catch (e) { _dbg('[URL] trust domain save failed', e); }
 }
 function openExternalLink(e, url) {
   if (e) e.preventDefault();
@@ -969,7 +974,7 @@ function openExternalLink(e, url) {
   const trustedDomains = _getTrustedDomains();
   let isTrusted = false;
   let urlDomain = '';
-  try { urlDomain = new URL(url).hostname; isTrusted = trustedDomains.some(d => urlDomain.includes(d)); } catch (e) { console.debug('[URL] parse failed', e); }
+  try { urlDomain = new URL(url).hostname; isTrusted = trustedDomains.some(d => urlDomain.includes(d)); } catch (e) { _dbg('[URL] parse failed', e); }
   if (isTrusted) {
     window.open(url, '_blank', 'noopener,noreferrer');
   } else {
@@ -1130,7 +1135,7 @@ function scrollToMsg(msgId) {
   try {
     const row=document.querySelector(`[data-msgid="${CSS.escape(String(msgId))}"]`);
     if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.style.background='rgba(255,249,62,.06)';row.style.transition='background .3s';setTimeout(()=>row.style.background='',1500);}
-  } catch(e) { console.warn('scrollToMsg', e); }
+  } catch(e) { _wrn('scrollToMsg', e); }
 }
 // Smart auto-scroll: track whether user is at bottom
 let _chatAutoScroll={};
@@ -1506,7 +1511,7 @@ function showView(v, _skipPush) {
   // Close mobile sidebars on navigation
   if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
   // Sync mobile tab bar
-  setTimeout(() => { try { _syncMobileTabBar(); } catch (e) { console.debug('[Mobile] tab bar sync failed', e); } }, 50);
+  setTimeout(() => { try { _syncMobileTabBar(); } catch (e) { _dbg('[Mobile] tab bar sync failed', e); } }, 50);
   const _mtb = document.getElementById('mobile-tab-bar');
   if (_mtb) _mtb.style.display = '';
   // Stop admin polling when leaving admin view
@@ -1749,7 +1754,7 @@ function updateUserbar() {
   }
   _syncRailUserbarActivity();
   // Update mobile tab bar avatar and badges
-  try { _updateMobileTabAvatar(); _updateMobileNotifBadge(); } catch(e) { console.debug('[Mobile] Tab update:', e?.message); }
+  try { _updateMobileTabAvatar(); _updateMobileNotifBadge(); } catch(e) { _dbg('[Mobile] Tab update:', e?.message); }
 }
 function _isMobile() { return window.innerWidth <= 768; }
 function _isTablet() { return window.innerWidth <= 1024 && window.innerWidth > 768; }
@@ -2128,8 +2133,8 @@ function renderRailBastions() {
   const groupKey = 'ftz_bastion_groups';
   let order = [];
   let groups = {};
-  try { order = JSON.parse(localStorage.getItem(orderKey)||'[]'); } catch (e) { console.debug('[Sidebar] order parse failed', e); }
-  try { groups = JSON.parse(localStorage.getItem(groupKey)||'{}'); } catch (e) { console.debug('[Sidebar] groups parse failed', e); }
+  try { order = JSON.parse(localStorage.getItem(orderKey)||'[]'); } catch (e) { _dbg('[Sidebar] order parse failed', e); }
+  try { groups = JSON.parse(localStorage.getItem(groupKey)||'{}'); } catch (e) { _dbg('[Sidebar] groups parse failed', e); }
 
   const bastions = CU?.bastions||[];
   // Build ordered list: user order first, then any new bastions
@@ -2512,7 +2517,7 @@ function _groupBastions(name) {
   // Group selected bastions together (called from context menu)
   const groupKey = 'ftz_bastion_groups';
   let groups = {};
-  try { groups = JSON.parse(localStorage.getItem(groupKey)||'{}'); } catch (e) { console.debug('[Sidebar] groups parse failed', e); }
+  try { groups = JSON.parse(localStorage.getItem(groupKey)||'{}'); } catch (e) { _dbg('[Sidebar] groups parse failed', e); }
   if (!groups[name]) groups[name] = [];
   // For now, add current bastion to group
   const bastions = CU?.bastions||[];
@@ -3299,7 +3304,7 @@ async function renderDMSidebar(scroll) {
       }
       const row = document.getElementById('dm-fi-'+f);
       if (row) row.dataset.lastTime = lastTime;
-    } catch(e) { console.debug('[DM] Friend row update:', e?.message); }
+    } catch(e) { _dbg('[DM] Friend row update:', e?.message); }
   });
 
   const gcPromises = visibleGCs.map(async gc => {
@@ -3314,7 +3319,7 @@ async function renderDMSidebar(scroll) {
           el.textContent = (last.from===CU.username?'You: ':last.from+': ') + (last.text||'').slice(0,35);
         }
       }
-    } catch(e) { console.debug('[GC] Preview update:', e?.message); }
+    } catch(e) { _dbg('[GC] Preview update:', e?.message); }
     const row = document.getElementById('gc-fi-'+gc.id);
     if (row) row.dataset.lastTime = lastTime;
   });
@@ -3476,7 +3481,7 @@ async function renderDMFriendsHome() {
         const row = document.querySelector(`.dm-friend-row[data-user="${CSS.escape(f)}"]`);
         if (row) row.style.display = 'none';
       }
-    } catch (e) { console.debug('[DM] friend status update failed', e); }
+    } catch (e) { _dbg('[DM] friend status update failed', e); }
   });
 }
 
@@ -3709,13 +3714,13 @@ async function ensureDMExists(partnerUsername) {
       const newArr2 = [CU.username, ...arr2.filter(u=>u!==CU.username)].slice(0,30);
       await firebase.database().ref('dmIndex/'+partnerUsername).set(newArr2);
     }
-  } catch(e) { console.warn('ensureDMExists', e); }
+  } catch(e) { _wrn('ensureDMExists', e); }
 }
 
 async function loadDMMessages(username) {
   const msgsEl = document.getElementById('dm-msgs');
   if (!msgsEl) return;
-  if (_dmListener) { try{_dmListener();}catch(e){console.debug('[DM] Listener cleanup:',e?.message);} _dmListener=null; }
+  if (_dmListener) { try{_dmListener();}catch(e){_dbg('[DM] Listener cleanup:',e?.message);} _dmListener=null; }
   // Stop any existing DM polling for this conversation
   const dmKey = [CU.username, username].sort().join('__');
   FortizedSocial.stopDMPolling(dmKey);
@@ -3739,7 +3744,7 @@ async function loadDMMessages(username) {
         if(msg.from!==CU.username && !isUserBlocked(msg.from) && !isUserIgnored(msg.from)) playNotifSound('message');
       }
     });
-  } catch(e){console.warn('DM load',e);}
+  } catch(e){_wrn('DM load',e);}
 }
 
 async function sendDM() {
@@ -3762,7 +3767,7 @@ async function sendDM() {
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
   try {
     const savedMsg = await FortizedSocial.sendDMMessage(CU.username, curDM, text);
-    console.debug('[sendDM] Message sent successfully');
+    _dbg('[sendDM] Message sent successfully');
     FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: savedMsg || msg });
     _trackSendMsgQuest();
   } catch (e) {
@@ -4103,7 +4108,7 @@ function _filterGCMembers(query) {
 async function loadGCMessages(gcId) {
   const msgsEl = document.getElementById('gc-msgs');
   if (!msgsEl || !gcId) return;
-  if (_gcListener) { try{_gcListener();}catch(e){console.debug('[GC] Listener cleanup:',e?.message);} _gcListener=null; }
+  if (_gcListener) { try{_gcListener();}catch(e){_dbg('[GC] Listener cleanup:',e?.message);} _gcListener=null; }
   // Join Socket.io room for GC real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('gc', gcId);
   try {
@@ -4135,8 +4140,8 @@ let _gcEditListenerPath = null;
 function _attachGCLiveEdits(gcId) {
   const path = 'groupChats/'+gcId+'/messages';
   if (_gcEditListenerPath) {
-    try { firebase.database().ref(_gcEditListenerPath).off('child_changed'); } catch(e){console.debug('[GC] Edit listener off:',e?.message);}
-    try { firebase.database().ref(_gcEditListenerPath).off('child_removed'); } catch(e){console.debug('[GC] Delete listener off:',e?.message);}
+    try { firebase.database().ref(_gcEditListenerPath).off('child_changed'); } catch(e){_dbg('[GC] Edit listener off:',e?.message);}
+    try { firebase.database().ref(_gcEditListenerPath).off('child_removed'); } catch(e){_dbg('[GC] Delete listener off:',e?.message);}
     _gcEditListenerPath = null;
   }
   _gcEditListenerPath = path;
@@ -4197,7 +4202,7 @@ function _stopGCTypingBroadcast() {
 }
 
 function listenGCTyping(gcId, members) {
-  if (_gcTypingListenerOff) { try{_gcTypingListenerOff();}catch(e){console.debug('[GC] Typing listener off:',e?.message);} _gcTypingListenerOff=null; }
+  if (_gcTypingListenerOff) { try{_gcTypingListenerOff();}catch(e){_dbg('[GC] Typing listener off:',e?.message);} _gcTypingListenerOff=null; }
   const ref = firebase.database().ref(_gcTypingPath(gcId));
   const handler = ref.on('value', snap => {
     const data = snap.val()||{};
@@ -4726,7 +4731,7 @@ function selectChannel(idx) {
   // Clear unread for this channel
   if (curBastion !== null) clearChannelUnread(curBastion, idx);
   // Auto-clear mention notifications for this channel (Discord-style)
-  try { FortizedSocial.markNotificationReadBySource(CU.username, 'mention', null).then(()=>updateNotifBadge()).catch(e => console.warn('[Notif] Clear mention read:', e?.message)); } catch(e) { console.warn('[Notif]', e?.message); }
+  try { FortizedSocial.markNotificationReadBySource(CU.username, 'mention', null).then(()=>updateNotifBadge()).catch(e => _wrn('[Notif] Clear mention read:', e?.message)); } catch(e) { _wrn('[Notif]', e?.message); }
   if (typeof closeMobileCtxSidebar === 'function') closeMobileCtxSidebar();
   // Remember last channel for this bastion
   if (curBastion !== null && CU.bastions?.[curBastion]) {
@@ -4859,7 +4864,7 @@ async function loadChannelMessages(idx) {
   const ch=b?.channels?.[idx];
   const msgsEl=document.getElementById('ch-msgs-'+idx);
   if (!ch||!msgsEl) return;
-  if (_chListener){try{_chListener();}catch(e){console.debug('[CH] Listener cleanup:',e?.message);}_chListener=null;}
+  if (_chListener){try{_chListener();}catch(e){_dbg('[CH] Listener cleanup:',e?.message);}_chListener=null;}
   // Join Socket.io room for bastion channel real-time events (typing, edits, deletes)
   FortizedSocial.joinRoom('bastion', b.globalId||b.name, ch.name);
   try {
@@ -4885,7 +4890,7 @@ async function loadChannelMessages(idx) {
     // Start polling to enable real-time message sync across sessions
     const channelKey = 'bastion:' + (b.globalId||b.name) + ':' + ch.name;
     FortizedSocial.startChannelPolling(channelKey);
-  } catch(e){console.warn('Channel load',e);}
+  } catch(e){_wrn('Channel load',e);}
 }
 
 // ════════════════════════════════════════════
@@ -4927,10 +4932,10 @@ async function _loadAnnouncementRoom(wrap, b, ch, idx) {
   try {
     const msgs = await FortizedSocial.getBastionChannelMessages(b.globalId||b.name, ch.name);
     _renderAnnouncementFeed(feedEl, msgs || [], idx, canPost);
-  } catch(e) { console.warn('Ann load', e); }
+  } catch(e) { _wrn('Ann load', e); }
 
   // Live listener
-  if (_annListener) { try { _annListener(); } catch(e) { console.debug('[Ann] Listener cleanup:', e?.message); } _annListener = null; }
+  if (_annListener) { try { _annListener(); } catch(e) { _dbg('[Ann] Listener cleanup:', e?.message); } _annListener = null; }
   _annListener = FortizedSocial.listenBastionChannel(b.globalId||b.name, ch.name, msg => {
     if (curChannel !== idx) return;
     // Handle edit/delete events
@@ -6952,7 +6957,7 @@ function initFortizedUXResilience() {
     if (cached){
       try{CU=JSON.parse(cached);}catch{CU=null;}
       usedCache = true;
-      console.debug('[Init] Using cached user data (offline mode)');
+      _dbg('[Init] Using cached user data (offline mode)');
     }
     if (!CU?.username) {
       localStorage.removeItem('ftz_current');
@@ -6977,7 +6982,7 @@ function initFortizedUXResilience() {
       if (cached){
         try{CU=JSON.parse(cached);}catch{CU=null;}
         usedCache = true;
-        console.warn('[Init] Cache fallback after timeout:', e?.message);
+        _wrn('[Init] Cache fallback after timeout:', e?.message);
       }
     }
     if (!CU?.username){
@@ -7028,7 +7033,7 @@ function initFortizedUXResilience() {
           try { await FortizedSocial.adminUnsuspendUser(username); } catch(e) { console.warn('[Admin] Unsuspend failed:', e?.message); }
         }
       }
-    } catch(e) { console.warn('Ban/suspension check skipped:', e); }
+    } catch(e) { _wrn('Ban/suspension check skipped:', e); }
   }
 
   // Migrate: ensure all bastions have unique globalIds
@@ -7056,9 +7061,9 @@ function initFortizedUXResilience() {
   if (navigator.onLine && typeof FortizedSocial !== 'undefined') {
     setTimeout(async () => {
       try {
-        console.debug('[Init] Refreshing user data from database...');
+        _dbg('[Init] Refreshing user data from database...');
         const refreshed = await refreshCU();
-        console.debug('[Init] ✓ User data refreshed from database');
+        _dbg('[Init] ✓ User data refreshed from database');
       } catch(e) {
         console.warn('[Init] Refresh failed but continuing:', e?.message);
       }
@@ -7070,9 +7075,9 @@ function initFortizedUXResilience() {
   initFortizedUXResilience();
 
   try { saveCurrentToAccounts(); } catch(e) { console.warn('[init] saveCurrentToAccounts:', e); }
-  try { updateUserbar(); } catch(e) { console.warn('[init] updateUserbar:', e); }
-  try { renderRailBastions(); } catch(e) { console.warn('[init] renderRailBastions:', e); }
-  try { if(typeof startVCListener==='function') startVCListener(CU.username); } catch(e) { console.warn('[init] startVCListener:', e); }
+  try { updateUserbar(); } catch(e) { _wrn('[init] updateUserbar:', e); }
+  try { renderRailBastions(); } catch(e) { _wrn('[init] renderRailBastions:', e); }
+  try { if(typeof startVCListener==='function') startVCListener(CU.username); } catch(e) { _wrn('[init] startVCListener:', e); }
   // ── Initialize Socket.io for real-time events ──
   try {
     const _socketCbs = {
@@ -7090,7 +7095,7 @@ function initFortizedUXResilience() {
           // Only update if not a self-triggered change (avoid loops)
           if (CU.status !== data.status && data.status !== 'offline') {
             CU.status = data.status;
-            try { updateUserbar(); } catch(e) { console.debug('[Userbar] Update failed:', e?.message); }
+            try { updateUserbar(); } catch(e) { _dbg('[Userbar] Update failed:', e?.message); }
           }
         }
 
@@ -7180,7 +7185,7 @@ function initFortizedUXResilience() {
               allRows.forEach(r => { if (r.style.display !== 'none') onCount++; });
               sob.textContent = _dmFriendsFilter === 'online' ? onCount : sob.textContent;
             }
-          } catch (e) { console.debug('[DM] online count update failed', e); }
+          } catch (e) { _dbg('[DM] online count update failed', e); }
           // Refresh Active Now sidebar when a friend's status changes
           _debouncedActiveNowRefresh();
         }
@@ -7259,7 +7264,7 @@ function initFortizedUXResilience() {
       },
       onMessage: function(room, msg) {
         if (!room || !msg) return;
-        console.debug('[Socket.IO] Received message:new event', { room, msgId: msg.id, from: msg.from });
+        _dbg('[Socket.IO] Received message:new event', { room, msgId: msg.id, from: msg.from });
         // Handle DM messages
         if (room.startsWith('dm:') && curDM) {
           const expectedRoom = 'dm:' + [CU.username, curDM].sort().join('__');
@@ -7269,7 +7274,7 @@ function initFortizedUXResilience() {
               // Check if message already rendered (echo from own send)
               const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
               if (!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) {
-                console.debug('[onMessage] Adding DM message to display', { id: mid, from: msg.from });
+                _dbg('[onMessage] Adding DM message to display', { id: mid, from: msg.from });
                 const lastRows = msgsEl.querySelectorAll('.msg-row');
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'dm', lastAuthor);
@@ -7287,7 +7292,7 @@ function initFortizedUXResilience() {
             if (msgsEl) {
               const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
               if (!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) {
-                console.debug('[onMessage] Adding GC message to display', { id: mid, from: msg.from });
+                _dbg('[onMessage] Adding GC message to display', { id: mid, from: msg.from });
                 const lastRows = msgsEl.querySelectorAll('.msg-row');
                 const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                 appendMessage(msgsEl, msg, 'gc', lastAuthor);
@@ -7308,7 +7313,7 @@ function initFortizedUXResilience() {
               if (msgsEl) {
                 const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
                 if (!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) {
-                  console.debug('[onMessage] Adding bastion message to display', { id: mid, from: msg.from });
+                  _dbg('[onMessage] Adding bastion message to display', { id: mid, from: msg.from });
                   const lastRows = msgsEl.querySelectorAll('.msg-row');
                   const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;
                   appendMessage(msgsEl, msg, 'ch', lastAuthor);
@@ -7482,7 +7487,7 @@ function initFortizedUXResilience() {
           if (data.pfpCrop !== undefined) CU.pfpCrop = data.pfpCrop;
           if (data.displayName) CU.displayName = data.displayName;
           saveLocal();
-          try { updateUserbar(); } catch(e) { console.debug('[Userbar] Update failed:', e?.message); }
+          try { updateUserbar(); } catch(e) { _dbg('[Userbar] Update failed:', e?.message); }
         }
 
         // ── CACHE PFP CROP DATA ──
@@ -7601,7 +7606,7 @@ function initFortizedUXResilience() {
       },
       onFriendRequestsUpdate: function(data) {
         if (!data) return;
-        console.debug('[onFriendRequestsUpdate] Friend requests changed:', { sent: data.sent?.length || 0, received: data.received?.length || 0 });
+        _dbg('[onFriendRequestsUpdate] Friend requests changed:', { sent: data.sent?.length || 0, received: data.received?.length || 0 });
         // Update the user object with fresh friend request data
         CU.friendRequestsSent = data.sent || [];
         CU.friendRequestsReceived = data.received || [];
@@ -7616,7 +7621,7 @@ function initFortizedUXResilience() {
       },
       onVoiceRoomUpdate: function(data) {
         if (!data) return;
-        console.debug('[onVoiceRoomUpdate] Voice room changed:', { bastionId: data.bastionId, channelName: data.channelName, participants: data.participants?.length || 0 });
+        _dbg('[onVoiceRoomUpdate] Voice room changed:', { bastionId: data.bastionId, channelName: data.channelName, participants: data.participants?.length || 0 });
         // Update voice room participant list
         const voicePanel = document.querySelector(`[data-bastion-id="${CSS.escape(data.bastionId)}"][data-channel-name="${CSS.escape(data.channelName)}"]`);
         if (voicePanel) {
@@ -7648,7 +7653,7 @@ function initFortizedUXResilience() {
     FortizedSocial.initSocket(CU.username, _socketCbs);
     // Start Supabase real-time polling with callbacks for message delivery
     FortizedSocial.startPolling(CU.username, _socketCbs);
-  } catch(e) { console.warn('[init] Socket.io/polling init:', e); }
+  } catch(e) { _wrn('[init] Socket.io/polling init:', e); }
   // Show offline banner immediately if we loaded from cache while offline
   if (!navigator.onLine) {
     const _ob = document.getElementById('offline-banner');
@@ -7718,21 +7723,21 @@ function initFortizedUXResilience() {
   // Onboarding will be triggered if user is new
 
   // Check invite link
-  try{checkInviteLink();}catch(e){console.warn('[Init] Invite link check:',e?.message);}
-  try{checkTrialLink();}catch(e){console.warn('[Init] Trial link check:',e?.message);}
-  try{checkPersonalInviteLink();}catch(e){console.warn('[Init] Personal invite check:',e?.message);}
-  try{checkGiftLinks();}catch(e){console.warn('[Init] Gift links check:',e?.message);}
+  try{checkInviteLink();}catch(e){_wrn('[Init] Invite link check:',e?.message);}
+  try{checkTrialLink();}catch(e){_wrn('[Init] Trial link check:',e?.message);}
+  try{checkPersonalInviteLink();}catch(e){_wrn('[Init] Personal invite check:',e?.message);}
+  try{checkGiftLinks();}catch(e){_wrn('[Init] Gift links check:',e?.message);}
   // Show personal invite link if already generated
-  try { applyRadianceFont(); } catch(e) { console.warn('[init] applyRadianceFont:', e); }
-  try { trackRadianceTime(); } catch(e) { console.warn('[init] trackRadianceTime:', e); }
+  try { applyRadianceFont(); } catch(e) { _wrn('[init] applyRadianceFont:', e); }
+  try { trackRadianceTime(); } catch(e) { _wrn('[init] trackRadianceTime:', e); }
   // Post-init setup: account switcher, periodic updates
   setTimeout(_postInitSetup, 500);
   // Check & listen for maintenance mode
-  try { checkMaintenanceMode(); } catch(e) { console.warn('[init] checkMaintenanceMode:', e); }
-  try { _listenGlobalSettingsConsolidated(); } catch(e) { console.warn('[init] _listenGlobalSettingsConsolidated:', e); }
+  try { checkMaintenanceMode(); } catch(e) { _wrn('[init] checkMaintenanceMode:', e); }
+  try { _listenGlobalSettingsConsolidated(); } catch(e) { _wrn('[init] _listenGlobalSettingsConsolidated:', e); }
   // Listen for force-refresh and session-clear signals from admin
-  try { _listenForceRefresh(); } catch(e) { console.warn('[init] _listenForceRefresh:', e); }
-  try { _listenClearSessions(); } catch(e) { console.warn('[init] _listenClearSessions:', e); }
+  try { _listenForceRefresh(); } catch(e) { _wrn('[init] _listenForceRefresh:', e); }
+  try { _listenClearSessions(); } catch(e) { _wrn('[init] _listenClearSessions:', e); }
   // Poll for ban/suspension/warning enforcement via Supabase (every 15s)
   let _wasBanned = CU.banned || false;
   let _wasSuspended = !!(CU.suspension || CU.suspendedUntil);
@@ -7756,14 +7761,14 @@ function initFortizedUXResilience() {
         }
         // Force logout check
         _checkForceLogout(u);
-      } catch (e) { console.debug('[Init] enforcement poll failed', e); }
+      } catch (e) { _dbg('[Init] enforcement poll failed', e); }
     }, 120000); // Reduced to 2min (was 15s) — egress emergency
-  } catch(e) { console.warn('[init] enforcement poller:', e); }
+  } catch(e) { _wrn('[init] enforcement poller:', e); }
   if(CU.personalInviteCode){const d=document.getElementById('invite-link-display');if(d){const l=location.origin+location.pathname+'?ref='+CU.personalInviteCode;d.textContent=l;d.style.cursor='pointer';d.onclick=()=>navigator.clipboard.writeText(l).then(()=>toast('Copied!','success'));}}
   // Start report polling for all staff
-  try { if(hasStaffAccess())setTimeout(startReportPolling,2000); } catch(e) { console.warn('[init] reportPolling:', e); }
+  try { if(hasStaffAccess())setTimeout(startReportPolling,2000); } catch(e) { _wrn('[init] reportPolling:', e); }
   // Listen for real-time staff changes so sidebar updates dynamically
-  try { _listenStaffChanges(); } catch(e) { console.warn('[init] _listenStaffChanges:', e); }
+  try { _listenStaffChanges(); } catch(e) { _wrn('[init] _listenStaffChanges:', e); }
   // Listen for real-time bastion updates from other members
   setTimeout(_listenBastionUpdates, 1500);
   setTimeout(_listenDmUpdates, 2000);
@@ -7839,15 +7844,15 @@ function initFortizedUXResilience() {
   try {
     // Notification listeners are now handled via Socket.IO in initCrossDeviceSync()
   } catch(e) { console.warn('[Notif] Listener setup failed:', e?.message); }
-  try { initIdleDetection(); } catch(e) { console.warn('[init] initIdleDetection:', e); }
+  try { initIdleDetection(); } catch(e) { _wrn('[init] initIdleDetection:', e); }
   // Start Spotify polling if already connected
   try { if (CU?.spotifyToken) _pollSpotifyNowPlaying(); } catch(e) { console.warn('[Spotify] Init poll failed:', e?.message); }
   // Auto-detect game activity in Tauri desktop app (Discord-style)
-  try { _startAutoActivityDetection(); } catch(e) { console.warn('[init] autoActivityDetection:', e); }
-  try { restoreCustomStatusTimer(); } catch(e) { console.warn('[init] restoreCustomStatusTimer:', e); }
+  try { _startAutoActivityDetection(); } catch(e) { _wrn('[init] autoActivityDetection:', e); }
+  try { restoreCustomStatusTimer(); } catch(e) { _wrn('[init] restoreCustomStatusTimer:', e); }
   // Discord-style: restore the user's chosen status from last session
-  try { FtzStatus.restoreManualStatus(); } catch(e) { console.warn('[init] restoreManualStatus:', e); }
-  try { updateUserbar(); } catch(e) { console.warn('[init] updateUserbar2:', e); }
+  try { FtzStatus.restoreManualStatus(); } catch(e) { _wrn('[init] restoreManualStatus:', e); }
+  try { updateUserbar(); } catch(e) { _wrn('[init] updateUserbar2:', e); }
   initDragDrop();
   clearTimeout(_st);
   if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
@@ -7857,7 +7862,7 @@ function initFortizedUXResilience() {
     clearTimeout(_st);
     if(window._loadingSafetyTimer)clearTimeout(window._loadingSafetyTimer);
     // Fallback: ensure home view is visible even if init partially failed
-    try { showView('home'); } catch (e) { console.debug('[Nav] showView failed', e); }
+    try { showView('home'); } catch (e) { _dbg('[Nav] showView failed', e); }
   }
 })();
 
@@ -8744,7 +8749,7 @@ async function joinBastionByCode() {
       closeModal('modal-join-bastion');
       return;
     }
-  } catch (e) { console.debug('[Bastion] invite lookup failed', e); }
+  } catch (e) { _dbg('[Bastion] invite lookup failed', e); }
 
   // Strategy 2: Search global bastions for invite code
   const allBastions = await FortizedSocial.getGlobalBastions().catch(()=>({})) || {};
@@ -8970,7 +8975,7 @@ function renderOverviewRoom() {
     + '<span class="ov-section-title">Upcoming events</span>'
     + '<span class="ov-section-link" onclick="openBastionSettings(\'events\')">See all</span>'
     + '</div>'
-    + '<div class="ov-ev-row" id="ov-events-row"><div style="font-size:11px;color:var(--muted);padding:10px;">Loading…</div></div>'
+    + '<div class="ov-ev-row" id="ov-events-row"><div style="padding:10px;display:flex;justify-content:center;"><div class="pl-spinner" style="width:14px;height:14px;border-width:2px;"></div></div></div>'
     + '</div>';
 
   // Load events async into the row
@@ -9724,7 +9729,7 @@ function renderBSettingsMain(tab) {
       <div class="bs-section-title">Members</div>
       <div style="font-size:12px;color:var(--muted-light);margin-bottom:16px;">${b.memberCount||1} member${(b.memberCount||1)!==1?'s':''}</div>
       <input class="field-input" id="member-search" placeholder="Search members…" oninput="filterBSettingsMembers(this.value)" style="margin-bottom:14px;">
-      <div id="bsettings-members-list"><div style="color:var(--muted);">Loading…</div></div>`;
+      <div id="bsettings-members-list"><div style="display:flex;justify-content:center;align-items:center;padding:20px;"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;"></div></div></div>`;
     loadBastionMembersList();
   }
   else if (tab==='bans') {
@@ -10352,7 +10357,7 @@ async function saveAppQuestions() {
     if (b.applicationQuestions) b.applicationQuestions[i] = el.value.trim();
   });
   await saveUser();
-  try { if (b.globalId) await FortizedSocial.updateBastionSettings?.(b.globalId, {applicationQuestions: b.applicationQuestions}); } catch(e) { console.warn('[Bastion] App questions sync:', e?.message); }
+  try { if (b.globalId) await FortizedSocial.updateBastionSettings?.(b.globalId, {applicationQuestions: b.applicationQuestions}); } catch(e) { _wrn('[Bastion] App questions sync:', e?.message); }
   toast('Application form saved!', 'success');
 }
 async function updateBastionIcon(e) {
@@ -10467,9 +10472,9 @@ async function revokeInvite(i) {
 async function loadBastionMembersList() {
   const b = CU.bastions[curBastion];
   const el = document.getElementById('bsettings-members-list'); if(!el) return;
-  el.innerHTML = '<div style="color:var(--muted);font-size:13px;">Loading…</div>';
+  el.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;padding:20px;"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;"></div></div>';
   let members=[];
-  try { members = await FortizedSocial.getBastionMembers(b.globalId||b.name)||[]; } catch(e) { console.warn('[Bastion] Members list load:', e?.message); }
+  try { members = await FortizedSocial.getBastionMembers(b.globalId||b.name)||[]; } catch(e) { _wrn('[Bastion] Members list load:', e?.message); }
   if(!members.length) members=[b.owner];
   const roles = b.roles||[];
   const memberRoles = b.memberRoles||{};
@@ -11460,7 +11465,7 @@ function confirmDeployBot(arsenalBotId, bastionIdx) {
   toast(`${arsenalBot.name} deployed to ${b.name}!`, 'success');
   // System message for bot integration
   const bCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
-  try { FortizedSocial.sendBastionChannelMessage(b.globalId||b.name, bCh.name, '__system__', '**'+arsenalBot.name+'** has been integrated into the bastion.'); } catch(e) { console.debug('[Bot] System msg failed:', e?.message); }
+  try { FortizedSocial.sendBastionChannelMessage(b.globalId||b.name, bCh.name, '__system__', '**'+arsenalBot.name+'** has been integrated into the bastion.'); } catch(e) { _dbg('[Bot] System msg failed:', e?.message); }
 }
 
 function openDeployBotPicker() {
@@ -11514,7 +11519,7 @@ function deployMyBot(botIdx) {
   toast(`${bot.name} deployed!`, 'success');
   // System message for bot integration
   const bCh = (b.channels||[]).find(ch=>ch.type==='text')||{name:'general'};
-  try { FortizedSocial.sendBastionChannelMessage(b.globalId||b.name, bCh.name, '__system__', '**'+bot.name+'** has been integrated into the bastion.'); } catch(e) { console.debug('[Bot] System msg failed:', e?.message); }
+  try { FortizedSocial.sendBastionChannelMessage(b.globalId||b.name, bCh.name, '__system__', '**'+bot.name+'** has been integrated into the bastion.'); } catch(e) { _dbg('[Bot] System msg failed:', e?.message); }
 }
 
 function toggleBastionBot(botId) {
@@ -12222,7 +12227,7 @@ function _trackEmojiFrequency(emoji) {
     // Keep only top 100 entries
     const sorted = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,100);
     localStorage.setItem('ftz_emoji_freq', JSON.stringify(Object.fromEntries(sorted)));
-  } catch (e) { console.debug('[Emoji] frequency save failed', e); }
+  } catch (e) { _dbg('[Emoji] frequency save failed', e); }
 }
 
 // Emoji info popover — right-click an emoji to see details
@@ -13356,7 +13361,7 @@ async function updateNotifBadge() {
   const badge=document.getElementById('notif-badge');
   const tbBadge=document.getElementById('tb-notif-badge');
   let unread = 0;
-  try { unread = await FortizedSocial.getUnreadCount(CU.username) || 0; } catch (e) { console.debug('[Notif] unread count failed', e); }
+  try { unread = await FortizedSocial.getUnreadCount(CU.username) || 0; } catch (e) { _dbg('[Notif] unread count failed', e); }
   if(badge){badge.textContent=unread;badge.style.display=unread>0?'flex':'none';}
   if(tbBadge){tbBadge.textContent=unread;tbBadge.style.display=unread>0?'block':'none';}
   setFaviconNotif(unread>0);
@@ -13413,7 +13418,7 @@ async function buildNotifList() {
   const list=document.getElementById('np-list-v2')||document.getElementById('np-list'); if(!list) return;
   try {
   let notifs=[];
-  try{notifs=await FortizedSocial.getNotifications(CU.username)||[];}catch(e){console.warn('[inbox] notif fetch:',e);}
+  try{notifs=await FortizedSocial.getNotifications(CU.username)||[];}catch(e){_wrn('[inbox] notif fetch:',e);}
   // Robust normalization — handle all possible Firebase return types
   if (!Array.isArray(notifs)) {
     if (notifs && typeof notifs === 'object') notifs = Object.values(notifs);
@@ -13468,7 +13473,7 @@ async function buildNotifList() {
   const _notifUsers = {};
   const _notifUsernames = [...new Set(notifs.slice(0,25).filter(n=>n.from && n.type!=='support_ticket').map(n=>n.from))];
   await Promise.allSettled(_notifUsernames.map(async uname => {
-    try { const u = await FortizedSocial.getUserByName(uname); if (u) _notifUsers[uname] = u; } catch (e) { console.debug('[Notif] user lookup failed', e); }
+    try { const u = await FortizedSocial.getUserByName(uname); if (u) _notifUsers[uname] = u; } catch (e) { _dbg('[Notif] user lookup failed', e); }
   }));
 
   list.innerHTML = notifs.slice(0,25).map(n => {
@@ -13528,7 +13533,7 @@ async function markAllRead(){
   _clearAllDMBadges();
   try{
     await FortizedSocial.markNotificationsRead(CU.username);
-  }catch(e){console.warn('[inbox] markAllRead:',e);}
+  }catch(e){_wrn('[inbox] markAllRead:',e);}
   // Rebuild after DB is updated
   try{await updateNotifBadge();}catch{}
   try{await buildNotifList();}catch{}
@@ -13541,7 +13546,7 @@ function _clearAllDMBadges(){document.querySelectorAll('.friend-item').forEach(f
 // ════════════════════════════════════════════
 async function viewUserProfile(username) {
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch (e) { console.debug('[Profile] user lookup failed', e); }
+  try { u = await FortizedSocial.getUserByName(username); } catch (e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
   if (username === CU.username) u = { ...u, ...CU };
 
@@ -13556,10 +13561,10 @@ async function viewUserProfile(username) {
         status = presenceResult[username].status || 'offline';
       } else {
         // Socket.IO unavailable, fall back to DB
-        try { status = await FortizedSocial.getStatus(username); } catch (e) { console.debug('[Profile] status fallback failed', e); }
+        try { status = await FortizedSocial.getStatus(username); } catch (e) { _dbg('[Profile] status fallback failed', e); }
       }
     } catch (e) {
-      try { status = await FortizedSocial.getStatus(username); } catch (e) { console.debug('[Profile] status fallback failed', e); }
+      try { status = await FortizedSocial.getStatus(username); } catch (e) { _dbg('[Profile] status fallback failed', e); }
     }
   }
   subscribeProfileStatus(username);
@@ -13598,7 +13603,7 @@ async function viewUserProfile(username) {
   const _mutualFriendsData = {};
   if (_mutualFriendNames.length) {
     await Promise.all(_mutualFriendNames.slice(0, 20).map(async f => {
-      try { const ud = await FortizedSocial.getUserByName(f); if (ud) _mutualFriendsData[f] = ud; } catch (e) { console.debug('[Profile] mutual friend lookup failed', e); }
+      try { const ud = await FortizedSocial.getUserByName(f); if (ud) _mutualFriendsData[f] = ud; } catch (e) { _dbg('[Profile] mutual friend lookup failed', e); }
     }));
   }
   const _mutualFriends = _mutualFriendNames;
@@ -14619,7 +14624,7 @@ async function _syncAdminData() {
     _nsfwBannedHashes = mergedHashes;
     localStorage.setItem('ftz_nsfw_banned_hashes', JSON.stringify(mergedHashes));
     localStorage.setItem('ftz_support_tickets', JSON.stringify(tickets));
-  } catch(e) { console.warn('Admin sync partial fail:', e); }
+  } catch(e) { _wrn('Admin sync partial fail:', e); }
 }
 
 async function _saveBanToServer(banObj) {
@@ -14725,7 +14730,7 @@ function _setupAdminLiveSync() {
         _renderAdminNav(adminTab);
         _loadAdminPage(adminTab, true);
       }
-    } catch (e) { console.debug('[Admin] live sync failed', e); }
+    } catch (e) { _dbg('[Admin] live sync failed', e); }
   }, 60000);
 }
 function _teardownAdminLiveSync() {
@@ -14764,7 +14769,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   // Legacy tabs (prefixed with _) render into sub-content if available; top-level tabs use main content
   const _isLegacySub = tab.startsWith('_');
   let main = (_isLegacySub && document.getElementById('adm-sub-content')) || document.getElementById('adm-content'); if (!main) return;
-  if (!_isAutoRefresh && !_isLegacySub) main.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,.3);">Loading…</div>';
+  if (!_isAutoRefresh && !_isLegacySub) main.innerHTML = '<div style="display:flex;justify-content:center;padding:40px;"><div class="pl-spinner" style="width:24px;height:24px;border-width:2.5px;"></div></div>';
   // Auto-refresh moderation and feedback tabs
   if (!_isAutoRefresh && (tab === 'moderation' || tab === 'feedback')) {
     _adminAutoRefresh = setInterval(() => {
@@ -15375,7 +15380,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         localStorage.setItem('ftz_global_settings', JSON.stringify(gs2));
         _globalSettings = gs2;
       }
-    } catch (e) { console.debug('[Admin] settings fetch failed', e); }
+    } catch (e) { _dbg('[Admin] settings fetch failed', e); }
     const gs = JSON.parse(localStorage.getItem('ftz_global_settings')||'{}');
     main.innerHTML = `<div style="padding:20px 24px;height:100%;overflow:auto;">
       <div style="font-family:var(--font-display);font-size:19px;font-weight:800;margin-bottom:14px;">Configuration</div>
@@ -15509,7 +15514,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     try {
       const fbList = await FortizedSocial.adminGetFeedback();
       feedbackData = Array.isArray(fbList) ? fbList.slice().reverse() : [];
-    } catch (e) { console.debug('[Admin] feedback fetch failed', e); }
+    } catch (e) { _dbg('[Admin] feedback fetch failed', e); }
     const posCount = feedbackData.filter(f=>f.rating==='positive').length;
     const neuCount = feedbackData.filter(f=>f.rating==='neutral').length;
     const negCount = feedbackData.filter(f=>f.rating==='negative').length;
@@ -15769,7 +15774,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
   else if (tab === '_scheduled_actions') {
     if (!isAdmin()) { main.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Access denied</div>'; return; }
     let scheduledItems = [];
-    try { const acts = await FortizedSocial.adminGetScheduledActions(); scheduledItems = acts.map((v,i)=>({...v,_key:i})); } catch (e) { console.debug('[Admin] scheduled actions fetch failed', e); }
+    try { const acts = await FortizedSocial.adminGetScheduledActions(); scheduledItems = acts.map((v,i)=>({...v,_key:i})); } catch (e) { _dbg('[Admin] scheduled actions fetch failed', e); }
     main.innerHTML = `<div style="padding:var(--space-xl);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-xl);">
         <div>
@@ -15800,7 +15805,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
     try {
       const statSnap = await firebase.database().ref('statuses').get();
       if (statSnap.exists()) activeConnections = Object.values(statSnap.val()).filter(s=>s!=='offline').length;
-    } catch (e) { console.debug('[Admin] network stats fetch failed', e); }
+    } catch (e) { _dbg('[Admin] network stats fetch failed', e); }
     main.innerHTML = `<div style="padding:var(--space-xl);">
       <div style="font-family:var(--font-display);font-size:var(--font-xl);font-weight:800;color:#fff;margin-bottom:var(--space-xs);">Network Monitor</div>
       <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:var(--space-xl);">Monitor active connections, database health, and service status.</div>
@@ -16474,7 +16479,7 @@ function _listenGlobalSettingsConsolidated() {
           document.body.appendChild(bar);
         }
       }
-    } catch (e) { console.debug('[Settings] global settings poll failed', e); }
+    } catch (e) { _dbg('[Settings] global settings poll failed', e); }
   }, 60000);
 }
 // Keep old function names as no-ops since init code calls them separately
@@ -16577,7 +16582,7 @@ function _submitFeedbackWithComment(btn, skip) {
       ...(comment ? { comment } : {}),
     };
     FortizedSocial.adminPushFeedback(fb);
-  } catch(e) { console.warn('[feedback]', e); }
+  } catch(e) { _wrn('[feedback]', e); }
 
   const _fbSub = toast_el.querySelector('.fb-sub'); if (_fbSub) _fbSub.textContent = 'Thanks for your feedback!';
   const commentWrap = toast_el.querySelector('.fb-comment-wrap'); if (commentWrap) commentWrap.style.display = 'none';
@@ -16626,7 +16631,7 @@ function _listenStaffChanges() {
         }
         adminAuthed = false;
       }
-    } catch (e) { console.debug('[Admin] staff access poll failed', e); }
+    } catch (e) { _dbg('[Admin] staff access poll failed', e); }
   }, 60000);
 }
 
@@ -16646,7 +16651,7 @@ function _listenForceRefresh() {
           setTimeout(() => location.reload(), 2000);
         }
       }
-    } catch (e) { console.debug('[Admin] force refresh poll failed', e); }
+    } catch (e) { _dbg('[Admin] force refresh poll failed', e); }
   }, 30000);
 }
 
@@ -16668,7 +16673,7 @@ function _listenClearSessions() {
           setTimeout(() => { window.location.href = '/login'; }, 2000);
         }
       }
-    } catch (e) { console.debug('[Admin] clear sessions poll failed', e); }
+    } catch (e) { _dbg('[Admin] clear sessions poll failed', e); }
   }, 30000);
 }
 
@@ -16676,7 +16681,7 @@ function _listenClearSessions() {
 const _bastionLiveRefs = [];
 function _listenBastionUpdates() {
   // Clean up previous listeners to prevent leaks
-  _bastionLiveRefs.forEach(ref => { try { ref.off(); } catch(e) { console.debug('[Bastion] ref.off:', e?.message); } });
+  _bastionLiveRefs.forEach(ref => { try { ref.off(); } catch(e) { _dbg('[Bastion] ref.off:', e?.message); } });
   _bastionLiveRefs.length = 0;
   if (!CU?.bastions) return;
   CU.bastions.forEach((b, idx) => {
@@ -16738,7 +16743,7 @@ function _listenBastionUpdates() {
 let _dmLiveRef = null;
 function _listenDmUpdates() {
   if (!CU?.username) return;
-  if (_dmLiveRef) { try { _dmLiveRef.off(); } catch(e) { console.debug('[DM] Ref off:', e?.message); } }
+  if (_dmLiveRef) { try { _dmLiveRef.off(); } catch(e) { _dbg('[DM] Ref off:', e?.message); } }
   _dmLiveRef = firebase.database().ref('dmIndex/' + CU.username);
   _dmLiveRef.on('value', snap => {
     if (!snap.exists()) return;
@@ -16753,7 +16758,7 @@ function _listenDmUpdates() {
 let _groupDmRefs = [];
 function _listenGroupDmUpdates() {
   // Clean up old listeners
-  _groupDmRefs.forEach(r => { try { r.ref.off('value', r.cb); } catch(e) { console.debug('[GC] Ref off:', e?.message); } });
+  _groupDmRefs.forEach(r => { try { r.ref.off('value', r.cb); } catch(e) { _dbg('[GC] Ref off:', e?.message); } });
   _groupDmRefs = [];
   if (!CU?.username) return;
   // Listen for changes to group DM metadata
@@ -16797,8 +16802,8 @@ async function adminSearchUser() {
   try {
     const pr = await FortizedSocial.queryPresence([username]);
     if (pr && pr[username]) { userStatus = pr[username].status || 'offline'; }
-    else { try { userStatus = await FortizedSocial.getStatus(username); } catch (e) { console.debug('[Profile] status fallback failed', e); } }
-  } catch (e) { try { userStatus = await FortizedSocial.getStatus(username); } catch (e) { console.debug('[Profile] status fallback failed', e); } }
+    else { try { userStatus = await FortizedSocial.getStatus(username); } catch (e) { _dbg('[Profile] status fallback failed', e); } }
+  } catch (e) { try { userStatus = await FortizedSocial.getStatus(username); } catch (e) { _dbg('[Profile] status fallback failed', e); } }
   const statusColors = {online:'#3ecf6e',away:'#f59e0b',dnd:'#f87171',invisible:'#6b7280',offline:'#6b7280'};
 
   // Risk analysis
@@ -17430,10 +17435,10 @@ async function _loadNSFWModel() {
         if (typeof nsfwjs === 'undefined') { throw new Error('nsfwjs library not available'); }
       }
       if (typeof tf !== 'undefined') {
-        try { await tf.ready(); } catch (e) { console.debug('[TF] ready failed', e); }
+        try { await tf.ready(); } catch (e) { _dbg('[TF] ready failed', e); }
       }
       _nsfwModel = await nsfwjs.load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/model/', { size: 299 });
-      if (_nsfwModel) { console.debug('[NSFW] Model loaded (attempt ' + (attempt+1) + ')'); break; }
+      if (_nsfwModel) { _dbg('[NSFW] Model loaded (attempt ' + (attempt+1) + ')'); break; }
     } catch(e) {
       console.error('NSFWJS model load attempt ' + (attempt+1) + ' failed:', e);
       _nsfwModel = null;
@@ -17526,7 +17531,7 @@ async function _analyzeFrame(source, w, h) {
     const explicitScore = pornScore + hentaiScore;
     const combinedScore = explicitScore + (sexyScore * 0.5);
 
-    console.debug('[NSFW] scan:', JSON.stringify(predMap), '→ explicit:', explicitScore.toFixed(2), 'combined:', combinedScore.toFixed(2));
+    _dbg('[NSFW] scan:', JSON.stringify(predMap), '→ explicit:', explicitScore.toFixed(2), 'combined:', combinedScore.toFixed(2));
 
     if (explicitScore > 0.30) return { label: 'EXPLICIT', score: combinedScore.toFixed(2) };
     if (combinedScore > 0.45) return { label: 'SUGGESTIVE', score: combinedScore.toFixed(2) };
@@ -17610,7 +17615,7 @@ async function adjustOnyx(direction) {
   if (!amount||amount<=0) { toast('Enter a valid amount','error'); return; }
   if (!reason) { toast('Reason is required','error'); return; }
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch(e) { console.warn('[Admin] User lookup:', e?.message); }
+  try { u = await FortizedSocial.getUserByName(username); } catch(e) { _wrn('[Admin] User lookup:', e?.message); }
   if (!u) { toast('User not found','error'); return; }
   const delta = direction > 0 ? amount : -amount;
   u.onyx = Math.max(0, (u.onyx||0) + delta);
@@ -18099,7 +18104,7 @@ async function showBastionInviteDialog(bastion, inviterName, inviteCode) {
   try {
     const inviterUser = await FortizedSocial.getUserByName(inviterName);
     if (inviterUser?.pfp) inviterPfp = inviterUser.pfp;
-  } catch (e) { console.debug('[Invite] inviter avatar fetch failed', e); }
+  } catch (e) { _dbg('[Invite] inviter avatar fetch failed', e); }
   const inviterAvatarHTML = inviterPfp
     ? `<img src="${inviterPfp}" onerror="this.src='${_defaultPfpUrl(inviterName)}'">`
     : `<img src="${_defaultPfpUrl(inviterName)}">`;
@@ -18242,7 +18247,7 @@ async function joinBastionById(bastionId, hasInvite) {
     const wTemplate = localB.welcomeMessage || '**{user}** joined the bastion. Welcome!';
     const wMsg = wTemplate.replace(/\{user\}/g, '**'+wName+'**').replace(/\{bastion\}/g, '**'+(b.name||'Bastion')+'**').replace(/\{count\}/g, '');
     const wChName = localB.welcomeChannel || (b.channels||[]).find(ch=>ch.type==='text')?.name || 'general';
-    try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch(e) { console.debug('[Bastion] Welcome msg failed:', e?.message); }
+    try { await FortizedSocial.sendBastionChannelMessage(gid, wChName, '__system__', wMsg); } catch(e) { _dbg('[Bastion] Welcome msg failed:', e?.message); }
   }
 }
 
@@ -18659,7 +18664,7 @@ function leaveBastion(idx) {
     return;
   }
   showCustomConfirm('Leave "' + b.name + '"? You can rejoin with an invite.', async () => {
-    try { await FortizedSocial.removeBastionMember(b.globalId || b.name, CU.username); } catch(e) { console.warn('[Bastion] Leave member remove:', e?.message); }
+    try { await FortizedSocial.removeBastionMember(b.globalId || b.name, CU.username); } catch(e) { _wrn('[Bastion] Leave member remove:', e?.message); }
     // Clean local memberRoles so member list doesn't ghost
     if(b.memberRoles) delete b.memberRoles[CU.username];
     CU.bastions.splice(idx, 1);
@@ -19214,7 +19219,7 @@ function parseMD(s) {
       try {
       // Strategy 1: Check user's own bastions by invite code match
       (CU?.bastions||[]).forEach(ub => { if ((ub.invites||[]).some(inv=>inv.code===code)) b = ub; });
-      if (b) console.debug('[Embed] Found via strategy 1 (local bastions)');
+      if (b) _dbg('[Embed] Found via strategy 1 (local bastions)');
       // Strategy 1b: Look up invite in Supabase to get bastionId, then match locally or fetch globally
       if (!b) {
         try {
@@ -19222,30 +19227,30 @@ function parseMD(s) {
           if (invData?.bastionId) {
             // Try local match first
             const match = (CU?.bastions||[]).find(ub => ub.globalId === invData.bastionId);
-            if (match) { b = match; console.debug('[Embed] Found via strategy 1b (invite->local)'); }
+            if (match) { b = match; _dbg('[Embed] Found via strategy 1b (invite->local)'); }
             // If not local, fetch from global
             if (!b) {
               const gb = await FortizedSocial.getGlobalBastion(invData.bastionId);
-              if (gb) { b = {...gb, id: invData.bastionId}; console.debug('[Embed] Found via strategy 1b (invite->global)'); }
+              if (gb) { b = {...gb, id: invData.bastionId}; _dbg('[Embed] Found via strategy 1b (invite->global)'); }
             }
           }
-        } catch(e) { console.debug('[Embed] Strategy 1b failed:', e); }
+        } catch(e) { _dbg('[Embed] Strategy 1b failed:', e); }
       }
       // Strategy 2: Try API endpoint (server-side lookup)
       if (!b) {
         try {
           const r = await fetch('/api/bastion/invite/'+encodeURIComponent(code));
-          if (r.ok) { const d = await r.json(); if (d.success && d.bastion) { b = d.bastion; console.debug('[Embed] Found via strategy 2 (API)'); } }
-        } catch(e) { console.debug('[Embed] Strategy 2 failed:', e); }
+          if (r.ok) { const d = await r.json(); if (d.success && d.bastion) { b = d.bastion; _dbg('[Embed] Found via strategy 2 (API)'); } }
+        } catch(e) { _dbg('[Embed] Strategy 2 failed:', e); }
       }
       // Strategy 3: Search all global bastions client-side
       if (!b) {
         try {
           const all = await FortizedSocial.getGlobalBastions() || {};
           for (const [k,v] of Object.entries(all)) {
-            if ((v.invites||[]).some(inv=>inv.code===code)) { b = {...v, id: k}; console.debug('[Embed] Found via strategy 3 (global search)'); break; }
+            if ((v.invites||[]).some(inv=>inv.code===code)) { b = {...v, id: k}; _dbg('[Embed] Found via strategy 3 (global search)'); break; }
           }
-        } catch(e) { console.debug('[Embed] Strategy 3 failed:', e); }
+        } catch(e) { _dbg('[Embed] Strategy 3 failed:', e); }
       }
       // Strategy 4: Search all users' bastions as last resort
       if (!b) {
@@ -19253,11 +19258,11 @@ function parseMD(s) {
           const allUsers = await FortizedSocial.getUsers();
           for (const user of allUsers) {
             for (const ub of (user.bastions||[])) {
-              if ((ub.invites||[]).some(inv=>inv.code===code)) { b = ub; console.debug('[Embed] Found via strategy 4 (user search)'); break; }
+              if ((ub.invites||[]).some(inv=>inv.code===code)) { b = ub; _dbg('[Embed] Found via strategy 4 (user search)'); break; }
             }
             if (b) break;
           }
-        } catch(e) { console.debug('[Embed] Strategy 4 failed:', e); }
+        } catch(e) { _dbg('[Embed] Strategy 4 failed:', e); }
       }
       } catch(e) { console.error('[Embed] Unexpected error:', e); }
       // Update embed or show error
@@ -19331,7 +19336,7 @@ function parseMD(s) {
   s = s.replace(/(?<![='"(])(https?:\/\/[^\s<>"'()]+)/gi, url => {
     const safe = escapeHTML(url);
     let domain = '', siteName = '', embedColor = 'rgba(255,255,255,.2)';
-    try { const u = new URL(url); domain = u.hostname.replace('www.',''); siteName = domain.split('.')[0]; siteName = siteName.charAt(0).toUpperCase() + siteName.slice(1); } catch (e) { console.debug('[Embed] URL parse failed', e); }
+    try { const u = new URL(url); domain = u.hostname.replace('www.',''); siteName = domain.split('.')[0]; siteName = siteName.charAt(0).toUpperCase() + siteName.slice(1); } catch (e) { _dbg('[Embed] URL parse failed', e); }
     if (domain.includes('github.com')) { siteName = 'GitHub'; embedColor = '#f0f6fc'; }
     else if (domain.includes('twitch.tv')) { siteName = 'Twitch'; embedColor = '#9146ff'; }
     else if (domain.includes('reddit.com')) { siteName = 'Reddit'; embedColor = '#ff4500'; }
@@ -20056,7 +20061,7 @@ function initDesktopGameDetection() {
   // Listen for desktop app activity updates (v3.0.0)
   if (typeof window.fortizedDesktop.onActivityUpdate === 'function') {
     window.fortizedDesktop.onActivityUpdate((activityData) => {
-      console.debug('[Desktop] Activity update:', activityData);
+      _dbg('[Desktop] Activity update:', activityData);
       // Send to server if user is authenticated
       if (CU?.username && FortizedSocial?.getSocket?.()) {
         try {
@@ -20064,7 +20069,7 @@ function initDesktopGameDetection() {
             username: CU.username,
             desktopAppActivity: activityData,
           });
-        } catch (e) { console.debug('[Desktop] activity emit failed', e); }
+        } catch (e) { _dbg('[Desktop] activity emit failed', e); }
       }
     });
   }
@@ -20072,7 +20077,7 @@ function initDesktopGameDetection() {
   // Register for desktop app connection events
   if (typeof window.fortizedDesktop.onAppConnected === 'function') {
     window.fortizedDesktop.onAppConnected((data) => {
-      console.debug('[Desktop] App connected - Version:', data?.appVersion);
+      _dbg('[Desktop] App connected - Version:', data?.appVersion);
     });
   }
 
@@ -20095,7 +20100,7 @@ function initDesktopGameDetection() {
           setGameActivity(null);
         }
       }
-    } catch (e) { console.debug('[Desktop] process poll failed', e); }
+    } catch (e) { _dbg('[Desktop] process poll failed', e); }
   }
 
   // Poll every 15s using renderer-side matching
@@ -20121,7 +20126,7 @@ async function _enrichDetectedGameIGDB(game) {
         _igdbEnriched: true,
       };
     }
-  } catch (e) { console.debug('[IGDB] enrichment failed', e); }
+  } catch (e) { _dbg('[IGDB] enrichment failed', e); }
   return game;
 }
 
@@ -20265,11 +20270,11 @@ async function detectRunningApps() {
   try {
     const procs = await window.fortizedDesktop.getProcesses();
     if (procs) return _matchAllRunningApps(procs);
-  } catch (e) { console.debug('[Desktop] getProcesses failed', e); }
+  } catch (e) { _dbg('[Desktop] getProcesses failed', e); }
   try {
     const games = await window.fortizedDesktop.detectGames();
     if (games.length) return games;
-  } catch (e) { console.debug('[Desktop] detectGames failed', e); }
+  } catch (e) { _dbg('[Desktop] detectGames failed', e); }
   return [];
 }
 
@@ -20383,7 +20388,7 @@ function _blockUserConfirm(username) {
         try {
           await FortizedSocial.declineFriendRequest(CU.username, username);
           await refreshCU();
-        } catch (e) { console.debug('[Block] cancel friend request failed', e); }
+        } catch (e) { _dbg('[Block] cancel friend request failed', e); }
       }
       // Persist to Firebase
       try { await firebase.database().ref('users/' + CU.username + '/blockedUsers').set(blocked); } catch(e) { console.warn('[Block] Save failed:', e?.message); }
@@ -20470,7 +20475,7 @@ async function _syncIgnoreListFromFirebase() {
       }
       if (merged) _saveIgnoreList(localList);
     }
-  } catch (e) { console.debug('[Ignore] sync from Firebase failed', e); }
+  } catch (e) { _dbg('[Ignore] sync from Firebase failed', e); }
 }
 
 function isUserIgnored(username) {
@@ -20488,14 +20493,14 @@ function unignoreUser(username) {
   delete list[username];
   _saveIgnoreList(list);
   // Sync to Firebase
-  try { firebase.database().ref('users/' + CU.username + '/ignoredUsers/' + username).remove(); } catch(e) { console.warn('[Ignore] Remove sync:', e?.message); }
+  try { firebase.database().ref('users/' + CU.username + '/ignoredUsers/' + username).remove(); } catch(e) { _wrn('[Ignore] Remove sync:', e?.message); }
   toast(`Unignored ${username}`, 'success');
-  try { closeModal('modal-user'); } catch (e) { console.debug('[Modal] close failed', e); }
+  try { closeModal('modal-user'); } catch (e) { _dbg('[Modal] close failed', e); }
   _applyIgnoreBlurToExistingMessages(username, false);
 }
 
 function showIgnorePicker(username) {
-  try { closeModal('modal-user'); } catch (e) { console.debug('[Modal] close failed', e); }
+  try { closeModal('modal-user'); } catch (e) { _dbg('[Modal] close failed', e); }
   document.getElementById('modal-ignore-picker')?.remove();
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -20531,7 +20536,7 @@ function _applyIgnore(username, durationMs) {
   list[username] = Date.now() + durationMs;
   _saveIgnoreList(list);
   // Also persist to Firebase for cross-device sync
-  try { firebase.database().ref('users/' + CU.username + '/ignoredUsers/' + username).set(Date.now() + durationMs); } catch(e) { console.warn('[Ignore] Set sync:', e?.message); }
+  try { firebase.database().ref('users/' + CU.username + '/ignoredUsers/' + username).set(Date.now() + durationMs); } catch(e) { _wrn('[Ignore] Set sync:', e?.message); }
   document.getElementById('modal-ignore-picker')?.remove();
   const dur = IGNORE_DURATIONS.find(d => d.ms === durationMs);
   toast(`Ignoring ${username} for ${dur ? dur.label : 'a while'}`, 'info');
@@ -20634,8 +20639,8 @@ function _playNotifFallback(type) {
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.3);
     }
-    setTimeout(() => { try { ctx.close(); } catch (e) { console.debug('[Audio] ctx close failed', e); } }, 1000);
-  } catch (e) { console.debug('[Audio] sound play failed', e); }
+    setTimeout(() => { try { ctx.close(); } catch (e) { _dbg('[Audio] ctx close failed', e); } }, 1000);
+  } catch (e) { _dbg('[Audio] sound play failed', e); }
 }
 
 
@@ -20893,7 +20898,7 @@ async function _refreshInlineDetectedApps() {
     try {
       const procs = await window.fortizedDesktop.getProcesses();
       if (procs) detectedApps = _matchAllRunningApps(procs).filter(a => !owned.has(a.name.toLowerCase()));
-    } catch (e) { console.debug('[Desktop] detect apps failed', e); }
+    } catch (e) { _dbg('[Desktop] detect apps failed', e); }
   }
 
   // Enrich detected apps with IGDB cover art
@@ -20910,7 +20915,7 @@ async function _refreshInlineDetectedApps() {
           enriched.coverThumb = results[0].coverThumb || null;
           enriched.genre = results[0].genre || 'App';
         }
-      } catch (e) { console.debug('[IGDB] cover search failed', e); }
+      } catch (e) { _dbg('[IGDB] cover search failed', e); }
     }
     enrichedApps.push(enriched);
   }
@@ -20952,7 +20957,7 @@ async function _addDetectedGame(name) {
         coverThumb = results[0].coverThumb || null;
         genre = results[0].genre || genre;
       }
-    } catch (e) { console.debug('[IGDB] search failed', e); }
+    } catch (e) { _dbg('[IGDB] search failed', e); }
   }
   addGameToCollection(name, catalogEntry?.icon || '🎮', genre, cover, coverThumb);
   // Refresh the picker to remove the added game
@@ -21067,7 +21072,7 @@ async function _enrichGamesFromIGDB(games) {
           }
         });
       }
-    } catch (e) { console.debug('[IGDB] batch lookup failed', e); }
+    } catch (e) { _dbg('[IGDB] batch lookup failed', e); }
   }
   if (changed) { CU.gameCollection = games; await saveUser(); }
 }
@@ -21175,7 +21180,7 @@ async function addGameToCollection(name, icon, genre, coverUrl, coverThumb) {
   if (coverThumb) entry.coverThumb = coverThumb;
   CU.gameCollection.push(entry);
   await saveUser();
-  try { renderGCGrid(GAME_CATALOG); } catch (e) { console.debug('[GameCatalog] render failed', e); }
+  try { renderGCGrid(GAME_CATALOG); } catch (e) { _dbg('[GameCatalog] render failed', e); }
   buildProfileView('game_collection');
   toast(name + ' added!', 'success');
 }
@@ -21828,7 +21833,7 @@ async function _connectSpotify() {
           _onSpotifyTokens(d.tokens);
         }
       }
-    } catch (e) { console.debug('[Spotify] auth poll failed', e); }
+    } catch (e) { _dbg('[Spotify] auth poll failed', e); }
   }, 2000);
 
   // Safety: stop polling after 5 minutes
@@ -21851,7 +21856,7 @@ async function _onSpotifyTokens(tokens) {
   _pollSpotifyNowPlaying();
   const wc = document.getElementById('up-widgets-container');
   if (wc) renderProfileWidgetsOnCard(CU, wc);
-  try { buildProfileView('myprofile'); } catch (e) { console.debug('[Spotify] profile refresh failed', e); }
+  try { buildProfileView('myprofile'); } catch (e) { _dbg('[Spotify] profile refresh failed', e); }
 }
 
 // Refresh Spotify token using refresh_token
@@ -21875,7 +21880,7 @@ async function _refreshSpotifyToken() {
       saveUser();
       return true;
     }
-  } catch (e) { console.debug('[Spotify] token refresh failed', e); }
+  } catch (e) { _dbg('[Spotify] token refresh failed', e); }
   return false;
 }
 
@@ -21883,18 +21888,18 @@ async function _refreshSpotifyToken() {
 function _updateSpotifyWidget() {
   const spotifyData = CU.spotifyNowPlaying;
   if (!spotifyData) {
-    console.debug('[Spotify] No data to update');
+    _dbg('[Spotify] No data to update');
     return;
   }
 
   // Find all spotify widgets on the page (in profile cards, modals, etc)
   const spotifyWidgets = document.querySelectorAll('[style*="3ecf6e"]');
-  console.debug('[Spotify] Found', spotifyWidgets.length, 'widgets');
+  _dbg('[Spotify] Found', spotifyWidgets.length, 'widgets');
 
   spotifyWidgets.forEach(widget => {
     // Check if this is actually a spotify widget (has spotify-related content)
     if (widget.textContent.includes('Spotify') || widget.textContent.includes('SPOTIFY')) {
-      console.debug('[Spotify] Updating widget');
+      _dbg('[Spotify] Updating widget');
 
       if (spotifyData.isPlaying) {
         // Calculate real-time progress based on elapsed time since data was fetched
@@ -21927,7 +21932,7 @@ function _updateSpotifyWidget() {
             </div>
           </div>
         `;
-        console.debug('[Spotify] Updated with track:', spotifyData.track);
+        _dbg('[Spotify] Updated with track:', spotifyData.track);
       }
     }
   });
@@ -21938,7 +21943,7 @@ async function _pollSpotifyNowPlaying() {
   if (!CU?.spotifyToken) return;
   // Auto-refresh token if expired (within 60 seconds of expiry)
   if (CU.spotifyTokenExpiry && Date.now() > CU.spotifyTokenExpiry - 60000) {
-    console.debug('[Spotify] Token expiring soon, refreshing...');
+    _dbg('[Spotify] Token expiring soon, refreshing...');
     const refreshed = await _refreshSpotifyToken();
     if (!refreshed) {
       console.error('[Spotify] Token refresh failed');
@@ -21993,27 +21998,27 @@ async function _pollSpotifyNowPlaying() {
         _updateUserbarActivity();
         _syncRailUserbarActivity();
         FortizedSocial.socketEmit('activity:set', { activity: activityState.primary, activityState: activityState });
-        try { firebase.database().ref('users/'+CU.username+'/gameActivity').set(activityState.primary); } catch(e) { console.debug('[Activity] gameActivity write failed', e); }
-        try { firebase.database().ref('users/'+CU.username+'/activityState').set(activityState); } catch(e) { console.debug('[Activity] activityState write failed', e); }
+        try { firebase.database().ref('users/'+CU.username+'/gameActivity').set(activityState.primary); } catch(e) { _dbg('[Activity] gameActivity write failed', e); }
+        try { firebase.database().ref('users/'+CU.username+'/activityState').set(activityState); } catch(e) { _dbg('[Activity] activityState write failed', e); }
         // Save Spotify data to database
-        try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch(e) { console.debug('[Spotify] nowPlaying write failed', e); }
+        try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch(e) { _dbg('[Spotify] nowPlaying write failed', e); }
         // Update profile widget if visible
         _updateSpotifyWidget();
       } else {
         CU.spotifyNowPlaying = { isPlaying: false };
-        try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch(e) { console.debug('[Spotify] nowPlaying write failed', e); }
+        try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch(e) { _dbg('[Spotify] nowPlaying write failed', e); }
         _updateSpotifyWidget();
         // Clear Spotify activity if it was set
         removeActivity('spotify');
       }
     } else if (res.status === 204) {
       CU.spotifyNowPlaying = { isPlaying: false };
-      try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch(e) { console.debug('[Spotify] nowPlaying write failed', e); }
+      try { firebase.database().ref('users/'+CU.username+'/spotifyNowPlaying').set(CU.spotifyNowPlaying); } catch(e) { _dbg('[Spotify] nowPlaying write failed', e); }
       _updateSpotifyWidget();
       removeActivity('spotify');
     } else if (res.status === 401) {
       // Token invalid/expired — try refresh
-      console.warn('[Spotify] Token invalid (401), attempting refresh...');
+      _wrn('[Spotify] Token invalid (401), attempting refresh...');
       const refreshed = await _refreshSpotifyToken();
       if (!refreshed) {
         console.error('[Spotify] Token refresh failed');
@@ -22023,11 +22028,11 @@ async function _pollSpotifyNowPlaying() {
         await saveUser(true);
       }
       else {
-        console.debug('[Spotify] Token refreshed, retrying poll...');
+        _dbg('[Spotify] Token refreshed, retrying poll...');
         return _pollSpotifyNowPlaying(); // retry with new token
       }
     } else {
-      console.warn('[Spotify] API returned status:', res.status);
+      _wrn('[Spotify] API returned status:', res.status);
     }
   } catch (err) {
     console.error('[Spotify] Polling error:', err);
@@ -22280,7 +22285,7 @@ async function renderActivityDetectionTab(main) {
     try {
       const procs = await window.fortizedDesktop.getProcesses();
       if (procs) detectedApps = _matchAllRunningApps(procs);
-    } catch (e) { console.debug('[Desktop] process detection failed', e); }
+    } catch (e) { _dbg('[Desktop] process detection failed', e); }
   }
 
   // ── Current activity ──
@@ -22586,7 +22591,7 @@ async function showDMUserPanel(username) {
   panel.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center;">Loading\u2026</div>';
   subscribeProfileStatus(username);
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch(e) { console.debug('[DM] user lookup failed', e); }
+  try { u = await FortizedSocial.getUserByName(username); } catch(e) { _dbg('[DM] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
   // Update DM welcome area with actual pfp
   const _wAv = document.getElementById('dm-welcome-av');
@@ -22597,8 +22602,8 @@ async function showDMUserPanel(username) {
   try {
     const pr = await FortizedSocial.queryPresence([username]);
     if (pr && pr[username]) { status = pr[username].status || 'offline'; }
-    else { try { status = await FortizedSocial.getStatus(username); } catch(e) { console.debug('[DM] status fallback failed', e); } }
-  } catch(e) { console.debug('[DM] presence query failed', e); try { status = await FortizedSocial.getStatus(username); } catch(e2) { console.debug('[DM] status fallback failed', e2); } }
+    else { try { status = await FortizedSocial.getStatus(username); } catch(e) { _dbg('[DM] status fallback failed', e); } }
+  } catch(e) { _dbg('[DM] presence query failed', e); try { status = await FortizedSocial.getStatus(username); } catch(e2) { _dbg('[DM] status fallback failed', e2); } }
   const sc = FtzStatus.color(status);
   const hasR = u.radianceUntil && new Date(u.radianceUntil) > new Date();
   const hasRadiancePlus = u.radiancePlus && new Date(u.radiancePlus) > new Date();
@@ -22877,7 +22882,7 @@ async function _loadCollectionPreviews() {
     // Assign first gif to trending, then distribute to categories
     const trendCard = document.querySelector('[data-cat-preview="trending"]');
     if (trendCard && items[0]) trendCard.src = _klipyGifUrl(items[0], 'sm') || _klipyGifUrl(items[0], 'xs');
-  } catch (e) { console.debug('[Klipy] trending fetch failed', e); }
+  } catch (e) { _dbg('[Klipy] trending fetch failed', e); }
   // Load a preview for each category (batch a few at a time)
   const cats = [...previewCards].filter(c => c.dataset.catPreview !== 'trending');
   for (let i = 0; i < cats.length; i += 4) {
@@ -22890,7 +22895,7 @@ async function _loadCollectionPreviews() {
         const data = await res.json();
         const items = data.data?.data || data.data || [];
         if (items[0]) card.src = _klipyGifUrl(items[0], 'sm') || _klipyGifUrl(items[0], 'xs');
-      } catch (e) { console.debug('[Klipy] category preview failed', e); }
+      } catch (e) { _dbg('[Klipy] category preview failed', e); }
     }));
   }
 }
@@ -22932,7 +22937,7 @@ async function loadGiphyTrending(inputId) {
   const grid = document.getElementById('giphy-grid');
   if (!grid) return;
   grid.style.display = '';
-  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);">Loading…</div>';
+  grid.innerHTML = '<div style="grid-column:1/-1;display:flex;justify-content:center;padding:20px;"><div class="pl-spinner" style="width:20px;height:20px;border-width:2px;"></div></div>';
   try {
     const cid = CU?.username || 'anon';
     const res = await fetch(KLIPY_BASE + '/gifs/trending?per_page=30&content_filter=medium&customer_id=' + encodeURIComponent(cid));
@@ -23934,7 +23939,7 @@ async function openPollChannel(chIdx) {
     const snap = await firebase.database().ref(_getPollDbPath(bastionId, ch.name)).orderByChild('createdAt').get();
     if (snap.exists()) polls = Object.entries(snap.val()).map(([k, v]) => ({ ...v, _key: k }));
     polls.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  } catch (e) { console.debug('[Polls] load failed', e); }
+  } catch (e) { _dbg('[Polls] load failed', e); }
 
   const totalResponses = polls.reduce((s, p) => s + Object.keys(p.voters || {}).length, 0);
 
@@ -23975,7 +23980,7 @@ async function openPollChannel(chIdx) {
 }
 
 function _teardownPollLive() {
-  if (_pollLiveRef) { try { _pollLiveRef.off(); } catch(e) { console.debug('[Poll] live ref cleanup failed', e); } _pollLiveRef = null; }
+  if (_pollLiveRef) { try { _pollLiveRef.off(); } catch(e) { _dbg('[Poll] live ref cleanup failed', e); } _pollLiveRef = null; }
 }
 
 function _renderPollCard(poll, chIdx) {
@@ -24262,7 +24267,7 @@ async function startVoiceCall(partner) {
 async function showCallingScreen(partner) {
   _closeEl('calling-screen-modal');
   let partnerPfp = null;
-  try { const pu = await FortizedSocial.getUserByName(partner); partnerPfp=pu?.pfp; } catch(e) { console.debug('[VC] partner pfp lookup failed', e); }
+  try { const pu = await FortizedSocial.getUserByName(partner); partnerPfp=pu?.pfp; } catch(e) { _dbg('[VC] partner pfp lookup failed', e); }
 
   const modal = document.createElement('div');
   modal.id = 'calling-screen-modal';
@@ -24385,19 +24390,19 @@ async function _vcSetup(isCaller) {
       audioEl.volume = 1.0;
       audioEl.style.display = 'none';
       audioEl.onerror = (err) => console.error('[Voice] Audio element error:', err);
-      audioEl.onloadedmetadata = () => console.debug('[Voice] Remote audio metadata loaded');
+      audioEl.onloadedmetadata = () => _dbg('[Voice] Remote audio metadata loaded');
       document.body.appendChild(audioEl);
     }
     audioEl.srcObject = _vc.remoteStream;
     // Ensure audio is playing (bypass autoplay restrictions if needed)
     if (audioEl.play && typeof audioEl.play === 'function') {
       audioEl.play().catch(err => {
-        console.warn('[Voice] Audio autoplay blocked, requesting user interaction:', err);
+        _wrn('[Voice] Audio autoplay blocked, requesting user interaction:', err);
         // Fallback: create a user-initiated playback trigger
         document.addEventListener('click', () => { audioEl.play().catch(()=>{}); }, {once: true});
       });
     }
-    console.debug('[Voice] Incoming audio track received, stream:', e.streams[0]?.id);
+    _dbg('[Voice] Incoming audio track received, stream:', e.streams[0]?.id);
     // If a screen share video track arrives, show it in the call room
     if (e.track.kind === 'video') {
       _showScreenInRoom(true);
@@ -24434,16 +24439,16 @@ async function endVoiceCall() {
   if (_vc._speakChecker) { clearInterval(_vc._speakChecker); _vc._speakChecker=null; }
   if (_vc.localStream) _vc.localStream.getTracks().forEach(t=>t.stop());
   if (_vc.screenStream) _vc.screenStream.getTracks().forEach(t=>t.stop());
-  if (_vc.pc) { try { _vc.pc.close(); } catch(e) { console.debug('[VC] peer connection close failed', e); } }
+  if (_vc.pc) { try { _vc.pc.close(); } catch(e) { _dbg('[VC] peer connection close failed', e); } }
   if (_vc.sigRef) {
     // Signal to partner that call ended
-    try { firebase.database().ref(_vc.sigRef).update({ended:true,endedBy:CU.username,ts:Date.now()}); } catch(e) { console.debug('[VC] signal ended write failed', e); }
-    try { firebase.database().ref(_vc.sigRef+'/ice').off(); } catch(e) { console.debug('[VC] ice listener cleanup failed', e); }
-    try { firebase.database().ref(_vc.sigRef+'/answer').off(); } catch(e) { console.debug('[VC] answer listener cleanup failed', e); }
-    try { firebase.database().ref(_vc.sigRef).off('value'); } catch(e) { console.debug('[VC] value listener cleanup failed', e); }
+    try { firebase.database().ref(_vc.sigRef).update({ended:true,endedBy:CU.username,ts:Date.now()}); } catch(e) { _dbg('[VC] signal ended write failed', e); }
+    try { firebase.database().ref(_vc.sigRef+'/ice').off(); } catch(e) { _dbg('[VC] ice listener cleanup failed', e); }
+    try { firebase.database().ref(_vc.sigRef+'/answer').off(); } catch(e) { _dbg('[VC] answer listener cleanup failed', e); }
+    try { firebase.database().ref(_vc.sigRef).off('value'); } catch(e) { _dbg('[VC] value listener cleanup failed', e); }
     // Clean up stale signal data after a short delay (let partner read the 'ended' flag first)
     const sigPath = _vc.sigRef;
-    setTimeout(() => { try { firebase.database().ref(sigPath).remove(); } catch(e) { console.debug('[VC] signal cleanup failed', e); } }, 5000);
+    setTimeout(() => { try { firebase.database().ref(sigPath).remove(); } catch(e) { _dbg('[VC] signal cleanup failed', e); } }, 5000);
   }
   // Clean up ALL voice call UI elements
   document.getElementById('vc-remote-audio')?.remove();
@@ -24607,7 +24612,7 @@ async function renderVoiceCallUI(partner, isCaller) {
   _closeEl('vc-call-bar');
   // Fetch avatars
   let myPfp = CU.pfp, partnerPfp = null;
-  try { const pu = await FortizedSocial.getUserByName(partner); partnerPfp=pu?.pfp; } catch(e) { console.debug('[VC] partner pfp lookup failed', e); }
+  try { const pu = await FortizedSocial.getUserByName(partner); partnerPfp=pu?.pfp; } catch(e) { _dbg('[VC] partner pfp lookup failed', e); }
 
   const room = document.createElement('div');
   room.id = 'vc-call-bar';
@@ -24749,7 +24754,7 @@ async function renderVoiceCallUI(partner, isCaller) {
         if(ring) ring.style.borderColor = vol>12?'#3ecf6e':'rgba(255,255,255,.08)';
       },100);
       _vc._speakChecker = checkSpeak;
-    } catch (e) { console.debug('[VC] local speak detect failed', e); }
+    } catch (e) { _dbg('[VC] local speak detect failed', e); }
   }
   // Speaking indicator for partner (remote stream)
   if (_vc.remoteStream) {
@@ -24766,7 +24771,7 @@ async function renderVoiceCallUI(partner, isCaller) {
         const pRing = document.getElementById('vc-partner-ring');
         if(pRing) pRing.style.borderColor = vol2>12?'#3ecf6e':'rgba(255,255,255,.08)';
       },100);
-    } catch (e) { console.debug('[VC] remote speak detect failed', e); }
+    } catch (e) { _dbg('[VC] remote speak detect failed', e); }
   } else {
     // Remote stream may not be ready yet — attach when it arrives
     const _waitRemote = setInterval(()=>{
@@ -24786,7 +24791,7 @@ async function renderVoiceCallUI(partner, isCaller) {
             const pr = document.getElementById('vc-partner-ring');
             if(pr) pr.style.borderColor = v>12?'#3ecf6e':'rgba(255,255,255,.08)';
           },100);
-        } catch (e) { console.debug('[VC] deferred speak detect failed', e); }
+        } catch (e) { _dbg('[VC] deferred speak detect failed', e); }
       }
     }, 500);
   }
@@ -24829,7 +24834,7 @@ function _startVCQualityMonitor() {
       bars.forEach((bar, i) => {
         bar.style.background = i < level ? (colors[level]||'#3ecf6e') : 'rgba(255,255,255,.12)';
       });
-    } catch (e) { console.debug('[VC] quality indicator failed', e); }
+    } catch (e) { _dbg('[VC] quality indicator failed', e); }
   }, 3000);
 }
 
@@ -24879,7 +24884,7 @@ async function showIncomingCall(caller, offerSdp) {
   _startRingtone(); // callee also hears ringtone
   // Fetch caller pfp
   let callerPfp = null;
-  try { const cu = await FortizedSocial.getUserByName(caller); callerPfp = cu?.pfp; } catch(e) { console.debug('[VC] caller pfp lookup failed', e); }
+  try { const cu = await FortizedSocial.getUserByName(caller); callerPfp = cu?.pfp; } catch(e) { _dbg('[VC] caller pfp lookup failed', e); }
 
   const modal = document.createElement('div');
   modal.id = 'incoming-call-modal';
@@ -25006,8 +25011,8 @@ function subscribeProfileStatus(username) {
 function unsubscribeProfileStatus(username) {
   const l = _profileStatusListeners[username];
   if(l){
-    try { FortizedSocial.sb.removeChannel(l.statusSub); } catch(e) { console.debug('[Profile] status channel cleanup failed', e); }
-    try { FortizedSocial.sb.removeChannel(l.csSub); } catch(e) { console.debug('[Profile] customStatus channel cleanup failed', e); }
+    try { FortizedSocial.sb.removeChannel(l.statusSub); } catch(e) { _dbg('[Profile] status channel cleanup failed', e); }
+    try { FortizedSocial.sb.removeChannel(l.csSub); } catch(e) { _dbg('[Profile] customStatus channel cleanup failed', e); }
     delete _profileStatusListeners[username];
   }
 }
@@ -25112,7 +25117,7 @@ function _startRingtone() {
 }
 function _stopRingtone() {
   if (_ringtoneTimer) { clearTimeout(_ringtoneTimer); _ringtoneTimer=null; }
-  if (_ringtoneAudio) { try { _ringtoneAudio.pause(); _ringtoneAudio.currentTime=0; } catch(e) { console.debug('[Ringtone] pause failed', e); } _ringtoneAudio=null; }
+  if (_ringtoneAudio) { try { _ringtoneAudio.pause(); _ringtoneAudio.currentTime=0; } catch(e) { _dbg('[Ringtone] pause failed', e); } _ringtoneAudio=null; }
 }
 
 // ════════════════════════════════════════════
@@ -25385,7 +25390,7 @@ function broadcastIfChanged() {
       if (CU?.username) {
         firebase.database().ref('users/' + CU.username + '/activityState').set(activityState);
       }
-    } catch(e) { console.debug('[Activity] broadcast write failed', e); }
+    } catch(e) { _dbg('[Activity] broadcast write failed', e); }
     _updateUserbarActivity();
     _syncRailUserbarActivity();
   }
@@ -25573,7 +25578,7 @@ function _startAutoActivityDetection() {
           setGameActivity(null);
         }
       }
-    } catch(e) { console.debug('[Activity] auto-detect poll failed', e); }
+    } catch(e) { _dbg('[Activity] auto-detect poll failed', e); }
   }, AUTO_ACTIVITY_POLL_MS);
   // Run once immediately
   (async () => {
@@ -25583,7 +25588,7 @@ function _startAutoActivityDetection() {
       if (!procs) return;
       const detected = _matchRunningApp(procs);
       if (detected) setGameActivity(detected.name, detected.icon);
-    } catch(e) { console.debug('[Activity] initial detect failed', e); }
+    } catch(e) { _dbg('[Activity] initial detect failed', e); }
   })();
 }
 
@@ -25600,7 +25605,7 @@ async function detectGameActivity() {
       const detected = _matchRunningApp(procs);
       if (detected) return detected;
     }
-  } catch(e) { console.debug('[Activity] detectGameActivity failed', e); }
+  } catch(e) { _dbg('[Activity] detectGameActivity failed', e); }
   return null;
 }
 
@@ -26020,8 +26025,8 @@ function _attachDMLiveEdits(user1, user2) {
   const ref = firebase.database().ref(path);
   // Detach old with proper handler references
   if (_dmEditListener) {
-    try { firebase.database().ref(_dmEditListener).off('child_changed', _dmEditHandler); } catch(e) { console.debug('[DM] edit listener cleanup failed', e); }
-    try { firebase.database().ref(_dmEditListener).off('child_removed', _dmRemoveHandler); } catch(e) { console.debug('[DM] remove listener cleanup failed', e); }
+    try { firebase.database().ref(_dmEditListener).off('child_changed', _dmEditHandler); } catch(e) { _dbg('[DM] edit listener cleanup failed', e); }
+    try { firebase.database().ref(_dmEditListener).off('child_removed', _dmRemoveHandler); } catch(e) { _dbg('[DM] remove listener cleanup failed', e); }
     _dmEditListener = null;
   }
   if (_dmRemoveListener) _dmRemoveListener = null;
@@ -26037,8 +26042,8 @@ function _attachChLiveEdits(bastionId, channelName) {
   const path = 'bastionMsgs/'+bastionId+'/'+channelName;
   // Detach previous listener to prevent memory leaks
   if (_chEditListenerPath && _chEditListenerPath !== path) {
-    try { firebase.database().ref(_chEditListenerPath).off('child_changed'); } catch(e) { console.debug('[Ch] edit listener cleanup failed', e); }
-    try { firebase.database().ref(_chEditListenerPath).off('child_removed'); } catch(e) { console.debug('[Ch] remove listener cleanup failed', e); }
+    try { firebase.database().ref(_chEditListenerPath).off('child_changed'); } catch(e) { _dbg('[Ch] edit listener cleanup failed', e); }
+    try { firebase.database().ref(_chEditListenerPath).off('child_removed'); } catch(e) { _dbg('[Ch] remove listener cleanup failed', e); }
   }
   if (_chEditListenerPath === path) return; // already attached
   _chEditListenerPath = path;
@@ -26154,7 +26159,7 @@ function _stopTypingBroadcast() {
 }
 
 function _listenTyping(partner) {
-  if (_typingListenerOff) { try{_typingListenerOff();}catch(e){ console.debug('[Typing] listener cleanup failed', e); } _typingListenerOff=null; }
+  if (_typingListenerOff) { try{_typingListenerOff();}catch(e){ _dbg('[Typing] listener cleanup failed', e); } _typingListenerOff=null; }
   // Firebase listener as fallback
   const ref = firebase.database().ref(_typingPath(CU.username, partner));
   const handler = ref.on('value', snap => {
@@ -27132,8 +27137,8 @@ async function switchToAccount(username) {
       localStorage.setItem('ftz_user_'+CU.username, JSON.stringify(CU));
     }
     // Set old account away, new account online
-    try { if (CU?.username) await FortizedSocial.setStatus(CU.username, 'away'); } catch(e) { console.debug('[Account] status set away failed', e); }
-    try { await FortizedSocial.setStatus(username, 'online'); } catch(e) { console.debug('[Account] status set online failed', e); }
+    try { if (CU?.username) await FortizedSocial.setStatus(CU.username, 'away'); } catch(e) { _dbg('[Account] status set away failed', e); }
+    try { await FortizedSocial.setStatus(username, 'online'); } catch(e) { _dbg('[Account] status set online failed', e); }
     // Set both localStorage keys for consistency
     localStorage.setItem('ftz_current', username);
     localStorage.setItem('fortized_current_user', username);
@@ -27148,7 +27153,7 @@ async function switchToAccount(username) {
         localStorage.setItem('ftz_user_'+user.username, JSON.stringify(user));
         localStorage.setItem('ftz_current', user.username);
         localStorage.setItem('fortized_current_user', user.username);
-        try { await FortizedSocial.setStatus(user.username, 'online'); } catch(e) { console.debug('[Account] status set online failed', e); }
+        try { await FortizedSocial.setStatus(user.username, 'online'); } catch(e) { _dbg('[Account] status set online failed', e); }
         window.location.reload();
         return;
       }
@@ -27225,7 +27230,7 @@ async function submitAddAccount() {
     }
     // Method 2: FortizedSocial.loginUser (may not exist)
     if (!result && typeof FortizedSocial.loginUser === 'function') {
-      try { const r2 = await FortizedSocial.loginUser(username, password); if(r2?.username) result=r2; } catch(e) { console.debug('[Auth] loginUser fallback failed', e); }
+      try { const r2 = await FortizedSocial.loginUser(username, password); if(r2?.username) result=r2; } catch(e) { _dbg('[Auth] loginUser fallback failed', e); }
     }
     // Method 3: Manual password check (fetch user + compare)
     if (!result) {
@@ -27252,8 +27257,8 @@ async function submitAddAccount() {
     localStorage.setItem('ftz_current', result.username);
     localStorage.setItem('fortized_current_user', result.username);
     // Update statuses
-    try { if (CU?.username) await FortizedSocial.setStatus(CU.username, 'away'); } catch(e) { console.debug('[Auth] status away failed', e); }
-    try { await FortizedSocial.setStatus(result.username, 'online'); } catch(e) { console.debug('[Auth] status online failed', e); }
+    try { if (CU?.username) await FortizedSocial.setStatus(CU.username, 'away'); } catch(e) { _dbg('[Auth] status away failed', e); }
+    try { await FortizedSocial.setStatus(result.username, 'online'); } catch(e) { _dbg('[Auth] status online failed', e); }
     document.getElementById('add-acct-modal')?.remove();
     toast('Switching to @'+result.username+'…', 'success');
     setTimeout(()=>window.location.reload(), 700);
@@ -27376,7 +27381,7 @@ async function loadFriendActivity() {
   try {
     const _actSlice = friends.slice(0, 10);
     let _actPresence = {};
-    try { const pr = await FortizedSocial.queryPresence(_actSlice); if (pr) _actPresence = pr; } catch(e) { console.debug('[Activity] presence query failed', e); }
+    try { const pr = await FortizedSocial.queryPresence(_actSlice); if (pr) _actPresence = pr; } catch(e) { _dbg('[Activity] presence query failed', e); }
     const statuses = await Promise.all(_actSlice.map(async f => {
       try {
         const u = await FortizedSocial.getUserByName(f);
@@ -27498,9 +27503,9 @@ function _postInitSetup() {
     if (statO) statO.textContent = CU?.onyx||0;
   }, 30000);
   // Show the daily quest popup after a short delay (let the UI settle)
-  setTimeout(() => { try { _showDailyQuestPopup(); } catch(e) { console.warn('[quest-popup]', e); } }, 2000);
+  setTimeout(() => { try { _showDailyQuestPopup(); } catch(e) { _wrn('[quest-popup]', e); } }, 2000);
   // Check for pending quest rewards that haven't been granted yet
-  setTimeout(() => { try { _checkAndAwardPendingQuests(); } catch(e) { console.warn('[quest-check]', e); } }, 3000);
+  setTimeout(() => { try { _checkAndAwardPendingQuests(); } catch(e) { _wrn('[quest-check]', e); } }, 3000);
 }
 
 
@@ -27555,7 +27560,7 @@ async function joinByInvite(code) {
           inviterName = inviteData.createdBy || b.owner;
         }
       }
-    } catch(e) { console.debug('[Invite] strategy 1 lookup failed', e); }
+    } catch(e) { _dbg('[Invite] strategy 1 lookup failed', e); }
 
     // Strategy 2: Search all global bastions for matching invite code
     if (!foundBastion) {
@@ -28346,7 +28351,7 @@ function showCropModal(src, aspectRatio, callback, cropShape) {
     try {
       const d = tc.getImageData(0, 0, tmp.width, tmp.height).data;
       for (let i=3; i<d.length; i+=4) { if(d[i]<255){_cropData.hasAlpha=true;break;} }
-    } catch(e) { console.debug('[Crop] alpha detection failed', e); }
+    } catch(e) { _dbg('[Crop] alpha detection failed', e); }
     // Fit image (cover the crop area)
     const imgAspect = _cropImg.width / _cropImg.height;
     const canvasAspect = w / h;
@@ -28482,7 +28487,7 @@ function applyCrop() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target.result;
-      console.debug('[Crop] Image cropped and converted:', {
+      _dbg('[Crop] Image cropped and converted:', {
         mimeType,
         size: blob.size,
         dimensions: `${outW}x${outH}`
@@ -28525,16 +28530,16 @@ function initCrossDeviceSync() {
             try {
               if (!payload.new) return;
               const newData = payload.new;
-              console.debug('[Supabase Real-time] Change detected:', newData);
+              _dbg('[Supabase Real-time] Change detected:', newData);
 
               // IMPORTANT: Server data takes precedence over local cache
               if (newData.display_name && newData.display_name !== CU.displayName) {
-                console.debug('[Sync] Display name updated:', newData.display_name);
+                _dbg('[Sync] Display name updated:', newData.display_name);
                 CU.displayName = newData.display_name;
                 updateUserbar();
               }
               if (newData.pfp && newData.pfp !== CU.pfp) {
-                console.debug('[Sync] Avatar updated');
+                _dbg('[Sync] Avatar updated');
                 CU.pfp = newData.pfp;
                 updateUserbar();
                 document.querySelectorAll('.msg-av-inner img, .ua img, .up-left-av img').forEach(img => {
@@ -28542,30 +28547,30 @@ function initCrossDeviceSync() {
                 });
               }
               if (newData.banner && newData.banner !== CU.banner) {
-                console.debug('[Sync] Banner updated');
+                _dbg('[Sync] Banner updated');
                 CU.banner = newData.banner;
               }
               if (newData.status && newData.status !== CU.status) {
-                console.debug('[Sync] Status updated:', newData.status);
+                _dbg('[Sync] Status updated:', newData.status);
                 CU.status = newData.status;
                 updateUserbar();
               }
               if (newData.onyx !== undefined && newData.onyx !== CU.onyx) {
-                console.debug('[Sync] Onyx updated:', newData.onyx);
+                _dbg('[Sync] Onyx updated:', newData.onyx);
                 CU.onyx = newData.onyx;
                 updateOnyxDisplay();
               }
               if (newData.friends && JSON.stringify(newData.friends) !== JSON.stringify(CU.friends)) {
-                console.debug('[Sync] Friends list updated');
+                _dbg('[Sync] Friends list updated');
                 CU.friends = newData.friends;
               }
               if (newData.bastions && JSON.stringify(newData.bastions) !== JSON.stringify(CU.bastions)) {
-                console.debug('[Sync] Bastions updated');
+                _dbg('[Sync] Bastions updated');
                 CU.bastions = newData.bastions;
                 renderRailBastions?.();
               }
               if (newData.group_chats && JSON.stringify(newData.group_chats) !== JSON.stringify(CU.groupChats)) {
-                console.debug('[Sync] Group chats updated');
+                _dbg('[Sync] Group chats updated');
                 CU.groupChats = newData.group_chats;
                 const scroll = document.getElementById('sidebar-scroll');
                 if (scroll) renderDMSidebar(scroll);
@@ -28578,9 +28583,9 @@ function initCrossDeviceSync() {
         )
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.debug('[Supabase] ✓ Real-time user listener SUBSCRIBED', `(user: ${CU.username})`);
+            _dbg('[Supabase] ✓ Real-time user listener SUBSCRIBED', `(user: ${CU.username})`);
           } else if (status === 'CLOSED') {
-            console.debug('[Supabase] Real-time user listener closed - attempting to reconnect');
+            _dbg('[Supabase] Real-time user listener closed - attempting to reconnect');
             setTimeout(() => initCrossDeviceSync(), 5000);
           } else if (status === 'CHANNEL_ERROR') {
             console.error('[Supabase] Channel error - reconnecting');
@@ -28618,7 +28623,7 @@ function initCrossDeviceSync() {
     if (data.customStatus !== undefined) {
       CU.customStatus = data.customStatus;
       refreshCustomStatusBubble?.();
-      try { FtzStatus.restoreCustomTimer(); } catch(e) { console.debug('[Status] timer failed', e); }
+      try { FtzStatus.restoreCustomTimer(); } catch(e) { _dbg('[Status] timer failed', e); }
     }
     if (data.profileWidgets) {
       CU.profileWidgets = data.profileWidgets;
@@ -28685,7 +28690,7 @@ function initCrossDeviceSync() {
           });
           n.onclick = () => { window.focus(); n.close(); };
           setTimeout(() => n.close(), 8000);
-        } catch(e) { console.debug('[Notif] failed', e); }
+        } catch(e) { _dbg('[Notif] failed', e); }
       }
       playNotifSound('message');
     }
@@ -28697,7 +28702,7 @@ function initCrossDeviceSync() {
       // Refresh friend list
       try { FortizedSocial.getUserByUsername(CU.username).then(user => {
         if (user?.friends) { CU.friends = user.friends; saveLocal(); }
-      }).catch(()=>{}); } catch(e) { console.debug('[Friend] refresh failed', e); }
+      }).catch(()=>{}); } catch(e) { _dbg('[Friend] refresh failed', e); }
     }
   });
 
@@ -28718,7 +28723,7 @@ function initCrossDeviceSync() {
           });
           n.onclick = () => { window.focus(); n.close(); };
           setTimeout(() => n.close(), 8000);
-        } catch(e) { console.debug('[Notif] failed', e); }
+        } catch(e) { _dbg('[Notif] failed', e); }
       }
       playNotifSound(notif.type === 'mention' ? 'mention' : 'message');
     }
@@ -28747,7 +28752,7 @@ function initCrossDeviceSync() {
         });
         n.onclick = () => { window.focus(); n.close(); };
         setTimeout(() => n.close(), 10000);
-      } catch(e) { console.debug('[Announce] failed', e); }
+      } catch(e) { _dbg('[Announce] failed', e); }
     }
   });
 
@@ -28766,7 +28771,7 @@ function stopCrossDeviceSync() {
       supabase.removeChannel(_supabaseUserChannel);
       _supabaseUserChannel = null;
     } catch(e) {
-      console.debug('[Supabase] Unsubscribe failed', e);
+      _dbg('[Supabase] Unsubscribe failed', e);
     }
   }
   // Socket.IO listeners are auto-cleaned up on disconnect
@@ -28967,7 +28972,7 @@ async function claimGift(giftCode) {
       await firebase.database().ref('notifications/' + gift.from).push({
         type:'gift_claimed', from:CU.username, msg:`${CU.username} claimed your ${gift.type==='radiance'?'Radiance':'item'} gift!`, time:new Date().toISOString()
       });
-    } catch(e) { console.debug('[Gift] claim notification failed', e); }
+    } catch(e) { _dbg('[Gift] claim notification failed', e); }
   } catch (e) { toast('Failed to claim gift.', 'error'); }
 }
 
@@ -29028,7 +29033,7 @@ function _renderGiftEmbed(type, giftCode) {
         const el = document.getElementById(embedId);
         if (el) el.outerHTML = _buildGiftEmbedHTML(type, giftCode, snap.val());
       }
-    } catch(e) { console.debug('[Gift] embed fetch failed', e); }
+    } catch(e) { _dbg('[Gift] embed fetch failed', e); }
   }, 100);
   return `<span id="${embedId}">${initialHTML}</span>`;
 }
@@ -29507,7 +29512,7 @@ function initNotifToasts() {
 let _friendStatusSubs = {};
 function _subscribeFriendStatuses() {
   // Unsubscribe old Supabase channels
-  Object.values(_friendStatusSubs).forEach(sub => { try { FortizedSocial.sb.removeChannel(sub); } catch(e) { console.debug('[Friends] status sub cleanup failed', e); } });
+  Object.values(_friendStatusSubs).forEach(sub => { try { FortizedSocial.sb.removeChannel(sub); } catch(e) { _dbg('[Friends] status sub cleanup failed', e); } });
   _friendStatusSubs = {};
   const friends = CU?.friends || [];
   if (!friends.length) return;
@@ -29541,7 +29546,7 @@ function _subscribeFriendStatuses() {
         })
         .subscribe();
       _friendStatusSubs[f] = sub;
-    } catch(e) { console.debug('[Friends] status sub failed for', f, e); }
+    } catch(e) { _dbg('[Friends] status sub failed for', f, e); }
   });
 }
 
@@ -29656,7 +29661,7 @@ function closeOwnProfilePanel() {
 async function showMiniProfilePreview(username, anchorEl) {
   document.getElementById('mini-profile-preview')?.remove();
   let u = null;
-  try { u = await FortizedSocial.getUserByName(username); } catch(e) { console.debug('[Profile] user lookup failed', e); }
+  try { u = await FortizedSocial.getUserByName(username); } catch(e) { _dbg('[Profile] user lookup failed', e); }
   if (!u) u = { username, displayName: username };
   let status = 'offline';
   // Use live Socket.IO presence first, fallback to DB
@@ -29668,10 +29673,10 @@ async function showMiniProfilePreview(username, anchorEl) {
       if (presenceResult && presenceResult[username]) {
         status = presenceResult[username].status || 'offline';
       } else {
-        try { status = await FortizedSocial.getStatus(username); } catch(e) { console.debug('[Profile] status fallback failed', e); }
+        try { status = await FortizedSocial.getStatus(username); } catch(e) { _dbg('[Profile] status fallback failed', e); }
       }
-    } catch(e) { console.debug('[Profile] presence query failed', e);
-      try { status = await FortizedSocial.getStatus(username); } catch(e2) { console.debug('[Profile] status fallback failed', e2); }
+    } catch(e) { _dbg('[Profile] presence query failed', e);
+      try { status = await FortizedSocial.getStatus(username); } catch(e2) { _dbg('[Profile] status fallback failed', e2); }
     }
   }
   subscribeProfileStatus(username);
@@ -29888,7 +29893,7 @@ async function _mppToggleRole(username, roleId, el) {
     _syncBastionToGlobal(curBastion);
   } catch(e) { console.warn('Role save failed:', e); }
   // Refresh member list
-  try { renderMemberList(); } catch (e) { console.debug('[Members] render failed', e); }
+  try { renderMemberList(); } catch (e) { _dbg('[Members] render failed', e); }
 }
 
 
@@ -30480,7 +30485,7 @@ function openThread(msgId, text, from) {
 }
 function _closeThread() {
   _stopThreadTypingBroadcast();
-  if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch(e) { console.debug('[Thread] typing listener cleanup failed', e); } _threadTypingListenerOff = null; }
+  if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch(e) { _dbg('[Thread] typing listener cleanup failed', e); } _threadTypingListenerOff = null; }
   if (_threadListener) { _threadListener(); _threadListener = null; }
   _activeThread = null;
   _closeEl('thread-panel-overlay');
@@ -30561,7 +30566,7 @@ function _stopThreadTypingBroadcast() {
 }
 
 function _listenThreadTyping(bid, chName, msgId) {
-  if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch(e) { console.debug('[Thread] typing listener cleanup failed', e); } _threadTypingListenerOff = null; }
+  if (_threadTypingListenerOff) { try { _threadTypingListenerOff(); } catch(e) { _dbg('[Thread] typing listener cleanup failed', e); } _threadTypingListenerOff = null; }
   const ref = firebase.database().ref(_threadTypingPath(bid, chName, msgId));
   const handler = ref.on('value', snap => {
     const data = snap.val() || {};
@@ -30633,7 +30638,7 @@ function _stopChannelTypingBroadcast() {
 }
 
 function listenChannelTyping(bid, chName) {
-  if (_chTypingListenerOff) { try { _chTypingListenerOff(); } catch(e) { console.debug('[Ch] typing listener cleanup failed', e); } _chTypingListenerOff = null; }
+  if (_chTypingListenerOff) { try { _chTypingListenerOff(); } catch(e) { _dbg('[Ch] typing listener cleanup failed', e); } _chTypingListenerOff = null; }
   const ref = firebase.database().ref(_chTypingPath(bid, chName));
   const handler = ref.on('value', snap => {
     const data = snap.val() || {};
@@ -30774,7 +30779,7 @@ function _runAdvSearch(q) {
             if (fn && fn.toLowerCase().includes((searchQ||q).toLowerCase()) && !memberResults.includes(fn)) memberResults.push(fn);
           }
         }
-      } catch(e) { console.debug('[Search] member search failed', e); }
+      } catch(e) { _dbg('[Search] member search failed', e); }
       if (_advSearchFilter === 'members') {
         if (!memberResults.length) { results.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px;">No members found</div>'; return; }
         let html = '';
@@ -30784,7 +30789,7 @@ function _runAdvSearch(q) {
           try {
             const ud = await FortizedSocial.getUserByName(uname);
             if (ud) { pfp = ud.pfp || pfp; displayName = ud.displayName || uname; }
-          } catch(e) { console.debug('[Search] user lookup failed', e); }
+          } catch(e) { _dbg('[Search] user lookup failed', e); }
           html += `<div class="asr-item" onclick="showMiniProfilePreview('${escapeHTML(uname)}',this)">
             <div class="asr-av">${pfp ? `<img src="${escapeHTML(pfp)}" onerror="this.src='${_defaultPfpUrl(uname)}'">` : buildAvatarHTML(null,uname,32)}</div>
             <div class="asr-body"><div class="asr-meta"><span class="asr-from">${escapeHTML(displayName)}</span></div><div class="asr-text" style="font-size:11px;color:var(--muted);">@${escapeHTML(uname)}</div></div>
@@ -30814,7 +30819,7 @@ function _runAdvSearch(q) {
             try {
               const snap = await firebase.database().ref(`bastionMsgs/${bid}/${chName}`).limitToLast(100).get();
               if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'ch'; v._loc = chName; allMsgs.push(v); });
-            } catch(e) { console.debug('[Search] channel search failed', e); }
+            } catch(e) { _dbg('[Search] channel search failed', e); }
           }
         }
       }
@@ -30827,7 +30832,7 @@ function _runAdvSearch(q) {
             const dmKey = [CU.username, fn].sort().join('__');
             const snap = await firebase.database().ref('dms/' + dmKey).limitToLast(50).get();
             if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'dm'; v._loc = fn; allMsgs.push(v); });
-          } catch(e) { console.debug('[Search] DM search failed', e); }
+          } catch(e) { _dbg('[Search] DM search failed', e); }
         }
       }
       // Search all bastions (not just current)
@@ -30841,7 +30846,7 @@ function _runAdvSearch(q) {
               try {
                 const snap = await firebase.database().ref(`bastionMsgs/${bid}/${chName}`).limitToLast(30).get();
                 if (snap.exists()) snap.forEach(c => { const v = c.val(); v._ctx = 'ch'; v._loc = chName; v._bastion = b.name; allMsgs.push(v); });
-              } catch(e) { console.debug('[Search] bastion search failed', e); }
+              } catch(e) { _dbg('[Search] bastion search failed', e); }
             }
           }
         }
@@ -30878,7 +30883,7 @@ function _runAdvSearch(q) {
             if (fn && fn.toLowerCase().includes((searchQ||q).toLowerCase()) && !memberResults.includes(fn)) memberResults.push(fn);
           }
         }
-      } catch(e) { console.debug('[Search] quick member search failed', e); }
+      } catch(e) { _dbg('[Search] quick member search failed', e); }
       if (memberResults.length) {
         memberHtml = `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);padding:8px 14px 4px;">Members</div>`;
         for (const uname of memberResults.slice(0, 5)) {
@@ -30988,7 +30993,7 @@ function _getKeybinds() {
         return custom ? {...def, keys: custom.keys} : def;
       });
     }
-  } catch(e) { console.debug('[Keybinds] load failed', e); }
+  } catch(e) { _dbg('[Keybinds] load failed', e); }
   return _defaultKeybinds;
 }
 function _saveKeybinds(binds) {
@@ -31194,7 +31199,7 @@ function _playSoundClip(idx) {
 function _playCustomClip(idx) {
   const customs = JSON.parse(localStorage.getItem('ftz_soundboard_' + CU.username) || '[]');
   if (customs[idx]?.data) {
-    try { const a = new Audio(customs[idx].data); a.volume = 0.5; a.play(); } catch(e) { console.debug('[Soundboard] play failed', e); }
+    try { const a = new Audio(customs[idx].data); a.volume = 0.5; a.play(); } catch(e) { _dbg('[Soundboard] play failed', e); }
   }
   toast('Playing ' + (customs[idx]?.name || 'clip'),'info');
 }
@@ -31704,7 +31709,7 @@ async function _updateEventsBadge(bastionId) {
       if (diff > 0 && diff < 3600000) upcomingSoon++; // within 1 hour
     });
     _setEventsBadge(liveCount + upcomingSoon, liveCount > 0);
-  } catch(e) { console.debug('[Events] badge update failed', e); }
+  } catch(e) { _dbg('[Events] badge update failed', e); }
 }
 
 function _setEventsBadge(count, isLive) {
@@ -31856,7 +31861,7 @@ function _syncSlowMode(bastionId, chName) {
       if (v > 0) localStorage.setItem('ftz_slowmode_' + bastionId + '_' + chName, v);
       else localStorage.removeItem('ftz_slowmode_' + bastionId + '_' + chName);
     });
-  } catch(e) { console.debug('[SlowMode] sync listener failed', e); }
+  } catch(e) { _dbg('[SlowMode] sync listener failed', e); }
 }
 function _checkSlowMode() {
   if (curBastion === null) return true;
@@ -31907,7 +31912,7 @@ async function renderFriendsSorted(mode) {
   if (!friends.length) { list.innerHTML = html || `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('users','48')}</div><h3>No friends yet</h3><p>Add friends by username!</p><button class="btn-a" onclick="openModal('modal-add-friend')">+ Add Friend</button></div>`; return; }
   // Fetch statuses
   let statuses = {};
-  try { const snap = await firebase.database().ref('statuses').get(); if (snap.exists()) statuses = snap.val(); } catch(e) { console.debug('[Friends] status fetch failed', e); }
+  try { const snap = await firebase.database().ref('statuses').get(); if (snap.exists()) statuses = snap.val(); } catch(e) { _dbg('[Friends] status fetch failed', e); }
   let sorted = [...friends];
   if (_friendSortMode === 'online') sorted.sort((a,b) => { const sa = statuses[a]==='online'?2:statuses[a]==='away'?1:0; const sb = statuses[b]==='online'?2:statuses[b]==='away'?1:0; return sb-sa; });
   else if (_friendSortMode === 'alpha') sorted.sort((a,b) => a.localeCompare(b));
@@ -31952,7 +31957,7 @@ async function renderFriendsSorted(mode) {
       const actEl = document.getElementById('friend-sorted-act-'+f);
       if (actEl && activityText) actEl.textContent = '🎮 ' + activityText;
     });
-  } catch(e) { console.debug('[Friends] activity fetch failed', e); }
+  } catch(e) { _dbg('[Friends] activity fetch failed', e); }
 }
 
 // ════════════════════════════════════════════
@@ -32108,7 +32113,7 @@ function _closeEl(id) { const el = document.getElementById(id); if (el) { el.sty
 function _updateLastSeen() {
   if (!CU?.username) return;
   const now = new Date().toISOString();
-  try { firebase.database().ref('users/' + CU.username + '/lastSeen').set(now); } catch(e) { console.debug('[LastSeen] write failed', e); }
+  try { firebase.database().ref('users/' + CU.username + '/lastSeen').set(now); } catch(e) { _dbg('[LastSeen] write failed', e); }
 }
 // Update last seen every 2 minutes
 if (typeof window !== 'undefined') setInterval(_updateLastSeen, 120000);

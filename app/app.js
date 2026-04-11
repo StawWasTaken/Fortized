@@ -14492,18 +14492,7 @@ function handleContextMenu(e) {
     }
   }
 
-  // ── 3.7) Image/attachment context menu ──
-  const imgEl = target.closest('img:not(.msg-av-inner img)');
-  if (imgEl && imgEl.src && !isInput && !isSidebar) {
-    e.preventDefault();
-    showCtxMenu(e.clientX, e.clientY, [
-      { items: [
-        { icon: _ctxSvg('copy'), label: 'Copy Image Link', action: () => navigator.clipboard.writeText(imgEl.src), copyFeedback: true },
-        { icon: _ctxSvg('globe'), label: 'Open in Browser', action: () => window.open(imgEl.src, '_blank') },
-      ]}
-    ]);
-    return;
-  }
+  // ── 3.7) Image context menu — disabled (no Copy Image Link / Open in Browser) ──
 
   // ── 3.8) Link context menu ──
   const linkEl = target.closest('a[href]');

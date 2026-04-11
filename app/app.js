@@ -19180,13 +19180,13 @@ function buildChatInputBar({inputId, placeholder, onSend, context, chIdx}) {
             <button class="cit-gif" onclick="openGiphyPicker('${inputId}')" title="GIF" data-tooltip="GIFs">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><text x="12" y="15" text-anchor="middle" fill="currentColor" stroke="none" font-size="8" font-weight="800" font-family="sans-serif">GIF</text></svg>
             </button>
-            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}" title="Stickers">
+            <button class="cit-sticker" onclick="openStickerPicker('${inputId}')" id="sticker-btn-${emojiCtx}">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="14 3 14 9 21 9"/><circle cx="9" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1" fill="currentColor" stroke="none"/><path d="M9 17c1 1 2 1.5 3 1.5s2-.5 3-1.5"/></svg>
             </button>
             <button class="cit-btn" onclick="toggleEmojiPicker('${inputId}')" id="emoji-btn-${emojiCtx}" title="Emoji" data-tooltip="Emoji">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5"/><circle cx="9" cy="9.5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1" fill="currentColor" stroke="none"/></svg>
             </button>
-            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" title="Bot Commands" id="botcmd-btn-${emojiCtx}">
+            <button class="cit-botcmd" onclick="openBotCommandPanel('${inputId}','${context}')" id="botcmd-btn-${emojiCtx}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3"/><line x1="13" y1="15" x2="17" y2="15"/></svg>
             </button>
           </div>
@@ -20530,7 +20530,7 @@ function showBastionInviteModal(bastion, inviteCode) {
   document.body.appendChild(modal);
 }
 
-function acceptBastionInvite(inviteCode) {
+function _legacyAcceptBastionInvite(inviteCode) {
   const modal = document.getElementById('bastionInviteModal');
   if (modal) modal.remove();
 

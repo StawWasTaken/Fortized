@@ -765,14 +765,14 @@ window._cdnReady.then(function() {
     <div class="modal-bar"></div>
     <div class="modal-body" style="padding:0;">
       <div style="padding:28px 28px 22px;position:relative;">
-        <img src="/JoysterPoint.png" style="position:absolute;top:-20px;right:20px;width:80px;height:80px;object-fit:contain;z-index:3;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));transform:rotate(8deg);" onerror="this.style.display='none'" alt="">
         <div style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#fff;margin-bottom:5px;">Add Friend</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:16px;max-width:360px;">You can add friends with their Fortized usernames.</div>
-        <div style="display:flex;gap:8px;">
+        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-bottom:16px;max-width:340px;">You can add friends with their Fortized usernames.</div>
+        <div style="display:flex;gap:8px;position:relative;">
+          <img src="/JoysterPoint.png" style="position:absolute;bottom:100%;right:0;width:92px;height:92px;object-fit:contain;z-index:3;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3));" onerror="this.style.display='none'" alt="">
           <div style="flex:1;position:relative;">
-            <input class="modal-input" id="friend-target" placeholder="You can add friends with their Fortized usernames." autocomplete="off" spellcheck="false" oninput="checkFriendTarget(this.value)" onkeydown="if(event.key==='Enter')sendFriendRequest()" style="width:100%;padding:13px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);color:#fff;font-size:13px;box-sizing:border-box;transition:border-color .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'">
+            <input class="modal-input" id="friend-target" placeholder="Enter a username..." autocomplete="off" spellcheck="false" oninput="checkFriendTarget(this.value)" onkeydown="if(event.key==='Enter')sendFriendRequest()" style="width:100%;padding:11px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);color:#fff;font-size:13px;box-sizing:border-box;transition:border-color .15s;" onfocus="this.style.borderColor='rgba(255,249,62,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'">
           </div>
-          <button class="btn-a" id="friend-send-btn" onclick="sendFriendRequest()" style="padding:13px 20px;border-radius:10px;font-size:12.5px;font-weight:700;white-space:nowrap;">Send Friend Request</button>
+          <button class="btn-a" id="friend-send-btn" onclick="sendFriendRequest()" style="padding:10px 18px;border-radius:10px;font-size:12px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Send Friend Request</button>
         </div>
         <div id="friend-target-preview" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;"></div>
         <div id="friend-target-hint" style="font-size:11px;min-height:14px;margin-top:4px;transition:color .15s;"></div>

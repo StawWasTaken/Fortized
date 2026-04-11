@@ -1236,11 +1236,23 @@ const FortizedSocial = (() => {
     if (_socket && _socketReady) _socket.emit('room:leave', { type: type, id1: id1, id2: id2 });
   }
 
-  function queryPresence(usernames) {
+  async function queryPresence(usernames) {
+    if (!usernames || !usernames.length) return {};
+    // Primary: query Supabase statuses table directly (always works)
+    try {
+      const { data } = await sb.from('statuses').select('username,status').in('username', usernames.map(u => norm(u)));
+      if (data && data.length) {
+        const result = {};
+        usernames.forEach(u => { result[u] = { status: 'offline', gameActivity: null }; });
+        data.forEach(row => { if (row.username && row.status) result[row.username] = { status: row.status, gameActivity: null }; });
+        return result;
+      }
+    } catch(e) { /* fall through to Socket.IO */ }
+    // Fallback: Socket.IO query (may not work through Cloudflare)
     return new Promise(function(resolve) {
       if (_socket && _socketReady) {
         _socket.emit('presence:query', usernames, resolve);
-        setTimeout(function() { resolve(null); }, 3000);
+        setTimeout(function() { resolve(null); }, 2000);
       } else { resolve(null); }
     });
   }
@@ -1271,21 +1283,29 @@ const FortizedSocial = (() => {
 
         if (error || !data) return;
 
+        const room = 'dm:' + dmKey;
+        const cb = _socketCallbacks.onMessage || _callbacks.onMessage;
+        const editCb = _socketCallbacks.onMessageEdited;
+        const deleteCb = _socketCallbacks.onMessageDeleted;
         for (const row of data.reverse()) {
           const msgTime = new Date(row.timestamp).getTime();
           const lastTime = _lastDmTimestamp.get(dmKey) || 0;
           if (msgTime > lastTime) {
-            const msg = { id: row.id, from: row.from, text: row.text, time: row.time, timestamp: row.timestamp, edited: row.edited, reactions: row.reactions };
-            if (_socketCallbacks.onMessage) {
-              _socketCallbacks.onMessage('dm:' + dmKey, msg);
-            } else if (_callbacks.onMessage) {
-              _callbacks.onMessage('dm:' + dmKey, msg);
-            }
+            if (cb) cb(room, { id: row.id, from: row.from, text: row.text, time: row.time, timestamp: row.timestamp, edited: row.edited, reactions: row.reactions });
           }
+          const prevText = _lastMsgTexts.get(row.id);
+          if (prevText !== undefined && prevText !== row.text && editCb) {
+            editCb({ messageId: row.id, newText: row.text, editedBy: row.from });
+          }
+          _lastMsgTexts.set(row.id, row.text);
         }
-        if (data.length > 0) {
-          _lastDmTimestamp.set(dmKey, new Date(data[data.length-1].timestamp).getTime());
+        const currentIds = new Set(data.map(r => r.id));
+        const prevIds = _lastPollIds.get('dm:'+dmKey);
+        if (prevIds && deleteCb) {
+          prevIds.forEach(id => { if (!currentIds.has(id)) deleteCb({ messageId: id, deletedBy: '' }); });
         }
+        _lastPollIds.set('dm:'+dmKey, currentIds);
+        if (data.length > 0) _lastDmTimestamp.set(dmKey, new Date(data[data.length-1].timestamp).getTime());
       } catch(e) { /* silently skip */ }
     }, 1500); // Poll every 1.5s
 
@@ -1305,6 +1325,8 @@ const FortizedSocial = (() => {
   // ── Channel polling (for bastion channels) ──
   let _channelPollingIntervals = new Map();
   let _lastChannelTimestamp = new Map();
+  let _lastPollIds = new Map(); // channelKey -> Set of message IDs from last poll
+  let _lastMsgTexts = new Map(); // msgId -> last known text (for edit detection)
 
   async function startChannelPolling(channelKey) {
     if (_channelPollingIntervals.has(channelKey)) return;
@@ -1325,22 +1347,33 @@ const FortizedSocial = (() => {
 
         if (error) return; // silently skip on error
 
-        if (data && data.length > 0) {
-          for (const row of data.reverse()) {
+        if (data) {
+          const room = 'bastion:' + bastionId + ':' + channelId;
+          const cb = _socketCallbacks.onMessage || _callbacks.onMessage;
+          const editCb = _socketCallbacks.onMessageEdited;
+          const deleteCb = _socketCallbacks.onMessageDeleted;
+          // Detect new messages
+          for (const row of (data || []).reverse()) {
             const msgTime = new Date(row.timestamp).getTime();
             const lastTime = _lastChannelTimestamp.get(channelKey) || 0;
             if (msgTime > lastTime) {
-              const msg = { id: row.id, from: row.from, text: row.text, time: row.time, timestamp: row.timestamp, edited: row.edited, reactions: row.reactions };
-              // Invoke the listener callback
-              if (_socketCallbacks.onMessage) {
-                _socketCallbacks.onMessage('bastion:' + bastionId + ':' + channelId, msg);
-              } else if (_callbacks.onMessage) {
-                _callbacks.onMessage('bastion:' + bastionId + ':' + channelId, msg);
-              }
+              if (cb) cb(room, { id: row.id, from: row.from, text: row.text, time: row.time, timestamp: row.timestamp, edited: row.edited, reactions: row.reactions });
             }
+            // Detect edits (text changed for existing messages)
+            const prevText = _lastMsgTexts.get(row.id);
+            if (prevText !== undefined && prevText !== row.text && editCb) {
+              editCb({ messageId: row.id, newText: row.text, editedBy: row.from });
+            }
+            _lastMsgTexts.set(row.id, row.text);
           }
-          const lastMsg = data[data.length - 1];
-          _lastChannelTimestamp.set(channelKey, new Date(lastMsg.timestamp).getTime());
+          // Detect deletes (messages that were in prev poll but not in this one)
+          const currentIds = new Set((data||[]).map(r => r.id));
+          const prevIds = _lastPollIds.get(channelKey);
+          if (prevIds && deleteCb) {
+            prevIds.forEach(id => { if (!currentIds.has(id)) deleteCb({ messageId: id, deletedBy: '' }); });
+          }
+          _lastPollIds.set(channelKey, currentIds);
+          if (data.length > 0) _lastChannelTimestamp.set(channelKey, new Date(data[data.length-1].timestamp).getTime());
         }
       } catch (err) { /* silently skip */ }
     }, 1500); // Poll every 1.5s

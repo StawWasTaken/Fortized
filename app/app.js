@@ -6649,7 +6649,7 @@ function _renderDiscoverFeatured(bastions){
   if(!el)return;
   const featured=bastions.filter(b=>b.public!==false).sort((a,b)=>(b.memberCount||0)-(a.memberCount||0)).slice(0,3);
   if(!featured.length){el.innerHTML='';return;}
-  el.innerHTML=`<div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:.04em;text-transform:uppercase;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Trending Communities</div>
+  el.innerHTML=`<div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:.04em;text-transform:uppercase;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Trending Bastions</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
   ${featured.map(b=>{
     const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
@@ -6701,9 +6701,8 @@ function renderDiscoverGrid(bastions){
         <div class="bc-name">${escapeHTML(b.name)}</div>
         <div class="bc-desc">${escapeHTML((b.desc||'').slice(0,140))}</div>
         <div class="bc-footer">
-          <span style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.35);"><span style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;"></span> ${mc > 1000 ? Math.floor(mc/1000)+'K' : mc} Online</span>
-          <span style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.35);"><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.25);"></span> ${mc > 1000 ? Math.floor(mc/1000)+'K' : mc} Members</span>
-          ${cat?`<div class="bc-category" style="margin-left:auto;">${escapeHTML(cat)}</div>`:''}
+          <span style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.35);"><span style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;"></span> ${mc > 1000 ? Math.floor(mc/1000)+'K' : Math.max(1,Math.floor(mc*0.3))} Online</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.35);"><span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.25);"></span> ${mc > 1000 ? (mc/1000).toFixed(1)+'K' : mc} Member${mc!==1?'s':''}</span>
         </div>
       </div>
     </div>`;

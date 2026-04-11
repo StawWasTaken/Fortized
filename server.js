@@ -23,7 +23,10 @@ const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
   pingTimeout: 30000,
   pingInterval: 10000,
-  maxHttpBufferSize: 50 * 1024 * 1024, // 50MB max payload for file attachments
+  maxHttpBufferSize: 50 * 1024 * 1024,
+  transports: ['polling', 'websocket'], // Allow polling fallback first
+  allowUpgrades: true, // Upgrade from polling to websocket when possible
+  path: '/socket.io/',
 });
 
 const PORT = process.env.PORT || 3000;

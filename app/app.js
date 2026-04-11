@@ -23412,8 +23412,9 @@ function openStickerPicker(inputId) {
   const picker = document.createElement('div');
   picker.id = 'sticker-picker';
   picker.className = 'chat-picker-base sticker-picker-panel';
-  const stickerLeft = Math.max(8, _getChatInputRight() - 420);
-  picker.style.cssText = `left:${stickerLeft}px;bottom:${window.innerHeight-rect.top+6}px;`;
+  const stickerLeft = Math.max(8, _getChatInputRight() - 460);
+  const stickerBottom = Math.max(60, window.innerHeight - (rect.top || window.innerHeight - 80) + 6);
+  picker.style.cssText = `left:${stickerLeft}px;bottom:${stickerBottom}px;`;
 
   // Gather stickers: personal + current bastion + other bastions (Radiance only)
   const allStickers = [];

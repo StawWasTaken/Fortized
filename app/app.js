@@ -27402,29 +27402,31 @@ function spawnHeartAnimation(x, y) {
 
 // ── Did You Know strip — clear facts only, separate from Joyster's personality ──
 const DYK_FACTS = [
-  'Fortized was almost called Celestial before the team settled on the final name.',
+  'Fortized almost ended up being called Celestial before our name was chosen. Would\'ve been different, right?',
   'The Bastion system was inspired by medieval fortress communities and their hierarchies.',
-  'Onyx is named after the black gemstone — a symbol of rarity and value.',
+  'Onyx also exists in real life; a beautiful black gemstone with a lot of aura.',
   'Radiance subscribers send on average 3× more messages per day than free users.',
-  'The Fortized knight mascot was designed in under 2 hours during a brainstorm session.',
   'Each Bastion can have up to 40+ custom emoji, depending on boost level.',
-  'Voice calls on Fortized use WebRTC technology for ultra-low latency communication.',
-  'The Fortized app is over 20,000 lines of code — all in a single file.',
-  'Bastions can have five different room types: Text, Voice, Forum, Announcement, and Poll.',
-  'Fortized is built and operated by Swiftaw, incorporated under French law.',
-  'The Atelier economy runs entirely on Onyx — no real money is required.',
+  'The Fortized app is over 40,000 lines of code.',
+  'The development of Fortized officially began in June 2025 and was released in February 2026.',
+  'Fortized is a product of Swiftaw SAS, a European company! 🇪🇺',
+  'Fortized\'s economy is based entirely on a closed onyx circuit, just like in real life!',
   'You can earn Onyx every day by claiming your Daily Reward in the Atelier.',
+];
+const DYK_LORE = [
+  'Oakhaven is Fortized\'s sworn enemy.',
+  'Cardinal Wealthplace is also the Chief Minister of the Realm.',
+  'Officer Leafen\'s green chestplate is made from an alloy of iron and sugar-pine leaves.',
 ];
 const DYK_TIPS = [
   'Hold Shift + Enter to add a new line without sending your message.',
-  'Double-click a message to edit it quickly.',
   'You can drag bastions in the sidebar to reorder them.',
-  'Use /giphy in chat to search and send GIFs instantly.',
   'Right-click anything for quick actions via the context menu.',
+  'We have keyboard shortcuts! Customize them in settings.',
+  'Annoyed that Fortized converts your emoticons into emojis? Go to settings and turn the conversion off!',
 ];
 function getDYKHtml() {
-  // Rotate between lore, tips, and announcements
-  const types = [{tag:'Realm Lore',items:DYK_FACTS,icon:'🧠'},{tag:'Pro Tip',items:DYK_TIPS,icon:'⚡'}];
+  const types = [{tag:'Did you know?',items:DYK_FACTS,icon:'🤔'},{tag:'Realm Lore',items:DYK_LORE,icon:'🧭'},{tag:'Pro Tip',items:DYK_TIPS,icon:'⚡'}];
   // Include announcement if one exists
   if (_globalSettings?.announcement) types.push({tag:'Announcement',items:[_globalSettings.announcement],icon:'📢'});
   const t = types[Math.floor(Math.random()*types.length)];

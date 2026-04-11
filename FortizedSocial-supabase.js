@@ -1258,121 +1258,37 @@ const FortizedSocial = (() => {
   let _lastDmTimestamp = new Map(); // Track last seen message timestamp per conversation
 
   async function startDMPolling(dmKey) {
-    if (_dmPollingIntervals.has(dmKey)) {
-      console.log('[DMPolling] Already polling this conversation:', dmKey);
-      return;
-    }
-
-    console.log('[DMPolling] ✓ Starting polling for:', dmKey);
-    console.log('[DMPolling] Callbacks available:', { hasOnMessage: !!_callbacks.onMessage, callbackKeys: Object.keys(_callbacks) });
-
-    // Parse dmKey to get both users (dmKey is format "user1__user2")
-    const [user1, user2] = dmKey.split('__');
+    if (_dmPollingIntervals.has(dmKey)) return;
 
     const pollInterval = setInterval(async () => {
       try {
-        // Try old schema first with dm_key
-        let { data, error } = await sb.from('dms')
-          .select('*')
+        const { data, error } = await sb.from('dms')
+          .select('id,from,text,time,timestamp,edited,reactions')
           .eq('dm_key', dmKey)
           .order('timestamp', { ascending: false })
-          .limit(5);
+          .limit(3);
 
-        // If that fails or returns empty, try new schema with from/username columns
-        if ((error || !data || data.length === 0) && user1 && user2) {
-          console.debug('[DMPolling] Trying new schema with from/username columns');
-          // Query both directions: (from=user1 AND username=user2) OR (from=user2 AND username=user1)
-          const res1 = await sb.from('dms')
-            .select('*')
-            .eq('from', user1)
-            .eq('username', user2)
-            .order('time', { ascending: false })
-            .limit(3);
+        if (error || !data) return;
 
-          const res2 = await sb.from('dms')
-            .select('*')
-            .eq('from', user2)
-            .eq('username', user1)
-            .order('time', { ascending: false })
-            .limit(3);
-
-          if (!res1.error && !res2.error) {
-            data = [...(res1.data || []), ...(res2.data || [])].sort((a, b) => {
-              const timeA = a.time || a.timestamp || 0;
-              const timeB = b.time || b.timestamp || 0;
-              return new Date(timeB) - new Date(timeA);
-            }).slice(0, 5);
-            error = null;
-          } else {
-            error = res1.error || res2.error;
-          }
-        }
-
-        if (error) {
-          console.error('[DMPolling] Query error:', error.message);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          console.debug('[DMPolling] Fetched', data.length, 'messages, checking for new ones...');
-          // Check for new messages since last poll
-          for (const row of data.reverse()) {
-            // Parse the data column to get message content (handle both schemas)
-            let msgData = {};
-            let msgTime = 0;
-
-            if (row.timestamp !== undefined) {
-              // Old schema - has direct timestamp column
-              msgTime = new Date(row.timestamp).getTime();
-            } else if (row.time !== undefined) {
-              // New schema - has time column, might also have data column
-              msgTime = new Date(row.time).getTime();
-              if (row.data && typeof row.data === 'object') {
-                msgData = row.data;
-              } else if (row.data && typeof row.data === 'string') {
-                try {
-                  msgData = JSON.parse(row.data);
-                } catch(e) {
-                  console.warn('[DMPolling] Failed to parse data column:', e.message);
-                }
-              }
-            }
-
-            const lastTime = _lastDmTimestamp.get(dmKey) || 0;
-
-            if (msgTime > lastTime) {
-              const msg = row.text !== undefined ? _dmFromRow(row) : _dmFromPollingRow(row, msgData);
-              console.log('[DMPolling] 🔔 NEW MESSAGE:', { from: msg.from, text: msg.text?.slice(0,40), msgTime, lastTime });
-              if (_callbacks.onMessage) {
-                console.log('[DMPolling] Invoking onMessage callback...');
-                _callbacks.onMessage('dm:' + dmKey, msg);
-              } else {
-                console.error('[DMPolling] ERROR: onMessage callback not found!');
-              }
+        for (const row of data.reverse()) {
+          const msgTime = new Date(row.timestamp).getTime();
+          const lastTime = _lastDmTimestamp.get(dmKey) || 0;
+          if (msgTime > lastTime) {
+            const msg = { id: row.id, from: row.from, text: row.text, time: row.time, timestamp: row.timestamp, edited: row.edited, reactions: row.reactions };
+            if (_socketCallbacks.onMessage) {
+              _socketCallbacks.onMessage('dm:' + dmKey, msg);
+            } else if (_callbacks.onMessage) {
+              _callbacks.onMessage('dm:' + dmKey, msg);
             }
           }
-
-          // Update timestamp from most recent message
-          const lastRow = data[0];
-          let lastTime = 0;
-          if (lastRow.timestamp !== undefined) {
-            lastTime = new Date(lastRow.timestamp).getTime();
-          } else if (lastRow.time !== undefined) {
-            lastTime = new Date(lastRow.time).getTime();
-          }
-          if (lastTime > 0) {
-            _lastDmTimestamp.set(dmKey, lastTime);
-          }
-        } else {
-          console.debug('[DMPolling] No messages found for:', dmKey);
         }
-      } catch(e) {
-        console.error('[DMPolling] Fatal error:', e?.message, e);
-      }
-    }, 1000); // Poll every second for instant feel
+        if (data.length > 0) {
+          _lastDmTimestamp.set(dmKey, new Date(data[data.length-1].timestamp).getTime());
+        }
+      } catch(e) { /* silently skip */ }
+    }, 3000);
 
     _dmPollingIntervals.set(dmKey, pollInterval);
-    console.log('[DMPolling] ✓ Polling interval started, checking every 1 second');
   }
 
   function stopDMPolling(dmKey) {
@@ -1390,55 +1306,43 @@ const FortizedSocial = (() => {
   let _lastChannelTimestamp = new Map();
 
   async function startChannelPolling(channelKey) {
-    if (_channelPollingIntervals.has(channelKey)) {
-      console.log('[ChannelPolling] Already polling this channel:', channelKey);
-      return;
-    }
+    if (_channelPollingIntervals.has(channelKey)) return;
+    // channelKey format: 'bastion:BASTION_ID:CHANNEL_NAME'
+    const parts = channelKey.replace(/^bastion:/, '').split(':');
+    const bastionId = parts[0] || '';
+    const channelId = parts[1] || '';
+    if (!bastionId || !channelId) return;
 
-    console.log('[ChannelPolling] ✓ Starting polling for:', channelKey);
     const pollInterval = setInterval(async () => {
       try {
         const { data, error } = await sb.from('bastion_msgs')
-          .select('*')
-          .ilike('full_id', channelKey + '%')
+          .select('id,from,text,time,timestamp,edited,reactions')
+          .eq('bastion_id', bastionId)
+          .eq('channel_id', channelId)
           .order('timestamp', { ascending: false })
-          .limit(5);
+          .limit(3);
 
-        if (error) {
-          console.error('[ChannelPolling] Query error:', error.message);
-          return;
-        }
+        if (error) return; // silently skip on error
 
         if (data && data.length > 0) {
-          console.debug('[ChannelPolling] Fetched', data.length, 'messages, checking for new ones...');
           for (const row of data.reverse()) {
             const msgTime = new Date(row.timestamp).getTime();
             const lastTime = _lastChannelTimestamp.get(channelKey) || 0;
-
             if (msgTime > lastTime) {
-              const msg = {
-                id: row.id,
-                from: row.author || row.from,
-                text: row.content || row.text,
-                timestamp: row.timestamp,
-                reactions: row.reactions || {}
-              };
-              console.log('[ChannelPolling] 🔔 NEW MESSAGE:', { from: msg.from, text: msg.text?.slice(0,40), msgTime, lastTime });
-              if (_callbacks.onMessage) {
-                console.log('[ChannelPolling] Invoking onMessage callback...');
-                _callbacks.onMessage(channelKey, msg);
+              const msg = { id: row.id, from: row.from, text: row.text, time: row.time, timestamp: row.timestamp, edited: row.edited, reactions: row.reactions };
+              // Invoke the listener callback
+              if (_socketCallbacks.onMessage) {
+                _socketCallbacks.onMessage('bastion:' + bastionId + ':' + channelId, msg);
+              } else if (_callbacks.onMessage) {
+                _callbacks.onMessage('bastion:' + bastionId + ':' + channelId, msg);
               }
             }
           }
-          if (data.length > 0) {
-            const lastMsg = data[data.length - 1];
-            _lastChannelTimestamp.set(channelKey, new Date(lastMsg.timestamp).getTime());
-          }
+          const lastMsg = data[data.length - 1];
+          _lastChannelTimestamp.set(channelKey, new Date(lastMsg.timestamp).getTime());
         }
-      } catch (err) {
-        console.error('[ChannelPolling] Exception:', err.message);
-      }
-    }, 2000);
+      } catch (err) { /* silently skip */ }
+    }, 3000); // Poll every 3s (was 2s)
 
     _channelPollingIntervals.set(channelKey, pollInterval);
   }

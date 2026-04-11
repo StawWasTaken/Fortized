@@ -5083,7 +5083,8 @@ async function sendChannelMsg(idx) {
   _trackSendMsgQuest();
   try {
     const savedMsg = await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text);
-    FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: savedMsg || msg });
+    const emitResult = FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: savedMsg || msg });
+    console.log('[RT-DEBUG] Bastion send. emitResult:', emitResult, 'room:', 'bastion:'+(b.globalId||b.name)+':'+ch.name, 'msgId:', (savedMsg||msg).id);
   } catch { toast('Failed to send message. Check your connection.','error'); }
   // Bot command handling — trigger deployed bots with ! prefix
   if (text.startsWith('!')) {
@@ -7449,11 +7450,15 @@ function initFortizedUXResilience() {
           const ch = b?.channels?.[curChannel];
           if (b && ch) {
             const expectedRoom = 'bastion:' + (b.globalId || b.name) + ':' + ch.name;
+            console.log('[RT-DEBUG] Bastion msg received. room:', room, 'expected:', expectedRoom, 'match:', room===expectedRoom);
             if (room === expectedRoom) {
               const msgsEl = document.getElementById('ch-msgs-' + curChannel);
+              console.log('[RT-DEBUG] Container:', 'ch-msgs-'+curChannel, 'found:', !!msgsEl);
               if (msgsEl) {
                 const mid = msg.id != null ? msg.id : (msg.from + msg.timestamp);
-                if (!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`)) {
+                const exists = !!msgsEl.querySelector(`[data-msgid="${CSS.escape(mid)}"]`);
+                console.log('[RT-DEBUG] msgId:', mid, 'already exists:', exists);
+                if (!exists) {
                   _dbg('[onMessage] Adding bastion message to display', { id: mid, from: msg.from });
                   const lastRows = msgsEl.querySelectorAll('.msg-row');
                   const lastAuthor = lastRows.length ? lastRows[lastRows.length - 1].dataset.from : null;

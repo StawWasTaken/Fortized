@@ -1287,7 +1287,7 @@ const FortizedSocial = (() => {
           _lastDmTimestamp.set(dmKey, new Date(data[data.length-1].timestamp).getTime());
         }
       } catch(e) { /* silently skip */ }
-    }, 3000);
+    }, 1500); // Poll every 1.5s
 
     _dmPollingIntervals.set(dmKey, pollInterval);
   }
@@ -1343,7 +1343,7 @@ const FortizedSocial = (() => {
           _lastChannelTimestamp.set(channelKey, new Date(lastMsg.timestamp).getTime());
         }
       } catch (err) { /* silently skip */ }
-    }, 3000); // Poll every 3s (was 2s)
+    }, 1500); // Poll every 1.5s
 
     _channelPollingIntervals.set(channelKey, pollInterval);
   }

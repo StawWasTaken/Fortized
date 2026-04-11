@@ -870,8 +870,8 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .bc::before{display:none;}
 .bc:hover{border-color:rgba(255,255,255,.1);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.25);}
 .bc:hover::before{display:none;}
-.bc-banner{height:100px;background:linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.01));display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;position:relative;}
-.bc-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,var(--panel));pointer-events:none;}
+.bc-banner{height:110px;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.bc-banner::after{display:none;}
 .bc-banner img{width:100%;height:100%;object-fit:cover;}
 .bc-body{padding:14px 16px 16px;}
 .bc-meta{display:flex;align-items:center;gap:10px;margin-bottom:8px;}

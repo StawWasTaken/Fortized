@@ -6681,18 +6681,30 @@ function renderDiscoverGrid(bastions){
     const isTrending = mc >= 5;
     const boostLevel = b.boostLevel||0;
     const tags = (b.tags || []).slice(0,3);
-    return `<div class="bc" style="${boostLevel>0?'border-color:rgba(255,249,62,.25);box-shadow:0 0 20px rgba(255,249,62,.08);':''}" onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">
+    // Generate unique card accent from bastion name (deterministic color)
+    const _nameHash = (b.name||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+    const _hue = _nameHash % 360;
+    const _cardAccent = `hsl(${_hue},60%,50%)`;
+    const _cardAccentDim = `hsla(${_hue},60%,50%,.08)`;
+    const _cardAccentMid = `hsla(${_hue},60%,50%,.2)`;
+    // Banner: use actual banner image, or icon stretched, or gradient from card accent
+    const _bannerStyle = b.banner
+      ? `background:url('${escapeHTML(b.banner)}') center/cover no-repeat;`
+      : b.icon
+        ? `background:url('${escapeHTML(b.icon)}') center/cover no-repeat;filter:blur(12px) brightness(.6);transform:scale(1.2);`
+        : `background:linear-gradient(135deg,${_cardAccentDim},rgba(18,22,40,.9));`;
+    return `<div class="bc" style="border-color:${_cardAccentMid};${boostLevel>0?'box-shadow:0 0 20px rgba(255,249,62,.08);':''}" onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">
       ${boostLevel>0?`<div style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:3px 8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:6px;color:var(--accent);z-index:2;">${['🟦','🟪','👑'][boostLevel-1]} T${boostLevel}</div>`:''}
-      <div class="bc-banner">${b.icon?`<img src="${b.icon}" alt="" style="${boostLevel>0?'filter:brightness(1.1);':''}">`:`<div style="position:relative;z-index:1;width:100%;height:100%;background:linear-gradient(135deg,${boostLevel>0?'rgba(255,249,62,.1)':'rgba(255,249,62,.06)'},${boostLevel>0?'rgba(62,207,110,.06)':'rgba(62,207,110,.04)'},rgba(18,22,40,.9));display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${boostLevel>0?'rgba(255,249,62,.35)':'rgba(255,249,62,.2)'}" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`}</div>
+      <div class="bc-banner"><div style="position:absolute;inset:0;${_bannerStyle}"></div><div style="position:absolute;inset:0;background:linear-gradient(transparent 30%,var(--panel) 100%);"></div></div>
       <div class="bc-body">
-        <div class="bc-meta"><div class="bc-icon">${b.icon?`<img src="${b.icon}" alt="" style="${boostLevel>0?'filter:brightness(1.1);':''}">`:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.5)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>`}</div><div style="flex:1"></div>
+        <div class="bc-meta"><div class="bc-icon" style="border-color:${_cardAccentMid};box-shadow:0 2px 8px rgba(0,0,0,.3);">${b.icon?`<img src="${b.icon}" alt="">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${_cardAccentDim};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${_cardAccent}" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>`}</div><div style="flex:1"></div>
           ${joined?`<span style="font-size:10.5px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.15);padding:4px 12px;border-radius:10px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Joined</span>`:`<button class="ftz-btn ftz-btn-accent ftz-btn-xs" style="padding:5px 16px;border-radius:10px;" onclick="event.stopPropagation();promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">+ Join</button>`}
         </div>
         <div class="bc-name">${escapeHTML(b.name)}</div>
         <div class="bc-desc">${escapeHTML((b.desc||'').slice(0,140))}</div>
         <div class="bc-footer">
           <div class="bc-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</div>
-          ${isTrending?`<div style="display:flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:rgba(62,207,110,.7);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> 🔥 Trending</div>`:`<div style="display:flex;align-items:center;gap:3px;font-size:9.5px;color:rgba(255,255,255,.3);">💤 ${mc>1?'Active':'Quiet'}</div>`}
+          ${isTrending?`<div style="display:flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;color:rgba(62,207,110,.7);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Trending</div>`:`<div style="display:flex;align-items:center;gap:3px;font-size:9.5px;color:rgba(255,255,255,.3);">${mc>1?'Active':'Quiet'}</div>`}
           ${cat?`<div class="bc-category">${escapeHTML(cat)}</div>`:''}
         </div>
         ${tags.length?`<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;">${tags.map(t=>`<span class="bc-tag">#${escapeHTML(t)}</span>`).join('')}</div>`:''}

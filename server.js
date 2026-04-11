@@ -386,6 +386,41 @@ app.get('/join/:vanity', async (req, res) => {
 });
 
 // App subpage routes — each has its own index.html
+// Dynamic OG embed for invite links (shows bastion info when shared on Discord/etc)
+app.get('/invite', async (req, res) => {
+  const code = req.query.invite || req.query.code || '';
+  if (!code) return res.sendFile(path.join(__dirname, 'invite', 'index.html'));
+  try {
+    // Look up bastion data for OG tags
+    const { data: invData } = await sb.from('invites').select('data').eq('code', code).maybeSingle();
+    const invite = invData?.data || null;
+    let bastion = null;
+    if (invite?.bastionId) {
+      const { data: bData } = await sb.from('global_bastions').select('id,data').eq('id', invite.bastionId).maybeSingle();
+      if (bData?.data) bastion = bData.data;
+    }
+    if (!bastion) {
+      const { data: allB } = await sb.from('global_bastions').select('id,data');
+      if (allB) for (const row of allB) { if (row.data?.invites?.some(i => i.code === code)) { bastion = row.data; break; } }
+    }
+    // Read the invite HTML and inject OG tags
+    const fs = require('fs');
+    let html = fs.readFileSync(path.join(__dirname, 'invite', 'index.html'), 'utf8');
+    if (bastion) {
+      const ogTags = `<meta property="og:title" content="${(bastion.name||'Bastion').replace(/"/g,'&quot;')} — Fortized">
+    <meta property="og:description" content="${(bastion.desc||bastion.tagline||'Join this bastion on Fortized!').replace(/"/g,'&quot;').slice(0,200)}">
+    <meta property="og:image" content="${bastion.banner||bastion.icon||'https://fortized.com/Fortized banner.png'}">
+    <meta property="og:url" content="https://fortized.com/app?invite=${code}">
+    <meta name="theme-color" content="#fff93e">`;
+      html = html.replace('</head>', ogTags + '\n</head>');
+    }
+    res.send(html);
+  } catch (e) {
+    console.error('[Invite OG] Failed:', e.message);
+    res.sendFile(path.join(__dirname, 'invite', 'index.html'));
+  }
+});
+
 app.get('/app/messages', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'messages', 'index.html')));
 app.get('/app/discover', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'discover', 'index.html')));
 app.get('/app/atelier', (_req, res) => res.sendFile(path.join(__dirname, 'app', 'atelier', 'index.html')));

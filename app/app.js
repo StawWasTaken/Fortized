@@ -3779,9 +3779,20 @@ async function sendDM() {
   const isOutline = _outlineMode;
   _outlineMode = false;
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
+  // Optimistic render — show message immediately for sender
+  const msgsEl = document.getElementById('dm-msgs');
+  if (msgsEl) {
+    const lastRows = msgsEl.querySelectorAll('.msg-row');
+    const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
+    appendMessage(msgsEl, msg, 'dm', lastAuthor);
+    scrollBottom('dm-msgs');
+  }
   try {
     const savedMsg = await FortizedSocial.sendDMMessage(CU.username, curDM, text);
-    _dbg('[sendDM] Message sent successfully');
+    if (savedMsg?.id && msgsEl) {
+      const localRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
+      if (localRow) localRow.dataset.msgid = savedMsg.id;
+    }
     FortizedSocial.socketEmit('message:send', { type: 'dm', id1: CU.username, id2: curDM, message: savedMsg || msg });
     _trackSendMsgQuest();
   } catch (e) {
@@ -4185,10 +4196,17 @@ async function sendGCMessage() {
     ...(rep ? {replyTo: rep} : {}),
   };
   _removeNewMsgBar('gc-msgs');
+  // Optimistic render — show message immediately for sender
+  const gcMsgsEl = document.getElementById('gc-msgs');
+  if (gcMsgsEl) {
+    const lastRows = gcMsgsEl.querySelectorAll('.msg-row');
+    const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
+    appendMessage(gcMsgsEl, msg, 'gc', lastAuthor);
+    scrollBottom('gc-msgs');
+  }
   _trackSendMsgQuest();
   try {
     await msgRef.set(msg);
-    // Emit via Socket.IO so other users see it in real-time
     FortizedSocial.socketEmit('message:send', { type: 'gc', id1: curGC, message: msg });
   } catch { toast('Failed to send message. Check your connection.','error'); }
 }
@@ -5080,12 +5098,25 @@ async function sendChannelMsg(idx) {
   const isOutline = _outlineMode;
   _outlineMode = false;
   const msg={id:'local-'+Date.now(),from:CU.username,text,timestamp:new Date().toISOString(),replyTo:rep,outline:isOutline};
+  // Optimistic render — show message immediately for sender
+  const msgsEl = document.getElementById('ch-msgs-'+idx);
+  if (msgsEl) {
+    const lastRows = msgsEl.querySelectorAll('.msg-row');
+    const lastAuthor = lastRows.length ? lastRows[lastRows.length-1].dataset.from : null;
+    appendMessage(msgsEl, msg, 'ch', lastAuthor);
+    scrollBottom('ch-msgs-'+idx);
+  }
   // Award message reputation
   awardMessageRep(b.globalId||b.name, CU.username);
   _trackSendMsgQuest();
   try {
     const savedMsg = await FortizedSocial.sendBastionChannelMessage(b.globalId||b.name,ch.name,CU.username,text);
-    const emitResult = FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: savedMsg || msg });
+    // Update the local message ID to match Supabase ID (for edit/delete)
+    if (savedMsg?.id && msgsEl) {
+      const localRow = msgsEl.querySelector('[data-msgid="'+CSS.escape(msg.id)+'"]');
+      if (localRow) localRow.dataset.msgid = savedMsg.id;
+    }
+    FortizedSocial.socketEmit('message:send', { type: 'bastion', id1: b.globalId||b.name, id2: ch.name, message: savedMsg || msg });
     console.log('[RT-DEBUG] Bastion send. emitResult:', emitResult, 'room:', 'bastion:'+(b.globalId||b.name)+':'+ch.name, 'msgId:', (savedMsg||msg).id);
   } catch { toast('Failed to send message. Check your connection.','error'); }
   // Bot command handling — trigger deployed bots with ! prefix

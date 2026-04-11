@@ -1113,12 +1113,13 @@ const FortizedSocial = (() => {
     }
     try {
       _socket = window.io(_getSocketURL(), {
-        transports: ['websocket', 'polling'],
+        transports: ['polling', 'websocket'], // Start with polling (works through Cloudflare), upgrade to WS
+        upgrade: true,
         reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 2000,
-        reconnectionDelayMax: 10000,
-        timeout: 5000,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 10000,
       });
       _socket.on('connect', function() {
         _socketReady = true;

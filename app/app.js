@@ -825,6 +825,8 @@ async function _syncBastionToGlobal(bastionIdx) {
     const globalData = {...b, id: bid, owner: b.owner || CU.username, memberCount: b.memberCount || 1};
     delete globalData.globalId; // avoid nesting
     await FortizedSocial.saveGlobalBastion(bid, globalData);
+    // Broadcast change to all connected clients so they re-sync
+    FortizedSocial.socketEmit('bastion:update', { bastionId: bid, field: 'sync' });
   } catch(e) {
     console.warn('Bastion sync to global failed:', e);
     // Retry once
@@ -7706,18 +7708,23 @@ function initFortizedUXResilience() {
         }
       },
       onBastionUpdate: function(data) {
-        // Re-sync bastion data when roles or member roles change
-        if (!CU?.bastions) return;
+        if (!CU?.bastions || !data?.bastionId) return;
+        // Skip if we triggered this update ourselves
+        if (data.username === CU.username) return;
+        // Invalidate cache so we get fresh data
+        FortizedSocial.adminInvalidateCache?.();
         CU.bastions.forEach((b, idx) => {
           if ((b.globalId||b.name) === data.bastionId) {
             FortizedSocial.getGlobalBastion(data.bastionId).then(fresh => {
               if (!fresh) return;
-              const syncFields = ['roles','memberRoles','channels','name','members','memberCount'];
+              // Sync ALL fields from global
+              const syncFields = ['roles','memberRoles','channels','name','icon','banner','emblem','desc','tagline','members','memberCount','invites','automod','boostLevel','customEmojis','public','categories','moodDisabled','moodLocked','lockedMood','customMood','overview','bans'];
               syncFields.forEach(f => { if (fresh[f] !== undefined) b[f] = fresh[f]; });
               saveLocal();
+              renderRailBastions();
               if (curBastion === idx) {
-                renderRailBastions();
                 if (typeof renderMemberList === 'function') renderMemberList();
+                if (typeof renderBastionSidebar === 'function') renderBastionSidebar();
               }
             }).catch(()=>{});
           }
@@ -18697,10 +18704,10 @@ async function saveAssignedRoles(username, overlay) {
   const checked = [...overlay.querySelectorAll('input[type=checkbox]:checked')].map(el => el.dataset.roleid);
   b.memberRoles[username] = checked;
   await saveUser();
+  _syncBastionToGlobal(curBastion);
   overlay.remove();
   toast('Roles updated for @'+username,'success');
   loadBastionMembersList();
-  // Refresh member list panel in chat
   renderMemberList();
 }
 

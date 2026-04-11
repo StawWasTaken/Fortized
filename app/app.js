@@ -3604,16 +3604,16 @@ function showDMFriendsHome() {
   if (anSidebar) anSidebar.style.display = '';
   wrap.innerHTML = `
     <div id="dm-friends-home" style="flex:1;overflow-y:auto;">
-      <div class="page-banner" style="margin-bottom:0;">
-        <img src="/Fortized banner5.png" class="page-banner-img" alt="" onerror="this.style.display='none'">
-        <div class="page-banner-fade"></div>
+      <div class="disc-hero" style="height:140px;">
+        <img src="/Fortized banner.png" class="disc-hero-bg" alt="" onerror="this.style.display='none'">
+        <div class="disc-hero-fade"></div>
+        <div class="disc-hero-content">
+          <h1 style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin:0 0 3px;text-shadow:0 2px 12px rgba(0,0,0,.5);">Friends</h1>
+          <p style="font-size:11.5px;color:rgba(255,255,255,.4);margin:0;">Your conversations & friends</p>
+        </div>
       </div>
-      <div style="padding:0 28px 28px;max-width:900px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-          <div>
-            <h2 style="font-family:var(--font-display);font-size:24px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.02em;">Friends</h2>
-            <p style="font-size:12.5px;color:rgba(255,255,255,.3);margin:0;">Your conversations & friends</p>
-          </div>
+      <div style="padding:16px 28px 28px;max-width:900px;">
+        <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:14px;">
           <button class="btn-a" onclick="openModal('modal-add-friend')" style="font-size:12px;padding:8px 16px;border-radius:12px;display:flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Friend</button>
         </div>
         <!-- Search bar -->

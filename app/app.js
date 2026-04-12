@@ -26969,19 +26969,19 @@ function renderAtelierTab(tab) {
       const catRgb = q.daily ? '96,165,250' : q.category==='Explorer' ? '251,146,60' : '167,139,250';
       const bgColor = q.done ? 'rgba(62,207,110,.08)' : 'rgba(255,255,255,.03)';
       const borderColor = q.done ? 'rgba(62,207,110,.15)' : 'rgba(255,255,255,.08)';
+      const iconBorderRadius = q.done ? '50%' : '14px';
+      const iconBorder = q.done ? '3px solid var(--green)' : `2.5px solid rgba(${catRgb},.4)`;
 
       return `<div style="background:${bgColor};border:1.5px solid ${borderColor};border-radius:16px;overflow:hidden;transition:all .24s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;position:relative;" ${!q.done?`onmouseover="this.style.borderColor='rgba(${catRgb},.25)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='${borderColor}';this.style.transform='';this.style.boxShadow='none'"`:''}>
 
         <!-- Top Section: Icon and Title -->
         <div style="padding:20px;display:flex;align-items:flex-start;gap:16px;">
-          <!-- Circular Icon UI -->
-          <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.05);border:3px solid ${q.done?'var(--green)':'rgba('+catRgb+',.4)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;transition:all .3s cubic-bezier(.22,1,.36,1);box-shadow:${q.done?'0 0 20px rgba(62,207,110,.3),inset 0 0 20px rgba(62,207,110,.1)':'0 0 16px rgba('+catRgb+',.15),inset 0 0 12px rgba('+catRgb+',.08)'};">
-            <div style="width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;">
-              ${q.icon === '🎁' ? `<img src="/Onyx image.png" style="width:70%;height:70%;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3));">` : `<div style="font-size:36px;text-shadow:0 2px 8px rgba(0,0,0,.4);">${q.icon}</div>`}
-            </div>
+          <!-- Icon Container - Square for incomplete, Circular for completed -->
+          <div style="width:${q.done?'80px':'72px'};height:${q.done?'80px':'72px'};border-radius:${iconBorderRadius};background:rgba(255,255,255,.05);border:${iconBorder};display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;transition:all .3s cubic-bezier(.22,1,.36,1);box-shadow:${q.done?'0 0 20px rgba(62,207,110,.3),inset 0 0 20px rgba(62,207,110,.1)':'0 0 16px rgba('+catRgb+',.15),inset 0 0 12px rgba('+catRgb+',.08)'};">
+            <img src="/Onyx image.png" style="width:${q.done?'72%':'75%'};height:${q.done?'72%':'75%'};object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));border-radius:${q.done?'50%':'10px'};padding:${q.done?'0':'4px'};">
           </div>
 
-          <div style="flex:1;min-width:0;margin-top:4px;">
+          <div style="flex:1;min-width:0;margin-top:${q.done?'4px':'6px'};">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
               <span style="font-family:var(--font-display);font-size:15px;font-weight:800;color:${q.done?'rgba(255,255,255,.6)':'#fff'};letter-spacing:-.01em;">${q.title.toUpperCase()}</span>
               <span style="font-size:8px;font-weight:800;padding:3px 10px;border-radius:6px;background:${catColor}15;color:${catColor};border:1px solid ${catColor}25;letter-spacing:.05em;text-transform:uppercase;">${q.daily?'Daily':q.category}</span>

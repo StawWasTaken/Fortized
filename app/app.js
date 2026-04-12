@@ -26967,28 +26967,41 @@ function renderAtelierTab(tab) {
     const questCardHTML = (q) => {
       const catColor = q.daily ? '#60a5fa' : q.category==='Explorer' ? '#fb923c' : '#a78bfa';
       const catRgb = q.daily ? '96,165,250' : q.category==='Explorer' ? '251,146,60' : '167,139,250';
-      return `<div style="background:${q.done?'linear-gradient(135deg,rgba(62,207,110,.03),rgba(62,207,110,.01))':'linear-gradient(135deg,rgba(255,255,255,.025),rgba(255,255,255,.01))'};border:1.5px solid ${q.done?'rgba(62,207,110,.08)':'rgba(255,255,255,.05)'};border-radius:18px;padding:18px 20px;transition:all .22s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;" ${!q.done?`onmouseover="this.style.borderColor='rgba(${catRgb},.18)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.18)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'"`:''}>
-        ${q.done?'<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);border-radius:0 3px 3px 0;"></div>':''}
-        <div style="width:48px;height:48px;border-radius:16px;background:${q.done?'rgba(62,207,110,.06)':'rgba('+catRgb+',.06)'};border:1.5px solid ${q.done?'rgba(62,207,110,.1)':'rgba('+catRgb+',.1)'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative;">
-          ${q.icon}
-          ${q.done?'<div style="position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;border:2.5px solid #13161d;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>':''}
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <span style="font-family:var(--font-display);font-size:13.5px;font-weight:800;color:${q.done?'rgba(255,255,255,.4)':'#fff'};letter-spacing:-.01em;">${q.title}</span>
-            <span style="font-size:8.5px;font-weight:800;padding:3px 8px;border-radius:var(--radius-pill);background:${catColor}10;color:${catColor};border:1px solid ${catColor}18;letter-spacing:.05em;">${q.daily?'DAILY':q.category.toUpperCase()}</span>
+      const bgColor = q.done ? 'rgba(62,207,110,.08)' : 'rgba(255,255,255,.03)';
+      const borderColor = q.done ? 'rgba(62,207,110,.15)' : 'rgba(255,255,255,.08)';
+
+      return `<div style="background:${bgColor};border:1.5px solid ${borderColor};border-radius:16px;overflow:hidden;transition:all .24s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;position:relative;" ${!q.done?`onmouseover="this.style.borderColor='rgba(${catRgb},.25)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='${borderColor}';this.style.transform='';this.style.boxShadow='none'"`:''}>
+        ${q.done?'<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),#60d394);"></div>':''}
+
+        <!-- Top Section: Icon and Title -->
+        <div style="padding:20px;display:flex;align-items:flex-start;gap:16px;">
+          <div style="width:64px;height:64px;border-radius:14px;background:${q.done?'rgba(62,207,110,.15)':'rgba('+catRgb+',.1)'};border:2px solid ${q.done?'rgba(62,207,110,.25)':'rgba('+catRgb+',.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;">
+            ${q.icon === '🎁' ? `<img src="/Onyx image.png" style="width:100%;height:100%;object-fit:contain;padding:8px;">` : `<div style="font-size:32px;">${q.icon}</div>`}
+            ${q.done?'<div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(62,207,110,.1),transparent);"></div>':''}
           </div>
-          <div style="font-size:11.5px;color:rgba(255,255,255,.3);line-height:1.45;margin-bottom:10px;">${q.desc}</div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="flex:1;height:4px;background:rgba(255,255,255,.05);border-radius:var(--radius-pill);max-width:140px;">
-              <div style="height:100%;border-radius:var(--radius-pill);width:${q.done?100:0}%;background:${q.done?'linear-gradient(90deg,var(--green),#60d394)':'linear-gradient(90deg,var(--accent),#ffb93e)'};transition:width .5s cubic-bezier(.22,1,.36,1);"></div>
+
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+              <span style="font-family:var(--font-display);font-size:15px;font-weight:800;color:${q.done?'rgba(255,255,255,.6)':'#fff'};letter-spacing:-.01em;">${q.title.toUpperCase()}</span>
+              <span style="font-size:8px;font-weight:800;padding:3px 10px;border-radius:6px;background:${catColor}15;color:${catColor};border:1px solid ${catColor}25;letter-spacing:.05em;text-transform:uppercase;">${q.daily?'Daily':q.category}</span>
+              ${q.done?'<span style="font-size:8px;font-weight:800;padding:3px 10px;border-radius:6px;background:rgba(62,207,110,.15);color:var(--green);border:1px solid rgba(62,207,110,.25);letter-spacing:.05em;text-transform:uppercase;">✓ Done</span>':''}
             </div>
-            <span style="font-size:11.5px;font-weight:700;color:${q.done?'var(--green)':'var(--accent)'};display:flex;align-items:center;gap:4px;">+${q.reward} <img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"></span>
+            <div style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.5;">${q.desc}</div>
           </div>
         </div>
-        ${!q.done
-          ? `<button onclick="${q.action}" style="padding:9px 20px;border-radius:12px;background:linear-gradient(135deg,rgba(${catRgb},.1),rgba(${catRgb},.05));border:1.5px solid rgba(${catRgb},.15);color:${catColor};font-size:11.5px;font-weight:700;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);white-space:nowrap;flex-shrink:0;letter-spacing:.01em;" onmouseover="this.style.background='linear-gradient(135deg,rgba(${catRgb},.18),rgba(${catRgb},.08))';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(${catRgb},.1),rgba(${catRgb},.05))';this.style.transform=''">Go</button>`
-          : `<span style="font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;font-weight:600;">${q.daily?'Resets daily':'Completed'}</span>`}
+
+        <!-- Bottom Section: Reward and Action -->
+        <div style="padding:0 20px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid ${borderColor};margin:0 0 0 0;padding-top:16px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(255,249,62,.2));">
+            <span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--accent);">+${q.reward}</span>
+            <span style="font-size:11px;color:rgba(255,255,255,.35);font-weight:600;">${q.unit}</span>
+          </div>
+
+          ${!q.done
+            ? `<button onclick="${q.action}" style="padding:10px 22px;border-radius:10px;background:linear-gradient(135deg,${catColor},${catColor}dd);color:#fff;border:none;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;transition:all .18s cubic-bezier(.22,1,.36,1);letter-spacing:.01em;flex-shrink:0;box-shadow:0 4px 16px rgba(${catRgb},.25);" onmouseover="this.style.filter='brightness(1.12)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 24px rgba(${catRgb},.35)'" onmouseout="this.style.filter='brightness(1)';this.style.transform='';this.style.boxShadow='0 4px 16px rgba(${catRgb},.25)'">Accept Quest</button>`
+            : `<span style="font-size:11px;color:var(--green);font-weight:700;">Completed</span>`}
+        </div>
       </div>`;
     };
 

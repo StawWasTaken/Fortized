@@ -1572,7 +1572,7 @@ function showView(v, _skipPush) {
   if (rBtn) rBtn.classList.add('active');
 
   // Post-show callbacks
-  if (v === 'atelier') { _atelierTab = 'overview'; renderAtelierTab('overview'); setTimeout(() => { refreshCU().then(()=>{ switchAtelierTab('overview'); refreshDailyBtn(); }).catch(()=>{ switchAtelierTab('overview'); refreshDailyBtn(); }); }, 0); }
+  if (v === 'atelier') { _atelierTab = 'shop'; renderAtelierTab('shop'); setTimeout(() => { refreshCU().then(()=>{ switchAtelierTab('shop'); refreshDailyBtn(); }).catch(()=>{ switchAtelierTab('shop'); refreshDailyBtn(); }); }, 0); }
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
   if (v === 'dms' && !curDM && !curGC) setTimeout(() => { showDMFriendsHome(); }, 50);
@@ -2074,53 +2074,8 @@ function updateAtelierSidebar() {
 
 function renderAtelierSidebar(scroll) {
   if (!scroll) return;
-  const tab = _atelierTab || 'overview';
-  const bal = CU?.onyx || 0;
-  const hasRad = !!(CU?.radianceUntil && new Date(CU.radianceUntil) > new Date());
-  const hasPlus = !!(CU?.radiancePlus && new Date(CU.radiancePlus) > new Date());
-  let activeQuests = 0;
-  try {
-    const completed = CU?.completedQuests || [];
-    const allQIds = ['daily_claim','send_msg','invite','join_bastion','add_friend','set_pfp','set_bio','five_friends','send_gif','create_bastion'];
-    activeQuests = allQIds.filter(id => !completed.includes(id)).length;
-  } catch(e) {}
-  const radianceIcon = hasPlus
-    ? _radiancePlusImg('16')
-    : hasRad
-      ? _radianceImg('16')
-      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
-  scroll.innerHTML = ''
-    + '<div class="atel-sb-balance">'
-    +   '<img src="/Onyx.png" class="atel-sb-coin">'
-    +   '<div class="atel-sb-bal-info">'
-    +     '<span class="atel-sb-bal-val" id="atelier-balance">' + bal + '</span>'
-    +     '<span class="atel-sb-bal-label">Onyx</span>'
-    +   '</div>'
-    + '</div>'
-    + '<div class="atel-sb-sep"></div>'
-    + '<div class="atel-sb-section">Browse</div>'
-    + '<div class="atel-sb-item' + (tab==='overview'?' active':'') + '" data-tab="overview" onclick="switchAtelierTab(\'overview\')">'
-    +   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
-    +   '<span>Overview</span>'
-    + '</div>'
-    + '<div class="atel-sb-item' + (tab==='shop'?' active':'') + '" data-tab="shop" onclick="switchAtelierTab(\'shop\')">'
-    +   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>'
-    +   '<span>Shop</span>'
-    + '</div>'
-    + '<div class="atel-sb-sep"></div>'
-    + '<div class="atel-sb-section">Membership</div>'
-    + '<div class="atel-sb-item' + (tab==='radiance'?' active':'') + '" data-tab="radiance" onclick="switchAtelierTab(\'radiance\')">'
-    +   '<span class="atel-sb-radiance-icon">' + radianceIcon + '</span>'
-    +   '<span>Radiance</span>'
-    +   (hasRad || hasPlus ? '<span class="atel-sb-badge atel-active">' + (hasPlus ? 'Plus' : 'Active') + '</span>' : '')
-    + '</div>'
-    + '<div class="atel-sb-sep"></div>'
-    + '<div class="atel-sb-section">Earn</div>'
-    + '<div class="atel-sb-item' + (tab==='quests'?' active':'') + '" data-tab="quests" onclick="switchAtelierTab(\'quests\')">'
-    +   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
-    +   '<span>Quests</span>'
-    +   (activeQuests > 0 ? '<span class="atel-sb-badge atel-quest-count">' + activeQuests + '</span>' : '')
-    + '</div>';
+  // Show Direct Messages sidebar instead of Atelier navigation
+  renderDMSidebar(scroll);
 }
 function _defaultPfpUrl(name) {
   // Deterministic random based on name — always same for same user
@@ -26580,16 +26535,35 @@ let _atelierTab = 'overview';
 
 function switchAtelierTab(tab, el) {
   _atelierTab = tab;
-  // Update sidebar nav active state
-  document.querySelectorAll('.atel-sb-item').forEach(i => {
-    i.classList.toggle('active', i.getAttribute('data-tab') === tab);
-  });
-  // Update topbar title to show current section
-  const names = {overview:'Overview',shop:'Shop',radiance:'Radiance Dwelling',quests:'Quests'};
+  // Update topbar title
+  const names = {shop:'Shop',radiance:'Radiance Dwelling',quests:'Quests'};
   const tt = document.getElementById('topbar-title');
   if (tt) tt.textContent = names[tab] || 'Atelier';
+
+  // Update Atelier top navigation
+  renderAtelierTopNav();
   updateAtelierSidebar();
   renderAtelierTab(tab);
+}
+
+function renderAtelierTopNav() {
+  const tab = _atelierTab || 'shop';
+  const navContainer = document.getElementById('atelier-top-nav');
+  if (!navContainer) return;
+
+  const tabs = [
+    { id: 'radiance', name: 'Radiance Dwelling', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
+    { id: 'shop', name: 'Shop', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' },
+    { id: 'quests', name: 'Quests', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' }
+  ];
+
+  navContainer.innerHTML = tabs.map(t => {
+    const isActive = tab === t.id;
+    return `<button class="atel-top-nav-btn ${isActive ? 'active' : ''}" onclick="switchAtelierTab('${t.id}')" style="display:flex;align-items:center;gap:8px;padding:12px 16px;border:none;background:${isActive ? 'rgba(255,249,62,.08)' : 'transparent'};border-bottom:${isActive ? '2px solid var(--accent)' : '1px solid transparent'};color:${isActive ? 'var(--accent)' : 'rgba(255,255,255,.5)'};cursor:pointer;transition:all .2s;font-size:13px;font-weight:600;font-family:var(--font-display);position:relative;white-space:nowrap;">
+      <span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;color:currentColor;">${t.svg}</span>
+      <span>${t.name}</span>
+    </button>`;
+  }).join('');
 }
 
 function _renderShopItemCard(type, item, ownedApps, ownedDecos, activeDecoId) {
@@ -26649,187 +26623,9 @@ function renderAtelierTab(tab) {
   const today    = new Date().toDateString();
   const dailyDone = CU?.lastDailyReward===today || CU?.lastDaily===today;
 
-  // ── OVERVIEW ──────────────────────────────────────────────
-  if (tab === 'overview') {
-    const PERKS = [
-      {icon:ftzIcon('star','22'),name:'Profile Glow',desc:'Animated glow on avatar',color:'#ffd93e',plus:false},
-      {icon:ftzIcon('image','22'),name:'Custom Banner',desc:'Full profile banner',color:'#60a5fa',plus:false},
-      {icon:ftzIcon('clip','22'),name:'45MB Uploads',desc:'Bigger attachments',color:'#3ecf6e',plus:false},
-      {icon:ftzIcon('gem','22'),name:'Radiance Badge',desc:'Exclusive badge',color:'#a78bfa',plus:false},
-      {icon:'😊',name:'Emoji Access',desc:'Use all emojis daily',color:'#ffb627',plus:false},
-      {icon:'🎞️',name:'Sticker Access',desc:'Use all stickers daily',color:'#ff6b9d',plus:false},
-      {icon:ftzIcon('letters','22'),name:'Custom Font',desc:'Change your font',color:'#fb923c',plus:true},
-      {icon:ftzIcon('gift','22'),name:'Gift Radiance',desc:'Gift friends',color:'#f472b6',plus:true},
-      {icon:ftzIcon('zap','22'),name:'Profile Themes',desc:'Gradient border colors',color:'#06b6d4',plus:true},
-      {icon:ftzIcon('palette','22'),name:'Enhanced Reactions',desc:'Super reaction toggle',color:'#ec4899',plus:true},
-    ];
-    const doneQuests = (CU?.completedQuests||[]);
-    const allQ = [
-      {id:'daily_claim',icon:'🎁',title:'Daily Claim',reward:'50 Onyx'},
-      {id:'send_msg',icon:'💬',title:'Send a Message',reward:'10 Onyx'},
-      {id:'invite',icon:'🔗',title:'Invite a Friend',reward:'+9 Onyx/friend'},
-      {id:'join_bastion',icon:'🏰',title:'Join a Bastion',reward:'25 Onyx'},
-      {id:'add_friend',icon:'👥',title:'Add First Friend',reward:'15 Onyx'},
-      {id:'set_pfp',icon:'🖼️',title:'Set Avatar',reward:'20 Onyx'},
-      {id:'set_bio',icon:'📝',title:'Write Your Bio',reward:'15 Onyx'},
-      {id:'five_friends',icon:'🤝',title:'Social Butterfly',reward:'40 Onyx'},
-      {id:'send_gif',icon:'🎞️',title:'GIF Master',reward:'10 Onyx'},
-      {id:'create_bastion',icon:'⚔️',title:'Fortress Builder',reward:'50 Onyx'},
-    ];
-    const doneQ = allQ.filter(q => doneQuests.includes(q.id) || (q.id==='join_bastion'&&(CU?.bastions||[]).length>0) || (q.id==='add_friend'&&(CU?.friends||[]).length>0) || (q.id==='set_pfp'&&CU?.pfp) || (q.id==='daily_claim'&&dailyDone) || (q.id==='send_msg'&&isDailyQuestDone('send_msg')) || (q.id==='set_bio'&&!!CU?.bio) || (q.id==='five_friends'&&(CU?.friends||[]).length>=5));
-
-    // Update the balance in the sidebar
-    const balHeader = document.getElementById('atelier-balance');
-    if (balHeader) balHeader.textContent = bal;
-
-    el.innerHTML = `<div class="atelier-content-inner">
-
-      <!-- Redesigned Header with Profile Feel -->
-      <div style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.005));border:1px solid rgba(255,249,62,.08);border-radius:20px;padding:24px;margin-bottom:32px;position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:radial-gradient(circle,rgba(255,249,62,.05),transparent 70%);pointer-events:none;"></div>
-        <div style="display:flex;align-items:flex-start;gap:18px;">
-          <div style="flex:1;">
-            <div style="font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,249,62,.6);margin-bottom:8px;">Your Fortress</div>
-            <div style="font-family:var(--font-display);font-size:28px;font-weight:900;color:#fff;letter-spacing:-.02em;line-height:1.1;margin-bottom:12px;">Welcome back${CU?.displayName ? ', '+CU.displayName : ''}</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.6;max-width:450px;">Keep building your legacy. Check your progress and unlock new perks today.</div>
-          </div>
-          <div style="flex-shrink:0;text-align:right;">
-            <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Onyx Balance</div>
-            <div style="font-family:var(--font-display);font-size:32px;font-weight:900;color:var(--accent);text-shadow:0 2px 12px rgba(255,249,62,.15);">${bal}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions Row — Redesigned -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px;">
-        <!-- Daily Claim -->
-        <div style="background:rgba(255,249,62,.04);border:1.5px solid ${dailyDone?'rgba(62,207,110,.15)':'rgba(255,249,62,.12)'};border-radius:16px;padding:18px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;backdrop-filter:blur(2px);" onclick="claimDailyQuest()" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(255,249,62,.08)'" onmouseout="this.style.transform='';this.style.boxShadow='none'">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="width:36px;height:36px;border-radius:12px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🎁</div>
-            <span style="font-size:8px;font-weight:800;letter-spacing:.08em;padding:2px 8px;border-radius:6px;background:rgba(255,249,62,.1);color:var(--accent);text-transform:uppercase;">${dailyDone?'✓ Claimed':'Available'}</span>
-          </div>
-          <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.01em;">Daily Onyx</div>
-          <div style="font-size:10.5px;color:rgba(255,255,255,.4);">+50 Onyx per day</div>
-        </div>
-        <!-- Browse Shop -->
-        <div style="background:rgba(167,139,250,.03);border:1.5px solid rgba(167,139,250,.12);border-radius:16px;padding:18px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;backdrop-filter:blur(2px);" onclick="switchAtelierTab('shop')" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(167,139,250,.08)'" onmouseout="this.style.transform='';this.style.boxShadow='none'">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="width:36px;height:36px;border-radius:12px;background:rgba(167,139,250,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-            </div>
-            <span style="font-size:8px;font-weight:800;letter-spacing:.08em;padding:2px 8px;border-radius:6px;background:rgba(167,139,250,.1);color:var(--purple);text-transform:uppercase;">Shop</span>
-          </div>
-          <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.01em;">Browse Items</div>
-          <div style="font-size:10.5px;color:rgba(255,255,255,.4);">Themes & decorations</div>
-        </div>
-        <!-- Radiance -->
-        <div style="background:${hasRad||hasPlus?'rgba(255,160,62,.04)':'rgba(251,146,60,.03)'};border:1.5px solid ${hasRad||hasPlus?'rgba(255,160,62,.15)':'rgba(251,146,60,.1)'};border-radius:16px;padding:18px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;backdrop-filter:blur(2px);" onclick="switchAtelierTab('radiance')" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(255,160,62,.08)'" onmouseout="this.style.transform='';this.style.boxShadow='none'">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="width:36px;height:36px;border-radius:12px;background:${hasRad||hasPlus?'rgba(255,160,62,.1)':'rgba(251,146,60,.08)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              ${hasPlus ? _radiancePlusImg('18') : hasRad ? _radianceImg('18') : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'}
-            </div>
-            ${hasRad||hasPlus?'<span style="font-size:8px;font-weight:800;letter-spacing:.08em;padding:2px 8px;border-radius:6px;background:rgba(62,207,110,.1);color:var(--green);text-transform:uppercase;">Active</span>':'<span style="font-size:8px;font-weight:800;letter-spacing:.08em;padding:2px 8px;border-radius:6px;background:rgba(251,146,60,.1);color:#fb923c;text-transform:uppercase;">Upgrade</span>'}
-          </div>
-          <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.01em;">${hasPlus?'Radiance+':hasRad?'Radiance':'Get Radiance'}</div>
-          <div style="font-size:10.5px;color:rgba(255,255,255,.4);">${hasPlus?daysPlus+' days':hasRad?daysRad+' days':'Premium perks'}</div>
-        </div>
-      </div>
-
-      <!-- Radiance Perks — Unified Tier Layout -->
-      <div style="margin-bottom:32px;">
-        <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>Radiance Perks</span>
-          <span style="cursor:pointer;color:rgba(255,249,62,.5);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onclick="switchAtelierTab('radiance')" onmouseover="this.style.color='rgba(255,249,62,.8)'" onmouseout="this.style.color='rgba(255,249,62,.5)'">View All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg></span>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
-          ${PERKS.slice(0,5).map(p => {
-            const unlocked = p.plus ? hasPlus : hasRad;
-            const events = unlocked ? ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.borderColor=\'rgba(255,255,255,.15)\';this.style.boxShadow=\'0 6px 16px rgba(0,0,0,.12)\'" onmouseout="this.style.transform=\'\';this.style.borderColor=\'rgba(255,255,255,.1)\';this.style.boxShadow=\'none\'"' : '';
-            return `<div style="background:${unlocked?'linear-gradient(135deg,rgba(255,255,255,.035),rgba(255,255,255,.01))':'rgba(255,255,255,.015)'};border:1px solid ${unlocked?'rgba(255,255,255,.1)':'rgba(255,255,255,.04)'};border-radius:14px;padding:14px;position:relative;overflow:hidden;transition:all .18s cubic-bezier(.22,1,.36,1);opacity:${unlocked?'1':'0.5'};text-align:center;"${events}>`
-              + `<div style="font-size:20px;margin-bottom:8px;">${p.icon}</div>`
-              + `<div style="font-size:11px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3;">${p.name}</div>`
-              + `<div style="font-size:8.5px;color:rgba(255,255,255,.35);line-height:1.4;">${p.desc}</div>`
-              + (p.plus?`<div style="margin-top:6px;font-size:7px;font-weight:800;color:#ffd93e;text-transform:uppercase;letter-spacing:.05em;">Radiance+</div>`:'')
-              + '</div>';
-          }).join('')}
-        </div>
-        ${!hasRad?'<div style="margin-top:16px;background:linear-gradient(135deg,rgba(255,249,62,.035),rgba(255,249,62,.005));border:1.5px solid rgba(255,249,62,.1);border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);" onclick="switchAtelierTab(\'radiance\')" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 6px 20px rgba(255,249,62,.1)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'none\'">'
-          + '<div style="width:36px;height:36px;border-radius:12px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;">'+ftzIcon('star','18')+'</div>'
-          + '<div style="flex:1;"><div style="font-size:12.5px;font-weight:700;color:var(--accent);">Unlock Radiance</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;">Premium membership with exclusive perks</div></div>'
-          + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="opacity:.5;flex-shrink:0;"><path d="m9 18 6-6-6-6"/></svg>'
-          + '</div>':''}
-      </div>
-
-      <!-- Quest Progress — Modern Gamified Design -->
-      <div style="margin-bottom:32px;">
-        <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>Your Progress</span>
-          <span style="cursor:pointer;color:rgba(255,249,62,.5);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onclick="switchAtelierTab('quests')" onmouseover="this.style.color='rgba(255,249,62,.8)'" onmouseout="this.style.color='rgba(255,249,62,.5)'">Explore <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg></span>
-        </div>
-        <!-- Progress Ring and Stats -->
-        <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;margin-bottom:16px;align-items:center;">
-          <div style="position:relative;width:68px;height:68px;">
-            <svg width="68" height="68" viewBox="0 0 68 68" style="transform:rotate(-90deg);">
-              <circle cx="34" cy="34" r="28" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2.5"/>
-              <circle cx="34" cy="34" r="28" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="${28*2*Math.PI}" stroke-dashoffset="${28*2*Math.PI*(1-doneQ.length/allQ.length)}" style="transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);filter:drop-shadow(0 0 4px rgba(255,249,62,.2));"/>
-            </svg>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;">
-              <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;">${doneQ.length}</div>
-              <div style="font-size:8px;color:rgba(255,255,255,.35);font-weight:600;">of ${allQ.length}</div>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div>
-              <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">Overall Completion</div>
-              <div style="font-size:13px;font-weight:700;color:#fff;">${Math.round(doneQ.length/allQ.length*100)}% Complete</div>
-            </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <div style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:rgba(255,249,62,.05);border:1px solid rgba(255,249,62,.1);border-radius:10px;">
-                <span style="font-size:9px;font-weight:600;color:rgba(255,255,255,.4);">Quests Completed</span>
-                <span style="font-size:11px;font-weight:800;color:var(--accent);">${doneQ.length}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent Completed Quests -->
-        ${doneQ.length ? '<div style="display:flex;flex-direction:column;gap:8px;">'
-          + doneQ.slice(0,2).map(q=>
-            '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(135deg,rgba(62,207,110,.04),rgba(62,207,110,.01));border:1px solid rgba(62,207,110,.08);border-radius:12px;transition:all .18s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.transform=\'translateX(2px)\';this.style.borderColor=\'rgba(62,207,110,.15)\'" onmouseout="this.style.transform=\'\';this.style.borderColor=\'rgba(62,207,110,.08)\'">'
-            + '<div style="width:28px;height:28px;border-radius:10px;background:rgba(62,207,110,.1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">'+q.icon+'</div>'
-            + '<div style="flex:1;min-width:0;">'
-            + '<div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:2px;">'+q.title+'</div>'
-            + '<div style="font-size:9px;color:rgba(255,255,255,.35);">Completed</div>'
-            + '</div>'
-            + '<div style="display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--green);">+'+q.reward+' <img src="/Onyx.png" style="width:10px;height:10px;object-fit:contain;flex-shrink:0;"></div>'
-            + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>'
-            + '</div>').join('')
-          + '</div>'
-          : '<div style="text-align:center;padding:20px;background:rgba(255,255,255,.01);border-radius:14px;border:1px dashed rgba(255,255,255,.05);"><div style="font-size:20px;margin-bottom:6px;">📋</div><div style="font-size:11.5px;color:rgba(255,255,255,.3);line-height:1.5;">Complete quests to earn Onyx and unlock perks<br/><span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="switchAtelierTab(\'quests\')">Browse available quests →</span></div></div>'}
-      </div>
-
-      <!-- Featured Shop Section — Clean Grid -->
-      <div>
-        <div class="atel-section-hdr no-line" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>Featured In The Shop</span>
-          <span style="cursor:pointer;color:rgba(255,249,62,.5);font-size:11px;font-weight:600;transition:color .15s;display:flex;align-items:center;gap:4px;" onclick="switchAtelierTab('shop')" onmouseover="this.style.color='rgba(255,249,62,.8)'" onmouseout="this.style.color='rgba(255,249,62,.5)'">Explore <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg></span>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-          ${[{name:'Appearances',icon:ftzIcon('image','20'),color:'#a78bfa',desc:'Custom themes'},{name:'Decorations',icon:ftzIcon('star','20'),color:'#60a5fa',desc:'Avatar effects'},{name:'Bundles',icon:ftzIcon('gem','20'),color:'#fb923c',desc:'Value packs'}].map(it=>{
-            const rgb = it.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',');
-            return '<div style="background:linear-gradient(135deg,rgba('+rgb+',.03),rgba('+rgb+',.005));border:1px solid rgba('+rgb+',.1);border-radius:16px;padding:18px;text-align:center;cursor:pointer;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;backdrop-filter:blur(2px);" onclick="switchAtelierTab(\'shop\')" onmouseover="this.style.borderColor=\'rgba('+rgb+',.25)\';this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 24px rgba('+rgb+',.1)\'" onmouseout="this.style.borderColor=\'rgba('+rgb+',.1)\';this.style.transform=\'\';this.style.boxShadow=\'none\'">'
-            + '<div style="width:40px;height:40px;border-radius:12px;background:rgba('+rgb+',.08);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:'+it.color+';">'+it.icon+'</div>'
-            + '<div style="font-family:var(--font-display);font-size:12.5px;font-weight:800;color:rgba(255,255,255,.75);margin-bottom:4px;letter-spacing:-.01em;">'+it.name+'</div>'
-            + '<div style="font-size:9.5px;color:rgba(255,255,255,.35);">'+it.desc+'</div>'
-            + '</div>'}).join('')}
-        </div>
-      </div>
-
-    </div>`;
-  }
 
   // ── RADIANCE DWELLING ─────────────────────────────────────
-  else if (tab === 'radiance') {
+  if (tab === 'radiance') {
     const PLAN_BASIC = ['✨ Profile Glow','🖼️ Custom Banner','📎 45MB Uploads',_radianceImg('14')+' Radiance Badge','😊 Daily Emojis','🎞️ Daily Stickers'];
     const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance','🌈 Profile Themes','⚡ Super Reactions','🌟 Animated Badge'];
     const PRICES = {basic:[{days:7,onyx:200},{days:30,onyx:600},{days:90,onyx:1500}], plus:[{days:30,onyx:1200},{days:90,onyx:3000}]};

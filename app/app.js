@@ -5585,10 +5585,10 @@ function editMsg(msgId) {
   const original=row.dataset.text||'';
   const textEl=row.querySelector('.msg-text');
   if (!textEl) return;
-  textEl.innerHTML=`<textarea style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--accent-mid);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:6px 10px;resize:none;outline:none;box-sizing:border-box;" rows="2" id="edit-ta">${escapeHTML(original)}</textarea>
-    <div style="display:flex;gap:6px;margin-top:4px;font-size:12px;">
-      <button class="btn-a" style="padding:4px 12px;font-size:12px;" onclick="saveEdit('${escapeHTML(msgId)}')">Save</button>
-      <button class="btn-g" style="padding:4px 12px;font-size:12px;" onclick="cancelEdit('${escapeHTML(msgId)}','${escapeHTML(original)}')">Cancel</button>
+  textEl.innerHTML=`<textarea style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--accent-mid);border-radius:8px;color:#fff;font-family:var(--font-ui);font-size:13.5px;padding:6px 10px;resize:none;outline:none;box-sizing:border-box;" rows="2" id="edit-ta" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveEdit('${escapeHTML(msgId)}');}if(event.key==='Escape'){cancelEdit('${escapeHTML(msgId)}','${escapeHTML(original)}');}">${escapeHTML(original)}</textarea>
+    <div style="display:flex;gap:6px;margin-top:4px;font-size:11px;color:rgba(255,255,255,.25);">
+      <span>escape to <button style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;text-decoration:underline;font-size:11px;padding:0;" onclick="cancelEdit('${escapeHTML(msgId)}','${escapeHTML(original)}')">cancel</button></span>
+      <span style="margin-left:auto;">enter to <button style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;text-decoration:underline;font-size:11px;padding:0;" onclick="saveEdit('${escapeHTML(msgId)}')">save</button></span>
     </div>`;
 }
 function cancelEdit(msgId, original) {
@@ -5601,13 +5601,15 @@ async function saveEdit(msgId) {
   if (!ta) return;
   const newText=ta.value.trim();
   if (!newText) {
-    // Empty message — offer to delete
     const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
     if (row) { cancelEdit(msgId, row.dataset.text||''); }
     deleteMsg(msgId);
     return;
   }
   const row=document.querySelector(`[data-msgid="${CSS.escape(msgId)}"]`);
+  const originalText = row?.dataset.text || '';
+  // If text didn't change, just cancel the edit
+  if (newText === originalText) { cancelEdit(msgId, originalText); return; }
   if (row) row.dataset.text=newText;
   const textEl=row?.querySelector('.msg-text');
   if (textEl) textEl.innerHTML=parseMD(escapeHTML(newText))+'<span class="msg-edited">(edited)</span>';
@@ -7925,6 +7927,13 @@ function initFortizedUXResilience() {
       const clickedEmojiBtn = e.target.closest('[id^="emoji-btn-"]') || e.target.closest('.cit-btn');
       if(!clickedEmojiBtn) ep.classList.remove('show');
     }
+    // Close sticker/gif/botcmd pickers on outside click
+    const sp=document.getElementById('sticker-picker');
+    if(sp&&!sp.contains(e.target)&&!e.target.closest('.cit-sticker')) sp.remove();
+    const gp=document.getElementById('giphy-picker');
+    if(gp&&!gp.contains(e.target)&&!e.target.closest('.cit-gif')) gp.remove();
+    const bp=document.getElementById('botcmd-picker');
+    if(bp&&!bp.contains(e.target)&&!e.target.closest('.cit-botcmd')) bp.remove();
   });
   document.querySelectorAll('.modal-overlay').forEach(overlay=>{
     overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('open');});

@@ -26744,11 +26744,12 @@ function renderAtelierTab(tab) {
         <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
           ${PERKS.slice(0,5).map(p => {
             const unlocked = p.plus ? hasPlus : hasRad;
-            return '<div style="background:'+(unlocked?'linear-gradient(135deg,rgba(255,255,255,.035),rgba(255,255,255,.01))':'rgba(255,255,255,.015)')+';border:1px solid '+(unlocked?'rgba(255,255,255,.1)':'rgba(255,255,255,.04)')+';border-radius:14px;padding:14px;position:relative;overflow:hidden;transition:all .18s cubic-bezier(.22,1,.36,1);opacity:'+(unlocked?'1':'0.5')+';text-align:center;" '+(unlocked?'onmouseover="this.style.transform=\'translateY(-2px)\';this.style.borderColor=\'rgba(255,255,255,.15)\';this.style.boxShadow=\'0 6px 16px rgba(0,0,0,.12)\'" onmouseout="this.style.transform=\'\';this.style.borderColor=\'rgba(255,255,255,.1)\';this.style.boxShadow=\'none\'":"")+'>'
-              + '<div style="font-size:20px;margin-bottom:8px;">'+p.icon+'</div>'
-              + '<div style="font-size:11px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3;">'+p.name+'</div>'
-              + '<div style="font-size:8.5px;color:rgba(255,255,255,.35);line-height:1.4;">'+p.desc+'</div>'
-              + (p.plus?'<div style="margin-top:6px;font-size:7px;font-weight:800;color:#ffd93e;text-transform:uppercase;letter-spacing:.05em;">Radiance+</div>':'')
+            const events = unlocked ? ' onmouseover="this.style.transform=\'translateY(-2px)\';this.style.borderColor=\'rgba(255,255,255,.15)\';this.style.boxShadow=\'0 6px 16px rgba(0,0,0,.12)\'" onmouseout="this.style.transform=\'\';this.style.borderColor=\'rgba(255,255,255,.1)\';this.style.boxShadow=\'none\'"' : '';
+            return `<div style="background:${unlocked?'linear-gradient(135deg,rgba(255,255,255,.035),rgba(255,255,255,.01))':'rgba(255,255,255,.015)'};border:1px solid ${unlocked?'rgba(255,255,255,.1)':'rgba(255,255,255,.04)'};border-radius:14px;padding:14px;position:relative;overflow:hidden;transition:all .18s cubic-bezier(.22,1,.36,1);opacity:${unlocked?'1':'0.5'};text-align:center;"${events}>`
+              + `<div style="font-size:20px;margin-bottom:8px;">${p.icon}</div>`
+              + `<div style="font-size:11px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3;">${p.name}</div>`
+              + `<div style="font-size:8.5px;color:rgba(255,255,255,.35);line-height:1.4;">${p.desc}</div>`
+              + (p.plus?`<div style="margin-top:6px;font-size:7px;font-weight:800;color:#ffd93e;text-transform:uppercase;letter-spacing:.05em;">Radiance+</div>`:'')
               + '</div>';
           }).join('')}
         </div>

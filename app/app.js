@@ -56,8 +56,8 @@ function ftzIcon(name, size, color) {
 }
 // Shorthand icon helpers — Radiance & Onyx use PNG images (displayed inline like SVGs), Boost uses SVG
 function _onyxImg(size){const s=size||'18';return '<img src="/fortized badges/onyx.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Onyx">';}
-function _radianceImg(size){const s=size||'16';return '<img src="/fortized badges/basic radiance.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Radiance">';}
-function _radiancePlusImg(size){const s=size||'16';return '<img src="/fortized badges/radiance+.png" width="'+s+'" height="'+s+'" style="display:inline-block;vertical-align:middle;object-fit:contain;" alt="Radiance+">';}
+function _radianceImg(size){const s=size||'16';return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;object-fit:contain;" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="radianceGrad-'+Math.random()+'" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ff77e4;stop-opacity:1" /><stop offset="100%" style="stop-color:#fff93e;stop-opacity:1" /></linearGradient></defs><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#radianceGrad-'+Math.random()+')" /></svg>';}
+function _radiancePlusImg(size){return _radianceImg(size)}
 function _boostSvg(size){return ftzIcon('boost',size||'18','currentColor');}
 
 // ══════════════════════════════════════════════════════════
@@ -1572,7 +1572,7 @@ function showView(v, _skipPush) {
   if (rBtn) rBtn.classList.add('active');
 
   // Post-show callbacks
-  if (v === 'atelier') { _atelierTab = 'shop'; renderAtelierTab('shop'); setTimeout(() => { refreshCU().then(()=>{ switchAtelierTab('shop'); refreshDailyBtn(); }).catch(()=>{ switchAtelierTab('shop'); refreshDailyBtn(); }); }, 0); }
+  if (v === 'atelier') { _atelierTab = 'radiance'; renderAtelierTab('radiance'); setTimeout(() => { refreshCU().then(()=>{ switchAtelierTab('radiance'); refreshDailyBtn(); }).catch(()=>{ switchAtelierTab('radiance'); refreshDailyBtn(); }); }, 0); }
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
   if (v === 'dms' && !curDM && !curGC) setTimeout(() => { showDMFriendsHome(); }, 50);
@@ -26547,12 +26547,12 @@ function switchAtelierTab(tab, el) {
 }
 
 function renderAtelierTopNav() {
-  const tab = _atelierTab || 'shop';
+  const tab = _atelierTab || 'radiance';
   const navContainer = document.getElementById('atelier-top-nav');
   if (!navContainer) return;
 
   const tabs = [
-    { id: 'radiance', name: 'Radiance Dwelling', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
+    { id: 'radiance', name: 'Radiance Dwelling', svg: '<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="topNavRadianceGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ff77e4;stop-opacity:1" /><stop offset="100%" style="stop-color:#fff93e;stop-opacity:1" /></linearGradient></defs><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="url(#topNavRadianceGrad)"/></svg>' },
     { id: 'shop', name: 'Shop', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' },
     { id: 'quests', name: 'Quests', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' }
   ];
@@ -26626,99 +26626,57 @@ function renderAtelierTab(tab) {
 
   // ── RADIANCE DWELLING ─────────────────────────────────────
   if (tab === 'radiance') {
-    const PLAN_BASIC = ['✨ Profile Glow','🖼️ Custom Banner','📎 45MB Uploads',_radianceImg('14')+' Radiance Badge','😊 Daily Emojis','🎞️ Daily Stickers'];
-    const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance','🌈 Profile Themes','⚡ Super Reactions','🌟 Animated Badge'];
-    const PRICES = {basic:[{days:7,onyx:200},{days:30,onyx:600},{days:90,onyx:1500}], plus:[{days:30,onyx:1200},{days:90,onyx:3000}]};
+    const RADIANCE_PERKS = ['✨ Profile Glow','🖼️ Custom Banner','📎 100MB Uploads',_radianceImg('14')+' Radiance Badge','😊 Daily Emojis','🎞️ Daily Stickers','🔤 Font Selector','🎁 Gift Radiance','🌈 Profile Themes','⚡ Super Reactions'];
+    const PRICES = [{days:7,onyx:150},{days:30,onyx:400},{days:90,onyx:1000}];
 
     el.innerHTML = `<div class="atelier-content-inner" style="max-width:900px;">
 
       <!-- Active subscription status — Enhanced -->
-      ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,220,62,.08),rgba(255,249,62,.04));border:1.5px solid rgba(255,220,62,.18);border-radius:20px;padding:24px 28px;margin-bottom:36px;display:flex;align-items:center;gap:18px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-40px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(255,220,62,.06),transparent 70%);pointer-events:none;"></div>
-        <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,220,62,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,220,62,.18);">${_radiancePlusImg('32')}</div>
-        <div style="flex:1;"><div style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#ffd93e;letter-spacing:-.01em;margin-bottom:4px;">Radiance+ Active</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.45);">${daysPlus} days remaining · Auto-renews every month · <span style="font-weight:700;color:var(--accent);">1200 <img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;"></span></div></div>
-        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:12px;color:var(--red);font-size:11px;font-weight:700;padding:10px 20px;cursor:pointer;transition:all .15s;flex-shrink:0;letter-spacing:.01em;">Cancel Subscription</button>
-      </div>`:hasRad?`<div style="background:linear-gradient(135deg,rgba(255,160,62,.06),rgba(255,160,62,.02));border:1.5px solid rgba(255,160,62,.15);border-radius:20px;padding:24px 28px;margin-bottom:36px;display:flex;align-items:center;gap:18px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-40px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(255,160,62,.06),transparent 70%);pointer-events:none;"></div>
-        <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,160,62,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,160,62,.18);">${_radianceImg('32')}</div>
-        <div style="flex:1;"><div style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#ff9d3e;letter-spacing:-.01em;margin-bottom:4px;">Radiance Active</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.45);">${daysRad} days remaining · Auto-renews every month · <span style="font-weight:700;color:var(--accent);">600 <img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;"></span></div></div>
+      ${hasRad||hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,119,228,.08),rgba(255,249,62,.04));border:1.5px solid rgba(255,119,228,.18);border-radius:20px;padding:24px 28px;margin-bottom:36px;display:flex;align-items:center;gap:18px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(255,119,228,.06),transparent 70%);pointer-events:none;"></div>
+        <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,119,228,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,119,228,.18);">${_radianceImg('32')}</div>
+        <div style="flex:1;"><div style="font-family:var(--font-display);font-size:20px;font-weight:900;background:linear-gradient(90deg,#ff77e4,#fff93e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.01em;margin-bottom:4px;">Radiance Active</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.45);">${(hasPlus?daysPlus:daysRad)} days remaining · Auto-renews every month · <span style="font-weight:700;color:var(--accent);">${hasPlus?'Premium':'Standard'}</span></div></div>
         <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:12px;color:var(--red);font-size:11px;font-weight:700;padding:10px 20px;cursor:pointer;transition:all .15s;flex-shrink:0;letter-spacing:.01em;">Cancel Subscription</button>
       </div>`:''}
 
-      <!-- Plans side by side — Redesigned -->
-      <div class="atel-section-hdr" style="margin-bottom:20px;">Choose Your Plan</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:40px;">
-
-        <!-- Basic Radiance (orange) -->
-        <div style="background:linear-gradient(135deg,rgba(255,160,62,.03),rgba(255,160,62,.005));border:1.5px solid rgba(255,160,62,.12);border-radius:18px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;" onmouseover="this.style.borderColor='rgba(255,160,62,.25)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(255,160,62,.08)'" onmouseout="this.style.borderColor='rgba(255,160,62,.12)';this.style.transform='';this.style.boxShadow='none'">
-          <div style="padding:28px;position:relative;z-index:1;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-              <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;">${_radianceImg('28')}</div>
-              <div>
-                <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#ff9d3e;margin-bottom:2px;">Radiance</div>
-                <div style="font-size:10px;font-weight:600;color:rgba(255,160,62,.5);text-transform:uppercase;letter-spacing:.05em;">Core Membership</div>
-              </div>
+      <!-- Radiance Plan — Unified -->
+      <div class="atel-section-hdr" style="margin-bottom:20px;">Radiance Membership</div>
+      <div style="background:linear-gradient(135deg,rgba(255,119,228,.08),rgba(255,249,62,.04));border:1.5px solid rgba(255,119,228,.12);border-radius:18px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;max-width:600px;margin:0 auto 40px;" onmouseover="this.style.borderColor='rgba(255,119,228,.25)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(255,119,228,.08)'" onmouseout="this.style.borderColor='rgba(255,119,228,.12)';this.style.transform='';this.style.boxShadow='none'">
+        <div style="padding:32px;position:relative;z-index:1;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,119,228,.1);display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,119,228,.2);">${_radianceImg('32')}</div>
+            <div>
+              <div style="font-family:var(--font-display);font-size:22px;font-weight:900;background:linear-gradient(90deg,#ff77e4,#fff93e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;letter-spacing:-.01em;">Radiance</div>
+              <div style="font-size:11px;font-weight:600;color:rgba(255,119,228,.6);text-transform:uppercase;letter-spacing:.05em;">Premium Membership</div>
             </div>
-            <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.6;margin-bottom:20px;">Essential perks to enhance your Fortized experience with profile customization and premium features.</div>
-            <!-- Perk chips -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;">
-              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,160,62,.08);color:rgba(255,160,62,.8);border:1px solid rgba(255,160,62,.15);text-align:center;justify-content:center;padding:6px 8px;font-size:10px;">${p}</span>`).join('')}
-            </div>
+          </div>
+          <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.7;margin-bottom:24px;">Unlock exclusive perks and premium features to enhance your Fortized experience. Full access to all benefits including profile customization, gifting, themes, and more.</div>
+          <!-- All perks in 2 columns -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:28px;">
+            ${RADIANCE_PERKS.map(p=>`<span class="perk-chip" style="background:rgba(255,119,228,.08);color:rgba(255,249,62,.9);border:1px solid rgba(255,119,228,.15);text-align:center;justify-content:center;padding:8px 10px;font-size:10px;font-weight:600;">${p}</span>`).join('')}
           </div>
           <!-- Price buttons -->
-          <div style="padding:0 28px 28px;position:relative;z-index:1;">
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              ${PRICES.basic.map((pl,i)=>`
-                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:11px 16px;border-radius:12px;background:${i===1?'var(--accent)':'rgba(255,255,255,.035)'};color:${i===1?'#0f1119':'rgba(255,255,255,.75)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.08)'};font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;letter-spacing:-.01em;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
-                  <span>${pl.days} Days</span>
-                  <span style="display:flex;align-items:center;gap:4px;">${pl.onyx} <img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;">${i===1?'🔥':''}</span>
-                </button>`).join('')}
-            </div>
-          </div>
-        </div>
-
-        <!-- Radiance+ (yellow) — Premium -->
-        <div style="background:linear-gradient(160deg,rgba(255,220,62,.08),rgba(255,249,62,.04),rgba(255,255,255,.015));border:1.5px solid rgba(255,220,62,.22);border-radius:18px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,220,62,.4)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 16px 48px rgba(255,220,62,.12)'" onmouseout="this.style.borderColor='rgba(255,220,62,.22)';this.style.transform='';this.style.boxShadow='none'">
-          <div class="best-ribbon">MOST POPULAR</div>
-          <div style="padding:28px;position:relative;z-index:1;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-              <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,220,62,.12);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,220,62,.2);">${_radiancePlusImg('28')}</div>
-              <div>
-                <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#ffd93e;margin-bottom:2px;">Radiance+</div>
-                <div style="font-size:10px;font-weight:600;color:rgba(255,220,62,.6);text-transform:uppercase;letter-spacing:.05em;">Premium Plus</div>
-              </div>
-            </div>
-            <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.6;margin-bottom:20px;">Everything in Radiance plus exclusive premium features including font customization, gifting, and themes.</div>
-            <!-- All perks -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;">
-              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,220,62,.08);color:rgba(255,220,62,.85);border:1px solid rgba(255,220,62,.15);text-align:center;justify-content:center;padding:6px 8px;font-size:10px;">${p}</span>`).join('')}
-              ${PLAN_PLUS.map(p=>`<span class="perk-chip" style="background:rgba(255,249,62,.12);color:rgba(255,249,62,.9);border:1px solid rgba(255,249,62,.22);text-align:center;justify-content:center;padding:6px 8px;font-size:10px;font-weight:700;">${p}</span>`).join('')}
-            </div>
-          </div>
-          <div style="padding:0 28px 28px;position:relative;z-index:1;">
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              ${PRICES.plus.map((pl,i)=>`
-                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:11px 16px;border-radius:12px;background:${i===0?'linear-gradient(90deg,#ffd93e,#fff93e)':'rgba(255,255,255,.035)'};color:${i===0?'#0f1119':'rgba(255,255,255,.75)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.08)'};font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;letter-spacing:-.01em;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
-                  <span>${pl.days} Days</span>
-                  <span style="display:flex;align-items:center;gap:4px;">${pl.onyx} <img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;">${i===0?'⭐':''}</span>
-                </button>`).join('')}
-            </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            ${PRICES.map((pl,i)=>`
+              <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:13px 18px;border-radius:12px;background:${i===1?'linear-gradient(90deg,#ff77e4,#fff93e)':'rgba(255,255,255,.035)'};color:${i===1?'#0f1119':'rgba(255,255,255,.75)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.08)'};font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;letter-spacing:-.01em;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
+                <span>${pl.days} Days</span>
+                <span style="display:flex;align-items:center;gap:4px;">${pl.onyx} <img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;">${i===1?'🔥':''}</span>
+              </button>`).join('')}
           </div>
         </div>
       </div>
 
       <!-- Gift Radiance — Enhanced -->
-      ${hasPlus?`<div class="atel-section-hdr" style="margin-bottom:16px;">🎁 Gift Radiance to Friends</div>
-      <div style="background:linear-gradient(135deg,rgba(255,220,62,.04),rgba(255,220,62,.01));border:1.5px solid rgba(255,220,62,.12);border-radius:18px;overflow:hidden;position:relative;">
-        <div style="position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:radial-gradient(circle,rgba(255,220,62,.04),transparent 70%);pointer-events:none;"></div>
+      <div class="atel-section-hdr" style="margin-bottom:16px;">🎁 Gift Radiance to Friends</div>
+      ${hasRad||hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,119,228,.04),rgba(255,119,228,.01));border:1.5px solid rgba(255,119,228,.12);border-radius:18px;overflow:hidden;position:relative;">
+        <div style="position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:radial-gradient(circle,rgba(255,119,228,.04),transparent 70%);pointer-events:none;"></div>
         ${buildGiftRadianceUI()}
-      </div>`:`<div style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.005));border:1.5px dashed rgba(255,249,62,.12);border-radius:18px;padding:24px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,249,62,.04),transparent 70%);pointer-events:none;"></div>
-        <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🎁</div>
-        <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--accent);">Gift Premium to Friends</div><div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:3px;">Upgrade to Radiance+ to unlock the ability to gift subscriptions to your friends</div></div>
-        <button onclick="switchAtelierTab('radiance')" style="padding:9px 18px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-weight:700;font-size:11px;cursor:pointer;flex-shrink:0;transition:all .15s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">Get Radiance+</button>
+      </div>`:`<div style="background:linear-gradient(135deg,rgba(255,119,228,.03),rgba(255,119,228,.005));border:1.5px dashed rgba(255,119,228,.12);border-radius:18px;padding:24px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,119,228,.04),transparent 70%);pointer-events:none;"></div>
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,119,228,.08);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🎁</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--accent);">Get Radiance Premium</div><div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:3px;">Upgrade to Radiance to unlock the ability to gift subscriptions to your friends and access all premium features</div></div>
+        <button onclick="document.querySelector('[onclick*=\"purchaseRadiance\"]')?.click()" style="padding:9px 18px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-weight:700;font-size:11px;cursor:pointer;flex-shrink:0;transition:all .15s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">Get Radiance</button>
       </div>`}
     </div>`;
   }

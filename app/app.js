@@ -26978,7 +26978,7 @@ function renderAtelierTab(tab) {
         <div style="padding:20px;display:flex;align-items:flex-start;gap:16px;">
           <!-- Icon Container - Square for incomplete, Circular for completed -->
           <div style="width:${q.done?'80px':'72px'};height:${q.done?'80px':'72px'};border-radius:${iconBorderRadius};background:rgba(255,255,255,.05);border:${iconBorder};display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;transition:all .3s cubic-bezier(.22,1,.36,1);box-shadow:${q.done?'0 0 20px rgba(62,207,110,.3),inset 0 0 20px rgba(62,207,110,.1)':'0 0 16px rgba('+catRgb+',.15),inset 0 0 12px rgba('+catRgb+',.08)'};">
-            <img src="/Onyx image.png" style="width:${q.done?'72%':'75%'};height:${q.done?'72%':'75%'};object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));border-radius:${q.done?'50%':'10px'};padding:${q.done?'0':'4px'};">
+            <img src="/Onyx image.png" style="width:${q.done?'88%':'90%'};height:${q.done?'88%':'90%'};object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));border-radius:${q.done?'50%':'10px'};padding:${q.done?'0':'2px'};">
           </div>
 
           <div style="flex:1;min-width:0;margin-top:${q.done?'4px':'6px'};">

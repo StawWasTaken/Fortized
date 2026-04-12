@@ -26971,16 +26971,17 @@ function renderAtelierTab(tab) {
       const borderColor = q.done ? 'rgba(62,207,110,.15)' : 'rgba(255,255,255,.08)';
 
       return `<div style="background:${bgColor};border:1.5px solid ${borderColor};border-radius:16px;overflow:hidden;transition:all .24s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;position:relative;" ${!q.done?`onmouseover="this.style.borderColor='rgba(${catRgb},.25)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='${borderColor}';this.style.transform='';this.style.boxShadow='none'"`:''}>
-        ${q.done?'<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),#60d394);"></div>':''}
 
         <!-- Top Section: Icon and Title -->
         <div style="padding:20px;display:flex;align-items:flex-start;gap:16px;">
-          <div style="width:64px;height:64px;border-radius:14px;background:${q.done?'rgba(62,207,110,.15)':'rgba('+catRgb+',.1)'};border:2px solid ${q.done?'rgba(62,207,110,.25)':'rgba('+catRgb+',.2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;">
-            ${q.icon === '🎁' ? `<img src="/Onyx image.png" style="width:100%;height:100%;object-fit:contain;padding:8px;">` : `<div style="font-size:32px;">${q.icon}</div>`}
-            ${q.done?'<div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(62,207,110,.1),transparent);"></div>':''}
+          <!-- Circular Icon UI -->
+          <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.05);border:3px solid ${q.done?'var(--green)':'rgba('+catRgb+',.4)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;transition:all .3s cubic-bezier(.22,1,.36,1);box-shadow:${q.done?'0 0 20px rgba(62,207,110,.3),inset 0 0 20px rgba(62,207,110,.1)':'0 0 16px rgba('+catRgb+',.15),inset 0 0 12px rgba('+catRgb+',.08)'};">
+            <div style="width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;">
+              ${q.icon === '🎁' ? `<img src="/Onyx image.png" style="width:70%;height:70%;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3));">` : `<div style="font-size:36px;text-shadow:0 2px 8px rgba(0,0,0,.4);">${q.icon}</div>`}
+            </div>
           </div>
 
-          <div style="flex:1;min-width:0;">
+          <div style="flex:1;min-width:0;margin-top:4px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
               <span style="font-family:var(--font-display);font-size:15px;font-weight:800;color:${q.done?'rgba(255,255,255,.6)':'#fff'};letter-spacing:-.01em;">${q.title.toUpperCase()}</span>
               <span style="font-size:8px;font-weight:800;padding:3px 10px;border-radius:6px;background:${catColor}15;color:${catColor};border:1px solid ${catColor}25;letter-spacing:.05em;text-transform:uppercase;">${q.daily?'Daily':q.category}</span>

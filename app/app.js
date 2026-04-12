@@ -26833,82 +26833,95 @@ function renderAtelierTab(tab) {
     const PLAN_PLUS  = ['🔤 Font Selector','📎 100MB Uploads','🎁 Gift Radiance','🌈 Profile Themes','⚡ Super Reactions','🌟 Animated Badge'];
     const PRICES = {basic:[{days:7,onyx:200},{days:30,onyx:600},{days:90,onyx:1500}], plus:[{days:30,onyx:1200},{days:90,onyx:3000}]};
 
-    el.innerHTML = `<div class="atelier-content-inner" style="max-width:820px;">
+    el.innerHTML = `<div class="atelier-content-inner" style="max-width:900px;">
 
-      <!-- Active subscription status -->
-      ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,220,62,.08),rgba(255,249,62,.03));border:1.5px solid rgba(255,220,62,.18);border-radius:22px;padding:22px 26px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-30px;right:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,220,62,.06),transparent 70%);pointer-events:none;"></div>
-        <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,220,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_radiancePlusImg('32')}</div>
-        <div style="flex:1;"><div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#ffd93e;letter-spacing:-.01em;">Radiance+ Active</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">${daysPlus} days remaining · Auto-renews · 1200 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
-        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:var(--red);font-size:12px;padding:9px 18px;cursor:pointer;transition:all .15s;flex-shrink:0;">Cancel</button>
-      </div>`:hasRad?`<div style="background:linear-gradient(135deg,rgba(255,160,62,.06),rgba(255,160,62,.02));border:1.5px solid rgba(255,160,62,.15);border-radius:22px;padding:22px 26px;margin-bottom:32px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-30px;right:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,160,62,.06),transparent 70%);pointer-events:none;"></div>
-        <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${_radianceImg('32')}</div>
-        <div style="flex:1;"><div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#ff9d3e;letter-spacing:-.01em;">Radiance Active</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.4);margin-top:4px;">${daysRad} days remaining · Auto-renews · 600 <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></div></div>
-        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:12px;color:var(--red);font-size:12px;padding:9px 18px;cursor:pointer;transition:all .15s;flex-shrink:0;">Cancel</button>
+      <!-- Active subscription status — Enhanced -->
+      ${hasPlus?`<div style="background:linear-gradient(135deg,rgba(255,220,62,.08),rgba(255,249,62,.04));border:1.5px solid rgba(255,220,62,.18);border-radius:20px;padding:24px 28px;margin-bottom:36px;display:flex;align-items:center;gap:18px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(255,220,62,.06),transparent 70%);pointer-events:none;"></div>
+        <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,220,62,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,220,62,.18);">${_radiancePlusImg('32')}</div>
+        <div style="flex:1;"><div style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#ffd93e;letter-spacing:-.01em;margin-bottom:4px;">Radiance+ Active</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.45);">${daysPlus} days remaining · Auto-renews every month · <span style="font-weight:700;color:var(--accent);">1200 <img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;"></span></div></div>
+        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:12px;color:var(--red);font-size:11px;font-weight:700;padding:10px 20px;cursor:pointer;transition:all .15s;flex-shrink:0;letter-spacing:.01em;">Cancel Subscription</button>
+      </div>`:hasRad?`<div style="background:linear-gradient(135deg,rgba(255,160,62,.06),rgba(255,160,62,.02));border:1.5px solid rgba(255,160,62,.15);border-radius:20px;padding:24px 28px;margin-bottom:36px;display:flex;align-items:center;gap:18px;backdrop-filter:blur(8px);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(255,160,62,.06),transparent 70%);pointer-events:none;"></div>
+        <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,160,62,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,160,62,.18);">${_radianceImg('32')}</div>
+        <div style="flex:1;"><div style="font-family:var(--font-display);font-size:20px;font-weight:900;color:#ff9d3e;letter-spacing:-.01em;margin-bottom:4px;">Radiance Active</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.45);">${daysRad} days remaining · Auto-renews every month · <span style="font-weight:700;color:var(--accent);">600 <img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;"></span></div></div>
+        <button onclick="cancelRadiance()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:12px;color:var(--red);font-size:11px;font-weight:700;padding:10px 20px;cursor:pointer;transition:all .15s;flex-shrink:0;letter-spacing:.01em;">Cancel Subscription</button>
       </div>`:''}
 
-      <!-- Plans side by side -->
-      <div class="atel-section-hdr">Choose a Plan</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:32px;">
+      <!-- Plans side by side — Redesigned -->
+      <div class="atel-section-hdr" style="margin-bottom:20px;">Choose Your Plan</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:40px;">
 
         <!-- Basic Radiance (orange) -->
-        <div style="background:rgba(255,255,255,.025);border:1.5px solid rgba(255,160,62,.15);border-radius:22px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,160,62,.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,160,62,.15)';this.style.transform=''">
-          <div style="padding:24px 24px 18px;">
-            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">${_radianceImg('32')}</div>
-            <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#ff9d3e;margin-bottom:5px;">Radiance</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Core perks for Fortized fans</div>
+        <div style="background:linear-gradient(135deg,rgba(255,160,62,.03),rgba(255,160,62,.005));border:1.5px solid rgba(255,160,62,.12);border-radius:18px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);position:relative;" onmouseover="this.style.borderColor='rgba(255,160,62,.25)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(255,160,62,.08)'" onmouseout="this.style.borderColor='rgba(255,160,62,.12)';this.style.transform='';this.style.boxShadow='none'">
+          <div style="padding:28px;position:relative;z-index:1;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+              <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,160,62,.1);display:flex;align-items:center;justify-content:center;">${_radianceImg('28')}</div>
+              <div>
+                <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#ff9d3e;margin-bottom:2px;">Radiance</div>
+                <div style="font-size:10px;font-weight:600;color:rgba(255,160,62,.5);text-transform:uppercase;letter-spacing:.05em;">Core Membership</div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.6;margin-bottom:20px;">Essential perks to enhance your Fortized experience with profile customization and premium features.</div>
             <!-- Perk chips -->
-            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px;">
-              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,160,62,.07);color:rgba(255,160,62,.75);border:1px solid rgba(255,160,62,.12);">${p}</span>`).join('')}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;">
+              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,160,62,.08);color:rgba(255,160,62,.8);border:1px solid rgba(255,160,62,.15);text-align:center;justify-content:center;padding:6px 8px;font-size:10px;">${p}</span>`).join('')}
             </div>
           </div>
           <!-- Price buttons -->
-          <div style="padding:0 18px 20px;">
-            <div id="rad-price-sel-0" style="display:flex;flex-direction:column;gap:6px;">
+          <div style="padding:0 28px 28px;position:relative;z-index:1;">
+            <div style="display:flex;flex-direction:column;gap:6px;">
               ${PRICES.basic.map((pl,i)=>`
-                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===1?'var(--accent)':'rgba(255,255,255,.04)'};color:${i===1?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.07)'};font-family:var(--font-ui);font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;">
+                <button onclick="purchaseRadiance(false,${pl.days},${pl.onyx})" style="width:100%;padding:11px 16px;border-radius:12px;background:${i===1?'var(--accent)':'rgba(255,255,255,.035)'};color:${i===1?'#0f1119':'rgba(255,255,255,.75)'};border:1px solid ${i===1?'transparent':'rgba(255,255,255,.08)'};font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;letter-spacing:-.01em;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
                   <span>${pl.days} Days</span>
-                  <span>${pl.onyx} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">${i===1?' 🔥':''}</span>
+                  <span style="display:flex;align-items:center;gap:4px;">${pl.onyx} <img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;">${i===1?'🔥':''}</span>
                 </button>`).join('')}
             </div>
           </div>
         </div>
 
-        <!-- Radiance+ (yellow) -->
-        <div style="background:linear-gradient(160deg,rgba(255,220,62,.06),rgba(255,249,62,.03),rgba(255,255,255,.015));border:1.5px solid rgba(255,220,62,.22);border-radius:22px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,220,62,.4)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(255,220,62,.08)'" onmouseout="this.style.borderColor='rgba(255,220,62,.22)';this.style.transform='';this.style.boxShadow='none'">
-          <div class="best-ribbon">BEST VALUE</div>
-          <div style="padding:24px 24px 18px;">
-            <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,220,62,.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">${_radiancePlusImg('32')}</div>
-            <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#ffd93e;margin-bottom:5px;">Radiance+</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.35);margin-bottom:18px;">Everything unlocked</div>
-            <!-- Perk chips — basic + plus -->
-            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px;">
-              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,220,62,.07);color:rgba(255,220,62,.75);border:1px solid rgba(255,220,62,.12);">${p}</span>`).join('')}
-              ${PLAN_PLUS.map(p=>`<span class="perk-chip" style="background:rgba(255,249,62,.1);color:rgba(255,249,62,.85);border:1px solid rgba(255,249,62,.18);font-weight:800;">${p}</span>`).join('')}
+        <!-- Radiance+ (yellow) — Premium -->
+        <div style="background:linear-gradient(160deg,rgba(255,220,62,.08),rgba(255,249,62,.04),rgba(255,255,255,.015));border:1.5px solid rgba(255,220,62,.22);border-radius:18px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='rgba(255,220,62,.4)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 16px 48px rgba(255,220,62,.12)'" onmouseout="this.style.borderColor='rgba(255,220,62,.22)';this.style.transform='';this.style.boxShadow='none'">
+          <div class="best-ribbon">MOST POPULAR</div>
+          <div style="padding:28px;position:relative;z-index:1;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+              <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,220,62,.12);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,220,62,.2);">${_radiancePlusImg('28')}</div>
+              <div>
+                <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#ffd93e;margin-bottom:2px;">Radiance+</div>
+                <div style="font-size:10px;font-weight:600;color:rgba(255,220,62,.6);text-transform:uppercase;letter-spacing:.05em;">Premium Plus</div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.6;margin-bottom:20px;">Everything in Radiance plus exclusive premium features including font customization, gifting, and themes.</div>
+            <!-- All perks -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;">
+              ${PLAN_BASIC.map(p=>`<span class="perk-chip" style="background:rgba(255,220,62,.08);color:rgba(255,220,62,.85);border:1px solid rgba(255,220,62,.15);text-align:center;justify-content:center;padding:6px 8px;font-size:10px;">${p}</span>`).join('')}
+              ${PLAN_PLUS.map(p=>`<span class="perk-chip" style="background:rgba(255,249,62,.12);color:rgba(255,249,62,.9);border:1px solid rgba(255,249,62,.22);text-align:center;justify-content:center;padding:6px 8px;font-size:10px;font-weight:700;">${p}</span>`).join('')}
             </div>
           </div>
-          <div style="padding:0 18px 20px;">
+          <div style="padding:0 28px 28px;position:relative;z-index:1;">
             <div style="display:flex;flex-direction:column;gap:6px;">
               ${PRICES.plus.map((pl,i)=>`
-                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:10px 16px;border-radius:14px;background:${i===0?'linear-gradient(90deg,#ffd93e,#fff93e)':'rgba(255,255,255,.04)'};color:${i===0?'#0f1119':'rgba(255,255,255,.6)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.07)'};font-family:var(--font-ui);font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;">
+                <button onclick="purchaseRadiance(true,${pl.days},${pl.onyx})" style="width:100%;padding:11px 16px;border-radius:12px;background:${i===0?'linear-gradient(90deg,#ffd93e,#fff93e)':'rgba(255,255,255,.035)'};color:${i===0?'#0f1119':'rgba(255,255,255,.75)'};border:1px solid ${i===0?'transparent':'rgba(255,255,255,.08)'};font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .18s;letter-spacing:-.01em;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
                   <span>${pl.days} Days</span>
-                  <span>${pl.onyx} <img src="/Onyx.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;">${i===0?' 🔥':''}</span>
+                  <span style="display:flex;align-items:center;gap:4px;">${pl.onyx} <img src="/Onyx.png" style="width:13px;height:13px;object-fit:contain;">${i===0?'⭐':''}</span>
                 </button>`).join('')}
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Gift Radiance -->
-      ${hasPlus?`<div class="atel-section-hdr">🎁 Gift Radiance to a Friend</div>
-      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:20px;overflow:hidden;">
+      <!-- Gift Radiance — Enhanced -->
+      ${hasPlus?`<div class="atel-section-hdr" style="margin-bottom:16px;">🎁 Gift Radiance to Friends</div>
+      <div style="background:linear-gradient(135deg,rgba(255,220,62,.04),rgba(255,220,62,.01));border:1.5px solid rgba(255,220,62,.12);border-radius:18px;overflow:hidden;position:relative;">
+        <div style="position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:radial-gradient(circle,rgba(255,220,62,.04),transparent 70%);pointer-events:none;"></div>
         ${buildGiftRadianceUI()}
-      </div>`:`<div style="background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.06);border-radius:20px;padding:18px 22px;display:flex;align-items:center;gap:14px;opacity:.55;">
-        <div style="width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:22px;">🎁</div>
-        <div><div style="font-size:13.5px;font-weight:600;color:rgba(255,255,255,.5);">Gift Radiance</div><div style="font-size:12px;color:rgba(255,255,255,.28);margin-top:3px;">Requires Radiance+ — upgrade to gift friends</div></div>
+      </div>`:`<div style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.005));border:1.5px dashed rgba(255,249,62,.12);border-radius:18px;padding:24px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,249,62,.04),transparent 70%);pointer-events:none;"></div>
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🎁</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--accent);">Gift Premium to Friends</div><div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:3px;">Upgrade to Radiance+ to unlock the ability to gift subscriptions to your friends</div></div>
+        <button onclick="switchAtelierTab('radiance')" style="padding:9px 18px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-weight:700;font-size:11px;cursor:pointer;flex-shrink:0;transition:all .15s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">Get Radiance+</button>
       </div>`}
     </div>`;
   }
@@ -27089,125 +27102,140 @@ function renderAtelierTab(tab) {
 
     el.innerHTML = `<div class="atelier-content-inner">
 
-      <!-- Shop Sub-Tabs -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
+      <!-- Shop Header with Tabs and Balance -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;">
         ${['featured','browse'].map(t=>
-          '<button class="quest-tab-chip'+(shopTab===t?' active':'')+'" onclick="setShopTab(\''+t+'\')" id="stab-'+t+'">'+(t==='featured'?'Featured':'Browse All')+'</button>').join('')}
+          '<button class="quest-tab-chip'+(shopTab===t?' active':'')+'" onclick="setShopTab(\''+t+'\')" id="stab-'+t+'" style="padding:9px 22px;border-radius:12px;font-size:13px;font-weight:700;letter-spacing:.01em;">'+(t==='featured'?'Featured Items':'Browse All')+'</button>').join('')}
         <div style="flex:1;"></div>
-        <div style="display:flex;align-items:center;gap:7px;padding:8px 14px;background:linear-gradient(135deg,rgba(255,249,62,.05),rgba(255,249,62,.02));border:1.5px solid rgba(255,249,62,.1);border-radius:12px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,rgba(255,249,62,.055),rgba(255,249,62,.025));border:1px solid rgba(255,249,62,.12);border-radius:12px;">
           <img src="/Onyx.png" style="width:16px;height:16px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(255,249,62,.2));">
-          <span style="font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--accent);text-shadow:0 1px 6px rgba(255,249,62,.1);">${bal}</span>
+          <span style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--accent);text-shadow:0 1px 6px rgba(255,249,62,.1);">${bal}</span>
         </div>
       </div>
 
       ${shopTab==='featured'?`
 
-        <!-- Featured Items -->
-        <div style="margin-bottom:32px;">
-          <div class="atel-section-hdr"><span>Featured Items</span></div>
-            <div class="featured-scroll-row">
-              ${SHOP_APPEARANCES.map(a => {
-                const owned = ownedAppearances.includes(a.id);
-                return '<div class="shop-item-card" style="background:'+a.gradient+';border-color:'+a.borderColor+';" onmouseover="this.style.borderColor=\''+a.hoverBorder+'\'" onmouseout="this.style.borderColor=\''+a.borderColor+'\'">'
-                  + '<div class="sic-preview" style="background:'+a.previewBg+';">'
-                  + '<div class="sic-sidebar" style="background:'+a.sidebarBg+';"></div>'
-                  + '<div class="sic-content"><div style="height:4px;background:var(--accent);border-radius:var(--radius-pill);width:40%;margin-bottom:5px;"></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:var(--radius-pill);width:60%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.03);border-radius:var(--radius-pill);width:45%;"></div></div>'
-                  + '</div>'
-                  + '<div class="sic-body">'
-                  + '<div class="sic-name">'+a.name+'</div>'
-                  + '<div class="sic-type">Appearance</div>'
-                  + (owned ? '<div class="sic-owned">Owned</div>' : '<div class="sic-price"><img src="/Onyx.png"> '+a.price+'</div>')
-                  + '</div></div>';
-              }).join('')}
-              ${PROFILE_DECORATIONS.slice(0,3).map(d => _renderShopItemCard('decoration', d, ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)).join('')}
-            </div>
+        <!-- Featured Items — Premium Grid -->
+        <div style="margin-bottom:36px;">
+          <div class="atel-section-hdr" style="margin-bottom:18px;"><span>Featured This Week</span></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+            ${SHOP_APPEARANCES.map(a => {
+              const owned = ownedAppearances.includes(a.id);
+              return '<div style="background:'+a.gradient+';border:1.5px solid '+a.borderColor+';border-radius:16px;overflow:hidden;transition:all .24s cubic-bezier(.22,1,.36,1);position:relative;display:flex;flex-direction:column;" onmouseover="this.style.borderColor=\''+a.hoverBorder+'\';this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 16px 48px rgba(0,0,0,.3)\'" onmouseout="this.style.borderColor=\''+a.borderColor+'\';this.style.transform=\'\';this.style.boxShadow=\'none\'">'
+                + '<div style="height:120px;background:'+a.previewBg+';display:flex;gap:3px;padding:12px;position:relative;overflow:hidden;">'
+                + '<div style="width:20px;background:'+a.sidebarBg+';border-radius:5px;"></div>'
+                + '<div style="flex:1;background:rgba(255,255,255,.025);border-radius:5px;padding:10px;"><div style="height:4px;background:var(--accent);border-radius:var(--radius-pill);width:40%;margin-bottom:6px;"></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:var(--radius-pill);width:70%;margin-bottom:4px;"></div><div style="height:3px;background:rgba(255,255,255,.03);border-radius:var(--radius-pill);width:45%;"></div></div>'
+                + '</div>'
+                + '<div style="flex:1;padding:16px;display:flex;flex-direction:column;position:relative;z-index:1;">'
+                + '<div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.01em;">'+a.name+'</div>'
+                + '<div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin-bottom:12px;flex:1;">'+a.desc+'</div>'
+                + (owned ? '<div style="padding:9px 12px;background:rgba(62,207,110,.1);border:1px solid rgba(62,207,110,.2);border-radius:10px;color:var(--green);font-size:11px;font-weight:700;text-align:center;">✓ Owned</div>' : '<button onclick="buyAppearance(\''+a.id+'\','+a.price+')" style="padding:9px 12px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;" onmouseover="this.style.filter=\'brightness(1.1)\'" onmouseout="this.style.filter=\'\'"><img src=\'/Onyx.png\' style=\'width:13px;height:13px;object-fit:contain;\'> '+a.price+'</button>')
+                + '</div></div>';
+            }).join('')}
           </div>
+        </div>
+
+        <!-- Decorations Spotlight -->
+        <div style="margin-bottom:36px;">
+          <div class="atel-section-hdr" style="margin-bottom:18px;"><span>Avatar Decorations</span></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+            ${PROFILE_DECORATIONS.slice(0,4).map(d => _renderShopItemCard('decoration', d, ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)).join('')}
+          </div>
+        </div>
 
 
-          <!-- ── Midnight Collection ── -->
-          <div style="margin-bottom:36px;">
-            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(5,8,18,.95),rgba(10,18,40,.8),rgba(30,60,130,.3),rgba(96,165,250,.12));border-color:rgba(96,165,250,.12);" onclick="setShopCat('All');setShopTab('browse')" onmouseover="this.style.borderColor='rgba(96,165,250,.3)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)'">
+          <!-- ── Midnight Collection ── Redesigned -->
+          <div style="margin-bottom:40px;">
+            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(5,8,18,.95),rgba(10,18,40,.8),rgba(30,60,130,.3),rgba(96,165,250,.12));border:1.5px solid rgba(96,165,250,.12);border-radius:18px;cursor:pointer;" onclick="setShopCat('All');setShopTab('browse')" onmouseover="this.style.borderColor='rgba(96,165,250,.3)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(96,165,250,.1)'" onmouseout="this.style.borderColor='rgba(96,165,250,.12)';this.style.transform='';this.style.boxShadow='none'">
               <div style="position:absolute;top:-30px;right:10px;width:160px;height:160px;background:radial-gradient(circle,rgba(96,165,250,.06) 0%,transparent 70%);pointer-events:none;"></div>
-              <div class="collection-bar-title" style="color:var(--blue);text-shadow:0 2px 20px rgba(96,165,250,.35);">MIDNIGHT COLLECTION</div>
-              <div class="collection-bar-desc">Command the night with deep blue aesthetics</div>
-              <button class="collection-bar-btn" style="background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.2);color:var(--blue);" onmouseover="this.style.background='rgba(96,165,250,.2)'" onmouseout="this.style.background='rgba(96,165,250,.1)'">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                Shop the Collection
-              </button>
+              <div style="padding:32px;position:relative;z-index:1;">
+                <div class="collection-bar-title" style="color:var(--blue);text-shadow:0 2px 20px rgba(96,165,250,.35);font-size:28px;margin-bottom:8px;letter-spacing:-.02em;">Midnight Collection</div>
+                <div class="collection-bar-desc" style="color:rgba(96,165,250,.6);font-size:13px;margin-bottom:16px;">Command the night with deep blue aesthetics and premium dark-mode design</div>
+                <button class="collection-bar-btn" style="background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.25);color:var(--blue);padding:10px 24px;font-weight:700;transition:all .15s;" onmouseover="this.style.background='rgba(96,165,250,.2)';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='rgba(96,165,250,.12)';this.style.transform=''">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                  Shop Collection
+                </button>
+              </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px;">
               ${_renderShopItemCard('appearance', SHOP_APPEARANCES.find(a=>a.id==='midnight_citadel'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
               ${_renderShopItemCard('decoration', PROFILE_DECORATIONS.find(d=>d.id==='blue_glow'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
               ${_renderShopBundle('midnight_bundle','Midnight Bundle',260,210,['Midnight Citadel','Blue Glow'],'linear-gradient(135deg,rgba(96,165,250,.04),rgba(5,8,18,.9))','rgba(96,165,250,.12)','#60a5fa',()=>ownedAppearances.includes('midnight_citadel')&&(CU?.ownedDecorations||[]).includes('blue_glow'))}
             </div>
           </div>
 
-          <!-- ── Onyx Collection ── -->
-          <div style="margin-bottom:36px;">
-            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(1,1,3,.95),rgba(14,10,34,.85),rgba(60,40,120,.2),rgba(140,100,220,.08));border-color:rgba(140,100,220,.12);cursor:default;" onmouseover="this.style.borderColor='rgba(140,100,220,.25)'" onmouseout="this.style.borderColor='rgba(140,100,220,.12)'">
+          <!-- ── Onyx Collection ── Redesigned -->
+          <div style="margin-bottom:40px;">
+            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(1,1,3,.95),rgba(14,10,34,.85),rgba(60,40,120,.2),rgba(140,100,220,.08));border:1.5px solid rgba(140,100,220,.12);border-radius:18px;cursor:default;" onmouseover="this.style.borderColor='rgba(140,100,220,.25)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(140,100,220,.12)';this.style.transform=''">
               <div style="position:absolute;top:-20px;right:20px;width:140px;height:140px;background:radial-gradient(circle,rgba(140,100,220,.06) 0%,transparent 70%);pointer-events:none;"></div>
-              <div class="collection-bar-title" style="color:rgba(140,100,220,.8);text-shadow:0 2px 16px rgba(140,100,220,.25);">ONYX COLLECTION</div>
-              <div class="collection-bar-desc">Pure darkness. Minimal distractions.</div>
+              <div style="padding:32px;position:relative;z-index:1;">
+                <div class="collection-bar-title" style="color:rgba(140,100,220,.85);text-shadow:0 2px 16px rgba(140,100,220,.25);font-size:28px;margin-bottom:8px;letter-spacing:-.02em;">Onyx Signature</div>
+                <div class="collection-bar-desc" style="color:rgba(140,100,220,.5);font-size:13px;">Pure darkness. Minimal distractions. Premium immersion.</div>
+              </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:18px;">
               ${_renderShopItemCard('appearance', SHOP_APPEARANCES.find(a=>a.id==='onyx_pure'), ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)}
-              <!-- Onyx Badge -->
-              <div class="shop-item-card" style="background:linear-gradient(135deg,rgba(255,249,62,.03),rgba(255,249,62,.01));border-color:rgba(255,249,62,.12);" onmouseover="this.style.borderColor='rgba(255,249,62,.25)'" onmouseout="this.style.borderColor='rgba(255,249,62,.12)'">
-                <div style="padding:20px 18px;display:flex;align-items:center;gap:14px;">
-                  <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,249,62,.1);"><img src="/fortized badges/onyx.png" style="width:32px;height:32px;object-fit:contain;"></div>
-                  <div style="flex:1;min-width:0;">
-                    <div class="sic-name" style="margin-bottom:3px;">Onyx Badge</div>
-                    <div class="sic-type" style="margin-bottom:8px;">Evolving badge</div>
-                    ${CU?.onyxBadge
-                      ?`<div style="display:flex;align-items:center;gap:6px;">
-                        <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;max-width:120px;"><div style="height:100%;border-radius:2px;background:var(--accent);width:${Math.min(100,(CU.onyxBadgeSpent||0)/100)}%;"></div></div>
-                        <span style="font-size:10px;font-weight:600;color:rgba(255,249,62,.5);">${CU.onyxBadgeSpent||0} invested</span>
-                      </div>
-                      <div style="display:flex;gap:4px;margin-top:6px;">
-                        ${[{amt:100,label:'100'},{amt:500,label:'500'}].map(u=>'<button onclick="upgradeOnyxBadge('+u.amt+')" style="padding:5px 11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.1);border-radius:8px;color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px;transition:all .15s;" onmouseover="this.style.background=\'rgba(255,249,62,.12)\'" onmouseout="this.style.background=\'rgba(255,249,62,.06)\'"><img src=\'/Onyx.png\' style=\'width:10px;height:10px;object-fit:contain;\'> +'+u.label+'</button>').join('')}
-                      </div>`
-                      :`<div class="sic-price"><img src="/Onyx.png" style="width:12px;height:12px;object-fit:contain;"> 100</div>`}
+              <!-- Onyx Badge — Redesigned -->
+              <div style="background:linear-gradient(135deg,rgba(255,249,62,.04),rgba(255,249,62,.01));border:1.5px solid rgba(255,249,62,.12);border-radius:16px;overflow:hidden;transition:all .22s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;" onmouseover="this.style.borderColor='rgba(255,249,62,.25)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,249,62,.12)';this.style.transform=''">
+                <div style="padding:20px;flex:1;">
+                  <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;">
+                    <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,249,62,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(255,249,62,.12);"><img src="/fortized badges/onyx.png" style="width:28px;height:28px;object-fit:contain;"></div>
+                    <div style="flex:1;">
+                      <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;">Onyx Badge</div>
+                      <div style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.04em;font-weight:600;">Evolving Status</div>
+                    </div>
                   </div>
-                  ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:9px 16px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;"><img src='/Onyx.png' style='width:12px;height:12px;object-fit:contain;'> Buy</button>`:'<div style="font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">Owned</div>'}
+                  ${CU?.onyxBadge
+                    ?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                      <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;"><div style="height:100%;border-radius:2px;background:var(--accent);width:${Math.min(100,(CU.onyxBadgeSpent||0)/100)}%;transition:width .6s cubic-bezier(.22,1,.36,1);"></div></div>
+                      <span style="font-size:10px;font-weight:700;color:var(--accent);white-space:nowrap;">${CU.onyxBadgeSpent||0} invested</span>
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                      ${[{amt:100,label:'100'},{amt:500,label:'500'}].map(u=>'<button onclick="upgradeOnyxBadge('+u.amt+')" style="flex:1;padding:6px 10px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);border-radius:8px;color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;transition:all .15s;" onmouseover="this.style.background=\'rgba(255,249,62,.15)\'" onmouseout="this.style.background=\'rgba(255,249,62,.08)\'"><img src=\'/Onyx.png\' style=\'width:9px;height:9px;object-fit:contain;\'> +'+u.label+'</button>').join('')}
+                    </div>`
+                    :`<div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:12px;">Showcase your Onyx investment with this exclusive evolving badge</div>`}
                 </div>
+                ${!CU?.onyxBadge?`<button onclick="buyOnyxBadge()" style="padding:12px;background:var(--accent);color:var(--rail);border:none;border-radius:0;font-family:var(--font-display);font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;letter-spacing:.01em;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''"><img src='/Onyx.png' style='width:14px;height:14px;object-fit:contain;'> Buy for 100</button>`:'<div style="padding:12px;background:rgba(62,207,110,.08);border-top:1px solid rgba(62,207,110,.12);color:var(--green);font-size:11px;font-weight:700;text-align:center;">✓ Owned</div>'}
               </div>
             </div>
           </div>
 
-          <!-- ── Glow Decorations Collection ── -->
-          <div style="margin-bottom:36px;">
-            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(62,207,110,.04),rgba(251,146,60,.04),rgba(244,114,182,.03));border-color:rgba(255,255,255,.06);cursor:default;">
-              <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(96,165,250,.04),transparent 50%),radial-gradient(ellipse at 70% 50%,rgba(251,146,60,.04),transparent 50%);pointer-events:none;"></div>
-              <div class="collection-bar-title" style="color:rgba(255,255,255,.75);">GLOW DECORATIONS</div>
-              <div class="collection-bar-desc">Make your avatar shine with vibrant glow effects</div>
+          <!-- ── Glow Decorations Collection ── Redesigned -->
+          <div style="margin-bottom:40px;">
+            <div class="collection-bar" style="background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(62,207,110,.04),rgba(251,146,60,.04),rgba(244,114,182,.03));border:1.5px solid rgba(255,255,255,.08);border-radius:18px;cursor:default;">
+              <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(96,165,250,.04),transparent 50%),radial-gradient(ellipse at 70% 50%,rgba(251,146,60,.04),transparent 50%);pointer-events:none;border-radius:18px;"></div>
+              <div style="padding:32px;position:relative;z-index:1;">
+                <div class="collection-bar-title" style="color:rgba(255,255,255,.8);font-size:28px;margin-bottom:8px;letter-spacing:-.02em;">Avatar Glow Effects</div>
+                <div class="collection-bar-desc" style="color:rgba(255,255,255,.4);font-size:13px;">Make your profile picture shine with vibrant animated glow effects</div>
+              </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px;">
               ${PROFILE_DECORATIONS.map(d => _renderShopItemCard('decoration', d, ownedAppearances, CU?.ownedDecorations||[], CU?.activeDecoration)).join('')}
             </div>
           </div>
 
-          <!-- ── Coming Soon ── -->
-          <div class="atel-section-hdr" style="margin-top:12px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <!-- ── Coming Soon ── Enhanced -->
+          <div class="atel-section-hdr" style="margin-top:18px;margin-bottom:18px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.5;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span>Coming Soon</span>
           </div>
-          <div class="ftz-grid cols-3">
-            ${[{n:'Avatar Frames',i:'🖼️',c:'#a78bfa',d:'Decorate your profile picture'},{n:'Profile Effects',i:'✨',c:'#60a5fa',d:'Animated effects on your card'},{n:'Name Colors',i:'🎨',c:'#fb923c',d:'Stand out with colored names'}].map(it=>`
-              <div style="background:rgba(255,255,255,.015);border:1.5px solid rgba(255,255,255,.05);border-radius:18px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='${it.c}33';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.transform='';this.style.boxShadow='none'">
-                <div style="height:85px;background:linear-gradient(135deg,${it.c}08,rgba(0,0,0,.2));display:flex;align-items:center;justify-content:center;font-size:38px;position:relative;">
-                  <span style="opacity:.35;">${it.i}</span>
-                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="font-size:24px;opacity:.25;">🔒</div></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+            ${[{n:'Avatar Frames',i:'🖼️',c:'#a78bfa',d:'Decorative frames for your profile'},{n:'Profile Effects',i:'✨',c:'#60a5fa',d:'Animated effects on profile cards'},{n:'Name Colors',i:'🎨',c:'#fb923c',d:'Colorize your username'}].map(it=>`
+              <div style="background:linear-gradient(135deg,rgba(255,255,255,.015),rgba(255,255,255,.005));border:1.5px solid rgba(255,255,255,.06);border-radius:16px;overflow:hidden;position:relative;transition:all .22s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.borderColor='${it.c}22';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)';this.style.transform=''">
+                <div style="height:100px;background:linear-gradient(135deg,${it.c}08,rgba(0,0,0,.3));display:flex;align-items:center;justify-content:center;font-size:42px;position:relative;opacity:.6;">
+                  <span>${it.i}</span>
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);"><div style="background:rgba(255,255,255,.1);padding:8px 12px;border-radius:8px;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em;">Coming</div></div>
                 </div>
-                <div style="padding:14px 16px;">
-                  <div style="font-family:var(--font-display);font-size:12.5px;font-weight:800;color:rgba(255,255,255,.55);margin-bottom:4px;">${it.n}</div>
-                  <div style="font-size:10.5px;color:rgba(255,255,255,.22);line-height:1.5;">${it.d}</div>
+                <div style="padding:16px;">
+                  <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:rgba(255,255,255,.65);margin-bottom:5px;letter-spacing:-.01em;">${it.n}</div>
+                  <div style="font-size:10px;color:rgba(255,255,255,.3);line-height:1.5;">${it.d}</div>
                 </div>
               </div>`).join('')}
           </div>`:`
-          <!-- Browse -->
-          <div style="padding:8px 0;">
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;">
-              ${['All','Appearances','Badges','Decorations','Bundles'].map(cat=>`<button class="shop-filter-chip${shopCat===cat?' active':''}" onclick="setShopCat('${cat}')">${cat}</button>`).join('')}
+          <!-- Browse All Categories -->
+          <div style="padding:0;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;">
+              ${['All','Appearances','Badges','Decorations','Bundles'].map(cat=>`<button class="shop-filter-chip${shopCat===cat?' active':''}" onclick="setShopCat('${cat}')" style="padding:9px 18px;border-radius:11px;font-size:12px;">${cat}</button>`).join('')}
             </div>
             ${(shopCat==='All'||shopCat==='Appearances') ? `
             <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-bottom:14px;display:flex;align-items:center;gap:8px;">

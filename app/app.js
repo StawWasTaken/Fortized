@@ -25850,6 +25850,8 @@ const KNOWN_GAMES = [
 
 let _gameActivityInterval = null;
 let _autoActivityPoller = null;
+// _gameActivity: computed from activityState — the current game being played
+Object.defineProperty(window, '_gameActivity', { get: function() { return typeof activityState !== 'undefined' ? activityState?.activities?.find(a => a.id === 'game') || null : null; } });
 let _userCustomApps = JSON.parse(localStorage.getItem('ftz_custom_apps')||'[]');
 
 // ── Automatic Game Activity Detection (Tauri / Discord-style) ──

@@ -26790,17 +26790,17 @@ function renderAtelierTab(tab) {
     ];
 
     el.innerHTML = `<div class="atelier-content-inner" style="position:relative;">
-      <!-- ═══ VIDEO BACKGROUND LAYER ═══ -->
-      <div style="position:absolute;top:0;left:0;right:0;height:600px;z-index:0;overflow:hidden;">
-        <video style="width:100%;height:100%;object-fit:cover;" autoplay muted loop playsinline>
+      <!-- ═══ VIDEO BACKGROUND LAYER - TOP ═══ -->
+      <div style="position:absolute;top:0;left:0;right:0;height:480px;z-index:0;overflow:hidden;pointer-events:none;">
+        <video style="width:100%;height:100%;object-fit:cover;opacity:0.35;" autoplay muted loop playsinline>
           <source src="/AtelierWorld.webm" type="video/webm">
         </video>
         <!-- Gradient fade-out at bottom -->
-        <div style="position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(to bottom,transparent,rgba(15,17,25,.8));"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to bottom,transparent,rgba(15,17,25,.9));"></div>
       </div>
 
       <!-- ═══ HERO BANNER ═══ -->
-      <div style="position:relative;z-index:1;border-radius:12px;overflow:hidden;margin-bottom:40px;background:linear-gradient(135deg,rgba(255,119,228,.2) 0%,rgba(255,249,62,.12) 50%,rgba(255,119,228,.08) 100%);padding:48px 40px;">
+      <div style="position:relative;z-index:1;border-radius:12px;overflow:hidden;margin-bottom:40px;background:linear-gradient(135deg,rgba(255,119,228,.25) 0%,rgba(255,249,62,.15) 50%,rgba(255,119,228,.12) 100%);padding:48px 40px;">
         <!-- Wrap background overlay -->
         <div style="position:absolute;inset:0;background:url('/wrapBackground.png');background-size:cover;background-position:center;opacity:.6;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;display:flex;align-items:center;gap:24px;">
@@ -26883,6 +26883,15 @@ function renderAtelierTab(tab) {
           }).join('')}
         </div>
         <div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:14px;">Auto-renews monthly · Cancel anytime</div>
+      </div>
+
+      <!-- ═══ VIDEO BACKGROUND LAYER - BOTTOM (INVERTED) ═══ -->
+      <div style="position:fixed;bottom:0;left:0;right:0;height:480px;z-index:-1;overflow:hidden;pointer-events:none;transform:scaleY(-1);">
+        <video style="width:100%;height:100%;object-fit:cover;opacity:0.35;" autoplay muted loop playsinline>
+          <source src="/AtelierWorld.webm" type="video/webm">
+        </video>
+        <!-- Gradient fade-out at top -->
+        <div style="position:absolute;top:0;left:0;right:0;height:100px;background:linear-gradient(to top,transparent,rgba(15,17,25,.9));"></div>
       </div>
 
     </div>`;

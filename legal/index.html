@@ -349,8 +349,8 @@ footer{border-top:1px solid rgba(255,255,255,.05);padding:32px 72px;display:grid
           <li>Use automated tools (bots, scrapers) without explicit written permission</li>
           <li>Circumvent any security measures, rate limits, or access controls</li>
         </ul>
-        <div class="sub-label"><span>4.2 — Content Standards</span></div>
-        <p>All content shared on Fortized must comply with our Community Guidelines. Fortized reserves the right to remove content that violates these standards and to take enforcement action against offending accounts, including warnings, temporary suspensions, and permanent bans.</p>
+        <div class="sub-label"><span>4.2 — Content Standards &amp; Community Guidelines</span></div>
+        <p>All content shared on Fortized must comply with our Community Guidelines (available at <strong>/community-guidelines</strong>). Fortized reserves the right to remove content that violates these standards and to take enforcement action against offending accounts, including warnings, temporary suspensions, and permanent bans. Content violations may also be reported to relevant authorities if they involve illegal activities.</p>
         <div class="callout callout-yellow"><strong>Bastion Sovereignty:</strong> Bastion owners may set additional rules for their communities. These supplementary rules must not conflict with Fortized's platform-wide Terms of Service or Community Guidelines.</div>
 
         <div class="sec-head" id="s-5">
@@ -373,11 +373,32 @@ footer{border-top:1px solid rgba(255,255,255,.05);padding:32px 72px;display:grid
 
         <div class="sec-head" id="s-7">
           <div class="sec-num">07</div>
+          <h2>DMCA &amp; Copyright</h2>
+        </div>
+        <div class="sub-label"><span>7.1 — Copyright Infringement Notices</span></div>
+        <p>Fortized respects the intellectual property rights of others and complies with the Digital Millennium Copyright Act (DMCA). If you believe that content on Fortized infringes your copyright, you may submit a DMCA takedown notice to our designated agent at <strong>dmca@fortized.com</strong>.</p>
+        <div class="sub-label"><span>7.2 — DMCA Notice Requirements</span></div>
+        <p>Your notice must include:</p>
+        <ul>
+          <li>Identification of the copyrighted work you claim has been infringed</li>
+          <li>Identification of the infringing content and its location on Fortized</li>
+          <li>Your contact information (name, address, phone, email)</li>
+          <li>A statement that you have a good faith belief the use is not authorised</li>
+          <li>A statement, under penalty of perjury, that the information in your notice is accurate and that you are the copyright owner or an authorised agent</li>
+          <li>Your physical or electronic signature</li>
+        </ul>
+        <div class="sub-label"><span>7.3 — Counter-Notices</span></div>
+        <p>If your content was removed due to a DMCA notice and you believe it was removed in error, you may submit a counter-notice. Fortized will restore the content unless the copyright claimant files a legal action within 10 business days.</p>
+        <div class="sub-label"><span>7.4 — Repeat Infringers</span></div>
+        <p>Fortized may terminate accounts of users who are repeat copyright infringers.</p>
+
+        <div class="sec-head" id="s-8">
+          <div class="sec-num">08</div>
           <h2>Disclaimers &amp; Warranties</h2>
         </div>
-        <div class="sub-label"><span>7.1 — Service Provided "As Is"</span></div>
+        <div class="sub-label"><span>8.1 — Service Provided "As Is"</span></div>
         <p>Fortized is provided on an "as is" and "as available" basis, without warranties of any kind, whether express or implied, to the maximum extent permitted by applicable law. We do not guarantee that the Service will be uninterrupted, error-free, or free from harmful components.</p>
-        <div class="sub-label"><span>7.2 — Third-Party Content</span></div>
+        <div class="sub-label"><span>8.2 — Third-Party Content</span></div>
         <p>Fortized may contain links to or integrations with third-party services (e.g., Spotify, IGDB). We are not responsible for the content, privacy practices, or availability of these external services.</p>
 
         <p style="margin-top:2em;font-size:13px;color:var(--mu)">&copy; 2026 Fortized / Swiftaw</p>
@@ -387,7 +408,7 @@ footer{border-top:1px solid rgba(255,255,255,.05);padding:32px 72px;display:grid
     <!-- PRIVACY -->
     <div class="legal-section" id="sec-privacy">
       <div class="legal-body">
-        <div class="callout callout-blue"><strong>Note:</strong> Fortized currently operates with local browser storage. Your account data lives on your device, not on remote servers, unless explicitly stated otherwise in a future update.</div>
+        <div class="callout callout-blue"><strong>Note:</strong> Fortized uses Firebase for secure, encrypted cloud storage. Your data is protected with real-time encryption and stored on geographically redundant servers. For local storage of sensitive data, optional client-side encryption is available.</div>
 
         <div class="sec-head" id="p-1">
           <div class="sec-num">01</div>
@@ -395,28 +416,31 @@ footer{border-top:1px solid rgba(255,255,255,.05);padding:32px 72px;display:grid
         </div>
         <p>When you create a Fortized account or use the platform, the following data may be stored:</p>
         <ul>
-          <li>Your email address, used for account identification</li>
+          <li>Your email address, used for account identification and account recovery</li>
           <li>Your chosen username and display identity</li>
-          <li>Your password (stored locally; never transmitted in plain text)</li>
-          <li>An optional profile picture you upload</li>
-          <li>In-platform activity such as Bastion membership, friends list, and DMs</li>
-          <li>Usage preferences and platform settings</li>
+          <li>Your password (encrypted using bcrypt; never stored in plain text)</li>
+          <li>An optional profile picture you upload (stored with access controls)</li>
+          <li>In-platform activity such as Bastion membership, friends list, and direct messages</li>
+          <li>Usage preferences, platform settings, and customisation choices (Atelier purchases, appearance settings)</li>
+          <li>Onyx earnings history and account activity logs for security purposes</li>
         </ul>
 
         <div class="sec-head" id="p-2">
           <div class="sec-num">02</div>
           <h2>How Your Data Is Stored</h2>
         </div>
-        <div class="sub-label"><span>Local Storage Architecture</span></div>
-        <p>All account data is currently stored in your browser's localStorage. This means:</p>
+        <div class="sub-label"><span>Cloud Storage with Firebase</span></div>
+        <p>Fortized uses Google Firebase as its backend infrastructure. Your account data is stored on Firebase's secure, encrypted servers with real-time synchronisation. This means:</p>
         <ul>
-          <li>Data stays on your device and is not synced to external servers</li>
-          <li>Clearing your browser data will erase your Fortized account locally</li>
-          <li>Data is not accessible to Fortized staff or third parties</li>
+          <li>Your data is encrypted in transit (HTTPS/TLS) and at rest (AES-256)</li>
+          <li>Data is backed up on geographically redundant servers for reliability</li>
+          <li>You can access your account from multiple devices with automatic synchronisation</li>
+          <li>Fortized staff cannot directly access plaintext user data without proper authorisation</li>
+          <li>Data retention follows these timelines: active accounts retain all data indefinitely; deleted accounts have data purged within 30 days</li>
         </ul>
-        <div class="callout callout-yellow"><strong>Bastion Sovereignty:</strong> Your Bastion is yours. Our architecture ensures admins retain full, uncompromised control over their communities at all times.</div>
-        <div class="sub-label"><span>Future Cloud Storage</span></div>
-        <p>Future versions of Fortized may introduce cloud storage. If and when this happens, this policy will be updated and users will be notified in-app in advance.</p>
+        <div class="callout callout-yellow"><strong>Bastion Sovereignty:</strong> Your Bastion is yours. Our architecture ensures admins retain full, uncompromised control over their communities at all times, with complete audit trails and access logs.</div>
+        <div class="sub-label"><span>Data Retention Policy</span></div>
+        <p>Account data is retained as long as your account is active. Upon account deletion, data is removed from production systems within 30 days and from backup systems within 90 days, except where retention is required by law.</p>
 
         <div class="sec-head" id="p-3">
           <div class="sec-num">03</div>

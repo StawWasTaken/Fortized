@@ -18015,7 +18015,7 @@ function _copyInviteLink(btn) {
 }
 
 // ── Radiance Gift Modal ──────────────
-function openRadianceGiftModal() {
+async function openRadianceGiftModal() {
   if (!CU?.radianceUntil && !CU?.radiancePlus) {
     toast('You need Radiance to gift subscriptions', 'error');
     return;
@@ -18023,16 +18023,20 @@ function openRadianceGiftModal() {
 
   const friendsList = CU?.friends || [];
   const selected = new Set();
-  const RADIANCE_GIFT_COSTS = {1: 400, 2: 700, 3: 900, 4: 1100, 5: 1300};
+
+  // Fetch friend data with PFPs
+  const friends = await Promise.all(friendsList.map(async (uname) => {
+    try {
+      const u = await FortizedSocial.getUserByName(uname);
+      return {username:uname, displayName:u?.displayName||uname, pfp:u?.pfp||null, status:u?.status||0};
+    } catch (e) {
+      return {username:uname, displayName:uname, pfp:null, status:0};
+    }
+  }));
 
   const overlay = document.createElement('div');
   overlay.className = 'radiance-gift-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease;';
-
-  const friends = friendsList.map(uname => {
-    const f = window._friendsDataCache?.[uname] || {username:uname,displayName:uname,status:0,pfp:null};
-    return f;
-  });
 
   overlay.innerHTML = `<div style="background:rgba(20,20,30,.95);border:1px solid rgba(255,119,228,.15);border-radius:14px;width:100%;max-width:480px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.8);overflow:hidden;animation:slideUp .25s cubic-bezier(.22,1,.36,1);">
     <!-- Header -->
@@ -18055,7 +18059,7 @@ function openRadianceGiftModal() {
         <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;transition:background .12s;cursor:pointer;margin-bottom:4px;" onclick="toggleFriendSelection(${i},this)">
           <input type="checkbox" data-friend-idx="${i}" style="width:18px;height:18px;cursor:pointer;accent-color:#ff77e4;" onchange="updateGiftCost()">
           <div style="flex-shrink:0;">
-            <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.04);">${buildAvatarHTML(f.pfp,f.displayName,36)}</div>
+            <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.04);">${f.pfp ? `<img src="${escapeHTML(f.pfp)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='${_defaultPfpUrl(f.username)}';"/>` : buildAvatarHTML(null, f.displayName, 36)}</div>
           </div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.displayName)}</div>

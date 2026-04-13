@@ -26811,14 +26811,18 @@ function renderAtelierTab(tab) {
       </div>
 
       <!-- ═══ SHARE WITH FRIENDS CARD ═══ -->
-      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:36px;margin-bottom:40px;text-align:center;transition:all .2s;" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.borderColor='rgba(255,119,228,.15)'" onmouseout="this.style.background='rgba(255,255,255,.03)';this.style.borderColor='rgba(255,255,255,.08)'">
-        <div style="display:flex;justify-content:center;gap:8px;margin-bottom:16px;">
-          <img src="/fortized badges/radiance.png" style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));"/>
-          <img src="/Onyx.png" style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));"/>
+      <div style="background:linear-gradient(135deg,rgba(255,119,228,.12),rgba(255,119,228,.05));border:1.5px solid rgba(255,119,228,.2);border-radius:14px;padding:40px 32px;margin-bottom:40px;text-align:center;transition:all .3s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onmouseover="this.style.background='linear-gradient(135deg,rgba(255,119,228,.18),rgba(255,119,228,.08))';this.style.borderColor='rgba(255,119,228,.35)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(255,119,228,.15)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(255,119,228,.12),rgba(255,119,228,.05))';this.style.borderColor='rgba(255,119,228,.2)';this.style.transform='';this.style.boxShadow=''">
+        <!-- Decorative background glow -->
+        <div style="position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,119,228,.1),transparent 70%);pointer-events:none;"></div>
+
+        <div style="position:relative;z-index:1;">
+          <div style="margin-bottom:16px;">
+            <img src="/fortized badges/radiance.png" style="width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(255,119,228,.25));"/>
+          </div>
+          <div style="font-family:var(--font-display);font-size:20px;font-weight:900;background:linear-gradient(90deg,#ff77e4,#fff93e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;letter-spacing:-.01em;">Share Radiance</div>
+          <p style="font-size:13px;color:rgba(255,255,255,.6);margin:0 0 24px 0;line-height:1.6;">Gift your friends a Radiance subscription and let them enjoy all the premium perks together.</p>
+          <button onclick="openRadianceGiftModal()" style="padding:12px 32px;background:linear-gradient(135deg,#ff77e4,rgba(255,119,228,.8));border:none;border-radius:8px;color:#0f1119;font-family:var(--font-display);font-size:14px;font-weight:900;cursor:pointer;transition:all .2s;letter-spacing:-.01em;box-shadow:0 6px 20px rgba(255,119,228,.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(255,119,228,.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(255,119,228,.3)'">Send Gifts</button>
         </div>
-        <div style="font-family:var(--font-display);font-size:18px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:-.01em;">Share Radiance with Friends</div>
-        <p style="font-size:13px;color:rgba(255,255,255,.55);margin:0 0 20px 0;line-height:1.6;">Gift your friends a Radiance subscription and let them enjoy all the premium perks.</p>
-        <button onclick="openRadianceGiftModal()" style="padding:11px 28px;background:linear-gradient(135deg,rgba(255,119,228,.2),rgba(255,119,228,.1));border:1.5px solid rgba(255,119,228,.3);border-radius:8px;color:#ff77e4;font-family:var(--font-display);font-size:14px;font-weight:800;cursor:pointer;transition:all .18s;letter-spacing:-.01em;" onmouseover="this.style.background='linear-gradient(135deg,rgba(255,119,228,.3),rgba(255,119,228,.2))';this.style.borderColor='rgba(255,119,228,.5)';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(255,119,228,.2),rgba(255,119,228,.1))';this.style.borderColor='rgba(255,119,228,.3)';this.style.transform=''">Gift Radiance</button>
       </div>
 
       <!-- ═══ EXPLORE YOUR PERKS — Card Grid (Discord "Explore What's New" style) ═══ -->

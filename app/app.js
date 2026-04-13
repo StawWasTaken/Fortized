@@ -26833,18 +26833,21 @@ function renderAtelierTab(tab) {
       <div style="position:relative;z-index:1;margin-bottom:40px;">
         <div style="font-family:var(--font-display);font-size:13px;font-weight:900;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.12em;margin-bottom:18px;">Explore Your Perks</div>
 
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
           ${PERK_CARDS.map(c=>`
-            <div style="position:relative;">
-              <!-- Floating image above card -->
-              <img src="${c.img}" style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));z-index:2;"/>
-              <!-- Card -->
-              <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:visible;transition:all .2s;cursor:default;margin-top:30px;" onmouseover="this.style.borderColor='rgba(${c.colorRgb},.3)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.transform='';this.style.boxShadow=''">
-                <!-- Card body -->
-                <div style="padding:20px;">
-                  <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:8px;text-align:center;">${c.title}</div>
-                  <div style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.5;text-align:center;">${c.desc}</div>
-                </div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;transition:all .24s cubic-bezier(.22,1,.36,1);cursor:default;display:flex;flex-direction:column;position:relative;height:100%;" onmouseover="this.style.borderColor='rgba(${c.colorRgb},.25)';this.style.background='rgba(255,255,255,.05)';this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.03)';this.style.transform='';this.style.boxShadow=''">
+              <!-- Badge -->
+              <div style="position:absolute;top:12px;left:12px;padding:4px 10px;background:rgba(${c.colorRgb},.2);border:1px solid rgba(${c.colorRgb},.4);border-radius:6px;font-size:9px;font-weight:800;color:${c.color};text-transform:uppercase;letter-spacing:.08em;z-index:2;">Perk</div>
+
+              <!-- Image Area -->
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:linear-gradient(135deg,rgba(${c.colorRgb},.08),rgba(${c.colorRgb},.02));min-height:140px;">
+                <img src="${c.img}" style="max-width:100%;max-height:120px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3));"/>
+              </div>
+
+              <!-- Text Area -->
+              <div style="padding:16px;">
+                <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#fff;margin-bottom:6px;line-height:1.3;">${c.title}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.4;">${c.desc}</div>
               </div>
             </div>
           `).join('')}

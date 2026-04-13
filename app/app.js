@@ -26795,8 +26795,6 @@ function renderAtelierTab(tab) {
         <video style="width:100%;height:100%;object-fit:cover;opacity:0.4;" autoplay muted loop playsinline>
           <source src="/AtelierWorld.webm" type="video/webm">
         </video>
-        <!-- Smooth gradient fade-out at bottom -->
-        <div style="position:absolute;bottom:0;left:0;right:0;height:140px;background:linear-gradient(to bottom,rgba(15,17,25,0) 0%,rgba(15,17,25,.3) 50%,rgba(15,17,25,.8) 100%);pointer-events:none;"></div>
       </div>
 
       <!-- ═══ HERO BANNER ═══ -->
@@ -26890,8 +26888,6 @@ function renderAtelierTab(tab) {
         <video style="width:100%;height:100%;object-fit:cover;opacity:0.4;" autoplay muted loop playsinline>
           <source src="/AtelierWorld.webm" type="video/webm">
         </video>
-        <!-- Smooth gradient fade-out at top -->
-        <div style="position:absolute;top:0;left:0;right:0;height:140px;background:linear-gradient(to bottom,rgba(15,17,25,0) 0%,rgba(15,17,25,.3) 50%,rgba(15,17,25,.8) 100%);pointer-events:none;"></div>
       </div>
 
     </div>`;

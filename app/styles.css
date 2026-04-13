@@ -28,6 +28,10 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 .rail-home-logo{width:26px;height:26px;-webkit-mask:url('/Fortized logo.png') center/contain no-repeat;mask:url('/Fortized logo.png') center/contain no-repeat;background-color:rgba(255,255,255,.45);transition:transform .16s cubic-bezier(.22,1,.36,1),background-color .2s;}
 .rail-home-btn:hover .rail-home-logo{background-color:rgba(255,255,255,.9);transform:scale(1.06);}
 .rail-home-btn.active .rail-home-logo{background-color:var(--bg);}
+/* ── Radiance Dwelling Icon (using image mask like home button) ── */
+.radiance-icon{width:18px;height:18px;-webkit-mask:url('/radiance.png') center/contain no-repeat;mask:url('/radiance.png') center/contain no-repeat;background-color:rgba(255,255,255,.5);transition:background-color .2s;}
+.atel-top-nav-btn:hover .radiance-icon{background-color:rgba(255,255,255,.8);}
+.atel-top-nav-btn.active .radiance-icon{background-color:var(--accent);}
 .rail-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);border-radius:15px;}
 .rail-btn:hover svg{transform:scale(1.06);}
 .rail-btn.active{background:var(--accent);color:var(--bg);box-shadow:0 2px 12px rgba(255,249,62,.18);border-radius:var(--radius-lg);}

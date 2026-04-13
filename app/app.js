@@ -26791,12 +26791,12 @@ function renderAtelierTab(tab) {
 
     el.innerHTML = `<div class="atelier-content-inner" style="position:relative;">
       <!-- ═══ VIDEO BACKGROUND LAYER - TOP ═══ -->
-      <div style="position:absolute;top:0;left:0;right:0;height:480px;z-index:0;overflow:hidden;pointer-events:none;">
-        <video style="width:100%;height:100%;object-fit:cover;opacity:0.35;" autoplay muted loop playsinline>
+      <div style="position:absolute;top:0;left:0;right:0;height:480px;z-index:0;overflow:hidden;pointer-events:none;mix-blend-mode:overlay;">
+        <video style="width:100%;height:100%;object-fit:cover;opacity:0.4;" autoplay muted loop playsinline>
           <source src="/AtelierWorld.webm" type="video/webm">
         </video>
-        <!-- Gradient fade-out at bottom -->
-        <div style="position:absolute;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to bottom,transparent,rgba(15,17,25,.9));"></div>
+        <!-- Smooth gradient fade-out at bottom -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:140px;background:linear-gradient(to bottom,rgba(15,17,25,0) 0%,rgba(15,17,25,.3) 50%,rgba(15,17,25,.8) 100%);pointer-events:none;"></div>
       </div>
 
       <!-- ═══ HERO BANNER ═══ -->
@@ -26886,12 +26886,12 @@ function renderAtelierTab(tab) {
       </div>
 
       <!-- ═══ VIDEO BACKGROUND LAYER - BOTTOM (INVERTED) ═══ -->
-      <div style="position:fixed;bottom:0;left:0;right:0;height:480px;z-index:-1;overflow:hidden;pointer-events:none;transform:scaleY(-1);">
-        <video style="width:100%;height:100%;object-fit:cover;opacity:0.35;" autoplay muted loop playsinline>
+      <div style="position:relative;margin-top:200px;height:380px;z-index:0;overflow:hidden;pointer-events:none;mix-blend-mode:overlay;transform:scaleY(-1);">
+        <video style="width:100%;height:100%;object-fit:cover;opacity:0.4;" autoplay muted loop playsinline>
           <source src="/AtelierWorld.webm" type="video/webm">
         </video>
-        <!-- Gradient fade-out at top -->
-        <div style="position:absolute;top:0;left:0;right:0;height:100px;background:linear-gradient(to top,transparent,rgba(15,17,25,.9));"></div>
+        <!-- Smooth gradient fade-out at top -->
+        <div style="position:absolute;top:0;left:0;right:0;height:140px;background:linear-gradient(to bottom,rgba(15,17,25,0) 0%,rgba(15,17,25,.3) 50%,rgba(15,17,25,.8) 100%);pointer-events:none;"></div>
       </div>
 
     </div>`;

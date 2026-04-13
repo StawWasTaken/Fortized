@@ -26812,8 +26812,16 @@ function renderAtelierTab(tab) {
 
       <!-- ═══ SHARE WITH FRIENDS CARD ═══ -->
       <div style="background:linear-gradient(135deg,rgba(255,119,228,.12),rgba(255,119,228,.05));border:1.5px solid rgba(255,119,228,.2);border-radius:14px;padding:40px 32px;margin-bottom:40px;text-align:center;transition:all .3s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onmouseover="this.style.background='linear-gradient(135deg,rgba(255,119,228,.18),rgba(255,119,228,.08))';this.style.borderColor='rgba(255,119,228,.35)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(255,119,228,.15)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(255,119,228,.12),rgba(255,119,228,.05))';this.style.borderColor='rgba(255,119,228,.2)';this.style.transform='';this.style.boxShadow=''">
+        <!-- Video background -->
+        <video style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.4;z-index:0;" autoplay muted loop playsinline>
+          <source src="/AtelierWorld.webm" type="video/webm">
+        </video>
+
         <!-- Decorative background glow -->
-        <div style="position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,119,228,.1),transparent 70%);pointer-events:none;"></div>
+        <div style="position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,119,228,.1),transparent 70%);pointer-events:none;z-index:0;"></div>
+
+        <!-- Gradient overlay -->
+        <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(15,17,25,.4),rgba(15,17,25,.2));z-index:0;pointer-events:none;"></div>
 
         <div style="position:relative;z-index:1;">
           <div style="margin-bottom:16px;">

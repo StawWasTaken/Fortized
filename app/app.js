@@ -26789,10 +26789,18 @@ function renderAtelierTab(tab) {
       {icon:'🎁',title:'Gift Radiance',desc:'Send Radiance subscriptions to your friends as a gift.',color:'#f472b6',colorRgb:'244,114,182'},
     ];
 
-    el.innerHTML = `<div class="atelier-content-inner">
+    el.innerHTML = `<div class="atelier-content-inner" style="position:relative;">
+      <!-- ═══ VIDEO BACKGROUND LAYER ═══ -->
+      <div style="position:absolute;top:0;left:0;right:0;height:600px;z-index:0;overflow:hidden;">
+        <video style="width:100%;height:100%;object-fit:cover;" autoplay muted loop playsinline>
+          <source src="/AtelierWorld.webm" type="video/webm">
+        </video>
+        <!-- Gradient fade-out at bottom -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(to bottom,transparent,rgba(15,17,25,.8));"></div>
+      </div>
 
       <!-- ═══ HERO BANNER ═══ -->
-      <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:40px;background:linear-gradient(135deg,rgba(255,119,228,.2) 0%,rgba(255,249,62,.12) 50%,rgba(255,119,228,.08) 100%);padding:48px 40px;">
+      <div style="position:relative;z-index:1;border-radius:12px;overflow:hidden;margin-bottom:40px;background:linear-gradient(135deg,rgba(255,119,228,.2) 0%,rgba(255,249,62,.12) 50%,rgba(255,119,228,.08) 100%);padding:48px 40px;">
         <!-- Wrap background overlay -->
         <div style="position:absolute;inset:0;background:url('/wrapBackground.png');background-size:cover;background-position:center;opacity:.6;pointer-events:none;"></div>
         <div style="position:relative;z-index:1;display:flex;align-items:center;gap:24px;">
@@ -26810,16 +26818,8 @@ function renderAtelierTab(tab) {
         `:''}
       </div>
 
-      <!-- ═══ BACKGROUND VIDEO - TOP ═══ -->
-      <div style="margin-bottom:40px;position:relative;height:180px;overflow:hidden;border-radius:12px;">
-        <video style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.5;" autoplay muted loop playsinline>
-          <source src="/AtelierWorld.webm" type="video/webm">
-        </video>
-        <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(15,17,25,.6));"></div>
-      </div>
-
       <!-- ═══ SHARE WITH FRIENDS CARD ═══ -->
-      <div style="background:linear-gradient(135deg,rgba(255,119,228,.12),rgba(255,119,228,.05));border:1.5px solid rgba(255,119,228,.2);border-radius:14px;padding:40px 32px;margin-bottom:40px;text-align:center;transition:all .3s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden;" onmouseover="this.style.background='linear-gradient(135deg,rgba(255,119,228,.18),rgba(255,119,228,.08))';this.style.borderColor='rgba(255,119,228,.35)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(255,119,228,.15)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(255,119,228,.12),rgba(255,119,228,.05))';this.style.borderColor='rgba(255,119,228,.2)';this.style.transform='';this.style.boxShadow=''">
+      <div style="position:relative;z-index:1;background:linear-gradient(135deg,rgba(255,119,228,.12),rgba(255,119,228,.05));border:1.5px solid rgba(255,119,228,.2);border-radius:14px;padding:40px 32px;margin-bottom:40px;text-align:center;transition:all .3s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.background='linear-gradient(135deg,rgba(255,119,228,.18),rgba(255,119,228,.08))';this.style.borderColor='rgba(255,119,228,.35)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(255,119,228,.15)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(255,119,228,.12),rgba(255,119,228,.05))';this.style.borderColor='rgba(255,119,228,.2)';this.style.transform='';this.style.boxShadow=''">
         <!-- Decorative background glow -->
         <div style="position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,119,228,.1),transparent 70%);pointer-events:none;"></div>
 
@@ -26834,7 +26834,7 @@ function renderAtelierTab(tab) {
       </div>
 
       <!-- ═══ EXPLORE YOUR PERKS — Card Grid (Discord "Explore What's New" style) ═══ -->
-      <div style="margin-bottom:40px;">
+      <div style="position:relative;z-index:1;margin-bottom:40px;">
         <div style="font-family:var(--font-display);font-size:13px;font-weight:900;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.12em;margin-bottom:18px;">Explore Your Perks</div>
 
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
@@ -26856,7 +26856,7 @@ function renderAtelierTab(tab) {
       </div>
 
       <!-- ═══ PRICING SECTION ═══ -->
-      <div style="margin-bottom:40px;">
+      <div style="position:relative;z-index:1;margin-bottom:40px;">
         <div style="font-family:var(--font-display);font-size:13px;font-weight:900;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.12em;margin-bottom:18px;">${hasRad||hasPlus?'Extend Your Plan':'Choose Your Plan'}</div>
 
         <div style="display:flex;flex-direction:column;gap:12px;">
@@ -26883,14 +26883,6 @@ function renderAtelierTab(tab) {
           }).join('')}
         </div>
         <div style="font-size:11px;color:rgba(255,255,255,.25);margin-top:14px;">Auto-renews monthly · Cancel anytime</div>
-      </div>
-
-      <!-- ═══ BACKGROUND VIDEO - BOTTOM (INVERTED) ═══ -->
-      <div style="margin-top:40px;position:relative;height:180px;overflow:hidden;border-radius:12px;transform:scaleY(-1);">
-        <video style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.5;" autoplay muted loop playsinline>
-          <source src="/AtelierWorld.webm" type="video/webm">
-        </video>
-        <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(15,17,25,.6));"></div>
       </div>
 
     </div>`;

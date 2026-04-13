@@ -26884,7 +26884,7 @@ function renderAtelierTab(tab) {
       </div>
 
       <!-- ═══ VIDEO BACKGROUND LAYER - BOTTOM (INVERTED) ═══ -->
-      <div style="position:relative;margin-top:200px;height:380px;z-index:0;overflow:hidden;pointer-events:none;mix-blend-mode:overlay;transform:scaleY(-1);">
+      <div style="position:relative;margin-top:-80px;height:380px;z-index:0;overflow:hidden;pointer-events:none;mix-blend-mode:overlay;transform:scaleY(-1);">
         <video style="width:100%;height:100%;object-fit:cover;opacity:0.4;" autoplay muted loop playsinline>
           <source src="/AtelierWorld.webm" type="video/webm">
         </video>

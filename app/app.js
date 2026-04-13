@@ -26781,12 +26781,10 @@ function renderAtelierTab(tab) {
   if (tab === 'radiance') {
     const PRICES = [{days:7,onyx:150},{days:30,onyx:400},{days:90,onyx:1000}];
     const PERK_CARDS = [
-      {icon:'✨',title:'Profile Glow',desc:'Animated glow ring around your avatar visible everywhere.',color:'#ffd93e',colorRgb:'255,217,62'},
-      {icon:'🖼️',title:'Custom Banner',desc:'Upload a full-width banner to personalize your profile.',color:'#60a5fa',colorRgb:'96,165,250'},
-      {icon:'🌈',title:'Profile Themes',desc:'Choose gradient border colors and accent themes for your profile.',color:'#06b6d4',colorRgb:'6,182,212'},
-      {icon:'🔤',title:'Font Selector',desc:'Pick a custom font for your messages and display name.',color:'#fb923c',colorRgb:'251,146,60'},
-      {icon:'⚡',title:'Super Reactions',desc:'Toggle enhanced animated reactions on any message.',color:'#ec4899',colorRgb:'236,72,153'},
-      {icon:'🎁',title:'Gift Radiance',desc:'Send Radiance subscriptions to your friends as a gift.',color:'#f472b6',colorRgb:'244,114,182'},
+      {img:'/AtelierCustomEmoji.png',title:'Custom Emojis Everywhere',desc:'Use exclusive custom emojis across all your messages and reactions.',color:'#ff77e4',colorRgb:'255,119,228'},
+      {img:'/Atelier100MbUploads.png',title:'100MB Uploads',desc:'Upload files up to 100MB for seamless sharing and media management.',color:'#ffd93e',colorRgb:'255,217,62'},
+      {img:'/AtelierBadge.png',title:'Radiance Badge',desc:'Display your exclusive Radiance badge on your profile.',color:'#fff93e',colorRgb:'255,249,62'},
+      {img:'/AtelierGift.png',title:'Gift Radiance',desc:'Send Radiance subscriptions to your friends as a gift.',color:'#f472b6',colorRgb:'244,114,182'},
     ];
 
     el.innerHTML = `<div class="atelier-content-inner" style="position:relative;">
@@ -26835,18 +26833,18 @@ function renderAtelierTab(tab) {
       <div style="position:relative;z-index:1;margin-bottom:40px;">
         <div style="font-family:var(--font-display);font-size:13px;font-weight:900;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.12em;margin-bottom:18px;">Explore Your Perks</div>
 
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
           ${PERK_CARDS.map(c=>`
-            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;transition:all .2s;cursor:default;" onmouseover="this.style.borderColor='rgba(${c.colorRgb},.3)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.transform='';this.style.boxShadow=''">
-              <!-- Card preview area -->
-              <div style="height:120px;background:linear-gradient(135deg,rgba(${c.colorRgb},.15),rgba(${c.colorRgb},.05));display:flex;align-items:center;justify-content:center;position:relative;">
-                <span style="font-size:48px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));">${c.icon}</span>
-                <div style="position:absolute;top:10px;left:10px;padding:3px 8px;border-radius:4px;background:rgba(${c.colorRgb},.2);border:1px solid rgba(${c.colorRgb},.3);font-size:9px;font-weight:800;color:${c.color};text-transform:uppercase;letter-spacing:.06em;">Perk</div>
-              </div>
-              <!-- Card body -->
-              <div style="padding:16px;">
-                <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">${c.title}</div>
-                <div style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.5;">${c.desc}</div>
+            <div style="position:relative;">
+              <!-- Floating image above card -->
+              <img src="${c.img}" style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));z-index:2;"/>
+              <!-- Card -->
+              <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:visible;transition:all .2s;cursor:default;margin-top:30px;" onmouseover="this.style.borderColor='rgba(${c.colorRgb},.3)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.transform='';this.style.boxShadow=''">
+                <!-- Card body -->
+                <div style="padding:20px;">
+                  <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#fff;margin-bottom:8px;text-align:center;">${c.title}</div>
+                  <div style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.5;text-align:center;">${c.desc}</div>
+                </div>
               </div>
             </div>
           `).join('')}

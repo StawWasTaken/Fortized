@@ -12921,7 +12921,7 @@ function buildProfileView(tab) {
         ${[
           {label:'Privacy Policy', url:'/privacy', desc:'How we handle your data and privacy', color:'62,207,110'},
           {label:'Terms of Service', url:'/terms', desc:'Our terms and community guidelines', color:'167,139,250'},
-          {label:'Fortized Blog', url:'https://swiftaw.com/blog/c/fortized', desc:'News, updates, and announcements', color:'254,248,61'},
+          {label:'Fortized Blog', url:'/blog', desc:'News, updates, and announcements', color:'254,248,61'},
         ].map(link => `
           <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="legal-link-row" style="background:rgba(${link.color},.02);border:1.5px solid rgba(${link.color},.08);">
             <div style="flex:1;min-width:0;">

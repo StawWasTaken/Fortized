@@ -2680,12 +2680,16 @@ function renderHomePanel() {
 
   // Render Active Now sidebar for Home
   setTimeout(() => renderActiveNowSidebar('home-active-now-list'), 150);
+
+  // Check for new announcements
+  setTimeout(_checkForAnnouncements, 500);
 }
 
 // ── Home Ads ──
-function _pickWeightedAd(ads) {
-  if (!ads.length) return null;
-  const weighted = ads.map(a => {
+function _pickWeightedAd(ads, ratioFilter) {
+  let pool = ratioFilter ? ads.filter(a => (a.ratio||'banner') === ratioFilter) : ads;
+  if (!pool.length) return null;
+  const weighted = pool.map(a => {
     const owner = a.owner || '';
     const role = getStaffRole(owner);
     let w = 1;
@@ -2701,43 +2705,53 @@ function _pickWeightedAd(ads) {
 }
 function _adClickAction(ad) {
   if (ad.customLink) {
-    if (ad.customLink.startsWith('#')) {
-      try { eval(ad.customLink.slice(1)); } catch(e) {}
-    } else {
-      window.open(ad.customLink, '_blank', 'noopener');
-    }
+    window.open(ad.customLink, '_blank', 'noopener');
   } else {
     promptJoinPublicBastion(ad.bastionId || ad.bastionName || '');
   }
 }
-async function _renderHomeAds() {
-  const el = document.getElementById('home-ads');
-  if (!el) return;
+async function _getAllActiveAds() {
   let ads = [];
   try { ads = await FortizedSocial.getGlobalAds(); } catch(e) {}
   const localAds = (CU?.ads||[]).filter(a => a.status==='active' && new Date(a.expiresAt) > new Date());
   const allAds = [...ads];
   localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
-  if (!allAds.length) { el.innerHTML = ''; return; }
-  const ad = _pickWeightedAd(allAds);
-  if (!ad) { el.innerHTML = ''; return; }
-  const isRect = ad.ratio === 'rectangle';
-  window._currentHomeAd = ad;
-  el.innerHTML = `
-    <div style="text-align:center;padding:4px 0 2px;">
-      <div style="${isRect ? 'width:300px;margin:0 auto;' : 'max-width:100%;margin:0 auto;'}">
-        <a style="display:block;cursor:pointer;${isRect ? 'width:300px;height:250px;' : ''}" onclick="_adClickAction(window._currentHomeAd)">
-          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="${isRect ? 'width:300px;height:250px;' : 'width:100%;height:90px;'}object-fit:fill;border-radius:10px;display:block;" alt="${escapeHTML(ad.title||'')}">
-        </a>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
-          <div style="display:flex;align-items:center;gap:6px;min-width:0;">
-            ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:14px;height:14px;border-radius:4px;flex-shrink:0;">`:''}
-            <span style="font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.bastionName||'')} · Sponsored</span>
-          </div>
-          <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(ad.bastionName||'')}')">Report ad</span>
+  return allAds;
+}
+function _renderAdHTML(ad, size) {
+  const isBanner = size === 'banner';
+  const imgStyle = isBanner ? 'width:100%;height:90px;object-fit:fill;border-radius:10px;display:block;' : 'width:300px;height:250px;object-fit:fill;border-radius:10px;display:block;';
+  const wrapStyle = isBanner ? 'max-width:100%;' : 'width:300px;';
+  const adKey = '_ad_' + Math.random().toString(36).slice(2,6);
+  window[adKey] = ad;
+  return `<div style="text-align:center;padding:${isBanner?'4px 0 2px':'6px 0'};">
+    <div style="${wrapStyle}${isBanner?'':'margin:0 auto;'}">
+      <a style="display:block;cursor:pointer;" onclick="_adClickAction(window['${adKey}'])">
+        <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="${imgStyle}" alt="${escapeHTML(ad.title||'')}">
+      </a>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
+        <div style="display:flex;align-items:center;gap:5px;min-width:0;">
+          ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:13px;height:13px;border-radius:4px;flex-shrink:0;">`:''}
+          <span style="font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.bastionName||'')} · Sponsored</span>
         </div>
+        <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(ad.bastionName||'')}')">Report ad</span>
       </div>
-    </div>`;
+    </div>
+  </div>`;
+}
+async function _renderHomeAds() {
+  const bannerEl = document.getElementById('home-ads');
+  const sidebarEl = document.getElementById('home-sidebar-ad');
+  const allAds = await _getAllActiveAds();
+  // Banners go in main content, rectangles go in sidebar
+  if (bannerEl) {
+    const ad = _pickWeightedAd(allAds, 'banner');
+    bannerEl.innerHTML = ad ? _renderAdHTML(ad, 'banner') : '';
+  }
+  if (sidebarEl) {
+    const ad = _pickWeightedAd(allAds, 'rectangle');
+    sidebarEl.innerHTML = ad ? _renderAdHTML(ad, 'rectangle') : '';
+  }
 }
 
 // ── Realm friends loader (horizontal avatars) ──
@@ -6739,31 +6753,10 @@ function _renderDiscoverFeatured(bastions){
 async function _renderDiscoverAds() {
   const el = document.getElementById('disc-ads');
   if (!el) return;
-  let ads = [];
-  try { ads = await FortizedSocial.getGlobalAds(); } catch(e) {}
-  const localAds = (CU?.ads||[]).filter(a => a.status==='active' && new Date(a.expiresAt) > new Date());
-  const allAds = [...ads];
-  localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
-  if (!allAds.length) { el.innerHTML = ''; return; }
-  const ad = _pickWeightedAd(allAds);
-  if (!ad) { el.innerHTML = ''; return; }
-  const isRect = ad.ratio === 'rectangle';
-  window._currentDiscoverAd = ad;
-  el.innerHTML = `
-    <div style="text-align:center;padding:8px 0 4px;">
-      <div style="${isRect ? 'width:300px;margin:0 auto;' : 'max-width:728px;margin:0 auto;width:100%;'}">
-        <a style="display:block;cursor:pointer;${isRect ? 'width:300px;height:250px;' : ''}" onclick="_adClickAction(window._currentDiscoverAd)">
-          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="${isRect ? 'width:300px;height:250px;' : 'width:100%;height:90px;'}object-fit:fill;border-radius:12px;display:block;" alt="${escapeHTML(ad.title||'')}">
-        </a>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 2px 0;">
-          <div style="display:flex;align-items:center;gap:6px;min-width:0;">
-            ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:16px;height:16px;border-radius:5px;flex-shrink:0;">`:''}
-            <span style="font-size:11px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.title||ad.bastionName||'')} · Sponsored</span>
-          </div>
-          <span style="font-size:11px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(ad.bastionName||'')}')">Report ad</span>
-        </div>
-      </div>
-    </div>`;
+  const allAds = await _getAllActiveAds();
+  // Discover is wide — only banners fit nicely
+  const ad = _pickWeightedAd(allAds, 'banner');
+  el.innerHTML = ad ? _renderAdHTML(ad, 'banner') : '';
 }
 function renderDiscoverGrid(bastions){
   const grid=document.getElementById('discover-grid');
@@ -9644,8 +9637,6 @@ function renderBSettingsNav(activeTab) {
     {label:'LIVING BASTION'},
     {id:'mood',icon:ftzIcon('castle','15'),label:'Bastion Mood'},
     {id:'reputation',icon:ftzIcon('shield','15'),label:'Reputation'},
-    {label:'MARKETPLACE'},
-    {id:'create_marketplace',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>',label:'Create & Marketplace'},
     {sep:true},
     {id:'danger',icon:ftzIcon('warning','15'),label:'Delete Bastion',danger:true},
   ];
@@ -10483,16 +10474,9 @@ function renderBSettingsMain(tab) {
         </div>
       </div>`;
   }
-  else if (tab==='create_marketplace') {
-    const isOwner = b.owner===CU.username;
-    const myBots = (CU.bots||[]);
-    const myTemplates = (CU.bastions||[]).filter(bst=>bst.owner===CU.username);
-    const myAds = (CU.ads||[]);
-    const marketBots = (typeof _globalMarketBots!=='undefined'?_globalMarketBots:[]);
-    const marketTemplates = (typeof _globalMarketTemplates!=='undefined'?_globalMarketTemplates:[]);
-    const onyxBal = CU.onyx||0;
+  else if (tab==='create_marketplace_legacy') {
     main.innerHTML = `
-      <div class="bs-section-title">Create & Marketplace</div>
+      <div class="bs-section-title">Creator Hub</div>
       <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Create bots and templates, browse the marketplace, or advertise your bastion.</div>
 
       <!-- Sub-tabs -->
@@ -10978,8 +10962,8 @@ async function _cmCreateAd() {
     await saveUser();
     try { await FortizedSocial.upsertGlobalAd(ad); } catch(e) { console.warn('[Ads] Sync failed:', e); }
     toast('Ad created! Broadcasting for 4 days.', 'success');
-    renderBSettingsMain('create_marketplace');
-    setTimeout(() => _switchCMSubTab('advertise'), 50);
+    switchAtelierTab('creator');
+    setTimeout(() => _switchCreatorSub('creations'), 50);
   });
 }
 async function _cmCancelAd(adIdx) {
@@ -10994,8 +10978,8 @@ async function _cmCancelAd(adIdx) {
     await saveUser();
     try { await FortizedSocial.removeGlobalAd(ad.id); } catch(e) {}
     toast('Ad cancelled. 5 Onyx deducted.', 'info');
-    renderBSettingsMain('create_marketplace');
-    setTimeout(() => _switchCMSubTab('advertise'), 50);
+    switchAtelierTab('creator');
+    setTimeout(() => _switchCreatorSub('creations'), 50);
   });
 }
 async function _cmRenewAd(adIdx) {
@@ -11013,8 +10997,8 @@ async function _cmRenewAd(adIdx) {
     await saveUser();
     try { await FortizedSocial.upsertGlobalAd(ad); } catch(e) {}
     toast('Ad renewed! Broadcasting for 4 days.', 'success');
-    renderBSettingsMain('create_marketplace');
-    setTimeout(() => _switchCMSubTab('advertise'), 50);
+    switchAtelierTab('creator');
+    setTimeout(() => _switchCreatorSub('creations'), 50);
   });
 }
 const AD_REPORT_REASONS = ['Inappropriate content','Misleading or scam','Offensive imagery','Spam','Impersonation','Other'];
@@ -11079,6 +11063,213 @@ async function _submitAdReport(adId) {
   } catch(e) { console.warn('[Report] Ad report failed:', e); }
   document.getElementById('modal-report-ad')?.remove();
   toast('Ad reported. Our Safety team will review it.', 'success');
+}
+
+// ═══════════════════════════════════════════════════════
+// ANNOUNCEMENT SYSTEM — "What's New"
+// ═══════════════════════════════════════════════════════
+
+async function _checkForAnnouncements() {
+  try {
+    const all = await FortizedSocial.getAnnouncements();
+    if (!all?.length) return;
+    const seenIds = JSON.parse(localStorage.getItem('ftz_seen_announcements')||'[]');
+    const unseen = all.filter(a => a.published && !seenIds.includes(a.id));
+    if (unseen.length) _showWhatsNewModal(unseen);
+  } catch(e) { console.warn('[Announcements] Check failed:', e); }
+}
+
+function _showWhatsNewModal(announcements) {
+  if (document.getElementById('modal-whats-new')) return;
+  const sorted = [...announcements].sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-whats-new';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;animation:fadeIn .2s;';
+  overlay.onclick = e => { if (e.target === overlay) _dismissWhatsNew(); };
+
+  const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); } catch { return ''; } };
+
+  overlay.innerHTML = `
+    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:560px;width:94%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid rgba(255,255,255,.06);">
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;">What's New</div>
+        <button onclick="_dismissWhatsNew()" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='rgba(255,255,255,.06)'">&times;</button>
+      </div>
+      <!-- Content -->
+      <div style="overflow-y:auto;padding:20px 24px;flex:1;">
+        ${sorted.map(a => `
+          <div style="margin-bottom:24px;">
+            <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:8px;">${fmtDate(a.createdAt)}</div>
+            ${a.image ? `<div style="margin-bottom:14px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);"><img src="${escapeHTML(a.image)}" style="width:100%;display:block;max-height:220px;object-fit:cover;" onerror="this.parentElement.style.display='none'"></div>` : ''}
+            <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;margin-bottom:8px;line-height:1.3;">${escapeHTML(a.title||'')}</div>
+            <div style="font-size:13.5px;color:rgba(255,255,255,.55);line-height:1.7;white-space:pre-wrap;word-break:break-word;">${_renderAnnouncementBody(a.body||'')}</div>
+            ${a.author ? `<div style="margin-top:10px;font-size:11.5px;color:rgba(255,255,255,.25);">— ${escapeHTML(a.author)}</div>` : ''}
+          </div>
+          ${sorted.indexOf(a) < sorted.length-1 ? '<div style="border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:20px;"></div>' : ''}
+        `).join('')}
+      </div>
+      <!-- Footer with socials -->
+      <div style="padding:14px 24px 18px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:16px;">
+        <a href="https://x.com/Fortized" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,.3);text-decoration:none;transition:color .15s;" onmouseenter="this.style.color='rgba(255,255,255,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.3)'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          @Fortized
+        </a>
+        <a href="https://www.reddit.com/r/fortized/" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,.3);text-decoration:none;transition:color .15s;" onmouseenter="this.style.color='rgba(255,255,255,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.3)'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9.067" cy="14.533" r="1.6"/><circle cx="14.933" cy="14.533" r="1.6"/><path d="M24 12c0 6.627-5.373 12-12 12S0 18.627 0 12 5.373 0 12 0s12 5.373 12 12zm-4.862-2.2a1.76 1.76 0 00-2.985-1.009 8.67 8.67 0 00-4.18-1.37l.834-3.926 2.683.57a1.252 1.252 0 102.17-.085l-3.016-.64a.42.42 0 00-.49.313l-.933 4.39a8.764 8.764 0 00-4.322 1.355A1.76 1.76 0 106.975 12c-.023.176-.035.356-.035.538 0 3.17 3.582 5.737 8 5.737s8-2.567 8-5.737c0-.173-.01-.344-.029-.512a1.755 1.755 0 00.028-3.226l-.001.001zm-5.1 6.584c-1.085 0-3.15-.267-4.038-1.217a.42.42 0 01.595-.595c.63.676 2.174.915 3.443.915s2.813-.24 3.443-.915a.42.42 0 11.595.595c-.888.95-2.953 1.217-4.038 1.217z"/></svg>
+          r/fortized
+        </a>
+        <a href="/app/forum" style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,.3);text-decoration:none;transition:color .15s;" onmouseenter="this.style.color='rgba(255,255,255,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.3)'">
+          <img src="/Fortized logo.png" style="width:14px;height:14px;border-radius:3px;opacity:.5;">
+          Forum
+        </a>
+        <div style="flex:1;"></div>
+        <button onclick="_dismissWhatsNew()" style="padding:8px 20px;background:var(--accent);color:var(--rail);border:none;border-radius:10px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;">Got it!</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function _renderAnnouncementBody(text) {
+  let html = escapeHTML(text);
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700;">$1</strong>');
+  html = html.replace(/__(.*?)__/g, '<em>$1</em>');
+  html = html.replace(/^• (.+)/gm, '<div style="display:flex;gap:6px;margin:2px 0;"><span style="color:var(--accent);">•</span><span>$1</span></div>');
+  return html;
+}
+
+function _dismissWhatsNew() {
+  const modal = document.getElementById('modal-whats-new');
+  if (!modal) return;
+  modal.remove();
+  FortizedSocial.getAnnouncements().then(all => {
+    if (!all?.length) return;
+    const seenIds = JSON.parse(localStorage.getItem('ftz_seen_announcements')||'[]');
+    const published = all.filter(a=>a.published).map(a=>a.id);
+    const merged = [...new Set([...seenIds, ...published])];
+    localStorage.setItem('ftz_seen_announcements', JSON.stringify(merged));
+  }).catch(()=>{});
+}
+
+// Admin: create announcement
+async function _adminCreateAnnouncement() {
+  if (!isAdmin()) { toast('Access denied','error'); return; }
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-create-announcement';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:520px;width:94%;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.6);">
+      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;margin-bottom:18px;">New Announcement</div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Title</div>
+        <input id="ann-title" class="field-input" placeholder="What's new?" maxlength="120">
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Body</div>
+        <textarea id="ann-body" class="field-input" rows="6" placeholder="Write your announcement... Use **bold**, • for bullets, emojis work too!" style="resize:vertical;min-height:100px;"></textarea>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Banner Image (URL)</div>
+        <input id="ann-image" class="field-input" placeholder="https://... (optional)">
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;">
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Author</div>
+          <input id="ann-author" class="field-input" value="${escapeHTML(CU?.displayName||CU?.username||'')}" placeholder="Author name">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button onclick="document.getElementById('modal-create-announcement')?.remove()" style="padding:9px 20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;">Cancel</button>
+        <button onclick="_submitAnnouncement()" style="padding:9px 20px;background:var(--accent);border:none;border-radius:9px;color:var(--rail);cursor:pointer;font-weight:700;font-family:inherit;">Publish</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function _submitAnnouncement() {
+  const title = document.getElementById('ann-title')?.value?.trim();
+  const body = document.getElementById('ann-body')?.value?.trim();
+  const image = document.getElementById('ann-image')?.value?.trim();
+  const author = document.getElementById('ann-author')?.value?.trim();
+  if (!title) { toast('Title required','error'); return; }
+  if (!body) { toast('Body required','error'); return; }
+  const announcement = {
+    id: 'ann_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    title, body, image: image||undefined, author: author||CU?.username,
+    createdAt: new Date().toISOString(),
+    createdBy: CU?.username,
+    published: true
+  };
+  try {
+    const all = await FortizedSocial.getAnnouncements() || [];
+    all.unshift(announcement);
+    await FortizedSocial.saveAnnouncements(all.slice(0,50));
+    logAudit('announcement_create', title, 'Published by '+CU?.username);
+    document.getElementById('modal-create-announcement')?.remove();
+    toast('Announcement published! It will also appear on the blog.','success');
+  } catch(e) { toast('Failed to publish: '+e.message,'error'); }
+}
+
+// View all announcements (admin)
+async function _adminViewAnnouncements() {
+  if (!isAdmin()) { toast('Access denied','error'); return; }
+  const all = await FortizedSocial.getAnnouncements() || [];
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-view-announcements';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); } catch { return ''; } };
+  overlay.innerHTML = `
+    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:560px;width:94%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 14px;border-bottom:1px solid rgba(255,255,255,.06);">
+        <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#fff;">All Announcements (${all.length})</div>
+        <button onclick="this.closest('#modal-view-announcements').remove()" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;">&times;</button>
+      </div>
+      <div style="overflow-y:auto;padding:16px 24px;flex:1;">
+        ${all.length === 0 ? '<div style="text-align:center;padding:32px;color:rgba(255,255,255,.25);">No announcements yet.</div>' : all.map(a => `
+          <div style="padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:flex-start;gap:12px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(a.title||'Untitled')}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.3);">${fmtDate(a.createdAt)} · by ${escapeHTML(a.author||a.createdBy||'Unknown')}</div>
+            </div>
+            <button onclick="_deleteAnnouncement('${a.id}')" style="flex-shrink:0;padding:5px 10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);border-radius:7px;color:#ef4444;cursor:pointer;font-size:11px;font-weight:600;">Delete</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function _deleteAnnouncement(id) {
+  if (!isAdmin()) return;
+  showCustomConfirm('Delete this announcement?', async () => {
+    try {
+      let all = await FortizedSocial.getAnnouncements() || [];
+      all = all.filter(a => a.id !== id);
+      await FortizedSocial.saveAnnouncements(all);
+      toast('Announcement deleted','success');
+      document.getElementById('modal-view-announcements')?.remove();
+    } catch(e) { toast('Delete failed: '+e.message,'error'); }
+  });
+}
+
+// Load announcement preview in broadcast tab
+async function _loadAnnouncementPreview() {
+  const el = document.getElementById('admin-announcements-preview');
+  if (!el) return;
+  try {
+    const all = await FortizedSocial.getAnnouncements() || [];
+    const recent = all.slice(0, 3);
+    if (!recent.length) { el.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.2);padding:8px 0;">No announcements yet.</div>'; return; }
+    const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'}); } catch { return ''; } };
+    el.innerHTML = recent.map(a => `
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;${recent.indexOf(a)<recent.length-1?'border-bottom:1px solid rgba(255,255,255,.04);':''}">
+        <div style="width:6px;height:6px;border-radius:50%;background:#60a5fa;flex-shrink:0;"></div>
+        <div style="flex:1;font-size:12px;color:rgba(255,255,255,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(a.title||'')}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.2);flex-shrink:0;">${fmtDate(a.createdAt)}</div>
+      </div>
+    `).join('');
+  } catch { el.innerHTML = ''; }
 }
 
 // Bastion settings actions
@@ -16641,6 +16832,20 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
         </div>
       </div>
       <div class="hq-panel" style="margin-top:var(--space-lg);">
+        <div class="hq-panel-head">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <h3>What's New Announcements</h3>
+        </div>
+        <div style="padding:var(--space-lg);">
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Create Discord-style "What's New" announcements shown to all users. These also appear as blog posts.</div>
+          <div style="display:flex;gap:var(--space-sm);align-items:center;flex-wrap:wrap;">
+            <button class="hq-quick-btn" onclick="_adminCreateAnnouncement()" style="background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.15);color:#60a5fa;font-weight:700;">📝 New Announcement</button>
+            <button class="hq-quick-btn" onclick="_adminViewAnnouncements()">📋 View All</button>
+          </div>
+          <div id="admin-announcements-preview" style="margin-top:var(--space-md);"></div>
+        </div>
+      </div>
+      <div class="hq-panel" style="margin-top:var(--space-lg);">
         <div class="hq-panel-head"><h3>Quick Messages</h3></div>
         <div style="padding:var(--space-lg);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);">
           ${[
@@ -16672,6 +16877,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
       const prev = document.getElementById('_bc-preview-text');
       if (prev) prev.textContent = e.target.value || 'Your broadcast message will appear here…';
     });
+    _loadAnnouncementPreview();
   }
 
   else if (tab === '_analytics') {
@@ -27479,7 +27685,7 @@ let _atelierTab = 'overview';
 function switchAtelierTab(tab, el) {
   _atelierTab = tab;
   // Update topbar title
-  const names = {shop:'Shop',radiance:'Radiance Dwelling',quests:'Quests'};
+  const names = {shop:'Fortshop',radiance:'Radiance Dwelling',quests:'Quests',creator:'Creator'};
   const tt = document.getElementById('topbar-title');
   if (tt) tt.textContent = names[tab] || 'Atelier';
 
@@ -27496,8 +27702,9 @@ function renderAtelierTopNav() {
 
   const tabs = [
     { id: 'radiance', name: 'Radiance Dwelling', icon: '<div class="radiance-icon"></div>' },
-    { id: 'shop', name: 'Shop', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' },
-    { id: 'quests', name: 'Quests', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' }
+    { id: 'quests', name: 'Quests', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' },
+    { id: 'shop', name: 'Fortshop', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' },
+    { id: 'creator', name: 'Creator', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>' }
   ];
 
   navContainer.innerHTML = tabs.map(t => {
@@ -28113,9 +28320,223 @@ function renderAtelierTab(tab) {
     el._shopCat = shopCat;
   }
 
+  // ── CREATOR ──────────────────────────────────────────────
+  else if (tab === 'creator') {
+    const myAds = (CU.ads||[]);
+    const myBots = (CU.bots||[]);
+    const myTemplates = (CU.bastions||[]).filter(bst=>bst.owner===CU.username);
+    const onyxBal = CU.onyx||0;
+    const creatorSub = el._creatorSub || 'creations';
+
+    el.innerHTML = `<div class="atelier-content-inner">
+      <!-- Creator Header -->
+      <div style="margin-bottom:28px;">
+        <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;">Creator Hub</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.4);">Create ads, manage bots, publish bastion templates, and browse the Creator Marketplace.</div>
+      </div>
+
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:4px;margin-bottom:24px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
+        <button id="cr-tab-creations" class="btn-g" style="padding:8px 18px;font-size:12px;border-radius:8px;font-weight:${creatorSub==='creations'?'700':'600'};background:${creatorSub==='creations'?'var(--accent)':'transparent'};color:${creatorSub==='creations'?'var(--rail)':'var(--muted-light)'};border:none;cursor:pointer;" onclick="_switchCreatorSub('creations')">Creations</button>
+        <button id="cr-tab-marketplace" class="btn-g" style="padding:8px 18px;font-size:12px;border-radius:8px;font-weight:${creatorSub==='marketplace'?'700':'600'};background:${creatorSub==='marketplace'?'var(--accent)':'transparent'};color:${creatorSub==='marketplace'?'var(--rail)':'var(--muted-light)'};border:none;cursor:pointer;" onclick="_switchCreatorSub('marketplace')">Creator Marketplace</button>
+      </div>
+
+      <!-- ═══ CREATIONS ═══ -->
+      <div id="cr-section-creations" style="${creatorSub!=='creations'?'display:none;':''}">
+        <!-- Creations sub-nav -->
+        <div style="display:flex;gap:6px;margin-bottom:18px;">
+          <button id="cr-cr-ads-btn" style="padding:6px 14px;font-size:11.5px;border-radius:8px;font-weight:700;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);cursor:pointer;" onclick="_switchCreationsSub('ads')">Ads</button>
+          <button id="cr-cr-bots-btn" style="padding:6px 14px;font-size:11.5px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:1px solid var(--border);cursor:pointer;" onclick="_switchCreationsSub('bots')">Bots</button>
+          <button id="cr-cr-templates-btn" style="padding:6px 14px;font-size:11.5px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:1px solid var(--border);cursor:pointer;" onclick="_switchCreationsSub('templates')">Templates</button>
+        </div>
+
+        <!-- ADS Section -->
+        <div id="cr-cr-ads">
+          <!-- Create New Ad -->
+          <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <div style="font-size:14px;font-weight:700;">Create New Ad</div>
+              <div style="flex:1;"></div>
+              <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;"><img src="/Onyx.png" style="width:12px;height:12px;"> ${onyxBal.toLocaleString()} Onyx</div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <div class="settings-title">Ad Title</div>
+              <input class="field-input" id="cm-ad-title" placeholder="e.g. Join our gaming community!" maxlength="60" oninput="_cmUpdateAdPreview()">
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <input id="cm-ad-image-upload" type="file" accept="image/*" style="display:none;" onchange="_cmAdImagePreview(event)">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <button class="btn-g" onclick="document.getElementById('cm-ad-image-upload').click()" style="font-size:12px;padding:8px 16px;">Choose file</button>
+                <span id="cm-ad-file-label" style="font-size:12px;color:var(--muted);">No file selected.</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <div class="settings-title">Ad Format</div>
+              <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <label id="cm-ratio-banner" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;background:rgba(255,249,62,.06);border:1.5px solid rgba(255,249,62,.2);border-radius:10px;cursor:pointer;transition:all .15s;" onclick="_cmSelectAdRatio('banner')">
+                  <input type="radio" name="cm-ad-ratio" value="banner" checked style="accent-color:var(--accent);">
+                  <div>
+                    <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.85);">Banner</div>
+                    <div style="font-size:10px;color:var(--muted);">728 x 90 px — Wide horizontal strip (main content)</div>
+                  </div>
+                </label>
+                <label id="cm-ratio-rectangle" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;transition:all .15s;" onclick="_cmSelectAdRatio('rectangle')">
+                  <input type="radio" name="cm-ad-ratio" value="rectangle" style="accent-color:var(--accent);">
+                  <div>
+                    <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.65);">Rectangle</div>
+                    <div style="font-size:10px;color:var(--muted);">300 x 250 px — Sidebar placement</div>
+                  </div>
+                </label>
+              </div>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.25);">Banners appear in main content areas. Rectangles appear in sidebars. Wrong ratio images will be stretched.</div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Ad Templates</div>
+              <div style="display:flex;align-items:center;gap:14px;">
+                <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/BannerAdTemplate.png" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--accent);text-decoration:none;transition:opacity .15s;" onmouseenter="this.style.opacity='.7'" onmouseleave="this.style.opacity='1'">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Banner
+                </a>
+                <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/RectangleAdTemplate.png" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--accent);text-decoration:none;transition:opacity .15s;" onmouseenter="this.style.opacity='.7'" onmouseleave="this.style.opacity='1'">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Rectangle
+                </a>
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <div class="settings-title">Target Bastion</div>
+              <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
+                ${(CU.bastions||[]).filter(bst=>bst.owner===CU.username).map((bst,i)=>{
+                  const idx=(CU.bastions||[]).indexOf(bst);
+                  return `<option value="${idx}">${escapeHTML(bst.name)}</option>`;
+                }).join('')}
+              </select>
+            </div>
+
+            ${isSuperAdmin() ? `
+            <div style="margin-bottom:14px;">
+              <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Custom Link <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span></div>
+              <input class="field-input" id="cm-ad-custom-link" placeholder="https://... or leave empty to use bastion join" maxlength="500">
+              <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Override click destination with any URL.</div>
+            </div>
+            ` : ''}
+
+            <div style="margin-bottom:16px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted-light);cursor:pointer;">
+                <input type="checkbox" id="cm-ad-autorefund" style="accent-color:var(--accent);">
+                Auto-renew — automatically deduct 15 Onyx every 4 days
+              </label>
+            </div>
+
+            <div style="margin-bottom:16px;">
+              <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:8px;">Live Preview</div>
+              <div id="cm-ad-preview-wrap" style="max-width:728px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:12px;">
+                <div id="cm-ad-live-preview" style="text-align:center;">
+                  <div style="width:100%;height:90px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));display:flex;align-items:center;justify-content:center;">
+                    <span style="font-size:11px;color:var(--muted);">Upload an image to preview</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn-a" onclick="_cmCreateAd()" ${onyxBal<15?'disabled style="opacity:.5;cursor:not-allowed;font-size:13px;padding:9px 22px;"':'style="font-size:13px;padding:9px 22px;"'}>+ Create Ad — 15 Onyx</button>
+          </div>
+
+          <!-- Active Ads -->
+          <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Your Ads</div>
+          <div id="cr-ads-list">
+            ${myAds.length ? myAds.map((ad,i) => {
+              const isActive = ad.status==='active' && new Date(ad.expiresAt) > new Date();
+              const expired = ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date());
+              const statusLabel = ad.status==='cancelled'?'Cancelled':expired?'Expired':isActive?'Active':'Inactive';
+              const statusColor = isActive?'#3ecf6e':ad.status==='cancelled'?'#f87171':'#6b7280';
+              return `<div style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
+                ${ad.image?`<img src="${escapeHTML(ad.image)}" style="width:48px;height:${ad.ratio==='rectangle'?'40px':'28px'};object-fit:cover;border-radius:6px;flex-shrink:0;">`:''}
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.title||'Untitled')}</div>
+                  <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;margin-top:2px;">
+                    <span style="color:${statusColor};font-weight:700;">${statusLabel}</span>
+                    <span>${ad.ratio==='rectangle'?'Rectangle':'Banner'}</span>
+                    <span>${ad.clicks||0} clicks</span>
+                  </div>
+                </div>
+                ${isActive?`
+                  <button onclick="_cmRenewAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:var(--accent);cursor:pointer;">Renew</button>
+                  <button onclick="_cmCancelAd(${i})" style="padding:5px 12px;font-size:11px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.12);border-radius:8px;color:#f87171;cursor:pointer;">Cancel</button>
+                `:''}
+              </div>`;
+            }).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">No ads created yet.</div>'}
+          </div>
+        </div>
+
+        <!-- BOTS Section -->
+        <div id="cr-cr-bots" style="display:none;">
+          <div style="padding:20px;background:var(--panel);border:1px solid var(--border);border-radius:14px;text-align:center;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5" style="margin-bottom:8px;"><rect x="3" y="11" width="18" height="11" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M12 8v3"/></svg>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Bot Creations</div>
+            <div style="font-size:11.5px;color:var(--muted);">Create and manage your bots. Coming soon.</div>
+          </div>
+        </div>
+
+        <!-- TEMPLATES Section -->
+        <div id="cr-cr-templates" style="display:none;">
+          <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:16px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Your Bastion Templates</div>
+            ${myTemplates.length ? myTemplates.map((bst,i) => {
+              const idx = (CU.bastions||[]).indexOf(bst);
+              return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;">
+                ${bst.icon?`<img src="${escapeHTML(bst.icon)}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;">`:`<div style="width:36px;height:36px;border-radius:8px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>`}
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;font-weight:700;">${escapeHTML(bst.name)}</div>
+                  <div style="font-size:11px;color:var(--muted);">${(bst.channels||[]).length} channels</div>
+                </div>
+                <button onclick="_cmExportTemplate(${idx})" style="padding:5px 12px;font-size:11px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:var(--accent);cursor:pointer;">Export</button>
+              </div>`;
+            }).join('') : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">No bastions to publish as templates.</div>'}
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ CREATOR MARKETPLACE ═══ -->
+      <div id="cr-section-marketplace" style="${creatorSub!=='marketplace'?'display:none;':''}">
+        <div style="padding:28px;background:var(--panel);border:1px solid var(--border);border-radius:16px;text-align:center;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5" style="margin-bottom:12px;"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;margin-bottom:6px;">Creator Marketplace</div>
+          <div style="font-size:12.5px;color:var(--muted);max-width:360px;margin:0 auto;">Browse and purchase community-made bots, bastion templates, and more from other creators. Coming soon.</div>
+        </div>
+      </div>
+    </div>`;
+
+    el._creatorSub = creatorSub;
+  }
+
   else {
     el.innerHTML = `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('construction','48')}</div><h3>Coming Soon</h3></div>`;
   }
+}
+
+// ── Creator tab helpers ────────────────────────────────
+function _switchCreatorSub(sub) {
+  ['creations','marketplace'].forEach(t => {
+    const sec = document.getElementById('cr-section-'+t);
+    const btn = document.getElementById('cr-tab-'+t);
+    if (sec) sec.style.display = t===sub?'':'none';
+    if (btn) { btn.style.background = t===sub?'var(--accent)':'transparent'; btn.style.color = t===sub?'var(--rail)':'var(--muted-light)'; btn.style.fontWeight = t===sub?'700':'600'; }
+  });
+  const el = document.getElementById('atelier-content');
+  if (el) el._creatorSub = sub;
+}
+function _switchCreationsSub(sub) {
+  ['ads','bots','templates'].forEach(t => {
+    const sec = document.getElementById('cr-cr-'+t);
+    const btn = document.getElementById('cr-cr-'+t+'-btn');
+    if (sec) sec.style.display = t===sub?'':'none';
+    if (btn) { btn.style.background = t===sub?'rgba(255,249,62,.1)':'transparent'; btn.style.color = t===sub?'var(--accent)':'var(--muted-light)'; btn.style.borderColor = t===sub?'rgba(255,249,62,.2)':'var(--border)'; btn.style.fontWeight = t===sub?'700':'600'; }
+  });
 }
 
 // ── Quest / Shop tab helpers ──────────────────────────────

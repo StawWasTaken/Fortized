@@ -739,6 +739,77 @@ function filterBlogPosts(val) { renderPostGrid(val); }
     </div>`;
 })();
 
+// ── Load announcements from Supabase as blog posts ──
+(async function loadAnnouncementPosts() {
+  try {
+    const SB_URL = 'https://ufnjjddqnicbzyjfawrb.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbmpqZGRxbmljYnp5amZhd3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NTkzMjgsImV4cCI6MjA4ODIzNTMyOH0.5Sfc_wQO6T3mQT6lqsPTAntqyxhDZJqTrZ3GNkyQSEk';
+    const res = await fetch(SB_URL + '/rest/v1/admin_kv?key=eq.announcements&select=data', {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!rows?.length || !rows[0]?.data) return;
+    const announcements = rows[0].data;
+    if (!Array.isArray(announcements)) return;
+    const published = announcements.filter(a => a.published && a.title);
+    if (!published.length) return;
+    let added = 0;
+    for (const a of published) {
+      const slug = 'ann_' + (a.id || '').replace(/[^a-z0-9_]/gi, '_');
+      if (ARTICLES[slug]) continue;
+      // Convert announcement body to blog HTML
+      let bodyHtml = (a.body || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      bodyHtml = bodyHtml.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      bodyHtml = bodyHtml.replace(/__(.*?)__/g, '<em>$1</em>');
+      // Split into paragraphs
+      const lines = bodyHtml.split(/\n+/);
+      let content = '<p class="lead">' + (lines[0] || '') + '</p>';
+      const rest = lines.slice(1);
+      let inBullets = false;
+      for (const line of rest) {
+        if (line.startsWith('• ') || line.startsWith('- ')) {
+          if (!inBullets) { content += '<ul>'; inBullets = true; }
+          content += '<li>' + line.replace(/^[•\-]\s*/, '') + '</li>';
+        } else {
+          if (inBullets) { content += '</ul>'; inBullets = false; }
+          if (line.trim()) content += '<p>' + line + '</p>';
+        }
+      }
+      if (inBullets) content += '</ul>';
+      // Format date
+      let dateStr = '';
+      try {
+        const d = new Date(a.createdAt);
+        dateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      } catch { dateStr = 'Recent'; }
+      const authorName = a.author || a.createdBy || 'Fortized';
+      const initial = authorName.charAt(0).toUpperCase();
+      ARTICLES[slug] = {
+        category: 'Announcement', date: dateStr, readTime: Math.max(1, Math.ceil((a.body||'').split(/\s+/).length / 200)) + ' min read',
+        authorInitial: initial, authorPillLabel: 'Fortized',
+        title: a.title, bylineName: authorName,
+        bylineRole: 'Fortized Team',
+        tagClass: 'tag-announce', tagLabel: 'Announcement',
+        banner: a.image || '/Fortized banner.png',
+        content: content
+      };
+      added++;
+    }
+    if (added) {
+      renderPostGrid();
+      const countEl = document.getElementById('article-count');
+      if (countEl) countEl.textContent = Object.keys(ARTICLES).length;
+      // Check if current URL has an announcement article
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('article');
+      if (id && ARTICLES[id] && id.startsWith('ann_')) {
+        renderArticle(id);
+      }
+    }
+  } catch(e) { console.warn('[Blog] Failed to load announcements:', e); }
+})();
+
 renderPostGrid();
 
 // Update article count

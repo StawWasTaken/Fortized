@@ -1867,6 +1867,14 @@ const FortizedSocial = (() => {
     try { await sb.from('global_ads').delete().eq('id', adId); } catch(e) { console.warn('[Ads] removeGlobalAd failed:', e?.message); }
   }
 
+  // ── Announcements API ──────────────────────────────────
+  async function getAnnouncements() {
+    return (await _adminKVGet('announcements')) || [];
+  }
+  async function saveAnnouncements(list) {
+    await _adminKVSet('announcements', list);
+  }
+
   // ── Public API ───────────────────────────────────────
   return {
     sb, // Expose supabase client for direct calls in app code
@@ -1893,6 +1901,7 @@ const FortizedSocial = (() => {
     getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,
     getGlobalBastions, saveGlobalBastion, getGlobalBastion, deleteGlobalBastion, clearBastionCache,
     getGlobalAds, upsertGlobalAd, removeGlobalAd,
+    getAnnouncements, saveAnnouncements,
     getBastionMembers, addBastionMember, removeBastionMember,
     getInvite, saveInvite, incrementInviteUses,
     submitReport,

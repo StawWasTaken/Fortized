@@ -10852,6 +10852,7 @@ function _cmBuyBot(botId) {
 function _cmBuyTemplate(tmplId) {
   toast('Template marketplace coming soon!', 'info');
 }
+let _cmAdImageData = null;
 function _cmSelectAdRatio(ratio) {
   const bannerLabel = document.getElementById('cm-ratio-banner');
   const rectLabel = document.getElementById('cm-ratio-rectangle');
@@ -10875,11 +10876,7 @@ function _cmAdImagePreview(e) {
   if (label) label.textContent = file.name;
   const reader = new FileReader();
   reader.onload = function(ev) {
-    const preview = document.getElementById('cm-ad-image-preview');
-    if (preview) {
-      preview.innerHTML = `<img src="${ev.target.result}" style="width:100%;max-height:120px;object-fit:cover;display:block;border-radius:10px;">`;
-      preview._adImageData = ev.target.result;
-    }
+    _cmAdImageData = ev.target.result;
     _cmUpdateAdPreview();
   };
   reader.readAsDataURL(file);
@@ -10887,7 +10884,7 @@ function _cmAdImagePreview(e) {
 function _cmUpdateAdPreview() {
   const livePreview = document.getElementById('cm-ad-live-preview');
   if (!livePreview) return;
-  const imageData = document.getElementById('cm-ad-image-preview')?._adImageData;
+  const imageData = _cmAdImageData;
   const title = document.getElementById('cm-ad-title')?.value?.trim() || '';
   const bastionIdx = parseInt(document.getElementById('cm-ad-bastion')?.value);
   const bst = CU.bastions?.[bastionIdx];
@@ -10922,8 +10919,7 @@ async function _cmCreateAd() {
   const bastionIdx = parseInt(document.getElementById('cm-ad-bastion')?.value);
   const bst = CU.bastions?.[bastionIdx];
   if (!bst) { toast('Select a bastion', 'error'); return; }
-  const preview = document.getElementById('cm-ad-image-preview');
-  const image = preview?._adImageData || (bst.banner||bst.icon||'');
+  const image = _cmAdImageData || (bst.banner||bst.icon||'');
   const autoRefund = document.getElementById('cm-ad-autorefund')?.checked || false;
   const ratio = document.querySelector('input[name="cm-ad-ratio"]:checked')?.value || 'banner';
   showCustomConfirm(`Create ad "${title}" for ${escapeHTML(bst.name)}? This costs 15 Onyx.`, async () => {

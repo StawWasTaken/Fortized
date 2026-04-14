@@ -2694,15 +2694,18 @@ async function _renderHomeAds() {
   if (!allAds.length) { el.innerHTML = ''; return; }
   const ad = allAds[Math.floor(Math.random()*allAds.length)];
   el.innerHTML = `
-    <div style="background:var(--panel);border:1px solid rgba(255,249,62,.08);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative;" onclick="promptJoinPublicBastion('${escapeHTML(ad.bastionId||ad.bastionName||'')}')" onmouseenter="this.style.borderColor='rgba(255,249,62,.18)'" onmouseleave="this.style.borderColor='rgba(255,249,62,.08)'">
-      ${ad.image?`<div style="height:70px;overflow:hidden;"><img src="${escapeHTML(ad.image)}" style="width:100%;height:100%;object-fit:cover;"></div>`:''}
-      <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;">
-        ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:20px;height:20px;border-radius:6px;">`:''}
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:12px;font-weight:700;">${escapeHTML(ad.title||ad.bastionName||'')}</div>
-          <div style="font-size:10px;color:var(--muted);">${escapeHTML(ad.bastionName||'')} · Sponsored</div>
+    <div style="text-align:center;padding:4px 0 2px;">
+      <div style="max-width:100%;margin:0 auto;display:inline-block;text-align:left;">
+        <a style="display:block;cursor:pointer;" onclick="promptJoinPublicBastion('${escapeHTML(ad.bastionId||ad.bastionName||'')}')">
+          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:100%;max-height:90px;object-fit:cover;border-radius:10px;display:block;" alt="${escapeHTML(ad.title||'')}">
+        </a>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
+          <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+            ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:14px;height:14px;border-radius:4px;flex-shrink:0;">`:''}
+            <span style="font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.bastionName||'')} · Sponsored</span>
+          </div>
+          <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(ad.bastionName||'')}')">Report ad</span>
         </div>
-        <span style="font-size:9px;color:var(--muted);cursor:pointer;" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}')">Report</span>
       </div>
     </div>`;
 }
@@ -6708,31 +6711,25 @@ async function _renderDiscoverAds() {
   if (!el) return;
   let ads = [];
   try { ads = await FortizedSocial.getGlobalAds(); } catch(e) {}
-  // Also include local user ads that are active
   const localAds = (CU?.ads||[]).filter(a => a.status==='active' && new Date(a.expiresAt) > new Date());
   const allAds = [...ads];
   localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
   if (!allAds.length) { el.innerHTML = ''; return; }
-  // Shuffle and pick up to 3
-  const shuffled = allAds.sort(()=>Math.random()-.5).slice(0,3);
+  const ad = allAds[Math.floor(Math.random()*allAds.length)];
   el.innerHTML = `
-    <div style="font-family:var(--font-display);font-size:11px;font-weight:700;color:rgba(255,255,255,.25);margin-bottom:10px;display:flex;align-items:center;gap:6px;letter-spacing:.06em;text-transform:uppercase;">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Sponsored
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
-      ${shuffled.map(ad => `
-        <div onclick="promptJoinPublicBastion('${escapeHTML(ad.bastionId||ad.bastionName||'')}')" style="background:var(--panel2);border:1px solid rgba(255,249,62,.08);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)';this.style.transform='translateY(-2px)'" onmouseleave="this.style.borderColor='rgba(255,249,62,.08)';this.style.transform=''">
-          ${ad.image?`<div style="height:80px;overflow:hidden;"><img src="${escapeHTML(ad.image)}" style="width:100%;height:100%;object-fit:cover;"></div>`:''}
-          <div style="padding:12px 14px;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:3px;">${escapeHTML(ad.title||ad.bastionName||'')}</div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--muted);">
-              ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:16px;height:16px;border-radius:4px;">`:''}
-              <span>${escapeHTML(ad.bastionName||'')}</span>
-              <span style="margin-left:auto;cursor:pointer;color:var(--muted);font-size:9px;" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}')">Report</span>
-            </div>
+    <div style="text-align:center;padding:8px 0 4px;">
+      <div style="max-width:728px;margin:0 auto;display:inline-block;text-align:left;width:100%;">
+        <a style="display:block;cursor:pointer;" onclick="promptJoinPublicBastion('${escapeHTML(ad.bastionId||ad.bastionName||'')}')">
+          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:100%;max-height:120px;object-fit:cover;border-radius:12px;display:block;" alt="${escapeHTML(ad.title||'')}">
+        </a>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 2px 0;">
+          <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+            ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:16px;height:16px;border-radius:5px;flex-shrink:0;">`:''}
+            <span style="font-size:11px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.title||ad.bastionName||'')} · Sponsored</span>
           </div>
+          <span style="font-size:11px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(ad.bastionName||'')}')">Report ad</span>
         </div>
-      `).join('')}
+      </div>
     </div>`;
 }
 function renderDiscoverGrid(bastions){
@@ -10615,36 +10612,68 @@ function renderBSettingsMain(tab) {
 
         <!-- Create New Ad -->
         <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:20px;">
-          <div style="font-size:14px;font-weight:700;margin-bottom:14px;">Create New Ad</div>
-          <div style="margin-bottom:12px;">
-            <div class="settings-title">Ad Image</div>
-            <div style="height:120px;border-radius:12px;overflow:hidden;border:1.5px dashed rgba(255,249,62,.15);cursor:pointer;position:relative;transition:all .2s;display:flex;align-items:center;justify-content:center;background:rgba(255,249,62,.02);" onclick="document.getElementById('cm-ad-image-upload').click()" id="cm-ad-image-preview">
-              <div style="text-align:center;color:var(--muted);font-size:12px;">Click to upload ad image<br><span style="font-size:10px;color:var(--muted);">Recommended: 728x90 or 300x250</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <div style="font-size:14px;font-weight:700;">Create New Ad</div>
+          </div>
+
+          <!-- Ad image upload — Polytoria-style banner -->
+          <div style="margin-bottom:14px;">
+            <div class="settings-title">Ad Banner Image</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">This banner image will be shown on Discover and Home pages. Use a wide image for best results (728x90 recommended).</div>
+            <div style="max-width:728px;">
+              <div style="border-radius:12px;overflow:hidden;border:1.5px dashed rgba(255,249,62,.15);cursor:pointer;position:relative;transition:all .2s;background:rgba(255,249,62,.02);min-height:90px;" onclick="document.getElementById('cm-ad-image-upload').click()" id="cm-ad-image-preview" onmouseenter="this.style.borderColor='rgba(255,249,62,.3)'" onmouseleave="this.style.borderColor='rgba(255,249,62,.15)'">
+                <div style="text-align:center;color:var(--muted);font-size:12px;padding:30px 20px;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:6px;display:block;margin-left:auto;margin-right:auto;opacity:.4;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  Click to upload banner image
+                </div>
+              </div>
             </div>
             <input id="cm-ad-image-upload" type="file" accept="image/*" style="display:none;" onchange="_cmAdImagePreview(event)">
           </div>
-          <div style="margin-bottom:12px;">
-            <div class="settings-title">Ad Title</div>
-            <input class="field-input" id="cm-ad-title" placeholder="e.g. Join our gaming community!" maxlength="60">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div>
+              <div class="settings-title">Ad Title</div>
+              <input class="field-input" id="cm-ad-title" placeholder="e.g. Join our gaming community!" maxlength="60" oninput="_cmUpdateAdPreview()">
+            </div>
+            <div>
+              <div class="settings-title">Target Bastion</div>
+              <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
+                ${(CU.bastions||[]).filter(bst=>bst.owner===CU.username).map((bst,i)=>{
+                  const idx=(CU.bastions||[]).indexOf(bst);
+                  return `<option value="${idx}" ${idx===curBastion?'selected':''}>${escapeHTML(bst.name)}</option>`;
+                }).join('')}
+              </select>
+            </div>
           </div>
-          <div style="margin-bottom:12px;">
-            <div class="settings-title">Target Bastion</div>
-            <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;">
-              ${(CU.bastions||[]).filter(bst=>bst.owner===CU.username).map((bst,i)=>{
-                const idx=(CU.bastions||[]).indexOf(bst);
-                return `<option value="${idx}" ${idx===curBastion?'selected':''}>${escapeHTML(bst.name)}</option>`;
-              }).join('')}
-            </select>
-          </div>
+
           <div style="margin-bottom:16px;">
             <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted-light);cursor:pointer;">
               <input type="checkbox" id="cm-ad-autorefund" style="accent-color:var(--accent);">
-              Auto-refund & renew — automatically deduct 15 Onyx every 4 days to keep broadcasting
+              Auto-renew — automatically deduct 15 Onyx every 4 days to keep broadcasting
             </label>
           </div>
+
+          <!-- Live preview -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:8px;">Live Preview</div>
+            <div style="max-width:728px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:12px;">
+              <div id="cm-ad-live-preview" style="text-align:center;">
+                <div style="height:80px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));display:flex;align-items:center;justify-content:center;">
+                  <span style="font-size:11px;color:var(--muted);">Upload an image to preview</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
+                  <span style="font-size:10px;color:rgba(255,255,255,.3);" id="cm-ad-preview-label">${escapeHTML(b.name)} · Sponsored</span>
+                  <span style="font-size:10px;color:rgba(255,255,255,.2);">Report ad</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div style="display:flex;gap:8px;align-items:center;">
             <button class="btn-a" onclick="_cmCreateAd()" ${onyxBal<15?'disabled style="opacity:.5;cursor:not-allowed;font-size:12.5px;padding:8px 18px;"':'style="font-size:12.5px;padding:8px 18px;"'}>Create Ad — 15 Onyx</button>
-            <span style="font-size:11px;color:var(--muted);">Runs for 4 days on Discover & Home</span>
+            <span style="font-size:11px;color:var(--muted);">Broadcasts for 4 days</span>
           </div>
         </div>
 
@@ -10787,11 +10816,36 @@ function _cmAdImagePreview(e) {
   reader.onload = function(ev) {
     const preview = document.getElementById('cm-ad-image-preview');
     if (preview) {
-      preview.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+      preview.innerHTML = `<img src="${ev.target.result}" style="width:100%;max-height:120px;object-fit:cover;display:block;border-radius:10px;">`;
       preview._adImageData = ev.target.result;
     }
+    _cmUpdateAdPreview();
   };
   reader.readAsDataURL(file);
+}
+function _cmUpdateAdPreview() {
+  const livePreview = document.getElementById('cm-ad-live-preview');
+  if (!livePreview) return;
+  const imageData = document.getElementById('cm-ad-image-preview')?._adImageData;
+  const title = document.getElementById('cm-ad-title')?.value?.trim() || '';
+  const bastionIdx = parseInt(document.getElementById('cm-ad-bastion')?.value);
+  const bst = CU.bastions?.[bastionIdx];
+  const bastionName = bst?.name || 'Your Bastion';
+  const bastionIcon = bst?.icon || '';
+  livePreview.innerHTML = `
+    <div style="text-align:center;">
+      ${imageData
+        ? `<img src="${imageData}" style="width:100%;max-height:90px;object-fit:cover;border-radius:10px;display:block;">`
+        : `<div style="height:80px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));display:flex;align-items:center;justify-content:center;"><span style="font-size:11px;color:var(--muted);">Upload an image to preview</span></div>`
+      }
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
+        <div style="display:flex;align-items:center;gap:5px;">
+          ${bastionIcon?`<img src="${escapeHTML(bastionIcon)}" style="width:14px;height:14px;border-radius:4px;">`:''}
+          <span style="font-size:10px;color:rgba(255,255,255,.3);">${escapeHTML(title||bastionName)} · Sponsored</span>
+        </div>
+        <span style="font-size:10px;color:rgba(255,255,255,.2);">Report ad</span>
+      </div>
+    </div>`;
 }
 async function _cmCreateAd() {
   const onyxBal = CU.onyx||0;
@@ -10867,11 +10921,68 @@ async function _cmRenewAd(adIdx) {
     setTimeout(() => _switchCMSubTab('advertise'), 50);
   });
 }
-function _reportAd(adId) {
-  showCustomInput('Report Ad', 'Why are you reporting this ad?', async (reason) => {
-    if (!reason?.trim()) return;
-    toast('Ad reported. Our team will review it.', 'success');
-  });
+const AD_REPORT_REASONS = ['Inappropriate content','Misleading or scam','Offensive imagery','Spam','Impersonation','Other'];
+function _reportAd(adId, adTitle, adBastion) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'modal-report-ad';
+  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="max-width:440px;width:100%;border-radius:24px;background:linear-gradient(165deg,#15171e,#13161d);border:1.5px solid rgba(248,113,113,.08);box-shadow:0 24px 80px rgba(0,0,0,.7);overflow:hidden;animation:ctxIn .15s cubic-bezier(.22,1,.36,1);">
+      <div style="background:linear-gradient(135deg,rgba(248,113,113,.06),rgba(248,113,113,.02));padding:22px 26px 18px;border-bottom:1px solid rgba(255,255,255,.04);">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.12);display:flex;align-items:center;justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Report Ad</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.35);">Help us keep Fortized safe</div>
+          </div>
+          <button onclick="this.closest('.modal-overlay').remove()" style="width:32px;height:32px;border-radius:10px;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      </div>
+      <div style="padding:20px 26px 24px;max-height:65vh;overflow-y:auto;">
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:rgba(248,113,113,.04);border:1px solid rgba(248,113,113,.1);border-radius:12px;margin-bottom:18px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <div style="min-width:0;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(248,113,113,.5);margin-bottom:3px;">Reported Ad</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.6);word-break:break-word;line-height:1.5;">"${escapeHTML((adTitle||'Untitled').slice(0,100))}"</div>
+            ${adBastion?`<div style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:4px;">from ${escapeHTML(adBastion)}</div>`:''}
+          </div>
+        </div>
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(248,113,113,.45);margin-bottom:10px;">What's the issue?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px;">
+          ${AD_REPORT_REASONS.map((r,i)=>`
+            <label id="adr-label-${i}" class="report-reason-label">
+              <input type="radio" name="ad-report-reason" value="${r}" onchange="document.querySelectorAll('[id^=adr-label-]').forEach((el,j)=>{el.style.borderColor=j===${i}?'rgba(248,113,113,.3)':'rgba(255,255,255,.06)';el.style.background=j===${i}?'rgba(248,113,113,.06)':'rgba(255,255,255,.02)';const sp=el.querySelector('span');if(sp)sp.style.color=j===${i}?'rgba(255,255,255,.85)':'rgba(255,255,255,.65)';})" style="accent-color:var(--red);">
+              <span style="font-size:12.5px;font-weight:500;color:rgba(255,255,255,.65);">${r}</span>
+            </label>`).join('')}
+        </div>
+        <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:8px;">Additional Context <span style="font-weight:500;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.15);">(optional)</span></div>
+        <textarea class="field-input" id="ad-report-context" placeholder="Describe what's wrong with this ad..." rows="3" style="resize:none;margin-bottom:14px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:12px;padding:11px 14px;width:100%;color:#fff;font-family:var(--font-ui);font-size:13px;outline:none;transition:border-color .2s;"></textarea>
+        <div id="ad-report-error" style="font-size:12px;color:var(--red);margin-bottom:8px;min-height:16px;"></div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="_submitAdReport('${escapeHTML(adId)}')" class="report-submit-btn">Submit Report</button>
+          <button onclick="this.closest('.modal-overlay').remove()" style="padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;">Cancel</button>
+        </div>
+        <div style="margin-top:14px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;display:flex;align-items:center;gap:8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span style="font-size:11px;color:rgba(255,255,255,.25);">Your report is anonymous and reviewed by our Safety team.</span>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+async function _submitAdReport(adId) {
+  const reason = document.querySelector('input[name="ad-report-reason"]:checked')?.value;
+  const context = document.getElementById('ad-report-context')?.value?.trim();
+  const errEl = document.getElementById('ad-report-error');
+  if (!reason) { if (errEl) errEl.textContent = 'Please select a reason.'; return; }
+  try {
+    await FortizedSocial.submitReport({ type:'ad', adId, reason, context, reporter:CU?.username, reportedAt:new Date().toISOString() });
+  } catch(e) { console.warn('[Report] Ad report failed:', e); }
+  document.getElementById('modal-report-ad')?.remove();
+  toast('Ad reported. Our Safety team will review it.', 'success');
 }
 
 // Bastion settings actions

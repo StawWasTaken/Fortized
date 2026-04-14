@@ -2168,7 +2168,7 @@ function _renderRailBastion(b, i) {
     draggable="true" data-bastion-idx="${i}" data-bastion-id="${escapeHTML(b.globalId||b.name)}"
     onclick="openBastion(${i})"
     oncontextmenu="event.preventDefault();showRailBastionCtx(event,${i})"
-    data-rail-tip="${escapeHTML(b.name)}" data-rail-icon="${escapeHTML(b.icon||'')}" data-rail-emblem=""
+    data-rail-tip="${escapeHTML(b.name)}" data-rail-icon="${escapeHTML(b.icon||'')}" data-rail-emblem="" data-rail-verified="${b.verified?'1':''}"
     style="margin-bottom:4px;">
     <div class="bastion-icon">${b.icon
       ? (b.icon.toLowerCase().endsWith('.gif') ? `<img src="${b.icon}" class="gif-emblem" onload="_freezeGifEmblem(this)">` : `<img src="${b.icon}">`)
@@ -2256,6 +2256,7 @@ function _showRailTip(e) {
   const name = el.dataset.railTip;
   const icon = el.dataset.railIcon;
   const emblem = el.dataset.railEmblem || '';
+  const verified = el.dataset.railVerified === '1';
   if (!name) return;
   _hideRailTip();
   const tip = document.createElement('div');
@@ -2263,7 +2264,7 @@ function _showRailTip(e) {
   const iconHtml = icon
     ? `<div class="rail-tooltip-icon"><img src="${icon}"></div>`
     : `<div class="rail-tooltip-icon"><span style="font-family:var(--font-display);font-weight:800;color:var(--accent);">${name ? name[0].toUpperCase() : 'B'}</span></div>`;
-  tip.innerHTML = iconHtml + `<span>${escapeHTML(name)}</span>`;
+  tip.innerHTML = iconHtml + `<span>${escapeHTML(name)}${verified?_verifiedBadge(14):''}</span>`;
   document.body.appendChild(tip);
   _railTipEl = tip;
   const rect = el.getBoundingClientRect();
@@ -2531,7 +2532,7 @@ function toggleBastionDropdown(e, idx) {
   dropdown.className = 'bastion-dropdown';
   dropdown.innerHTML = `
     <div class="bd-header">
-      <div class="bd-name">${escapeHTML(b.name)}</div>
+      <div class="bd-name">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''}</div>
     </div>
     <div class="bd-info">
       <span class="bd-chip">${visIcon} ${visLabel}</span>
@@ -2671,11 +2672,39 @@ function renderHomePanel() {
     }
   }
 
+  // Render home ads
+  _renderHomeAds();
+
   // Load friend activity feed
   setTimeout(loadFriendActivity, 100);
 
   // Render Active Now sidebar for Home
   setTimeout(() => renderActiveNowSidebar('home-active-now-list'), 150);
+}
+
+// ── Home Ads ──
+async function _renderHomeAds() {
+  const el = document.getElementById('home-ads');
+  if (!el) return;
+  let ads = [];
+  try { ads = await FortizedSocial.getGlobalAds(); } catch(e) {}
+  const localAds = (CU?.ads||[]).filter(a => a.status==='active' && new Date(a.expiresAt) > new Date());
+  const allAds = [...ads];
+  localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
+  if (!allAds.length) { el.innerHTML = ''; return; }
+  const ad = allAds[Math.floor(Math.random()*allAds.length)];
+  el.innerHTML = `
+    <div style="background:var(--panel);border:1px solid rgba(255,249,62,.08);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative;" onclick="promptJoinPublicBastion('${escapeHTML(ad.bastionId||ad.bastionName||'')}')" onmouseenter="this.style.borderColor='rgba(255,249,62,.18)'" onmouseleave="this.style.borderColor='rgba(255,249,62,.08)'">
+      ${ad.image?`<div style="height:70px;overflow:hidden;"><img src="${escapeHTML(ad.image)}" style="width:100%;height:100%;object-fit:cover;"></div>`:''}
+      <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:20px;height:20px;border-radius:6px;">`:''}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;font-weight:700;">${escapeHTML(ad.title||ad.bastionName||'')}</div>
+          <div style="font-size:10px;color:var(--muted);">${escapeHTML(ad.bastionName||'')} · Sponsored</div>
+        </div>
+        <span style="font-size:9px;color:var(--muted);cursor:pointer;" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}')">Report</span>
+      </div>
+    </div>`;
 }
 
 // ── Realm friends loader (horizontal avatars) ──
@@ -6653,6 +6682,7 @@ async function loadDiscover(){
     statsEl.innerHTML=`<div class="disc-stat"><strong>${publicCount}</strong> communities</div><div class="disc-stat"><strong>${totalMembers}</strong> total members</div>`;
   }
   _renderDiscoverFeatured(discoverData);
+  _renderDiscoverAds();
   renderDiscoverGrid(discoverData);
 }
 function _renderDiscoverFeatured(bastions){
@@ -6672,6 +6702,38 @@ function _renderDiscoverFeatured(bastions){
       ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.12);padding:5px 12px;border-radius:10px;">✓ Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);padding:5px 12px;border-radius:10px;">+ Join</span>`}
     </div>`;
   }).join('')}</div>`;
+}
+async function _renderDiscoverAds() {
+  const el = document.getElementById('disc-ads');
+  if (!el) return;
+  let ads = [];
+  try { ads = await FortizedSocial.getGlobalAds(); } catch(e) {}
+  // Also include local user ads that are active
+  const localAds = (CU?.ads||[]).filter(a => a.status==='active' && new Date(a.expiresAt) > new Date());
+  const allAds = [...ads];
+  localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
+  if (!allAds.length) { el.innerHTML = ''; return; }
+  // Shuffle and pick up to 3
+  const shuffled = allAds.sort(()=>Math.random()-.5).slice(0,3);
+  el.innerHTML = `
+    <div style="font-family:var(--font-display);font-size:11px;font-weight:700;color:rgba(255,255,255,.25);margin-bottom:10px;display:flex;align-items:center;gap:6px;letter-spacing:.06em;text-transform:uppercase;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Sponsored
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+      ${shuffled.map(ad => `
+        <div onclick="promptJoinPublicBastion('${escapeHTML(ad.bastionId||ad.bastionName||'')}')" style="background:var(--panel2);border:1px solid rgba(255,249,62,.08);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)';this.style.transform='translateY(-2px)'" onmouseleave="this.style.borderColor='rgba(255,249,62,.08)';this.style.transform=''">
+          ${ad.image?`<div style="height:80px;overflow:hidden;"><img src="${escapeHTML(ad.image)}" style="width:100%;height:100%;object-fit:cover;"></div>`:''}
+          <div style="padding:12px 14px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:3px;">${escapeHTML(ad.title||ad.bastionName||'')}</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--muted);">
+              ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:16px;height:16px;border-radius:4px;">`:''}
+              <span>${escapeHTML(ad.bastionName||'')}</span>
+              <span style="margin-left:auto;cursor:pointer;color:var(--muted);font-size:9px;" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}')">Report</span>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
 }
 function renderDiscoverGrid(bastions){
   const grid=document.getElementById('discover-grid');
@@ -9552,6 +9614,8 @@ function renderBSettingsNav(activeTab) {
     {label:'LIVING BASTION'},
     {id:'mood',icon:ftzIcon('castle','15'),label:'Bastion Mood'},
     {id:'reputation',icon:ftzIcon('shield','15'),label:'Reputation'},
+    {label:'MARKETPLACE'},
+    {id:'create_marketplace',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>',label:'Create & Marketplace'},
     {sep:true},
     {id:'danger',icon:ftzIcon('warning','15'),label:'Delete Bastion',danger:true},
   ];
@@ -10389,9 +10453,425 @@ function renderBSettingsMain(tab) {
         </div>
       </div>`;
   }
+  else if (tab==='create_marketplace') {
+    const isOwner = b.owner===CU.username;
+    const myBots = (CU.bots||[]);
+    const myTemplates = (CU.bastions||[]).filter(bst=>bst.owner===CU.username);
+    const myAds = (CU.ads||[]);
+    const marketBots = (typeof _globalMarketBots!=='undefined'?_globalMarketBots:[]);
+    const marketTemplates = (typeof _globalMarketTemplates!=='undefined'?_globalMarketTemplates:[]);
+    const onyxBal = CU.onyx||0;
+    main.innerHTML = `
+      <div class="bs-section-title">Create & Marketplace</div>
+      <div style="font-size:12.5px;color:var(--muted-light);margin-bottom:20px;">Create bots and templates, browse the marketplace, or advertise your bastion.</div>
+
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:4px;margin-bottom:22px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;">
+        <button id="cm-tab-owned" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:700;background:var(--accent);color:var(--rail);border:none;" onclick="_switchCMSubTab('owned')">What You Own</button>
+        <button id="cm-tab-marketplace" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchCMSubTab('marketplace')">Marketplace</button>
+        <button id="cm-tab-advertise" class="btn-g" style="padding:7px 16px;font-size:12px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:none;cursor:pointer;" onclick="_switchCMSubTab('advertise')">Advertise</button>
+      </div>
+
+      <!-- ═══ WHAT YOU OWN ═══ -->
+      <div id="cm-section-owned">
+        <!-- Sub-sub tabs -->
+        <div style="display:flex;gap:8px;margin-bottom:18px;">
+          <button id="cm-own-bots-btn" class="btn-g" style="padding:6px 14px;font-size:11.5px;border-radius:7px;font-weight:700;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);" onclick="_switchCMOwnedSub('bots')">Bots</button>
+          <button id="cm-own-templates-btn" class="btn-g" style="padding:6px 14px;font-size:11.5px;border-radius:7px;font-weight:600;background:transparent;color:var(--muted-light);border:1px solid var(--border);cursor:pointer;" onclick="_switchCMOwnedSub('templates')">Bastion Templates</button>
+        </div>
+
+        <!-- My Bots -->
+        <div id="cm-own-bots">
+          <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <button class="btn-a" onclick="openCreateBotModal()" style="font-size:12px;">+ Create Bot</button>
+            <button class="btn-g" onclick="_cmListBotForSale()" style="font-size:12px;">List Bot for Sale</button>
+          </div>
+          ${myBots.length ? myBots.map((bot,i) => `
+            <div class="bot-card" style="margin-bottom:8px;cursor:pointer;" onclick="openBotEditor(${i})">
+              <div class="bot-av">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
+              <div class="bot-meta">
+                <div class="bot-name">${escapeHTML(bot.name)} <span class="ftz-badge badge-bot"><img src="/fortized badges/bot.png" alt="bot"></span>
+                  ${bot.visibility==='public'?'<span style="font-size:9px;color:var(--green);">Public</span>':bot.visibility==='unlisted'?'<span style="font-size:9px;color:var(--muted);">Unlisted</span>':'<span style="font-size:9px;color:var(--muted);">Private</span>'}
+                  ${bot.listedForSale?`<span style="font-size:9px;color:#fbbf24;background:rgba(251,191,36,.1);padding:2px 6px;border-radius:4px;">On Sale · ${bot.salePrice||0} Onyx</span>`:''}
+                </div>
+                <div class="bot-desc">${escapeHTML(bot.bio||'No description')}</div>
+                <div class="bot-stats"><span>${(bot.commands||[]).length} commands</span><span>·</span><span>Created ${new Date(bot.createdAt||Date.now()).toLocaleDateString()}</span></div>
+              </div>
+            </div>
+          `).join('') : `
+            <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">
+              <div style="font-size:28px;margin-bottom:10px;"><img src="/Fortized Bot.png" style="width:28px;height:28px;"></div>
+              No bots yet. Create your first bot above!
+            </div>`}
+        </div>
+
+        <!-- My Templates -->
+        <div id="cm-own-templates" style="display:none;">
+          <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <button class="btn-a" onclick="_cmCreateTemplate()" style="font-size:12px;">+ Create Template</button>
+            <button class="btn-g" onclick="_cmListTemplateForSale()" style="font-size:12px;">List Template for Sale</button>
+          </div>
+          ${myTemplates.length ? myTemplates.map((bst,i) => {
+            const tmplIdx = (CU.bastions||[]).indexOf(bst);
+            const chCount = (bst.channels||[]).length;
+            const roleCount = (bst.roles||[]).length;
+            return `
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">
+              <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,249,62,.1);">
+                ${bst.icon?`<img src="${escapeHTML(bst.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:11px;">`:`<span style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent);">${(bst.name||'B')[0].toUpperCase()}</span>`}
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13.5px;font-weight:700;margin-bottom:2px;">${escapeHTML(bst.name)}</div>
+                <div style="font-size:11px;color:var(--muted);">${chCount} channels · ${roleCount} roles</div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn-g" style="font-size:11px;padding:5px 12px;" onclick="_cmExportTemplate(${tmplIdx})">Export</button>
+                ${bst.templateLink?`<span style="font-size:10px;color:var(--green);padding:5px 10px;display:flex;align-items:center;">Shared</span>`:`<button class="btn-a" style="font-size:11px;padding:5px 12px;" onclick="generateBastionTemplateLink(${tmplIdx}).then(()=>renderBSettingsMain('create_marketplace'))">Share</button>`}
+              </div>
+            </div>`;
+          }).join('') : `
+            <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">
+              You don't own any bastions to create templates from.
+            </div>`}
+        </div>
+      </div>
+
+      <!-- ═══ MARKETPLACE ═══ -->
+      <div id="cm-section-marketplace" style="display:none;">
+        <div style="display:flex;gap:8px;margin-bottom:18px;">
+          <button id="cm-mkt-bots-btn" class="btn-g" style="padding:6px 14px;font-size:11.5px;border-radius:7px;font-weight:700;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);" onclick="_switchCMMktSub('bots')">Bots</button>
+          <button id="cm-mkt-templates-btn" class="btn-g" style="padding:6px 14px;font-size:11.5px;border-radius:7px;font-weight:600;background:transparent;color:var(--muted-light);border:1px solid var(--border);cursor:pointer;" onclick="_switchCMMktSub('templates')">Bastion Templates</button>
+        </div>
+
+        <!-- Marketplace Bots -->
+        <div id="cm-mkt-bots">
+          <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Browse community-made bots. Free or up to 2,500 Onyx.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="cm-mkt-bots-grid">
+            ${marketBots.length ? marketBots.map(bot => `
+              <div class="bot-card" style="flex-direction:column;gap:10px;cursor:default;">
+                <div style="display:flex;gap:12px;align-items:center;">
+                  <div class="bot-av" style="width:44px;height:44px;">${bot.avatar?`<img src="${escapeHTML(bot.avatar)}">`:'<img src="/Fortized Bot.png" style="width:100%;height:100%;object-fit:cover;">'}</div>
+                  <div style="flex:1;min-width:0;">
+                    <div class="bot-name">${escapeHTML(bot.name)}</div>
+                    <div style="font-size:10.5px;color:var(--muted);">by @${escapeHTML(bot.owner||'unknown')} · ${(bot.commands||[]).length} cmds</div>
+                  </div>
+                </div>
+                <div class="bot-desc" style="white-space:normal;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;">${escapeHTML(bot.bio||'No description')}</div>
+                <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;">
+                  <span style="font-size:12px;font-weight:700;color:${bot.price?'#fbbf24':'var(--green)'};">${bot.price?bot.price+' Onyx':'Free'}</span>
+                  <button class="btn-a" style="font-size:11px;padding:5px 12px;" onclick="_cmBuyBot('${escapeHTML(bot.id)}')">
+                    ${bot.price?'Buy':'Get'}
+                  </button>
+                </div>
+              </div>
+            `).join('') : `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted);font-size:13px;">No bots listed yet. Be the first to list one!</div>`}
+          </div>
+        </div>
+
+        <!-- Marketplace Templates -->
+        <div id="cm-mkt-templates" style="display:none;">
+          <div style="font-size:12px;color:var(--muted-light);margin-bottom:14px;">Browse community bastion templates. Free or up to 2,500 Onyx.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="cm-mkt-templates-grid">
+            ${marketTemplates.length ? marketTemplates.map(tmpl => `
+              <div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:default;">
+                <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">
+                  <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+                    ${tmpl.icon?`<img src="${escapeHTML(tmpl.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">`:`<span style="font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--accent);">${(tmpl.name||'T')[0].toUpperCase()}</span>`}
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:700;">${escapeHTML(tmpl.name)}</div>
+                    <div style="font-size:10.5px;color:var(--muted);">by @${escapeHTML(tmpl.owner||'unknown')} · ${tmpl.channelCount||0} ch · ${tmpl.roleCount||0} roles</div>
+                  </div>
+                </div>
+                <div style="font-size:11.5px;color:var(--muted-light);margin-bottom:10px;line-height:1.4;">${escapeHTML((tmpl.desc||'No description').slice(0,100))}</div>
+                <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;">
+                  <span style="font-size:12px;font-weight:700;color:${tmpl.price?'#fbbf24':'var(--green)'};">${tmpl.price?tmpl.price+' Onyx':'Free'}</span>
+                  <button class="btn-a" style="font-size:11px;padding:5px 12px;" onclick="_cmBuyTemplate('${escapeHTML(tmpl.id)}')">
+                    ${tmpl.price?'Buy':'Get'}
+                  </button>
+                </div>
+              </div>
+            `).join('') : `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted);font-size:13px;">No templates listed yet. Share yours from the "What You Own" tab!</div>`}
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ADVERTISE ═══ -->
+      <div id="cm-section-advertise" style="display:none;">
+        <div style="padding:18px;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));border:1.5px solid rgba(255,249,62,.15);border-radius:16px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;">Advertise Your Bastion</div>
+          </div>
+          <div style="font-size:12.5px;color:var(--muted-light);line-height:1.6;margin-bottom:14px;">
+            Promote your bastion on the Discover page and Homepage. Ads cost <strong style="color:#fbbf24;">15 Onyx</strong> for <strong>4 days</strong> of broadcasting.
+            Clicking your ad sends users a bastion invite. You can cancel anytime for 5 Onyx.
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted);">
+            <span>Your balance: <strong style="color:#fbbf24;">${onyxBal} Onyx</strong></span>
+            ${onyxBal<15?'<span style="color:var(--red);font-size:11px;">You need at least 15 Onyx to create an ad.</span>':''}
+          </div>
+        </div>
+
+        <!-- Create New Ad -->
+        <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:20px;">
+          <div style="font-size:14px;font-weight:700;margin-bottom:14px;">Create New Ad</div>
+          <div style="margin-bottom:12px;">
+            <div class="settings-title">Ad Image</div>
+            <div style="height:120px;border-radius:12px;overflow:hidden;border:1.5px dashed rgba(255,249,62,.15);cursor:pointer;position:relative;transition:all .2s;display:flex;align-items:center;justify-content:center;background:rgba(255,249,62,.02);" onclick="document.getElementById('cm-ad-image-upload').click()" id="cm-ad-image-preview">
+              <div style="text-align:center;color:var(--muted);font-size:12px;">Click to upload ad image<br><span style="font-size:10px;color:var(--muted);">Recommended: 728x90 or 300x250</span></div>
+            </div>
+            <input id="cm-ad-image-upload" type="file" accept="image/*" style="display:none;" onchange="_cmAdImagePreview(event)">
+          </div>
+          <div style="margin-bottom:12px;">
+            <div class="settings-title">Ad Title</div>
+            <input class="field-input" id="cm-ad-title" placeholder="e.g. Join our gaming community!" maxlength="60">
+          </div>
+          <div style="margin-bottom:12px;">
+            <div class="settings-title">Target Bastion</div>
+            <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;">
+              ${(CU.bastions||[]).filter(bst=>bst.owner===CU.username).map((bst,i)=>{
+                const idx=(CU.bastions||[]).indexOf(bst);
+                return `<option value="${idx}" ${idx===curBastion?'selected':''}>${escapeHTML(bst.name)}</option>`;
+              }).join('')}
+            </select>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted-light);cursor:pointer;">
+              <input type="checkbox" id="cm-ad-autorefund" style="accent-color:var(--accent);">
+              Auto-refund & renew — automatically deduct 15 Onyx every 4 days to keep broadcasting
+            </label>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-a" onclick="_cmCreateAd()" ${onyxBal<15?'disabled style="opacity:.5;cursor:not-allowed;font-size:12.5px;padding:8px 18px;"':'style="font-size:12.5px;padding:8px 18px;"'}>Create Ad — 15 Onyx</button>
+            <span style="font-size:11px;color:var(--muted);">Runs for 4 days on Discover & Home</span>
+          </div>
+        </div>
+
+        <!-- Active Ads -->
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Your Ads</div>
+        <div id="cm-ads-list">
+          ${myAds.length ? myAds.map((ad,i) => {
+            const isActive = ad.status==='active' && new Date(ad.expiresAt) > new Date();
+            const expired = ad.status==='expired' || (ad.expiresAt && new Date(ad.expiresAt) <= new Date());
+            const status = expired ? 'expired' : (ad.status||'pending');
+            const daysLeft = isActive ? Math.max(0, Math.ceil((new Date(ad.expiresAt) - new Date()) / 86400000)) : 0;
+            const targetBst = (CU.bastions||[])[ad.bastionIdx];
+            return `
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--panel);border:1px solid ${isActive?'rgba(62,207,110,.2)':expired?'rgba(248,113,113,.15)':'var(--border)'};border-radius:12px;margin-bottom:8px;">
+              <div style="width:80px;height:50px;border-radius:8px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.03);">
+                ${ad.image?`<img src="${escapeHTML(ad.image)}" style="width:100%;height:100%;object-fit:cover;">`:'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);">No img</div>'}
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:700;margin-bottom:2px;">${escapeHTML(ad.title||'Untitled Ad')}</div>
+                <div style="font-size:11px;color:var(--muted);">
+                  Target: ${targetBst?escapeHTML(targetBst.name):'Unknown'}
+                  · ${ad.clicks||0} clicks · ${ad.impressions||0} views
+                  ${ad.autoRefund?'· Auto-renew':''}
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;${isActive?'color:var(--green);background:rgba(62,207,110,.1);':'color:var(--red);background:rgba(248,113,113,.1);'}">${isActive?daysLeft+'d left':'Expired'}</span>
+                ${isActive?`<button class="btn-g" style="font-size:10px;padding:3px 8px;color:var(--red);" onclick="_cmCancelAd(${i})">Cancel (5 Onyx)</button>`:`<button class="btn-g" style="font-size:10px;padding:3px 8px;" onclick="_cmRenewAd(${i})">Renew (15 Onyx)</button>`}
+              </div>
+            </div>`;
+          }).join('') : `<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No ads yet. Create your first ad above!</div>`}
+        </div>
+      </div>`;
+  }
   else {
     main.innerHTML = `<div class="empty-state"><div class="ei" style="color:rgba(255,255,255,.15);">${ftzIcon('construction','48')}</div><h3>Coming Soon</h3><p>This section is in development.</p></div>`;
   }
+}
+
+// ── Create & Marketplace helpers ──
+function _switchCMSubTab(tab) {
+  ['owned','marketplace','advertise'].forEach(t => {
+    const sec = document.getElementById('cm-section-'+t);
+    const btn = document.getElementById('cm-tab-'+t);
+    if (sec) sec.style.display = t===tab?'':'none';
+    if (btn) { btn.style.background = t===tab?'var(--accent)':'transparent'; btn.style.color = t===tab?'var(--rail)':'var(--muted-light)'; btn.style.fontWeight = t===tab?'700':'600'; }
+  });
+}
+function _switchCMOwnedSub(sub) {
+  const bots = document.getElementById('cm-own-bots');
+  const templates = document.getElementById('cm-own-templates');
+  const botsBtn = document.getElementById('cm-own-bots-btn');
+  const templatesBtn = document.getElementById('cm-own-templates-btn');
+  if (bots) bots.style.display = sub==='bots'?'':'none';
+  if (templates) templates.style.display = sub==='templates'?'':'none';
+  if (botsBtn) { botsBtn.style.background = sub==='bots'?'rgba(255,249,62,.1)':'transparent'; botsBtn.style.color = sub==='bots'?'var(--accent)':'var(--muted-light)'; botsBtn.style.borderColor = sub==='bots'?'rgba(255,249,62,.2)':'var(--border)'; botsBtn.style.fontWeight = sub==='bots'?'700':'600'; }
+  if (templatesBtn) { templatesBtn.style.background = sub==='templates'?'rgba(255,249,62,.1)':'transparent'; templatesBtn.style.color = sub==='templates'?'var(--accent)':'var(--muted-light)'; templatesBtn.style.borderColor = sub==='templates'?'rgba(255,249,62,.2)':'var(--border)'; templatesBtn.style.fontWeight = sub==='templates'?'700':'600'; }
+}
+function _switchCMMktSub(sub) {
+  const bots = document.getElementById('cm-mkt-bots');
+  const templates = document.getElementById('cm-mkt-templates');
+  const botsBtn = document.getElementById('cm-mkt-bots-btn');
+  const templatesBtn = document.getElementById('cm-mkt-templates-btn');
+  if (bots) bots.style.display = sub==='bots'?'':'none';
+  if (templates) templates.style.display = sub==='templates'?'':'none';
+  if (botsBtn) { botsBtn.style.background = sub==='bots'?'rgba(255,249,62,.1)':'transparent'; botsBtn.style.color = sub==='bots'?'var(--accent)':'var(--muted-light)'; botsBtn.style.borderColor = sub==='bots'?'rgba(255,249,62,.2)':'var(--border)'; botsBtn.style.fontWeight = sub==='bots'?'700':'600'; }
+  if (templatesBtn) { templatesBtn.style.background = sub==='templates'?'rgba(255,249,62,.1)':'transparent'; templatesBtn.style.color = sub==='templates'?'var(--accent)':'var(--muted-light)'; templatesBtn.style.borderColor = sub==='templates'?'rgba(255,249,62,.2)':'var(--border)'; templatesBtn.style.fontWeight = sub==='templates'?'700':'600'; }
+}
+function _cmListBotForSale() {
+  const myBots = (CU.bots||[]);
+  if (!myBots.length) { toast('Create a bot first!', 'error'); return; }
+  const botNames = myBots.map(b=>b.name);
+  showCustomInput('List Bot for Sale', 'Which bot? ('+botNames.join(', ')+')', (name) => {
+    const bot = myBots.find(b=>b.name.toLowerCase()===name.toLowerCase());
+    if (!bot) { toast('Bot not found', 'error'); return; }
+    showCustomInput('Set Price', 'Price in Onyx (0 = free, max 2500)', (priceStr) => {
+      const price = Math.min(2500, Math.max(0, parseInt(priceStr)||0));
+      bot.listedForSale = true;
+      bot.salePrice = price;
+      bot.visibility = 'public';
+      saveUser();
+      toast(`${bot.name} listed for ${price?price+' Onyx':'free'}!`, 'success');
+      renderBSettingsMain('create_marketplace');
+    }, '0');
+  });
+}
+function _cmListTemplateForSale() {
+  const owned = (CU.bastions||[]).filter(b=>b.owner===CU.username);
+  if (!owned.length) { toast('You need to own a bastion first!', 'error'); return; }
+  const names = owned.map(b=>b.name);
+  showCustomInput('List Template for Sale', 'Which bastion template? ('+names.join(', ')+')', (name) => {
+    const bst = owned.find(b=>b.name.toLowerCase()===name.toLowerCase());
+    if (!bst) { toast('Bastion not found', 'error'); return; }
+    showCustomInput('Set Price', 'Price in Onyx (0 = free, max 2500)', (priceStr) => {
+      const price = Math.min(2500, Math.max(0, parseInt(priceStr)||0));
+      bst.templateListed = true;
+      bst.templatePrice = price;
+      saveUser();
+      toast(`Template for "${bst.name}" listed for ${price?price+' Onyx':'free'}!`, 'success');
+      renderBSettingsMain('create_marketplace');
+    }, '0');
+  });
+}
+function _cmCreateTemplate() {
+  const owned = (CU.bastions||[]).filter(b=>b.owner===CU.username);
+  if (!owned.length) { toast('You need to own a bastion to create a template', 'error'); return; }
+  const names = owned.map(b=>b.name);
+  showCustomInput('Create Template', 'From which bastion? ('+names.join(', ')+')', (name) => {
+    const bst = owned.find(b=>b.name.toLowerCase()===name.toLowerCase());
+    if (!bst) { toast('Bastion not found', 'error'); return; }
+    const idx = (CU.bastions||[]).indexOf(bst);
+    generateBastionTemplateLink(idx).then(link => {
+      if (link) {
+        toast('Template created and link generated!', 'success');
+        renderBSettingsMain('create_marketplace');
+      }
+    });
+  });
+}
+function _cmExportTemplate(bastionIdx) {
+  const bst = CU.bastions?.[bastionIdx];
+  if (!bst) return;
+  const tmpl = { name: bst.name, desc: bst.desc, channels: (bst.channels||[]).map(c=>({name:c.name,type:c.type})), roles: (bst.roles||[]).map(r=>({name:r.name,color:r.color,permissions:r.permissions})), categories: bst.categories||[] };
+  const blob = new Blob([JSON.stringify(tmpl, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = bst.name.replace(/[^a-zA-Z0-9]/g,'_')+'_template.json'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Template exported!', 'success');
+}
+function _cmBuyBot(botId) {
+  toast('Bot marketplace coming soon!', 'info');
+}
+function _cmBuyTemplate(tmplId) {
+  toast('Template marketplace coming soon!', 'info');
+}
+function _cmAdImagePreview(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const preview = document.getElementById('cm-ad-image-preview');
+    if (preview) {
+      preview.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+      preview._adImageData = ev.target.result;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+async function _cmCreateAd() {
+  const onyxBal = CU.onyx||0;
+  if (onyxBal < 15) { toast('Not enough Onyx! You need 15 Onyx.', 'error'); return; }
+  const title = document.getElementById('cm-ad-title')?.value?.trim();
+  if (!title) { toast('Enter an ad title', 'error'); return; }
+  const bastionIdx = parseInt(document.getElementById('cm-ad-bastion')?.value);
+  const bst = CU.bastions?.[bastionIdx];
+  if (!bst) { toast('Select a bastion', 'error'); return; }
+  const preview = document.getElementById('cm-ad-image-preview');
+  const image = preview?._adImageData || (bst.banner||bst.icon||'');
+  const autoRefund = document.getElementById('cm-ad-autorefund')?.checked || false;
+  showCustomConfirm(`Create ad "${title}" for ${escapeHTML(bst.name)}? This costs 15 Onyx.`, async () => {
+    CU.onyx = (CU.onyx||0) - 15;
+    CU.ads = CU.ads || [];
+    const ad = {
+      id: 'ad_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+      bastionIdx: bastionIdx,
+      bastionId: bst.globalId || bst.name,
+      bastionName: bst.name,
+      bastionIcon: bst.icon||'',
+      image: image,
+      title: title,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now()+4*86400000).toISOString(),
+      autoRefund: autoRefund,
+      clicks: 0,
+      impressions: 0,
+      owner: CU.username
+    };
+    CU.ads.push(ad);
+    saveLocal();
+    await saveUser();
+    try { await FortizedSocial.upsertGlobalAd(ad); } catch(e) { console.warn('[Ads] Sync failed:', e); }
+    toast('Ad created! Broadcasting for 4 days.', 'success');
+    renderBSettingsMain('create_marketplace');
+    setTimeout(() => _switchCMSubTab('advertise'), 50);
+  });
+}
+async function _cmCancelAd(adIdx) {
+  const ad = CU.ads?.[adIdx];
+  if (!ad) return;
+  const onyxBal = CU.onyx||0;
+  if (onyxBal < 5) { toast('Cancelling costs 5 Onyx. Not enough!', 'error'); return; }
+  showCustomConfirm('Cancel this ad? You will be charged 5 Onyx.', async () => {
+    CU.onyx = (CU.onyx||0) - 5;
+    ad.status = 'cancelled';
+    saveLocal();
+    await saveUser();
+    try { await FortizedSocial.removeGlobalAd(ad.id); } catch(e) {}
+    toast('Ad cancelled. 5 Onyx deducted.', 'info');
+    renderBSettingsMain('create_marketplace');
+    setTimeout(() => _switchCMSubTab('advertise'), 50);
+  });
+}
+async function _cmRenewAd(adIdx) {
+  const ad = CU.ads?.[adIdx];
+  if (!ad) return;
+  const onyxBal = CU.onyx||0;
+  if (onyxBal < 15) { toast('Not enough Onyx! You need 15 Onyx.', 'error'); return; }
+  showCustomConfirm('Renew this ad for another 4 days? Costs 15 Onyx.', async () => {
+    CU.onyx = (CU.onyx||0) - 15;
+    ad.status = 'active';
+    ad.expiresAt = new Date(Date.now()+4*86400000).toISOString();
+    ad.clicks = 0;
+    ad.impressions = 0;
+    saveLocal();
+    await saveUser();
+    try { await FortizedSocial.upsertGlobalAd(ad); } catch(e) {}
+    toast('Ad renewed! Broadcasting for 4 days.', 'success');
+    renderBSettingsMain('create_marketplace');
+    setTimeout(() => _switchCMSubTab('advertise'), 50);
+  });
+}
+function _reportAd(adId) {
+  showCustomInput('Report Ad', 'Why are you reporting this ad?', async (reason) => {
+    if (!reason?.trim()) return;
+    toast('Ad reported. Our team will review it.', 'success');
+  });
 }
 
 // Bastion settings actions
@@ -18537,15 +19017,19 @@ function showCategoryCtxMenu(e, catId, label, type) {
         }},
         { icon: _ctxSvg('trash'), label: 'Delete Category', danger: true, action: () => {
           // Delete all channels in this category type
-          const typeMap = { text:'text', voice:'voice', forum:'forum', announcement:'announcement', poll:'poll' };
-          const delType = typeMap[type] || type;
-          const toDelete = (b.channels||[]).filter(ch => (ch.type||'text') === delType || (!ch.type && delType === 'text'));
+          const delType = type || 'text';
+          const curB = CU.bastions?.[curBastion];
+          if (!curB) return;
+          const toDelete = (curB.channels||[]).filter(ch => (ch.type||'text') === delType);
           showCustomConfirm(`Delete ${label} and its ${toDelete.length} room${toDelete.length!==1?'s':''}?`, async () => {
-            b.channels = (b.channels||[]).filter(ch => {
+            const bst = CU.bastions?.[curBastion];
+            if (!bst) return;
+            bst.channels = (bst.channels||[]).filter(ch => {
               const chType = ch.type || 'text';
               return chType !== delType;
             });
             curChannel = null;
+            saveLocal();
             await saveUser();
             _syncBastionToGlobal(curBastion);
             const scroll = document.getElementById('sidebar-scroll');

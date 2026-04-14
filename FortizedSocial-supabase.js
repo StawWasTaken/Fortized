@@ -1847,6 +1847,26 @@ const FortizedSocial = (() => {
     }
   }
 
+  // ── Ads API ──────────────────────────────────────────
+  async function getGlobalAds() {
+    try {
+      const { data } = await sb.from('global_ads').select('*').eq('status', 'active');
+      return (data||[]).map(r => {
+        try { return typeof r.data === 'string' ? JSON.parse(r.data) : r.data; } catch { return r; }
+      }).filter(a => a && new Date(a.expiresAt) > new Date());
+    } catch(e) { console.warn('[Ads] getGlobalAds failed:', e?.message); return []; }
+  }
+  async function upsertGlobalAd(ad) {
+    if (!ad?.id) return;
+    try {
+      await sb.from('global_ads').upsert({ id: ad.id, owner: ad.owner, status: ad.status, data: JSON.stringify(ad) }, { onConflict: 'id' });
+    } catch(e) { console.warn('[Ads] upsertGlobalAd failed:', e?.message); }
+  }
+  async function removeGlobalAd(adId) {
+    if (!adId) return;
+    try { await sb.from('global_ads').delete().eq('id', adId); } catch(e) { console.warn('[Ads] removeGlobalAd failed:', e?.message); }
+  }
+
   // ── Public API ───────────────────────────────────────
   return {
     sb, // Expose supabase client for direct calls in app code
@@ -1872,6 +1892,7 @@ const FortizedSocial = (() => {
     getDMMessages, sendDMMessage, editMessage, deleteMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,
     getGlobalBastions, saveGlobalBastion, getGlobalBastion, deleteGlobalBastion, clearBastionCache,
+    getGlobalAds, upsertGlobalAd, removeGlobalAd,
     getBastionMembers, addBastionMember, removeBastionMember,
     getInvite, saveInvite, incrementInviteUses,
     submitReport,

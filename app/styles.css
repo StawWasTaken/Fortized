@@ -98,7 +98,7 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 /* ── Bastion Sidebar 2027 ────────────────────────── */
 .bastion-banner-hero{position:relative;width:100%;height:140px;overflow:visible;flex-shrink:0;margin-bottom:0;}
 .bastion-banner-hero img{width:100%;height:140px;object-fit:cover;display:block;}
-.bastion-banner-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,var(--channel),transparent);pointer-events:none;z-index:1;}
+.bastion-banner-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(to top,var(--channel) 0%,transparent 100%);pointer-events:none;z-index:1;}
 .bastion-banner-hero .bb-emblem{position:absolute;bottom:-38px;left:50%;transform:translateX(-50%);z-index:3;}
 .bastion-banner-hero .bb-emblem .bastion-emblem{width:80px;height:80px;border-radius:22px;background:var(--channel);border:4px solid var(--channel);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.6);transition:transform .2s,box-shadow .2s;}
 .bastion-banner-hero .bb-emblem .bastion-emblem:hover{transform:scale(1.08);box-shadow:0 8px 32px rgba(0,0,0,.7);}
@@ -130,7 +130,7 @@ body{background:var(--canvas-color);color:var(--text);font-family:var(--font-ui)
 .bastion-name-dropdown .bnd-action.danger{color:rgba(248,113,113,.6);}
 .bastion-name-dropdown .bnd-action.danger:hover{background:rgba(248,113,113,.07);color:rgba(248,113,113,.9);}
 .bastion-name-dropdown .bnd-action .bnd-icon{width:18px;text-align:center;font-size:13px;flex-shrink:0;}
-.bm-name-clickable{cursor:pointer;display:flex;align-items:center;gap:4px;transition:color .15s;}
+.bm-name-clickable{cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:color .15s;flex-wrap:wrap;}
 .bm-name-clickable:hover{color:var(--accent);}
 .bm-name-clickable .bm-chevron{font-size:10px;opacity:.4;transition:transform .2s,opacity .2s;}
 .bm-name-clickable:hover .bm-chevron{opacity:.7;}

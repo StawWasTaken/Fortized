@@ -2705,7 +2705,12 @@ function _pickWeightedAd(ads, ratioFilter) {
 }
 function _adClickAction(ad) {
   if (ad.customLink) {
-    window.open(ad.customLink, '_blank', 'noopener');
+    // Fortized internal links open in same page, external links open in new tab
+    if (ad.customLink.startsWith('/') || ad.customLink.startsWith(location.origin)) {
+      window.location.href = ad.customLink;
+    } else {
+      window.open(ad.customLink, '_blank', 'noopener');
+    }
   } else {
     promptJoinPublicBastion(ad.bastionId || ad.bastionName || '');
   }
@@ -2720,37 +2725,58 @@ async function _getAllActiveAds() {
 }
 function _renderAdHTML(ad, size) {
   const isBanner = size === 'banner';
-  const imgStyle = isBanner ? 'width:100%;height:90px;object-fit:fill;border-radius:10px;display:block;' : 'width:300px;height:250px;object-fit:fill;border-radius:10px;display:block;';
-  const wrapStyle = isBanner ? 'max-width:100%;' : 'width:300px;';
   const adKey = '_ad_' + Math.random().toString(36).slice(2,6);
   window[adKey] = ad;
-  return `<div style="text-align:center;padding:${isBanner?'4px 0 2px':'6px 0'};">
-    <div style="${wrapStyle}${isBanner?'':'margin:0 auto;'}">
-      <a style="display:block;cursor:pointer;" onclick="_adClickAction(window['${adKey}'])">
-        <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="${imgStyle}" alt="${escapeHTML(ad.title||'')}">
-      </a>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
-        <div style="display:flex;align-items:center;gap:5px;min-width:0;">
-          ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:13px;height:13px;border-radius:4px;flex-shrink:0;">`:''}
-          <span style="font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.bastionName||'')} · Sponsored</span>
+  if (isBanner) {
+    // Banner: 728x90 ratio, centered, actual proportions, max-width capped
+    return `<div style="text-align:center;padding:4px 0 2px;">
+      <div style="max-width:728px;margin:0 auto;">
+        <a style="display:block;cursor:pointer;border-radius:10px;overflow:hidden;" onclick="_adClickAction(window['${adKey}'])">
+          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:100%;aspect-ratio:728/90;object-fit:cover;display:block;border-radius:10px;" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
+        </a>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 2px 0;">
+          <div style="display:flex;align-items:center;gap:5px;min-width:0;">
+            ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:13px;height:13px;border-radius:4px;flex-shrink:0;">`:''}
+            <span style="font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.bastionName||ad.title||'')} · Sponsored</span>
+          </div>
+          <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(ad.bastionName||'')}')">Report ad</span>
         </div>
-        <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(ad.bastionName||'')}')">Report ad</span>
       </div>
-    </div>
-  </div>`;
+    </div>`;
+  } else {
+    // Rectangle: 300x250, centered
+    return `<div style="text-align:center;padding:6px 0;">
+      <div style="width:300px;margin:0 auto;">
+        <a style="display:block;cursor:pointer;border-radius:10px;overflow:hidden;" onclick="_adClickAction(window['${adKey}'])">
+          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:300px;height:250px;object-fit:cover;display:block;border-radius:10px;" alt="${escapeHTML(ad.title||'')}" onerror="this.style.background='rgba(255,249,62,.04)'">
+        </a>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 2px 0;">
+          <div style="display:flex;align-items:center;gap:5px;min-width:0;">
+            ${ad.bastionIcon?`<img src="${escapeHTML(ad.bastionIcon)}" style="width:13px;height:13px;border-radius:4px;flex-shrink:0;">`:''}
+            <span style="font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(ad.bastionName||ad.title||'')} · Sponsored</span>
+          </div>
+          <span style="font-size:10px;color:rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;transition:color .15s;" onmouseenter="this.style.color='rgba(248,113,113,.6)'" onmouseleave="this.style.color='rgba(255,255,255,.2)'" onclick="event.stopPropagation();_reportAd('${escapeHTML(ad.id)}','${escapeHTML(ad.title||'')}','${escapeHTML(ad.bastionName||'')}')">Report ad</span>
+        </div>
+      </div>
+    </div>`;
+  }
 }
 async function _renderHomeAds() {
   const bannerEl = document.getElementById('home-ads');
   const sidebarEl = document.getElementById('home-sidebar-ad');
   const allAds = await _getAllActiveAds();
-  // Banners go in main content, rectangles go in sidebar
-  if (bannerEl) {
-    const ad = _pickWeightedAd(allAds, 'banner');
-    bannerEl.innerHTML = ad ? _renderAdHTML(ad, 'banner') : '';
-  }
-  if (sidebarEl) {
-    const ad = _pickWeightedAd(allAds, 'rectangle');
-    sidebarEl.innerHTML = ad ? _renderAdHTML(ad, 'rectangle') : '';
+  // Only 1 ad per page — try banner first (main content), fall back to rectangle (sidebar)
+  const bannerAd = _pickWeightedAd(allAds, 'banner');
+  const rectAd = _pickWeightedAd(allAds, 'rectangle');
+  if (bannerAd) {
+    if (bannerEl) bannerEl.innerHTML = _renderAdHTML(bannerAd, 'banner');
+    if (sidebarEl) sidebarEl.innerHTML = '';
+  } else if (rectAd) {
+    if (bannerEl) bannerEl.innerHTML = '';
+    if (sidebarEl) sidebarEl.innerHTML = _renderAdHTML(rectAd, 'rectangle');
+  } else {
+    if (bannerEl) bannerEl.innerHTML = '';
+    if (sidebarEl) sidebarEl.innerHTML = '';
   }
 }
 
@@ -6754,9 +6780,9 @@ async function _renderDiscoverAds() {
   const el = document.getElementById('disc-ads');
   if (!el) return;
   const allAds = await _getAllActiveAds();
-  // Discover is wide — only banners fit nicely
-  const ad = _pickWeightedAd(allAds, 'banner');
-  el.innerHTML = ad ? _renderAdHTML(ad, 'banner') : '';
+  // Discover: 1 ad only, prefer banners (wide layout)
+  const ad = _pickWeightedAd(allAds, 'banner') || _pickWeightedAd(allAds, 'rectangle');
+  el.innerHTML = ad ? _renderAdHTML(ad, (ad.ratio||'banner') === 'rectangle' ? 'rectangle' : 'banner') : '';
 }
 function renderDiscoverGrid(bastions){
   const grid=document.getElementById('discover-grid');
@@ -7950,6 +7976,8 @@ function initFortizedUXResilience() {
   // Staff console button now lives in the topbar (tb-admin-btn) — show it on init
   const _tbAdminBtn = document.getElementById('tb-admin-btn');
   if (_tbAdminBtn) _tbAdminBtn.style.display = hasStaffAccess() ? 'flex' : 'none';
+  // Add admin button to the rail immediately (don't wait for 60s poll)
+  try { _syncAdminRailButton(); } catch(e) { _wrn('[init] syncAdminRailButton:', e); }
 
   // Onboarding will be triggered if user is new
 
@@ -10701,8 +10729,19 @@ function renderBSettingsMain(tab) {
           <!-- Custom Link (Superadmin only) -->
           <div style="margin-bottom:14px;">
             <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Custom Link <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span></div>
-            <input class="field-input" id="cm-ad-custom-link" placeholder="https://... or leave empty to use bastion join" maxlength="500">
-            <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Override click destination. Supports any URL or Fortized page paths.</div>
+            <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="document.getElementById('cm-ad-custom-link').style.display=this.value==='custom'?'':'none';if(this.value!=='custom')document.getElementById('cm-ad-custom-link').value=this.value==='bastion'?'':this.value;">
+              <option value="bastion">Default — Join Bastion</option>
+              <option value="/">Home</option>
+              <option value="/app">App</option>
+              <option value="/app/forum">Forum</option>
+              <option value="/blog">Blog</option>
+              <option value="/download">Download</option>
+              <option value="/support">Support</option>
+              <option value="/legal">Legal</option>
+              <option value="custom">Custom URL (opens in browser)</option>
+            </select>
+            <input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">
+            <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Fortized pages open in-app. External URLs open in the user's browser.</div>
           </div>
           ` : ''}
 
@@ -10934,7 +10973,12 @@ async function _cmCreateAd() {
   const image = _cmAdImageData || (bst.banner||bst.icon||'');
   const autoRefund = document.getElementById('cm-ad-autorefund')?.checked || false;
   const ratio = document.querySelector('input[name="cm-ad-ratio"]:checked')?.value || 'banner';
-  const customLink = isSuperAdmin() ? (document.getElementById('cm-ad-custom-link')?.value?.trim() || '') : '';
+  let customLink = '';
+  if (isSuperAdmin()) {
+    const linkType = document.getElementById('cm-ad-link-type')?.value || 'bastion';
+    if (linkType === 'custom') customLink = document.getElementById('cm-ad-custom-link')?.value?.trim() || '';
+    else if (linkType !== 'bastion') customLink = linkType;
+  }
   showCustomConfirm(`Create ad "${title}" for ${escapeHTML(bst.name)}? This costs 15 Onyx.`, async () => {
     CU.onyx = (CU.onyx||0) - 15;
     CU.ads = CU.ads || [];
@@ -10971,15 +11015,29 @@ async function _cmCancelAd(adIdx) {
   if (!ad) return;
   const onyxBal = CU.onyx||0;
   if (onyxBal < 5) { toast('Cancelling costs 5 Onyx. Not enough!', 'error'); return; }
-  showCustomConfirm('Cancel this ad? You will be charged 5 Onyx.', async () => {
+  showCustomConfirm('Cancel this ad? You will be charged 5 Onyx. The ad will be deleted in 20 seconds.', async () => {
     CU.onyx = (CU.onyx||0) - 5;
     ad.status = 'cancelled';
     saveLocal();
     await saveUser();
     try { await FortizedSocial.removeGlobalAd(ad.id); } catch(e) {}
-    toast('Ad cancelled. 5 Onyx deducted.', 'info');
+    toast('Ad cancelled. It will be deleted in 20 seconds.', 'info');
     switchAtelierTab('creator');
     setTimeout(() => _switchCreatorSub('creations'), 50);
+    // Auto-delete the ad after 20 seconds
+    const adId = ad.id;
+    setTimeout(async () => {
+      try {
+        CU.ads = (CU.ads||[]).filter(a => a.id !== adId);
+        saveLocal();
+        await saveUser();
+        // Refresh Creator tab if viewing it
+        if (_currentView === 'atelier' && _atelierTab === 'creator') {
+          switchAtelierTab('creator');
+          setTimeout(() => _switchCreatorSub('creations'), 50);
+        }
+      } catch(e) { console.warn('[Ads] Auto-delete failed:', e); }
+    }, 20000);
   });
 }
 async function _cmRenewAd(adIdx) {
@@ -11152,25 +11210,43 @@ function _dismissWhatsNew() {
 }
 
 // Admin: create announcement
+let _annImageData = null;
 async function _adminCreateAnnouncement() {
   if (!isAdmin()) { toast('Access denied','error'); return; }
+  _annImageData = null;
   const overlay = document.createElement('div');
   overlay.id = 'modal-create-announcement';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;';
   overlay.innerHTML = `
-    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:520px;width:94%;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.6);">
+    <div style="background:#1a1d26;border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:520px;width:94%;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.6);position:relative;">
       <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;margin-bottom:18px;">New Announcement</div>
       <div style="margin-bottom:12px;">
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Title</div>
         <input id="ann-title" class="field-input" placeholder="What's new?" maxlength="120">
       </div>
       <div style="margin-bottom:12px;">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Body</div>
-        <textarea id="ann-body" class="field-input" rows="6" placeholder="Write your announcement... Use **bold**, • for bullets, emojis work too!" style="resize:vertical;min-height:100px;"></textarea>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;">Body</div>
+          <button onclick="_annToggleEmojiPicker()" style="padding:3px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:4px;color:rgba(255,255,255,.5);transition:all .15s;" onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='rgba(255,255,255,.06)'" title="Insert emoji">😀 <span style="font-size:10px;">Emoji</span></button>
+        </div>
+        <div style="position:relative;">
+          <textarea id="ann-body" class="field-input" rows="6" placeholder="Write your announcement... Use **bold**, • for bullets" style="resize:vertical;min-height:100px;"></textarea>
+          <div id="ann-emoji-picker" style="display:none;position:absolute;right:0;top:100%;z-index:10;margin-top:4px;background:#1e2130;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px;width:300px;max-height:260px;box-shadow:0 12px 40px rgba(0,0,0,.5);">
+            <div style="display:flex;gap:4px;margin-bottom:8px;overflow-x:auto;padding-bottom:4px;" id="ann-emoji-tabs"></div>
+            <div id="ann-emoji-grid" style="display:flex;flex-wrap:wrap;gap:2px;max-height:180px;overflow-y:auto;"></div>
+          </div>
+        </div>
       </div>
       <div style="margin-bottom:12px;">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Banner Image (URL)</div>
-        <input id="ann-image" class="field-input" placeholder="https://... (optional)">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Banner Image</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface-1,rgba(255,255,255,.04));border:1px solid var(--surface-border,rgba(255,255,255,.08));border-radius:8px;cursor:pointer;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--surface-border,rgba(255,255,255,.08))'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            <span id="ann-file-label" style="font-size:12px;color:rgba(255,255,255,.4);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Choose image... (optional)</span>
+            <input type="file" accept="image/*" id="ann-image-upload" style="display:none;" onchange="_annImagePreview(event)">
+          </label>
+          ${_annImageData ? `<div id="ann-image-thumb" style="width:40px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.08);"><img src="" style="width:100%;height:100%;object-fit:cover;"></div>` : ''}
+        </div>
       </div>
       <div style="display:flex;gap:12px;margin-bottom:16px;">
         <div style="flex:1;">
@@ -11184,12 +11260,81 @@ async function _adminCreateAnnouncement() {
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  // Close emoji picker on outside click
+  overlay.addEventListener('click', e => {
+    const picker = document.getElementById('ann-emoji-picker');
+    if (picker && picker.style.display !== 'none' && !picker.contains(e.target) && !e.target.closest('[onclick*="_annToggleEmojiPicker"]')) {
+      picker.style.display = 'none';
+    }
+  });
+}
+
+function _annImagePreview(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    _annImageData = ev.target.result;
+    const label = document.getElementById('ann-file-label');
+    if (label) label.textContent = file.name;
+    // Add/update thumbnail
+    let thumb = document.getElementById('ann-image-thumb');
+    if (!thumb) {
+      thumb = document.createElement('div');
+      thumb.id = 'ann-image-thumb';
+      thumb.style.cssText = 'width:40px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.08);';
+      e.target.closest('div[style*="display:flex"]')?.appendChild(thumb);
+    }
+    thumb.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+let _annEmojiTab = 'smileys';
+function _annToggleEmojiPicker() {
+  const picker = document.getElementById('ann-emoji-picker');
+  if (!picker) return;
+  if (picker.style.display === 'none') {
+    picker.style.display = 'block';
+    _annRenderEmojiPicker();
+  } else {
+    picker.style.display = 'none';
+  }
+}
+function _annRenderEmojiPicker() {
+  const tabs = document.getElementById('ann-emoji-tabs');
+  const grid = document.getElementById('ann-emoji-grid');
+  if (!tabs || !grid) return;
+  const cats = EMOJI_PICKER_TABS.filter(t => t.emojis && t.emojis.length);
+  tabs.innerHTML = cats.map(c => `<button onclick="_annSetEmojiTab('${c.id}')" style="padding:4px 6px;border-radius:5px;border:none;cursor:pointer;font-size:14px;background:${_annEmojiTab===c.id?'rgba(255,249,62,.15)':'transparent'};" title="${c.label||c.id}">${c.icon}</button>`).join('');
+  _annRenderEmojiGrid();
+}
+function _annSetEmojiTab(tab) {
+  _annEmojiTab = tab;
+  _annRenderEmojiPicker();
+}
+function _annRenderEmojiGrid() {
+  const grid = document.getElementById('ann-emoji-grid');
+  if (!grid) return;
+  const cat = EMOJI_PICKER_TABS.find(t => t.id === _annEmojiTab);
+  const emojis = cat?.emojis || [];
+  grid.innerHTML = emojis.map(em => `<button onclick="_annInsertEmoji('${em}')" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;cursor:pointer;font-size:18px;border-radius:5px;transition:background .1s;" onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='transparent'">${em}</button>`).join('');
+}
+function _annInsertEmoji(emoji) {
+  const ta = document.getElementById('ann-body');
+  if (!ta) return;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const text = ta.value;
+  ta.value = text.slice(0, start) + emoji + text.slice(end);
+  ta.selectionStart = ta.selectionEnd = start + emoji.length;
+  ta.focus();
 }
 
 async function _submitAnnouncement() {
   const title = document.getElementById('ann-title')?.value?.trim();
   const body = document.getElementById('ann-body')?.value?.trim();
-  const image = document.getElementById('ann-image')?.value?.trim();
+  const image = _annImageData || '';
   const author = document.getElementById('ann-author')?.value?.trim();
   if (!title) { toast('Title required','error'); return; }
   if (!body) { toast('Body required','error'); return; }
@@ -16837,7 +16982,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <h3>What's New Announcements</h3>
         </div>
         <div style="padding:var(--space-lg);">
-          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Create Discord-style "What's New" announcements shown to all users. These also appear as blog posts.</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:var(--space-sm);">Create "What's New" announcements shown to all users. These also appear as blog posts.</div>
           <div style="display:flex;gap:var(--space-sm);align-items:center;flex-wrap:wrap;">
             <button class="hq-quick-btn" onclick="_adminCreateAnnouncement()" style="background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.15);color:#60a5fa;font-weight:700;">📝 New Announcement</button>
             <button class="hq-quick-btn" onclick="_adminViewAnnouncements()">📋 View All</button>
@@ -17787,38 +17932,41 @@ function _listenStaffChanges() {
       } else {
         localStorage.setItem('ftz_staff', JSON.stringify({ admins: [], moderators: [] }));
       }
-      // Dynamically add/remove the staff console button
-      const rail = document.getElementById('rail');
-      const existingBtn = document.getElementById('admin-rail-btn');
-      const existingSep = existingBtn?.previousElementSibling;
-      if (hasStaffAccess()) {
-        if (!existingBtn && rail) {
-          const role = getStaffRole(CU.username);
-          const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
-          const btn = document.createElement('div');
-          btn.id = 'admin-rail-btn'; btn.className = 'rail-btn';
-          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Staff Console</span>`;
-          btn.dataset.tip = roleLabel + ' Panel';
-          btn.style.cssText = 'border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);margin-top:6px;background:rgba(248,113,113,.04);';
-          btn.onclick = tryOpenAdmin;
-          const sep = document.createElement('div');
-          sep.className = 'rail-sep'; sep.style.margin = '8px 12px'; sep.id = 'admin-rail-sep';
-          const createBtn = rail.querySelector('[onclick*="modal-create-bastion"]');
-          if (createBtn) { rail.insertBefore(sep, createBtn); rail.insertBefore(btn, createBtn); }
-          else rail.appendChild(btn);
-        }
-      } else {
-        if (existingBtn) existingBtn.remove();
-        if (existingSep && existingSep.id === 'admin-rail-sep') existingSep.remove();
-        if (_currentView === 'admin') {
-          adminAuthed = false;
-          _closeAdminPanel();
-          toast('Your staff access has been revoked.', 'error');
-        }
-        adminAuthed = false;
-      }
+      _syncAdminRailButton();
     } catch (e) { _dbg('[Admin] staff access poll failed', e); }
   }, 60000);
+}
+
+function _syncAdminRailButton() {
+  const rail = document.getElementById('rail');
+  const existingBtn = document.getElementById('admin-rail-btn');
+  const existingSep = existingBtn?.previousElementSibling;
+  if (hasStaffAccess()) {
+    if (!existingBtn && rail) {
+      const role = getStaffRole(CU.username);
+      const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
+      const btn = document.createElement('div');
+      btn.id = 'admin-rail-btn'; btn.className = 'rail-btn';
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Staff Console</span>`;
+      btn.dataset.tip = roleLabel + ' Panel';
+      btn.style.cssText = 'border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);margin-top:6px;background:rgba(248,113,113,.04);';
+      btn.onclick = tryOpenAdmin;
+      const sep = document.createElement('div');
+      sep.className = 'rail-sep'; sep.style.margin = '8px 12px'; sep.id = 'admin-rail-sep';
+      const createBtn = rail.querySelector('[onclick*="modal-create-bastion"]');
+      if (createBtn) { rail.insertBefore(sep, createBtn); rail.insertBefore(btn, createBtn); }
+      else rail.appendChild(btn);
+    }
+  } else {
+    if (existingBtn) existingBtn.remove();
+    if (existingSep && existingSep.id === 'admin-rail-sep') existingSep.remove();
+    if (_currentView === 'admin') {
+      adminAuthed = false;
+      _closeAdminPanel();
+      toast('Your staff access has been revoked.', 'error');
+    }
+    adminAuthed = false;
+  }
 }
 
 // Poll for force-refresh signal from admin
@@ -28475,10 +28623,41 @@ function renderAtelierTab(tab) {
 
         <!-- BOTS Section -->
         <div id="cr-cr-bots" style="display:none;">
-          <div style="padding:20px;background:var(--panel);border:1px solid var(--border);border-radius:14px;text-align:center;">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5" style="margin-bottom:8px;"><rect x="3" y="11" width="18" height="11" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M12 8v3"/></svg>
-            <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Bot Creations</div>
-            <div style="font-size:11.5px;color:var(--muted);">Create and manage your bots. Coming soon.</div>
+          <div style="padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:16px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <img src="/Fortized Bot.png" style="width:22px;height:22px;">
+                <div style="font-size:14px;font-weight:700;">Your Bots</div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn-a" onclick="openCreateBotModal()" style="font-size:11.5px;padding:6px 14px;">+ Create Bot</button>
+              </div>
+            </div>
+            <div style="font-size:11.5px;color:var(--muted);margin-bottom:14px;">Create bots with custom commands, visual block scripting, and deploy them to your Bastions.</div>
+            ${(CU.bots||[]).length ? (CU.bots||[]).map((bot, i) => `
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin-bottom:6px;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--border)'">
+                <div style="width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--panel2);display:flex;align-items:center;justify-content:center;">
+                  ${bot.avatar ? `<img src="${escapeHTML(bot.avatar)}" style="width:100%;height:100%;object-fit:cover;">` : `<img src="/Fortized Bot.png" style="width:28px;height:28px;">`}
+                </div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;">
+                    ${escapeHTML(bot.name)}
+                    <span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;${bot.enabled!==false?'background:rgba(62,207,110,.1);color:var(--green);':'background:rgba(255,255,255,.05);color:var(--muted);'}">${bot.enabled!==false?'Online':'Offline'}</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);">${escapeHTML(bot.bio||'No description')} · ${(bot.commands||[]).length} commands · ${bot.visibility||'private'}</div>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn-g" style="font-size:10.5px;padding:5px 10px;" onclick="openBotEditor(${i})">Edit</button>
+                  <button class="btn-g" style="font-size:10.5px;padding:5px 10px;color:var(--red);" onclick="_crDeleteBot(${i})">Delete</button>
+                </div>
+              </div>
+            `).join('') : `
+              <div style="text-align:center;padding:24px;border:1px dashed rgba(255,255,255,.08);border-radius:12px;">
+                <img src="/Fortized Bot.png" style="width:40px;height:40px;opacity:.3;margin-bottom:8px;">
+                <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;">No bots yet. Create your first bot to automate your Bastions!</div>
+                <button class="btn-a" onclick="openCreateBotModal()" style="font-size:12px;">Create Bot</button>
+              </div>
+            `}
           </div>
         </div>
 
@@ -28503,10 +28682,46 @@ function renderAtelierTab(tab) {
 
       <!-- ═══ CREATOR MARKETPLACE ═══ -->
       <div id="cr-section-marketplace" style="${creatorSub!=='marketplace'?'display:none;':''}">
-        <div style="padding:28px;background:var(--panel);border:1px solid var(--border);border-radius:16px;text-align:center;">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5" style="margin-bottom:12px;"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;margin-bottom:6px;">Creator Marketplace</div>
-          <div style="font-size:12.5px;color:var(--muted);max-width:360px;margin:0 auto;">Browse and purchase community-made bots, bastion templates, and more from other creators. Coming soon.</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          <div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;">Creator Marketplace</div>
+            <div style="font-size:11.5px;color:var(--muted);">Browse and get community-made bots and bastion templates.</div>
+          </div>
+        </div>
+
+        <!-- Marketplace sub-tabs -->
+        <div style="display:flex;gap:6px;margin-bottom:16px;">
+          <button id="cr-mkt-bots-btn2" style="padding:7px 16px;font-size:11.5px;border-radius:8px;font-weight:700;background:rgba(255,249,62,.1);color:var(--accent);border:1px solid rgba(255,249,62,.2);cursor:pointer;" onclick="_switchMktTab('bots')">Bots</button>
+          <button id="cr-mkt-templates-btn2" style="padding:7px 16px;font-size:11.5px;border-radius:8px;font-weight:600;background:transparent;color:var(--muted-light);border:1px solid var(--border);cursor:pointer;" onclick="_switchMktTab('templates')">Templates</button>
+        </div>
+
+        <!-- Marketplace Bots -->
+        <div id="cr-mkt-bots2">
+          <div style="margin-bottom:14px;position:relative;">
+            <input class="field-input" id="mkt-bot-search" placeholder="Search bots..." oninput="_filterMktBots(this.value)" style="padding-left:34px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          </div>
+          <div id="mkt-bots-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+            <div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;">
+              <img src="/Fortized Bot.png" style="width:36px;height:36px;opacity:.25;margin-bottom:8px;">
+              <div>No bots listed yet. List yours from the Creations tab!</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Marketplace Templates -->
+        <div id="cr-mkt-templates2" style="display:none;">
+          <div style="margin-bottom:14px;position:relative;">
+            <input class="field-input" id="mkt-tpl-search" placeholder="Search templates..." oninput="_filterMktTemplates(this.value)" style="padding-left:34px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          </div>
+          <div id="mkt-templates-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+            <div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5" style="margin-bottom:8px;"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              <div>No templates listed yet. Export yours from the Creations tab!</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>`;
@@ -28536,6 +28751,88 @@ function _switchCreationsSub(sub) {
     const btn = document.getElementById('cr-cr-'+t+'-btn');
     if (sec) sec.style.display = t===sub?'':'none';
     if (btn) { btn.style.background = t===sub?'rgba(255,249,62,.1)':'transparent'; btn.style.color = t===sub?'var(--accent)':'var(--muted-light)'; btn.style.borderColor = t===sub?'rgba(255,249,62,.2)':'var(--border)'; btn.style.fontWeight = t===sub?'700':'600'; }
+  });
+}
+
+function _switchMktTab(tab) {
+  const bots = document.getElementById('cr-mkt-bots2');
+  const tpl = document.getElementById('cr-mkt-templates2');
+  const botsBtn = document.getElementById('cr-mkt-bots-btn2');
+  const tplBtn = document.getElementById('cr-mkt-templates-btn2');
+  if (bots) bots.style.display = tab==='bots'?'':'none';
+  if (tpl) tpl.style.display = tab==='templates'?'':'none';
+  if (botsBtn) { botsBtn.style.background = tab==='bots'?'rgba(255,249,62,.1)':'transparent'; botsBtn.style.color = tab==='bots'?'var(--accent)':'var(--muted-light)'; botsBtn.style.borderColor = tab==='bots'?'rgba(255,249,62,.2)':'var(--border)'; botsBtn.style.fontWeight = tab==='bots'?'700':'600'; }
+  if (tplBtn) { tplBtn.style.background = tab==='templates'?'rgba(255,249,62,.1)':'transparent'; tplBtn.style.color = tab==='templates'?'var(--accent)':'var(--muted-light)'; tplBtn.style.borderColor = tab==='templates'?'rgba(255,249,62,.2)':'var(--border)'; tplBtn.style.fontWeight = tab==='templates'?'700':'600'; }
+  if (tab==='bots') _loadMktBots();
+  if (tab==='templates') _loadMktTemplates();
+}
+async function _loadMktBots() {
+  const grid = document.getElementById('mkt-bots-grid');
+  if (!grid) return;
+  try {
+    const listed = await FortizedSocial.getMarketplaceBots?.() || [];
+    if (!listed.length) { grid.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;"><img src="/Fortized Bot.png" style="width:36px;height:36px;opacity:.25;margin-bottom:8px;"><div>No bots listed yet.</div></div>'; return; }
+    grid.innerHTML = listed.map(bot => `
+      <div style="padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--border)'">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="width:36px;height:36px;border-radius:10px;overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;">
+            ${bot.avatar ? `<img src="${escapeHTML(bot.avatar)}" style="width:100%;height:100%;object-fit:cover;">` : `<img src="/Fortized Bot.png" style="width:24px;height:24px;">`}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(bot.name)}</div>
+            <div style="font-size:10px;color:var(--muted);">by ${escapeHTML(bot.owner||'Unknown')}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted-light);line-height:1.4;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHTML(bot.bio||'No description')}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:11px;font-weight:700;color:var(--accent);">${(bot.price||0)>0?bot.price+' Onyx':'Free'}</span>
+          <span style="font-size:10px;color:var(--muted);">${(bot.commands||[]).length} commands</span>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    grid.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;">No bots listed yet.</div>';
+  }
+}
+async function _loadMktTemplates() {
+  const grid = document.getElementById('mkt-templates-grid');
+  if (!grid) return;
+  try {
+    const listed = await FortizedSocial.getMarketplaceTemplates?.() || [];
+    if (!listed.length) { grid.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5" style="margin-bottom:8px;"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><div>No templates listed yet.</div></div>'; return; }
+    grid.innerHTML = listed.map(tpl => `
+      <div style="padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(255,249,62,.2)'" onmouseleave="this.style.borderColor='var(--border)'">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          ${tpl.icon?`<img src="${escapeHTML(tpl.icon)}" style="width:36px;height:36px;border-radius:10px;object-fit:cover;">`:`<div style="width:36px;height:36px;border-radius:10px;background:rgba(255,249,62,.06);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>`}
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(tpl.name)}</div>
+            <div style="font-size:10px;color:var(--muted);">by ${escapeHTML(tpl.owner||'Unknown')}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted-light);margin-bottom:8px;">${(tpl.channels||[]).length} channels · ${(tpl.roles||[]).length} roles</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:11px;font-weight:700;color:var(--accent);">${(tpl.price||0)>0?tpl.price+' Onyx':'Free'}</span>
+          <button class="btn-g" style="font-size:10px;padding:4px 10px;" onclick="event.stopPropagation();toast('Template imported!','success')">Use</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    grid.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:12px;grid-column:1/-1;">No templates listed yet.</div>';
+  }
+}
+function _filterMktBots(q) { /* search is a stub for now — filters client-side when data is loaded */ }
+function _filterMktTemplates(q) { /* stub */ }
+
+function _crDeleteBot(idx) {
+  const bot = CU.bots?.[idx];
+  if (!bot) return;
+  showCustomConfirm(`Delete bot "${escapeHTML(bot.name)}"? This cannot be undone.`, async () => {
+    CU.bots.splice(idx, 1);
+    saveLocal();
+    await saveUser();
+    toast('Bot deleted.', 'info');
+    switchAtelierTab('creator');
+    setTimeout(() => { _switchCreatorSub('creations'); _switchCreationsSub('bots'); }, 50);
   });
 }
 

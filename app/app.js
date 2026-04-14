@@ -2693,11 +2693,18 @@ async function _renderHomeAds() {
   localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
   if (!allAds.length) { el.innerHTML = ''; return; }
   const ad = allAds[Math.floor(Math.random()*allAds.length)];
+  const isRect = ad.ratio === 'rectangle';
+  const imgStyle = isRect
+    ? 'width:300px;height:250px;object-fit:fill;border-radius:10px;display:block;'
+    : 'width:100%;height:90px;object-fit:fill;border-radius:10px;display:block;';
+  const wrapStyle = isRect
+    ? 'max-width:300px;margin:0 auto;display:inline-block;text-align:left;'
+    : 'max-width:100%;margin:0 auto;display:inline-block;text-align:left;';
   el.innerHTML = `
     <div style="text-align:center;padding:4px 0 2px;">
-      <div style="max-width:100%;margin:0 auto;display:inline-block;text-align:left;">
+      <div style="${wrapStyle}">
         <a style="display:block;cursor:pointer;" onclick="promptJoinPublicBastion('${escapeHTML(ad.bastionId||ad.bastionName||'')}')">
-          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:100%;max-height:90px;object-fit:cover;border-radius:10px;display:block;" alt="${escapeHTML(ad.title||'')}">
+          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="${imgStyle}" alt="${escapeHTML(ad.title||'')}">
         </a>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
           <div style="display:flex;align-items:center;gap:6px;min-width:0;">
@@ -6716,11 +6723,18 @@ async function _renderDiscoverAds() {
   localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
   if (!allAds.length) { el.innerHTML = ''; return; }
   const ad = allAds[Math.floor(Math.random()*allAds.length)];
+  const isRect = ad.ratio === 'rectangle';
+  const imgStyle = isRect
+    ? 'width:300px;height:250px;object-fit:fill;border-radius:12px;display:block;'
+    : 'width:100%;height:90px;object-fit:fill;border-radius:12px;display:block;';
+  const wrapStyle = isRect
+    ? 'max-width:300px;margin:0 auto;display:inline-block;text-align:left;'
+    : 'max-width:728px;margin:0 auto;display:inline-block;text-align:left;width:100%;';
   el.innerHTML = `
     <div style="text-align:center;padding:8px 0 4px;">
-      <div style="max-width:728px;margin:0 auto;display:inline-block;text-align:left;width:100%;">
+      <div style="${wrapStyle}">
         <a style="display:block;cursor:pointer;" onclick="promptJoinPublicBastion('${escapeHTML(ad.bastionId||ad.bastionName||'')}')">
-          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="width:100%;max-height:120px;object-fit:cover;border-radius:12px;display:block;" alt="${escapeHTML(ad.title||'')}">
+          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="${imgStyle}" alt="${escapeHTML(ad.title||'')}">
         </a>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 2px 0;">
           <div style="display:flex;align-items:center;gap:6px;min-width:0;">
@@ -10617,35 +10631,67 @@ function renderBSettingsMain(tab) {
             <div style="font-size:14px;font-weight:700;">Create New Ad</div>
           </div>
 
-          <!-- Ad image upload — Polytoria-style banner -->
+          <!-- Ad Title -->
           <div style="margin-bottom:14px;">
-            <div class="settings-title">Ad Banner Image</div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">This banner image will be shown on Discover and Home pages. Use a wide image for best results (728x90 recommended).</div>
-            <div style="max-width:728px;">
-              <div style="border-radius:12px;overflow:hidden;border:1.5px dashed rgba(255,249,62,.15);cursor:pointer;position:relative;transition:all .2s;background:rgba(255,249,62,.02);min-height:90px;" onclick="document.getElementById('cm-ad-image-upload').click()" id="cm-ad-image-preview" onmouseenter="this.style.borderColor='rgba(255,249,62,.3)'" onmouseleave="this.style.borderColor='rgba(255,249,62,.15)'">
-                <div style="text-align:center;color:var(--muted);font-size:12px;padding:30px 20px;">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:6px;display:block;margin-left:auto;margin-right:auto;opacity:.4;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                  Click to upload banner image
-                </div>
-              </div>
-            </div>
-            <input id="cm-ad-image-upload" type="file" accept="image/*" style="display:none;" onchange="_cmAdImagePreview(event)">
+            <div class="settings-title">Ad Title</div>
+            <input class="field-input" id="cm-ad-title" placeholder="e.g. Join our gaming community!" maxlength="60" oninput="_cmUpdateAdPreview()">
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-            <div>
-              <div class="settings-title">Ad Title</div>
-              <input class="field-input" id="cm-ad-title" placeholder="e.g. Join our gaming community!" maxlength="60" oninput="_cmUpdateAdPreview()">
+          <!-- Ad Image Upload -->
+          <div style="margin-bottom:14px;">
+            <input id="cm-ad-image-upload" type="file" accept="image/*" style="display:none;" onchange="_cmAdImagePreview(event)">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <button class="btn-g" onclick="document.getElementById('cm-ad-image-upload').click()" style="font-size:12px;padding:8px 16px;">Choose file</button>
+              <span id="cm-ad-file-label" style="font-size:12px;color:var(--muted);">No file selected.</span>
             </div>
-            <div>
-              <div class="settings-title">Target Bastion</div>
-              <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
-                ${(CU.bastions||[]).filter(bst=>bst.owner===CU.username).map((bst,i)=>{
-                  const idx=(CU.bastions||[]).indexOf(bst);
-                  return `<option value="${idx}" ${idx===curBastion?'selected':''}>${escapeHTML(bst.name)}</option>`;
-                }).join('')}
-              </select>
+          </div>
+
+          <!-- Ad Ratio Selector -->
+          <div style="margin-bottom:14px;">
+            <div class="settings-title">Ad Format</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <label id="cm-ratio-banner" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;background:rgba(255,249,62,.06);border:1.5px solid rgba(255,249,62,.2);border-radius:10px;cursor:pointer;transition:all .15s;" onclick="_cmSelectAdRatio('banner')">
+                <input type="radio" name="cm-ad-ratio" value="banner" checked style="accent-color:var(--accent);">
+                <div>
+                  <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.85);">Banner</div>
+                  <div style="font-size:10px;color:var(--muted);">728 x 90 px — Wide horizontal strip</div>
+                </div>
+              </label>
+              <label id="cm-ratio-rectangle" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;background:rgba(255,255,255,.02);border:1.5px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;transition:all .15s;" onclick="_cmSelectAdRatio('rectangle')">
+                <input type="radio" name="cm-ad-ratio" value="rectangle" style="accent-color:var(--accent);">
+                <div>
+                  <div style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.65);">Rectangle</div>
+                  <div style="font-size:10px;color:var(--muted);">300 x 250 px — Compact rectangle</div>
+                </div>
+              </label>
             </div>
+            <div style="font-size:10.5px;color:rgba(255,255,255,.25);margin-bottom:2px;">Images that don't match the selected ratio will be stretched to fit.</div>
+          </div>
+
+          <!-- Ad Templates Download -->
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Ad Templates</div>
+            <div style="display:flex;align-items:center;gap:14px;">
+              <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/RectangleAdTemplate.png" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--accent);text-decoration:none;transition:opacity .15s;" onmouseenter="this.style.opacity='.7'" onmouseleave="this.style.opacity='1'">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Rectangle
+              </a>
+              <a href="https://github.com/StawWasTaken/Fortized/releases/download/AdTemplates/BannerAdTemplate.png" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--accent);text-decoration:none;transition:opacity .15s;" onmouseenter="this.style.opacity='.7'" onmouseleave="this.style.opacity='1'">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Banner
+              </a>
+            </div>
+          </div>
+
+          <!-- Target Bastion -->
+          <div style="margin-bottom:14px;">
+            <div class="settings-title">Target Bastion</div>
+            <select class="field-input" id="cm-ad-bastion" style="padding:10px 14px;" onchange="_cmUpdateAdPreview()">
+              ${(CU.bastions||[]).filter(bst=>bst.owner===CU.username).map((bst,i)=>{
+                const idx=(CU.bastions||[]).indexOf(bst);
+                return `<option value="${idx}" ${idx===curBastion?'selected':''}>${escapeHTML(bst.name)}</option>`;
+              }).join('')}
+            </select>
           </div>
 
           <div style="margin-bottom:16px;">
@@ -10658,9 +10704,9 @@ function renderBSettingsMain(tab) {
           <!-- Live preview -->
           <div style="margin-bottom:16px;">
             <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-bottom:8px;">Live Preview</div>
-            <div style="max-width:728px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:12px;">
+            <div id="cm-ad-preview-wrap" style="max-width:728px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:12px;">
               <div id="cm-ad-live-preview" style="text-align:center;">
-                <div style="height:80px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));display:flex;align-items:center;justify-content:center;">
+                <div style="width:100%;height:90px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));display:flex;align-items:center;justify-content:center;">
                   <span style="font-size:11px;color:var(--muted);">Upload an image to preview</span>
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
@@ -10671,10 +10717,7 @@ function renderBSettingsMain(tab) {
             </div>
           </div>
 
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button class="btn-a" onclick="_cmCreateAd()" ${onyxBal<15?'disabled style="opacity:.5;cursor:not-allowed;font-size:12.5px;padding:8px 18px;"':'style="font-size:12.5px;padding:8px 18px;"'}>Create Ad — 15 Onyx</button>
-            <span style="font-size:11px;color:var(--muted);">Broadcasts for 4 days</span>
-          </div>
+          <button class="btn-a" onclick="_cmCreateAd()" ${onyxBal<15?'disabled style="opacity:.5;cursor:not-allowed;font-size:13px;padding:9px 22px;"':'style="font-size:13px;padding:9px 22px;"'}>+ Create Ad — 15 Onyx</button>
         </div>
 
         <!-- Active Ads -->
@@ -10809,9 +10852,27 @@ function _cmBuyBot(botId) {
 function _cmBuyTemplate(tmplId) {
   toast('Template marketplace coming soon!', 'info');
 }
+function _cmSelectAdRatio(ratio) {
+  const bannerLabel = document.getElementById('cm-ratio-banner');
+  const rectLabel = document.getElementById('cm-ratio-rectangle');
+  if (ratio === 'banner') {
+    if (bannerLabel) { bannerLabel.style.background='rgba(255,249,62,.06)'; bannerLabel.style.borderColor='rgba(255,249,62,.2)'; }
+    if (rectLabel) { rectLabel.style.background='rgba(255,255,255,.02)'; rectLabel.style.borderColor='rgba(255,255,255,.06)'; }
+    const bnInput = bannerLabel?.querySelector('input[type="radio"]');
+    if (bnInput) bnInput.checked = true;
+  } else {
+    if (rectLabel) { rectLabel.style.background='rgba(255,249,62,.06)'; rectLabel.style.borderColor='rgba(255,249,62,.2)'; }
+    if (bannerLabel) { bannerLabel.style.background='rgba(255,255,255,.02)'; bannerLabel.style.borderColor='rgba(255,255,255,.06)'; }
+    const rcInput = rectLabel?.querySelector('input[type="radio"]');
+    if (rcInput) rcInput.checked = true;
+  }
+  _cmUpdateAdPreview();
+}
 function _cmAdImagePreview(e) {
   const file = e.target.files?.[0];
   if (!file) return;
+  const label = document.getElementById('cm-ad-file-label');
+  if (label) label.textContent = file.name;
   const reader = new FileReader();
   reader.onload = function(ev) {
     const preview = document.getElementById('cm-ad-image-preview');
@@ -10832,13 +10893,19 @@ function _cmUpdateAdPreview() {
   const bst = CU.bastions?.[bastionIdx];
   const bastionName = bst?.name || 'Your Bastion';
   const bastionIcon = bst?.icon || '';
+  const ratio = document.querySelector('input[name="cm-ad-ratio"]:checked')?.value || 'banner';
+  const isBanner = ratio === 'banner';
+  const imgW = isBanner ? '100%' : '300px';
+  const imgH = isBanner ? '90px' : '250px';
+  const wrap = document.getElementById('cm-ad-preview-wrap');
+  if (wrap) wrap.style.maxWidth = isBanner ? '728px' : '324px';
   livePreview.innerHTML = `
     <div style="text-align:center;">
       ${imageData
-        ? `<img src="${imageData}" style="width:100%;max-height:90px;object-fit:cover;border-radius:10px;display:block;">`
-        : `<div style="height:80px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));display:flex;align-items:center;justify-content:center;"><span style="font-size:11px;color:var(--muted);">Upload an image to preview</span></div>`
+        ? `<img src="${imageData}" style="width:${imgW};height:${imgH};object-fit:fill;border-radius:10px;display:block;${isBanner?'':'margin:0 auto;'}">`
+        : `<div style="width:${imgW};height:${imgH};border-radius:10px;overflow:hidden;background:linear-gradient(135deg,rgba(255,249,62,.06),rgba(255,249,62,.02));display:flex;align-items:center;justify-content:center;${isBanner?'':'margin:0 auto;'}"><span style="font-size:11px;color:var(--muted);">Upload an image to preview</span></div>`
       }
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;${isBanner?'':'max-width:300px;margin:0 auto;'}">
         <div style="display:flex;align-items:center;gap:5px;">
           ${bastionIcon?`<img src="${escapeHTML(bastionIcon)}" style="width:14px;height:14px;border-radius:4px;">`:''}
           <span style="font-size:10px;color:rgba(255,255,255,.3);">${escapeHTML(title||bastionName)} · Sponsored</span>
@@ -10858,6 +10925,7 @@ async function _cmCreateAd() {
   const preview = document.getElementById('cm-ad-image-preview');
   const image = preview?._adImageData || (bst.banner||bst.icon||'');
   const autoRefund = document.getElementById('cm-ad-autorefund')?.checked || false;
+  const ratio = document.querySelector('input[name="cm-ad-ratio"]:checked')?.value || 'banner';
   showCustomConfirm(`Create ad "${title}" for ${escapeHTML(bst.name)}? This costs 15 Onyx.`, async () => {
     CU.onyx = (CU.onyx||0) - 15;
     CU.ads = CU.ads || [];
@@ -10869,6 +10937,7 @@ async function _cmCreateAd() {
       bastionIcon: bst.icon||'',
       image: image,
       title: title,
+      ratio: ratio,
       status: 'active',
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now()+4*86400000).toISOString(),

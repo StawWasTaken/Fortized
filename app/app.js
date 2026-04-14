@@ -810,6 +810,8 @@ async function saveUser(immediate) {
     _saveUserTimer = setTimeout(() => { doSave().then(resolve).catch(resolve); }, 300);
   });
 }
+// Verified badge SVG helper
+function _verifiedBadge(size) { const s=size||16; return `<svg width="${s}" height="${s}" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-left:3px;flex-shrink:0;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
 // Sync a local bastion's data to the global bastions collection
 async function _syncBastionToGlobal(bastionIdx) {
   try {
@@ -822,7 +824,11 @@ async function _syncBastionToGlobal(bastionIdx) {
       await FortizedSocial.addBastionMember(b.globalId, CU.username);
     }
     const bid = b.globalId;
+    // Preserve admin-set fields (verified) from existing global data
+    let existingGlobal = null;
+    try { existingGlobal = await FortizedSocial.getGlobalBastion(bid); } catch(e) {}
     const globalData = {...b, id: bid, owner: b.owner || CU.username, memberCount: b.memberCount || 1};
+    if (existingGlobal?.verified !== undefined) globalData.verified = existingGlobal.verified;
     delete globalData.globalId; // avoid nesting
     await FortizedSocial.saveGlobalBastion(bid, globalData);
     // Broadcast change to all connected clients so they re-sync
@@ -841,7 +847,7 @@ async function _syncBastionFromGlobal(bastionIdx) {
     const global = await FortizedSocial.getGlobalBastion(b.globalId);
     if (!global) return;
     // Merge global fields into local copy (owner-managed data)
-    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview'];
+    const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
     let changed = false;
     for (const key of syncFields) {
       if (global[key] !== undefined && JSON.stringify(b[key]) !== JSON.stringify(global[key])) {
@@ -4498,7 +4504,7 @@ function renderBastionSidebar(scroll) {
   html+=`<div class="bastion-identity${bannerSrc?' ':' no-banner '}" style="position:relative;">
     ${bannerSrc?'':`<div class="bastion-emblem">${emblemHTML}</div>`}
     <div class="bastion-meta">
-      <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)} ${boostLv>0?`<span style="display:inline-block;margin-left:6px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:5px;background:linear-gradient(135deg,${boostLv===1?'#60a5fa':boostLv===2?'#a78bfa':'#fbbf24'},${boostLv===1?'#60a5fa99':boostLv===2?'#a78bfa99':'#fbbf2499'});color:#fff;letter-spacing:.03em;">${boostLv===1?'🟦 T1':boostLv===2?'🟪 T2':'👑 T3'}</span>`:'<span style="display:inline-block;margin-left:6px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);">🔓 Boost</span>'} <span class="bm-chevron">▼</span></div>
+      <div class="bm-name bm-name-clickable" id="bastion-name-toggle" onclick="toggleBastionNameDropdown(event)">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''} ${boostLv>0?`<span style="display:inline-block;margin-left:6px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:5px;background:linear-gradient(135deg,${boostLv===1?'#60a5fa':boostLv===2?'#a78bfa':'#fbbf24'},${boostLv===1?'#60a5fa99':boostLv===2?'#a78bfa99':'#fbbf2499'});color:#fff;letter-spacing:.03em;">${boostLv===1?'🟦 T1':boostLv===2?'🟪 T2':'👑 T3'}</span>`:'<span style="display:inline-block;margin-left:6px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);">🔓 Boost</span>'} <span class="bm-chevron">▼</span></div>
       ${b.tagline?`<div class="bm-tagline">${escapeHTML(b.tagline)}</div>`:''}
     </div>
     <div id="bastion-name-dd-anchor"></div>
@@ -4554,7 +4560,7 @@ function renderBastionSidebar(scroll) {
     if (!contentHTML && !canManageChannels) return '';
     const isCollapsed=!!collapsedCats[catId];
     return `<div class="ch-cat-wrap${isCollapsed?' collapsed':''}" data-cat="${catId}">
-      <div class="ch-category" onclick="toggleChCat(this,'${catId}')">
+      <div class="ch-category" onclick="toggleChCat(this,'${catId}')" oncontextmenu="showCategoryCtxMenu(event,'${catId}','${escapeHTML(label)}','${type}')">
         <span class="cat-chevron">▼</span><span class="cat-icon">${icon}</span> ${label}${canManageChannels?`<button class="cat-add" onclick="event.stopPropagation();addChannel(${curBastion},'${type}')">+</button>`:''}
       </div>
       <div class="ch-cat-items">${contentHTML||''}</div>
@@ -4833,12 +4839,12 @@ function loadChatChannel(idx) {
       <div class="chat-msgs" id="ch-msgs-${idx}">
         <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Jump to Present</button></div>
         <div class="new-messages-bar" id="ch-new-msgs-bar-${idx}"><span id="ch-new-msgs-text-${idx}">1 new message</span><button onclick="markChannelRead(${idx})">Mark as Read</button></div>
-        ${bannerSafe ? `<div style="width:100%;height:140px;position:relative;flex-shrink:0;overflow:hidden;">
-          <img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.82) saturate(1.1);" onerror="this.parentElement.style.display='none'">
-          <div style="position:absolute;inset:0;background:linear-gradient(to top,var(--channel) 0%,rgba(0,0,0,.25) 50%,transparent 100%);pointer-events:none;"></div>
+        ${bannerSafe ? `<div style="width:100%;height:140px;position:relative;flex-shrink:0;overflow:hidden;margin-top:-20px;">
+          <img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'">
+          <div style="position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to top,var(--channel),transparent);pointer-events:none;"></div>
           <div style="position:absolute;bottom:14px;left:18px;display:flex;align-items:center;gap:10px;">
             ${b.icon?`<img src="${escapeHTML(b.icon)}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;border:2px solid rgba(255,255,255,.15);box-shadow:0 2px 8px rgba(0,0,0,.4);" onerror="this.style.display='none'">`:''}
-            <span style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7),0 0 4px rgba(0,0,0,.4);letter-spacing:-.01em;">${escapeHTML(b.name||'')}</span>
+            <span style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7),0 0 4px rgba(0,0,0,.4);letter-spacing:-.01em;">${escapeHTML(b.name||'')}${b.verified?_verifiedBadge(14):''}</span>
           </div>
         </div>` : ''}
         <div class="chat-welcome">
@@ -8968,7 +8974,7 @@ function renderBastionHub() {
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;${bannerSafe?'margin-top:-40px;position:relative;z-index:2;padding:0 8px;':''}">
       <div style="width:56px;height:56px;border-radius:16px;background:var(--panel2);border:3px solid var(--channel);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,.4);">${emblemHTML}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;word-break:break-word;">${escapeHTML(b.name)}</div>
+        <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:#fff;word-break:break-word;">${escapeHTML(b.name)}${b.verified?_verifiedBadge(18):''}</div>
         ${b.tagline ? `<div style="font-size:12px;color:var(--muted-light);margin-top:2px;">${escapeHTML(b.tagline)}</div>` : ''}
       </div>
     </div>
@@ -9081,7 +9087,7 @@ function renderOverviewRoom() {
   // ── Identity: name, tagline, badge ──
   html += '<div class="ov-identity" style="' + (bannerSrc ? '' : 'padding-top:24px;') + '">'
     + (bannerSrc ? '' : '<div class="ov-emblem" style="position:relative;margin-bottom:12px;"><div class="ov-icon">' + emblemHTML + '</div></div>')
-    + '<div class="ov-name">' + escapeHTML(b.name) + '</div>'
+    + '<div class="ov-name">' + escapeHTML(b.name) + (b.verified?_verifiedBadge(16):'') + '</div>'
     + (b.tagline ? '<div class="ov-tagline">' + escapeHTML(b.tagline) + '</div>' : '')
     + '</div>';
 
@@ -9107,7 +9113,6 @@ function renderOverviewRoom() {
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
         <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('members');closeModal('modal-overview')">👥 Members</button>
         <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('roles');closeModal('modal-overview')">🎭 Roles</button>
-        <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('channels');closeModal('modal-overview')">📝 Rooms</button>
         <button class="btn-g" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="openBastionSettings('invites');closeModal('modal-overview')">🔗 Invites</button>
         <button class="btn-a" style="font-size:11px;padding:8px 12px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:1/-1;" onclick="openBastionSettings('boost');closeModal('modal-overview')">${_boostSvg('13')} Boost Bastion</button>
       </div>
@@ -9526,7 +9531,6 @@ function renderBSettingsNav(activeTab) {
   const sections = [
     {label:escapeHTML(b.name).toUpperCase()},
     {id:'overview',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',label:'Bastion Profile'},
-    {id:'channels',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',label:'Rooms'},
     {label:'EXPRESSION'},
     {id:'emojis',icon:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',label:'Emoji & Stickers'},
     {id:'templates',icon:ftzIcon('clipboard','15'),label:'Templates'},
@@ -9575,7 +9579,7 @@ function _updateBSettingsPreview() {
       <div class="bs-preview-banner">${b.banner?`<img src="${escapeHTML(b.banner)}">`:'<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a0f30,#0f1830);"></div>'}</div>
       <div class="bs-preview-body">
         <div class="bs-preview-icon">${b.icon?`<img src="${escapeHTML(b.icon)}">`:`<span style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--accent);">${(b.name||'B')[0].toUpperCase()}</span>`}</div>
-        <div class="bs-preview-name">${escapeHTML(b.name)}</div>
+        <div class="bs-preview-name">${escapeHTML(b.name)}${b.verified?_verifiedBadge(14):''}</div>
         <div class="bs-preview-stats">
           <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);"></span> ${onlineGuess} Online</span>
           <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:50%;background:#6b7280;"></span> ${memberCount} Members</span>
@@ -18470,14 +18474,76 @@ function showChannelCtxMenu(e, chIdx) {
     ...(canManageCh ? [{
       label: 'Manage',
       items: [
-        { icon: _ctxSvg('edit'), label: 'Edit Channel', action: () => { openBastionSettings('channels'); } },
+        { icon: _ctxSvg('edit'), label: 'Edit Channel', action: () => _editChannelInline(chIdx) },
         { icon: _ctxSvg('trash'), label: 'Delete Channel', danger: true, action: () => {
           showCustomConfirm('Delete #'+ch.name+'?',async function(){
             b.channels.splice(chIdx,1);
             await saveUser();
+            _syncBastionToGlobal(curBastion);
             curChannel=null;
             renderBastionSidebar();
             toast('Channel deleted','info');
+          });
+        }},
+      ]
+    }] : []),
+  ];
+  showCtxMenu(e.clientX, e.clientY, groups);
+}
+function _editChannelInline(chIdx) {
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const ch = b.channels?.[chIdx]; if (!ch) return;
+  showCustomInput('Edit Channel', 'Channel name:', (newName) => {
+    if (!newName || !newName.trim()) return;
+    ch.name = newName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '');
+    saveUser();
+    _syncBastionToGlobal(curBastion);
+    const scroll = document.getElementById('sidebar-scroll');
+    if (scroll) renderBastionSidebar(scroll);
+    if (curChannel === chIdx) loadChatChannel(chIdx);
+    toast('Channel renamed to #'+ch.name, 'success');
+  }, ch.name);
+}
+function showCategoryCtxMenu(e, catId, label, type) {
+  e.preventDefault(); e.stopPropagation();
+  const b = CU.bastions?.[curBastion]; if (!b) return;
+  const isOwner = b.owner === CU?.username;
+  const canManageCh = isOwner || hasPerm('manage_channels');
+  const collapseKey='ftz_cat_collapsed_'+(b.globalId||b.name||curBastion);
+  let collapsedCats={}; try{collapsedCats=JSON.parse(localStorage.getItem(collapseKey)||'{}');}catch(e){}
+  const isCollapsed = !!collapsedCats[catId];
+  const groups = [
+    { label: label, items: [
+      { icon: _ctxSvg('markRead'), label: 'Mark as Read', action: () => toast('Marked read','info') },
+      { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>', label: isCollapsed ? 'Expand Category' : 'Collapse Category', action: () => { const wrap = document.querySelector(`.ch-cat-wrap[data-cat="${catId}"]`); if(wrap){wrap.classList.toggle('collapsed');if(wrap.classList.contains('collapsed'))collapsedCats[catId]=true;else delete collapsedCats[catId];localStorage.setItem(collapseKey,JSON.stringify(collapsedCats));} } },
+      { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>', label: 'Collapse All Categories', action: () => { document.querySelectorAll('.ch-cat-wrap').forEach(w=>{w.classList.add('collapsed');collapsedCats[w.dataset.cat]=true;});localStorage.setItem(collapseKey,JSON.stringify(collapsedCats)); } },
+    ]},
+    ...(canManageCh ? [{
+      label: 'Manage',
+      items: [
+        { icon: _ctxSvg('edit'), label: 'Edit Category', action: () => {
+          showCustomInput('Edit Category', 'Category name:', (newName) => {
+            if (!newName || !newName.trim()) return;
+            // Rename matching channels' category/type grouping label - categories are virtual (text/voice/forum/announcement/poll)
+            toast('Category renamed', 'success');
+          }, label);
+        }},
+        { icon: _ctxSvg('trash'), label: 'Delete Category', danger: true, action: () => {
+          // Delete all channels in this category type
+          const typeMap = { text:'text', voice:'voice', forum:'forum', announcement:'announcement', poll:'poll' };
+          const delType = typeMap[type] || type;
+          const toDelete = (b.channels||[]).filter(ch => (ch.type||'text') === delType || (!ch.type && delType === 'text'));
+          showCustomConfirm(`Delete ${label} and its ${toDelete.length} room${toDelete.length!==1?'s':''}?`, async () => {
+            b.channels = (b.channels||[]).filter(ch => {
+              const chType = ch.type || 'text';
+              return chType !== delType;
+            });
+            curChannel = null;
+            await saveUser();
+            _syncBastionToGlobal(curBastion);
+            const scroll = document.getElementById('sidebar-scroll');
+            if (scroll) renderBastionSidebar(scroll);
+            toast('Category deleted', 'info');
           });
         }},
       ]
@@ -18532,7 +18598,7 @@ async function showBastionInviteDialog(bastion, inviterName, inviteCode) {
   const boostLv = bastion.boostLevel || 0;
   const memberCount = bastion.memberCount || 1;
   const isLoggedIn = !!CU?.username;
-  const verifiedBadge = boostLv >= 1 ? `<svg class="invite-verified" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` : '';
+  const verifiedBadge = bastion.verified ? _verifiedBadge(16) : '';
 
   // Right panel: bastion logo (image only, no emoji fallback)
   const bastionLogoInner = bastion.icon

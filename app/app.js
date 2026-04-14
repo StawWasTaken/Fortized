@@ -1574,6 +1574,7 @@ function showView(v, _skipPush) {
   // Post-show callbacks
   if (v === 'atelier') { _atelierTab = 'radiance'; renderAtelierTab('radiance'); setTimeout(() => { refreshCU().then(()=>{ switchAtelierTab('radiance'); refreshDailyBtn(); }).catch(()=>{ switchAtelierTab('radiance'); refreshDailyBtn(); }); }, 0); }
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
+  if (v === 'discover') setTimeout(() => loadDiscover(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
   if (v === 'dms' && !curDM && !curGC) setTimeout(() => { showDMFriendsHome(); }, 50);
 
@@ -1606,6 +1607,9 @@ function updateTopbar(v) {
   if (_isMobile() && v === 'bastion' && acts) {
     acts.insertAdjacentHTML('beforeend', '<button class="tb-act-btn" title="Members" onclick="toggleMobileMemberPanel()" style="position:relative;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></button>');
   }
+  // Show/hide staff console button in topbar
+  const adminBtn = document.getElementById('tb-admin-btn');
+  if (adminBtn) adminBtn.style.display = hasStaffAccess() ? 'flex' : 'none';
   updateOnyxDisplay();
 }
 // Update document title for bastion view: Fortized | #room | Bastion Name
@@ -4435,19 +4439,23 @@ function openBastion(idx) {
     const b = CU.bastions[idx];
     if (!b) return;
     const lastChKey = 'ftz_last_ch_' + (b.globalId||b.name||idx);
-    const lastVal = localStorage.getItem(lastChKey) || 'overview';
+    const lastVal = localStorage.getItem(lastChKey);
+    const chs = b.channels||[];
+    const fallbackCh = chs.findIndex(ch => ch.type !== 'voice' && ch.type !== 'forum');
     if (lastVal === 'overview') {
       openOverviewRoom();
-    } else {
+    } else if (lastVal != null) {
       const lastChIdx = parseInt(lastVal);
-      const chs = b.channels||[];
-      const fallbackCh = chs.findIndex(ch => ch.type !== 'voice' && ch.type !== 'forum');
       const autoChIdx = (lastChIdx >= 0 && lastChIdx < chs.length) ? lastChIdx : fallbackCh;
       if (autoChIdx >= 0) {
         selectChannel(autoChIdx);
       } else {
         openOverviewRoom();
       }
+    } else {
+      // First open — go to first text channel, not overview
+      if (fallbackCh >= 0) selectChannel(fallbackCh);
+      else openOverviewRoom();
     }
     document.getElementById('member-list').innerHTML='';
   });
@@ -6768,7 +6776,8 @@ async function promptJoinPublicBastion(bastionId){
     // Update member count in global
     try{
       const members=await FortizedSocial.getBastionMembers(gid)||[];
-      await firebase.database().ref('globalBastions/'+gid+'/memberCount').set(members.length);
+      const _gb=await FortizedSocial.getGlobalBastion(gid);
+      if(_gb){_gb.memberCount=members.length;await FortizedSocial.saveGlobalBastion(gid,_gb);}
     }catch(e){console.warn('[Bastion] Member count update failed:',e?.message);}
     renderRailBastions();
     toast('Joined '+b.name+'!','success');
@@ -8118,6 +8127,20 @@ function selectBastionTemplate(id, emoji, name) {
   }
 }
 
+// Preview icon during bastion creation
+function previewCBIcon(e) {
+  const file = e.target.files[0]; if (!file) return;
+  if (file.size > 8*1024*1024) { toast('Max 8 MB','error'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const dataUrl = ev.target.result;
+    cbIconData = dataUrl;
+    const preview = document.getElementById('cb-icon-preview');
+    if (preview) preview.innerHTML = '<img src="'+dataUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">';
+  };
+  reader.readAsDataURL(file);
+}
+
 // Template channel presets — rich bastion templates
 const BASTION_TEMPLATES = {
   gaming: {
@@ -9359,10 +9382,7 @@ async function saveOverviewConfig() {
   document.getElementById('modal-ov-editor')?.remove();
   try {
     await saveUser();
-    if (b.globalId) {
-      await firebase.database().ref('bastions/' + b.globalId + '/overview').set(b.overview);
-      await firebase.database().ref('globalBastions/' + b.globalId + '/overview').set(b.overview);
-    }
+    _syncBastionToGlobal(curBastion);
     toast('Overview updated!', 'success');
   } catch(e) { toast('Failed to save: ' + e.message, 'error'); }
   renderOverviewRoom();
@@ -10581,8 +10601,6 @@ async function generateInvite() {
   const bid = b.globalId;
   await saveUser();
   try {
-    // Sync invites to globalBastions
-    await firebase.database().ref('globalBastions/'+bid+'/invites').set(b.invites);
     // Also save to dedicated invites collection for faster lookup
     await FortizedSocial.saveInvite(code, {code, bastionId: bid, bastionName: b.name, createdBy: CU.username, created: invite.created, expires: invite.expires||null, maxUses: invite.maxUses||0, uses:0});
   } catch(e) { console.warn('[Invite] Sync failed:', e?.message); }
@@ -10792,7 +10810,7 @@ function confirmDeleteBastion(idx) {
   delBtn.onclick = async () => {
     if (inp.value.trim().toUpperCase() !== confirmWord) return;
     overlay.remove();
-    try { await firebase.database().ref('globalBastions/' + (b.globalId || b.name)).remove(); } catch(e) { console.warn('[Bastion] Global remove failed:', e?.message); }
+    try { await FortizedSocial.deleteGlobalBastion(b.globalId || b.name); } catch(e) { console.warn('[Bastion] Global remove failed:', e?.message); }
     CU.bastions.splice(idx, 1);
     await saveUser();
     curBastion = null;
@@ -10812,7 +10830,7 @@ async function transferBastionOwnership() {
     if(!b.memberRoles)b.memberRoles={};
     b.memberRoles[newOwner]=['admin'];
     await saveUser();
-    try{await firebase.database().ref('globalBastions/'+(b.globalId||b.name)).update({owner:newOwner});}catch{}
+    try{ _syncBastionToGlobal(curBastion); }catch{}
     renderBSettingsMain('danger');
     toast(`Ownership transferred to ${newOwner}`,'success');
   });
@@ -16958,65 +16976,42 @@ function _listenClearSessions() {
 }
 
 // Real-time bastion data sync — listens for changes to bastions the user belongs to
-const _bastionLiveRefs = [];
+let _bastionPollInterval = null;
 function _listenBastionUpdates() {
-  // Clean up previous listeners to prevent leaks
-  _bastionLiveRefs.forEach(ref => { try { ref.off(); } catch(e) { _dbg('[Bastion] ref.off:', e?.message); } });
-  _bastionLiveRefs.length = 0;
+  if (_bastionPollInterval) { clearInterval(_bastionPollInterval); _bastionPollInterval = null; }
   if (!CU?.bastions) return;
-  CU.bastions.forEach((b, idx) => {
-    const gid = b.globalId || b.name;
-    if (!gid) return;
-    const bastionRef = firebase.database().ref('globalBastions/' + gid);
-    _bastionLiveRefs.push(bastionRef);
-    bastionRef.on('value', snap => {
-      if (!snap.exists()) return;
-      const fresh = snap.val();
-      const local = CU.bastions[idx];
-      if (!local || (local.globalId || local.name) !== gid) return;
-      // Sync important fields from global bastion
-      const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','members','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview'];
-      let changed = false;
-      let membersChanged = false;
-      syncFields.forEach(f => {
-        if (fresh[f] !== undefined && JSON.stringify(fresh[f]) !== JSON.stringify(local[f])) {
-          if (f === 'memberRoles' || f === 'memberCount' || f === 'members') membersChanged = true;
-          local[f] = fresh[f];
-          changed = true;
-        }
-      });
-      if (changed) {
-        saveLocal();
-        // Re-render if viewing this bastion
-        if (curBastion === idx) {
-          renderRailBastions();
-          // Live update: re-render member list when members change
-          if (membersChanged && typeof renderMemberList === 'function') {
-            renderMemberList();
+  // Poll bastion updates periodically via Supabase
+  async function _pollBastionSync() {
+    if (!CU?.bastions) return;
+    for (let idx = 0; idx < CU.bastions.length; idx++) {
+      const b = CU.bastions[idx];
+      const gid = b.globalId || b.name;
+      if (!gid || b.owner === CU.username) continue; // owners push, don't pull
+      try {
+        const fresh = await FortizedSocial.getGlobalBastion(gid);
+        if (!fresh) continue;
+        const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','members','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview'];
+        let changed = false;
+        let membersChanged = false;
+        syncFields.forEach(f => {
+          if (fresh[f] !== undefined && JSON.stringify(fresh[f]) !== JSON.stringify(b[f])) {
+            if (f === 'memberRoles' || f === 'memberCount' || f === 'members') membersChanged = true;
+            b[f] = fresh[f];
+            changed = true;
+          }
+        });
+        if (changed) {
+          saveLocal();
+          if (curBastion === idx) {
+            renderRailBastions();
+            if (membersChanged && typeof renderMemberList === 'function') renderMemberList();
           }
         }
-      }
-    });
-    // Live listener for bastion member list — updates member list in real-time when someone joins/leaves
-    const membersRef = firebase.database().ref('globalBastions/' + gid + '/members');
-    _bastionLiveRefs.push(membersRef);
-    membersRef.on('value', snap => {
-      if (!snap.exists()) return;
-      const raw = snap.val();
-      if (!raw) return;
-      // Firebase may store arrays as objects — normalize to array
-      const freshMembers = Array.isArray(raw) ? raw : Object.values(raw);
-      // Update the local bastion's members array so renderMemberList has fresh data
-      const local = CU.bastions?.[idx];
-      if (local && (local.globalId || local.name) === gid) {
-        local.members = freshMembers;
-      }
-      // Re-render member list if currently viewing this bastion
-      if (curBastion === idx && _currentView === 'bastion') {
-        if (typeof renderMemberList === 'function') renderMemberList();
-      }
-    });
-  });
+      } catch(e) { /* poll fail — ignore */ }
+    }
+  }
+  _bastionPollInterval = setInterval(_pollBastionSync, 30000); // every 30s
+  setTimeout(_pollBastionSync, 3000); // first poll after 3s
 }
 
 // Real-time DM list sync — updates DM sidebar when group chat members change or new DMs arrive
@@ -18200,7 +18195,7 @@ async function showBastionInviteUI(bastionIdx) {
     b.invites.push(newInv);
     saveUser().catch(e => console.warn('[Save] Failed:', e?.message));
     if (gid) {
-      try { await firebase.database().ref('globalBastions/' + gid + '/invites').set(b.invites); } catch(e) { console.warn('[Invite] Sync failed:', e?.message); }
+      try { _syncBastionToGlobal(curBastion); } catch(e) { console.warn('[Invite] Sync failed:', e?.message); }
       // Also save to dedicated invites table so API can look it up
       try { await FortizedSocial.saveInvite(inviteCode, {code: inviteCode, bastionId: gid, bastionName: b.name, createdBy: CU.username, created: newInv.created, expires: null, maxUses: 0, uses: 0}); } catch(e) { console.warn('[Invite] Supabase save failed:', e?.message); }
       // Sync full bastion data to global so API has latest info
@@ -18671,7 +18666,7 @@ async function joinBastionById(bastionId, hasInvite) {
   CU.bastions=[...(CU.bastions||[]),localB];
   await saveUser();
   await FortizedSocial.addBastionMember(gid,CU.username);
-  try{const members=await FortizedSocial.getBastionMembers(gid)||[];await firebase.database().ref('globalBastions/'+gid+'/memberCount').set(members.length);}catch{}
+  try{const members=await FortizedSocial.getBastionMembers(gid)||[];const _gb=await FortizedSocial.getGlobalBastion(gid);if(_gb){_gb.memberCount=members.length;await FortizedSocial.saveGlobalBastion(gid,_gb);}}catch{}
   renderRailBastions();
   toast('Joined '+b.name+'!','success');
   openBastion(CU.bastions.length-1);
@@ -19150,8 +19145,7 @@ async function _deleteBastion(globalId, name) {
   if (!isSuperAdmin()) { toast('Only super admins can delete bastions', 'error'); return; }
   if (!globalId) { toast('No bastion ID', 'error'); return; }
   try {
-    await firebase.database().ref('globalBastions/' + globalId).remove();
-    await firebase.database().ref('bastions/' + globalId).remove();
+    await FortizedSocial.deleteGlobalBastion(globalId);
     logAudit('bastion_deleted', name, 'Deleted by super admin ' + CU.username);
     toast(`Bastion "${name}" deleted`, 'success');
     _adminBastionsCache = _adminBastionsCache.filter(b => b._globalId !== globalId);

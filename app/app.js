@@ -4585,24 +4585,24 @@ function renderBastionSidebar(scroll) {
   });
   if (textHTML||canManageChannels) html+=catWrap('text','📝','TEXT ROOMS','text',textHTML);
 
-  // Forums
+  // Walls (formerly Forums)
   let forumHTML='';
   forumChs.forEach(ch => {
     const ri=chs.indexOf(ch);
     const fu = getChannelUnread(curBastion, ri);
     const fuClass = fu.count > 0 && curChannel !== ri ? ' unread' : '';
-    forumHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${fuClass}" id="ch-sb-${ri}" onclick="openForumChannel(${ri})">
+    forumHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${fuClass}" id="ch-sb-${ri}" onclick="openForumChannel(${ri})" oncontextmenu="showChannelCtxMenu(event,${ri})">
       <span class="ch-hash">${ftzIcon('chat','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
-  if (forumHTML||canManageChannels) html+=catWrap('forum',ftzIcon('chat','12'),'FORUM ROOMS','forum',forumHTML);
+  if (forumHTML||canManageChannels) html+=catWrap('forum',ftzIcon('chat','12'),'WALL ROOMS','forum',forumHTML);
 
   // Voice
   let voiceHTML='';
   chs.forEach((ch,i)=>{
     if (ch.type!=='voice') return;
     const live=voiceConnected&&voiceChannel===i;
-    voiceHTML+=`<div class="vc-item-2027 ${live?'active-vc':''}" onclick="selectChannel(${i})">
+    voiceHTML+=`<div class="vc-item-2027 ${live?'active-vc':''}" onclick="selectChannel(${i})" oncontextmenu="showChannelCtxMenu(event,${i})">
       <span class="vc-icon">${ftzIcon('mic','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
       ${live?'<span class="vc-live">LIVE</span>':''}
     </div>`;
@@ -4615,7 +4615,7 @@ function renderBastionSidebar(scroll) {
     const ri=chs.indexOf(ch);
     const au = getChannelUnread(curBastion, ri);
     const auClass = au.count > 0 && curChannel !== ri ? ' unread' : '';
-    announceHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${auClass}" id="ch-sb-${ri}" onclick="selectChannel(${ri})">
+    announceHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${auClass}" id="ch-sb-${ri}" onclick="selectChannel(${ri})" oncontextmenu="showChannelCtxMenu(event,${ri})">
       <span class="ch-hash">${ftzIcon('megaphone','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
@@ -4627,7 +4627,7 @@ function renderBastionSidebar(scroll) {
     const ri=chs.indexOf(ch);
     const pu = getChannelUnread(curBastion, ri);
     const puClass = pu.count > 0 && curChannel !== ri ? ' unread' : '';
-    pollHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${puClass}" id="ch-sb-${ri}" onclick="openPollChannel(${ri})">
+    pollHTML+=`<div class="ch-item-2027${curChannel===ri?' active':''}${puClass}" id="ch-sb-${ri}" onclick="openPollChannel(${ri})" oncontextmenu="showChannelCtxMenu(event,${ri})">
       <span class="ch-hash">${ftzIcon('ballot','14')}</span><span class="ch-name">${escapeHTML(ch.name)}</span>
     </div>`;
   });
@@ -7730,7 +7730,7 @@ function initFortizedUXResilience() {
             FortizedSocial.getGlobalBastion(data.bastionId).then(fresh => {
               if (!fresh) return;
               // Sync ALL fields from global
-              const syncFields = ['roles','memberRoles','channels','name','icon','banner','emblem','desc','tagline','members','memberCount','invites','automod','boostLevel','customEmojis','public','categories','moodDisabled','moodLocked','lockedMood','customMood','overview','bans'];
+              const syncFields = ['roles','memberRoles','channels','name','icon','banner','emblem','desc','tagline','members','memberCount','invites','automod','boostLevel','customEmojis','public','categories','moodDisabled','moodLocked','lockedMood','customMood','overview','bans','verified'];
               syncFields.forEach(f => { if (fresh[f] !== undefined) b[f] = fresh[f]; });
               saveLocal();
               renderRailBastions();
@@ -8749,7 +8749,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
   const types = [
     { id:'text', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`, label:'Text', desc:'Send messages, images, GIFs, and more' },
     { id:'voice', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`, label:'Party', desc:'Voice chat and hang out together' },
-    { id:'forum', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`, label:'Forum', desc:'Organized threaded discussions' },
+    { id:'forum', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`, label:'Wall', desc:'Organized threaded discussions' },
     { id:'announcement', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`, label:'Announcement', desc:'Important updates — only admins can post' },
     { id:'poll', icon:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h2v5H7z"/><path d="M11 8h2v9h-2z"/><path d="M15 10h2v7h-2z"/></svg>`, label:'Poll', desc:'Create polls and gather opinions' },
   ];
@@ -8822,7 +8822,7 @@ function showCreateRoomModal(bastionIdx, preselectedType) {
     const pvIcon = overlay.querySelector('#crm-pv-icon');
     if (pvName) pvName.textContent = n;
     if (pvWelcome) pvWelcome.innerHTML = 'Welcome to <strong style="color:rgba(255,255,255,.5);">#' + escapeHTML(n) + '</strong>! This is the start of the channel.';
-    const typeLabels = {text:'Text',voice:'Party',forum:'Forum',announcement:'Announcement',poll:'Poll'};
+    const typeLabels = {text:'Text',voice:'Party',forum:'Wall',announcement:'Announcement',poll:'Poll'};
     const typeIcons = {
       text:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
       voice:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>',
@@ -8879,7 +8879,7 @@ function _crmSelectType(el, type) {
     if (radio) { radio.style.borderColor = isThis ? '#fff93e' : 'rgba(255,255,255,.15)'; radio.children[0].style.background = isThis ? '#fff93e' : 'transparent'; }
   });
   // Update room preview
-  const typeLabels = {text:'Text',voice:'Party',forum:'Forum',announcement:'Announcement',poll:'Poll'};
+  const typeLabels = {text:'Text',voice:'Party',forum:'Wall',announcement:'Announcement',poll:'Poll'};
   const typeIcons = {
     text:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
     voice:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>',
@@ -9157,18 +9157,18 @@ function renderOverviewRoom() {
     html += '</div></div>';
   }
 
-  // ── Recent Forum Activity ──
+  // ── Recent Wall Activity ──
   if (showForums && forumChs.length > 0) {
     html += '<div class="ov-section">'
       + '<div class="ov-section-header">'
-      + '<span class="ov-section-title">Recent forum activity</span>'
+      + '<span class="ov-section-title">Recent wall activity</span>'
       + '<span class="ov-section-link" onclick="selectChannel(' + chs.indexOf(forumChs[0]) + ')">See all</span>'
       + '</div><div class="ov-card-row">';
     forumChs.forEach(ch => {
       const ri = chs.indexOf(ch);
       html += '<div class="ov-ann-card" onclick="openForumChannel(' + ri + ');closeModal(\'modal-overview\')">'
         + '<div class="ov-ac-title">' + ftzIcon('chat','14') + ' ' + escapeHTML(ch.name) + '</div>'
-        + '<div class="ov-ac-meta"><span>Forum room</span></div>'
+        + '<div class="ov-ac-meta"><span>Wall room</span></div>'
         + '</div>';
     });
     html += '</div></div>';
@@ -9336,7 +9336,7 @@ function openOverviewEditor() {
           <input type="checkbox" id="ov-ed-announcements" ${ov.showAnnouncements!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Latest Announcements
         </label>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
-          <input type="checkbox" id="ov-ed-forums" ${ov.showForums!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Recent Forum Activity
+          <input type="checkbox" id="ov-ed-forums" ${ov.showForums!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Recent Wall Activity
         </label>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
           <input type="checkbox" id="ov-ed-roles" ${ov.showRoles!==false?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;"> Your Roles
@@ -9692,7 +9692,7 @@ function renderBSettingsMain(tab) {
         <button class="btn-g" onclick="addChannel(curBastion,'voice')" style="font-size:13px;">+ Party Room</button>
         <button class="btn-g" onclick="addChannel(curBastion,'announcement')" style="font-size:13px;">+ Announcement Room</button>
         <button class="btn-g" onclick="addChannel(curBastion,'poll')" style="font-size:13px;">+ Poll Room</button>
-        <button class="btn-g" onclick="addChannel(curBastion,'forum')" style="font-size:13px;">+ Forum Room</button>
+        <button class="btn-g" onclick="addChannel(curBastion,'forum')" style="font-size:13px;">+ Wall Room</button>
       </div>
       ${catHTML}
       ${uncatHTML||(!cats.length?'<div style="color:var(--muted);font-size:13.5px;text-align:center;padding:20px;">No channels yet. Create some above!</div>':'')}`;
@@ -16986,7 +16986,7 @@ function _listenBastionUpdates() {
       try {
         const fresh = await FortizedSocial.getGlobalBastion(gid);
         if (!fresh) continue;
-        const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','members','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview'];
+        const syncFields = ['name','emblem','icon','banner','tagline','desc','channels','roles','memberRoles','members','public','automod','boostLevel','customEmojis','invites','moodDisabled','moodLocked','lockedMood','customMood','memberCount','owner','overview','verified'];
         let changed = false;
         let membersChanged = false;
         syncFields.forEach(f => {
@@ -18465,23 +18465,28 @@ function showChannelCtxMenu(e, chIdx) {
   const ch = b.channels?.[chIdx]; if (!ch) return;
   const isOwner = b.owner === CU?.username;
   const canManageCh = isOwner || hasPerm('manage_channels');
+  const chType = ch.type || 'text';
+  const typeLabels = {text:'Text',voice:'Party',forum:'Wall',announcement:'Announcement',poll:'Poll'};
+  const prefix = chType === 'text' ? '#' : '';
+  const displayName = prefix + ch.name;
   const groups = [
-    { label: '#'+ch.name, items: [
+    { label: displayName, items: [
       { icon: _ctxSvg('markRead'), label: 'Mark as Read', action: () => toast('Marked read','info') },
       { icon: _ctxSvg('mute'), label: 'Mute Channel', action: () => { ch._muted=!ch._muted; toast(ch._muted?'Channel muted':'Channel unmuted','info'); } },
-      { icon: _ctxSvg('copy'), label: 'Copy Channel Name', action: () => navigator.clipboard.writeText('#'+ch.name), copyFeedback: true },
+      { icon: _ctxSvg('copy'), label: 'Copy Channel Name', action: () => navigator.clipboard.writeText(displayName), copyFeedback: true },
     ]},
     ...(canManageCh ? [{
       label: 'Manage',
       items: [
         { icon: _ctxSvg('edit'), label: 'Edit Channel', action: () => _editChannelInline(chIdx) },
         { icon: _ctxSvg('trash'), label: 'Delete Channel', danger: true, action: () => {
-          showCustomConfirm('Delete #'+ch.name+'?',async function(){
+          showCustomConfirm('Delete '+displayName+'?',async function(){
             b.channels.splice(chIdx,1);
             await saveUser();
             _syncBastionToGlobal(curBastion);
             curChannel=null;
-            renderBastionSidebar();
+            const scroll = document.getElementById('sidebar-scroll');
+            if (scroll) renderBastionSidebar(scroll);
             toast('Channel deleted','info');
           });
         }},
@@ -18493,7 +18498,9 @@ function showChannelCtxMenu(e, chIdx) {
 function _editChannelInline(chIdx) {
   const b = CU.bastions?.[curBastion]; if (!b) return;
   const ch = b.channels?.[chIdx]; if (!ch) return;
-  showCustomInput('Edit Channel', 'Channel name:', (newName) => {
+  const chType = ch.type || 'text';
+  const typeNames = {text:'Text',voice:'Party',forum:'Wall',announcement:'Announcement',poll:'Poll'};
+  showCustomInput('Edit '+typeNames[chType]+' Room', 'Room name:', (newName) => {
     if (!newName || !newName.trim()) return;
     ch.name = newName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '');
     saveUser();
@@ -18501,7 +18508,7 @@ function _editChannelInline(chIdx) {
     const scroll = document.getElementById('sidebar-scroll');
     if (scroll) renderBastionSidebar(scroll);
     if (curChannel === chIdx) loadChatChannel(chIdx);
-    toast('Channel renamed to #'+ch.name, 'success');
+    toast('Room renamed to '+(chType==='text'?'#':'')+ch.name, 'success');
   }, ch.name);
 }
 function showCategoryCtxMenu(e, catId, label, type) {
@@ -20120,7 +20127,7 @@ function _showRoomPreview(e, el, roomName) {
     if (!b) return;
     const ch = (b.channels||[]).find(c => c.name === roomName);
     if (!ch) return;
-    const typeLabel = {text:'Text Room',voice:'Party Room',forum:'Forum Room',announcement:'Announcement Room',poll:'Poll Room'}[ch.type]||'Room';
+    const typeLabel = {text:'Text Room',voice:'Party Room',forum:'Wall Room',announcement:'Announcement Room',poll:'Poll Room'}[ch.type]||'Room';
     const typeIcon = {text:'#',voice:ftzIcon('mic','12'),forum:ftzIcon('chat','12'),announcement:ftzIcon('megaphone','12'),poll:ftzIcon('ballot','12')}[ch.type]||'#';
     const panel = document.createElement('div');
     panel.className = 'mention-preview';
@@ -28430,7 +28437,7 @@ function _handleSmartSuggestion(ta) {
       // Rooms
       (b?.channels||[]).forEach(ch => {
         if (ch.name.toLowerCase().startsWith(query) || ch.name.toLowerCase().includes(query)) {
-          const typeLabel = {text:'Text Room',voice:'Party Room',forum:'Forum Room',announcement:'Announcement Room',poll:'Poll Room'}[ch.type]||'Room';
+          const typeLabel = {text:'Text Room',voice:'Party Room',forum:'Wall Room',announcement:'Announcement Room',poll:'Poll Room'}[ch.type]||'Room';
           _sugResults.push({type:'room',label:ch.name,desc:typeLabel,icon:ch.type==='voice'?'🎉':ch.type==='forum'?'💬':ch.type==='announcement'?'📢':ch.type==='poll'?'🗳':'#',insert:'#'+ch.name});
         }
       });

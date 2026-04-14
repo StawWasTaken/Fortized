@@ -771,8 +771,8 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* Role accent stripe */
 .msg-role-stripe{position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:1px;opacity:.35;transition:opacity .2s;}
 /* Viewing older messages bar */
-.chat-past-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(96,165,250,.04));backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border-bottom:1px solid rgba(96,165,250,.15);font-size:13px;color:rgba(96,165,250,.85);transition:opacity .2s,transform .2s;opacity:0;transform:translateY(-100%);pointer-events:none;font-weight:500;}
-.chat-past-bar.show{opacity:1;transform:translateY(0);pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.3);}
+.chat-past-bar{position:sticky;top:0;z-index:20;display:none;align-items:center;justify-content:center;gap:12px;padding:10px 16px;background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(96,165,250,.04));backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border-bottom:1px solid rgba(96,165,250,.15);font-size:13px;color:rgba(96,165,250,.85);pointer-events:none;font-weight:500;}
+.chat-past-bar.show{display:flex;pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.3);}
 .chat-past-bar button{background:rgba(96,165,250,.15);border:1.5px solid rgba(96,165,250,.3);color:rgba(96,165,250,.95);border-radius:8px;padding:6px 18px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:var(--font-display);white-space:nowrap;}
 .chat-past-bar button:hover{background:rgba(96,165,250,.25);border-color:rgba(96,165,250,.5);transform:translateY(-1px);}
 .chat-past-bar button:active{transform:translateY(0);}
@@ -780,8 +780,8 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .chat-past-bar button.has-new{animation:pastBarPulse 2s ease infinite;}
 
 /* New messages notification bar */
-.new-messages-bar{position:sticky;top:40px;z-index:19;display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 16px;background:linear-gradient(135deg,rgba(62,207,110,.12),rgba(62,207,110,.06));backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border-bottom:1px solid rgba(62,207,110,.18);font-size:12.5px;color:rgba(62,207,110,.8);transition:opacity .2s,transform .2s;opacity:0;transform:translateY(-100%);pointer-events:none;font-weight:500;}
-.new-messages-bar.show{opacity:1;transform:translateY(0);pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.new-messages-bar{position:sticky;top:40px;z-index:19;display:none;align-items:center;justify-content:center;gap:12px;padding:8px 16px;background:linear-gradient(135deg,rgba(62,207,110,.12),rgba(62,207,110,.06));backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border-bottom:1px solid rgba(62,207,110,.18);font-size:12.5px;color:rgba(62,207,110,.8);pointer-events:none;font-weight:500;}
+.new-messages-bar.show{display:flex;pointer-events:auto;box-shadow:0 2px 12px rgba(0,0,0,.2);}
 .new-messages-bar button{background:transparent;border:1px solid rgba(62,207,110,.3);color:rgba(62,207,110,.9);border-radius:6px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font-ui);}
 .new-messages-bar button:hover{background:rgba(62,207,110,.1);border-color:rgba(62,207,110,.5);}
 /* New messages floating button */
@@ -823,7 +823,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 .chat-input-actions{display:flex;gap:2px;align-items:center;}
 .chat-input-actions button{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
 .chat-send{display:none;}
-.member-list{width:250px;min-width:250px;max-width:250px;background:var(--sidebar);border-left:1px solid var(--border);overflow-y:auto;padding:0;flex-shrink:0;}
+.member-list{width:250px;min-width:250px;max-width:250px;background:var(--glass-mid);backdrop-filter:var(--blur-mid);-webkit-backdrop-filter:var(--blur-mid);border-left:1px solid var(--glass-border);overflow-y:auto;padding:0;flex-shrink:0;}
 .ml-header{padding:14px 14px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.04);margin-bottom:0;}
 .ml-header-title{font-family:var(--font-display);font-size:10.5px;font-weight:800;color:rgba(255,255,255,.3);letter-spacing:.06em;text-transform:uppercase;}
 .ml-header-count{font-size:10px;color:rgba(255,255,255,.2);font-weight:600;}
@@ -1341,7 +1341,7 @@ body.is-desktop-app .hero-knight-bg{height:240px;max-height:240px;right:-20px;bo
 /* ── Overview Room ──────────────────────── */
 .overview-room{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
 .ov-banner{position:relative;width:100%;height:220px;overflow:visible;flex-shrink:0;border-bottom:1.5px solid var(--border);}
-.ov-banner img{width:100%;height:100%;object-fit:cover;filter:brightness(.85) saturate(1.15);}
+.ov-banner img{width:100%;height:100%;object-fit:cover;}
 .ov-banner .ov-gradient{display:none;}
 .ov-emblem{position:absolute;bottom:-56px;left:50%;transform:translateX(-50%);z-index:3;}
 .ov-emblem .ov-icon{width:128px;height:128px;border-radius:28px;background:var(--panel);border:5px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:56px;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);transition:transform .2s cubic-bezier(.22,1,.36,1);}

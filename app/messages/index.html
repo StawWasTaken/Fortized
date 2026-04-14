@@ -495,24 +495,25 @@ window._cdnReady.then(function() {
     <!-- DISCOVER VIEW -->
     <div class="view" id="view-discover">
       <div class="discover-scroll">
-        <!-- Discord-style Banner -->
-        <div class="page-banner" style="margin:-28px -28px 0;margin-bottom:0;">
-          <img src="/Fortized banner.png" class="page-banner-img" alt="">
-          <div class="page-banner-fade"></div>
+        <!-- Hero Banner -->
+        <div class="disc-hero">
+          <img src="/Fortized banner.png" class="disc-hero-bg" alt="">
+          <div class="disc-hero-fade"></div>
+          <div class="disc-hero-content">
+            <h1 style="font-family:var(--font-display);font-size:24px;font-weight:900;color:#fff;margin:0 0 4px;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.5);">Explore the realm.</h1>
+            <p style="font-size:12.5px;color:rgba(255,255,255,.45);margin:0;">Find the Bastions where people gather around the things you love.</p>
+          </div>
         </div>
-        <!-- Header -->
-        <div style="margin-bottom:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <div>
-              <h2 style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-.02em;">Discover</h2>
-              <p style="font-size:12.5px;color:rgba(255,255,255,.3);margin:0;">Find communities to join and explore</p>
-            </div>
-            <div class="disc-search" style="width:280px;">
+        <!-- Search + Categories -->
+        <div style="padding:20px 28px 0;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div class="disc-search" style="flex:1;max-width:360px;">
               <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
               <input type="text" placeholder="Search bastions..." id="disc-search-input" oninput="filterDiscover(this.value)">
             </div>
+            <div class="disc-stats" id="disc-stats" style="display:flex;gap:12px;margin-left:auto;"></div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
             <button class="disc-tab active" onclick="setDiscoverTab('all',this)">All</button>
             <button class="disc-tab" onclick="setDiscoverTab('gaming',this)">Gaming</button>
             <button class="disc-tab" onclick="setDiscoverTab('art',this)">Art</button>
@@ -520,12 +521,12 @@ window._cdnReady.then(function() {
             <button class="disc-tab" onclick="setDiscoverTab('social',this)">Social</button>
             <button class="disc-tab" onclick="setDiscoverTab('music',this)">Music</button>
             <button class="disc-tab" onclick="setDiscoverTab('education',this)">Education</button>
-            <div style="flex:1;"></div>
-            <div class="disc-stats" id="disc-stats" style="display:flex;gap:12px;"></div>
           </div>
         </div>
-        <div id="disc-featured" style="margin-bottom:20px;"></div>
-        <div class="bastion-grid" id="discover-grid"></div>
+        <div style="padding:0 28px;">
+          <div id="disc-featured" style="margin-bottom:20px;"></div>
+          <div class="bastion-grid" id="discover-grid"></div>
+        </div>
       </div>
     </div>
 

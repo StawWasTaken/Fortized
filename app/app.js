@@ -4833,7 +4833,14 @@ function loadChatChannel(idx) {
       <div class="chat-msgs" id="ch-msgs-${idx}">
         <div class="chat-past-bar"><span>You're viewing older messages</span><button onclick="scrollBottom('ch-msgs-${idx}')">Jump to Present</button></div>
         <div class="new-messages-bar" id="ch-new-msgs-bar-${idx}"><span id="ch-new-msgs-text-${idx}">1 new message</span><button onclick="markChannelRead(${idx})">Mark as Read</button></div>
-        ${bannerSafe ? `<div style="width:100%;height:120px;position:relative;flex-shrink:0;overflow:hidden;border-bottom:1.5px solid var(--border);"><img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.88);" onerror="this.parentElement.style.display='none'"><div style="position:absolute;bottom:12px;left:16px;font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);">${escapeHTML(b.name||'')}</div></div>` : ''}
+        ${bannerSafe ? `<div style="width:100%;height:140px;position:relative;flex-shrink:0;overflow:hidden;">
+          <img src="${bannerSafe}" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.82) saturate(1.1);" onerror="this.parentElement.style.display='none'">
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,var(--channel) 0%,rgba(0,0,0,.25) 50%,transparent 100%);pointer-events:none;"></div>
+          <div style="position:absolute;bottom:14px;left:18px;display:flex;align-items:center;gap:10px;">
+            ${b.icon?`<img src="${escapeHTML(b.icon)}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;border:2px solid rgba(255,255,255,.15);box-shadow:0 2px 8px rgba(0,0,0,.4);" onerror="this.style.display='none'">`:''}
+            <span style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7),0 0 4px rgba(0,0,0,.4);letter-spacing:-.01em;">${escapeHTML(b.name||'')}</span>
+          </div>
+        </div>` : ''}
         <div class="chat-welcome">
           <div class="w-av" style="font-size:26px;background:var(--panel2);">${chTypeIcon}</div>
           <h3>${escapeHTML(ch.name)}${nsfwBadge}</h3>
@@ -6624,6 +6631,7 @@ async function loadDiscover(){
   const grid=document.getElementById('discover-grid');
   if(!grid)return;
   grid.innerHTML='<div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">' + Array(6).fill(0).map(() => '<div class="skeleton-card"><div class="skeleton skeleton-banner"></div><div class="skeleton-body"><div class="skeleton skeleton-text" style="width:65%;height:14px;"></div><div class="skeleton skeleton-text" style="width:90%;"></div><div class="skeleton skeleton-text" style="width:40%;height:10px;"></div></div></div>').join('') + '</div>';
+  try { FortizedSocial.clearBastionCache(); } catch(e) {}
   try{discoverData=Object.values(await FortizedSocial.getGlobalBastions()||{});}catch{discoverData=[];}
   // Strictly filter: only show bastions that are explicitly public
   discoverData = discoverData.filter(b => b.public === true || (b.public !== false && b.public !== undefined));
@@ -6654,7 +6662,7 @@ function _renderDiscoverFeatured(bastions){
     const boostBadge = (b.boostLevel||0)>0?(['🟦 Tier 1','🟪 Tier 2','👑 Tier 3'][(b.boostLevel||1)-1]):'';
     return `<div onclick="promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')" style="background:linear-gradient(135deg,${(b.boostLevel||0)>0?'rgba(255,249,62,.08)':'rgba(255,249,62,.04)'},rgba(62,207,110,.02),rgba(14,18,28,.95));border:1.5px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.12)'};border-radius:18px;padding:20px 22px;cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(12px);" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px ${(b.boostLevel||0)>0?'rgba(255,249,62,.12)':'rgba(255,249,62,.06)'}';" onmouseleave="this.style.transform='';this.style.boxShadow='';">
       <div style="width:52px;height:52px;border-radius:14px;background:${(b.boostLevel||0)>0?'linear-gradient(135deg,rgba(255,249,62,.15),rgba(255,249,62,.05))':'rgba(255,249,62,.06)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid ${(b.boostLevel||0)>0?'rgba(255,249,62,.2)':'rgba(255,249,62,.1)'};overflow:hidden;">${b.icon?`<img src="${b.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,249,62,.4)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}</div>
-      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)} ${boostBadge?'<span style="font-size:10px;margin-left:6px;font-weight:700;color:var(--accent);">'+boostBadge+'</span>':''}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.8);display:flex;align-items:center;gap:2px;font-weight:700;">🔥 Trending</span>`:`<span style="color:rgba(255,255,255,.4);">💤 ${mc>1?'Active':'Quiet'}</span>`}</div></div>
+      <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;line-height:1.2;">${escapeHTML(b.name)}${b.verified?` <svg width="16" height="16" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-left:2px;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''} ${boostBadge?'<span style="font-size:10px;margin-left:6px;font-weight:700;color:var(--accent);">'+boostBadge+'</span>':''}</div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-ui);">${escapeHTML((b.desc||'A community bastion').slice(0,70))}</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.3);"><span style="display:flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ${mc}</span>${mc>=5?`<span style="color:rgba(62,207,110,.8);display:flex;align-items:center;gap:2px;font-weight:700;">🔥 Trending</span>`:`<span style="color:rgba(255,255,255,.4);">💤 ${mc>1?'Active':'Quiet'}</span>`}</div></div>
       ${joined?`<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.12);padding:5px 12px;border-radius:10px;">✓ Joined</span>`:`<span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.15);padding:5px 12px;border-radius:10px;">+ Join</span>`}
     </div>`;
   }).join('')}</div>`;
@@ -6664,12 +6672,15 @@ function renderDiscoverGrid(bastions){
   if(!grid)return;
   const filtered=bastions.filter(b=>b.public!==false&&(discoverTab==='all'||(b.category||'').toLowerCase()===discoverTab));
   if(!filtered.length){grid.innerHTML=`<div style="grid-column:1/-1;" class="ftz-empty"><div class="ftz-empty-icon"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div><div class="ftz-empty-title">No bastions found</div><div class="ftz-empty-text">Try a different category or search term</div></div>`;return;}
-  // Sort: trending (most members) first, then newest
+  // Sort: verified first, then most members, then oldest (established communities)
   const sorted = [...filtered].sort((a,b) => {
+    // Verified bastions always come first
+    const aV = a.verified ? 1 : 0, bV = b.verified ? 1 : 0;
+    if (aV !== bV) return bV - aV;
     const aMembers = a.memberCount||0, bMembers = b.memberCount||0;
     if (aMembers !== bMembers) return bMembers - aMembers;
-    // Tie-break by creation date (newer first)
-    return (b.createdAt||'').localeCompare(a.createdAt||'');
+    // Tie-break by creation date (older = more established first)
+    return (a.createdAt||'').localeCompare(b.createdAt||'');
   });
   grid.innerHTML=sorted.map(b=>{
     const joined=(CU?.bastions||[]).some(ub=>ub.globalId===b.id);
@@ -6695,7 +6706,7 @@ function renderDiscoverGrid(bastions){
           <div style="flex:1"></div>
           ${joined?`<span style="font-size:10.5px;font-weight:700;color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);padding:4px 12px;border-radius:8px;display:flex;align-items:center;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Joined</span>`:`<button class="ftz-btn ftz-btn-accent ftz-btn-xs" style="padding:5px 16px;border-radius:8px;" onclick="event.stopPropagation();promptJoinPublicBastion('${escapeHTML(b.id||b.name)}')">+ Join</button>`}
         </div>
-        <div class="bc-name">${escapeHTML(b.name)}</div>
+        <div class="bc-name">${escapeHTML(b.name)}${b.verified?` <svg width="16" height="16" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-left:4px;flex-shrink:0;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}</div>
         <div class="bc-desc">${escapeHTML((b.desc||'').slice(0,140))}</div>
         <div class="bc-footer">
           <span style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.35);"><span style="width:8px;height:8px;border-radius:50%;background:#3ecf6e;"></span> ${mc > 1000 ? Math.floor(mc/1000)+'K' : Math.max(1,Math.floor(mc*0.3))} Online</span>
@@ -7845,28 +7856,9 @@ function initFortizedUXResilience() {
     } catch(e) { console.warn('Staff sync at init failed:', e); }
   }
 
-  // Staff console button (visible to superadmin, admin, moderator)
-  if (hasStaffAccess()){
-    const rail=document.getElementById('rail');
-    if(rail&&!document.getElementById('admin-rail-btn')){
-      const role = getStaffRole(CU.username);
-      const roleIcon = role === 'superadmin' ? '<img src="/fortized badges/superadmin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">' : role === 'admin' ? '<img src="/fortized badges/admin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">' : '<img src="/fortized badges/moderator.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">';
-      const roleLabel = role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Moderator';
-      const btn=document.createElement('div');
-      btn.id='admin-rail-btn';btn.className='rail-btn';
-      btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Staff Console</span>`;
-      btn.dataset.tip=roleLabel + ' Panel';
-      btn.style.cssText='border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);margin-top:6px;background:rgba(248,113,113,.04);';
-      btn.onclick=tryOpenAdmin;
-      const sep = document.createElement('div');
-      sep.className='rail-sep';sep.style.margin='8px 12px';
-      const bastionSection = rail.querySelector('#rail-bastions')?.parentElement || rail;
-      // Insert before the Create Bastion button area
-      const createBtn = rail.querySelector('[onclick*="modal-create-bastion"]');
-      if(createBtn){rail.insertBefore(sep,createBtn);rail.insertBefore(btn,createBtn);}
-      else rail.appendChild(btn);
-    }
-  }
+  // Staff console button now lives in the topbar (tb-admin-btn) — show it on init
+  const _tbAdminBtn = document.getElementById('tb-admin-btn');
+  if (_tbAdminBtn) _tbAdminBtn.style.display = hasStaffAccess() ? 'flex' : 'none';
 
   // Onboarding will be triggered if user is new
 
@@ -19126,7 +19118,8 @@ function leaveBastion(idx) {
 let _adminBastionsCache = [];
 
 async function loadAdminBastions(silent = false) {
-  // Single data source: Firebase globalBastions
+  // Clear cache to always show fresh data in admin panel
+  try { FortizedSocial.clearBastionCache(); } catch(e) {}
   try {
     const data = await FortizedSocial.getGlobalBastions() || {};
     _adminBastionsCache = Object.entries(data).map(([id, b]) => ({...b, _globalId: id}));
@@ -19151,6 +19144,23 @@ async function _deleteBastion(globalId, name) {
     _adminBastionsCache = _adminBastionsCache.filter(b => b._globalId !== globalId);
     renderAdminBastionsList(_adminBastionsCache);
   } catch(e) { toast('Failed to delete bastion: ' + e.message, 'error'); }
+}
+
+async function _toggleVerifyBastion(globalId, name, isCurrentlyVerified) {
+  if (!isSuperAdmin()) { toast('Only super admins can verify bastions', 'error'); return; }
+  if (!globalId) { toast('No bastion ID', 'error'); return; }
+  try {
+    const b = await FortizedSocial.getGlobalBastion(globalId);
+    if (!b) { toast('Bastion not found', 'error'); return; }
+    b.verified = !isCurrentlyVerified;
+    await FortizedSocial.saveGlobalBastion(globalId, b);
+    logAudit(b.verified ? 'bastion_verified' : 'bastion_unverified', name, (b.verified ? 'Verified' : 'Unverified') + ' by ' + CU.username);
+    toast(`${name} ${b.verified ? 'verified' : 'unverified'}`, 'success');
+    // Update cache
+    const cached = _adminBastionsCache.find(x => x._globalId === globalId);
+    if (cached) cached.verified = b.verified;
+    renderAdminBastionsList(_adminBastionsCache);
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
 }
 
 function filterAdminBastions(q) {
@@ -19179,6 +19189,7 @@ function renderAdminBastionsList(bastions) {
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-weight:700;font-size:13.5px;">${escapeHTML(b.name||'Unnamed')}</span>
+          ${b.verified?'<svg width="14" height="14" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;"><circle cx="24" cy="24" r="20" fill="#3ecf6e"/><path d="M15 25l6 6 12-12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
           ${b.public===false?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);">PRIVATE</span>':''}
           ${nsfwChannels?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(248,113,113,.1);color:var(--red);">${nsfwChannels} NSFW</span>`:''}
           ${boostLv?`<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-pill);background:rgba(255,249,62,.08);color:#ffd93e;display:inline-flex;align-items:center;gap:2px;">${_boostSvg('9')} Lv${boostLv}</span>`:''}
@@ -19188,6 +19199,7 @@ function renderAdminBastionsList(bastions) {
       <div style="display:flex;gap:6px;flex-shrink:0;">
         <button onclick="_loadAdminPage('users');setTimeout(()=>{const el=document.getElementById('admin-user-search');if(el){el.value='${escapeHTML(b.owner||'')}';adminSearchUser();}},150);" style="padding:5px 10px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.18);border-radius:7px;color:var(--blue);font-size:11px;cursor:pointer;">Owner</button>
         <button onclick="logAudit('bastion_review','${escapeHTML(b.name||'')}','Manual inspection');toast('Flagged for review','info')" style="padding:5px 10px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;">Flag</button>
+        ${isSuperAdmin()?`<button onclick="_toggleVerifyBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}',${!!b.verified})" style="padding:5px 10px;background:${b.verified?'rgba(62,207,110,.12)':'rgba(255,249,62,.08)'};border:1px solid ${b.verified?'rgba(62,207,110,.25)':'rgba(255,249,62,.18)'};border-radius:7px;color:${b.verified?'var(--green)':'var(--accent)'};font-size:11px;cursor:pointer;font-weight:600;">${b.verified?'✓ Verified':'Verify'}</button>`:''}
         ${isSuperAdmin()?`<button onclick="_deleteBastion('${escapeHTML(b._globalId||'')}','${escapeHTML(b.name||'')}')" style="padding:5px 10px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;font-weight:700;">Delete</button>`:''}
       </div>
     </div>`}).join('');
@@ -29202,15 +29214,29 @@ function initCrossDeviceSync() {
     }
   });
 
-  // 7. Bastion updates
+  // 7. Bastion updates (full re-sync when another client pushes changes)
   socket.on('bastion:updated', (data) => {
     if (data.bastionId && CU.bastions) {
       const idx = CU.bastions.findIndex(b => (b.globalId || b.name) === data.bastionId);
       if (idx >= 0) {
         Object.assign(CU.bastions[idx], data.updates);
         renderRailBastions();
+        if (curBastion === idx) { updateSidebar('bastion'); }
       }
     }
+  });
+  // Listen for bastion:update (emitted by _syncBastionToGlobal) to re-sync non-owned bastions
+  socket.on('bastion:update', (data) => {
+    if (!data?.bastionId || !CU?.bastions) return;
+    const idx = CU.bastions.findIndex(b => b.globalId === data.bastionId);
+    if (idx >= 0 && CU.bastions[idx]?.owner !== CU.username) {
+      _syncBastionFromGlobal(idx).then(() => {
+        renderRailBastions();
+        if (curBastion === idx) { updateSidebar('bastion'); }
+      }).catch(() => {});
+    }
+    // Also bust discover cache so next visit shows updated data
+    try { FortizedSocial.clearBastionCache(); } catch(e) {}
   });
 
   // 8. Announcement broadcasts

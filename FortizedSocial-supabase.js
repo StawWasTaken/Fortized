@@ -1020,6 +1020,14 @@ const FortizedSocial = (() => {
     return result;
   }
 
+  async function deleteGlobalBastion(id) {
+    _cacheDel('globalBastions');
+    _cacheDel('gb:' + id);
+    await sb.from('global_bastions').delete().eq('id', id);
+    // Also clean up bastion members
+    try { await sb.from('bastion_members').delete().eq('bastion_id', id); } catch(e) {}
+  }
+
   // ── Bastion Members ──────────────────────────────────
   async function getBastionMembers(bastionId) {
     const cacheKey = 'bMembers:' + bastionId;
@@ -1859,7 +1867,7 @@ const FortizedSocial = (() => {
     sendFriendRequest, acceptFriendRequest, acceptFriend, declineFriendRequest, removeFriend,
     getDMMessages, sendDMMessage, editMessage, deleteMessage, getRecentDMPartners,
     getBastionChannelMessages, sendBastionChannelMessage, addReaction, toggleReaction,
-    getGlobalBastions, saveGlobalBastion, getGlobalBastion,
+    getGlobalBastions, saveGlobalBastion, getGlobalBastion, deleteGlobalBastion,
     getBastionMembers, addBastionMember, removeBastionMember,
     getInvite, saveInvite, incrementInviteUses,
     submitReport,

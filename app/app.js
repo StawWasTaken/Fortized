@@ -2683,6 +2683,33 @@ function renderHomePanel() {
 }
 
 // ── Home Ads ──
+function _pickWeightedAd(ads) {
+  if (!ads.length) return null;
+  const weighted = ads.map(a => {
+    const owner = a.owner || '';
+    const role = getStaffRole(owner);
+    let w = 1;
+    if (role === 'superadmin') w = 5;
+    else if (role === 'admin') w = 3;
+    else if (a.ownerVerified) w = 2;
+    return { ad: a, weight: w };
+  });
+  const total = weighted.reduce((s, w) => s + w.weight, 0);
+  let r = Math.random() * total;
+  for (const w of weighted) { r -= w.weight; if (r <= 0) return w.ad; }
+  return weighted[weighted.length - 1].ad;
+}
+function _adClickAction(ad) {
+  if (ad.customLink) {
+    if (ad.customLink.startsWith('#')) {
+      try { eval(ad.customLink.slice(1)); } catch(e) {}
+    } else {
+      window.open(ad.customLink, '_blank', 'noopener');
+    }
+  } else {
+    promptJoinPublicBastion(ad.bastionId || ad.bastionName || '');
+  }
+}
 async function _renderHomeAds() {
   const el = document.getElementById('home-ads');
   if (!el) return;
@@ -2692,19 +2719,15 @@ async function _renderHomeAds() {
   const allAds = [...ads];
   localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
   if (!allAds.length) { el.innerHTML = ''; return; }
-  const ad = allAds[Math.floor(Math.random()*allAds.length)];
+  const ad = _pickWeightedAd(allAds);
+  if (!ad) { el.innerHTML = ''; return; }
   const isRect = ad.ratio === 'rectangle';
-  const imgStyle = isRect
-    ? 'width:300px;height:250px;object-fit:fill;border-radius:10px;display:block;'
-    : 'width:100%;height:90px;object-fit:fill;border-radius:10px;display:block;';
-  const wrapStyle = isRect
-    ? 'max-width:300px;margin:0 auto;display:inline-block;text-align:left;'
-    : 'max-width:100%;margin:0 auto;display:inline-block;text-align:left;';
+  window._currentHomeAd = ad;
   el.innerHTML = `
     <div style="text-align:center;padding:4px 0 2px;">
-      <div style="${wrapStyle}">
-        <a style="display:block;cursor:pointer;" onclick="promptJoinPublicBastion('${escapeHTML(ad.bastionId||ad.bastionName||'')}')">
-          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="${imgStyle}" alt="${escapeHTML(ad.title||'')}">
+      <div style="${isRect ? 'width:300px;margin:0 auto;' : 'max-width:100%;margin:0 auto;'}">
+        <a style="display:block;cursor:pointer;${isRect ? 'width:300px;height:250px;' : ''}" onclick="_adClickAction(window._currentHomeAd)">
+          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="${isRect ? 'width:300px;height:250px;' : 'width:100%;height:90px;'}object-fit:fill;border-radius:10px;display:block;" alt="${escapeHTML(ad.title||'')}">
         </a>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 0;">
           <div style="display:flex;align-items:center;gap:6px;min-width:0;">
@@ -6722,19 +6745,15 @@ async function _renderDiscoverAds() {
   const allAds = [...ads];
   localAds.forEach(la => { if (!allAds.find(a=>a.id===la.id)) allAds.push(la); });
   if (!allAds.length) { el.innerHTML = ''; return; }
-  const ad = allAds[Math.floor(Math.random()*allAds.length)];
+  const ad = _pickWeightedAd(allAds);
+  if (!ad) { el.innerHTML = ''; return; }
   const isRect = ad.ratio === 'rectangle';
-  const imgStyle = isRect
-    ? 'width:300px;height:250px;object-fit:fill;border-radius:12px;display:block;'
-    : 'width:100%;height:90px;object-fit:fill;border-radius:12px;display:block;';
-  const wrapStyle = isRect
-    ? 'max-width:300px;margin:0 auto;display:inline-block;text-align:left;'
-    : 'max-width:728px;margin:0 auto;display:inline-block;text-align:left;width:100%;';
+  window._currentDiscoverAd = ad;
   el.innerHTML = `
     <div style="text-align:center;padding:8px 0 4px;">
-      <div style="${wrapStyle}">
-        <a style="display:block;cursor:pointer;" onclick="promptJoinPublicBastion('${escapeHTML(ad.bastionId||ad.bastionName||'')}')">
-          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="${imgStyle}" alt="${escapeHTML(ad.title||'')}">
+      <div style="${isRect ? 'width:300px;margin:0 auto;' : 'max-width:728px;margin:0 auto;width:100%;'}">
+        <a style="display:block;cursor:pointer;${isRect ? 'width:300px;height:250px;' : ''}" onclick="_adClickAction(window._currentDiscoverAd)">
+          <img src="${escapeHTML(ad.image||ad.bastionIcon||'/Fortized banner.png')}" style="${isRect ? 'width:300px;height:250px;' : 'width:100%;height:90px;'}object-fit:fill;border-radius:12px;display:block;" alt="${escapeHTML(ad.title||'')}">
         </a>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 2px 0;">
           <div style="display:flex;align-items:center;gap:6px;min-width:0;">
@@ -10694,6 +10713,15 @@ function renderBSettingsMain(tab) {
             </select>
           </div>
 
+          ${isSuperAdmin() ? `
+          <!-- Custom Link (Superadmin only) -->
+          <div style="margin-bottom:14px;">
+            <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Custom Link <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span></div>
+            <input class="field-input" id="cm-ad-custom-link" placeholder="https://... or leave empty to use bastion join" maxlength="500">
+            <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Override click destination. Supports any URL or Fortized page paths.</div>
+          </div>
+          ` : ''}
+
           <div style="margin-bottom:16px;">
             <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted-light);cursor:pointer;">
               <input type="checkbox" id="cm-ad-autorefund" style="accent-color:var(--accent);">
@@ -10922,6 +10950,7 @@ async function _cmCreateAd() {
   const image = _cmAdImageData || (bst.banner||bst.icon||'');
   const autoRefund = document.getElementById('cm-ad-autorefund')?.checked || false;
   const ratio = document.querySelector('input[name="cm-ad-ratio"]:checked')?.value || 'banner';
+  const customLink = isSuperAdmin() ? (document.getElementById('cm-ad-custom-link')?.value?.trim() || '') : '';
   showCustomConfirm(`Create ad "${title}" for ${escapeHTML(bst.name)}? This costs 15 Onyx.`, async () => {
     CU.onyx = (CU.onyx||0) - 15;
     CU.ads = CU.ads || [];
@@ -10934,6 +10963,8 @@ async function _cmCreateAd() {
       image: image,
       title: title,
       ratio: ratio,
+      customLink: customLink || undefined,
+      ownerVerified: !!CU.verified,
       status: 'active',
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now()+4*86400000).toISOString(),
@@ -13306,7 +13337,7 @@ function buildProfileView(tab) {
                 <div style="font-size:14px;font-weight:700;color:#fff;">Profile Theme</div>
                 <span style="font-size:9px;font-weight:700;background:linear-gradient(90deg,rgba(255,160,62,.1),rgba(167,139,250,.1));color:#c084fc;border:1px solid rgba(167,139,250,.2);border-radius:5px;padding:2px 7px;">RADIANCE+</span>
               </div>
-              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Customise the colours of your profile card border, banner gradient, and accents. Visible to others with Radiance+.</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:12px;">Customise the colours of your profile card border, banner gradient, and accents. Visible to others with Radiance.</div>
               <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;">
                 <div style="text-align:center;">
                   <label style="cursor:pointer;display:block;">
@@ -14063,9 +14094,9 @@ function buildProfileView(tab) {
         ${ptHero}
         <div style="background:rgba(255,255,255,.02);border:1.5px dashed rgba(254,248,61,.08);border-radius:18px;padding:40px;text-align:center;">
           <div style="font-size:44px;margin-bottom:14px;">🔒</div>
-          <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Radiance+ Required</div>
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:8px;">Radiance Required</div>
           <div style="font-size:13.5px;color:rgba(255,255,255,.4);max-width:320px;margin:0 auto 22px;line-height:1.6;">Profile themes let you add a gradient stroke and custom colors around your profile card and avatar.</div>
-          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" style="background:#fef83d;color:var(--rail);border:none;border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:11px 24px;cursor:pointer;">Get Radiance+</button>
+          <button onclick="switchAtelierTab('radiance',document.getElementById('atnav-radiance'));showView('atelier')" style="background:#fef83d;color:var(--rail);border:none;border-radius:14px;font-family:var(--font-display);font-size:13px;font-weight:800;padding:11px 24px;cursor:pointer;">Get Radiance</button>
         </div>
       </div>`;
     } else {
@@ -14241,7 +14272,7 @@ async function updateBanner(e) {
   // Require Basic Radiance or Radiance+ to change banner
   const hasRadiance = CU?.radianceUntil && new Date(CU.radianceUntil) > new Date();
   if (!hasRadiance) {
-    toast('Custom banners require a Basic Radiance or Radiance+ subscription!', 'error');
+    toast('Custom banners require a Radiance subscription!', 'error');
     e.target.value = '';
     return;
   }
@@ -14297,17 +14328,16 @@ async function buyRadiance(days, cost) {
 }
 
 async function buyRadiancePlus(days, cost) {
-  showCustomConfirm(`Buy ${days}-day Radiance+ for ${cost} Onyx?`, async () => {
+  showCustomConfirm(`Buy ${days}-day Radiance for ${cost} Onyx?`, async () => {
     if ((CU.onyx||0) < cost) { toast('Not enough Onyx!', 'error'); return; }
     CU.onyx -= cost;
     const until = new Date(Date.now() + days*86400000);
     CU.radiancePlus = until.toISOString();
-    // Also set basic radiance so all basic perks work
     CU.radianceUntil = until.toISOString();
     await saveUser();
     refreshAtelierBalance();
     distributeOnyxRevenue(cost);
-    toast(`🌟 Radiance+ active for ${days} days!`, 'success');
+    toast(`🌟 Radiance active for ${days} days!`, 'success');
   });
 }
 
@@ -14657,7 +14687,7 @@ async function viewUserProfile(username) {
       <!-- Name -->
       <div class="up-left-info">
         <div class="up-left-name" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">
-          ${escapeHTML(u.displayName||u.username)}
+          ${escapeHTML(u.displayName||u.username)}${u.verified ? _verifiedBadge(18) : ''}
         </div>
         <div class="up-left-uname">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.25);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
       </div>
@@ -16190,7 +16220,7 @@ async function _loadAdminPage(tab, _isAutoRefresh) {
           <input class="settings-input" id="radiance-username" placeholder="Username" style="margin-bottom:9px;">
           <select class="settings-input" id="radiance-days" style="margin-bottom:11px;"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="180">180 days</option><option value="365">365 days</option></select>
           <button onclick="adminGrantRadiance()" style="width:100%;padding:8px;background:rgba(255,249,62,.1);border:1px solid rgba(255,249,62,.2);border-radius:9px;color:var(--accent);cursor:pointer;font-weight:700;margin-bottom:8px;">Grant Radiance</button>
-          <button onclick="adminGrantRadiancePlus()" style="width:100%;padding:8px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:9px;color:#a855f7;cursor:pointer;font-weight:700;">Grant Radiance+</button>
+          <button onclick="adminGrantRadiancePlus()" style="width:100%;padding:8px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:9px;color:#a855f7;cursor:pointer;font-weight:700;">Grant Radiance</button>
         </div>
         <div style="background:var(--panel,#1b1e25);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px;">
           <div style="font-weight:700;font-size:13.5px;margin-bottom:12px;">🎟️ Trial Link</div>
@@ -17791,8 +17821,8 @@ async function adminSearchUser() {
           ${!isMe?(isBanned?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','unban')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Unban</button>`:`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','ban')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Ban</button>`):''}
           ${!isMe && !alreadyFriends?`<button class="hq-quick-btn" onclick="adminForceFriend('${escapeHTML(username)}')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);">Force Friend</button>`:''}
           <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','give_onyx')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Give Onyx</button>
-          <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','radiance')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Radiance</button>
-          <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="border-color:rgba(168,85,247,.12);background:rgba(168,85,247,.03);color:rgba(168,85,247,.5);">Radiance+</button>
+          <button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','radiance_plus')" style="border-color:rgba(255,249,62,.12);background:rgba(255,249,62,.03);color:rgba(255,249,62,.5);">Radiance</button>
+          ${isSuperAdmin()?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','${u.verified?'unverify':'verify'}')" style="border-color:rgba(62,207,110,.15);background:rgba(62,207,110,.04);color:rgba(62,207,110,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3ecf6e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${u.verified?'Unverify':'Verify'}</button>`:''}
           ${!isMe?`<button class="hq-quick-btn" onclick="adminActionUser('${escapeHTML(username)}','force_logout')" style="border-color:rgba(248,113,113,.12);background:rgba(248,113,113,.03);color:rgba(248,113,113,.5);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Force Logout</button>`:''}
         `}
         <button class="hq-quick-btn" onclick="openDMView('${escapeHTML(username)}');_closeAdminPanel();" style="border-color:rgba(96,165,250,.15);background:rgba(96,165,250,.04);color:rgba(96,165,250,.6);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Message</button>
@@ -17811,7 +17841,7 @@ async function adminSearchUser() {
               ['Bastions', (u.bastions||[]).length, '#60a5fa'],
               [ageLabel, ageDisplay, '#a78bfa'],
               ['Joined', u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Unknown', '#60a5fa'],
-              ['Radiance', hasRadiancePlus ? 'Plus Active' : hasRadiance ? 'Active' : 'None', hasRadiancePlus ? '#a855f7' : hasRadiance ? '#ffd93e' : '#6b7280'],
+              ['Radiance', hasRadiancePlus ? 'Active' : hasRadiance ? 'Active' : 'None', (hasRadiancePlus||hasRadiance) ? '#ffd93e' : '#6b7280'],
               ['Verified', u.verified ? 'Yes' : 'No', u.verified ? '#3ecf6e' : '#6b7280'],
               ['Reports Against', reportsAgainst.length, reportsAgainst.length > 0 ? '#f87171' : '#3ecf6e'],
               ...(canSeeEmail ? [['Email', u.email || 'N/A', '#38bdf8']] : []),
@@ -17889,6 +17919,27 @@ async function adminForceFriend(targetUsername) {
 }
 
 function adminActionUser(username, action) {
+  if (action === 'verify') {
+    if (!isSuperAdmin()) { toast('Only superadmins can verify users', 'error'); return; }
+    showCustomConfirm(`Verify ${username}? They will receive a verified badge.`, async () => {
+      await FortizedSocial.adminUpdateUserField(username, 'verified', true);
+      await FortizedSocial.addNotification(username, { type: 'system', text: 'Your account has been verified by Fortized staff! You now have a verified badge.' }).catch(()=>{});
+      logAudit('verify_user', username, 'Verified by ' + CU.username);
+      toast(`${username} is now verified`, 'success');
+      adminSearchUser();
+    });
+    return;
+  }
+  if (action === 'unverify') {
+    if (!isSuperAdmin()) { toast('Only superadmins can unverify users', 'error'); return; }
+    showCustomConfirm(`Remove verification from ${username}?`, async () => {
+      await FortizedSocial.adminUpdateUserField(username, 'verified', false);
+      logAudit('unverify_user', username, 'Unverified by ' + CU.username);
+      toast(`${username} is no longer verified`, 'info');
+      adminSearchUser();
+    });
+    return;
+  }
   if (action === 'ban') {
     showCustomInput('Reason for Ban', 'Enter reason (required):', (reason) => {
       if (!reason?.trim()) { toast('Reason required', 'error'); return; }
@@ -18000,14 +18051,14 @@ function adminActionUser(username, action) {
       adminSearchUser();
     });
   } else if (action === 'radiance_plus') {
-    showCustomInput('Grant Radiance+ (days)', 'Days of Radiance+:', async (days) => {
+    showCustomInput('Grant Radiance (days)', 'Days of Radiance:', async (days) => {
       const n = parseInt(days);
       if (!n || n <= 0) { toast('Enter valid days','error'); return; }
       const until = new Date(Date.now() + n*86400000).toISOString();
       await FortizedSocial.adminUpdateUserField(username, 'radiancePlus', until);
       await FortizedSocial.adminUpdateUserField(username, 'radianceUntil', until);
-      logAudit('grant_radiance_plus', username, `${n} days`);
-      toast(`Granted ${n} days Radiance+ to ${username}`, 'success');
+      logAudit('grant_radiance', username, `${n} days`);
+      toast(`Granted ${n} days Radiance to ${username}`, 'success');
       if (username===CU.username) await refreshCU();
       adminSearchUser();
     });
@@ -28102,9 +28153,10 @@ const BADGE_DEFS = {
   superadmin: { img:'/fortized badges/superadmin.png', tooltip:'Superadmin - Highest level of platform authority in Fortized.', cls:'badge-superadmin', order:0 },
   admin:      { img:'/fortized badges/admin.png', tooltip:'Admin - Platform administrator with elevated permissions.', cls:'badge-admin', order:1 },
   moderator:  { img:'/fortized badges/moderator.png', tooltip:'Moderator - Helps maintain safety and order.', cls:'badge-moderator', order:2 },
-  bot:        { img:'/fortized badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:3 },
-  'radiance-plus': { img:'/fortized badges/radiance+.png', tooltip:'Radiance+ - Active Radiance+ subscriber.', cls:'badge-radiance-plus', order:4 },
-  radiance:   { img:'/fortized badges/basic radiance.png', tooltip:'Basic Radiance - Active Basic Radiance subscriber.', cls:'badge-radiance', order:5 },
+  verified:   { img:null, tooltip:'Verified - Identity confirmed by Fortized staff.', cls:'badge-verified', order:3 },
+  bot:        { img:'/fortized badges/bot.png', tooltip:'Bot - Automated or system-managed account.', cls:'badge-bot', order:4 },
+  'radiance-plus': { img:'/fortized badges/radiance+.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance-plus', order:5 },
+  radiance:   { img:'/fortized badges/basic radiance.png', tooltip:'Radiance - Active Radiance subscriber.', cls:'badge-radiance', order:6 },
   beta:       { img:'/fortized badges/beta user.png', tooltip:'Beta User - Early supporter of Fortized.', cls:'badge-beta', order:6 },
   quest:      { img:'/fortized badges/quest.png', tooltip:'Quest Completed - Successfully completed a Fortized quest.', cls:'badge-quest', order:7 },
   onyx:       { img:'/fortized badges/onyx.png', cls:'badge-onyx', order:8 },
@@ -28172,6 +28224,8 @@ function getUserBadges(user) {
   if (staffRole === 'superadmin') badges.push({ id:'superadmin', ...BADGE_DEFS.superadmin });
   else if (staffRole === 'admin') badges.push({ id:'admin', ...BADGE_DEFS.admin });
   else if (staffRole === 'moderator') badges.push({ id:'moderator', ...BADGE_DEFS.moderator });
+  // Verified badge
+  if (user.verified) badges.push({ id:'verified', ...BADGE_DEFS.verified });
   // Bot badge
   if (user.isBot) badges.push({ id:'bot', ...BADGE_DEFS.bot });
   // Subscription badges
@@ -28202,7 +28256,7 @@ function renderBadgesHTML(user) {
   const badges = getUserBadges(user);
   if (!badges.length) return '';
   return '<span class="ftz-badge-row">' + badges.map(b => {
-    const icon = `<img src="${b.img}" alt="${b.id}">`;
+    const icon = b.id === 'verified' ? _verifiedBadge(16) : `<img src="${b.img}" alt="${b.id}">`;
     return `<span class="ftz-badge ${b.cls}">${icon}<span class="badge-tooltip">${escapeHTML(b.tooltip||'')}</span></span>`;
   }).join('') + '</span>';
 }
@@ -28732,10 +28786,10 @@ async function adminGrantRadiancePlus() {
     const until = new Date(Date.now() + days*86400000).toISOString();
     await FortizedSocial.adminUpdateUserField(username, 'radiancePlus', until);
     await FortizedSocial.adminUpdateUserField(username, 'radianceUntil', until);
-    toast(`Radiance+ granted to ${username} for ${days} days`, 'success');
-    logAudit('grant_radiance_plus', username, `${days} days`);
+    toast(`Radiance granted to ${username} for ${days} days`, 'success');
+    logAudit('grant_radiance', username, `${days} days`);
   } catch(e) {
-    toast('Could not grant Radiance+: '+e.message, 'error');
+    toast('Could not grant Radiance: '+e.message, 'error');
   }
 }
 
@@ -30033,16 +30087,15 @@ async function purchaseRadiance(isPlus, days, cost) {
     return;
   }
   showCustomConfirm(
-    `Purchase ${isPlus ? 'Radiance+' : 'Radiance'} for ${days} days (${cost} Onyx)?`,
+    `Purchase Radiance for ${days} days (${cost} Onyx)?`,
     async () => {
       CU.onyx = (CU.onyx || 0) - cost;
       const until = new Date(Date.now() + days * 86400000).toISOString();
-      if (isPlus) { CU.radiancePlus = until; CU.radianceUntil = until; }
-      else { CU.radianceUntil = until; }
+      CU.radiancePlus = until; CU.radianceUntil = until;
       await saveUser();
       updateOnyxDisplay();
       distributeOnyxRevenue(cost);
-      toast(`✨ ${isPlus ? 'Radiance+' : 'Radiance'} active for ${days} days!`, 'success');
+      toast(`✨ Radiance active for ${days} days!`, 'success');
       renderAtelierTab('radiance');
     }
   );

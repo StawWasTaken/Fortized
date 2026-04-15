@@ -297,6 +297,57 @@ CREATE TABLE IF NOT EXISTS events (
   PRIMARY KEY (bastion_id, id)
 );
 
+-- ── Admin KV ──────────────────────────────────────
+CREATE TABLE IF NOT EXISTS admin_kv (
+  key TEXT PRIMARY KEY,
+  data JSONB
+);
+
+-- ── Global Ads ────────────────────────────────────
+CREATE TABLE IF NOT EXISTS global_ads (
+  id TEXT PRIMARY KEY,
+  owner TEXT,
+  status TEXT DEFAULT 'active',
+  data JSONB
+);
+CREATE INDEX IF NOT EXISTS idx_global_ads_status ON global_ads(status);
+
+-- ── Forum ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS forum_threads (
+  id TEXT PRIMARY KEY,
+  category TEXT NOT NULL,
+  title TEXT NOT NULL,
+  author TEXT NOT NULL,
+  content TEXT,
+  image TEXT,
+  created_at BIGINT,
+  updated_at BIGINT,
+  views INTEGER DEFAULT 0,
+  reply_count INTEGER DEFAULT 0,
+  last_reply_by TEXT,
+  last_reply_at BIGINT,
+  pinned BOOLEAN DEFAULT false,
+  locked BOOLEAN DEFAULT false,
+  likes JSONB DEFAULT '[]'::jsonb
+);
+CREATE INDEX IF NOT EXISTS idx_forum_threads_cat ON forum_threads(category);
+CREATE INDEX IF NOT EXISTS idx_forum_threads_author ON forum_threads(author);
+
+CREATE TABLE IF NOT EXISTS forum_posts (
+  id TEXT PRIMARY KEY,
+  thread_id TEXT NOT NULL REFERENCES forum_threads(id) ON DELETE CASCADE,
+  author TEXT NOT NULL,
+  content TEXT,
+  image TEXT,
+  created_at BIGINT,
+  edited BOOLEAN DEFAULT false,
+  likes JSONB DEFAULT '[]'::jsonb,
+  quote_id TEXT,
+  quote_author TEXT,
+  quote_text TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_forum_posts_thread ON forum_posts(thread_id);
+
 -- ── Enable Realtime for tables that need live updates ──
 -- Use DO block to safely add tables that may already be members
 DO $$

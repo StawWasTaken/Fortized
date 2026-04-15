@@ -1397,6 +1397,7 @@ const _ftzRouter = {
     '/app/discover': 'discover',
     '/app/atelier':  'atelier',
     '/app/bastion':  'bastion',
+    '/app/forum':    'forum',
   },
   // View → path mapping (reverse)
   paths: {
@@ -1406,6 +1407,7 @@ const _ftzRouter = {
     'discover': '/app/discover',
     'atelier':  '/app/atelier',
     'bastion':  '/app/bastion',
+    'forum':    '/app/forum',
   },
   // Parse current URL to determine view + params
   parseRoute: function() {
@@ -1582,6 +1584,7 @@ function showView(v, _skipPush) {
   if (v === 'home') setTimeout(() => renderHomePanel(), 0);
   if (v === 'discover') setTimeout(() => loadDiscover(), 0);
   if (v === 'friends') setTimeout(() => renderFriendsList('all'), 0);
+  if (v === 'forum') setTimeout(() => _forumInit(), 0);
   if (v === 'dms' && !curDM && !curGC) setTimeout(() => { showDMFriendsHome(); }, 50);
 
   updateTopbar(v);
@@ -1597,7 +1600,7 @@ function updateTopbar(v) {
   if (sep) sep.style.display = 'none';
   if (desc) desc.textContent = '';
   if (acts) acts.innerHTML = '';
-  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'Settings',bsettings:'Bastion Settings',bhub:'Overview'};
+  const labels = {home:'Home',dms:'Direct Messages',friends:'Direct Messages',discover:'Discover',atelier:'Atelier',profile:'Settings',bsettings:'Bastion Settings',bhub:'Overview',forum:'Forum'};
   if (v === 'bastion') {
     const b = CU?.bastions?.[curBastion];
     title.textContent = b?.name || 'Bastion';
@@ -28568,8 +28571,19 @@ function renderAtelierTab(tab) {
             ${isSuperAdmin() ? `
             <div style="margin-bottom:14px;">
               <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Custom Link <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span></div>
-              <input class="field-input" id="cm-ad-custom-link" placeholder="https://... or leave empty to use bastion join" maxlength="500">
-              <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Override click destination with any URL.</div>
+              <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="document.getElementById('cm-ad-custom-link').style.display=this.value==='custom'?'':'none';if(this.value!=='custom')document.getElementById('cm-ad-custom-link').value=this.value==='bastion'?'':this.value;">
+                <option value="bastion">Default — Join Bastion</option>
+                <option value="/">Home</option>
+                <option value="/app">App</option>
+                <option value="/app/forum">Forum</option>
+                <option value="/blog">Blog</option>
+                <option value="/download">Download</option>
+                <option value="/support">Support</option>
+                <option value="/legal">Legal</option>
+                <option value="custom">Custom URL (opens in browser)</option>
+              </select>
+              <input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">
+              <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Fortized pages open in-app. External URLs open in the user's browser.</div>
             </div>
             ` : ''}
 
@@ -28834,6 +28848,365 @@ function _crDeleteBot(idx) {
     switchAtelierTab('creator');
     setTimeout(() => { _switchCreatorSub('creations'); _switchCreationsSub('bots'); }, 50);
   });
+}
+
+// ── Forum System ──────────────────────────────────────────
+const FORUM_CATEGORIES = [
+  { id: 'announcements', name: 'Announcements', icon: '📢', color: '#ff6b6b', desc: 'Official announcements from Fortized' },
+  { id: 'general', name: 'General', icon: '💬', color: '#4ecdc4', desc: 'General discussion and chat' },
+  { id: 'bugs', name: 'Bugs & Issues', icon: '🐛', color: '#f87171', desc: 'Report and discuss bugs' },
+  { id: 'suggestions', name: 'Suggestions', icon: '💡', color: '#ffd93e', desc: 'Feature requests and ideas' },
+  { id: 'showcase', name: 'Showcase', icon: '✨', color: '#a78bfa', desc: 'Share your creations' },
+  { id: 'offtopic', name: 'Off-Topic', icon: '🎲', color: '#64748b', desc: 'Off-topic discussions' },
+];
+
+let _forumCurrentCategory = 'general';
+let _forumCurrentThread = null;
+let _forumThreadImageData = null;
+let _forumPostImageData = null;
+
+async function _forumInit() {
+  const root = document.getElementById('forum-root');
+  if (!root) return;
+  root.innerHTML = `
+    <div style="flex:1;display:flex;flex-direction:column;">
+      <!-- Forum Hero Banner -->
+      <div style="background:linear-gradient(135deg,rgba(255,249,62,.08),rgba(255,217,62,.04));border-bottom:1.5px solid var(--border);padding:32px 28px;margin-bottom:24px;">
+        <div style="max-width:1200px;margin:0 auto;">
+          <div style="display:flex;align-items:flex-end;gap:16px;margin-bottom:16px;">
+            <div style="font-size:48px;">💬</div>
+            <div>
+              <h1 style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin:0;">Fortized Forum</h1>
+              <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,.4);">Connect with the community, share ideas, and get support</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <input type="text" id="forum-search" placeholder="Search threads..." style="flex:1;min-width:200px;padding:10px 14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.8);font-size:13px;" oninput="_forumSearch(this.value)">
+            <button class="btn-a" onclick="_forumShowCreateThread()" style="padding:10px 18px;font-size:12px;">+ New Thread</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories & Threads Grid -->
+      <div style="flex:1;overflow-y:auto;padding:0 28px 28px;">
+        <div style="max-width:1200px;margin:0 auto;">
+          <!-- Category Tabs -->
+          <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;" id="forum-cat-tabs">
+            ${FORUM_CATEGORIES.map(cat => `
+              <button class="forum-cat-tab ${_forumCurrentCategory === cat.id ? 'active' : ''}" onclick="_forumSetCategory('${cat.id}')" style="padding:10px 16px;background:${_forumCurrentCategory === cat.id ? 'rgba(255,249,62,.12)' : 'rgba(255,255,255,.04)'};border:1.5px solid ${_forumCurrentCategory === cat.id ? 'rgba(255,249,62,.2)' : 'var(--border)'};border-radius:10px;color:${_forumCurrentCategory === cat.id ? 'var(--accent)' : 'rgba(255,255,255,.6)'};cursor:pointer;font-weight:${_forumCurrentCategory === cat.id ? '700' : '600'};transition:all .15s;font-size:12.5px;">
+                ${cat.icon} ${cat.name}
+              </button>
+            `).join('')}
+          </div>
+
+          <!-- Thread List -->
+          <div id="forum-threads-container"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  await _forumLoadThreads();
+}
+
+async function _forumSetCategory(catId) {
+  _forumCurrentCategory = catId;
+  await _forumLoadThreads();
+}
+
+async function _forumLoadThreads() {
+  const container = document.getElementById('forum-threads-container');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">Loading threads...</div>';
+
+  try {
+    const threads = await FortizedSocial.getForumThreads(_forumCurrentCategory, 50, 0);
+    if (!threads.length) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">No threads yet. Be the first to start a discussion!</div>';
+      return;
+    }
+
+    const threadHTML = await Promise.all(threads.map(async th => {
+      const author = await FortizedSocial.getUserByName(th.author);
+      const cat = FORUM_CATEGORIES.find(c => c.id === th.category) || FORUM_CATEGORIES[0];
+      const lastReply = th.last_reply_at ? new Date(th.last_reply_at).toLocaleDateString() : 'No replies';
+      return `
+        <div onclick="_forumViewThread('${th.id}')" style="display:flex;align-items:flex-start;gap:14px;padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.04)';this.style.borderColor='rgba(255,249,62,.15)'" onmouseout="this.style.background='var(--panel)';this.style.borderColor='var(--border)'">
+          <img src="${escapeHTML(author?.pfp || '/default-pfp.png')}" style="width:40px;height:40px;border-radius:8px;flex-shrink:0;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13.5px;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:4px;">${escapeHTML(th.title)}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:12px;">
+              <span>by <strong>${escapeHTML(th.author)}</strong></span>
+              <span style="width:1px;height:12px;background:rgba(255,255,255,.1);"></span>
+              <span>${th.views || 0} views</span>
+              <span>${th.reply_count || 0} replies</span>
+            </div>
+          </div>
+          <div style="flex-shrink:0;text-align:right;">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">${lastReply}</div>
+            <span style="display:inline-block;padding:3px 8px;background:${cat.color}40;color:${cat.color};border-radius:6px;font-size:10px;font-weight:700;">${cat.icon} ${cat.name}</span>
+          </div>
+        </div>
+      `;
+    }));
+
+    container.innerHTML = threadHTML.join('');
+  } catch(e) {
+    console.error('[Forum] Load failed:', e);
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#f87171;">Failed to load threads</div>';
+  }
+}
+
+async function _forumViewThread(threadId) {
+  const root = document.getElementById('forum-root');
+  if (!root) return;
+
+  try {
+    const thread = await FortizedSocial.getForumThread(threadId);
+    const posts = await FortizedSocial.getForumPosts(threadId);
+    const author = await FortizedSocial.getUserByName(thread.author);
+    const cat = FORUM_CATEGORIES.find(c => c.id === thread.category) || FORUM_CATEGORIES[0];
+
+    // Increment views
+    await FortizedSocial.updateForumThread(threadId, { views: (thread.views || 0) + 1 });
+
+    _forumCurrentThread = threadId;
+
+    root.innerHTML = `
+      <div style="flex:1;display:flex;flex-direction:column;overflow-y:auto;">
+        <!-- Header -->
+        <div style="padding:20px 28px;border-bottom:1.5px solid var(--border);background:var(--panel);">
+          <button onclick="_forumInit()" style="margin-bottom:12px;padding:6px 12px;background:rgba(255,249,62,.08);border:1px solid rgba(255,249,62,.12);border-radius:6px;color:var(--accent);cursor:pointer;font-size:11px;font-weight:700;">← Back to Threads</button>
+          <h2 style="margin:0 0 8px;font-size:20px;font-weight:800;">${escapeHTML(thread.title)}</h2>
+          <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:rgba(255,255,255,.4);">
+            <span>${thread.views || 0} views</span>
+            <span>•</span>
+            <span>${posts.length} replies</span>
+            <span>•</span>
+            <span style="display:inline-block;padding:2px 6px;background:${cat.color}40;color:${cat.color};border-radius:4px;font-weight:700;">${cat.icon} ${cat.name}</span>
+          </div>
+        </div>
+
+        <!-- Content Area -->
+        <div style="flex:1;overflow-y:auto;padding:20px 28px;">
+          <div style="max-width:900px;margin:0 auto;">
+            <!-- Original Post -->
+            <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;display:flex;gap:16px;">
+              <img src="${escapeHTML(author?.pfp || '/default-pfp.png')}" style="width:48px;height:48px;border-radius:10px;flex-shrink:0;">
+              <div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                  <strong style="font-size:13px;">${escapeHTML(thread.author)}</strong>
+                  ${author?.verified ? '<span style="font-size:9px;color:#3ecf6e;font-weight:700;">✓ Verified</span>' : ''}
+                </div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">${new Date(thread.created_at).toLocaleString()}</div>
+                <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:rgba(255,255,255,.85);">${escapeHTML(thread.content || '')}</p>
+                ${thread.image ? `<img src="${escapeHTML(thread.image)}" style="max-width:100%;max-height:400px;border-radius:10px;margin-bottom:12px;">` : ''}
+              </div>
+            </div>
+
+            <!-- Replies -->
+            <div id="forum-posts-list">
+              ${posts.map((post, i) => `
+                <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;gap:14px;">
+                  <img src="/default-pfp.png" style="width:40px;height:40px;border-radius:8px;flex-shrink:0;">
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:12px;font-weight:700;margin-bottom:2px;">${escapeHTML(post.author)}</div>
+                    <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">${new Date(post.created_at).toLocaleString()}</div>
+                    <p style="margin:0 0 8px;font-size:12px;color:rgba(255,255,255,.8);">${escapeHTML(post.content || '')}</p>
+                    ${post.image ? `<img src="${escapeHTML(post.image)}" style="max-width:100%;max-height:300px;border-radius:8px;margin-bottom:8px;">` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <!-- Reply Form -->
+            <div style="margin-top:24px;padding:18px;background:var(--panel);border:1.5px solid var(--border);border-radius:12px;">
+              <div style="font-size:12px;font-weight:700;margin-bottom:12px;">Reply to this thread</div>
+              <textarea id="forum-post-text" placeholder="Share your thoughts..." style="width:100%;height:100px;padding:12px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;color:rgba(255,255,255,.8);font-size:12px;margin-bottom:10px;resize:vertical;"></textarea>
+              <div style="display:flex;gap:10px;margin-bottom:10px;">
+                <input id="forum-post-image-upload" type="file" accept="image/*" style="display:none;" onchange="_forumPostImagePreview(event)">
+                <button onclick="document.getElementById('forum-post-image-upload').click()" style="padding:8px 14px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:var(--accent);cursor:pointer;font-size:11px;font-weight:700;">📷 Add Image</button>
+                <span id="forum-post-file-label" style="flex:1;font-size:11px;color:var(--muted);padding:8px 0;">No image selected</span>
+              </div>
+              <div id="forum-post-image-preview" style="margin-bottom:10px;"></div>
+              <button onclick="_forumCreatePost('${threadId}')" style="padding:10px 18px;background:var(--accent);color:var(--rail);border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;">Post Reply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch(e) {
+    console.error('[Forum] View thread failed:', e);
+    root.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;">Failed to load thread</div>';
+  }
+}
+
+async function _forumShowCreateThread() {
+  const modal = document.createElement('div');
+  modal.className = 'overview-modal';
+  modal.style.zIndex = '9999';
+  modal.innerHTML = `
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;">
+      <div style="background:var(--panel);border:1.5px solid var(--border);border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <h3 style="margin:0;font-size:16px;font-weight:800;">Start a New Thread</h3>
+          <button onclick="this.closest('.overview-modal').remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;">✕</button>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Category</label>
+          <select id="forum-new-category" style="width:100%;padding:10px 12px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;color:rgba(255,255,255,.8);font-size:12px;">
+            ${FORUM_CATEGORIES.map(cat => `<option value="${cat.id}">${cat.icon} ${cat.name}</option>`).join('')}
+          </select>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Thread Title</label>
+          <input id="forum-new-title" type="text" placeholder="What's on your mind?" maxlength="100" style="width:100%;padding:10px 12px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;color:rgba(255,255,255,.8);font-size:12px;">
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Description</label>
+          <textarea id="forum-new-content" placeholder="Share your thoughts..." style="width:100%;height:120px;padding:10px 12px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;color:rgba(255,255,255,.8);font-size:12px;resize:vertical;"></textarea>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <input id="forum-thread-image-upload" type="file" accept="image/*" style="display:none;" onchange="_forumThreadImagePreview(event)">
+          <button onclick="document.getElementById('forum-thread-image-upload').click()" style="padding:8px 14px;background:rgba(255,249,62,.06);border:1px solid rgba(255,249,62,.12);border-radius:8px;color:var(--accent);cursor:pointer;font-size:11px;font-weight:700;">📷 Add Image</button>
+          <span id="forum-thread-file-label" style="margin-left:8px;font-size:11px;color:var(--muted);">No image selected</span>
+        </div>
+
+        <div id="forum-thread-image-preview" style="margin-bottom:14px;"></div>
+
+        <button onclick="_forumCreateThread(event)" style="width:100%;padding:12px;background:var(--accent);color:var(--rail);border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;">Create Thread</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function _forumThreadImagePreview(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    _forumThreadImageData = ev.target.result;
+    document.getElementById('forum-thread-file-label').textContent = file.name;
+    document.getElementById('forum-thread-image-preview').innerHTML = `<img src="${_forumThreadImageData}" style="max-width:100%;max-height:150px;border-radius:8px;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function _forumPostImagePreview(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    _forumPostImageData = ev.target.result;
+    document.getElementById('forum-post-file-label').textContent = file.name;
+    document.getElementById('forum-post-image-preview').innerHTML = `<img src="${_forumPostImageData}" style="max-width:100%;max-height:150px;border-radius:8px;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function _forumCreateThread(e) {
+  const title = document.getElementById('forum-new-title')?.value?.trim();
+  const content = document.getElementById('forum-new-content')?.value?.trim();
+  const category = document.getElementById('forum-new-category')?.value || 'general';
+
+  if (!title) { toast('Enter a thread title', 'error'); return; }
+  if (!content) { toast('Enter a description', 'error'); return; }
+
+  const thread = {
+    id: 'thread_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    category: category,
+    title: title,
+    author: CU.username,
+    content: content,
+    image: _forumThreadImageData || null,
+    created_at: Date.now(),
+    updated_at: Date.now(),
+    views: 0,
+    reply_count: 0,
+    last_reply_by: null,
+    last_reply_at: null,
+    pinned: false,
+    locked: false,
+    likes: []
+  };
+
+  try {
+    await FortizedSocial.createForumThread(thread);
+    document.querySelector('.overview-modal')?.remove();
+    toast('Thread created!', 'success');
+    _forumThreadImageData = null;
+    await _forumSetCategory(category);
+  } catch(e) {
+    console.error('[Forum] Create failed:', e);
+    toast('Failed to create thread', 'error');
+  }
+}
+
+async function _forumCreatePost(threadId) {
+  const text = document.getElementById('forum-post-text')?.value?.trim();
+  if (!text) { toast('Write something to post', 'error'); return; }
+
+  const post = {
+    id: 'post_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    thread_id: threadId,
+    author: CU.username,
+    content: text,
+    image: _forumPostImageData || null,
+    created_at: Date.now(),
+    edited: false,
+    likes: [],
+    quote_id: null,
+    quote_author: null,
+    quote_text: null
+  };
+
+  try {
+    await FortizedSocial.createForumPost(post);
+    await FortizedSocial.updateForumThread(threadId, {
+      reply_count: (await FortizedSocial.getForumPosts(threadId)).length + 1,
+      last_reply_by: CU.username,
+      last_reply_at: Date.now()
+    });
+    document.getElementById('forum-post-text').value = '';
+    _forumPostImageData = null;
+    document.getElementById('forum-post-image-preview').innerHTML = '';
+    document.getElementById('forum-post-file-label').textContent = 'No image selected';
+    toast('Reply posted!', 'success');
+    await _forumViewThread(threadId);
+  } catch(e) {
+    console.error('[Forum] Post failed:', e);
+    toast('Failed to post reply', 'error');
+  }
+}
+
+async function _forumSearch(query) {
+  if (!query.trim()) { await _forumLoadThreads(); return; }
+  const container = document.getElementById('forum-threads-container');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">Searching...</div>';
+
+  try {
+    const results = await FortizedSocial.searchForumThreads(query);
+    const filtered = results.filter(t => t.category === _forumCurrentCategory);
+    if (!filtered.length) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">No threads found</div>';
+      return;
+    }
+    const threadHTML = filtered.map(th => `
+      <div onclick="_forumViewThread('${th.id}')" style="padding:14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(255,249,62,.04)'" onmouseout="this.style.background='var(--panel)'">
+        <div style="font-size:13.5px;font-weight:700;margin-bottom:4px;">${escapeHTML(th.title)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);">by ${escapeHTML(th.author)} • ${th.views || 0} views • ${th.reply_count || 0} replies</div>
+      </div>
+    `).join('');
+    container.innerHTML = threadHTML;
+  } catch(e) {
+    console.error('[Forum] Search failed:', e);
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#f87171;">Search failed</div>';
+  }
 }
 
 // ── Quest / Shop tab helpers ──────────────────────────────

@@ -1875,6 +1875,65 @@ const FortizedSocial = (() => {
     await _adminKVSet('announcements', list);
   }
 
+  // ── Forum API ──────────────────────────────────────
+  async function getForumThreads(category, limit, offset) {
+    try {
+      let q = sb.from('forum_threads').select('*').order('pinned', { ascending: false }).order('updated_at', { ascending: false });
+      if (category && category !== 'all') q = q.eq('category', category);
+      if (limit) q = q.limit(limit);
+      if (offset) q = q.range(offset, offset + (limit || 20) - 1);
+      const { data } = await q;
+      return data || [];
+    } catch(e) { console.warn('[Forum] getForumThreads failed:', e?.message); return []; }
+  }
+  async function getForumThread(threadId) {
+    try {
+      const { data } = await sb.from('forum_threads').select('*').eq('id', threadId).maybeSingle();
+      return data || null;
+    } catch(e) { console.warn('[Forum] getForumThread failed:', e?.message); return null; }
+  }
+  async function createForumThread(thread) {
+    try {
+      const { data, error } = await sb.from('forum_threads').insert(thread);
+      if (error) throw error;
+      return data;
+    } catch(e) { console.warn('[Forum] createForumThread failed:', e?.message); return null; }
+  }
+  async function updateForumThread(threadId, updates) {
+    try {
+      await sb.from('forum_threads').update(updates).eq('id', threadId);
+    } catch(e) { console.warn('[Forum] updateForumThread failed:', e?.message); }
+  }
+  async function deleteForumThread(threadId) {
+    try {
+      await sb.from('forum_threads').delete().eq('id', threadId);
+    } catch(e) { console.warn('[Forum] deleteForumThread failed:', e?.message); }
+  }
+  async function getForumPosts(threadId) {
+    try {
+      const { data } = await sb.from('forum_posts').select('*').eq('thread_id', threadId).order('created_at', { ascending: true });
+      return data || [];
+    } catch(e) { console.warn('[Forum] getForumPosts failed:', e?.message); return []; }
+  }
+  async function createForumPost(post) {
+    try {
+      const { data, error } = await sb.from('forum_posts').insert(post);
+      if (error) throw error;
+      return data;
+    } catch(e) { console.warn('[Forum] createForumPost failed:', e?.message); return null; }
+  }
+  async function deleteForumPost(postId) {
+    try {
+      await sb.from('forum_posts').delete().eq('id', postId);
+    } catch(e) { console.warn('[Forum] deleteForumPost failed:', e?.message); }
+  }
+  async function searchForumThreads(query) {
+    try {
+      const { data } = await sb.from('forum_threads').select('*').ilike('title', '%' + query + '%').order('updated_at', { ascending: false }).limit(30);
+      return data || [];
+    } catch(e) { console.warn('[Forum] search failed:', e?.message); return []; }
+  }
+
   // ── Public API ───────────────────────────────────────
   return {
     sb, // Expose supabase client for direct calls in app code
@@ -1923,6 +1982,8 @@ const FortizedSocial = (() => {
     adminSetSignal, adminGetSignal,
     adminGetFeedback, adminPushFeedback,
     adminInvalidateCache,
+    getForumThreads, getForumThread, createForumThread, updateForumThread, deleteForumThread,
+    getForumPosts, createForumPost, deleteForumPost, searchForumThreads,
     uploadFile,
     startPolling, stopPolling, listenBastionChannel, listenDM,
     startDMPolling, stopDMPolling, startChannelPolling, stopChannelPolling,

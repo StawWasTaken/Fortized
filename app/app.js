@@ -28851,14 +28851,21 @@ function _crDeleteBot(idx) {
 }
 
 // ── Forum System ──────────────────────────────────────────
+const _forumSvg = {
+  megaphone: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>',
+  chat: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  bug: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg>',
+  lightbulb: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>',
+  sparkles: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>',
+  dice: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg>',
+};
 const FORUM_CATEGORIES = [
-  { id: 'announcements', name: 'Announcements', icon: '📢', color: '#ff6b6b', desc: 'Official announcements from Fortized', group: 'announcements' },
-  { id: 'general', name: 'General', icon: '💬', color: '#4ecdc4', desc: 'Talk about anything related to Fortized', group: 'fortized' },
-  { id: 'bugs', name: 'Bugs & Troubleshooting', icon: '🐛', color: '#f87171', desc: 'Found a bug? Need help? Ask here — you may not be alone.', group: 'fortized' },
-  { id: 'suggestions', name: 'Suggestions', icon: '💡', color: '#ffd93e', desc: 'Have a suggestion for Fortized? Post it here!', group: 'fortized' },
-  { id: 'showcase', name: 'Showcase', icon: '✨', color: '#a78bfa', desc: 'Made something cool? Show it off to the community!', group: 'fortized' },
-  { id: 'offtopic', name: 'Off-Topic', icon: '🎲', color: '#64748b', desc: 'Anything that doesn\'t fit into the other categories.', group: 'community' },
-  { id: 'trading', name: 'Trading', icon: '🤝', color: '#33DED4', desc: 'Anything about trading and the Fortized economy.', group: 'community' },
+  { id: 'announcements', name: 'Announcements', icon: _forumSvg.megaphone, color: '#ff6b6b', desc: 'Official announcements from Fortized', group: 'announcements' },
+  { id: 'general', name: 'Fortized General', icon: _forumSvg.chat, color: '#4ecdc4', desc: 'Talk about anything related to Fortized.', group: 'fortized' },
+  { id: 'bugs', name: 'Bugs & Troubleshooting', icon: _forumSvg.bug, color: '#f87171', desc: 'Found a bug? Need help? Ask here — you may not be alone.', group: 'fortized' },
+  { id: 'suggestions', name: 'Suggestions', icon: _forumSvg.lightbulb, color: '#ffd93e', desc: 'Have a suggestion for Fortized? Post it here!', group: 'fortized' },
+  { id: 'showcase', name: 'Showcase', icon: _forumSvg.sparkles, color: '#a78bfa', desc: 'Made something cool? Show it off to the community!', group: 'fortized' },
+  { id: 'offtopic', name: 'Off-Topic', icon: _forumSvg.dice, color: '#64748b', desc: 'Anything that doesn\'t fit into the other categories.', group: 'community' },
 ];
 
 let _forumCurrentCategory = null;
@@ -28914,36 +28921,30 @@ async function _forumInit() {
 
   root.innerHTML = `
     <div class="forum-scroll">
-      <div class="forum-hero">
-        <div class="forum-hero-glow"></div>
-        <div class="forum-hero-inner">
-          <div class="forum-hero-top">
-            <div>
-              <div class="forum-hero-info">
-                <div class="forum-hero-icon">💬</div>
-                <div>
-                  <h1>Fortized Forum</h1>
-                  <p class="forum-hero-sub">Engage with the community and share your thoughts.</p>
-                </div>
-              </div>
+      <div class="disc-hero" style="height:140px;">
+        <img src="/Fortized banner.png" class="disc-hero-bg" alt="" onerror="this.style.display='none'">
+        <div class="disc-hero-fade"></div>
+        <div class="disc-hero-content">
+          <h1 style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#fff;margin:0 0 3px;text-shadow:0 2px 12px rgba(0,0,0,.5);">Fortized Forum</h1>
+          <p style="font-size:11.5px;color:rgba(255,255,255,.4);margin:0;">Engage with the community and share your thoughts.</p>
+        </div>
+      </div>
+      <div style="padding:16px 28px 0;max-width:1200px;margin:0 auto;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <div class="forum-hero-stats" style="display:flex;gap:10px;">
+            <div class="forum-hero-stat">
+              <div class="forum-hero-stat-num">${_forumFormatCount(totalThreads)}</div>
+              <div class="forum-hero-stat-label">Posts</div>
             </div>
-            <div class="forum-hero-stats">
-              <div class="forum-hero-stat">
-                <div class="forum-hero-stat-num">${_forumFormatCount(totalThreads)}</div>
-                <div class="forum-hero-stat-label">Threads</div>
-              </div>
-              <div class="forum-hero-stat">
-                <div class="forum-hero-stat-num">${_forumFormatCount(totalPosts)}</div>
-                <div class="forum-hero-stat-label">Posts</div>
-              </div>
+            <div class="forum-hero-stat">
+              <div class="forum-hero-stat-num">${_forumFormatCount(totalPosts)}</div>
+              <div class="forum-hero-stat-label">Replies</div>
             </div>
           </div>
-          <div class="forum-toolbar">
-            <div class="forum-search-wrap">
-              <svg class="forum-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input class="forum-search-input" id="forum-search" placeholder="Search threads..." oninput="_forumGlobalSearch(this.value)">
-            </div>
-            <button class="forum-new-btn" onclick="_forumShowCreateThread()">+ New Thread</button>
+          <div style="flex:1;"></div>
+          <div class="forum-search-wrap" style="max-width:280px;">
+            <svg class="forum-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input class="forum-search-input" id="forum-search" placeholder="Search posts..." oninput="_forumGlobalSearch(this.value)">
           </div>
         </div>
       </div>
@@ -28994,13 +28995,13 @@ async function _forumInit() {
                 <span class="forum-group-label">${g.label}</span>
                 <div class="forum-group-line"></div>
                 <div class="forum-group-col-header">
-                  <span class="forum-group-col-label">Threads</span>
                   <span class="forum-group-col-label">Posts</span>
+                  <span class="forum-group-col-label">Replies</span>
                 </div>
               </div>
               ${g.cats.map(cat => `
                 <div class="forum-cat-entry" style="--cat-color:${cat.color}" onclick="_forumOpenCategory('${cat.id}')">
-                  <div class="forum-cat-icon" style="background:${cat.color}18;">${cat.icon}</div>
+                  <div class="forum-cat-icon" style="background:${cat.color}18;color:${cat.color};">${cat.icon}</div>
                   <div class="forum-cat-info">
                     <div class="forum-cat-name">${cat.name}</div>
                     <div class="forum-cat-desc">${escapeHTML(cat.desc)}</div>
@@ -29027,7 +29028,7 @@ async function _forumOpenCategory(catId) {
     <div style="display:flex;flex-direction:column;height:100%;">
       <div class="forum-threadlist-header">
         <button class="forum-back-btn" onclick="_forumInit()">← Back</button>
-        <span class="forum-threadlist-cat-icon">${cat.icon}</span>
+        <span class="forum-threadlist-cat-icon" style="color:${cat.color};">${cat.icon}</span>
         <div style="flex:1;min-width:0;">
           <div class="forum-threadlist-title">${cat.name}</div>
           <div class="forum-threadlist-desc">${escapeHTML(cat.desc)}</div>
@@ -29037,12 +29038,12 @@ async function _forumOpenCategory(catId) {
             <svg class="forum-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input class="forum-search-input" placeholder="Search in ${escapeHTML(cat.name)}..." oninput="_forumSearchInCategory(this.value)">
           </div>
-          <button class="forum-new-btn" onclick="_forumShowCreateThread('${catId}')">+ New Thread</button>
+          <button class="forum-new-btn" onclick="_forumShowCreatePost('${catId}')">+ New Post</button>
         </div>
       </div>
       <div class="forum-threadlist-body">
         <div class="forum-threadlist-inner" id="forum-threads-container">
-          <div class="forum-empty"><p>Loading threads...</p></div>
+          <div class="forum-empty"><p>Loading posts...</p></div>
         </div>
       </div>
     </div>
@@ -29059,7 +29060,7 @@ async function _forumLoadThreads() {
     if (!threads.length) {
       container.innerHTML = `<div class="forum-empty">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <p>No threads yet. Be the first to start a discussion!</p>
+        <p>No posts yet. Be the first to start a discussion!</p>
       </div>`;
       return;
     }
@@ -29069,7 +29070,7 @@ async function _forumLoadThreads() {
       <div class="forum-thread-row${th.pinned ? ' forum-thread-pinned' : ''}" onclick="_forumViewThread('${th.id}')">
         <img class="forum-thread-avatar" src="${escapeHTML(th.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
         <div class="forum-thread-info">
-          <div class="forum-thread-title">${th.pinned ? '📌 ' : ''}${escapeHTML(th.title)}</div>
+          <div class="forum-thread-title">${th.pinned ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="color:var(--accent);vertical-align:middle;margin-right:4px;"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg> ' : ''}${escapeHTML(th.title)}</div>
           <div class="forum-thread-meta">
             <span>by <strong style="color:var(--text);">${escapeHTML(th.author)}</strong></span>
             <span class="forum-thread-meta-sep"></span>
@@ -29086,7 +29087,7 @@ async function _forumLoadThreads() {
     `).join('');
   } catch(e) {
     console.error('[Forum] Load failed:', e);
-    container.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Failed to load threads</p></div>';
+    container.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Failed to load posts</p></div>';
   }
 }
 
@@ -29155,11 +29156,11 @@ async function _forumViewThread(threadId) {
             </div>
 
             <div class="forum-reply-compose">
-              <div class="forum-reply-compose-title">Reply to this thread</div>
+              <div class="forum-reply-compose-title">Reply to this post</div>
               <textarea id="forum-post-text" placeholder="Share your thoughts..."></textarea>
               <div class="forum-reply-compose-actions">
                 <input id="forum-post-image-upload" type="file" accept="image/*" style="display:none;" onchange="_forumPostImagePreview(event)">
-                <button class="forum-img-btn" onclick="document.getElementById('forum-post-image-upload').click()">📷 Add Image</button>
+                <button class="forum-img-btn" onclick="document.getElementById('forum-post-image-upload').click()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Add Image</button>
                 <span class="forum-file-label" id="forum-post-file-label">No image selected</span>
                 <button class="forum-submit-btn" onclick="_forumCreatePost('${threadId}')">Post Reply</button>
               </div>
@@ -29175,49 +29176,100 @@ async function _forumViewThread(threadId) {
   }
 }
 
-async function _forumShowCreateThread(preselectedCategory) {
-  const modal = document.createElement('div');
-  modal.className = 'overview-modal';
-  modal.style.zIndex = '9999';
+function _forumShowCreatePost(preselectedCategory) {
+  const root = document.getElementById('forum-root');
+  if (!root) return;
   const defaultCat = preselectedCategory || _forumCurrentCategory || 'general';
-  modal.innerHTML = `
-    <div style="position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:9999;" onclick="if(event.target===this)this.closest('.overview-modal').remove()">
-      <div style="background:var(--panel);border:1.5px solid var(--border);border-radius:18px;padding:28px;max-width:520px;width:92%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.6);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-          <h3 style="margin:0;font-family:var(--font-display);font-size:18px;font-weight:800;color:#fff;">Start a New Thread</h3>
-          <button onclick="this.closest('.overview-modal').remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px 8px;border-radius:6px;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='none'">✕</button>
-        </div>
+  const cat = FORUM_CATEGORIES.find(c => c.id === defaultCat) || FORUM_CATEGORIES[0];
 
-        <div style="margin-bottom:16px;">
-          <label style="display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;">Category</label>
-          <select id="forum-new-category" style="width:100%;padding:10px 14px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:var(--font-ui);">
-            ${FORUM_CATEGORIES.map(cat => `<option value="${cat.id}" ${cat.id === defaultCat ? 'selected' : ''}>${cat.icon} ${cat.name}</option>`).join('')}
-          </select>
-        </div>
+  root.innerHTML = `
+    <div style="display:flex;flex-direction:column;height:100%;">
+      <div style="flex:1;overflow-y:auto;padding:28px 36px 40px;">
+        <div style="max-width:720px;margin:0 auto;">
+          <!-- Breadcrumb -->
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:24px;flex-wrap:wrap;">
+            <a href="#" onclick="event.preventDefault();_forumInit()" style="color:var(--blue);font-weight:600;text-decoration:none;">Forum</a>
+            <span style="color:var(--muted);">/</span>
+            <a href="#" onclick="event.preventDefault();_forumOpenCategory('${defaultCat}')" style="color:var(--blue);font-weight:600;text-decoration:none;">${escapeHTML(cat.name)}</a>
+            <span style="color:var(--muted);">/</span>
+            <span style="color:var(--text);font-weight:600;">New Post</span>
+          </div>
 
-        <div style="margin-bottom:16px;">
-          <label style="display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;">Thread Title</label>
-          <input id="forum-new-title" type="text" placeholder="What's on your mind?" maxlength="100" style="width:100%;padding:10px 14px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:var(--font-ui);transition:border-color .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='var(--border)'">
-        </div>
+          <!-- Title -->
+          <input id="forum-new-title" type="text" placeholder="Title" maxlength="100" style="width:100%;padding:12px 16px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:var(--font-ui);margin-bottom:12px;transition:border-color .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='var(--border)'">
 
-        <div style="margin-bottom:16px;">
-          <label style="display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;">Description</label>
-          <textarea id="forum-new-content" placeholder="Share your thoughts..." style="width:100%;height:120px;padding:10px 14px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:var(--font-ui);resize:vertical;transition:border-color .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-        </div>
+          <!-- Content -->
+          <textarea id="forum-new-content" placeholder="Content" style="width:100%;height:200px;padding:12px 16px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:var(--font-ui);resize:vertical;margin-bottom:16px;transition:border-color .18s;" onfocus="this.style.borderColor='rgba(255,249,62,.25)'" onblur="this.style.borderColor='var(--border)'"></textarea>
 
-        <div style="margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+          <!-- Image upload (hidden) -->
           <input id="forum-thread-image-upload" type="file" accept="image/*" style="display:none;" onchange="_forumThreadImagePreview(event)">
-          <button class="forum-img-btn" onclick="document.getElementById('forum-thread-image-upload').click()">📷 Add Image</button>
-          <span id="forum-thread-file-label" class="forum-file-label">No image selected</span>
+          <div id="forum-thread-image-preview" style="margin-bottom:12px;"></div>
+          <input id="forum-new-category" type="hidden" value="${defaultCat}">
+
+          <!-- ToS Warning + Create button row -->
+          <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:240px;">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-light);margin-bottom:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--accent);"><path d="M12 8v4"/><path d="M12 16h.01"/><circle cx="12" cy="12" r="10"/></svg>
+                Before posting, please make sure your post content follows the <a href="https://fortized.com/legal/" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:600;">Terms of Service &amp; Terms of Use</a> or you may be banned.
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-light);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--blue);"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Additionally, we have some additional forum rules that you must keep in mind:
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0;align-items:center;">
+              <button class="forum-img-btn" onclick="document.getElementById('forum-thread-image-upload').click()" style="padding:8px 14px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Image</button>
+              <button class="forum-submit-btn" onclick="_forumCreateThread(event)">Create</button>
+            </div>
+          </div>
+
+          <!-- Collapsible Forum Rules -->
+          <details style="background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+            <summary style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--text);user-select:none;list-style:none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--muted-light);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Forum rules
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:auto;transition:transform .2s;"><polyline points="6 9 12 15 18 9"/></svg>
+            </summary>
+            <div style="padding:0 16px 16px;font-size:12.5px;color:var(--muted-light);line-height:1.7;">
+              <div style="margin-bottom:14px;">
+                <strong style="color:var(--text);font-size:13px;">Do not post personal attacks</strong><br>
+                Personal attacks are not welcome here. A personal attack is defined as a post or comment that is intended to insult, demean, or otherwise harass another user. This includes, but is not limited to, name-calling, threats, and deliberately inflammatory comments. In short, do not talk about other users in a negative way. If you have a problem with another user, please use the report feature or contact an administrator or a moderator.
+              </div>
+              <div style="margin-bottom:14px;">
+                <strong style="color:var(--text);font-size:13px;">No spamming</strong><br>
+                Only post content that is relevant to the forum. Spamming is defined as posting the same content multiple times, posting irrelevant or off-topic content, or posting excessively large or small amounts of content. Check twice before you hit the submit button to make sure that your post is actually relevant to the current discussion.
+              </div>
+              <div style="margin-bottom:14px;">
+                <strong style="color:var(--text);font-size:13px;">No swearing or attempting to bypass the profanity filter</strong><br>
+                The profanity filter is in place for a reason - to keep the forum clean and family-friendly. Do not attempt to bypass the filter by misspelling words or using creative substitutions. If you feel that a certain word does not need to be filtered, please contact an administrator or a moderator.
+              </div>
+              <div style="margin-bottom:14px;">
+                <strong style="color:var(--text);font-size:13px;">No advertising and off-site links</strong><br>
+                Advertising or posting any off-site links without permission is strictly forbidden. We only allow a limited number of exceptions for links to resources that are directly related to the topic of discussion. Remember that the link you are posting must be appropriate and relevant to the discussion. If you want to post a link that is not on this list, please contact an administrator or a moderator and get permission first.
+              </div>
+              <div style="margin-bottom:14px;">
+                <strong style="color:var(--text);font-size:13px;">Don't post about your moderation</strong><br>
+                If you have been warned, suspended, or banned from the forums, do not post about it. If you do, your post will be removed and you may be subject to further action. If you have a problem with a moderation decision, please contact an administrator or a moderator.
+              </div>
+              <div style="margin-bottom:14px;">
+                <strong style="color:var(--text);font-size:13px;">Be respectful and constructive</strong><br>
+                We want everyone to feel welcome here, so please be respectful of other users. This includes, but is not limited to, refraining from making derogatory comments about race, ethnicity, national origin, religion, gender, sexual orientation, or disability. If you disagree with someone, please do so in a constructive way. Remember that everyone is entitled to their own opinion.
+              </div>
+              <div>
+                <strong style="color:var(--text);font-size:13px;">Do not try to find loopholes in the rules</strong><br>
+                The rules are in place for a reason. Do not try to find loopholes or exploit technicalities. If you are unsure whether something is allowed, ask a moderator before posting. The spirit of the rules is more important than the letter.
+              </div>
+            </div>
+          </details>
         </div>
-
-        <div id="forum-thread-image-preview" style="margin-bottom:16px;"></div>
-
-        <button class="forum-submit-btn" style="width:100%;" onclick="_forumCreateThread(event)">Create Thread</button>
       </div>
     </div>
   `;
-  document.body.appendChild(modal);
+}
+
+function _forumShowCreateThread(preselectedCategory) {
+  _forumShowCreatePost(preselectedCategory);
 }
 
 function _forumThreadImagePreview(e) {
@@ -29273,7 +29325,7 @@ async function _forumCreateThread(e) {
   try {
     await FortizedSocial.createForumThread(thread);
     document.querySelector('.overview-modal')?.remove();
-    toast('Thread created!', 'success');
+    toast('Post created!', 'success');
     _forumThreadImageData = null;
     await _forumOpenCategory(category);
   } catch(e) {
@@ -29327,7 +29379,7 @@ async function _forumGlobalSearch(query) {
   try {
     const results = await FortizedSocial.searchForumThreads(query);
     if (!results.length) {
-      mainContent.innerHTML = `<div class="forum-empty"><p>No threads found matching "<strong>${escapeHTML(query)}</strong>"</p></div>`;
+      mainContent.innerHTML = `<div class="forum-empty"><p>No posts found matching "<strong>${escapeHTML(query)}</strong>"</p></div>`;
       return;
     }
     mainContent.innerHTML = `
@@ -29371,7 +29423,7 @@ async function _forumSearchInCategory(query) {
     const results = await FortizedSocial.searchForumThreads(query);
     const filtered = results.filter(t => t.category === _forumCurrentCategory);
     if (!filtered.length) {
-      container.innerHTML = `<div class="forum-empty"><p>No threads found matching "<strong>${escapeHTML(query)}</strong>"</p></div>`;
+      container.innerHTML = `<div class="forum-empty"><p>No posts found matching "<strong>${escapeHTML(query)}</strong>"</p></div>`;
       return;
     }
     const cat = FORUM_CATEGORIES.find(c => c.id === _forumCurrentCategory) || FORUM_CATEGORIES[0];

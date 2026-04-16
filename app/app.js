@@ -2764,23 +2764,29 @@ function _renderAdHTML(ad, size) {
     </div>`;
   }
 }
+let _homeAdTimer = null;
 async function _renderHomeAds() {
-  const bannerEl = document.getElementById('home-ads');
-  const sidebarEl = document.getElementById('home-sidebar-ad');
-  const allAds = await _getAllActiveAds();
-  // Only 1 ad per page — try banner first (main content), fall back to rectangle (sidebar)
-  const bannerAd = _pickWeightedAd(allAds, 'banner');
-  const rectAd = _pickWeightedAd(allAds, 'rectangle');
-  if (bannerAd) {
-    if (bannerEl) bannerEl.innerHTML = _renderAdHTML(bannerAd, 'banner');
-    if (sidebarEl) sidebarEl.innerHTML = '';
-  } else if (rectAd) {
-    if (bannerEl) bannerEl.innerHTML = '';
-    if (sidebarEl) sidebarEl.innerHTML = _renderAdHTML(rectAd, 'rectangle');
-  } else {
-    if (bannerEl) bannerEl.innerHTML = '';
-    if (sidebarEl) sidebarEl.innerHTML = '';
+  if (_homeAdTimer) { clearInterval(_homeAdTimer); _homeAdTimer = null; }
+  async function _rotateHomeAd() {
+    const bannerEl = document.getElementById('home-ads');
+    const sidebarEl = document.getElementById('home-sidebar-ad');
+    if (!bannerEl && !sidebarEl) return;
+    const allAds = await _getAllActiveAds();
+    const bannerAd = _pickWeightedAd(allAds, 'banner');
+    const rectAd = _pickWeightedAd(allAds, 'rectangle');
+    if (bannerAd) {
+      if (bannerEl) { bannerEl.innerHTML = _renderAdHTML(bannerAd, 'banner'); bannerEl.onclick = () => _adClickAction(bannerAd); }
+      if (sidebarEl) sidebarEl.innerHTML = '';
+    } else if (rectAd) {
+      if (bannerEl) bannerEl.innerHTML = '';
+      if (sidebarEl) { sidebarEl.innerHTML = _renderAdHTML(rectAd, 'rectangle'); sidebarEl.onclick = () => _adClickAction(rectAd); }
+    } else {
+      if (bannerEl) bannerEl.innerHTML = '';
+      if (sidebarEl) sidebarEl.innerHTML = '';
+    }
   }
+  await _rotateHomeAd();
+  _homeAdTimer = setInterval(_rotateHomeAd, 75000);
 }
 
 // ── Realm friends loader (horizontal avatars) ──
@@ -6779,13 +6785,23 @@ function _renderDiscoverFeatured(bastions){
     </div>`;
   }).join('')}</div>`;
 }
+let _discoverAdTimer = null;
 async function _renderDiscoverAds() {
-  const el = document.getElementById('disc-ads');
-  if (!el) return;
-  const allAds = await _getAllActiveAds();
-  // Discover: 1 ad only, prefer banners (wide layout)
-  const ad = _pickWeightedAd(allAds, 'banner') || _pickWeightedAd(allAds, 'rectangle');
-  el.innerHTML = ad ? _renderAdHTML(ad, (ad.ratio||'banner') === 'rectangle' ? 'rectangle' : 'banner') : '';
+  if (_discoverAdTimer) { clearInterval(_discoverAdTimer); _discoverAdTimer = null; }
+  async function _rotateDiscoverAd() {
+    const el = document.getElementById('disc-ads');
+    if (!el) return;
+    const allAds = await _getAllActiveAds();
+    const ad = _pickWeightedAd(allAds, 'banner') || _pickWeightedAd(allAds, 'rectangle');
+    if (ad) {
+      el.innerHTML = _renderAdHTML(ad, (ad.ratio||'banner') === 'rectangle' ? 'rectangle' : 'banner');
+      el.onclick = () => _adClickAction(ad);
+    } else {
+      el.innerHTML = '';
+    }
+  }
+  await _rotateDiscoverAd();
+  _discoverAdTimer = setInterval(_rotateDiscoverAd, 75000);
 }
 function renderDiscoverGrid(bastions){
   const grid=document.getElementById('discover-grid');
@@ -28572,18 +28588,29 @@ function renderAtelierTab(tab) {
             <div style="margin-bottom:14px;">
               <div class="settings-title" style="display:flex;align-items:center;gap:6px;">Custom Link <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(255,217,62,.1);color:#ffd93e;border:1px solid rgba(255,217,62,.15);">SUPERADMIN</span></div>
               <select class="field-input" id="cm-ad-link-type" style="padding:10px 14px;margin-bottom:8px;" onchange="document.getElementById('cm-ad-custom-link').style.display=this.value==='custom'?'':'none';if(this.value!=='custom')document.getElementById('cm-ad-custom-link').value=this.value==='bastion'?'':this.value;">
-                <option value="bastion">Default — Join Bastion</option>
-                <option value="/">Home</option>
-                <option value="/app">App</option>
-                <option value="/app/forum">Forum</option>
-                <option value="/blog">Blog</option>
-                <option value="/download">Download</option>
-                <option value="/support">Support</option>
-                <option value="/legal">Legal</option>
-                <option value="custom">Custom URL (opens in browser)</option>
+                <option value="bastion">Default — Join Bastion (opens in app)</option>
+                <optgroup label="Fortized Web (opens in browser)">
+                  <option value="https://fortized.com/">Home</option>
+                  <option value="https://fortized.com/blog">Blog</option>
+                  <option value="https://fortized.com/support">Support</option>
+                  <option value="https://fortized.com/legal">Legal</option>
+                  <option value="https://fortized.com/download">Download</option>
+                </optgroup>
+                <optgroup label="Fortized App (opens in app)">
+                  <option value="/app">Home</option>
+                  <option value="/app/messages">Direct Messages</option>
+                  <option value="/app/discover">Discover</option>
+                  <option value="/app/forum">Forum</option>
+                  <option value="/app/atelier">Atelier</option>
+                  <option value="/app/atelier?tab=shop">Atelier — Shop</option>
+                  <option value="/app/atelier?tab=quests">Atelier — Quests</option>
+                  <option value="/app/atelier?tab=inventory">Atelier — Inventory</option>
+                  <option value="/app/atelier?tab=creator">Atelier — Creator</option>
+                </optgroup>
+                <option value="custom">Custom URL</option>
               </select>
               <input class="field-input" id="cm-ad-custom-link" placeholder="https://..." maxlength="500" style="display:none;">
-              <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Fortized pages open in-app. External URLs open in the user's browser.</div>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.2);margin-top:4px;">Web pages open in browser. App pages and bastion links open in-app.</div>
             </div>
             ` : ''}
 
@@ -28852,12 +28879,12 @@ function _crDeleteBot(idx) {
 
 // ── Forum System ──────────────────────────────────────────
 const _forumSvg = {
-  megaphone: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>',
-  chat: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-  bug: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg>',
-  lightbulb: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>',
-  sparkles: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>',
-  dice: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg>',
+  megaphone: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2a1 1 0 0 1 1 1v3.757l-2 2V4.413L11 8.318V15.682l3.735 1.953L13 19.37V21a1 1 0 0 1-1.504.864l-4.89-2.934H4a3 3 0 0 1-3-3V8.07a3 3 0 0 1 3-3h2.606L20 2zM8 6.07H4a1 1 0 0 0-1 1V15.93a1 1 0 0 0 1 1h4V6.07zm3 .248v11.364l-1-.523V6.841l1-.523zm10.293 2.39l1.414 1.414L20.414 12.414l2.293 2.293-1.414 1.414L19 13.828l-2.293 2.293-1.414-1.414L17.586 12.414 15.293 10.121l1.414-1.414L19 11l2.293-2.293z"/></svg>',
+  chat: '<svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor"><path d="M12 4C6.486 4 2 7.589 2 12c0 2.908 1.898 5.515 5 7.313V24a1 1 0 0 0 1.554.832L12.698 22H12c0 0 0 0 0 0h6c5.514 0 10-3.589 10-8s-4.486-8-10-8h-6zm14 8c0 3.309-3.589 6-8 6h-6.384l-2.17 1.447.004-2.964-.892-.467C5.871 14.592 4 12.398 4 12c0-3.309 3.589-6 8-6h6c4.411 0 8 2.691 8 6z"/><path d="M22 10h-2v4h-4v2h4v4h2v-4h4v-2h-4z" opacity="0"/></svg>',
+  bug: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.56 3.85a4.75 4.75 0 0 1 6.88 0l.47.492a4.75 4.75 0 0 1 1.34 3.316V8h1.48a.75.75 0 0 1 0 1.5H17.25v.84l2.76 1.38a.75.75 0 0 1-.67 1.34L17.25 12.01V13c0 .69-.074 1.362-.214 2.008l2.224 1.112a.75.75 0 0 1-.67 1.34l-1.824-.911A7.252 7.252 0 0 1 12 20.25a7.252 7.252 0 0 1-4.766-4.701l-1.824.911a.75.75 0 0 1-.67-1.34l2.224-1.112A7.248 7.248 0 0 1 6.75 13v-.99L4.66 13.06a.75.75 0 0 1-.67-1.34L6.75 10.34V9.5H5.25a.75.75 0 0 1 0-1.5h1.5v-.342a4.75 4.75 0 0 1 1.34-3.316l.47-.492zm5.81 1.06a3.25 3.25 0 0 0-4.74 0l-.47.492A3.25 3.25 0 0 0 8.25 7.658V13a3.75 3.75 0 0 0 7.5 0V7.658a3.25 3.25 0 0 0-.91-2.256l-.47-.492z"/></svg>',
+  lightbulb: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-4.5 12.37V17a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-2.63A7 7 0 0 0 12 2zm2.5 15h-5v-1h5v1zm.16-3.16l-.66.43V16h-4v-1.73l-.66-.43A5 5 0 1 1 17 9a4.98 4.98 0 0 1-2.34 4.84zM9 20h6a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2z"/></svg>',
+  sparkles: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1l2.42 7.372L22 10.814l-6.168 4.486L18.064 23 12 18.528 5.936 23l2.232-7.7L2 10.814l7.58-2.442z"/></svg>',
+  offtopic: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.038 2 11c0 2.727 1.37 5.189 3.594 6.87L4 22l5.34-2.326C10.22 19.89 11.1 20 12 20c5.514 0 10-4.038 10-9S17.514 2 12 2zm.75 13h-1.5v-1.5h1.5V15zm0-3h-1.5V7h1.5v5z"/></svg>',
 };
 const FORUM_CATEGORIES = [
   { id: 'announcements', name: 'Announcements', icon: _forumSvg.megaphone, color: '#ff6b6b', desc: 'Official announcements from Fortized', group: 'announcements' },
@@ -28865,7 +28892,7 @@ const FORUM_CATEGORIES = [
   { id: 'bugs', name: 'Bugs & Troubleshooting', icon: _forumSvg.bug, color: '#f87171', desc: 'Found a bug? Need help? Ask here — you may not be alone.', group: 'fortized' },
   { id: 'suggestions', name: 'Suggestions', icon: _forumSvg.lightbulb, color: '#ffd93e', desc: 'Have a suggestion for Fortized? Post it here!', group: 'fortized' },
   { id: 'showcase', name: 'Showcase', icon: _forumSvg.sparkles, color: '#a78bfa', desc: 'Made something cool? Show it off to the community!', group: 'fortized' },
-  { id: 'offtopic', name: 'Off-Topic', icon: _forumSvg.dice, color: '#64748b', desc: 'Anything that doesn\'t fit into the other categories.', group: 'community' },
+  { id: 'offtopic', name: 'Off-Topic', icon: _forumSvg.offtopic, color: '#64748b', desc: 'Anything that doesn\'t fit into the other categories.', group: 'community' },
 ];
 
 let _forumCurrentCategory = null;
@@ -28920,7 +28947,7 @@ async function _forumInit() {
   };
 
   root.innerHTML = `
-    <div class="forum-scroll">
+    <div class="forum-scroll" id="forum-scroll-shell">
       <div class="disc-hero" style="height:140px;">
         <img src="/Fortized banner.png" class="disc-hero-bg" alt="" onerror="this.style.display='none'">
         <div class="disc-hero-fade"></div>
@@ -28929,103 +28956,130 @@ async function _forumInit() {
           <p style="font-size:11.5px;color:rgba(255,255,255,.4);margin:0;">Engage with the community and share your thoughts.</p>
         </div>
       </div>
-      <div style="padding:16px 28px 0;max-width:1200px;margin:0 auto;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-          <div class="forum-hero-stats" style="display:flex;gap:10px;">
-            <div class="forum-hero-stat">
-              <div class="forum-hero-stat-num">${_forumFormatCount(totalThreads)}</div>
-              <div class="forum-hero-stat-label">Posts</div>
-            </div>
-            <div class="forum-hero-stat">
-              <div class="forum-hero-stat-num">${_forumFormatCount(totalPosts)}</div>
-              <div class="forum-hero-stat-label">Replies</div>
-            </div>
-          </div>
-          <div style="flex:1;"></div>
-          <div class="forum-search-wrap" style="max-width:280px;">
-            <svg class="forum-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input class="forum-search-input" id="forum-search" placeholder="Search posts..." oninput="_forumGlobalSearch(this.value)">
-          </div>
-        </div>
-      </div>
-
-      <div class="forum-body">
-        <div class="forum-sidebar">
-          <div class="forum-section-title">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Recent Activity
-          </div>
-          <div class="forum-activity-card">
-            ${recentThreads.length ? recentThreads.map(th => {
-              const cat = FORUM_CATEGORIES.find(c => c.id === th.category) || FORUM_CATEGORIES[0];
-              return `<div class="forum-activity-item" onclick="_forumViewThread('${th.id}')">
-                <img class="forum-activity-avatar" src="${escapeHTML(th.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
-                <div class="forum-activity-info">
-                  <div class="forum-activity-title"><span class="fa-cat-dot" style="background:${cat.color}"></span>${escapeHTML(th.title)}</div>
-                  <div class="forum-activity-meta">${escapeHTML(th.author)} · ${_forumTimeAgo(th.updated_at || th.created_at)}</div>
-                </div>
-              </div>`;
-            }).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">No activity yet</div>'}
-          </div>
-
-          <div class="forum-section-title" style="margin-top:8px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Your Posts
-          </div>
-          <div class="forum-your-posts">
-            ${myThreads.length ? myThreads.map(th => {
-              const cat = FORUM_CATEGORIES.find(c => c.id === th.category) || FORUM_CATEGORIES[0];
-              return `<div class="forum-activity-item" onclick="_forumViewThread('${th.id}')">
-                <div class="forum-activity-info">
-                  <div class="forum-activity-title"><span class="fa-cat-dot" style="background:${cat.color}"></span>${escapeHTML(th.title)}</div>
-                  <div class="forum-activity-meta">${th.reply_count || 0} replies · ${_forumTimeAgo(th.created_at)}</div>
-                </div>
-              </div>`;
-            }).join('') : `<div class="forum-your-posts-empty">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              Your posts will appear here!
-            </div>`}
-          </div>
-        </div>
-
-        <div class="forum-main" id="forum-main-content">
-          ${Object.values(groups).map(g => `
-            <div>
-              <div class="forum-group-header">
-                <span class="forum-group-label">${g.label}</span>
-                <div class="forum-group-line"></div>
-                <div class="forum-group-col-header">
-                  <span class="forum-group-col-label">Posts</span>
-                  <span class="forum-group-col-label">Replies</span>
-                </div>
+      <div id="forum-page-content">
+        <div style="padding:16px 28px 0;max-width:1200px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div class="forum-hero-stats" style="display:flex;gap:10px;">
+              <div class="forum-hero-stat">
+                <div class="forum-hero-stat-num">${_forumFormatCount(totalThreads)}</div>
+                <div class="forum-hero-stat-label">Posts</div>
               </div>
-              ${g.cats.map(cat => `
-                <div class="forum-cat-entry" style="--cat-color:${cat.color}" onclick="_forumOpenCategory('${cat.id}')">
-                  <div class="forum-cat-icon" style="background:${cat.color}18;color:${cat.color};">${cat.icon}</div>
-                  <div class="forum-cat-info">
-                    <div class="forum-cat-name">${cat.name}</div>
-                    <div class="forum-cat-desc">${escapeHTML(cat.desc)}</div>
-                  </div>
-                  <div class="forum-cat-count">${_forumFormatCount(catCounts[cat.id]?.threads || 0)}</div>
-                  <div class="forum-cat-count">${_forumFormatCount(catCounts[cat.id]?.posts || 0)}</div>
-                </div>
-              `).join('')}
+              <div class="forum-hero-stat">
+                <div class="forum-hero-stat-num">${_forumFormatCount(totalPosts)}</div>
+                <div class="forum-hero-stat-label">Replies</div>
+              </div>
             </div>
-          `).join('')}
+            <div style="flex:1;"></div>
+            <div class="forum-search-wrap" style="max-width:280px;">
+              <svg class="forum-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input class="forum-search-input" id="forum-search" placeholder="Search posts..." oninput="_forumGlobalSearch(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <div class="forum-body">
+          <div class="forum-sidebar">
+            <div class="forum-section-title">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Recent Activity
+            </div>
+            <div class="forum-activity-card">
+              ${recentThreads.length ? recentThreads.map(th => {
+                const cat = FORUM_CATEGORIES.find(c => c.id === th.category) || FORUM_CATEGORIES[0];
+                return `<div class="forum-activity-item" onclick="_forumViewThread('${th.id}')">
+                  <img class="forum-activity-avatar" src="${escapeHTML(th.author_pfp || '/default pfp.png')}" onerror="this.src='/default pfp.png'">
+                  <div class="forum-activity-info">
+                    <div class="forum-activity-title"><span class="fa-cat-dot" style="background:${cat.color}"></span>${escapeHTML(th.title)}</div>
+                    <div class="forum-activity-meta">${escapeHTML(th.author)} · ${_forumTimeAgo(th.updated_at || th.created_at)}</div>
+                  </div>
+                </div>`;
+              }).join('') : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">No activity yet</div>'}
+            </div>
+
+            <div class="forum-section-title" style="margin-top:8px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Your Posts
+            </div>
+            <div class="forum-your-posts">
+              ${myThreads.length ? myThreads.map(th => {
+                const cat = FORUM_CATEGORIES.find(c => c.id === th.category) || FORUM_CATEGORIES[0];
+                return `<div class="forum-activity-item" onclick="_forumViewThread('${th.id}')">
+                  <div class="forum-activity-info">
+                    <div class="forum-activity-title"><span class="fa-cat-dot" style="background:${cat.color}"></span>${escapeHTML(th.title)}</div>
+                    <div class="forum-activity-meta">${th.reply_count || 0} replies · ${_forumTimeAgo(th.created_at)}</div>
+                  </div>
+                </div>`;
+              }).join('') : `<div class="forum-your-posts-empty">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Your posts will appear here!
+              </div>`}
+            </div>
+
+            <div id="forum-ad-slot" class="forum-ad-slot" style="margin-top:16px;">
+              <div class="ad-empty">Ad</div>
+            </div>
+          </div>
+
+          <div class="forum-main" id="forum-main-content">
+            ${Object.values(groups).map(g => `
+              <div>
+                <div class="forum-group-header">
+                  <span class="forum-group-label">${g.label}</span>
+                  <div class="forum-group-line"></div>
+                  <div class="forum-group-col-header">
+                    <span class="forum-group-col-label">Posts</span>
+                    <span class="forum-group-col-label">Replies</span>
+                  </div>
+                </div>
+                ${g.cats.map(cat => `
+                  <div class="forum-cat-entry" style="--cat-color:${cat.color}" onclick="_forumOpenCategory('${cat.id}')">
+                    <div class="forum-cat-icon" style="background:${cat.color}18;color:${cat.color};">${cat.icon}</div>
+                    <div class="forum-cat-info">
+                      <div class="forum-cat-name">${cat.name}</div>
+                      <div class="forum-cat-desc">${escapeHTML(cat.desc)}</div>
+                    </div>
+                    <div class="forum-cat-count">${_forumFormatCount(catCounts[cat.id]?.threads || 0)}</div>
+                    <div class="forum-cat-count">${_forumFormatCount(catCounts[cat.id]?.posts || 0)}</div>
+                  </div>
+                `).join('')}
+              </div>
+            `).join('')}
+          </div>
         </div>
       </div>
     </div>
   `;
+  _forumRenderAd();
+}
+
+let _forumAdTimer = null;
+async function _forumRenderAd() {
+  const slot = document.getElementById('forum-ad-slot');
+  if (!slot) return;
+  if (_forumAdTimer) { clearInterval(_forumAdTimer); _forumAdTimer = null; }
+  async function _showAd() {
+    try {
+      const ads = await _getAllActiveAds();
+      const rectAds = ads.filter(a => a.ratio === 'rectangle');
+      if (!rectAds.length) { slot.innerHTML = '<div class="ad-empty">Ad</div>'; return; }
+      const ad = _pickWeightedAd(rectAds);
+      if (!ad) return;
+      slot.innerHTML = _renderAdHTML(ad, 'rectangle');
+      slot.onclick = () => _adClickAction(ad);
+    } catch(e) { slot.innerHTML = '<div class="ad-empty">Ad</div>'; }
+  }
+  await _showAd();
+  _forumAdTimer = setInterval(_showAd, 75000);
 }
 
 async function _forumOpenCategory(catId) {
   _forumCurrentCategory = catId;
-  const root = document.getElementById('forum-root');
-  if (!root) return;
+  const content = document.getElementById('forum-page-content');
+  if (!content) { const root = document.getElementById('forum-root'); if (!root) return; await _forumInit(); return; }
   const cat = FORUM_CATEGORIES.find(c => c.id === catId) || FORUM_CATEGORIES[0];
 
-  root.innerHTML = `
-    <div style="display:flex;flex-direction:column;height:100%;">
+  content.innerHTML = `
+    <div style="display:flex;flex-direction:column;flex:1;min-height:0;">
       <div class="forum-threadlist-header">
         <button class="forum-back-btn" onclick="_forumInit()">← Back</button>
         <span class="forum-threadlist-cat-icon" style="color:${cat.color};">${cat.icon}</span>
@@ -29092,8 +29146,8 @@ async function _forumLoadThreads() {
 }
 
 async function _forumViewThread(threadId) {
-  const root = document.getElementById('forum-root');
-  if (!root) return;
+  const content = document.getElementById('forum-page-content');
+  if (!content) return;
 
   try {
     const thread = await FortizedSocial.getForumThread(threadId);
@@ -29108,8 +29162,8 @@ async function _forumViewThread(threadId) {
       ? `_forumOpenCategory('${_forumCurrentCategory}')`
       : `_forumInit()`;
 
-    root.innerHTML = `
-      <div style="display:flex;flex-direction:column;height:100%;">
+    content.innerHTML = `
+      <div style="display:flex;flex-direction:column;flex:1;min-height:0;">
         <div class="forum-detail-header">
           <button class="forum-detail-back" onclick="${backAction}">← Back</button>
           <div style="flex:1;min-width:0;">
@@ -29172,18 +29226,18 @@ async function _forumViewThread(threadId) {
     `;
   } catch(e) {
     console.error('[Forum] View thread failed:', e);
-    root.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Failed to load thread</p></div>';
+    content.innerHTML = '<div class="forum-empty"><p style="color:var(--red);">Failed to load thread</p></div>';
   }
 }
 
 function _forumShowCreatePost(preselectedCategory) {
-  const root = document.getElementById('forum-root');
-  if (!root) return;
+  const content = document.getElementById('forum-page-content');
+  if (!content) return;
   const defaultCat = preselectedCategory || _forumCurrentCategory || 'general';
   const cat = FORUM_CATEGORIES.find(c => c.id === defaultCat) || FORUM_CATEGORIES[0];
 
-  root.innerHTML = `
-    <div style="display:flex;flex-direction:column;height:100%;">
+  content.innerHTML = `
+    <div style="display:flex;flex-direction:column;flex:1;min-height:0;">
       <div style="flex:1;overflow-y:auto;padding:28px 36px 40px;">
         <div style="max-width:720px;margin:0 auto;">
           <!-- Breadcrumb -->

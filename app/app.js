@@ -116,6 +116,7 @@ let CU = null;
 const _pfpCache = {};
 const _pfpCropCache = {}; // username -> {leftPct, topPct, widthPct} for GIF avatar CSS cropping
 const _liveStatusCache = {}; // username -> status, updated by real-time presence events
+const _verifiedCache = {};   // username -> bool (populated via getUserByName)
 let curBastion = null;
 let curChannel = null;
 let curDM = null;
@@ -889,7 +890,7 @@ async function refreshCU() {
           'connections','email','radianceUntil','radiancePlus','unlockedAppearances','ownedDecorations',
           'profileWidgets','displayFont','displayEffect','displayColor','wantToPlay','gameCollection',
           'spotifyConnected','spotifyToken','spotifyRefreshToken','spotifyTokenExpiry','spotifyNowPlaying',
-          'onyxBadge','onyxBadgeSpent','createdAt','customStatus'
+          'onyxBadge','onyxBadgeSpent','createdAt','customStatus','verified','appearance','personalStickers'
         ];
         for (const k of protectFields) {
           const nv = fresh[k], lv = CU[k];
@@ -962,6 +963,16 @@ async function refreshCU() {
       if (CU.spotifyNowPlaying && !fresh.spotifyNowPlaying) fresh.spotifyNowPlaying = CU.spotifyNowPlaying;
       // Preserve game collection
       if (CU.gameCollection?.length && (!fresh.gameCollection?.length || fresh.gameCollection.length < CU.gameCollection.length)) fresh.gameCollection = CU.gameCollection;
+      // Cross-device appearance sync: if DB has an appearance different from
+      // the one currently applied locally, re-apply it (visual only — no write-back).
+      try {
+        const dbTheme = fresh.appearance;
+        if (dbTheme) {
+          const curKey = 'ftz_appearance_' + (fresh.username || CU.username || '');
+          const localTheme = localStorage.getItem(curKey);
+          if (localTheme !== dbTheme) _applyAppearanceVisual(dbTheme);
+        }
+      } catch (e) { _dbg && _dbg('[Appearance] refresh sync failed', e); }
       CU = fresh; saveLocal();
       // Check for admin force-logout flag
       _checkForceLogout(fresh);
@@ -4188,11 +4199,13 @@ async function showGCMemberPanel(meta) {
         if (ud.pfp) _pfpCache[m] = ud.pfp;
         const entry = panel.querySelector(`.ml-entry[data-member="${CSS.escape(m)}"]`);
         if (!entry) return;
+        _verifiedCache[m] = !!ud.verified;
         const nameEl = entry.querySelector('.ml-name');
         if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
         if (nameEl) {
           if (ud.displayFont && ud.displayFont !== 'default') nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont);
           if (ud.displayColor && ud.displayColor !== '#fff') nameEl.style.cssText += _getDisplayEffectCSS(ud.displayEffect || 'solid', ud.displayColor);
+          if (ud.verified && !nameEl.querySelector('svg')) nameEl.insertAdjacentHTML('beforeend', _verifiedBadge(14));
         }
         if (ud.pfp) {
           const avWrap = entry.querySelector('.gc-ml-av');
@@ -4219,7 +4232,7 @@ function _buildGCMemberEntry(m, meta, isOwner, statusMap) {
     <div class="gc-ml-av" style="position:relative;width:30px;height:30px;border-radius:50%;overflow:visible;flex-shrink:0;">${buildAvatarHTML(pfpSrc,displayN,30,pfpCrop)}<span class="profile-status-dot" data-for="${escapeHTML(m)}" data-dot-size="10" data-dot-status="${st}" style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;z-index:3;">${FtzStatus.dotSvg(st, 10)}</span></div>
     <div style="flex:1;min-width:0;">
       <div style="display:flex;align-items:center;gap:4px;">
-        <div class="ml-name" style="color:${isGCOwner?'var(--accent)':'rgba(255,255,255,.6)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
+        <div class="ml-name" style="color:${isGCOwner?'var(--accent)':'rgba(255,255,255,.6)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}${(isMe ? CU.verified : _verifiedCache[m]) ? _verifiedBadge(12) : ''}</div>
         ${isGCOwner?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(255,249,62,.08);padding:1px 5px;border-radius:4px;flex-shrink:0;">OWNER</span>':''}
       </div>
     </div>
@@ -5520,6 +5533,7 @@ function appendMessage(container, msg, context, prevAuthor) {
     }
     FortizedSocial.getUserByName(msg.from).then(u=>{
       if (!u) return;
+      _verifiedCache[msg.from] = !!u.verified;
       if(u.pfp){const el=document.getElementById(avId);if(el)el.innerHTML=buildAvatarHTML(u.pfp,u.displayName||msg.from,40);}
       // Add decoration overlay on chat avatar
       if(u.activeDecoration){const el=document.getElementById(avId);if(el){el.style.position='relative';el.style.overflow='visible';const existing=el.querySelector('.profile-decoration-overlay-sm');if(!existing){el.insertAdjacentHTML('beforeend',buildDecorationOverlay(u.activeDecoration,'profile-decoration-overlay-sm'));}}}
@@ -5537,8 +5551,16 @@ function appendMessage(container, msg, context, prevAuthor) {
           const effectCSS = _getDisplayEffectCSS(u.displayEffect || 'solid', u.displayColor);
           authorEl.style.cssText += effectCSS;
         }
+        // Verified badge — inserted AFTER the author span, not inside it, so
+        // the name color/effect styles above don't recolor the checkmark.
+        if (u.verified && !authorEl.parentElement?.querySelector('.msg-verified-badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'msg-verified-badge';
+          badge.style.display = 'inline-flex';
+          badge.innerHTML = _verifiedBadge(14);
+          authorEl.insertAdjacentElement('afterend', badge);
+        }
       }
-      // Badges only shown in profile cards/previews, not in chat messages
     }).catch(()=>{});
   } else {
     const textId='mt-c-'+id.replace(/[^a-z0-9]/gi,'-');
@@ -6423,10 +6445,16 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
         if (!ud) return;
         if (ud.pfp) _pfpCache[u] = ud.pfp;
         if (ud.pfpCrop) _pfpCropCache[u] = ud.pfpCrop;
+        _verifiedCache[u] = !!ud.verified;
         const entry = document.querySelector('.ml-entry[data-member="'+CSS.escape(u)+'"]');
         if (!entry) return;
         const nameEl = entry.querySelector('.ml-name');
-        if (nameEl && ud.displayName) nameEl.textContent = ud.displayName;
+        if (nameEl && ud.displayName) {
+          nameEl.textContent = ud.displayName;
+          if (ud.verified) nameEl.insertAdjacentHTML('beforeend', _verifiedBadge(14));
+        } else if (nameEl && ud.verified && !nameEl.querySelector('svg')) {
+          nameEl.insertAdjacentHTML('beforeend', _verifiedBadge(14));
+        }
         // Apply display name styles (font, effect, color) for other users
         if (nameEl) {
           if (ud.displayFont && ud.displayFont !== 'default') nameEl.style.fontFamily = _getDisplayFontCSS(ud.displayFont);
@@ -6491,7 +6519,7 @@ function buildMemberEntry(u, roles, memberRoles, knownStatus, isOffline) {
     </div>
     <div class="ml-info" style="min-width:0;flex:1;">
       <div style="display:flex;align-items:center;gap:4px;">
-        <div class="ml-name" style="color:${primaryRole?.color||'rgba(255,255,255,.55)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}</div>
+        <div class="ml-name" style="color:${primaryRole?.color||'rgba(255,255,255,.55)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(displayN)}${(isMe ? CU.verified : _verifiedCache[u]) ? _verifiedBadge(14) : ''}</div>
         <span class="ml-badges">${staffBadge}</span>
       </div>
       <div class="ml-custom-status"></div>
@@ -7303,6 +7331,16 @@ function initFortizedUXResilience() {
   if (!CU.friends)CU.friends=[];
   if (CU.onyx===undefined)CU.onyx=0;
   notifSettings=CU.notifSettings||notifSettings;
+
+  // Apply this user's appearance from DB (cross-device sync). localStorage
+  // was already applied earlier as a fast cache; reconcile with the DB value
+  // now that we know who's logged in.
+  try {
+    if (CU.appearance) {
+      localStorage.setItem('ftz_appearance_' + CU.username, CU.appearance);
+      _applyAppearanceVisual(CU.appearance);
+    }
+  } catch (e) { _dbg && _dbg('[Appearance] init apply failed', e); }
 
   // ── Enforce bans & suspensions (skip when offline to avoid hanging) ──
   if (navigator.onLine) {
@@ -12833,6 +12871,8 @@ const EMOJI_PICKER_TABS = [
 let _recentEmojis = JSON.parse(localStorage.getItem('ftz_recent_emojis')||'[]');
 let _favEmojis = JSON.parse(localStorage.getItem('ftz_fav_emojis')||'[]');
 let _emojiPickerTab = 'smileys';
+let _emojiScrollSpySuspend = false;
+let _emojiScrollSpyObserver = null;
 
 
 function toggleFavEmoji(emoji) {
@@ -12842,14 +12882,11 @@ function toggleFavEmoji(emoji) {
     _favEmojis = [emoji, ..._favEmojis].slice(0,50);
   }
   localStorage.setItem('ftz_fav_emojis', JSON.stringify(_favEmojis));
-  // Refresh picker if currently showing
+  // Refresh the single continuous grid (Discord-style) to update star icons
   const grid = document.getElementById('epp-grid');
-  if (grid && _emojiPickerTab === 'favorites') {
-    renderEmojiTab('favorites');
-  } else if (grid) {
-    // Just refresh the current view to update star icons
-    const currentTab = _emojiPickerTab;
-    renderEmojiTab(currentTab);
+  if (grid) {
+    renderEmojiGrid();
+    _wireEmojiScrollSpy();
   }
 }
 
@@ -12965,253 +13002,184 @@ function buildEmojiPicker() {
           <input class="epp-search-inp" placeholder="Search" style="width:100%;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:10px;color:#fff;font-family:var(--font-ui);font-size:12px;padding:8px 12px 8px 32px;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;" oninput="searchEmojis(this.value)">
         </div>
       </div>
-      <div id="epp-grid" style="flex:1;overflow-y:auto;padding:6px 8px;display:grid;grid-template-columns:repeat(8,1fr);gap:1px;max-height:340px;"></div>
+      <div id="epp-grid" style="flex:1;overflow-y:auto;padding:0 8px 8px;max-height:340px;position:relative;"></div>
       <div style="padding:6px 10px;border-top:1px solid rgba(255,255,255,.03);font-size:10px;color:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
         <span id="epp-hover-label">Select an emoji</span>
         <button onclick="_showEmojiInfo()" style="background:none;border:none;color:rgba(255,255,255,.15);cursor:pointer;font-size:12px;padding:2px;" title="Emoji Info">ℹ</button>
       </div>
     </div>
   `;
-  renderEmojiTab(_emojiPickerTab);
+  renderEmojiGrid();
+  // After initial render, wire the intersection observer for auto-highlight
+  _wireEmojiScrollSpy();
 }
 
 function setEmojiTab(tabId) {
+  // Discord-style behavior: clicking a sidebar icon SCROLLS to that section in
+  // the single continuous grid, it does NOT switch what's visible.
   _emojiPickerTab = tabId;
-  // Update sidebar active state
+  _setActiveEmojiSidebarBtn(tabId);
+  scrollToEmojiSection(tabId);
+}
+function _setActiveEmojiSidebarBtn(tabId) {
   document.querySelectorAll('.epp-sidebar-btn').forEach(b => b.classList.remove('active'));
   const activeBtn = document.getElementById('etab-' + tabId);
   if (activeBtn) activeBtn.classList.add('active');
-  // Legacy tab bar support
-  document.querySelectorAll('[id^=etab-]').forEach(b => {
-    if (b.classList.contains('epp-sidebar-btn')) return;
-    const active = b.id === 'etab-' + tabId;
-    b.style.background = active ? 'rgba(255,249,62,.15)' : 'transparent';
-    b.style.color = active ? 'var(--accent)' : 'rgba(255,255,255,.5)';
-  });
-  renderEmojiTab(tabId);
 }
-
-function renderEmojiTab(tabId) {
+function scrollToEmojiSection(sectionId) {
   const grid = document.getElementById('epp-grid');
   if (!grid) return;
+  const hdr = grid.querySelector('.epp-section[data-section="' + sectionId + '"]');
+  if (!hdr) return;
+  // Suppress scrollspy so the intersection observer doesn't fight the jump
+  _emojiScrollSpySuspend = true;
+  grid.scrollTo({ top: hdr.offsetTop - 2, behavior: 'smooth' });
+  setTimeout(() => { _emojiScrollSpySuspend = false; }, 500);
+}
 
-  if (tabId === 'favorites') {
-    grid.style.gridTemplateColumns = 'repeat(8,1fr)';
-    if (!_favEmojis.length) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">No favorites yet! Right-click any emoji to favorite it.</div>';
-      return;
-    }
-    grid.innerHTML = _favEmojis.map(e => renderEmojiCell(e)).join('');
-    wireEmojiHover(grid);
-    return;
+// Intersection-observer scroll-spy: highlights the sidebar button for whichever
+// section is currently at the top of the scrollable emoji grid.
+function _wireEmojiScrollSpy() {
+  const grid = document.getElementById('epp-grid');
+  if (!grid) return;
+  if (_emojiScrollSpyObserver) { try { _emojiScrollSpyObserver.disconnect(); } catch {} _emojiScrollSpyObserver = null; }
+  const sections = Array.from(grid.querySelectorAll('.epp-section'));
+  if (!sections.length) return;
+  _emojiScrollSpyObserver = new IntersectionObserver((entries) => {
+    if (_emojiScrollSpySuspend) return;
+    // Find the top-most intersecting header
+    const visible = entries.filter(e => e.isIntersecting).sort((a,b) => a.boundingClientRect.top - b.boundingClientRect.top);
+    if (!visible.length) return;
+    const id = visible[0].target.getAttribute('data-section');
+    if (id) _setActiveEmojiSidebarBtn(id);
+  }, { root: grid, rootMargin: '0px 0px -80% 0px', threshold: 0 });
+  sections.forEach(s => _emojiScrollSpyObserver.observe(s));
+}
+
+// Hover preview — updates the bar at the bottom of the emoji picker with the
+// emoji glyph + shortcode label, Discord-style.
+function _emojiHover(label, fromBastion, url, isCustom) {
+  const el = document.getElementById('epp-hover-label');
+  if (!el) return;
+  let html = '';
+  if (url) {
+    html = `<img src="${escapeHTML(url)}" style="width:18px;height:18px;vertical-align:-4px;object-fit:contain;margin-right:6px;">`;
+  }
+  html += `<span style="color:rgba(255,255,255,.7);font-weight:600;">${escapeHTML(label)}</span>`;
+  if (fromBastion) html += `<span style="color:rgba(255,255,255,.3);margin-left:6px;">· ${escapeHTML(fromBastion)}</span>`;
+  el.innerHTML = html;
+}
+
+// Legacy shim — kept for callers (like toggleFavEmoji) that want to refresh
+// the picker. In the new Discord-style model there is a SINGLE grid showing
+// every section, so this just re-renders the whole thing.
+function renderEmojiTab(_tabId) { renderEmojiGrid(); }
+
+// Build ONE continuous grid containing every section back-to-back with sticky
+// headers, Discord-style. The sidebar jumps to sections; it does NOT switch
+// categories.
+function renderEmojiGrid() {
+  const grid = document.getElementById('epp-grid');
+  if (!grid) return;
+  const isRadiance = _hasActiveRadiance();
+  const bastions = CU?.bastions || [];
+  const freqData = (() => { try { return JSON.parse(localStorage.getItem('ftz_emoji_freq')||'{}'); } catch { return {}; } })();
+  const freqList = Object.entries(freqData).sort((a,b) => b[1]-a[1]).slice(0,48).map(([e]) => e);
+
+  const sectionHdr = (id, title, extra) => `<div class="epp-section" data-section="${id}">${escapeHTML(title)}${extra||''}</div>`;
+  const gridOpen = (cols) => `<div class="epp-section-grid" style="grid-template-columns:repeat(${cols},1fr);">`;
+  const gridClose = `</div>`;
+  const ftzCell = (name, url, fromBastion) => `
+    <div onclick="insertFortizedEmoji('${escapeHTML(name)}','${escapeHTML(url)}')"
+         onmouseenter="_emojiHover(':${escapeHTML(name)}:',${fromBastion?`'${escapeHTML(fromBastion)}'`:'null'},'${escapeHTML(url)}',true)"
+         title=":${escapeHTML(name)}:${fromBastion?' from '+escapeHTML(fromBastion):''}"
+         class="emoji-cell emoji-cell-custom">
+      <img src="${escapeHTML(url)}" alt=":${escapeHTML(name)}:" style="width:100%;height:100%;object-fit:contain;">
+    </div>`;
+
+  let html = '';
+
+  // 1) Frequently used (quick-access row)
+  if (freqList.length || _recentEmojis.length) {
+    const rows = (freqList.length ? freqList : _recentEmojis.slice(0,24));
+    html += sectionHdr('frequent', 'Frequently used');
+    html += gridOpen(8);
+    html += rows.map(e => {
+      if (FORTIZED_EMOJI_MAP[e]) return ftzCell(e, FORTIZED_EMOJI_MAP[e]);
+      return renderEmojiCell(e);
+    }).join('');
+    html += gridClose;
   }
 
-  if (tabId === 'recent') {
-    if (!_recentEmojis.length) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">No recent emojis yet!</div>';
-      return;
-    }
-    grid.innerHTML = _recentEmojis.map(e => renderEmojiCell(e)).join('');
-    wireEmojiHover(grid);
-    return;
+  // 2) Favorites
+  html += sectionHdr('favorites', 'Favorites');
+  if (_favEmojis.length) {
+    html += gridOpen(8) + _favEmojis.map(e => renderEmojiCell(e)).join('') + gridClose;
+  } else {
+    html += `<div class="epp-empty">Right-click any emoji to favorite it.</div>`;
   }
 
-  // Frequently used — combines recent emojis with usage frequency
-  if (tabId === 'frequent') {
-    grid.style.gridTemplateColumns = 'repeat(8,1fr)';
-    const freqData = JSON.parse(localStorage.getItem('ftz_emoji_freq')||'{}');
-    const freqList = Object.entries(freqData).sort((a,b) => b[1]-a[1]).slice(0,48);
-    if (!freqList.length && !_recentEmojis.length) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">Use some emojis and they\'ll show up here!</div>';
-      return;
+  // 3) Fortized custom emojis
+  html += sectionHdr('ftz', 'Fortized');
+  html += gridOpen(6);
+  html += FORTIZED_EMOJIS.map(name => ftzCell(name, FORTIZED_EMOJI_MAP[name])).join('');
+  html += gridClose;
+
+  // 4) Personal (Radiance)
+  html += sectionHdr('personal', 'My Custom Emojis' + (isRadiance ? ` (${(CU?.personalEmojis||[]).length}/${typeof PERSONAL_EMOJI_LIMIT!=='undefined'?PERSONAL_EMOJI_LIMIT:50})` : ''));
+  if (!isRadiance) {
+    html += `<div class="epp-empty" style="padding:16px;">
+      <div style="font-size:20px;margin-bottom:4px;opacity:.3;">✨</div>
+      <div style="font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">Radiance required</div>
+      <div style="font-size:11.5px;color:rgba(255,255,255,.25);line-height:1.45;margin-bottom:10px;">Personal emojis are available with Radiance.</div>
+      <button onclick="showView('atelier')" class="settings-save-btn" style="padding:7px 16px;font-size:11px;">Get Radiance</button>
+    </div>`;
+  } else {
+    const pe = CU?.personalEmojis || [];
+    const limit = typeof PERSONAL_EMOJI_LIMIT !== 'undefined' ? PERSONAL_EMOJI_LIMIT : 50;
+    html += gridOpen(6);
+    html += pe.map((e,i) => `
+      <div onclick="insertFortizedEmoji('${escapeHTML(e.name)}','${escapeHTML(e.data)}')"
+           onmouseenter="_emojiHover(':${escapeHTML(e.name)}:',null,'${escapeHTML(e.data)}',true)"
+           oncontextmenu="event.preventDefault();showCustomConfirm('Delete :${escapeHTML(e.name)}:?',function(){deletePersonalEmoji(${i})})"
+           title=":${escapeHTML(e.name)}:" class="emoji-cell emoji-cell-custom">
+        <img src="${escapeHTML(e.data)}" alt=":${escapeHTML(e.name)}:" style="width:100%;height:100%;object-fit:contain;">
+      </div>`).join('');
+    if (pe.length < limit) {
+      html += `<div onclick="openPersonalEmojiUpload()" class="emoji-add-btn" title="Upload a personal emoji">+</div>`;
     }
-    let html = '<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">Frequently used</div>';
-    if (freqList.length) {
-      html += freqList.map(([emoji]) => {
-        if (FORTIZED_EMOJI_MAP[emoji]) {
-          return `<div onclick="insertFortizedEmoji('${escapeHTML(emoji)}','${escapeHTML(FORTIZED_EMOJI_MAP[emoji])}')" title=":${escapeHTML(emoji)}:" style="width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:3px;" onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(emoji)}:'"><img src="${escapeHTML(FORTIZED_EMOJI_MAP[emoji])}" style="width:100%;height:100%;object-fit:contain;"></div>`;
-        }
-        return renderEmojiCell(emoji);
-      }).join('');
-    } else {
-      html += _recentEmojis.slice(0,24).map(e => renderEmojiCell(e)).join('');
-    }
-    grid.innerHTML = html;
-    return;
+    html += gridClose;
   }
 
-  // All bastions for Radiance users
-  if (tabId === 'bastions') {
-    const isRadiance = _hasActiveRadiance();
-    if (!isRadiance) return;
-    grid.style.gridTemplateColumns = 'repeat(6,1fr)';
-    const allBastionEmojis = [];
-    const emojiMap = {}; // Track which bastion owns which emoji
-    const bastions = CU?.bastions || [];
-    bastions.forEach((b, bi) => {
-      const emojis = b.customEmojis || [];
-      emojis.forEach(ce => {
-        if (!emojiMap[ce.name]) {
-          allBastionEmojis.push({...ce, bastion: b.name, bastionIdx: bi});
-          emojiMap[ce.name] = true;
-        }
-      });
-    });
-
-    if (!allBastionEmojis.length) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);font-size:13px;">Your bastions have no custom emojis yet.</div>';
-      return;
-    }
-    let html = `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">All Bastion Emojis</div>`;
-    html += allBastionEmojis.map(ce => `
-      <div onclick="insertFortizedEmoji('${escapeHTML(ce.name)}','${escapeHTML(ce.data)}')"
-           onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:  (from ${escapeHTML(ce.bastion)})'"
-           title=":${escapeHTML(ce.name)}: from ${escapeHTML(ce.bastion)}"
-           style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
-          >
+  // 5) Each bastion as its own section (custom emojis)
+  bastions.forEach((b, bi) => {
+    const custom = b.customEmojis || [];
+    if (!custom.length) return;
+    const locked = !isRadiance && bi !== curBastion; // must be in-bastion or have Radiance to use
+    html += sectionHdr('bastion-' + bi, b.name || ('Bastion ' + (bi+1)), locked ? ' <span class="epp-lock">RADIANCE</span>' : '');
+    html += gridOpen(6);
+    html += custom.map(ce => `
+      <div onclick="${(!locked) ? "insertFortizedEmoji('"+escapeHTML(ce.name)+"','"+escapeHTML(ce.data)+"')" : "toast('Radiance required to use this bastion\\'s emojis outside the bastion','error')"}"
+           onmouseenter="_emojiHover(':${escapeHTML(ce.name)}:','${escapeHTML(b.name||'')}','${escapeHTML(ce.data)}',true)"
+           title=":${escapeHTML(ce.name)}:" class="emoji-cell emoji-cell-custom" style="${locked?'opacity:.4;filter:grayscale(.5);':''}">
         <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
       </div>`).join('');
-    grid.innerHTML = html;
-    return;
-  }
+    html += gridClose;
+  });
 
-  // Bastion-specific emoji tab
-  if (tabId.startsWith('bastion-')) {
-    const bi = parseInt(tabId.split('-')[1]);
-    const b = CU?.bastions?.[bi];
-    if (!b) return;
-    const bastionEmojis = b.customEmojis || [];
-    grid.style.gridTemplateColumns = 'repeat(6,1fr)';
-    let html = `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">${escapeHTML(b.name||'Bastion')}</div>`;
-    if (bastionEmojis.length) {
-      html += bastionEmojis.map(ce => `
-        <div onclick="insertFortizedEmoji('${escapeHTML(ce.name)}','${escapeHTML(ce.data)}')"
-             onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:'"
-             title=":${escapeHTML(ce.name)}:"
-             style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
-            >
-          <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
-        </div>`).join('');
-    } else {
-      html += '<div style="grid-column:1/-1;font-size:11.5px;color:rgba(255,255,255,.25);padding:4px;">No custom emojis in this bastion</div>';
-    }
-    grid.innerHTML = html;
-    return;
-  }
-  
-  if (tabId === 'personal') {
-    grid.style.gridTemplateColumns = 'repeat(6,1fr)';
-    const isRadiance = _hasActiveRadiance();
-    if (!isRadiance) {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:28px 16px;">
-        <div style="font-size:28px;margin-bottom:8px;opacity:.3;">✨</div>
-        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;">Radiance Required</div>
-        <div style="font-size:11.5px;color:rgba(255,255,255,.25);line-height:1.5;margin-bottom:12px;">Personal emojis and stickers are available with Radiance. Radiance users can also use bastion emojis everywhere.</div>
-        <button onclick="showView('atelier')" class="settings-save-btn" style="padding:8px 18px;font-size:11px;">Get Radiance</button>
-      </div>`;
-      return;
-    }
-    const personalEmojis = CU?.personalEmojis || [];
-    const personalStickers = CU?.personalStickers || [];
-    let html = '';
-    html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">My Custom Emojis (${personalEmojis.length}/${PERSONAL_EMOJI_LIMIT})</div>`;
-    if (personalEmojis.length) {
-      html += personalEmojis.map((e,i) => `
-        <div onclick="insertFortizedEmoji('${escapeHTML(e.name)}','${escapeHTML(e.data)}')"
-             onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(e.name)}:'"
-             oncontextmenu="event.preventDefault();showCustomConfirm('Delete :${escapeHTML(e.name)}:?',function(){deletePersonalEmoji(${i})})"
-             title=":${escapeHTML(e.name)}:"
-             style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;position:relative;"
-            >
-          <img src="${escapeHTML(e.data)}" alt=":${escapeHTML(e.name)}:" style="width:100%;height:100%;object-fit:contain;">
-        </div>`).join('');
-    }
-    if (personalEmojis.length < PERSONAL_EMOJI_LIMIT) {
-      html += `<div onclick="openPersonalEmojiUpload()" class="emoji-add-btn">+</div>`;
-    }
-    grid.innerHTML = html;
-    return;
-  }
+  // 6) Unicode category sections
+  EMOJI_PICKER_TABS.forEach(tab => {
+    if (!tab.emojis) return; // skip 'recent' / 'ftz' which have no list
+    html += sectionHdr(tab.id, tab.label || (tab.id.charAt(0).toUpperCase() + tab.id.slice(1)));
+    html += gridOpen(8);
+    html += tab.emojis.map(e => renderEmojiCell(e)).join('');
+    html += gridClose;
+  });
 
-  if (tabId === 'ftz') {
-    const bastionCustom = curBastion !== null ? (CU?.bastions?.[curBastion]?.customEmojis||[]) : [];
-    // For radiance users, also gather emojis from all other bastions
-    const isRadiance = _hasActiveRadiance();
-    const otherBastionEmojis = [];
-    if (isRadiance) {
-      (CU?.bastions||[]).forEach((b, bi) => {
-        if (bi === curBastion) return;
-        (b.customEmojis||[]).forEach(ce => {
-          otherBastionEmojis.push({...ce, bastionName: b.name, bastionIdx: bi});
-        });
-      });
-    }
-    const ftzEmojis = FORTIZED_EMOJIS.map(name => ({type:'ftz', name, url:FORTIZED_EMOJI_MAP[name]}));
+  // 7) Hearts (curated)
+  // (already covered by EMOJI_PICKER_TABS 'hearts' entry)
 
-    grid.style.gridTemplateColumns = 'repeat(6,1fr)';
-
-    let html = '';
-
-    // Section: Fortized Global Emojis
-    html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:8px 4px 4px;">Fortized Guide</div>`;
-    html += ftzEmojis.map(e => `
-      <div onclick="insertFortizedEmoji('${escapeHTML(e.name)}','${escapeHTML(e.url)}')"
-           onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(e.name)}:'"
-           title=":${escapeHTML(e.name)}:"
-           style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
-          >
-        <img src="${escapeHTML(e.url)}" alt=":${escapeHTML(e.name)}:"
-             style="width:100%;height:100%;object-fit:contain;"
-             onerror="this.parentElement.innerHTML='<span style=\'font-size:9px;color:rgba(255,255,255,.2);text-align:center;word-break:break-all;padding:2px;\'>${escapeHTML(e.name.replace('knight_','').replace('joyster_','').replace('leafen_',''))}</span>'">
-      </div>`).join('');
-
-    // Section: Per-Bastion Custom Emojis (Radiance only for usage)
-    if (curBastion !== null) {
-      const bName = escapeHTML(CU?.bastions?.[curBastion]?.name || 'Bastion');
-      html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:10px 4px 4px;">${bName}${!isRadiance ? ' <span style="font-size:8px;color:#ff9d3e;background:rgba(255,160,62,.1);border:1px solid rgba(255,160,62,.15);border-radius:4px;padding:1px 5px;vertical-align:1px;margin-left:4px;">RADIANCE</span>' : ''}</div>`;
-      if (bastionCustom.length) {
-        html += bastionCustom.map(ce => `
-          <div onclick="${isRadiance ? "insertFortizedEmoji('"+escapeHTML(ce.name)+"','"+escapeHTML(ce.data)+"')" : "toast('Bastion emojis require Radiance','error')"}"
-               onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:'"
-               title=":${escapeHTML(ce.name)}:"
-               style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;${!isRadiance ? 'opacity:.4;filter:grayscale(.5);' : ''}"
-              >
-            <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
-          </div>`).join('');
-      } else {
-        html += `<div style="grid-column:1/-1;font-size:11.5px;color:rgba(255,255,255,.25);padding:4px;">No custom emojis — add them in Bastion Settings → Emojis</div>`;
-      }
-    }
-
-    // Radiance users: show emojis from other bastions they're in
-    if (isRadiance && otherBastionEmojis.length) {
-      const grouped = {};
-      otherBastionEmojis.forEach(e => {
-        if (!grouped[e.bastionName]) grouped[e.bastionName] = [];
-        grouped[e.bastionName].push(e);
-      });
-      Object.entries(grouped).forEach(([bName, emojis]) => {
-        html += `<div style="grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(167,139,250,.4);padding:10px 4px 4px;">✨ ${escapeHTML(bName)}</div>`;
-        html += emojis.map(ce => `
-          <div onclick="insertFortizedEmoji('${escapeHTML(ce.name)}','${escapeHTML(ce.data)}')"
-               onmouseenter="document.getElementById('epp-hover-label').textContent=':${escapeHTML(ce.name)}:'"
-               title=":${escapeHTML(ce.name)}:"
-               style="aspect-ratio:1;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:3px;transition:background .1s;"
-              >
-            <img src="${escapeHTML(ce.data)}" alt=":${escapeHTML(ce.name)}:" style="width:100%;height:100%;object-fit:contain;">
-          </div>`).join('');
-      });
-    }
-
-    grid.innerHTML = html;
-    return;
-  }
-  
-  const tab = EMOJI_PICKER_TABS.find(t => t.id === tabId);
-  if (!tab) return;
-  grid.style.gridTemplateColumns = 'repeat(8,1fr)';
-  grid.innerHTML = (tab.emojis||[]).map(e => renderEmojiCell(e)).join('');
-  wireEmojiHover(grid);
+  grid.innerHTML = html;
 }
 
 function emojiToTwemojiUrl(emoji) {
@@ -13386,40 +13354,59 @@ function wireEmojiHover(grid) {
 function searchEmojis(q) {
   const grid = document.getElementById('epp-grid');
   if (!grid) return;
-  if (!q.trim()) { renderEmojiTab(_emojiPickerTab); return; }
+  const panel = document.getElementById('emoji-picker');
+  const sidebar = document.getElementById('epp-sidebar');
+  if (!q.trim()) {
+    // Restore sectioned grid + sidebar jump-nav
+    if (sidebar) sidebar.style.display = '';
+    if (panel) panel.classList.remove('epp-searching');
+    renderEmojiGrid();
+    _wireEmojiScrollSpy();
+    return;
+  }
+  // Hide sidebar during search; the grid shows a flat filtered list.
+  if (sidebar) sidebar.style.display = 'none';
+  if (panel) panel.classList.add('epp-searching');
+  if (_emojiScrollSpyObserver) { try { _emojiScrollSpyObserver.disconnect(); } catch {} _emojiScrollSpyObserver = null; }
+
   const ql = q.toLowerCase();
-  // Search unicode emojis by shortcode name
   const matches = [];
   const seen = new Set();
-  // Search shortcodes
   Object.entries(EMOJI_SHORTCODES).forEach(([name, emoji]) => {
     if (name.includes(ql) && !seen.has(emoji)) { matches.push({type:'unicode',emoji,name}); seen.add(emoji); }
   });
-  // Search all emoji arrays
   EMOJI_PICKER_TABS.slice(2).forEach(tab => {
     (tab.emojis||[]).forEach(e => { if (!seen.has(e) && e.includes(q)) { matches.push({type:'unicode',emoji:e,name:e}); seen.add(e); } });
   });
-  // Search Fortized emojis
   FORTIZED_EMOJIS.forEach(name => {
-    if (name.includes(ql)) matches.push({type:'ftz',name,url:FORTIZED_EMOJI_MAP[name]});
+    if (name.toLowerCase().includes(ql)) matches.push({type:'ftz',name,url:FORTIZED_EMOJI_MAP[name]});
   });
-  // Search bastion custom emojis
-  (CU?.bastions||[]).forEach((b, bi) => {
+  (CU?.bastions||[]).forEach((b) => {
     (b.customEmojis||[]).forEach(ce => {
-      if (ce.name && ce.name.toLowerCase().includes(ql)) matches.push({type:'ftz',name:ce.name,url:ce.data});
+      if (ce.name && ce.name.toLowerCase().includes(ql)) matches.push({type:'ftz',name:ce.name,url:ce.data,from:b.name||''});
     });
   });
-  // Search personal emojis
   (CU?.personalEmojis||[]).forEach(pe => {
     if (pe.name && pe.name.toLowerCase().includes(ql)) matches.push({type:'ftz',name:pe.name,url:pe.data});
   });
 
-  if (!matches.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,.4);">No results for "'+escapeHTML(q)+'"</div>'; return; }
-  grid.style.gridTemplateColumns = 'repeat(8,1fr)';
-  grid.innerHTML = matches.slice(0,64).map(m => {
-    if (m.type === 'ftz') return `<div onclick="insertFortizedEmoji('${escapeHTML(m.name)}','${escapeHTML(m.url)}')" title=":${escapeHTML(m.name)}:" style="width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:3px;"><img src="${escapeHTML(m.url)}" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.style.display='none'"></div>`;
+  if (!matches.length) {
+    grid.innerHTML = '<div class="epp-empty" style="padding:20px;">No results for "'+escapeHTML(q)+'"</div>';
+    return;
+  }
+  let html = `<div class="epp-section-grid" style="grid-template-columns:repeat(8,1fr);">`;
+  html += matches.slice(0,128).map(m => {
+    if (m.type === 'ftz') {
+      return `<div onclick="insertFortizedEmoji('${escapeHTML(m.name)}','${escapeHTML(m.url)}')"
+               onmouseenter="_emojiHover(':${escapeHTML(m.name)}:',${m.from?`'${escapeHTML(m.from)}'`:'null'},'${escapeHTML(m.url)}',true)"
+               title=":${escapeHTML(m.name)}:" class="emoji-cell emoji-cell-custom">
+              <img src="${escapeHTML(m.url)}" alt=":${escapeHTML(m.name)}:" style="width:100%;height:100%;object-fit:contain;">
+            </div>`;
+    }
     return renderEmojiCell(m.emoji);
   }).join('');
+  html += `</div>`;
+  grid.innerHTML = html;
 }
 
 function setEmojiCat(idx) { setEmojiTab(EMOJI_PICKER_TABS[idx]?.id || 'smileys'); }
@@ -24903,6 +24890,7 @@ function insertGifById(id, inputId, url) {
 // STICKER PICKER — bastion-uploaded stickers
 // ════════════════════════════════════════════
 let _stickerInput = 'ch-input';
+const PERSONAL_STICKER_LIMIT = 50;
 function openStickerPicker(inputId) {
   _stickerInput = inputId || 'ch-input';
   document.getElementById('sticker-picker')?.remove();
@@ -25036,6 +25024,45 @@ function _stickerOutsideClose(e) {
   if (!picker) return;
   if (!picker.contains(e.target)) { picker.remove(); return; }
   document.addEventListener('mousedown', _stickerOutsideClose, {once:true, capture:true});
+}
+
+// Upload a personal sticker: pick a PNG/GIF/WebP, compress via existing
+// avatar pipeline, and save to CU.personalStickers.
+function openPersonalStickerUpload() {
+  const used = (CU?.personalStickers || []).length;
+  if (used >= PERSONAL_STICKER_LIMIT) {
+    toast(`Personal sticker limit reached (${PERSONAL_STICKER_LIMIT})`, 'error');
+    return;
+  }
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/png,image/gif,image/webp,image/jpeg';
+  inp.style.display = 'none';
+  document.body.appendChild(inp);
+  inp.onchange = async () => {
+    const f = inp.files && inp.files[0];
+    inp.remove();
+    if (!f) return;
+    if (f.size > 2 * 1024 * 1024) { toast('Sticker too large (2MB max)', 'error'); return; }
+    try {
+      const dataUrl = await new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(fr.result);
+        fr.onerror = () => rej(new Error('read failed'));
+        fr.readAsDataURL(f);
+      });
+      const name = (f.name || 'sticker').replace(/\.[^.]+$/, '').slice(0, 40);
+      CU.personalStickers = CU.personalStickers || [];
+      CU.personalStickers.push({ url: dataUrl, name, addedAt: Date.now() });
+      try { await saveUser(true); } catch {}
+      toast('Sticker added!', 'success');
+      document.getElementById('sticker-picker')?.remove();
+      openStickerPicker(_stickerInput);
+    } catch (e) {
+      toast('Upload failed', 'error');
+    }
+  };
+  inp.click();
 }
 
 
@@ -31496,6 +31523,16 @@ function initCrossDeviceSync() {
                 const scroll = document.getElementById('sidebar-scroll');
                 if (scroll) renderDMSidebar(scroll);
               }
+              // Appearance lives in raw JSONB — apply visually so a theme
+              // switch on device A is reflected instantly on device B.
+              try {
+                const dbTheme = (newData.raw && newData.raw.appearance) || null;
+                if (dbTheme && dbTheme !== CU.appearance) {
+                  _dbg('[Sync] Appearance updated:', dbTheme);
+                  CU.appearance = dbTheme;
+                  _applyAppearanceVisual(dbTheme);
+                }
+              } catch (e) { _dbg('[Sync] appearance apply failed', e); }
               saveLocal();
             } catch (e) {
               console.error('[Supabase Sync Error]', e);
@@ -32661,7 +32698,7 @@ async function showMiniProfilePreview(username, anchorEl) {
     </div>
     <!-- Identity -->
     <div class="mpp-identity">
-      <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}</div>
+      <div class="mpp-displayname" onclick="document.getElementById('mini-profile-preview')?.remove();viewUserProfile('${escapeHTML(username)}')" style="font-family:${getDisplayFont(u)};${_getDisplayEffectCSS(u.displayEffect||'solid',u.displayColor||'#fff')}">${escapeHTML(u.displayName||u.username)}${u.verified ? _verifiedBadge(16) : ''}</div>
       <div class="mpp-username">@${escapeHTML(u.username)}${u.pronouns ? ` <span style="color:rgba(255,255,255,.2);font-weight:400;">&middot; ${escapeHTML(u.pronouns)}</span>` : ''}</div>
     </div>
     <!-- Status -->
@@ -32842,10 +32879,24 @@ function _darkenHex(hex, pct) {
   const f = 1 - pct;
   return '#' + [Math.round(r*f),Math.round(g*f),Math.round(b*f)].map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('');
 }
-function applyAppearance(themeId) {
+function _applyAppearanceVisual(themeId) {
+  // Pure visual application — no persistence. Used when an external sync
+  // applies the theme coming from the DB (so we don't ping-pong back).
+  if (themeId === 'fortized') themeId = 'fortized_classic';
+  applyAppearance(themeId, { _skipPersist: true });
+}
+function applyAppearance(themeId, _opts) {
   // Migrate old 'fortized' id to 'fortized_classic'
   if (themeId === 'fortized') themeId = 'fortized_classic';
   localStorage.setItem(_appearanceKey(), themeId);
+  // Persist to DB so it syncs across devices (skipped when we're just
+  // applying a theme that already came from the DB/real-time channel).
+  if (!(_opts && _opts._skipPersist) && typeof CU !== 'undefined' && CU && CU.username) {
+    if (CU.appearance !== themeId) {
+      CU.appearance = themeId;
+      try { saveUser(); } catch (e) { _dbg && _dbg('[Appearance] saveUser failed', e); }
+    }
+  }
   // ALL themes keep Fortized yellow accent
   document.documentElement.style.setProperty('--accent',     '#fff93e');
   document.documentElement.style.setProperty('--accent-dim', 'rgba(255,249,62,.1)');
@@ -33059,7 +33110,9 @@ function applySelectedAppearance() {
   _appearancePreviewId = null;
 }
 
-// Apply saved appearance on load (per-user)
+// Apply saved appearance on load (per-user). localStorage is used as a fast
+// cache; the source of truth lives on the user row in Supabase and will be
+// reconciled once CU is loaded (see refreshCU + the real-time channel).
 (function() {
   const key = _appearanceKey();
   let saved = localStorage.getItem(key);
@@ -33070,7 +33123,11 @@ function applySelectedAppearance() {
   }
   // Migrate removed themes
   if (saved === 'dark_fortress') { saved = 'fortized_classic'; localStorage.setItem(key, saved); }
-  if (saved) applyAppearance(saved);
+  // Prefer DB value if CU is already loaded (e.g. session restore)
+  try {
+    if (typeof CU !== 'undefined' && CU && CU.appearance) saved = CU.appearance;
+  } catch {}
+  if (saved) _applyAppearanceVisual(saved);
 })();
 
 
